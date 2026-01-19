@@ -1,6 +1,6 @@
 import { Editor } from "@tiptap/react"
 import ToolbarButton from './ToolbarButton'
-import { FaListUl, FaListOl } from "react-icons/fa"
+import { List, ListOrdered } from 'lucide-react';
 import { useEffect, useState } from "react";
 
 export default function ListItem({ editor }: { editor: Editor }) {
@@ -40,7 +40,7 @@ export default function ListItem({ editor }: { editor: Editor }) {
           editor.chain().focus().toggleBulletList().run()
         }
       >
-        <FaListUl className="w-4 h-4" />
+        <List className="w-4 h-4" />
       </ToolbarButton>
 
       {/* Ordered List */}
@@ -51,7 +51,7 @@ export default function ListItem({ editor }: { editor: Editor }) {
           editor.chain().focus().toggleOrderedList().run()
         }
       >
-        <FaListOl className="w-4 h-4" />
+        <ListOrdered className="w-4 h-4" />
       </ToolbarButton>
 
     </div>

@@ -1,11 +1,11 @@
 import { MoreHorizontal } from 'lucide-react';
 import { Editor } from '@tiptap/react';
 import ToolbarButton from './ToolbarButton';
-import { FaAlignCenter, FaAlignLeft, FaAlignRight } from 'react-icons/fa';
 import { useState, type PropsWithChildren } from 'react';
 import Divider from './Divider';
 import ColorDropdown from './ColorDropdown';
 import ListItem from './ListItem';
+import { AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
 
 function Row({ children }: { children: PropsWithChildren['children'] }) {
   return (
@@ -26,7 +26,7 @@ function AlignMenu({ editor }: { editor: Editor }) {
         toggleMark={(editor) => editor.chain().focus().setTextAlign('left').run()}
         active={editor.isActive({ textAlign: 'left' })}
       >
-        <FaAlignLeft />
+        <AlignLeft className='w-4 h-4' />
       </ToolbarButton>
 
       {/* Align center */}
@@ -35,7 +35,7 @@ function AlignMenu({ editor }: { editor: Editor }) {
         toggleMark={(editor) => editor.chain().focus().setTextAlign('center').run()}
         active={editor.isActive({ textAlign: 'center' })}
       >
-        <FaAlignCenter />
+        <AlignCenter className='w-4 h-4' />
       </ToolbarButton>
 
       {/* Align right */}
@@ -44,7 +44,16 @@ function AlignMenu({ editor }: { editor: Editor }) {
         toggleMark={(editor) => editor.chain().focus().setTextAlign('right').run()}
         active={editor.isActive({ textAlign: 'right' })}
       >
-        <FaAlignRight />
+        <AlignRight className='w-4 h-4' />
+      </ToolbarButton>
+
+      {/* Align justify */}
+      <ToolbarButton
+        editor={editor}
+        toggleMark={(editor) => editor.chain().focus().setTextAlign('justify').run()}
+        active={editor.isActive({ textAlign: 'justify' })}
+      >
+        <AlignJustify className='w-4 h-4' />
       </ToolbarButton>
 
     </div>

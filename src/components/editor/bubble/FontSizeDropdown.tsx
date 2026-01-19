@@ -5,22 +5,45 @@ import { Editor } from "@tiptap/react";
 import { TbTextSize } from 'react-icons/tb';
 import { ChevronDown } from "lucide-react";
 
-function FontSizeLabel({ label, value }: { label: string, value: string }) {
+
+function FontSizeLabel({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
   return (
-    <div className='flex justify-items-center gap-1.5 border
-     rounded-lg pl-1.5 pr-1.5 pt-1 pb-1
-     border-neutral-300 dark:border-neutral-700'>
-      {label === 'Normal' && (
-        <TbTextSize className="w-4 h-4 text-gray-600" />
-      )}
-      {label !== 'Normal' && (
-        <span className="text-gray-500 text-xs font-medium">{value}</span>
+    <div
+      className="
+        flex items-center gap-1.5
+        border border-neutral-300 dark:border-neutral-700
+        rounded-lg px-1.5 h-6
+      "
+    >
+      {label === 'Normal' ? (
+        <TbTextSize className="w-3.5 h-3.5 text-neutral-600" />
+      ) : (
+        <span
+          className="
+            text-[13px] leading-none font-medium
+            text-neutral-600
+          "
+        >
+          {value}
+        </span>
       )}
 
-      <ChevronDown className="w-3 h-4 text-gray-600 mt-0.1" />
+      <ChevronDown
+        className="
+          w-3.5 h-3.5 text-neutral-600
+          ml-0.5
+        "
+      />
     </div>
-  )
+  );
 }
+
 
 
 export default function FontSizeDropdown({ editor }: { editor: Editor }) {

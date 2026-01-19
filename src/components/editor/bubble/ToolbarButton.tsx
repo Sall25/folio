@@ -8,15 +8,31 @@ interface ToolbarButtonProps {
   active?: boolean;
 }
 
-export default function ToolbarButton({ children, editor, toggleMark, active = false }: ToolbarButtonProps) {
+export default function ToolbarButton({
+  children,
+  editor,
+  toggleMark,
+  active = false,
+}: ToolbarButtonProps) {
   return (
-    <button onClick={() => toggleMark(editor)} className={`hover:bg-neutral-100 
-    dark:hover:bg-neutral-700 
-      w-6 h-5 flex justify-center py-1  my-auto rounded-md
-      ${active ? 'text-cyan-500 dark:text-cyan-600' : 'text-neutral-500'}
-    `}
+    <button
+      onMouseDown={(e) => {
+        e.preventDefault(); // keep editor focus
+        toggleMark(editor);
+      }}
+      className={`
+        flex items-center justify-center
+        w-6 h-6 rounded-md
+        transition-colors
+        hover:bg-neutral-100 dark:hover:bg-neutral-700
+        ${active
+          ? 'text-cyan-500 dark:text-cyan-600 bg-neutral-100 dark:bg-neutral-700'
+          : 'text-neutral-600'
+        }
+      `}
     >
       {children}
     </button>
   );
 }
+

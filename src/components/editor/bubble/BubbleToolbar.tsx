@@ -1,4 +1,3 @@
-import { FaBold, FaItalic, FaStrikethrough, FaUnderline } from 'react-icons/fa';
 import { Editor } from "@tiptap/react";
 import FontSizeDropdown from './FontSizeDropdown';
 import HeadingDropdown from './HeadingDropdown';
@@ -7,6 +6,13 @@ import MoreOptions from './MoreOptions';
 import ToolbarButton from './ToolbarButton';
 import Divider from './Divider';
 import { useState, useEffect } from 'react';
+import {
+  Bold,
+  Italic,
+  Strikethrough,
+  Underline,
+} from 'lucide-react';
+
 
 export default function BubbleToolbar({ editor }: { editor: Editor }) {
   const [boldActive, setBoldActive] = useState(false);
@@ -60,14 +66,14 @@ export default function BubbleToolbar({ editor }: { editor: Editor }) {
       <Divider />
 
       {/* Text Style */}
-      <div className='flex gap-1.5 px-2.5'>
+      <div className='flex items-center gap-1.5 px-2.5'>
         {/* Bold */}
         <ToolbarButton
           editor={editor}
           toggleMark={(editor) => editor.chain().focus().toggleBold().run()}
           active={boldActive}
         >
-          <FaBold className="" />
+          <Bold className="w-3.5 h-4" />
         </ToolbarButton>
 
         {/* Italic */}
@@ -76,7 +82,7 @@ export default function BubbleToolbar({ editor }: { editor: Editor }) {
           toggleMark={(editor) => editor.chain().focus().toggleItalic().run()}
           active={italicActive}
         >
-          <FaItalic />
+          <Italic className="w-3.5 h-4" />
         </ToolbarButton>
 
         {/* Strike */}
@@ -85,7 +91,7 @@ export default function BubbleToolbar({ editor }: { editor: Editor }) {
           toggleMark={(editor) => editor.chain().focus().toggleStrike().run()}
           active={strikeActive}
         >
-          <FaStrikethrough className="" />
+          <Strikethrough className="w-3.5 h-4" />
         </ToolbarButton>
 
         {/* Underline */}
@@ -94,7 +100,7 @@ export default function BubbleToolbar({ editor }: { editor: Editor }) {
           toggleMark={(editor) => editor.chain().focus().toggleUnderline().run()}
           active={underlineActive}
         >
-          <FaUnderline />
+          <Underline className="w-3.5 h-4" />
         </ToolbarButton>
 
       </div>

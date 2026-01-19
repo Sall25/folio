@@ -2,25 +2,43 @@ import { useEffect, useState } from "react";
 import Dropdown from "./Dropdown";
 import DropdownItem from "./DropdownItem";
 import { Editor } from "@tiptap/react";
-import { FaFont } from "react-icons/fa";
 import { ChevronDown } from 'lucide-react';
+
 
 function FontFamilyLabel({ font }: { font: string }) {
   return (
-    <div className='flex justify-items-center gap-1.5 border border-neutral-300 dark:border-neutral-700
-     rounded-lg pl-1.5 pr-1.5 pt-1 pb-1'>
-      {font === 'Default' && (
-        <FaFont className="w-3 h-4 text-gray-600" />
-      )}
-      {font !== 'Default' && (
-        <span className="text-gray-600 text-xs font-medium">{font}</span>
+    <div
+      className="
+        flex items-center gap-1.5
+        border border-neutral-300 dark:border-neutral-700
+        rounded-lg px-1.5 h-6
+      "
+    >
+      {font === 'Default' ? (
+        <span className="font-semibold text-[13px] text-neutral-600">A</span>
+
+      ) : (
+        <span
+          className="
+            text-[13px] leading-none font-medium
+            text-neutral-600
+            truncate
+          "
+        >
+          {font}
+        </span>
       )}
 
-      <ChevronDown className="w-4 h-4 text-gray-500 mt-0.1 
-      dark:hover:bg-neutral-700 rounded transition-all duration-200 scale-105" />
+      <ChevronDown
+        className="
+          w-3.5 h-3.5 text-neutral-600
+          ml-0.5
+        "
+      />
     </div>
-  )
+  );
 }
+
 
 export default function FontFamilyDropdown({ editor }: { editor: Editor }) {
   const [font, setFont] = useState('Default');

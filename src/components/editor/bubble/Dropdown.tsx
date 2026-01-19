@@ -17,7 +17,6 @@ export default function Dropdown({
         onClick={() => setOpen(v => !v)}
         className="
           px-2 py-1 rounded-md text-sm text-gray-800
-          hover:bg-neutral-100 dark:hover:bg-neutral-800
           transition dark:shadow-neutral-800
           shadow-2xl
         "
