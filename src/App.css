@@ -1,42 +1,64 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+/* App*/
+#root{
+  @apply sm:w-xl md:w-2xl lg:w-4xl mx-auto font-sans 
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/*Editor Wrapper*/
+.EditorWrapper{
+  @apply transition-transform duration-400 scale-100 shadow-none overflow-y-auto  
+  border border-neutral-200 border-t-0 min-h-screen dark:border-neutral-700
+  bg-neutral-50 dark:bg-neutral-900
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+
+/* Core editor look */
+.ProseMirror {
+  @apply outline-none text-[16px] leading-relaxed text-gray-900 dark:bg-neutral-900
+   dark:text-gray-50 p-2.5 overflow-y-auto ;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* Paragraph spacing */
+.ProseMirror p {
+  @apply my-2;
 }
 
-.card {
-  padding: 2em;
+/* Headings */
+.ProseMirror h1 {
+  @apply text-3xl font-bold mt-8 mb-3;
+}
+.ProseMirror h2 {
+  @apply text-2xl font-semibold mt-6 mb-2;
+}
+.ProseMirror h3 {
+  @apply text-xl font-semibold mt-4 mb-2;
 }
 
-.read-the-docs {
-  color: #888;
+/* Lists */
+.ProseMirror ul {
+  @apply list-disc pl-6 my-3;
 }
+.ProseMirror ol {
+  @apply list-decimal pl-6 my-3;
+}
+
+/* Blockquote */
+.ProseMirror blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 my-4;
+}
+
+/* Code */
+.ProseMirror code {
+  @apply bg-gray-100 px-1 py-0.5 rounded text-sm;
+}
+
+.editor-empty:first-child::before {
+  @apply text-gray-500  pointer-events-none;
+  content: attr(data-placeholder);
+  display: block;
+  height: 0;
+}
+
