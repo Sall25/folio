@@ -1,120 +1,119 @@
 import { MoreHorizontal } from 'lucide-react';
 import { Editor } from '@tiptap/react';
-import ToolbarButton from './ToolbarButton';
-import { useState, type PropsWithChildren } from 'react';
+import { useEffect, useState } from 'react';
 import Divider from './Divider';
-import ColorDropdown from './ColorDropdown';
-import ListItem from './ListItem';
-import { AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
+import {
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Subscript,
+  Superscript
+} from 'lucide-react';
+import { Dropdown } from '../dropdown';
 
-function Row({ children }: { children: PropsWithChildren['children'] }) {
-  return (
-    <div className='flex gap-2.5'>
-      {children}
-    </div>
-  );
-}
-
-function AlignMenu({ editor }: { editor: Editor }) {
-
-  return (
-    <div className='border border-neutral-300 dark:border-neutral-700
-      rounded-lg z-40 flex my-auto pb-0.5 justify-center h-7 w-20'>
-      {/* Align left */}
-      <ToolbarButton
-        editor={editor}
-        toggleMark={(editor) => editor.chain().focus().setTextAlign('left').run()}
-        active={editor.isActive({ textAlign: 'left' })}
-      >
-        <AlignLeft className='w-4 h-4' />
-      </ToolbarButton>
-
-      {/* Align center */}
-      <ToolbarButton
-        editor={editor}
-        toggleMark={(editor) => editor.chain().focus().setTextAlign('center').run()}
-        active={editor.isActive({ textAlign: 'center' })}
-      >
-        <AlignCenter className='w-4 h-4' />
-      </ToolbarButton>
-
-      {/* Align right */}
-      <ToolbarButton
-        editor={editor}
-        toggleMark={(editor) => editor.chain().focus().setTextAlign('right').run()}
-        active={editor.isActive({ textAlign: 'right' })}
-      >
-        <AlignRight className='w-4 h-4' />
-      </ToolbarButton>
-
-      {/* Align justify */}
-      <ToolbarButton
-        editor={editor}
-        toggleMark={(editor) => editor.chain().focus().setTextAlign('justify').run()}
-        active={editor.isActive({ textAlign: 'justify' })}
-      >
-        <AlignJustify className='w-4 h-4' />
-      </ToolbarButton>
-
-    </div>
-  )
-}
-
-type E = React.MouseEvent<HTMLElement, MouseEvent>;
-
-interface ContentProps {
-  children: PropsWithChildren['children'];
-  onMouseDown?: (e: E) => void;
-  onMouseLeave?: () => void;
-}
-
-function Content({ children, onMouseDown, onMouseLeave }: ContentProps) {
-
-  return (
-    <div className="
-            absolute flex  -bottom-12 right-0 mt-2 z-50 
-            bg-white dark:bg-neutral-800 rounded-full p-1
-            shadow shadow-neutral-200 
-          dark:shadow-neutral-900 
-          px-4 py-0.5 
-          "
-      onMouseDown={(e) => {
-        if (onMouseDown) {
-          onMouseDown(e);
-        }
-      }}
-      onMouseLeave={onMouseLeave}>
-      {children}
-    </div>
-  );
-}
 
 export default function MoreOptions({ editor }: { editor: Editor }) {
 
-  const [open, setOpen] = useState(false);
+  const [superscriptActive, setSuperscriptActive] = useState(false);
+  const [subscriptActive, setSubscriptActive] = useState(false);
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const update = () => {
+      const superscript = editor.isActive('superscript');
+      setSuperscriptActive(superscript);
+
+      const subscript = editor.isActive('subscript');
+      setSubscriptActive(subscript);
+    };
+
+    editor.on('update', update);
+
+    update();
+
+    return () => {
+      editor.off('update', update);
+    }
+  }, [editor]);
 
   return (
-    <div className='flex flex-col justify-center hover:bg-neutral-100 hover:dark:bg-neutral-800
-     m-1 p-1 rounded z-50'>
-      <MoreHorizontal
-        className='w-4 h-4 text-gray-600'
-        onMouseDown={() => setOpen(!open)}
-      />
+    <Dropdown>
+      <Dropdown.Trigger>
+        <MoreHorizontal
+          className='w-4 h-4'
+        />
+      </Dropdown.Trigger>
 
-      {open && (
-        <Content
-          onMouseDown={(e) => e.preventDefault()}
-          onMouseLeave={() => setOpen(false)}
+      <Dropdown.Content
+        className='flex items-center -right-full py-1.5 px-2.5 gap-3 absolute -top-14
+        z-10 rounded-full bg-white shadow shadow-neutral-200 text-neutral-600
+      dark:bg-neutral-900 border dark:border-neutral-800 dark:text-neutral-200 dark:shadow-neutral-950
+        '
+      >
+        <Dropdown.Group
+          className='flex items-center gap-2'
         >
-          <Row>
-            <AlignMenu editor={editor} />
-            <Divider />
-            <ListItem editor={editor} />
-            <Divider />
-            <ColorDropdown editor={editor} />
-          </Row>
-        </Content>
-      )}
-    </div>
-  );
+          {/*Superscript */}
+          <Dropdown.Item
+            onSelect={() => editor.chain().focus().toggleSuperscript().run()}
+            active={superscriptActive}
+          >
+            <Superscript className='w-5 h-5' />
+          </Dropdown.Item>
+
+          {/*Subscript*/}
+          <Dropdown.Item
+            onSelect={() => editor.chain().focus().toggleSubscript().run()}
+            active={subscriptActive}
+          >
+            <Subscript className='w-5 h-5' />
+          </Dropdown.Item>
+        </Dropdown.Group>
+
+        <Divider />
+
+        {/* Align */}
+        <Dropdown.Group
+          className='border border-neutral-300 dark:border-neutral-700
+        rounded-lg z-40 flex my-auto pb-0.5 justify-center h-7 w-32'
+        >
+          {/* Align Left */}
+          <Dropdown.Item
+            onSelect={() => editor.chain().focus().setTextAlign('left').run()}
+            active={editor.isActive({ textAlign: 'left' })}
+          >
+            <AlignLeft className='w-4 h-4' />
+          </Dropdown.Item>
+
+          {/* Align Center */}
+          <Dropdown.Item
+            onSelect={() => editor.chain().focus().setTextAlign('center').run()}
+            active={editor.isActive({ textAlign: 'center' })}
+          >
+            <AlignCenter className='w-4 h-4' />
+          </Dropdown.Item>
+
+          {/* Align Right */}
+          <Dropdown.Item
+            onSelect={() => editor.chain().focus().setTextAlign('right').run()}
+            active={editor.isActive({ textAlign: 'right' })}
+          >
+            <AlignRight className='w-4 h-4' />
+          </Dropdown.Item>
+
+          {/* Align Justify */}
+          <Dropdown.Item
+            onSelect={() => editor.chain().focus().setTextAlign('justify').run()}
+            active={editor.isActive({ textAlign: 'justify' })}
+          >
+            <AlignJustify className='w-4 h-4' />
+          </Dropdown.Item>
+
+        </Dropdown.Group>
+
+      </Dropdown.Content>
+    </Dropdown>
+  )
 }
