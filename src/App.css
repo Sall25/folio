@@ -4,21 +4,22 @@
 @custom-variant dark (&:where(.dark, .dark *));
 /* App*/
 #root{
-  @apply sm:w-xl md:w-2xl lg:w-4xl mx-auto font-sans 
+  @apply sm:w-xl md:w-2xl lg:w-4xl mx-auto font-sans
 }
+
 
 /*Editor Wrapper*/
 .EditorWrapper{
-  @apply transition-transform duration-400 scale-100 shadow-none overflow-y-auto  
-  border border-neutral-200 border-t-0 min-h-screen dark:border-neutral-700
-  bg-neutral-50 dark:bg-neutral-900
+  @apply shadow-none 
+ border-t-0  dark:border-neutral-800 m-0 p-0
+  bg-neutral-50 dark:bg-neutral-900  rounded-lg 
 }
 
 
 /* Core editor look */
 .ProseMirror {
   @apply outline-none text-[16px] leading-relaxed text-gray-900 dark:bg-neutral-900
-   dark:text-gray-50 p-2.5 overflow-y-auto ;
+   dark:text-gray-50 px-2.5  z-0 rounded-lg;
 }
 
 /* Paragraph spacing */
@@ -28,13 +29,13 @@
 
 /* Headings */
 .ProseMirror h1 {
-  @apply text-3xl font-bold mt-8 mb-3;
+  @apply text-3xl font-bold mt-8 mb-3 scroll-mt-16;
 }
 .ProseMirror h2 {
-  @apply text-2xl font-semibold mt-6 mb-2;
+  @apply text-2xl font-semibold mt-6 mb-2 scroll-mt-16;
 }
 .ProseMirror h3 {
-  @apply text-xl font-semibold mt-4 mb-2;
+  @apply text-xl font-semibold mt-4 mb-2 scroll-mt-16;
 }
 
 /* Lists */
@@ -62,3 +63,33 @@
   height: 0;
 }
 
+.ProseMirror a {
+  @apply
+    relative
+    font-medium
+    text-blue-600 dark:text-blue-400
+    cursor-pointer
+    no-underline
+    transition-colors;
+}
+
+.ProseMirror a::after {
+  content: '';
+  @apply
+    absolute
+    left-0
+    right-0
+    -bottom-[1px]
+    h-px
+    bg-current
+    opacity-40;
+}
+
+
+.ProseMirror a:hover {
+  @apply text-blue-700 dark:text-blue-300;
+}
+
+.ProseMirror a:hover::after {
+  @apply opacity-70;
+}

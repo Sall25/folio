@@ -1,30 +1,18 @@
-import { FloatingSections } from "./FloatingSections";
-import { HoverArea } from "./HoverArea";
-import { Indicator } from "./Indicator";
-import { NavigationContext } from "./navigationContext";
-import { NavigationPanel } from "./NavigationPanel";
-import { NavigationProvider } from "./NavigationProvider";
-import { ProgressBar } from "./ProgressBar";
-import * as Types from './types';
 
-export * from './FloatingSections';
-export * from './HoverArea';
-export * from './Indicator';
-export * from './navigationContext';
-export * from './NavigationPanel';
-export * from './NavigationProvider';
-export * from './ProgressBar';
-export * from './types';
+import Content from "./components/Content";
+import Item from "./components/Item";
+import { NavigationBase } from "./components/NavigationBase";
+import { type NavigationComponent } from "./components/NavigationComponent";
+import Trigger from "./components/Trigger";
 
-export default {
-  FloatingSections,
-  HoverArea,
-  Indicator,
-  NavigationContext,
-  NavigationPanel,
-  NavigationProvider,
-  ProgressBar,
-  Types
+const Navigation = NavigationBase as NavigationComponent;
+
+Navigation.Trigger = Trigger;
+Navigation.Content = Content;
+Navigation.Item = Item;
+
+export {
+  Navigation
 };
 
 

@@ -3,7 +3,7 @@ export default function Divider() {
     <div
       className="
         w-px h-4
-        bg-neutral-300 dark:bg-neutral-700
+        bg-neutral-300 dark:bg-neutral-500
         my-auto
       "
     />
