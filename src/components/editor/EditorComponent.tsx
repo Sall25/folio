@@ -1,27 +1,24 @@
-import { Editor, EditorContent, useEditor } from '@tiptap/react'
+import { EditorContent, useEditor } from '@tiptap/react'
 import { Placeholder } from '@tiptap/extensions'
 import StarterKit from '@tiptap/starter-kit'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { BackgroundColor, Color, FontSize, TextStyle } from '@tiptap/extension-text-style'
 import { FontFamily } from '@tiptap/extension-font-family'
-import HorizontalRule from '@tiptap/extension-horizontal-rule'
+import { Subscript } from '@tiptap/extension-subscript'
+import { Superscript } from '@tiptap/extension-superscript'
+import Link from '@tiptap/extension-link'
 import Toolbar from './Toolbar'
-import { NavigationPanel } from './navigation'
 import { BubbleMenu } from '@tiptap/react/menus'
 import BubbleToolbar from './bubble/BubbleToolbar'
-
-function EditorLayout({ editor }: { editor: Editor }) {
-  return (
-    <div className="">
-      <EditorContent editor={editor} />
-    </div>
-  );
-}
+import { TocNavigationPanel } from './toc/types'
+import HeadingWithId from './toc/extensions'
 
 function EditorComponent() {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        heading: false
+      }),
       Placeholder.configure({
         placeholder: 'Write Something here...',
         emptyEditorClass: 'editor-empty',
@@ -35,8 +32,14 @@ function EditorComponent() {
       FontSize,
       Color,
       BackgroundColor,
-      HorizontalRule
-
+      Superscript,
+      Subscript,
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+      }),
+      HeadingWithId
     ],
     editorProps: {
       attributes: {
@@ -50,20 +53,25 @@ function EditorComponent() {
   if (!editor) return null;
 
   return (
-    <main className=' mt-7 sm:w-xl md:w-2xl lg:w-4xl mx-auto 
-        font-sans rounded-2xl w-40
-        '>
+    <main className=" mx-auto rounded-2xl border
+     flex flex-col p-0 m-0
+    border-neutral-200 dark:border-neutral-800">
       <Toolbar />
-      <div className='EditorWrapper'>
-        <EditorLayout editor={editor} />
+      <TocNavigationPanel editor={editor} />
+
+      <div className="EditorWrapper">
+        <EditorContent editor={editor} />
+
+        <BubbleMenu editor={editor} className="z-50">
+          <BubbleToolbar editor={editor} />
+        </BubbleMenu>
       </div>
 
-      <BubbleMenu className='z-50' editor={editor} options={{ placement: 'top', offset: 8, flip: true }}>
-        <BubbleToolbar editor={editor} />
-      </BubbleMenu>
 
-      <NavigationPanel editor={editor} />
+
+
     </main>
+
 
   );
 }
