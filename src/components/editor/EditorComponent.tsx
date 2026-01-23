@@ -1,5 +1,5 @@
 import { EditorContent, useEditor } from '@tiptap/react'
-import { Placeholder, Selection, UndoRedo } from '@tiptap/extensions'
+import { Placeholder } from '@tiptap/extensions'
 import StarterKit from '@tiptap/starter-kit'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { BackgroundColor, Color, FontSize, TextStyle } from '@tiptap/extension-text-style'
@@ -45,9 +45,6 @@ function EditorComponent() {
         linkOnPaste: true,
       }),
       HeadingWithId,
-      Selection.configure({
-        className: 'selection'
-      }),
     ],
 
     editorProps: {

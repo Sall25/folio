@@ -21,11 +21,27 @@
   @apply outline-none text-[16px] leading-relaxed text-gray-900 dark:bg-neutral-900
    dark:text-gray-50 px-2.5  z-0 rounded-lg;
 }
+.ProseMirror{
+  caret-color: rgb(59, 130, 246);
+}
 
 /* Selection*/
-.ProseMirror .selection{
-  @apply bg-cyan-600/20
+.dark .ProseMirror ::selection {
+  background-color: rgba(0, 255, 255, 0.105);
+  color: white;
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.6),
+    0 0 8px rgba(96, 165, 250, 0.5);
 }
+
+.ProseMirror ::selection {
+  background-color: rgba(5, 74, 74, 0.122);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.085),
+    0 0 6px rgba(59, 131, 246, 0.774);
+}
+
+
 
 /* Paragraph spacing */
 .ProseMirror p {
