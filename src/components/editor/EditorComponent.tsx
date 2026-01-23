@@ -45,6 +45,7 @@ function EditorComponent() {
         linkOnPaste: true,
       }),
       HeadingWithId,
+      Selection.configure({ className: 'selection' }),
     ],
 
     editorProps: {

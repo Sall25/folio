@@ -49,6 +49,7 @@ export function LinkPopover({
      rounded-2xl
       bg-white dark:bg-neutral-900
       shadow-lg 
+      popover-animate
     ">
       <div
         className="dark:bg-neutral-800/60 p-2 rounded-2xl"
