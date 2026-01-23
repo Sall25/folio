@@ -9,7 +9,7 @@ export default function TocNavigationPanel({ editor }: { editor: Editor }) {
 
   return (
     <Navigation
-      className="sticky top-32 left-full -translate-x-1 z-50 w-5 h-6"
+      className="fixed right-4 top-1/5 z-50 w-min-45"
     >
       <TocProgressBar editor={editor} />
       <TocContent editor={editor} />

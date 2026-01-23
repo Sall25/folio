@@ -17,7 +17,7 @@ export default function ToolbarButton({
   onClick
 }: ToolbarButtonProps) {
   return (
-    <button
+    <span
       onMouseDown={(e) => {
         e.preventDefault(); // keep editor focus
         if (toggleMark) {
@@ -27,18 +27,18 @@ export default function ToolbarButton({
       }}
       className={`
         flex items-center justify-center
-        w-6 h-6 rounded-md
+        w-6 h-6 p-1 rounded-md 
         transition-colors
         hover:bg-neutral-100 dark:hover:bg-neutral-800
         ${active
           ? 'text-cyan-500 dark:text-cyan-600 bg-neutral-100 dark:bg-neutral-700'
-          : 'text-neutral-600 dark:text-neutral-200'
+          : 'text-neutral-600 dark:text-neutral-400'
         }
       `}
       onClick={onClick}
     >
       {children}
-    </button>
+    </span>
   );
 }
 

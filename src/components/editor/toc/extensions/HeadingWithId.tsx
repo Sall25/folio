@@ -24,13 +24,20 @@ export const HeadingWithId = Heading.extend({
   addProseMirrorPlugins() {
     return [
       new Plugin({
-        appendTransaction: (_, __, newState) => {
-          let tr = newState.tr
+        appendTransaction(transactions, oldState, newState) {
+          if (!transactions.some(tr => tr.docChanged)) {
+            return null
+          }
+
+          const tr = newState.tr
           let modified = false
 
           newState.doc.descendants((node, pos) => {
-            if (node.type.name === 'heading' && !node.attrs.id) {
-              tr = tr.setNodeMarkup(pos, undefined, {
+            if (
+              node.type.name === 'heading' &&
+              node.attrs.id == null
+            ) {
+              tr.setNodeMarkup(pos, undefined, {
                 ...node.attrs,
                 id: nanoid(8),
               })
@@ -39,7 +46,8 @@ export const HeadingWithId = Heading.extend({
           })
 
           return modified ? tr : null
-        },
+        }
+
       }),
     ]
   },

@@ -38,9 +38,10 @@ export function TocContent({ editor }: ContentProps) {
     <Navigation.Content
       className={`absolute -top-6 right-0 flex flex-col items-center gap-2
                   px-3 py-1 border dark:border-neutral-700 rounded-2xl
-                   bg-neutral-50 dark:bg-neutral-900 shadow-xl
+                   bg-neutral-50 dark:bg-neutral-800/80 shadow-xl
                    shadow-neutral-200
                 dark:shadow-neutral-950
+                min-w-45
                   transition-all duration-400 ease-out`
       }
     >
@@ -58,7 +59,7 @@ export function TocContent({ editor }: ContentProps) {
                         rounded-lg flex justify-start items-center
                           max-w-50 w-full
                         whitespace-nowrap overflow-hidden text-ellipsis
-                      ${heading.id === activeHeading?.id ? 'text-cyan-600' : ''}
+                      ${heading.id === activeHeading?.id ? 'text-cyan-600' : 'dark:text-neutral-400'}
                       `}
 
           >

@@ -5,8 +5,9 @@ function App() {
 
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen relative">
       <EditorComponent />
+
     </div>
 
   );

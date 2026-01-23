@@ -4,12 +4,8 @@ import { Editor } from '@tiptap/react';
 
 export function LinkPopover({
   editor,
-  onClose,
-  open
 }: {
   editor: Editor;
-  onClose: () => void;
-  open: boolean
 }) {
   const [url, setUrl] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,57 +37,56 @@ export function LinkPopover({
       .extendMarkRange('link')
       .setLink({ href: url })
       .run();
-
-    onClose();
   };
 
   const removeLink = () => {
     editor.chain().focus().unsetLink().run();
-    onClose();
   };
 
-  if (!open) return null;
 
   return (
     <div className="
-      absolute top-full mt-2 z-50
-      w-64 rounded-lg border border-neutral-200
+     rounded-2xl
       bg-white dark:bg-neutral-900
-      shadow-lg p-2
+      shadow-lg 
     ">
-      <div className="flex items-center gap-2">
-        <Link className="w-4 h-4 text-neutral-500" />
-        <input
-          ref={inputRef}
-          value={url}
-          onChange={e => setUrl(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && applyLink()}
-          placeholder="Paste or type a link"
-          className="
+      <div
+        className="dark:bg-neutral-800/60 p-2 rounded-2xl"
+      >
+        <div className="flex items-center gap-2">
+          <Link className="w-4 h-4 text-neutral-500" />
+          <input
+            ref={inputRef}
+            value={url}
+            onChange={e => setUrl(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && applyLink()}
+            placeholder="Paste or type a link"
+            className="
             flex-1 bg-transparent text-sm outline-none
             text-neutral-900 dark:text-neutral-100
           "
-        />
-      </div>
+          />
+        </div>
 
-      <div className="flex justify-between mt-2">
-        {editor.isActive('link') && (
+        <div className="flex justify-between mt-2">
+          {editor.isActive('link') && (
+            <button
+              onClick={removeLink}
+              className="flex items-center gap-1 text-xs text-red-500"
+            >
+              <Unlink className="w-3 h-3" />
+              Remove
+            </button>
+          )}
+
           <button
-            onClick={removeLink}
-            className="flex items-center gap-1 text-xs text-red-500"
+            onClick={applyLink}
+            className="ml-auto flex items-center gap-1 text-xs text-cyan-600"
           >
-            <Unlink className="w-3 h-3" />
-            Remove
+            <ExternalLink className="w-3 h-3" />
+            Apply
           </button>
-        )}
-
-        <button
-          onClick={applyLink}
-          className="ml-auto flex items-center gap-1 text-xs text-cyan-600"
-        >
-          <ExternalLink className="w-3 h-3" />
-          Apply
-        </button>
+        </div>
       </div>
     </div>
   );

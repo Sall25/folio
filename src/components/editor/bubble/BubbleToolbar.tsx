@@ -8,11 +8,12 @@ import {
   Italic,
   Strikethrough,
   Underline,
-  Link
 } from 'lucide-react';
-import ColorDropdown from "./ColorDropdown";
-import { LinkPopover } from "./LinkPopover";
 import TextDropdown from "./TextDropdown";
+import ColorDropdown from "./ColorDropdown";
+import { LinkComponent } from "./LinkComponent";
+import { BubbleMenu } from "@tiptap/react/menus";
+import clsx from 'clsx'
 
 
 export default function BubbleToolbar({ editor }: { editor: Editor }) {
@@ -21,8 +22,22 @@ export default function BubbleToolbar({ editor }: { editor: Editor }) {
   const [strikeActive, setStrikeActive] = useState(false);
   const [underlineActive, setUnderlineActive] = useState(false);
 
+  const [menuVisible, setMenuVisible] = useState(false);
+
+
   useEffect(() => {
     if (!editor) return;
+
+    //   const node = $from.parent;
+
+    //   // Show BubbleMenu only for these block types
+    //   const allowedBlocks = ['paragraph', 'heading', 'listItem'];
+    //   if (allowedBlocks.includes(node.type.name)) {
+    //     setMenuVisible(true);
+    //   } else {
+    //     setMenuVisible(false);
+    //   }
+    // };
 
     const update = () => {
       const bold = editor.isActive('bold');
@@ -36,104 +51,119 @@ export default function BubbleToolbar({ editor }: { editor: Editor }) {
 
       const underline = editor.isActive('underline');
       setUnderlineActive(underline);
+
+
     };
 
     editor.on('update', update);
+    // editor.on('selectionUpdate', updateMenuVisibility);
 
     update();
 
     return () => {
       editor.off('update', update);
+      // editor.off('selectionUpdate', updateMenuVisibility);
     }
   }, [editor]);
 
 
-  const [linkOpen, setLinkOpen] = useState(false);
-
-
   return (
-    <div className="absolute -left-full -top-12
-    -translate-x-1/6 flex 
-    gap-2 z-50 bg-white shadow shadow-neutral-200 
-     dark:bg-neutral-900 border dark:border-neutral-800 dark:shadow-neutral-900
-    rounded-full px-2 py-0.5 items-center"
+
+    <BubbleMenu
+      editor={editor}
+      className="z-50"
+      options={{
+        placement: 'top-start',
+        flip: true, offset: 8,
+        onShow() {
+          setMenuVisible(true)
+        },
+        onHide() {
+          setMenuVisible(false)
+        },
+
+      }}
     >
-
-      {/* Text Dropdown */}
-      <TextDropdown editor={editor} />
-
-      <Divider />
-
-
-      {/* Text Formatting */}
-      <div className='flex items-center gap-1.5 px-2.5'>
-        {/* Bold */}
-        <ToolbarButton
-          editor={editor}
-          toggleMark={(editor) => editor?.chain().focus().toggleBold().run()}
-          active={boldActive}
-        >
-          <Bold className="w-3.5 h-4" />
-        </ToolbarButton>
-
-        {/* Italic */}
-        <ToolbarButton
-          editor={editor}
-          toggleMark={(editor) => editor?.chain().focus().toggleItalic().run()}
-          active={italicActive}
-        >
-          <Italic className="w-3.5 h-4" />
-        </ToolbarButton>
-
-        {/* Strike */}
-        <ToolbarButton
-          editor={editor}
-          toggleMark={(editor) => editor?.chain().focus().toggleStrike().run()}
-          active={strikeActive}
-        >
-          <Strikethrough className="w-3.5 h-4" />
-        </ToolbarButton>
-
-        {/* Underline */}
-        <ToolbarButton
-          editor={editor}
-          toggleMark={(editor) => editor?.chain().focus().toggleUnderline().run()}
-          active={underlineActive}
-        >
-          <Underline className="w-3.5 h-4" />
-        </ToolbarButton>
-      </div>
-
-      <Divider />
-
-      {/*Link */}
-      <div>
-        <ToolbarButton
-          editor={editor}
-          onClick={() => setLinkOpen(!linkOpen)}
-          active={editor.isActive('link')}
-        >
-          <Link className="w-3.5 h-3.5" />
-        </ToolbarButton>
-
-        {linkOpen && (
-          <LinkPopover
-            editor={editor}
-            open={linkOpen}
-            onClose={() => setLinkOpen(false)}
-          />
+      {/*absolute -left-full -top-12 -translate-x-1/6 */}
+      <div
+        className={clsx(
+          'flex gap-2 z-50 bg-white ring-1 dark:ring-neutral-800 dark:bg-neutral-900 shadow rounded-2xl px-4 py-0.5 h-10 items-center transition-all duration-150 ease-out',
+          menuVisible ? 'opacity-100' : 'opacity-0'
         )}
+      >
+        {/* Text Dropdown */}
+        <TextDropdown editor={editor} />
+
+        <Divider />
+
+
+        {/* Text Formatting */}
+        <div className='flex items-center gap-2.5 px-2.5'>
+          {/* Bold */}
+          <ToolbarButton
+            editor={editor}
+            toggleMark={(editor) => editor?.chain().focus().toggleBold().run()}
+            active={boldActive}
+          >
+            <Bold />
+          </ToolbarButton>
+
+          {/* Italic */}
+          <ToolbarButton
+            editor={editor}
+            toggleMark={(editor) => editor?.chain().focus().toggleItalic().run()}
+            active={italicActive}
+          >
+            <Italic />
+          </ToolbarButton>
+
+          {/* Strike */}
+          <ToolbarButton
+            editor={editor}
+            toggleMark={(editor) => editor?.chain().focus().toggleStrike().run()}
+            active={strikeActive}
+          >
+            <Strikethrough />
+          </ToolbarButton>
+
+          {/* Underline */}
+          <ToolbarButton
+            editor={editor}
+            toggleMark={(editor) => editor?.chain().focus().toggleUnderline().run()}
+            active={underlineActive}
+          >
+            <Underline />
+          </ToolbarButton>
+        </div>
+
+        <Divider />
+
+        <div className='flex items-center gap-2.5 px-2.5'>
+          {/*Link */}
+          <LinkComponent editor={editor} />
+
+          {/* Color */}
+          <ColorDropdown editor={editor} />
+        </div>
+
+        <Divider />
+
+        {/* More options */}
+        <MoreOptions editor={editor} />
+
       </div>
+    </BubbleMenu>
 
-      {/* Color */}
-      <ColorDropdown editor={editor} />
-      <Divider />
+    // // </div>
+    // <div className="z-50">
+    //   <Root open={open}>
+    //     <Content className="flex 
+    //  gap-2 z-50 bg-white shadow shadow-neutral-200 
+    //   dark:bg-neutral-900 border dark:border-neutral-800 dark:shadow-neutral-900
+    //  rounded-full px-2 py-0.5 items-center">
 
-
-
-      {/* More options */}
-      <MoreOptions editor={editor} />
-
-    </div>
+    //     </Content>
+    //   </Root>
+    // </div>
   );
 }
