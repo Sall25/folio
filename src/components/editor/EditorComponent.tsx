@@ -1,5 +1,5 @@
 import { EditorContent, useEditor } from '@tiptap/react'
-import { Placeholder, Selection } from '@tiptap/extensions'
+import { Placeholder, Selection, UndoRedo } from '@tiptap/extensions'
 import StarterKit from '@tiptap/starter-kit'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { BackgroundColor, Color, FontSize, TextStyle } from '@tiptap/extension-text-style'
@@ -7,16 +7,21 @@ import { FontFamily } from '@tiptap/extension-font-family'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
 import Link from '@tiptap/extension-link'
-import Toolbar from './Toolbar'
+import Toolbar from './toolbar'
 import BubbleMenuComponent from './bubble-menu/BubbleMenuComponent'
 import { TocNavigationPanel } from './toc/types'
 import HeadingWithId from './toc/extensions'
+
 
 function EditorComponent() {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        heading: false
+        heading: false,
+        undoRedo: {
+          depth: 100,
+          newGroupDelay: 500
+        }
       }),
       Placeholder.configure({
         placeholder: 'Write Something here...',
@@ -42,7 +47,7 @@ function EditorComponent() {
       HeadingWithId,
       Selection.configure({
         className: 'selection'
-      })
+      }),
     ],
 
     editorProps: {
@@ -60,18 +65,14 @@ function EditorComponent() {
     <main className="rounded-2xl
      flex flex-col 
     ">
-      <Toolbar />
+      <Toolbar editor={editor} />
       <TocNavigationPanel editor={editor} />
 
       <div className="EditorWrapper mx-auto">
         <EditorContent editor={editor} />
 
         <BubbleMenuComponent editor={editor} />
-
       </div>
-
-
-
 
 
     </main>
