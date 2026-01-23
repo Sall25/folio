@@ -80,8 +80,8 @@ function FontFamilySelect({ editor }: { editor: Editor }) {
     <Select>
       <Select.Trigger>
         <div className="flex items-center gap-1 pl-1.5">
-          <span className="font-semibold text-[13px]">A</span>
-          <span>Font</span>
+          <span className="  text-[13px]">A</span>
+          <span className=" ">Font</span>
         </div>
         <ChevronRight className="w-4 h-4" />
       </Select.Trigger>
@@ -131,9 +131,9 @@ function Headings({ editor }: { editor: Editor }) {
           onClick={() => editor.chain().focus().toggleHeading({ level: level as Level }).run()}
           className="flex gap-1 items-center w-full justify-start px-2 py-1 text-sm"
         >
-          <span className="font-semibold text-[13px]">H</span>
+          <span className="text-[13px]">H</span>
           <span className="text-xs">{level}</span>
-          <span className="ml-2">Heading {level}</span>
+          <span className="ml-1">Heading {level}</span>
         </Button>
       ))}
     </>
@@ -206,7 +206,7 @@ function Blocks({ editor }: { editor: Editor }) {
         className="flex items-center gap-2 px-2 py-1 w-full justify-start text-sm"
       >
         <Quote className="w-4 h-4" />
-        <span>Blockquote</span>
+        <span className="text-neutral-600 dark:text-neutral-300">Blockquote</span>
       </Button>
 
       {/* Code Block */}
@@ -216,7 +216,7 @@ function Blocks({ editor }: { editor: Editor }) {
         className="flex items-center gap-2 px-2 py-1 w-full justify-start text-sm font-mono"
       >
         <Code className="w-4 h-4" />
-        <span>Code Block</span>
+        <span className="text-neutral-600 dark:text-neutral-300  ">Code Block</span>
       </Button>
     </div>
   );
@@ -294,29 +294,26 @@ export default function TextDropdown({ editor }: { editor: Editor }) {
         </span>
       </Trigger>
 
-      <Content side="bottom" align="start" sideOffset={10}
-        className="dark:bg-neutral-900 rounded-2xl popover-animate"
+      <Content side="bottom" align="start" sideOffset={8}
+        className="dark:bg-neutral-800 rounded-2xl popover-animate
+         flex flex-col gap-3 z-50 py-3 px-1.5 min-w-40 
+       text-neutral-400
+          bg-neutral-100
+        ring-1 ring-neutral-100 dark:ring-neutral-800
+        dark:text-neutral-200 dark:shadow-neutral-950
+        "
       >
-        <div
-          className="
-          flex flex-col gap-3 z-50 py-3 px-1.5 min-w-40 
-          rounded-2xl bg-white shadow-xl shadow-neutral-100 text-neutral-400
-        dark:bg-neutral-800/40 ring-1 dark:ring-neutral-800
-        dark:text-neutral-200 dark:shadow-neutral-950"
-        >
-          {/* Size */}
-          <FontSizeSelect
-            editor={editor} />
+        {/* Size */}
+        <FontSizeSelect
+          editor={editor} />
 
-          {/*Font Family */}
-          <FontFamilySelect
-            editor={editor} />
+        {/*Font Family */}
+        <FontFamilySelect
+          editor={editor} />
 
-          {/* Blocks (Code, Blockquote, Headings, Lists) */}
-          <Blocks
-            editor={editor} />
-
-        </div>
+        {/* Blocks (Code, Blockquote, Headings, Lists) */}
+        <Blocks
+          editor={editor} />
       </Content>
     </Root>
   );

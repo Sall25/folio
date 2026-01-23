@@ -11,7 +11,7 @@
 
 /*Editor Wrapper*/
 .EditorWrapper {
-  @apply shadow-none w-full mx-auto  mt-24 ;
+  @apply shadow-none w-2xl mx-auto  mt-24;
 }
 
 
@@ -38,9 +38,9 @@
 }
 
 /* Paragraph and Block spacing*/
-.ProseMirror > * + * {
-  @apply mt-3;
-}
+/* .ProseMirror > * + * {
+  @apply mt-1;
+} */
 
 /* Headings */
 .ProseMirror h1 {

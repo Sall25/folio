@@ -57,7 +57,8 @@ export default function BubbleMenuComponent({ editor }: { editor: Editor }) {
       editor={editor}
       className="z-50"
       options={{
-        placement: 'top-start',
+        placement: 'top',
+        strategy: 'absolute',
         flip: true, offset: 8,
         onShow() {
           setMenuVisible(true)
@@ -70,7 +71,7 @@ export default function BubbleMenuComponent({ editor }: { editor: Editor }) {
     >
       <div
         className={clsx(
-          'flex gap-2 z-50 bg-white ring-1 dark:ring-neutral-800 dark:bg-neutral-900 shadow rounded-2xl px-4 py-0.5 h-10 items-center transition-all duration-150 ease-out',
+          'flex gap-2 z-50 bg-white ring-1 ring-neutral-100 dark:ring-neutral-800 dark:bg-neutral-900 shadow rounded-2xl px-4 py-0.5 h-10 items-center transition-all duration-150 ease-out',
           menuVisible ? 'opacity-100' : 'opacity-0'
         )}
       >

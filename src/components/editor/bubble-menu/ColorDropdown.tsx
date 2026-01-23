@@ -66,73 +66,73 @@ export default function ColorDropdown({ editor }: { editor: Editor }) {
 
       <Content
         side="bottom"
-        align="start"
-        sideOffset={12}
-        className="popover-animate"
+        align="center"
+        sideOffset={14}
+        className="popover-animate
+        flex flex-col gap-4 z-50 py-4 px-4 min-w-36 rounded-2xl bg-neutral-100 shadow-md
+         shadow-neutral-100 text-neutral-600 dark:bg-neutral-800 ring-1 dark:ring-neutral-800
+          dark:text-neutral-200 dark:shadow-neutral-950 ring-neutral-100
+        "
       >
-        <div className="flex flex-col gap-4 z-50 py-4 px-4 min-w-40 rounded-2xl bg-white shadow-md shadow-neutral-100 text-neutral-600 dark:bg-neutral-800/60 ring-1 dark:ring-neutral-800 dark:text-neutral-200 dark:shadow-neutral-950 ring-neutral-200">
-
-          {/* --- Recent Colors --- */}
-          {recentColors.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium">Recent</span>
-              <div className="flex gap-2">
-                {recentColors.map(c => (
-                  <span
-                    key={c.hex}
-                    className={`w-5 h-5 rounded-full  transition-transform duration-200 hover:scale-105 cursor-pointer
-                           ${c.rgba === currentColor ? 'ring-2 ring-offset-1 ring-offset-white dark:ring-offset-neutral-900' : ''}
-                           ${c.ring}`}
-                    style={{ backgroundColor: c.rgba }}
-                    onMouseDown={() => {
-                      editor.chain().focus().toggleTextStyle({ color: c.rgba }).run();
-                      addRecentColor(c);
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* --- Main Text Colors --- */}
+        {/* --- Recent Colors --- */}
+        {recentColors.length > 0 && (
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium">Color</span>
-            <div className="grid grid-cols-5 gap-3">
-              {COLORS.map(c => (
+            <span className="text-sm font-medium">Recent</span>
+            <div className="flex gap-2">
+              {recentColors.map(c => (
                 <span
                   key={c.hex}
-                  className={`w-5 h-4.5 rounded-full flex justify-center items-center transition-transform duration-200 hover:scale-105 cursor-pointer text-xs
-                         ${c.text} ring-1 ${c.ring} ${c.rgba === currentColor ? 'ring-2 ring-offset-1 ring-offset-white dark:ring-offset-neutral-900' : ''}`}
+                  className={`w-5 h-5 rounded-full  transition-transform duration-200 hover:scale-105 cursor-pointer
+                           ${c.rgba === currentColor ? 'ring-2 ring-offset-1 ring-offset-white dark:ring-offset-neutral-900' : ''}
+                           ${c.ring}`}
+                  style={{ backgroundColor: c.rgba }}
                   onMouseDown={() => {
                     editor.chain().focus().toggleTextStyle({ color: c.rgba }).run();
                     addRecentColor(c);
-                  }}
-                >
-                  A
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* --- Background Colors --- */}
-          <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium">Background</span>
-            <div className="grid grid-cols-5 gap-2">
-              {COLORS.map(c => (
-                <span
-                  key={c.hex + '-bg'}
-                  className={`w-5 h-5 rounded-full transition-transform duration-200 hover:scale-105 cursor-pointer
-                         ${c.rgba === currentBg ? 'ring-2 ring-offset-1 ring-offset-white dark:ring-offset-neutral-900' : ''} `}
-                  style={{ backgroundColor: c.rgba }}
-                  onMouseDown={() => {
-                    editor.chain().focus().toggleTextStyle({ backgroundColor: c.rgba }).run();
-                    setCurrentBg(c.rgba);
                   }}
                 />
               ))}
             </div>
           </div>
+        )}
 
+        {/* --- Main Text Colors --- */}
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-medium">Color</span>
+          <div className="grid grid-cols-5 gap-3">
+            {COLORS.map(c => (
+              <span
+                key={c.hex}
+                className={`w-5 h-4.5 rounded-full flex justify-center items-center transition-transform duration-200 hover:scale-105 cursor-pointer text-xs
+                         ${c.text} ring-1 ${c.ring} ${c.rgba === currentColor ? 'ring-2 ring-offset-1 ring-offset-white dark:ring-offset-neutral-900' : ''}`}
+                onMouseDown={() => {
+                  editor.chain().focus().toggleTextStyle({ color: c.rgba }).run();
+                  addRecentColor(c);
+                }}
+              >
+                A
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* --- Background Colors --- */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium">Background</span>
+          <div className="grid grid-cols-5 gap-2">
+            {COLORS.map(c => (
+              <span
+                key={c.hex + '-bg'}
+                className={`w-5 h-5 rounded-full transition-transform duration-200 hover:scale-105 cursor-pointer
+                         ${c.rgba === currentBg ? 'ring-2 ring-offset-1 ring-offset-white dark:ring-offset-neutral-900' : ''} `}
+                style={{ backgroundColor: c.rgba }}
+                onMouseDown={() => {
+                  editor.chain().focus().toggleTextStyle({ backgroundColor: c.rgba }).run();
+                  setCurrentBg(c.rgba);
+                }}
+              />
+            ))}
+          </div>
         </div>
       </Content>
     </Root>

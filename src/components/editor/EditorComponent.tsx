@@ -1,5 +1,5 @@
 import { EditorContent, useEditor } from '@tiptap/react'
-import { Placeholder } from '@tiptap/extensions'
+import { Placeholder, Selection } from '@tiptap/extensions'
 import StarterKit from '@tiptap/starter-kit'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { BackgroundColor, Color, FontSize, TextStyle } from '@tiptap/extension-text-style'
@@ -66,7 +66,7 @@ function EditorComponent() {
       <Toolbar editor={editor} />
       <TocNavigationPanel editor={editor} />
 
-      <div className="EditorWrapper mx-auto">
+      <div className="EditorWrapper">
         <EditorContent editor={editor} />
 
         <BubbleMenuComponent editor={editor} />

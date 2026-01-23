@@ -32,7 +32,7 @@ export default function Button({
 
         ${active
           ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
-          : "text-neutral-700 dark:text-neutral-300"}
+          : "text-neutral-600 dark:text-neutral-300"}
 
         ${!disabled && !active && `
           hover:bg-neutral-200/70
