@@ -18,48 +18,70 @@
 
 /* Core editor look */
 .ProseMirror {
-  @apply outline-none text-[16px] leading-relaxed text-gray-900 dark:bg-neutral-900
-   dark:text-gray-50 px-2.5  z-0 rounded-lg;
+  @apply outline-none text-[16px] leading-7
+    text-neutral-800 dark:text-neutral-200
+    px-3 py-2 rounded-lg;
 }
+
 
 /* Selection*/
-.ProseMirror .selection{
-  @apply bg-cyan-600/20
+.ProseMirror ::selection {
+  background: rgba(56, 189, 248, 0.35); /* cyan-400 */
+  color: inherit;
 }
 
-/* Paragraph spacing */
-.ProseMirror p {
-  @apply my-2;
+.dark .ProseMirror ::selection {
+  background: rgba(34, 211, 238, 0.35);
+}
+
+/* Paragraph and Block spacing*/
+.ProseMirror > * + * {
+  @apply mt-3;
 }
 
 /* Headings */
 .ProseMirror h1 {
-  @apply text-3xl font-bold mt-8 mb-3 scroll-mt-16;
+  @apply text-3xl font-bold tracking-tight mt-10;
 }
+
 .ProseMirror h2 {
-  @apply text-2xl font-semibold mt-6 mb-2 scroll-mt-16;
+  @apply text-2xl font-semibold tracking-tight mt-8;
 }
+
 .ProseMirror h3 {
-  @apply text-xl font-semibold mt-4 mb-2 scroll-mt-16;
+  @apply text-xl font-semibold mt-6;
 }
+
 
 /* Lists */
 .ProseMirror ul {
-  @apply list-disc pl-6 my-3;
+  @apply list-disc pl-6;
 }
+
 .ProseMirror ol {
-  @apply list-decimal pl-6 my-3;
+  @apply list-decimal pl-6;
 }
+
+.ProseMirror li {
+  @apply my-1;
+}
+
 
 /* Blockquote */
 .ProseMirror blockquote {
-  @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 my-4;
+  @apply border-l-2 border-neutral-300 dark:border-neutral-700
+    pl-4 text-neutral-600 dark:text-neutral-400
+    not-italic;
 }
+
 
 /* Code */
 .ProseMirror code {
-  @apply bg-gray-100 px-1 py-0.5 rounded text-sm;
+  @apply bg-neutral-100 dark:bg-neutral-800
+    text-[0.85em] px-1.5 py-0.5 rounded-md
+    font-mono text-neutral-800 dark:text-neutral-200;
 }
+
 
 .editor-empty:first-child::before {
   @apply text-gray-500  pointer-events-none;
@@ -68,33 +90,77 @@
   height: 0;
 }
 
+/* Links*/
 .ProseMirror a {
-  @apply
-    relative
-    font-medium
-    text-blue-600 dark:text-blue-400
-    cursor-pointer
-    no-underline
+  @apply text-blue-600 dark:text-blue-400
+    underline underline-offset-2 decoration-blue-400/40
     transition-colors;
 }
 
-.ProseMirror a::after {
-  content: '';
-  @apply
-    absolute
-    left-0
-    right-0
-    -bottom-[1px]
-    h-px
-    bg-current
-    opacity-40;
-}
-
-
 .ProseMirror a:hover {
-  @apply text-blue-700 dark:text-blue-300;
+  @apply decoration-blue-500/80;
 }
 
-.ProseMirror a:hover::after {
-  @apply opacity-70;
+/* Notion-style blockquote */
+.ProseMirror blockquote {
+  @apply border-l-4 border-neutral-300 dark:border-neutral-700
+         pl-4 pr-2 py-1.5
+         text-neutral-700 dark:text-neutral-300
+         bg-neutral-100 dark:bg-neutral-800/80
+         rounded-md
+         my-3;
+
+  /* Optional: smooth transition for hover */
+  transition: background-color 0.2s ease;
+}
+
+
+/* Inline code inside blockquote */
+.ProseMirror blockquote code {
+  @apply bg-neutral-100 dark:bg-neutral-800
+         px-1 py-0.5 rounded text-sm font-mono;
+}
+
+/* Notion-style code block */
+.ProseMirror pre {
+  @apply bg-neutral-100 dark:bg-neutral-800
+         text-sm font-mono
+         p-3 rounded-lg
+         text-neutral-800 dark:text-neutral-200
+         overflow-x-auto
+         my-3
+         border border-neutral-200 dark:border-neutral-700
+         shadow-sm dark:shadow-neutral-900/50
+         whitespace-pre-wrap; /* wrap long lines nicely */
+  transition: background-color 0.2s ease;
+}
+
+
+/* Inline code inside code blocks or paragraphs */
+.ProseMirror code {
+  @apply bg-neutral-100 dark:bg-neutral-800
+         px-1 py-0.5 rounded text-sm font-mono
+         text-neutral-800 dark:text-neutral-200;
+}
+
+
+/* Soft, semi-transparent cyan highlight */
+.ProseMirror .selection {
+  @apply bg-cyan-400/20;
+  transition: background-color 0.2s ease;
+}
+
+/* Optional: darker background in dark mode */
+.dark .ProseMirror .selection {
+  @apply bg-cyan-500/30;
+}
+
+/* Optional: subtle rounded corners for a “fluid” feel */
+.ProseMirror .selection {
+  border-radius: 0.25rem;
+}
+
+/* Optional: add subtle animation when selection changes */
+.ProseMirror .selection {
+  transition: background-color 0.15s ease, transform 0.15s ease;
 }

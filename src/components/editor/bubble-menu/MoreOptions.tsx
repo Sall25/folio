@@ -1,6 +1,5 @@
-import { MoreVertical, SeparatorVertical } from 'lucide-react';
-import { Editor } from '@tiptap/react';
-import { useEffect, useState } from 'react';
+import { MoreVertical } from 'lucide-react';
+import { Editor, useEditorState } from '@tiptap/react';
 import Divider from './Divider';
 import {
   AlignLeft,
@@ -11,142 +10,134 @@ import {
   Superscript
 } from 'lucide-react';
 import { Root, Trigger, Content } from '@radix-ui/react-popover';
-import ToolbarButton from './ToolbarButton';
+import Button from './Button';
+import Tooltip from './Tooltip';
+
+const groupClass =
+  "flex items-center"
 
 
 export default function MoreOptions({ editor }: { editor: Editor }) {
+  const {
+    isSuperscript,
+    isSubscript,
+    canSuperscript,
+    canSubscript,
+    align,
+  } = useEditorState({
+    editor,
+    selector: ({ editor }) => {
+      const getAlign = (): 'left' | 'center' | 'right' | 'justify' => {
+        const types = ['paragraph', 'heading', 'listItem']
 
-  const [superscriptActive, setSuperscriptActive] = useState(false);
-  const [subscriptActive, setSubscriptActive] = useState(false);
-
-  const [align, setAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
-
-
-  useEffect(() => {
-    if (!editor) return;
-
-    function getActiveTextAlign(editor: Editor): 'left' | 'center' | 'right' | 'justify' {
-      const types = ['paragraph', 'heading', 'listItem'];
-
-      for (const type of types) {
-        if (editor.isActive(type)) {
-          return editor.getAttributes(type).textAlign ?? 'left';
+        for (const type of types) {
+          if (editor.isActive(type)) {
+            return editor.getAttributes(type).textAlign ?? 'left'
+          }
         }
+        return 'left'
       }
 
-      return 'left';
-    }
+      return {
+        isSuperscript: editor.isActive('superscript'),
+        isSubscript: editor.isActive('subscript'),
 
+        canSuperscript: editor.can().toggleSuperscript(),
+        canSubscript: editor.can().toggleSubscript(),
 
-    const update = () => {
-      const superscript = editor.isActive('superscript');
-      setSuperscriptActive(superscript);
+        align: getAlign(),
+      }
+    },
+  })
 
-      const subscript = editor.isActive('subscript');
-      setSubscriptActive(subscript);
-
-      const currentAlign = getActiveTextAlign(editor);
-      setAlign(currentAlign);
-    };
-
-    editor.on('update', update);
-
-    update();
-
-    return () => {
-      editor.off('update', update);
-    }
-  }, [editor]);
+  if (!editor) return null
 
   return (
     <Root>
       <Trigger>
-        <ToolbarButton>
-          <MoreVertical
-            className='w-4 h-4'
-          />
-        </ToolbarButton>
+        <Button className="h-8 w-8 p-0">
+          <MoreVertical className="w-4 h-4" />
+        </Button>
       </Trigger>
 
       <Content
         side="top"
         align="end"
         sideOffset={12}
-        className=''
-
+        className='popover-animate'
       >
         <div
-          className='flex items-center py-1.5 px-2.5 gap-3 
-        rounded-2xl bg-white shadow-sm shadow-neutral-200 text-neutral-600
-      dark:bg-neutral-900 ring-1 dark:ring-neutral-800
-       dark:text-neutral-200 dark:shadow-neutral-950
-        '
+          className="flex items-center gap-3 py-1.5 px-2.5 rounded-2xl
+            bg-white shadow-sm shadow-neutral-200 text-neutral-600
+            dark:bg-neutral-900 ring-1 ring-neutral-200 dark:ring-neutral-800
+            dark:text-neutral-200 dark:shadow-neutral-950"
         >
-          <div className='flex items-center'>
+          {/* Sup/Sub */}
+          <div className={groupClass}>
+            <Tooltip label='Superscript'>
+              <Button
+                active={isSuperscript}
+                disabled={!canSuperscript}
+                onClick={() => editor.chain().focus().toggleSuperscript().run()}
+              >
+                <Superscript className="w-4 h-5" />
+              </Button>
+            </Tooltip>
 
-            {/*Superscript */}
-            <ToolbarButton
-              onClick={() => editor.chain().focus().toggleSuperscript().run()}
-              active={superscriptActive}
-
-            >
-              <Superscript />
-            </ToolbarButton>
-
-            {/*Subscript*/}
-            <ToolbarButton
-              onClick={() => editor.chain().focus().toggleSubscript().run()}
-              active={subscriptActive}
-            >
-              <Subscript />
-            </ToolbarButton>
+            <Tooltip label='Subscript'>
+              <Button
+                active={isSubscript}
+                disabled={!canSubscript}
+                onClick={() => editor.chain().focus().toggleSubscript().run()}
+              >
+                <Subscript className="w-4 h-5" />
+              </Button>
+            </Tooltip>
           </div>
 
           <Divider />
 
-
           {/* Align */}
-          <div
-            className=' flex my-auto pb-0.5 justify-center '
-          >
-            {/* Align Left */}
-            <ToolbarButton
-              onClick={() => editor.chain().focus().setTextAlign('left').run()}
-              active={align === 'left'}
-            >
-              <AlignLeft className='w-4 h-4' />
-            </ToolbarButton>
+          <div className={groupClass}>
+            <Tooltip label='Align Left'>
+              <Button
+                active={align === 'left'}
+                onClick={() => editor.chain().focus().setTextAlign('left').run()}
 
-            {/* Align Center */}
-            <ToolbarButton
-              onClick={() => editor.chain().focus().setTextAlign('center').run()}
-              active={align === 'center'}
-            >
-              <AlignCenter className='w-4 h-4' />
-            </ToolbarButton>
+              >
+                <AlignLeft className="w-4 h-3" />
+              </Button>
+            </Tooltip>
 
-            {/* Align Right */}
-            <ToolbarButton
-              onClick={() => editor.chain().focus().setTextAlign('right').run()}
-              active={align === 'right'}
-            >
-              <AlignRight className='w-4 h-4' />
-            </ToolbarButton>
+            <Tooltip label='Align Center'>
+              <Button
+                active={align === 'center'}
+                onClick={() => editor.chain().focus().setTextAlign('center').run()}
+              >
+                <AlignCenter className="w-4 h-3" />
+              </Button>
+            </Tooltip>
 
-            {/* Align Justify */}
-            <ToolbarButton
-              onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-              active={align === 'justify'}
-            >
-              <AlignJustify className='w-4 h-4' />
-            </ToolbarButton>
+            <Tooltip label='Align Right'>
+              <Button
+                active={align === 'right'}
+                onClick={() => editor.chain().focus().setTextAlign('right').run()}
+              >
+                <AlignRight className="w-4 h-3" />
+              </Button>
+            </Tooltip>
 
-
+            <Tooltip label='Align Justify'>
+              <Button
+                active={align === 'justify'}
+                onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+              >
+                <AlignJustify className="w-4 h-3" />
+              </Button>
+            </Tooltip>
           </div>
         </div>
       </Content>
     </Root>
-
-
-  )
+  );
 }

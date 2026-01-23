@@ -64,8 +64,13 @@ export default function ColorDropdown({ editor }: { editor: Editor }) {
         <ChevronDown className="w-3.5 h-3.5" />
       </Trigger>
 
-      <Content side="bottom" align="start" sideOffset={12}>
-        <div className="flex flex-col gap-4 z-50 py-4 px-4 min-w-45 rounded-2xl bg-white shadow-md shadow-neutral-100 text-neutral-600 dark:bg-neutral-800/60 ring-1 dark:ring-neutral-800 dark:text-neutral-200 dark:shadow-neutral-950 ring-neutral-200">
+      <Content
+        side="bottom"
+        align="start"
+        sideOffset={12}
+        className="popover-animate"
+      >
+        <div className="flex flex-col gap-4 z-50 py-4 px-4 min-w-40 rounded-2xl bg-white shadow-md shadow-neutral-100 text-neutral-600 dark:bg-neutral-800/60 ring-1 dark:ring-neutral-800 dark:text-neutral-200 dark:shadow-neutral-950 ring-neutral-200">
 
           {/* --- Recent Colors --- */}
           {recentColors.length > 0 && (

@@ -1,10 +1,10 @@
-import { Editor } from "@tiptap/react";
+import { Editor, useEditorState } from "@tiptap/react";
 import MoreOptions from './MoreOptions';
-import ToolbarButton from './ToolbarButton';
 import Divider from './Divider';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Bold,
+  Code,
   Italic,
   Strikethrough,
   Underline,
@@ -14,44 +14,41 @@ import ColorDropdown from "./ColorDropdown";
 import { LinkComponent } from "./LinkComponent";
 import { BubbleMenu } from "@tiptap/react/menus";
 import clsx from 'clsx'
+import Button from "./Button";
 
 
 export default function BubbleMenuComponent({ editor }: { editor: Editor }) {
-  const [boldActive, setBoldActive] = useState(false);
-  const [italicActive, setItalicActive] = useState(false);
-  const [strikeActive, setStrikeActive] = useState(false);
-  const [underlineActive, setUnderlineActive] = useState(false);
+
 
   const [menuVisible, setMenuVisible] = useState(false);
 
+  const {
+    canBold,
+    canItalic,
+    canStrike,
+    canUnderline,
+    canCode,
+    isBold,
+    isItalic,
+    isStrike,
+    isUnderline,
+    isCode,
+  } = useEditorState({
+    editor,
+    selector: ({ editor }) => ({
+      canBold: editor.can().toggleBold(),
+      canItalic: editor.can().toggleItalic(),
+      canStrike: editor.can().toggleStrike(),
+      canUnderline: editor.can().toggleUnderline(),
+      canCode: editor.can().toggleCode(),
 
-  useEffect(() => {
-    if (!editor) return;
-
-    const update = () => {
-      const bold = editor.isActive('bold');
-      setBoldActive(bold);
-
-      const italic = editor.isActive('italic');
-      setItalicActive(italic);
-
-      const strike = editor.isActive('strike');
-      setStrikeActive(strike);
-
-      const underline = editor.isActive('underline');
-      setUnderlineActive(underline);
-
-
-    };
-
-    editor.on('update', update);
-
-    update();
-
-    return () => {
-      editor.off('update', update);
-    }
-  }, [editor]);
+      isBold: editor.isActive('bold'),
+      isItalic: editor.isActive('italic'),
+      isStrike: editor.isActive('strike'),
+      isUnderline: editor.isActive('underline'),
+      isCode: editor.isActive('code'),
+    }),
+  })
 
 
   return (
@@ -84,43 +81,48 @@ export default function BubbleMenuComponent({ editor }: { editor: Editor }) {
 
 
         {/* Text Formatting */}
-        <div className='flex items-center gap-2.5 px-2.5'>
-          {/* Bold */}
-          <ToolbarButton
-            editor={editor}
-            toggleMark={(editor) => editor?.chain().focus().toggleBold().run()}
-            active={boldActive}
+        <div className="flex items-center gap-1">
+          <Button
+            active={isBold}
+            disabled={!canBold}
+            onClick={() => editor.chain().focus().toggleBold().run()}
           >
-            <Bold />
-          </ToolbarButton>
+            <Bold className="w-4 h-5 font-bold" />
+          </Button>
 
-          {/* Italic */}
-          <ToolbarButton
-            editor={editor}
-            toggleMark={(editor) => editor?.chain().focus().toggleItalic().run()}
-            active={italicActive}
+          <Button
+            active={isItalic}
+            disabled={!canItalic}
+            onClick={() => editor.chain().focus().toggleItalic().run()}
           >
-            <Italic />
-          </ToolbarButton>
+            <Italic className="w-4 h-5" />
+          </Button>
 
-          {/* Strike */}
-          <ToolbarButton
-            editor={editor}
-            toggleMark={(editor) => editor?.chain().focus().toggleStrike().run()}
-            active={strikeActive}
+          <Button
+            active={isStrike}
+            disabled={!canStrike}
+            onClick={() => editor.chain().focus().toggleStrike().run()}
           >
-            <Strikethrough />
-          </ToolbarButton>
+            <Strikethrough className="w-4 h-5" />
+          </Button>
 
-          {/* Underline */}
-          <ToolbarButton
-            editor={editor}
-            toggleMark={(editor) => editor?.chain().focus().toggleUnderline().run()}
-            active={underlineActive}
+          <Button
+            active={isUnderline}
+            disabled={!canUnderline}
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
           >
-            <Underline />
-          </ToolbarButton>
+            <Underline className="w-4 h-5" />
+          </Button>
+
+          <Button
+            active={isCode}
+            disabled={!canCode}
+            onClick={() => editor.chain().focus().toggleCode().run()}
+          >
+            <Code className="w-4 h-5" />
+          </Button>
         </div>
+
 
         <Divider />
 
