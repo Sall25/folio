@@ -16,7 +16,7 @@ import { BubbleMenu } from "@tiptap/react/menus";
 import clsx from 'clsx'
 
 
-export default function BubbleToolbar({ editor }: { editor: Editor }) {
+export default function BubbleMenuComponent({ editor }: { editor: Editor }) {
   const [boldActive, setBoldActive] = useState(false);
   const [italicActive, setItalicActive] = useState(false);
   const [strikeActive, setStrikeActive] = useState(false);
@@ -27,17 +27,6 @@ export default function BubbleToolbar({ editor }: { editor: Editor }) {
 
   useEffect(() => {
     if (!editor) return;
-
-    //   const node = $from.parent;
-
-    //   // Show BubbleMenu only for these block types
-    //   const allowedBlocks = ['paragraph', 'heading', 'listItem'];
-    //   if (allowedBlocks.includes(node.type.name)) {
-    //     setMenuVisible(true);
-    //   } else {
-    //     setMenuVisible(false);
-    //   }
-    // };
 
     const update = () => {
       const bold = editor.isActive('bold');
@@ -56,13 +45,11 @@ export default function BubbleToolbar({ editor }: { editor: Editor }) {
     };
 
     editor.on('update', update);
-    // editor.on('selectionUpdate', updateMenuVisibility);
 
     update();
 
     return () => {
       editor.off('update', update);
-      // editor.off('selectionUpdate', updateMenuVisibility);
     }
   }, [editor]);
 
@@ -84,7 +71,6 @@ export default function BubbleToolbar({ editor }: { editor: Editor }) {
 
       }}
     >
-      {/*absolute -left-full -top-12 -translate-x-1/6 */}
       <div
         className={clsx(
           'flex gap-2 z-50 bg-white ring-1 dark:ring-neutral-800 dark:bg-neutral-900 shadow rounded-2xl px-4 py-0.5 h-10 items-center transition-all duration-150 ease-out',
@@ -153,17 +139,5 @@ export default function BubbleToolbar({ editor }: { editor: Editor }) {
 
       </div>
     </BubbleMenu>
-
-    // // </div>
-    // <div className="z-50">
-    //   <Root open={open}>
-    //     <Content className="flex 
-    //  gap-2 z-50 bg-white shadow shadow-neutral-200 
-    //   dark:bg-neutral-900 border dark:border-neutral-800 dark:shadow-neutral-900
-    //  rounded-full px-2 py-0.5 items-center">
-
-    //     </Content>
-    //   </Root>
-    // </div>
   );
 }

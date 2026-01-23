@@ -8,7 +8,7 @@ import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
 import Link from '@tiptap/extension-link'
 import Toolbar from './Toolbar'
-import BubbleToolbar from './bubble/BubbleToolbar'
+import BubbleMenuComponent from './bubble-menu/BubbleMenuComponent'
 import { TocNavigationPanel } from './toc/types'
 import HeadingWithId from './toc/extensions'
 
@@ -66,9 +66,10 @@ function EditorComponent() {
       <div className="EditorWrapper mx-auto">
         <EditorContent editor={editor} />
 
+        <BubbleMenuComponent editor={editor} />
 
       </div>
-      <BubbleToolbar editor={editor} />
+
 
 
 
