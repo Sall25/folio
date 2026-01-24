@@ -11,6 +11,7 @@ import Toolbar from './Toolbar'
 import BubbleMenuComponent from './bubble-menu/BubbleMenuComponent'
 import { TocNavigationPanel } from './toc/types'
 import HeadingWithId from './toc/extensions'
+import { MentionExtension } from './floating-menu/mention/extensions/MentionExtension'
 
 function EditorComponent() {
   const editor = useEditor({
@@ -42,7 +43,8 @@ function EditorComponent() {
       HeadingWithId,
       Selection.configure({
         className: 'selection'
-      })
+      }),
+      MentionExtension
     ],
 
     editorProps: {
