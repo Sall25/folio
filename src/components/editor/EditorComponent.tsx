@@ -11,11 +11,13 @@ import Toolbar from './Toolbar'
 import BubbleMenuComponent from './bubble-menu/BubbleMenuComponent'
 import { TocNavigationPanel } from './toc/types'
 import HeadingWithId from './toc/extensions'
-import { MentionExtension } from './floating-menu/mention/extensions/MentionExtension'
+import { MentionExtension } from './floating-menu/mention'
+import { SlashCommand } from './floating-menu/command-menu'
 
 function EditorComponent() {
   const editor = useEditor({
     extensions: [
+
       StarterKit.configure({
         heading: false
       }),
@@ -44,7 +46,10 @@ function EditorComponent() {
       Selection.configure({
         className: 'selection'
       }),
-      MentionExtension
+
+      MentionExtension,
+      SlashCommand,
+
     ],
 
     editorProps: {
