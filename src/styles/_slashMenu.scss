@@ -1,9 +1,0 @@
-@use './mentions' as mentions;
-
-@mixin slash-menu {
-  @include mentions.mention-dropdown
-}
-
-@mixin slash-item {
- @include mentions.mention-item
-}

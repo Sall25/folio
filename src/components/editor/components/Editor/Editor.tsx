@@ -7,13 +7,11 @@ import { FontFamily } from '@tiptap/extension-font-family'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
 import Link from '@tiptap/extension-link'
-import Toolbar from '../../Toolbar'
-import BubbleMenuComponent from '../BubbleMenu/BubbleMenu'
-import { TocNavigationPanel } from '../../toc/types'
 import HeadingWithId from '../../toc/extensions'
-import { EmojiExtension, SlashCommand, MentionExtension } from '../FloatingMenu'
+import { SlashCommand, MentionExtension } from '../FloatingMenu'
 
-import './Editor.scss'
+import BubbleMenu from '../BubbleMenu/BubbleMenu'
+import Toolbar from '../../Toolbar'
 
 function Editor() {
   const editor = useEditor({
@@ -24,7 +22,6 @@ function Editor() {
       }),
       Placeholder.configure({
         placeholder: 'Write Something here...',
-        emptyEditorClass: 'editor-empty',
       }),
 
       TextAlign.configure({
@@ -50,7 +47,7 @@ function Editor() {
 
       MentionExtension,
       SlashCommand,
-      EmojiExtension
+      // EmojiExtension
 
     ],
 
@@ -59,7 +56,7 @@ function Editor() {
         spellcheck: 'false',   // disable browser spell check
         autocorrect: 'off',    // optional: disables iOS autocorrect
         autocomplete: 'off',   // optional: disables autocomplete,
-        class: 'titap'
+        class: 'tiptap'
       },
     },
   });
@@ -67,26 +64,14 @@ function Editor() {
   if (!editor) return null;
 
   return (
-    <main className="rounded-2xl
-     flex flex-col 
-    ">
+    <main>
       <Toolbar />
-      <TocNavigationPanel editor={editor} />
-
-      <div className="EditorWrapper mx-auto">
+      <div className="editor-container">
         <EditorContent editor={editor} />
 
-        <BubbleMenuComponent editor={editor} />
-
+        <BubbleMenu editor={editor} />
       </div>
-
-
-
-
-
     </main>
-
-
   );
 }
 
