@@ -1,0 +1,24 @@
+@mixin bubble-menu__text-button {
+  padding: 0 8px;
+  height: 32px;
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #37352f;
+
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--bubble-text-button-hover);
+  }
+
+  &.is-active {
+    background: var(--bubble-text-button-active-bg);
+    color: var(--bubble-text-button-active-text);
+  }
+}

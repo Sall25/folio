@@ -1,0 +1,5 @@
+@use '../../../../styles/bubbleMenu_button' as button;
+
+.bubble-menu-button{
+  @include button.bubble-menu__button;
+}

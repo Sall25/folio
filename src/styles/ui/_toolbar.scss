@@ -1,0 +1,80 @@
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 30px;
+  padding: 5px 20px;
+  gap: 4px;
+  border-bottom: 1px solid var(--gray-3);
+  border-radius: 8px;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background: var(--gray-1);
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+
+}
+
+.toolbar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--gray-2);
+  }
+
+  &:active,
+  &.active {
+    background: var(--purple-light);
+    color: var(--purple-7);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    transition: transform 0.2s ease, color 0.15s ease;
+    margin-right: 10px;
+  }
+}
+
+/* Divider between groups of buttons */
+.toolbar-divider {
+  width: 1px;
+  background: var(--gray-3);
+  margin: 0 4px;
+}
+
+@include breakpoint(sm) {
+  .toolbar {
+    gap: 2px;
+    padding: 4px 6px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+  }
+
+  .toolbar-button {
+    padding: 3px 4px;
+
+    svg {
+      width: 0.875rem;
+      height: 0.875rem;
+    }
+
+  }
+
+  .toolbar-divider {
+    margin: 0 2px;
+  }
+}

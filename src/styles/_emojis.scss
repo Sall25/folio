@@ -1,0 +1,9 @@
+@use './mentions' as mentions;
+
+@mixin emoji-dropdown{
+  @include mentions.mention-dropdown
+}
+
+@mixin emoji-item{
+  @include mentions.mention-item
+}

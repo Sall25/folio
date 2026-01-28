@@ -1,0 +1,32 @@
+@use '../../../../styles/dropdown' as dropdown;
+@use '../../../../styles/_bubbleMenu_button.scss' as bubbleButton;
+
+.trigger-button{
+  @include bubbleButton.bubble-menu__button;
+  min-width: 85px;
+  padding: 2px;
+}
+
+/* Entire scrollbar */
+::-webkit-scrollbar {
+   width: 8px;
+  height: 8px;
+}
+
+/* Track (background) */
+::-webkit-scrollbar-track {
+  background: transparent; // Notion-style invisible track
+}
+
+/* Thumb (the draggable part) */
+::-webkit-scrollbar-thumb {
+  background-color: rgba(120, 120, 120, 0.35);
+  border-radius: 8px;
+  border: 2px solid transparent; // creates padding effect
+  background-clip: content-box;
+}
+
+/* Thumb on hover */
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(120, 120, 120, 0.55);
+}

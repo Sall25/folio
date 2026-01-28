@@ -1,0 +1,38 @@
+@mixin dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 6px 8px;
+  border-radius: 8px;
+
+  font-size: 14px;
+  color: #37352f;
+
+  cursor: pointer;
+  user-select: none;
+
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--dropdown-item-hover);
+  }
+
+  &.is-selected {
+    background: rgba(46, 170, 220, 0.15);
+    color: #0b6e99;
+  }
+
+  .dark & {
+    color: #e6e6e6;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    &.is-selected {
+      background: rgba(46, 170, 220, 0.25);
+      color: #6ecbff;
+    }
+  }
+}

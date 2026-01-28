@@ -1,0 +1,32 @@
+@use '../../../../styles/bubbleMenu_button' as menuButton;
+@use '../../../../styles/dropdown' as dropdown;
+@use '../../../../styles/_dropdown_item.scss' as dropdownItem;
+@use '../../../../styles/dropdown_icon' as dropdownIcon;
+@use '../../../../styles/dropdown_content' as dropdownContent;
+
+.trigger{
+  @include menuButton.bubble-menu__button
+}
+
+.dropdown{
+  @include dropdown.dropdown
+}
+
+.dropdown-item{
+  @include dropdownItem.dropdown__item
+}
+
+.dropdown-icon{
+  @include dropdownIcon.dropdown__icon
+}
+
+.dropdown-content{
+  @include dropdownContent.dropdown__content
+}
+.dropdown-title{
+  @include dropdownContent.dropdown__title
+}
+
+.dropdown-subtitle{
+  @include dropdownContent.dropdown__subtitle;
+}

@@ -1,0 +1,44 @@
+:root{
+  /* Default text */
+  --editor-text-default: var(--text-primary);
+
+  /* Gray */
+  --editor-gray: #9b9a97;
+
+  /* Brown */
+  --editor-brown: #64473a;
+
+  /* Orange */
+  --editor-orange: #d9730d;
+
+  /* Yellow */
+  --editor-yellow: #cb912f;
+
+  /* Green */
+  --editor-green: #448361;
+
+  /* Blue */
+  --editor-blue: #337ea9;
+
+  /* Purple */
+  --editor-purple: #9065b0;
+
+  /* Pink */
+  --editor-pink: #c14c8a;
+
+  /* Red */
+  --editor-red: #d44c47;
+}
+
+/*  Dark mode tuned versions */
+[data-theme='dark'] {
+  --editor-gray: #b8b6b1;
+  --editor-brown: #937264;
+  --editor-orange: #ffa344;
+  --editor-yellow: #ffd85e;
+  --editor-green: #4dab7c;
+  --editor-blue: #5ba8d6;
+  --editor-purple: #b48ead;
+  --editor-pink: #e255a1;
+  --editor-red: #ff6b6b;
+}

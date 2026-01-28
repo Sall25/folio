@@ -1,0 +1,57 @@
+@import './abstracts/breakpoints';
+@import './abstracts/themes';
+@import './abstracts/editor-colors';
+@import './abstracts/editor-highlights';
+@import './ui/toolbar';
+@import './ui/bubble-menu';
+@import './ui/dropdown-menu';
+@import './ui/slash-menu';
+@import './ui/icon';
+@import './ui/color-palette';
+@import './ui/recent-colors';
+@import './ui/highlight-palette';
+@import './ui/separator';
+@import './editor/editor';
+
+@import './app';
+
+
+*{
+  box-sizing: border-box;
+}
+
+* {
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+
+html, body{
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-app); 
+  color: var(--text-primary);   
+}
+
+/* Entire scrollbar */
+::-webkit-scrollbar {
+   width: 8px;
+  height: 8px;
+}
+
+
+/* Scrollbar styling */
+body::-webkit-scrollbar {
+  width: 10px;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: var(--gray-4);
+  border-radius: 5px;
+}
+
+body::-webkit-scrollbar-track {
+  background: var(--gray-1);
+}

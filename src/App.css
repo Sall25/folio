@@ -98,7 +98,7 @@
 .ProseMirror a:hover::after {
   @apply opacity-70;
 }
-
+/* 
 
 .mention-chip {
   background: rgba(35, 131, 226, 0.14);
@@ -144,4 +144,4 @@
 .mention-item.is-selected,
 .mention-item:hover{
   background-color: rgba(37, 35, 35, 0.471);
-}
+} */

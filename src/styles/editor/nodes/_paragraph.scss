@@ -1,0 +1,71 @@
+.tiptap {
+  p {
+    margin: 0.3rem 0; // vertical rhythm
+    line-height: 1.4;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
+  }
+
+   p::selection {
+    background: var(--selection-bg);
+    color: var(--selection-text);
+  }
+
+  p *::selection {
+    background: var(--selection-bg);
+    color: var(--selection-text);
+  }
+
+ p *::selection {
+  border-radius: 8px;
+}
+
+
+  /* First paragraph in document spacing */
+  > p:first-child {
+    margin-top: 0;
+  }
+
+  /* Empty paragraph (important for editor feel) */
+  p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: var(--text-muted);
+    pointer-events: none;
+    height: 0;
+  }
+
+  /* Paragraph after headings = tighter */
+  h1 + p,
+  h2 + p,
+  h3 + p,
+  h4 + p {
+    margin-top: 0.4rem;
+  }
+
+  /* Paragraph before headings = more breathing room */
+  p + h1,
+  p + h2,
+  p + h3,
+  p + h4 {
+    margin-top: 2rem;
+  }
+
+  /* Paragraph inside blockquote */
+  blockquote p {
+    color: var(--text-secondary);
+  }
+
+  /* Paragraph inside list */
+  li > p {
+    margin: 0.25rem 0;
+  }
+
+  /* Paragraph inside code block wrapper safety */
+  pre + p {
+    margin-top: 1.25rem;
+  }
+
+  
+}

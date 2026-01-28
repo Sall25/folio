@@ -1,0 +1,17 @@
+@mixin bubble-menu {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 6px;
+  border-radius: 10px;
+
+  background: var(--bg);
+  border: var(--bubble-menu-border);
+  box-shadow: var(--bubble-menu-shadow);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
