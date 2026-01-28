@@ -1,0 +1,46 @@
+.color-palette {
+  padding: 0.5rem;
+  min-width: 180px;
+}
+
+.color-palette__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.8rem;
+  padding: 0.25rem 0;
+}
+
+.color-palette__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+
+.color-swatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s ease, box-shadow 0.15s ease;
+  background: var(--gray-1); // subtle tile bg
+  border: 1px solid var(--gray-2);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  }
+}
+
+/* Active selection ring */
+.color-swatch--active {
+  box-shadow:
+    0 0 0 2px var(--ring-color),
+    0 0 0 4px var(--ring-offset);
+}

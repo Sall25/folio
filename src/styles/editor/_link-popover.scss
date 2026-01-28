@@ -1,0 +1,93 @@
+/* ===================================
+   Link Popover - Notion-style editor
+   =================================== */
+
+.link-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  width: 260px;
+
+  background: var(--bg-white);
+  border: 1px solid var(--gray-3);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+/* Input field */
+.link-popover input {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--gray-3);
+  background: var(--gray-1);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+
+  &::placeholder {
+    color: var(--gray-6);
+  }
+
+  &:focus {
+    border-color: var(--purple-6);
+    box-shadow: 0 0 0 2px var(--purple-light);
+    background: var(--bg-white);
+  }
+}
+
+
+/* Buttons row */
+.link-popover-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+/* Base button */
+.link-popover button {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+/* Primary button (Apply) */
+.link-popover .btn-primary {
+  background: var(--purple-6);
+  color: white;
+
+  &:hover {
+    background: var(--purple-7);
+  }
+}
+
+/* Secondary button (Remove / Cancel) */
+.link-popover .btn-secondary {
+  background: var(--gray-2);
+  color: var(--text-primary);
+
+  &:hover {
+    background: var(--gray-3);
+  }
+}
+
+/* Disabled state */
+.link-popover button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@include breakpoint(sm) {
+  .link-popover {
+    width: 220px;
+    padding: 8px;
+  }
+}

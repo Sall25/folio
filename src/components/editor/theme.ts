@@ -10,7 +10,7 @@ export function getTheme(): Theme {
 }
 
 export function applyTheme(theme: Theme) {
-  const root = document.documentElement
-  root.classList.toggle('dark', theme === 'dark')
+  const root = document.documentElement;
+  root.setAttribute('data-theme', theme);
   localStorage.setItem('theme', theme)
 }

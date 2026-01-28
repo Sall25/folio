@@ -1,0 +1,37 @@
+.highlight-palette {
+  padding: 0.5rem;
+  min-width: 180px;
+}
+
+.highlight-palette__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.highlight-palette__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.highlight-swatch {
+  height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid var(--gray-3);
+  transition: transform 0.1s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  }
+}
+
+.highlight-swatch--active {
+  box-shadow:
+    0 0 0 2px var(--ring-color),
+    0 0 0 4px var(--ring-offset);
+}

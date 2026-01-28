@@ -1,12 +1,10 @@
-import './App.css'
-import EditorComponent from './components/editor/EditorComponent'
+import Editor from './components/editor/components/Editor/Editor'
 
 function App() {
 
-
   return (
-    <div className="min-h-screen relative">
-      <EditorComponent />
+    <div>
+      <Editor />
 
     </div>
 

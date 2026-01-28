@@ -1,0 +1,13 @@
+.ui-separator {
+  height: 1px;
+  margin: 0.6rem 0;
+  background: var(--gray-3);
+  border: none;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+/* Slightly softer in dark mode */
+[data-theme='dark'] .ui-separator {
+  opacity: 0.4;
+}

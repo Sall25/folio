@@ -1,8 +1,10 @@
 import * as Theme from "./theme";
-import EditorComponent from "./EditorComponent";
+import EditorComponent from "./components/Editor/Editor";
 
 export * from './theme';
-export * from './EditorComponent';
+export * from './ThemeToggle';
+export * from './Toolbar';
+export * from './components/Editor/Editor';
 
 export default {
   Theme,

@@ -167,3 +167,50 @@
 .ProseMirror .selection {
   transition: background-color 0.15s ease, transform 0.15s ease;
 }
+/* 
+
+.mention-chip {
+  background: rgba(35, 131, 226, 0.14);
+  color: #1f6feb;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.dark .mention-chip{
+   background: rgba(1, 12, 22, 0.14);
+  color: #1f6feb;
+}
+
+.mention-dropdown {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  padding: 4px;
+  min-width: 180px;
+}
+
+.dark .mention-dropdown{
+  background-color: rgb(18, 17, 17);
+}
+
+.mention-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.mention-item.is-selected,
+.mention-item:hover {
+  background: rgba(0,0,0,0.06);
+}
+
+.dark 
+.mention-item.is-selected,
+.mention-item:hover{
+  background-color: rgba(37, 35, 35, 0.471);
+} */

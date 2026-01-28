@@ -1,0 +1,17 @@
+@import './blockquote';
+@import './codeblock';
+@import './emoji';
+@import './handle';
+@import './headings';
+@import './horizontal_rule';
+@import './image';
+@import './list';
+@import './mention';
+@import './paragraph';
+
+.tiptap{
+  &:first-child{
+    margin-top: 0px;
+  }
+  outline: none;
+}

@@ -1,0 +1,64 @@
+/* ===================================
+   ICON SYSTEM
+   Used across toolbar, menus, buttons
+   =================================== */
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0; // prevents vertical misalignment
+  flex-shrink: 0;
+  color: currentColor; // inherits text color
+}
+
+/* SVG inside icon wrapper */
+.icon svg {
+  width: 2em;
+  height: 2em;
+}
+
+/* Size variations */
+.icon-xs { font-size: 12px; }
+.icon-sm { font-size: 14px; }
+.icon-md { font-size: 16px; }
+.icon-lg { font-size: 20px; }
+.icon-xl { font-size: 24px; }
+
+/* Subtle default tone (like Notion) */
+.icon-muted {
+  color: var(--gray-6);
+}
+
+/* Interactive icons (toolbar buttons etc.) */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  padding: 6px;
+  color: var(--text-secondary);
+  transition: background 0.15s ease, color 0.15s ease;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--gray-2);
+    color: var(--text-primary);
+  }
+
+  &.is-active {
+    background: var(--purple-light);
+    color: var(--purple-6);
+  }
+}
+
+/* Icons inside dropdown items */
+.dropdown-item .icon {
+  margin-right: 6px;
+  color: var(--text-secondary);
+}
+
+/* Icons inside toolbar */
+.toolbar .icon {
+  font-size: 18px;
+}

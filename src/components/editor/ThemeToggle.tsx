@@ -1,7 +1,7 @@
 import { Root } from '@radix-ui/react-toggle';
 import { useState } from 'react'
 import { applyTheme, type Theme } from './theme'
-import { SunIcon, MoonIcon } from '@radix-ui/react-icons';
+import { Moon, Sun } from 'lucide-react';
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>('light')
@@ -24,21 +24,12 @@ export function ThemeToggle() {
     <Root
       onClick={onToggle}
       id='toggle-root'
-      className="
-      inline-flex items-center justify-center
-     
-      rounded-full
-      bg-background
-      text-foreground
-     
-      transition-all duration-200
-      hover:bg-muted
-  "
+      className="toolbar-button"
     >
       {theme === 'light' ? (
-        <SunIcon className="w-4 h-5 transition-transform duration-200 rotate-0 scale-100" />
+        <Sun className="icon" />
       ) : (
-        <MoonIcon className="w-4 h-5 transition-transform duration-200 rotate-0 scale-100" />
+        <Moon className='icon' />
       )}
     </Root>
 

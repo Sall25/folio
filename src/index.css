@@ -37,3 +37,31 @@
 *{
   box-sizing: border-box;
 }
+
+/* Entire scrollbar */
+::-webkit-scrollbar {
+   width: 8px;
+  height: 8px;
+}
+
+/* Track (background) */
+::-webkit-scrollbar-track {
+  background: transparent; 
+}
+
+/* Thumb (the draggable part) */
+::-webkit-scrollbar-thumb {
+  background-color: rgba(120, 120, 120, 0.35);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* Thumb on hover */
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(120, 120, 120, 0.55);
+}
+
+[data-radix-popper-content-wrapper] {
+  border: 1px solid var(--gray-6);
+}

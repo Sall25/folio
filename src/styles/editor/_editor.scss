@@ -1,0 +1,18 @@
+@import './nodes/nodes';
+@import './placeholders';
+@import './link-popover';
+
+.editor{
+  width: 100%;
+  padding: 40px 16px;
+  background-color: var(--bg-editor);
+
+  @include breakpoint(md){
+    padding: 60px 32px;
+  }
+
+  @include breakpoint(lg){
+    max-width: 720px;
+    margin: 0 auto;
+  }
+}
