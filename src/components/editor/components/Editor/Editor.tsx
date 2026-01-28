@@ -1,6 +1,7 @@
 import { EditorContent, useEditor } from '@tiptap/react'
 import { Placeholder, Selection } from '@tiptap/extensions'
 import StarterKit from '@tiptap/starter-kit'
+import { TableKit } from '@tiptap/extension-table'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { BackgroundColor, Color, FontSize, TextStyle } from '@tiptap/extension-text-style'
 import { FontFamily } from '@tiptap/extension-font-family'
@@ -52,7 +53,9 @@ function Editor() {
       MentionExtension,
       SlashCommand,
       // EmojiExtension
-
+      TableKit.configure({
+        table: { resizable: true }
+      })
     ],
 
     editorProps: {
@@ -63,6 +66,23 @@ function Editor() {
         class: 'tiptap'
       },
     },
+
+    content: `
+        <table>
+          <tbody>
+            <tr>
+              <th>Name</th>
+              <th colspan="3">Description</th>
+            </tr>
+            <tr>
+              <td>Cyndi Lauper</td>
+              <td>Singer</td>
+              <td>Songwriter</td>
+              <td>Actress</td>
+            </tr>
+          </tbody>
+        </table>
+    `
   });
 
   if (!editor) return null;
