@@ -46,7 +46,7 @@ export default function SlashList(props: Props) {
                 onClickItem?.(item)
               }}
             >
-              <span>{Icon && <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-cyan-600' : ''}`} />}</span>
+              <span className='icon'>{Icon && <Icon className='icon' />}</span>
               <span>{item.title}</span>
             </div>
           )

@@ -1,37 +1,26 @@
 import { Root } from '@radix-ui/react-toggle';
-import { useState } from 'react'
-import { applyTheme, type Theme } from './theme'
+import { useState } from 'react';
+import { applyTheme, type Theme } from './theme';
 import { Moon, Sun } from 'lucide-react';
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>('light')
+  const [theme, setTheme] = useState<Theme>('light');
 
+  const isDark = theme === 'dark';
 
-  function onToggle() {
-    const toggle = document.getElementById('toggle-root') as HTMLElement;
-    const state = toggle.dataset.state;
-    if (state === 'on') {
-      setTheme('dark');
-      applyTheme('dark');
-    } else {
-      setTheme('light');
-      applyTheme('light');
-    }
-
+  function handleToggle() {
+    const nextTheme = isDark ? 'light' : 'dark';
+    setTheme(nextTheme);
+    applyTheme(nextTheme);
   }
 
   return (
     <Root
-      onClick={onToggle}
-      id='toggle-root'
+      pressed={isDark} // controlled state
+      onPressedChange={handleToggle} // Radix fires after state changes
       className="toolbar-button"
     >
-      {theme === 'light' ? (
-        <Sun className="icon" />
-      ) : (
-        <Moon className='icon' />
-      )}
+      {isDark ? <Moon className="icon" /> : <Sun className="icon" />}
     </Root>
-
   );
 }

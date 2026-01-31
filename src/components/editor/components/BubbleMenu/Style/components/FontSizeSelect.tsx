@@ -32,9 +32,12 @@ export function FontSizeSelect() {
   return (
     <Root>
       <Trigger className="outline-0" asChild>
-        <div className="dropdown-item flex justify-between">
-          <div className="flex gap-1 items-center">
-            <TbTextSize className="icon" />
+        <div className="dropdown-item-select">
+          <div className="dropdown-item">
+            <TbTextSize
+              className="icon"
+              size={20}
+            />
             <span>Size</span>
           </div>
           <ChevronRight className="icon" />

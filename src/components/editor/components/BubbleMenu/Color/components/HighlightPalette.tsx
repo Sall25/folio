@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Circle } from "lucide-react"
 import { useColorContext } from "../context/colorContext"
 import { HIGHLIGHT_COLORS } from "../highlight_colors"
 import { RecentColorsRow } from "./RecentColorsRow"
@@ -23,20 +24,33 @@ export function HighlightPalette() {
 
       <div className="highlight-palette__grid">
         {HIGHLIGHT_COLORS.map(c => (
-          <span
-            key={c.name}
-            className={`highlight-swatch ${currentHighlight === c.css ? 'highlight-swatch--active' : ''
-              }`}
+          // <span
+          //   key={c.name}
+          //   className={`highlight-swatch ${currentHighlight === c.css ? 'highlight-swatch--active' : ''
+          //     }`}
+          //   style={{
+          //     background: c.css,
+          //     ['--ring-color' as any]: c.css
+          //   }}
+          //   onMouseDown={(e) => {
+          //     e.preventDefault()
+          //     editor.chain().focus().toggleTextStyle({ backgroundColor: c.css }).run()
+          //     addRecentColor({ css: c.css }, 'highlight')
+          //   }}
+          // />
+          <Circle
+            key={c.css}
+            size={25}
+            fill={c.css}
+            stroke={c.css}
             style={{
-              background: c.css,
+
               ['--ring-color' as any]: c.css
-            }}
-            onMouseDown={(e) => {
+            }} onMouseDown={(e) => {
               e.preventDefault()
               editor.chain().focus().toggleTextStyle({ backgroundColor: c.css }).run()
               addRecentColor({ css: c.css }, 'highlight')
-            }}
-          />
+            }} />
         ))}
       </div>
     </div>

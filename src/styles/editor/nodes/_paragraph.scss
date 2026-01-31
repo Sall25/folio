@@ -1,39 +1,35 @@
 .tiptap {
   p {
-    margin: 0.3rem 0; // vertical rhythm
-    line-height: 1.4;
+    margin: 0.5rem 0; // vertical rhythm
+    line-height: 1.6; // slightly more airy like Notion
     color: var(--text-primary);
-    font-size: 0.95rem;
+    font-size: 0.96rem;
     letter-spacing: 0.01em;
+    word-break: break-word; // avoid overflow
+    font-weight: 400;
   }
 
-   p::selection {
-    background: var(--selection-bg);
-    color: var(--selection-text);
-  }
-
+  /* Selection styling */
+  p::selection,
   p *::selection {
     background: var(--selection-bg);
     color: var(--selection-text);
+    border-radius: 6px;
   }
 
- p *::selection {
-  border-radius: 8px;
-}
-
-
-  /* First paragraph in document spacing */
+  /* First paragraph = no top margin */
   > p:first-child {
     margin-top: 0;
   }
 
-  /* Empty paragraph (important for editor feel) */
+  /* Empty paragraph placeholder */
   p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
-    float: left;
     color: var(--text-muted);
     pointer-events: none;
     height: 0;
+    display: inline-block;
+     font-weight: 400; // lighter placeholder
   }
 
   /* Paragraph after headings = tighter */
@@ -55,17 +51,22 @@
   /* Paragraph inside blockquote */
   blockquote p {
     color: var(--text-secondary);
+    font-style: italic;
+    margin: 0.25rem 0;
   }
 
-  /* Paragraph inside list */
+  /* Paragraph inside list items */
   li > p {
     margin: 0.25rem 0;
   }
 
-  /* Paragraph inside code block wrapper safety */
+  /* Paragraph after pre/code block */
   pre + p {
     margin-top: 1.25rem;
   }
 
-  
+  /* Optional: smooth transition when content changes */
+  p {
+    transition: all 0.1s ease-in-out;
+  }
 }

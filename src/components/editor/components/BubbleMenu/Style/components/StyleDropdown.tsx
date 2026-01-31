@@ -69,13 +69,14 @@ export function StyleDropdown({ editor }: { editor: Editor }) {
             onMouseDown={(e) => e.preventDefault()}
             className="bubble-trigger">
             <span className="flex">{active}</span>
-            <ChevronDown className="icon" />
+            <ChevronDown className="icon" size={20} />
           </button>
         </Trigger>
         <Content
           side="bottom"
           align="start"
-          sideOffset={6}
+          sideOffset={8}
+          alignOffset={-25}
           className="dropdown-menu active"
         >
           <label className="dropdown-item pl-2.5 mt-2.5">Turn into</label>

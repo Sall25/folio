@@ -42,6 +42,8 @@ export function ColorPalette() {
           >
             A
           </span>
+
+
         ))}
       </div>
     </div>

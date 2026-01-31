@@ -22,7 +22,7 @@ export function Text() {
       }
       className={`dropdown-item ${isTextActive}`}
     >
-      <Type className="w-4 h-4" />
+      <Type size={20} />
       <span>Text</span>
     </span>
   );

@@ -1,14 +1,15 @@
 .bubble-menu {
   display: flex;
   gap: 4px;
-  padding: 5px 10px;
-  background: var(--gray-1);
-  border: 1px solid var(--gray-3);
-  border-radius: 15px;
+  min-height: 45px;
+  padding: 8px 30px;
+  background: var(--cyan-3);
+  border: 1px solid var(--cyan-4);
+  border-radius: 30px;
   align-items: center;
   font-size: 0.875rem;
   color: var(--text-primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 0 5px var(--cyan-2);
   transition: 
     background 0.25s ease, 
     color 0.25s ease, 
@@ -47,7 +48,7 @@
     
 
     &:hover {
-      background: var(--gray-2);
+      background: var(--cyan-4);
     }
 
     &.active {
@@ -82,7 +83,7 @@
   .bubble-divider {
     width: 1px;
     height: 25px;
-    background: var(--gray-3);
+    background: var(--cyan-4);
     margin: 0 4px;
 
   }

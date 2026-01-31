@@ -1,0 +1,16 @@
+$colors: (
+  "gray": #6b6b6b,
+  "purple": #8b5cf6,
+  "blue": #3b82f6,
+  "green": #22c55e,
+  "red": #ef4444,
+  "yellow": #eab308,
+);
+
+// $colors: map-merge(
+//   $colors,
+//   (
+//     purple: desaturate(#8b5cf6, 18%),
+//     blue: desaturate(#3b82f6, 9%),
+//   )
+// );

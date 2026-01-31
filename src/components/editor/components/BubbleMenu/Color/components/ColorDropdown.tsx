@@ -4,7 +4,6 @@ import { ColorPalette } from "./ColorPalette";
 import { HighlightPalette } from "./HighlightPalette";
 import { Content, Root, Trigger } from "@radix-ui/react-popover";
 import { ChevronDown } from "lucide-react";
-import { Separator } from "./Separator";
 
 export function ColorDropdown({ editor }: { editor: Editor }) {
   return (
@@ -25,7 +24,7 @@ export function ColorDropdown({ editor }: { editor: Editor }) {
           className="dropdown-menu active"
         >
           <ColorPalette />
-          <Separator />
+          <hr className="dropdown-divider" />
           <HighlightPalette />
         </Content>
       </Root>

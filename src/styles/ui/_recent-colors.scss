@@ -19,7 +19,7 @@
 .recent-swatch {
   width: 22px;
   height: 22px;
-  border-radius: 5px;
+  border-radius: 100%;
   border: 1px solid var(--gray-3);
   cursor: pointer;
   transition: transform 0.1s ease, box-shadow 0.15s ease;

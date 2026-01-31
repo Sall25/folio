@@ -1,77 +1,63 @@
 .tiptap {
 
+  /* Table-specific styling */
   table {
     border-collapse: collapse;
-    margin: 1.5rem 0;
-    width: 100%;
+    margin: 0;
+    overflow: hidden;
     table-layout: fixed;
-    font-size: 0.9rem;
+    width: 100%;
+
+    td,
+    th {
+      border: 1px solid var(--cyan-4);
+      box-sizing: border-box;
+      min-width: 1em;
+      padding: 6px 8px;
+      position: relative;
+      vertical-align: top;
+
+      > * {
+        margin-bottom: 0;
+      }
+    }
+
+    th {
+      background-color: var(--cyan-2);
+      font-weight: bold;
+      text-align: left;
+    }
+
+    .selectedCell:after {
+      background: var(--cyan-4);
+      content: '';
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      pointer-events: none;
+      position: absolute;
+      z-index: 2;
+    }
+
+    .column-resize-handle {
+      background-color: var(--purple-3);
+      bottom: -2px;
+      pointer-events: none;
+      position: absolute;
+      right: -2px;
+      top: 0;
+      width: 4px;
+    }
   }
 
-  th,
-  td {
-    border: 1px solid var(--gray-3);
-    padding: 0.6rem 0.75rem;
-    vertical-align: top;
-    text-align: left;
-    position: relative;
-  }
-
-  /* Header row */
-  th {
-    background: var(--gray-1);
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  /* Normal cells */
-  td {
-    background: var(--bg-app);
-    color: var(--text-primary);
-  }
-
-  /* Row hover (editor feel) */
-  tr:hover td {
-    background: var(--gray-1);
-  }
-
-  /* Selected cell (ProseMirror adds this class) */
-  .selectedCell {
-    background: var(--purple-light) !important;
-  }
-
-  /* Column resize handle */
-  .column-resize-handle {
-    position: absolute;
-    right: -2px;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: var(--purple-5);
-    opacity: 0;
-    transition: opacity 0.15s ease;
-    pointer-events: none;
-  }
-
-  th:hover .column-resize-handle,
-  td:hover .column-resize-handle {
-    opacity: 1;
-  }
-
-  /* Table wrapper (for scrolling on small screens) */
   .tableWrapper {
-    overflow-x: auto;
     margin: 1.5rem 0;
+    overflow-x: auto;
   }
 
-  /* Prevent weird spacing inside cells */
-  td > *:first-child,
-  th > *:first-child {
-    margin-top: 0;
-  }
-
-  td > *:last-child,
-  th > *:last-child {
-    margin-bottom: 0;
+  &.resize-cursor {
+    cursor: ew-resize;
+    cursor: col-resize;
   }
 }

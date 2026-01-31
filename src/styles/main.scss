@@ -1,7 +1,11 @@
+
 @import './abstracts/breakpoints';
-@import './abstracts/themes';
+
 @import './abstracts/editor-colors';
 @import './abstracts/editor-highlights';
+@import './abstracts/variables';
+
+@import './abstracts/themes';
 @import './ui/toolbar';
 @import './ui/bubble-menu';
 @import './ui/dropdown-menu';
@@ -11,10 +15,11 @@
 @import './ui/recent-colors';
 @import './ui/highlight-palette';
 @import './ui/separator';
+@import './ui/gutter-floating-menu';
+@import './ui/floating-table-menu';
 @import './editor/editor';
-
+@import './abstracts/colors';
 @import './app';
-
 
 *{
   box-sizing: border-box;

@@ -18,16 +18,30 @@
   /* Accent */
   --accent: #3b82f6;
 
-  /*Gray Scale - Light Theme*/
-  --gray-1: #fafafa;
-  --gray-2: #f5f5f5;
-  --gray-3: #e5e5e5; /* borders, dividers */
-  --gray-4: #d4d4d4;
-  --gray-5: #a3a3a3; /* secondary text */
-  --gray-6: #737373;
-  --gray-7: #525252;
-  --gray-8: #404040;
-  --gray-9: #262626; /* primary text soft */
+  /* Gray Scale — Light Theme */
+--gray-1: #fcfcfd;  /* app background */
+--gray-2: #f6f7f8;
+--gray-3: #eceef1;  /* borders, dividers */
+--gray-4: #e1e4e8;
+--gray-5: #cdd3da;  /* subtle UI, disabled */
+--gray-6: #9aa4b2;  /* secondary text */
+--gray-7: #6b7280;
+--gray-8: #3f4752;
+--gray-9: #1f2328;  /* primary text */
+
+
+  /*Cyan Scale - Light Theme*/
+ /* Slate Cyan — Light Theme */
+--cyan-1: #f4f8fb;  /* lightest background */
+--cyan-2: #e6eef5;
+--cyan-3: #d6e3ee;  /* borders, dividers */
+--cyan-4: #c3d6e6;
+--cyan-5: #a9c2d8;  /* subtle fills */
+--cyan-6: #8eacc8;
+--cyan-7: #6f93b4;
+--cyan-8: #577a9f;
+--cyan-9: #3e5f7d;  /* primary text / strong elements */
+
 
    /* PURPLE SCALE — Light Theme */
   --purple-1: #f5f3ff;
@@ -75,8 +89,8 @@
 
 [data-theme='dark']{
   --bg-white: #1a1a1a;
-  --bg-app: #191919;
-  --bg-editor: #1f1f1f;
+  --bg-app: #090C10;
+  --bg-editor: #090C10;
   --bg-hover: #2a2a2a;
   --bg-active: #333333;
 
@@ -89,16 +103,28 @@
 
   --accent: #60a5fa;
 
-   /* Gray Scale — Dark Theme (INVERTED LUMINOSITY) */
-  --gray-1: #1c1c1c;
-  --gray-2: #242424;
-  --gray-3: #2f2f2f; /* borders, dividers */
-  --gray-4: #3a3a3a;
-  --gray-5: #525252; /* secondary text */
-  --gray-6: #737373;
-  --gray-7: #a3a3a3;
-  --gray-8: #d4d4d4;
-  --gray-9: #f5f5f5; /* primary text */
+  /* Gray Scale — Dark Theme */
+  --gray-1: #0f1113;  /* app background */
+  --gray-2: #16181b;
+  --gray-3: #1f2328;  /* borders, dividers */
+  --gray-4: #2a2f36;
+  --gray-5: #3a4048;  /* subtle UI */
+  --gray-6: #5a6472;  /* secondary text */
+  --gray-7: #8b949e;
+  --gray-8: #c9d1d9;
+  --gray-9: #f0f6fc;  /* primary text */
+
+    /* Cyan Scale — Dark Theme (Darker) */
+  --cyan-1: #090C10;  /* deepest background */
+  --cyan-2: #0f141a;
+  --cyan-3: #19222c;  /* borders, dividers */
+  --cyan-4: #23303e;
+  --cyan-5: #2b3b4d;  /* secondary text */
+  --cyan-6: #364b62;
+  --cyan-7: #45607d;
+  --cyan-8: #537599;
+  --cyan-9: #577a9f;  /* primary text */
+
 
   /* PURPLE SCALE — Dark Theme (slightly brighter for contrast) */
   --purple-1: #2a1f4a;

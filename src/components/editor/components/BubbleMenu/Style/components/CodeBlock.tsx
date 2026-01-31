@@ -22,7 +22,10 @@ export function CodeBlock() {
       }
       className={`dropdown-item ${codeBlockActive ? 'selected' : ''}`}
     >
-      <Code2 className="icon" />
+      <Code2
+        className="icon"
+        size={20}
+      />
       <span>CodeBlock</span>
 
     </span>

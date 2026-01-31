@@ -21,14 +21,20 @@ export function Lists() {
         className={`dropdown-item ${bulletActive ? 'selected' : ''}`}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
       >
-        <List className="icon" />
+        <List
+          className="icon"
+          size={20}
+        />
         <span>Bullet List</span>
       </span>
       <span
         className={`dropdown-item ${orderedActive ? 'selected' : ''}`}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
       >
-        <ListOrdered className="icon" />
+        <ListOrdered
+          className="icon"
+          size={20}
+        />
         <span>Ordered list</span>
       </span>
     </>

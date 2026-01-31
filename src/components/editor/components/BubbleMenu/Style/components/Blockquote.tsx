@@ -19,7 +19,10 @@ export function Blockquote() {
       onClick={() => editor.chain().focus().toggleBlockquote().run()}
       className={`dropdown-item ${isQuoteActive ? 'selected' : ''}`}
     >
-      <Quote className="icon" />
+      <Quote
+        className="icon"
+        size={20}
+      />
       <span>Blockquote</span>
     </span>
   );

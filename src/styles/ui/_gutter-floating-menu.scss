@@ -1,0 +1,46 @@
+.gutter-floating-menu{
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(0,0);
+  display: flex;
+  gap: 2px;
+  pointer-events: auto;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  &.isVisible{
+    opacity: 1;
+  }
+
+  .btn{
+    display: inline-flex;
+    align-items: center;
+    background-color: transparent;
+    color: var(--text-primary);
+   
+    border-radius:40%;
+    border: none;
+
+    transition: background-color 0.15s ease-in-out, scale 0.15s ease-in-out;
+
+    &:hover{
+      background-color: var(--gray-3);
+      scale: 1.15;
+    }
+
+    &.btn-plus{
+      cursor: pointer;
+    }
+
+    &.btn-grip{
+      cursor: grab;
+    }
+
+    svg{
+      width: 15px;
+      height: 25px;
+    }
+  }
+}

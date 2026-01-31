@@ -1,24 +1,27 @@
-import { useEffect, useRef, useState } from 'react'
-import { computePosition, offset, shift, flip, autoUpdate, type VirtualElement } from '@floating-ui/dom'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import {
+  computePosition,
+  offset,
+  shift,
+  flip,
+  autoUpdate,
+  type VirtualElement,
+} from '@floating-ui/dom'
 import type { Editor } from '@tiptap/core'
+import { MoreHorizontal } from 'lucide-react'
+import * as Popover from '@radix-ui/react-popover'
+import { ColumnDropdown } from './ColumnDropdown'
 
 export function TableFloatingMenu({ editor }: { editor: Editor }) {
   const [visible, setVisible] = useState(false)
+
+  /** -------------------------------
+   *  Floating + Virtual Anchor Setup
+   *  ------------------------------- */
   const floatingRef = useRef<HTMLElement | null>(null)
-  const isResizingRef = useRef(false)
-
-  // const posX = useRef(0)
-  // const posY = useRef(0)
-
-  const lastColumnRef = useRef<number | null>(null)
   const frameRef = useRef<number | null>(null)
 
-  const rectRef = useRef({
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-  })
+  const rectRef = useRef({ x: 0, y: 0, width: 0, height: 0 })
 
   const virtualRef = useRef<VirtualElement>({
     getBoundingClientRect: () => ({
@@ -33,48 +36,32 @@ export function TableFloatingMenu({ editor }: { editor: Editor }) {
     }),
   })
 
+  /** Snap animation between columns */
   const prevXRef = useRef<number | null>(null)
   const snapOffsetRef = useRef(0)
 
-
-
-  const updatePosition = async () => {
-    if (isResizingRef.current) {
-      const headerCell = document.elementFromPoint(
-        rectRef.current.x + rectRef.current.width / 2,
-        rectRef.current.y + 2
-      )?.closest('th, td') as HTMLElement | null
-
-      if (headerCell) {
-        const rect = headerCell.getBoundingClientRect()
-        rectRef.current.width = rect.width
-        rectRef.current.x = rect.left
-      }
-    }
-
+  const updatePosition = useCallback(async () => {
     if (!floatingRef.current) return
 
-    const { x, y } = await computePosition(virtualRef.current, floatingRef.current, {
-      placement: 'top-start',
-      middleware: [offset(6), shift({ padding: 8 }), flip()],
-    })
+    const { x, y } = await computePosition(
+      virtualRef.current,
+      floatingRef.current,
+      {
+        placement: 'top-start',
+        middleware: [offset(1), shift({ padding: 8 }), flip()],
+      }
+    )
 
     floatingRef.current.style.width = `${rectRef.current.width}px`
     floatingRef.current.style.transform = `translate(${x}px, ${y}px)`
-    floatingRef.current.style.setProperty(
-      '--snap-x',
-      `${snapOffsetRef.current}px`
-    )
+    floatingRef.current.style.setProperty('--snap-x', `${snapOffsetRef.current}px`)
 
-    // Reset after frame so it animates back to 0
     requestAnimationFrame(() => {
       snapOffsetRef.current = 0
       floatingRef.current?.style.setProperty('--snap-x', '0px')
     })
+  }, [])
 
-  }
-
-  //  Throttle to animation frames
   const scheduleUpdate = () => {
     if (frameRef.current) return
     frameRef.current = requestAnimationFrame(() => {
@@ -83,6 +70,72 @@ export function TableFloatingMenu({ editor }: { editor: Editor }) {
     })
   }
 
+  /** -------------------------------
+   *  Column + Table Tracking
+   *  ------------------------------- */
+  const lastColumnRef = useRef<number | null>(null)
+
+  const updateFromCell = (cell: HTMLElement) => {
+    const row = cell.parentElement
+    const table = cell.closest('table')
+    if (!row || !table) return
+
+    const columnIndex = Array.from(row.children).indexOf(cell)
+    if (columnIndex === lastColumnRef.current) return
+    lastColumnRef.current = columnIndex
+
+    const headerRow = table.querySelector('tr')
+    const headerCell = headerRow?.children[columnIndex] as HTMLElement | undefined
+    if (!headerCell) return
+
+    const rect = headerCell.getBoundingClientRect()
+
+    rectRef.current = {
+      x: rect.left,
+      y: rect.top,
+      width: rect.width,
+      height: rect.height,
+    }
+
+    if (prevXRef.current !== null) {
+      snapOffsetRef.current = prevXRef.current - rect.left
+    }
+    prevXRef.current = rect.left
+
+    scheduleUpdate()
+    showMenu()
+  }
+
+  /** -------------------------------
+   *  Resize Tracking
+   *  ------------------------------- */
+  const isResizingRef = useRef(false)
+
+  useEffect(() => {
+    const onMouseDown = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).closest('.column-resize-handle')) {
+        isResizingRef.current = true
+      }
+    }
+
+    const onMouseUp = () => {
+      if (isResizingRef.current) {
+        isResizingRef.current = false
+        lastColumnRef.current = null
+      }
+    }
+
+    document.addEventListener('mousedown', onMouseDown)
+    document.addEventListener('mouseup', onMouseUp)
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [])
+
+  /** -------------------------------
+   *  Visibility Control
+   *  ------------------------------- */
   const hideTimeout = useRef<number | null>(null)
 
   const showMenu = () => {
@@ -93,16 +146,17 @@ export function TableFloatingMenu({ editor }: { editor: Editor }) {
   const hideMenu = () => {
     hideTimeout.current = window.setTimeout(() => {
       setVisible(false)
-    }, 80)
+    }, 800)
   }
 
-
+  /** -------------------------------
+   *  Mouse Tracking inside Editor
+   *  ------------------------------- */
   useEffect(() => {
     if (!editor) return
-
     const editorDom = editor.view.dom
 
-    const onMouseMoveEditor = (e: MouseEvent) => {
+    const onMouseMove = (e: MouseEvent) => {
       if (isResizingRef.current) return
 
       const pos = editor.view.posAtCoords({ left: e.clientX, top: e.clientY })
@@ -111,13 +165,10 @@ export function TableFloatingMenu({ editor }: { editor: Editor }) {
       const resolved = editor.view.state.doc.resolve(pos.pos)
 
       let cellDom: HTMLElement | null = null
-
-      // Find closest table cell/header node
       for (let d = resolved.depth; d > 0; d--) {
         const node = resolved.node(d)
         if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
-          const cellPos = resolved.before(d)
-          cellDom = editor.view.nodeDOM(cellPos) as HTMLElement | null
+          cellDom = editor.view.nodeDOM(resolved.before(d)) as HTMLElement
           break
         }
       }
@@ -128,109 +179,47 @@ export function TableFloatingMenu({ editor }: { editor: Editor }) {
         return
       }
 
-      const row = cellDom.parentElement
-      if (!row) return
-
-      const columnIndex = Array.from(row.children).indexOf(cellDom)
-
-      //  Skip work if still in same column
-      if (columnIndex === lastColumnRef.current) return
-      lastColumnRef.current = columnIndex
-
-      const table = cellDom.closest('table')
-      if (!table) return
-
-      const headerRow = table.querySelector('tr')
-      if (!headerRow) return
-
-      const headerCell = headerRow.children[columnIndex] as HTMLElement | undefined
-      if (!headerCell) return
-
-      const rect = headerCell.getBoundingClientRect()
-
-
-      rectRef.current = {
-        x: rect.left,
-        y: rect.top,
-        width: rect.width,
-        height: rect.height,
-      }
-      // // Anchor to center-top of header cell
-      // posX.current = rect.left + rect.width / 2
-      // posY.current = rect.top
-
-      const newX = rect.left
-
-      if (prevXRef.current !== null) {
-        snapOffsetRef.current = prevXRef.current - newX
-      }
-
-      prevXRef.current = newX
-
-
-      scheduleUpdate()
-      showMenu()
-    }
-    const onMouseDown = (e: MouseEvent) => {
-      const target = e.target as HTMLElement
-      if (target.closest('.column-resize-handle')) {
-        isResizingRef.current = true
-      }
+      updateFromCell(cellDom)
     }
 
-    const onMouseUp = () => {
-      if (isResizingRef.current) {
-        isResizingRef.current = false
-        lastColumnRef.current = null // force recalculation
-      }
-    }
-
-    document.addEventListener('mousedown', onMouseDown)
-    document.addEventListener('mouseup', onMouseUp)
-    editorDom.addEventListener('mousemove', onMouseMoveEditor)
-
-    return () => {
-      document.removeEventListener('mousedown', onMouseDown)
-      document.removeEventListener('mouseup', onMouseUp)
-      editorDom.removeEventListener('mousemove', onMouseMoveEditor)
-    }
+    editorDom.addEventListener('mousemove', onMouseMove)
+    return () => editorDom.removeEventListener('mousemove', onMouseMove)
   }, [editor])
 
-  // Floating UI auto updates (scroll, resize, etc.)
+  /** Floating auto update (scroll/resize) */
   useEffect(() => {
     if (!floatingRef.current) return
     return autoUpdate(virtualRef.current, floatingRef.current, updatePosition)
-  }, [])
+  }, [updatePosition])
 
-  // Cleanup any pending animation frame
   useEffect(() => {
     return () => {
-      if (frameRef.current) cancelAnimationFrame(frameRef.current)
+      if (frameRef.current) {
+        cancelAnimationFrame(frameRef.current)
+      }
     }
   }, [])
 
   if (!editor) return null
 
   return (
-    <div
-      ref={(node) => {
-        floatingRef.current = node;
-      }}
-      className="column-menu"
-      data-visible={visible}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        transform: 'translate(0,0)',
-        zIndex: 1000,
-        pointerEvents: 'none',
-      }}
-    >
-      <div className="column-menu__inner">
-        <span>Hi there</span>
-      </div>
-    </div>
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <span
+          ref={(node) => { floatingRef.current = node }}
+          className="column-menu"
+          data-visible={visible}
+          onMouseDown={showMenu}
+        >
+          <div className="column-menu__inner">
+            <MoreHorizontal className="icon" />
+          </div>
+        </span>
+      </Popover.Trigger>
 
+      <Popover.Content>
+        <ColumnDropdown editor={editor} />
+      </Popover.Content>
+    </Popover.Root>
   )
 }

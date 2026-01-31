@@ -30,12 +30,13 @@ export function FontFamilySelect() {
   return (
     <Root>
       <Trigger className="outline-0">
-        <div className="dropdown-item flex justify-between">
-          <div className="flex gap-1 items-center">
+        <div className="dropdown-item-select">
+          <div className="dropdown-item">
             <span className="font-semibold text-[13px]">A</span>
             <span>Font</span>
           </div>
-          <ChevronRight className="icon" />
+          <ChevronRight
+            className="icon" />
         </div>
       </Trigger>
 

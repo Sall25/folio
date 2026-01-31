@@ -36,7 +36,10 @@ export function Headings() {
             }
             className={`dropdown-item ${isActiveLevel(level) ? 'selected' : ''}`}
           >
-            <Icon className="icon" />
+            <Icon
+              className="icon"
+              size={20}
+            />
             <span>Heading {level}</span>
           </span>
         )
