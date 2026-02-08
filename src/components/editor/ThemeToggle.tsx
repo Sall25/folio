@@ -1,10 +1,10 @@
 import { Root } from '@radix-ui/react-toggle';
-import { useState } from 'react';
-import { applyTheme, type Theme } from './theme';
+import { useEffect, useState } from 'react';
+import { applyTheme, getTheme, type Theme } from './theme';
 import { Moon, Sun } from 'lucide-react';
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>('light');
+  const [theme, setTheme] = useState<Theme>(() => getTheme());
 
   const isDark = theme === 'dark';
 
@@ -13,6 +13,11 @@ export function ThemeToggle() {
     setTheme(nextTheme);
     applyTheme(nextTheme);
   }
+
+  useEffect(() => {
+    applyTheme(theme);
+  }, []);
+
 
   return (
     <Root
