@@ -2,6 +2,8 @@
 import type { SuggestionProps } from '@tiptap/suggestion'
 import type { Editor } from '@tiptap/core'
 import type { Level } from '@tiptap/extension-heading'
+import { useEffect, useState } from 'react';
+import clsx from 'clsx';
 
 
 type MarkType = 'paragraph' | 'heading' | 'bulletList' | 'orderedList' | 'codeBlock' | (string & {});
@@ -12,7 +14,7 @@ export type SlashItem = {
   icon?: React.ComponentType<{ className?: string }>
   mark?: { type: MarkType; level?: Level }
   isActive?: boolean
-  run: (editor: Editor) => void
+  run?: (editor: Editor) => void
 }
 
 // Props received from ReactRenderer via Tiptap Suggestion
@@ -21,33 +23,65 @@ type Props = SuggestionProps<SlashItem> & {
   onClickItem?: (item: SlashItem) => void
 }
 
+
 export default function SlashList(props: Props) {
   const { items = [], selectedIndex = 0, onClickItem } = props
+  const [menuVisible, setMenuVisible] = useState(false)
 
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      setMenuVisible(true)
+    })
+    return () => cancelAnimationFrame(id)
+  }, [])
+
+  const isSelectable = (item: any) =>
+    item.mark?.type !== 'title' && item.mark?.type !== 'separator'
 
   return (
-    <div className="slash-menu active" role="listbox" aria-label="Slash commands">
-
+    <div
+      className={clsx('slash-menu', { active: menuVisible })}
+      role="listbox"
+      aria-label="Slash commands"
+    >
       {items.length === 0 ? (
         <div className="slash-empty">No commands</div>
       ) : (
         items.map((item, i) => {
+          const selectable = isSelectable(item)
+          const isActive = selectable && i === selectedIndex
           const Icon = item.icon
-          const isActive = i === selectedIndex
+
           return (
             <div
               key={item.id}
-              role="option"
-              aria-selected={isActive}
-              className={`slash-item ${isActive ? 'selected' : ''}`}
+              role={selectable ? 'option' : undefined}
+              aria-selected={selectable ? isActive : undefined}
+              className={clsx('slash-item', {
+                selected: isActive,
+                'is-title': item.mark?.type === 'title',
+                'is-separator': item.mark?.type === 'separator',
+              })}
               onMouseDown={(e) => {
-                // prevent the editor from losing focus
+                if (!selectable) return
                 e.preventDefault()
                 onClickItem?.(item)
               }}
             >
-              <span className='icon'>{Icon && <Icon className='icon' />}</span>
-              <span>{item.title}</span>
+              {item.mark?.type === 'title' && (
+                <span className="slash-title">{item.title}</span>
+              )}
+
+              {item.mark?.type === 'separator' && <hr />}
+
+              {selectable && (
+                <>
+                  <span className="icon">
+                    {Icon && <Icon className="icon" />}
+                  </span>
+                  <span>{item.title}</span>
+                </>
+              )}
             </div>
           )
         })
@@ -55,3 +89,5 @@ export default function SlashList(props: Props) {
     </div>
   )
 }
+
+

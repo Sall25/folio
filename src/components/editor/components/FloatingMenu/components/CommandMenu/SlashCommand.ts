@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Extension } from '@tiptap/core'
+import { Extension, posToDOMRect } from '@tiptap/core'
 import Suggestion, { exitSuggestion, type SuggestionProps } from '@tiptap/suggestion'
 import { ReactRenderer } from '@tiptap/react'
 import { Editor } from '@tiptap/core'
 import type { Plugin } from '@tiptap/pm/state'
-import tippy, { type Instance as TippyInstance } from 'tippy.js'
 import SlashList, { type SlashItem } from './SlashCommandList'
-import { Heading1, Heading2, Heading3, List, ListOrdered, Pilcrow, Quote } from 'lucide-react'
+import { AtSign, Heading1, Heading2, Heading3, Image, List, ListOrdered, Minus, Pilcrow, Quote, Table } from 'lucide-react'
+import { computePosition, flip, offset, shift, type VirtualElement } from '@floating-ui/dom'
+
 
 export const SlashCommand = Extension.create({
   name: 'slash-command',
@@ -14,6 +15,11 @@ export const SlashCommand = Extension.create({
   addOptions() {
     return {
       commands: [
+        {
+          id: 'style',
+          title: 'Style',
+          mark: { type: 'title' }
+        },
         {
           id: 'p',
           title: 'Text',
@@ -61,6 +67,55 @@ export const SlashCommand = Extension.create({
           mark: { type: 'blockQuote' },
           run: (editor: Editor) => editor.chain().focus().toggleBlockquote().run(),
         },
+        {
+          id: 'styleDivider',
+          title: 'separator',
+          mark: { type: 'separator' },
+        },
+        {
+          id: 'insert',
+          title: 'Insert',
+          mark: { type: 'title' }
+        },
+        {
+          id: 'mention',
+          title: 'Mention',
+          icon: AtSign
+        },
+        {
+          id: 'table',
+          title: 'Table',
+          icon: Table
+        },
+        {
+          id: 'separator',
+          title: 'Separator',
+          icon: Minus,
+          run(editor) {
+            editor.chain().focus().setHorizontalRule().run()
+          },
+        },
+        {
+          id: 'toc',
+          title: 'Table of Contents',
+          icon: List
+        },
+        {
+          id: 'insertDivider',
+          title: 'separator',
+          mark: { type: 'separator' },
+        },
+        {
+          id: 'upload',
+          title: 'Upload',
+          mark: { type: 'title' }
+        },
+        {
+          id: 'image',
+          title: 'Image',
+          icon: Image
+        }
+
       ] as SlashItem[],
     }
   },
@@ -68,23 +123,23 @@ export const SlashCommand = Extension.create({
   addProseMirrorPlugins() {
     const editor = this.editor
     let reactRenderer: ReactRenderer<any> | null = null
-    let tippyInstance: TippyInstance | null = null
     let selectedIndex = 0
     let currentProps: SuggestionProps<SlashItem> | null = null
 
-    function positionPopup(props: SuggestionProps<SlashItem>, element: HTMLElement) {
-      const rect = props.clientRect?.()
-      if (!rect) {
-        element.style.display = 'none'
-        return
+    const updatePosition = (element: HTMLElement) => {
+      const virtualElement: VirtualElement = {
+        getBoundingClientRect: () => posToDOMRect(editor.view, editor.state.selection.from, editor.state.selection.to)
       }
-
-      element.style.display = ''
-      const left = rect.left + window.scrollX
-      const top = rect.bottom + window.scrollY + 8
-
-      element.style.left = `${Math.round(left)}px`
-      element.style.top = `${Math.round(top)}px`
+      computePosition(virtualElement, element, {
+        placement: 'bottom-start',
+        strategy: 'absolute',
+        middleware: [shift({ padding: 8 }), flip(), offset(4)]
+      }).then(({ x, y, strategy }) => {
+        element.style.width = 'max-content'
+        element.style.position = strategy
+        element.style.left = `${x}px`
+        element.style.top = `${y}px`
+      })
     }
 
     function createRenderer(props: SuggestionProps<SlashItem>) {
@@ -103,23 +158,11 @@ export const SlashCommand = Extension.create({
         },
       })
 
+      reactRenderer.element.style.position = 'absolute'
+
       document.body.appendChild(reactRenderer.element)
 
-      tippyInstance = tippy(document.body, {
-        getReferenceClientRect: () => {
-          const rect = props.clientRect?.()
-          return rect ?? { width: 0, height: 0, top: 0, bottom: 0, left: 0, right: 0 } as DOMRect
-        },
-        content: reactRenderer.element,
-        appendTo: () => document.body,
-        showOnCreate: true,
-        interactive: true,
-        trigger: 'manual',
-        placement: 'bottom-start',
-        popperOptions: { strategy: 'fixed' },
-      })
-
-      positionPopup(props, reactRenderer.element)
+      updatePosition(reactRenderer.element)
     }
 
     function updateRenderer(props: SuggestionProps<SlashItem>) {
@@ -138,16 +181,19 @@ export const SlashCommand = Extension.create({
         },
       })
 
-      if (reactRenderer.element) positionPopup(props, reactRenderer.element)
-      if (tippyInstance) tippyInstance.setProps({
-        getReferenceClientRect: () => props.clientRect?.() ?? { width: 0, height: 0, top: 0, bottom: 0, left: 0, right: 0 } as DOMRect
-      })
+      // if (reactRenderer.element) positionPopup(props, reactRenderer.element)
+      // if (tippyInstance) tippyInstance.setProps({
+      //   getReferenceClientRect: () => props.clientRect?.() ?? { width: 0, height: 0, top: 0, bottom: 0, left: 0, right: 0 } as DOMRect
+      // })
     }
 
     function destroyRenderer() {
-      if (reactRenderer) {
-        try { reactRenderer.destroy() } catch {
 
+      if (reactRenderer) {
+        try {
+          reactRenderer.destroy()
+        }
+        catch {
           console.log('Error')
         }
         try {
@@ -156,12 +202,6 @@ export const SlashCommand = Extension.create({
           console.log('Error')
         }
         reactRenderer = null
-      }
-      if (tippyInstance) {
-        try { tippyInstance.destroy() } catch {
-          console.log('Error')
-        }
-        tippyInstance = null
       }
       currentProps = null
     }

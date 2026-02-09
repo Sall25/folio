@@ -3,11 +3,11 @@
 
 import { Mention } from '@tiptap/extension-mention'
 import type { MentionItem, MentionListRef } from './types'
-import { ReactRenderer } from '@tiptap/react'
+import { Editor, posToDOMRect, ReactRenderer } from '@tiptap/react'
 import MentionList from './MentionList'
-import tippy, { type Instance as TippyInstance } from 'tippy.js'
 import { type SuggestionKeyDownProps } from '@tiptap/suggestion'
 import { type MentionSuggestion } from './types'
+import { computePosition, flip, shift, type VirtualElement } from '@floating-ui/dom'
 
 export const MentionExtension = Mention.configure({
   HTMLAttributes: {
@@ -50,7 +50,22 @@ export const MentionExtension = Mention.configure({
 
     render: () => {
       let reactRenderer: ReactRenderer<MentionListRef> | null = null
-      let popup: TippyInstance[] | null = null
+
+      const updatePosition = (editor: Editor, element: HTMLElement) => {
+        const virtualEl: VirtualElement = {
+          getBoundingClientRect: () => posToDOMRect(editor.view, editor.state.selection.from, editor.state.selection.to)
+        }
+        computePosition(virtualEl, element, {
+          placement: 'bottom-start',
+          strategy: 'absolute',
+          middleware: [shift(), flip()]
+        }).then(({ x, y, strategy }) => {
+          element.style.width = 'max-content'
+          element.style.position = strategy
+          element.style.left = `${x}px`
+          element.style.top = `${y}px`
+        })
+      }
 
       return {
         onStart: (props: any) => {
@@ -59,27 +74,20 @@ export const MentionExtension = Mention.configure({
             editor: props.editor,
           })
 
-          popup = tippy('body', {
-            getReferenceClientRect: props.clientRect as any,
-            appendTo: () => document.body,
-            content: reactRenderer.element,
-            showOnCreate: true,
-            interactive: true,
-            trigger: 'manual',
-            placement: 'bottom-start',
-          })
+          reactRenderer.element.style.position = 'absolute'
+
+          document.body.appendChild(reactRenderer.element)
+
+          updatePosition(props.editor, reactRenderer.element)
         },
 
         onUpdate(props: any) {
           reactRenderer?.updateProps(props)
-          popup?.[0].setProps({
-            getReferenceClientRect: props.clientRect as any,
-          })
         },
 
         onKeyDown(props: SuggestionKeyDownProps) {
           if (props.event.key === 'Escape') {
-            popup?.[0].hide()
+            reactRenderer?.destroy()
             return true
           }
 
@@ -87,7 +95,7 @@ export const MentionExtension = Mention.configure({
         },
 
         onExit() {
-          popup?.[0].destroy()
+          reactRenderer?.element.remove()
           reactRenderer?.destroy()
         },
       }
