@@ -25,7 +25,7 @@ export function ThemeToggle() {
       onPressedChange={handleToggle} // Radix fires after state changes
       className="toolbar-button"
     >
-      {isDark ? <Moon className="icon" /> : <Sun className="icon" />}
+      {isDark ? <Moon size={20} /> : <Sun size={20} />}
     </Root>
   );
 }
