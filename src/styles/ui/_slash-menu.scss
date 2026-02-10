@@ -1,29 +1,66 @@
+
 .slash-menu {
-  position: absolute;
+  @include font(body, regular);
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  background: var(--cyan-3);
-  border: 1px solid var(--cyan-4);
-  border-radius: 25px;
-  min-width: 200px;
-  max-width: 320px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  gap: 2px;
+  background: var(--gray-2);
+  border: 1px solid var(--gray-3);
+  border-radius: 18px;
+  min-width: 230px;
+  max-width: 300px;
+  max-height: 350px;
+  box-shadow:var(--base-shadow);
   overflow: hidden;
-  padding: 12px 5px;
-  font-size: 0.875rem;
+  padding: 4px 10px;
   color: var(--text-primary);
   z-index: 60;
   opacity: 0;
   pointer-events: none;
-  transform: scale(0.95);
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transform: scale(0.98);
+  transition: opacity 150ms ease, transform 0.15s ease;
   overflow-y: auto;
+
+  
+  scroll-padding-bottom: 12px;
+
+  /* ===== Floating Scrollbar ===== */
+
+  &::-webkit-scrollbar {
+    width: 10px; // wider so thumb can float inside
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 10px 0; // creates top/bottom inset space
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--gray-1);
+    border-radius: 999px; // pill shape
+    border: 2px solid transparent; // THIS creates the floating effect
+    background-clip: content-box;
+    min-height: 40px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: var(--gray-2);
+  }
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(147, 146, 146, 0.35) transparent;
 
   &.active {
     opacity: 1;
     pointer-events: auto;
     transform: scale(1);
+  }
+
+  .slash-title{
+    font-size: 12px !important;
+    padding: 2px 4px !important;
+    font-weight: bold !important;
   }
 
   /* Individual menu items */
@@ -32,42 +69,63 @@
     align-items: center;
     justify-content: flex-start;
     gap: 8px;
-    padding: 6px 12px;
+   padding: 2px 8px;
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
-    color: var(--gray-8);
+    transition: color 0.15s ease;
+    color: var(--gray-7);
     border-radius: 5px;
 
     &:hover,
     &.selected {
-      background: var(--cyan-4);
+      background: var(--gray-3);
       color: var(--text-primary);
     }
 
     span{
-      font-size: 15px;
+      font-size: 14px;
       font-weight:normal;
       color: inherit;
     }
 
     /* Icon inside item */
     .icon {
-      width: 1.1rem;
-      height: 1.1rem;
+      width: 1.02rem;
+      height: 1.02rem;
        transition: transform 0.2s ease, color 0.15s ease;
     }
 
     &.selected .icon {
-      transform: scale(1.1); // subtle pop for selected item
+      transform: scale(1.01); // subtle pop for selected item
       color: var(--purple-6);
     }
-  }
-}
 
-@include breakpoint(sm) {
+    
+  &.is-title {
+    font-size: 4px;
+    font-weight: 800;
+    opacity: 1;
+    cursor: default;
+    pointer-events: none;
+    color: var(--gray-9);
+  }
+
+  &.is-separator {
+    pointer-events: none;
+
+    hr {
+      width: 100%;
+      margin: 5px 0;
+      padding: 0;
+      background-color: var(--gray-8);
+     
+    }
+  }
+  }
+
+  @include breakpoint(sm) {
   .slash-menu {
-    min-width: 200px;
-    max-width: 90vw;
+    min-width: 100px;
+    max-width: 150px;
     font-size: 0.75rem;
 
     .slash-item {
@@ -80,3 +138,6 @@
     }
   }
 }
+
+}
+

@@ -1,0 +1,7 @@
+// _mixins.scss
+@mixin font($family, $weight: regular, $line-height: body) {
+  font-family: map-get($fonts, $family);
+  font-weight: map-get($weights, $weight);
+  line-height: map-get($line-heights, $line-height);
+  font-size: 15px;
+}

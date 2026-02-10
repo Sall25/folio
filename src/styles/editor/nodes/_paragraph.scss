@@ -1,22 +1,25 @@
 .tiptap {
-  p {
-    margin: 0.5rem 0; // vertical rhythm
-    line-height: 1.6; // slightly more airy like Notion
-    color: var(--text-primary);
-    font-size: 0.96rem;
-    letter-spacing: 0.01em;
-    word-break: break-word; // avoid overflow
-    font-weight: 400;
-  }
+ p {
+  @include font(body, regular);
+  margin: 0.5rem 0;
+  // font-size: 1rem;
+  // line-height: 1.7;
+  // font-weight: 300; /* slightly heavier */
+  // letter-spacing: 0.015em;
+  color: var(--gray-9);
 
-  /* Selection styling */
-  p::selection,
-  p *::selection {
+   /* Selection styling */
+  &::selection,
+  & *::selection {
     background: var(--selection-bg);
     color: var(--selection-text);
     border-radius: 6px;
+   // animation: selection-fade 100ms ease-out;
   }
+ 
+}
 
+ 
   /* First paragraph = no top margin */
   > p:first-child {
     margin-top: 0;
@@ -29,7 +32,7 @@
     pointer-events: none;
     height: 0;
     display: inline-block;
-     font-weight: 400; // lighter placeholder
+     font-weight: 100; // lighter placeholder
   }
 
   /* Paragraph after headings = tighter */
@@ -37,7 +40,7 @@
   h2 + p,
   h3 + p,
   h4 + p {
-    margin-top: 0.4rem;
+    margin-top: 0.2rem;
   }
 
   /* Paragraph before headings = more breathing room */
@@ -50,8 +53,7 @@
 
   /* Paragraph inside blockquote */
   blockquote p {
-    color: var(--text-secondary);
-    font-style: italic;
+    color: var(--gray-9);
     margin: 0.25rem 0;
   }
 
