@@ -11,7 +11,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--cyan-5);
+    color: var(--purple-5);
     cursor: grab;
     border-radius: 6px;
     opacity: 0;
@@ -19,13 +19,13 @@
   }
 
   .drag-handle:hover {
-    background: var(--cyan-2);
-    color: var(--cyan-8);
+    background: var(--purple-2);
+    color: var(--purple-8);
   }
 
   .drag-handle:active {
     cursor: grabbing;
-    background: var(--cyan-3);
+    background: var(--purple-3);
   }
   
   /* Resize handles*/
@@ -45,8 +45,8 @@
     &[data-resize-handle='top-right'],
     &[data-resize-handle='bottom-left'],
     &[data-resize-handle='bottom-right'] {
-      width: 8px;
-      height: 8px;
+      width: 2px;
+      height: 2px;
     }
 
     &[data-resize-handle='top-left'] {

@@ -28,6 +28,6 @@
   },
   "include": [
     "src",
-    "src/components/editor/components/FloatingMenu/components/Emojis/EmojiList.tsx"
+    "src/components/Editor/Menus/FloatingMenu/components/Emojis/EmojiList.tsx"
   ]
 }

@@ -13,6 +13,7 @@ import { MoreHorizontal } from 'lucide-react'
 import * as Popover from '@radix-ui/react-popover'
 import { ColumnDropdown } from './ColumnDropdown'
 import { tableMenuPluginKey } from './extensions/plugins/tableMenuPlugin'
+import clsx from 'clsx'
 
 
 export function ColumnFloatingMenu({ editor }: { editor: Editor }) {
@@ -29,6 +30,7 @@ export function ColumnFloatingMenu({ editor }: { editor: Editor }) {
   const overTableRef = useRef(false)
   const [visible, setVisible] = useState(false)
   const [ready, setReady] = useState(false)
+  const [menuVisible, setMenuVisible] = useState(false)
 
   const virtualRef = useRef<VirtualElement>({
     getBoundingClientRect: () => {
@@ -182,45 +184,29 @@ export function ColumnFloatingMenu({ editor }: { editor: Editor }) {
     return () => cleanup()
   }, [])
 
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMenuVisible(true))
+
+    return () => cancelAnimationFrame(id
+
+    )
+  }, [])
+
   return (
     <Popover.Root
       onOpenChange={(open) => {
         openPopoverRef.current = open
-
-        // const tr = editor.state.tr.setMeta(activeColumnPluginKey, {
-        //   active: open,
-        //   columnIndex: columnIndexRef.current,
-        //   tablePos: tablePosRef.current
-        // })
-        // editor.view.dispatch(tr)
         if (open) {
-
-
-          editor.commands.sortColumn({ columnIndex: columnIndexRef.current!, direction: 'asc' })
-
-          // const tr = editor.state.tr.setMeta(alignCellPluginKey, { align: 'center' })
-          // editor.view.dispatch(tr)
-
           editor.commands.selectColumn({ columnIndex: columnIndexRef.current!, tablePos: tablePosRef.current! })
-
-          // selectColumn(editor.view, tablePosRef.current!, columnIndexRef.current!)
-
-          // editor.commands.alignColumn('center')
-
-          editor.commands.setColumnStyle({ color: 'lightpink' })
-          editor.commands.setColumnStyle({ textAlign: 'center' })
-
-          //  editor.commands.clearColumn()
-
+        } else {
+          editor.view.focus()
         }
-
-
       }}
     >
       <Popover.Trigger asChild>
         <span
           ref={(node) => { floatingRef.current = node }}
-          className="column-menu"
+          className={clsx('column-menu', { active: menuVisible })}
           data-visible={visible && ready}
         >
           <div className="column-menu__inner" style={{

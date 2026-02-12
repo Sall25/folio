@@ -1,11 +1,14 @@
 
 @import './abstracts/breakpoints';
-
 @import './abstracts/editor-colors';
 @import './abstracts/editor-highlights';
 @import './abstracts/variables';
-
 @import './abstracts/themes';
+
+@import './abstracts/fonts';
+@import './abstracts/typography';
+@import './abstracts/mixins';
+
 @import './ui/toolbar';
 @import './ui/bubble-menu';
 @import './ui/dropdown-menu';
@@ -17,16 +20,13 @@
 @import './ui/separator';
 @import './ui/gutter-floating-menu';
 @import './ui/floating-table-menu';
+@import './ui/row-add-menu';
 @import './editor/editor';
 @import './abstracts/colors';
 @import './app';
 
 *{
   box-sizing: border-box;
-}
-
-* {
-  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
 
@@ -42,18 +42,19 @@ html, body{
 
 /* Entire scrollbar */
 ::-webkit-scrollbar {
-   width: 8px;
-  height: 8px;
+   width: 4px;
+  height: 4px;
 }
 
 
 /* Scrollbar styling */
 body::-webkit-scrollbar {
-  width: 10px;
+  margin-top: 50px;
+  width: 8px;
 }
 
 body::-webkit-scrollbar-thumb {
-  background: var(--gray-4);
+  background: var(--gray-3);
   border-radius: 5px;
 }
 

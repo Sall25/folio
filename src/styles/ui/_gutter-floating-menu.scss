@@ -2,13 +2,12 @@
   position: absolute;
   top: 0;
   left: 0;
-  transform: translate(0,0);
   display: flex;
   gap: 2px;
   pointer-events: auto;
-  z-index: 1000;
+  z-index: 3;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.25s, transform 0.25s;
 
   &.isVisible{
     opacity: 1;
@@ -18,12 +17,12 @@
     display: inline-flex;
     align-items: center;
     background-color: transparent;
-    color: var(--text-primary);
+    color: var(--gray-7);
    
     border-radius:40%;
     border: none;
 
-    transition: background-color 0.15s ease-in-out, scale 0.15s ease-in-out;
+    transition: scale 0.15s ease-in-out;
 
     &:hover{
       background-color: var(--gray-3);

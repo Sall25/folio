@@ -1,23 +1,21 @@
 .bubble-menu {
   display: flex;
-  gap: 4px;
-  min-height: 45px;
+  gap: 15px;
+  min-height: 38px;
   padding: 8px 30px;
-  background: var(--cyan-3);
-  border: 1px solid var(--cyan-4);
-  border-radius: 30px;
+  background: var(--dark-1);
+  border: 1px solid var(--gray-1);
+  border-radius: 15px;
   align-items: center;
   font-size: 0.875rem;
   color: var(--text-primary);
-  box-shadow: 0 0 5px var(--cyan-2);
+ 
+ box-shadow: var(--base-shadow); //2px 2px 15px var(--gray-1);
   transition: 
-    background 0.25s ease, 
-    color 0.25s ease, 
-    opacity 0.2s ease, 
-    transform 0.2s ease;
+    opacity 0.25s ease;
 
   pointer-events: none;   // prevent clicks when hidden
-  transform: scale(0.9);  // subtle pop-in effect
+  //transform: scale(0.9);  // subtle pop-in effect
   z-index: 50;
   outline: none;
 
@@ -44,11 +42,11 @@
     border: none;
     cursor: pointer;
     color: inherit;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: color 0.15s ease;
     
 
     &:hover {
-      background: var(--cyan-4);
+      background: var(--gray-2);
     }
 
     &.active {
@@ -75,6 +73,7 @@
   }
 
   .bubble-trigger{
+    min-width: 95px;
     width: auto;
     padding: 5px 10px;
   }
@@ -83,7 +82,7 @@
   .bubble-divider {
     width: 1px;
     height: 25px;
-    background: var(--cyan-4);
+    background: var(--gray-3);
     margin: 0 4px;
 
   }

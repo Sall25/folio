@@ -14,5 +14,17 @@
   &:first-child{
     margin-top: 0px;
   }
+  .selection{
+    background: var(--selection-bg);
+    color: var(--selection-text);
+  }
+
+  &.disable-selection{
+    user-select: none;
+    opacity: 0;
+  }
+
   outline: none;
+  overflow-y: auto;
+  margin-top: 50px;
 }

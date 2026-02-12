@@ -1,10 +1,12 @@
 .tiptap{
   pre{
+    @include font(body, regular);
     background: var(--bg-code);
     border-radius: 0.5rem;
     color: var(--text-code);
-    font-family: 'JetBrainsMono', monospace;
-    margin: 1.5rem 0;
+    border: 1px solid var(--gray-2);
+
+    margin: 0.8rem 0;
     padding: 0.75rem 1rem;
     overflow-x: auto;
 

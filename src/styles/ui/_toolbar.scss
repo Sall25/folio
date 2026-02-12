@@ -1,30 +1,37 @@
 .toolbar {
+  position: fixed;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: flex-end;
-  min-height: 50px;
-  padding: 5px 20px;
-  gap: 4px;
-  border-bottom: 1px solid var(--cyan-3);
+  min-height: 45px;
+  padding: 5px 45px;
+  gap: 10px;
+  border-bottom: 1px solid var(--gray-3);
   border-radius: 8px;
   align-items: center;
   font-size: 0.875rem;
   color: var(--text-orange);
-  background: var(--cyan-1);
-  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  background: var(--bg-app);
+  z-index: 40;
 
+  .undoRedoMenu{
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
 }
 
 .toolbar-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 6px;
   border-radius: 6px;
   background: transparent;
   border: none;
   cursor: pointer;
-  color: inherit;
-  transition: background 0.15s ease, color 0.15s ease;
+  color: var(--gray-8);
+  background: transparent;
 
   &:hover {
     background: var(--cyan-2);
@@ -44,21 +51,22 @@
   .icon {
     width: 1.2rem;
     height: 1.2rem;
-    transition: transform 0.2s ease, color 0.15s ease;
+    transition: transform 0.2s ease;
     margin-right: 10px;
   }
 }
 
-/* Divider between groups of buttons */
-.toolbar-divider {
-  width: 1px;
-  background: var(--cyan-2);
-  margin: 0 4px;
+.profile{
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 100%;
+  cursor: pointer;
+  margin-right: 1.1rem;
 }
 
 @include breakpoint(sm) {
   .toolbar {
-    gap: 2px;
+    gap: 10px;
     padding: 4px 6px;
     font-size: 0.75rem;
     border-radius: 6px;
@@ -67,14 +75,16 @@
   .toolbar-button {
     padding: 3px 4px;
 
-    svg {
-      width: 0.875rem;
-      height: 0.875rem;
-    }
+    // svg {
+    //   width: 0.875rem;
+    //   height: 0.875rem;
+    // }
 
   }
 
   .toolbar-divider {
-    margin: 0 2px;
+    width: 1px;
+    height: 20px;
+    background-color: var(--gray-4);
   }
 }

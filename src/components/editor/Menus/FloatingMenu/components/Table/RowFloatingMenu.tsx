@@ -11,6 +11,7 @@ import { MoreVertical } from 'lucide-react'
 import * as Popover from '@radix-ui/react-popover'
 import { tableMenuPluginKey } from './extensions/plugins/tableMenuPlugin'
 import { RowDropdown } from './RowDropdown'
+import clsx from 'clsx'
 
 export function RowFloatingMenu({ editor }: { editor: Editor }) {
   const floatingRef = useRef<HTMLElement | null>(null)
@@ -27,7 +28,7 @@ export function RowFloatingMenu({ editor }: { editor: Editor }) {
   const [rowIdx, setRowIdx] = useState<number | null>(null)
   const [visible, setVisible] = useState(false)
   const [ready, setReady] = useState(false)
-
+  const [menuVisible, setMenuVisible] = useState(false)
 
   const virtualRef = useRef<VirtualElement>({
     getBoundingClientRect: () => {
@@ -187,28 +188,36 @@ export function RowFloatingMenu({ editor }: { editor: Editor }) {
     return () => cleanup()
   }, [])
 
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMenuVisible(true))
+
+    return () => cancelAnimationFrame(id)
+  })
+
   return (
     <Popover.Root
       onOpenChange={(open) => {
         openPopoverRef.current = open
         editor.commands.selectRow({ rowIndex: rowIndexRef.current!, tablePos: tablePosRef.current! })
-
+        if (!open) {
+          editor.view.focus()
+        }
       }}
     >
       <Popover.Trigger asChild>
         <span
           ref={(node) => { floatingRef.current = node }}
-          className="column-menu"
+          className={clsx('column-menu', { active: menuVisible })}
           data-visible={visible && ready}
         >
           <div
             className="column-menu__inner"
             style={{
               height: 'inherit',
-              width: '12px'
+              width: '11px'
             }}
           >
-            <MoreVertical size={12} />
+            <MoreVertical size={11} />
           </div>
         </span>
       </Popover.Trigger>

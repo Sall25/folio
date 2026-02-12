@@ -3,6 +3,7 @@ import { Editor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 import { tableMenuPluginKey } from "./extensions/plugins/tableMenuPlugin";
 import { Plus } from "lucide-react";
+import clsx from "clsx";
 
 export function ColumnAddFloatingMenu({ editor }: { editor: Editor }) {
   const floatingRef = useRef<HTMLElement | null>(null)
@@ -12,7 +13,7 @@ export function ColumnAddFloatingMenu({ editor }: { editor: Editor }) {
   const tableHeight = useRef(0)
   const overTableRef = useRef(false)
   const [visible, setVisible] = useState(false)
-
+  const [menuVisible, setMenuVisible] = useState(false)
 
   const virtualRef = useRef<VirtualElement>({
     getBoundingClientRect: () => {
@@ -163,12 +164,18 @@ export function ColumnAddFloatingMenu({ editor }: { editor: Editor }) {
     return () => cleanup()
   }, [])
 
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMenuVisible(true))
+
+    return () => cancelAnimationFrame(id)
+  }, [])
+
   return (
     <div
       ref={(node) => {
         floatingRef.current = node
       }}
-      className="column-menu"
+      className={clsx('column-menu', { active: menuVisible })}
       data-visible={visible}
       onClick={(e) => {
         e.preventDefault()
@@ -180,11 +187,11 @@ export function ColumnAddFloatingMenu({ editor }: { editor: Editor }) {
         style={{
           height: 'inherit',
           cursor: 'pointer',
-          width: '12px',
+          width: '11px',
 
         }}
       >
-        <Plus size={12} />
+        <Plus size={11} />
       </span>
     </div>
   );
