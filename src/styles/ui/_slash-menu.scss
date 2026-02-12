@@ -1,55 +1,32 @@
 
 .slash-menu {
-  @include font(body, regular);
+  @include font(body, medium);
   display: flex;
   flex-direction: column;
   gap: 2px;
-  background: var(--gray-2);
-  border: 1px solid var(--gray-3);
-  border-radius: 18px;
-  min-width: 230px;
+  background: var(--dark-4);
+  border: 1px solid var(--dark-5);
+  border-radius: 24px;
+  min-width: 220px;
   max-width: 300px;
   max-height: 350px;
   box-shadow:var(--base-shadow);
   overflow: hidden;
-  padding: 4px 10px;
+  padding: 4px 14px;
   color: var(--text-primary);
   z-index: 60;
   opacity: 0;
   pointer-events: none;
-  transform: scale(0.98);
-  transition: opacity 150ms ease, transform 0.15s ease;
+  transform: scale(0.96);
+  transition: opacity 250ms ease, transform 0.25s ease;
   overflow-y: auto;
 
   
   scroll-padding-bottom: 12px;
 
-  /* ===== Floating Scrollbar ===== */
-
-  &::-webkit-scrollbar {
-    width: 10px; // wider so thumb can float inside
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-    margin: 10px 0; // creates top/bottom inset space
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: var(--gray-1);
-    border-radius: 999px; // pill shape
-    border: 2px solid transparent; // THIS creates the floating effect
-    background-clip: content-box;
-    min-height: 40px;
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background-color: var(--gray-2);
-  }
-
   /* Firefox */
   scrollbar-width: thin;
-  scrollbar-color: rgba(147, 146, 146, 0.35) transparent;
+  scrollbar-color: var(--gray-3) transparent;
 
   &.active {
     opacity: 1;
@@ -72,19 +49,13 @@
    padding: 2px 8px;
     cursor: pointer;
     transition: color 0.15s ease;
-    color: var(--gray-7);
+    color: var(--gray-8);
     border-radius: 5px;
 
     &:hover,
     &.selected {
       background: var(--gray-3);
       color: var(--text-primary);
-    }
-
-    span{
-      font-size: 14px;
-      font-weight:normal;
-      color: inherit;
     }
 
     /* Icon inside item */
