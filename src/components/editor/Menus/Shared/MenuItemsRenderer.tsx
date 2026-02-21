@@ -1,5 +1,5 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { type MenuItem } from "../FloatingMenu/components/GutterFloatingMenu/types";
+import { type MenuItem } from "../types";
 import { ChevronRight } from 'lucide-react';
 
 interface IMenuItemsRenderer {
