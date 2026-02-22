@@ -82,8 +82,8 @@ export const gitHubEmojis: EmojiItem[] = [
 
 
 export const EmojiExtension = Emoji.configure({
-  emojis: gitHubEmojis,
-  enableEmoticons: true,
+  // emojis: gitHubEmojis,
+  // enableEmoticons: true,
 
   HTMLAttributes: {
     class: 'emoji'
@@ -99,16 +99,19 @@ export const EmojiExtension = Emoji.configure({
           )
         }).slice(0, 5)
     },
-    allowSpaces: false,
+    allowSpaces: true,
     char: ':',
 
     command: ({ editor, range, props }) => {
       // Remove the trigger character and any query text
       const { tr } = editor.state
-      tr.deleteRange(range.from, range.to)
-      editor.view.dispatch(tr)
-      // Execute the selected command
-      props.command(editor)
+
+      const nodeAfter = editor.state.selection.$to.nodeAfter
+
+      const overrideSpace = nodeAfter?.text?.startsWith(' ')
+      if (overrideSpace) {
+        range.to += 1
+      }
 
       editor
         .chain()
@@ -121,35 +124,21 @@ export const EmojiExtension = Emoji.configure({
               name: props.name,
               emoji: props.emoji
             }
-          }])
-        .run()
-      // editor
-      //   .chain()
-      //   .focus()
-      //   .setEmoji(props.name) // 
-      //   .run()
-      //   return true // 
-    },
-
-    /*
-    command: ({ editor, range, props }: { editor: any, range: any, props: any }) => {
-      editor
-        .chain()
-        .focus()
-        .insertContentAt(range, [
-          {
-            type: 'mention',
-            attrs: {
-              id: props.id,
-              label: props.label,
-              mentionSuggestionChar: '@',
-            },
           },
-          { type: 'text', text: ' ' },
+          {
+            type: 'text',
+            text: ' '
+          }
+
         ])
+        .command(({ tr, state }) => {
+          tr.setStoredMarks(
+            state.doc.resolve(state.selection.to - 2).marks()
+          )
+          return true
+        })
         .run()
     },
-    */
 
     render: () => {
       let component: ReactRenderer<any>;
@@ -158,8 +147,6 @@ export const EmojiExtension = Emoji.configure({
         const virtualEl: VirtualElement = {
           getBoundingClientRect: () => clientRect //posToDOMRect(editor.view, editor.state.selection.from, editor.state.selection.to)
         }
-
-
 
         computePosition(virtualEl, element, {
           placement: 'bottom-start',
@@ -180,7 +167,6 @@ export const EmojiExtension = Emoji.configure({
             props,
             editor: props.editor,
           });
-
 
           document.body.appendChild(component.element)
 
