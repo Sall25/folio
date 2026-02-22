@@ -25,7 +25,8 @@ import {
   DeleteNodeAtExtension,
   DuplicateNodeExtension,
   EmojiInputRules,
-  TableShortcutInputRules
+  TableShortcutInputRules,
+  DateInputRules
 } from '../Plugins/extensions'
 
 // components
@@ -107,7 +108,8 @@ export function EditorApp() {
       ColumnExtension,
       DocExtension,
       EmojiInputRules,
-      TableShortcutInputRules
+      TableShortcutInputRules,
+      DateInputRules
     ],
 
     editorProps: {
