@@ -8,7 +8,8 @@ import { DocExtension } from "../../UI/Menus/FloatingMenu/DocHandle/extensions";
 import { CopyNodeExtension } from "./CopyNodeExtension";
 import { DeleteNodeAtExtension } from "./DeleteNodeAtExtension";
 import { DuplicateNodeExtension } from "./DuplicateNodeExtension";
-import { EmojiInputRules } from "../../UI/Inputs";
+import { EmojiInputRules, TableShortcutInputRules } from "../../UI/Inputs";
+
 
 export {
   HeadingWithId,
@@ -22,5 +23,6 @@ export {
   CopyNodeExtension,
   DeleteNodeAtExtension,
   DuplicateNodeExtension,
-  EmojiInputRules
+  EmojiInputRules,
+  TableShortcutInputRules
 }

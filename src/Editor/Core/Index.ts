@@ -1,1 +1,1 @@
-export * from './AppEditor'
+export * from './EditorApp'

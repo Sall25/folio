@@ -24,7 +24,8 @@ import {
   CopyNodeExtension,
   DeleteNodeAtExtension,
   DuplicateNodeExtension,
-  EmojiInputRules
+  EmojiInputRules,
+  TableShortcutInputRules
 } from '../Plugins/extensions'
 
 // components
@@ -42,7 +43,7 @@ import {
 import { getEditorContent } from './editorContent'
 
 
-export function AppEditor() {
+export function EditorApp() {
 
   const editor = useEditor({
     extensions: [
@@ -105,7 +106,8 @@ export function AppEditor() {
       RowExtension,
       ColumnExtension,
       DocExtension,
-      EmojiInputRules
+      EmojiInputRules,
+      TableShortcutInputRules
     ],
 
     editorProps: {
