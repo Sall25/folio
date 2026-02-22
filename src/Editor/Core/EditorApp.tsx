@@ -26,7 +26,10 @@ import {
   DuplicateNodeExtension,
   EmojiInputRules,
   TableShortcutInputRules,
-  DateInputRules
+  DateInputRules,
+  SlashCommand,
+  MentionExtension,
+  EmojiExtension
 } from '../Plugins/extensions'
 
 // components
@@ -54,7 +57,8 @@ export function EditorApp() {
         undoRedo: {
           depth: 100,
           newGroupDelay: 500
-        }
+        },
+
       }),
       CopyNodeExtension,
       DuplicateNodeExtension,
@@ -107,9 +111,13 @@ export function EditorApp() {
       RowExtension,
       ColumnExtension,
       DocExtension,
-      EmojiInputRules,
+      // EmojiInputRules,
       TableShortcutInputRules,
-      DateInputRules
+      DateInputRules,
+      SlashCommand,
+      MentionExtension,
+      //  Emoji
+      EmojiExtension
     ],
 
     editorProps: {
