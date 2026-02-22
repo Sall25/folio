@@ -2,8 +2,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--bg-app);
-  color: var(--text-primary);
+  background: var(--tt-bg-color);
+  color: var(--tt-color-text-gray);
 }
 
 #root .editor-container{
@@ -20,7 +20,7 @@
 
 hr{
    height: 1px;
-  border: 1px solid var(--gray-4);
+  border: 1px solid var(--tt-border-color);
   margin: 5px 8px;
   width: 100%;
 }

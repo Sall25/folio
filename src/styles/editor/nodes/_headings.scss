@@ -2,13 +2,12 @@
   h1, h2, h3, h4, h5, h6 {
     @include font(body, regular);
     margin-top: 0.4rem;
-    color: var(--light-7);
+    color: var(--tt-color-text);
 
      /* Selection styling */
   &::selection,
    *::selection {
-    background: var(--selection-bg);
-    color: var(--selection-text);
+    background: var(--tt-selection-color);
     border-radius: 6px;
   }
     

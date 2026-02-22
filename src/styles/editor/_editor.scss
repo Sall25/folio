@@ -6,12 +6,18 @@
   width: 90%;
   margin: 60px 0;
   padding: 10px 16px;
-  background-color: var(--bg-editor);
+  background-color: var(--tt-bg-color);
   overflow-y: auto;
 
-  .pm-selected-node{
-    background-color: var(--selection-bg);
-    border-radius: 6px;
+  .ProseMirror-selectednode{
+    background-color: var(--tt-selection-color);
+      border-radius: 6px;
+  }
+
+  .drag-handle{
+    width: 33px;
+    height: 33px;
+    background: lightcoral;
   }
 
 

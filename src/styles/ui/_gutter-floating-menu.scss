@@ -2,15 +2,17 @@
   position: absolute;
   top: 0;
   left: 0;
-  display: flex;
+  //display: flex;
   gap: 2px;
   pointer-events: auto;
   z-index: 3;
   opacity: 0;
+  display: none;
   transition: opacity 0.25s, transform 0.25s;
 
   &.isVisible{
     opacity: 1;
+    display: flex;
   }
 
   .btn{

@@ -14,10 +14,10 @@
   &:first-child{
     margin-top: 0px;
   }
-  .selection{
-    background: var(--selection-bg);
-    color: var(--selection-text);
-  }
+  // .selection{
+  //   background: var(--selection-bg);
+  //   color: var(--selection-text);
+  // }
 
   &.disable-selection{
     user-select: none;

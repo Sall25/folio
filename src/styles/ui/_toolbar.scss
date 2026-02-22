@@ -7,18 +7,20 @@
   min-height: 45px;
   padding: 5px 45px;
   gap: 10px;
-  border-bottom: 1px solid var(--gray-3);
-  border-radius: 8px;
   align-items: center;
   font-size: 0.875rem;
-  color: var(--text-orange);
-  background: var(--bg-app);
-  z-index: 40;
+  color: var(--tt-sidebar-bg-color);
+  background: var(--tt-bg-color);
+  box-shadow: var(--tt-shadow-elevated-xs);
+  border-bottom: 1px solid var(--tt-border-color);
+  z-index: 10;
 
   .undoRedoMenu{
     display: flex;
     align-items: center;
-    gap: 4px;
+    border: none;
+    gap: 6px;
+    box-shadow: var(--tt-shadow-elevated-xs);
   }
 }
 
@@ -30,11 +32,13 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  color: var(--gray-8);
-  background: transparent;
+  color: var(--tt-gray-dark-800);
+  background: var(--transparent);
+  border-radius: var(--tt-radius-md);
+  box-shadow: var(--tt-shadow-elevated-xs);
 
   &:hover {
-    background: var(--cyan-2);
+    background: var(--tt-brand-color-900);
   }
 
   &:active,
@@ -62,6 +66,7 @@
   border-radius: 100%;
   cursor: pointer;
   margin-right: 1.1rem;
+  box-shadow: var(--tt-shadow-elevated-xs);
 }
 
 @include breakpoint(sm) {
@@ -69,7 +74,6 @@
     gap: 10px;
     padding: 4px 6px;
     font-size: 0.75rem;
-    border-radius: 6px;
   }
 
   .toolbar-button {

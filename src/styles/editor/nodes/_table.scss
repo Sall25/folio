@@ -21,11 +21,12 @@
       
       > * {
         margin-bottom: 0;
+        color: inherit;
       }
 
       &.active-cell{
-        border: 1px solid var(--purple-3);
-       
+        border: 2px solid var(--purple-3);
+        z-index: 5px;
       }
 
       //  &.active-column{
@@ -44,6 +45,12 @@
         border: 2px solid var(--purple-3);
         background-color: var(--purple-3);
         opacity: 0.5;
+      }
+     
+      >*{
+        color: inherit;
+        background-color: inherit;
+        background: inherit;
       }
     }
 

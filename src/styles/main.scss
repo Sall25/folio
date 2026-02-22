@@ -54,10 +54,10 @@ body::-webkit-scrollbar {
 }
 
 body::-webkit-scrollbar-thumb {
-  background: var(--gray-3);
+  background: var(--tt-scrollbar-color);
   border-radius: 5px;
 }
 
 body::-webkit-scrollbar-track {
-  background: var(--gray-1);
+  background: var(--tt-scrollbar-color);
 }

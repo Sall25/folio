@@ -26,8 +26,8 @@
   pointer-events: none;
   transform: scale(0.94) translateY(-4px);
   transform-origin: top left;
-  transition: opacity 0.25s ease,
-              transform 0.25s ease;
+  // transition: opacity 0.25s ease,
+  //             transform 0.25s ease;
 
 
   /* ACTIVE / OPEN STATE */
@@ -122,7 +122,7 @@
   }
 
   .icon {
-    transition: transform 0.2s ease, color 0.15s ease;
+    transition: transform 0.1s ease, color 0.15s ease;
   }
 
   &:hover,

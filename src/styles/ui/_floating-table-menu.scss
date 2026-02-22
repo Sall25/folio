@@ -23,21 +23,6 @@
     cursor: grab;
     z-index: 2;
 
-    opacity: 0;
-  }
-
-  &[data-visible="true"] {
-    .column-menu__inner {
-      opacity: 1;
-      transform:
-        translateX(0)
-        translateY(0)
-        scale(1);
-
-      .icon{
-        width: 1.2rem;
-        height: 1.2rem;
-      }
-    }
+    opacity: 1;
   }
 }

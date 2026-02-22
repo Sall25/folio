@@ -5,8 +5,12 @@
     padding: 0 0.5rem;
     margin: 0.5rem 0.5rem 0.5rem 0.4rem;
 
+    >*{
+      color: inherit;
+    }
+
     li p{
-    
+      color: inherit;
       margin-top: 0.15em;
       margin-bottom: 0.15em;
     }
