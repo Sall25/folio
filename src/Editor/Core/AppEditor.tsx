@@ -23,7 +23,8 @@ import {
   DocExtension,
   CopyNodeExtension,
   DeleteNodeAtExtension,
-  DuplicateNodeExtension
+  DuplicateNodeExtension,
+  EmojiInputRules
 } from '../Plugins/extensions'
 
 // components
@@ -41,7 +42,7 @@ import {
 import { getEditorContent } from './editorContent'
 
 
-function Editor() {
+export function AppEditor() {
 
   const editor = useEditor({
     extensions: [
@@ -103,7 +104,8 @@ function Editor() {
       BlurSelection,
       RowExtension,
       ColumnExtension,
-      DocExtension
+      DocExtension,
+      EmojiInputRules
     ],
 
     editorProps: {
@@ -159,5 +161,3 @@ function Editor() {
     </main>
   );
 }
-
-export default Editor;

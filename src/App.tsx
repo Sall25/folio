@@ -1,10 +1,10 @@
-import Editor from './components/Editor/Core/Editor'
+import { AppEditor } from "./Editor/Core/AppEditor";
 
 function App() {
 
   return (
     <div>
-      <Editor />
+      <AppEditor />
 
     </div>
 
