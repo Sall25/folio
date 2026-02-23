@@ -47,6 +47,7 @@ import {
 } from '../UI/Toolbar'
 
 import { getEditorContent } from './editorContent'
+import { useEffect, useState } from 'react'
 
 
 export function EditorApp() {
@@ -123,7 +124,15 @@ export function EditorApp() {
       //  Emoji
       EmojiExtension,
       GlobalCommands,
-      Image
+      Image.configure({
+        resize: {
+          enabled: true,
+          directions: ['top', 'bottom', 'left', 'right'], // can be any direction or diagonal combination
+          minWidth: 50,
+          minHeight: 50,
+          alwaysPreserveAspectRatio: true,
+        }
+      })
       // SlashCommandPlaceholder.configure({
       //   slashPlaceholder: 'Commands: /heading, /list, /table...',
       //   placeholder: ({ isSlashActive }) =>
@@ -145,14 +154,28 @@ export function EditorApp() {
   });
 
 
+  const [fontsLoaded, setFontsLoaded] = useState(false)
+
+  useEffect(() => {
+
+    document.fonts.ready.then(() => {
+      setFontsLoaded(true)
+    })
+  }, [])
+
+
   if (!editor) return null;
+
 
   return (
     <main>
       <Toolbar
         editor={editor}
       />
-      <div className="editor-container">
+      <div
+        className="editor-container"
+        style={{ visibility: fontsLoaded ? 'visible' : 'hidden' }}
+      >
         <EditorContent
           className="editor"
           editor={editor}

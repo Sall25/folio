@@ -5,7 +5,18 @@ export const TableMenuExtension = Table.extend({
   addProseMirrorPlugins() {
     return [
       ...(this.parent?.() || []),
-      tableContextPlugin
+      tableContextPlugin,
+      // new Plugin({
+      //   key: new PluginKey('tableAwarePlugin'),
+      //   props: {
+      //     handleDOMEvents: {
+      //       mouseleave(view) {
+
+
+      //       },
+      //     }
+      //   }
+      // })
     ]
   },
 

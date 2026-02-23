@@ -47,7 +47,17 @@ export const tableContextPlugin = new Plugin({
       // inside props.handleDOMEvents
       mousemove(view, event) {
         const ctx = getTableContext(view, event)
-        if (!ctx) return false
+        if (!ctx) {
+
+          view.dispatch(
+            view.state.tr.setMeta('hideColumnDragHandle', true)
+          )
+          view.dispatch(
+            view.state.tr.setMeta('hideRowDragHandle', true)
+          )
+          console.log('left table')
+          return false
+        }
 
         const { cell, table } = ctx
         const tableContainer = view.nodeDOM(table.pos) as HTMLElement | null
@@ -127,6 +137,9 @@ export const tableContextPlugin = new Plugin({
             tablePos: null
           })
         )
+
+
+
       }
     }
   }
