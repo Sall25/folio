@@ -1,42 +1,32 @@
-/* Placeholder text for empty editor nodes */
-// .tiptap .ProseMirror p[data-placeholder]::before {
-//   content: attr(data-placeholder);
-//   color: var(--placeholder-color);       
-//   pointer-events: none;        // don’t block clicks
-//   font-style: italic;
-//   position: absolute;
-//   left: 0;
-//   top: 0;
-//   padding-left: 0.25rem;
-//   padding-top: 0.125rem;
-//   user-select: none;
-//   opacity: 0.6;
-//   transition: color 0.25s ease;
-// }
-
-// /* Hide placeholder when editor has content */
-// .tiptap .ProseMirror p:not(:empty)::before {
-//   content: '';
-// }
 
 .tiptap{
-  /* Placeholder (at the top) */
-  p.is-editor-empty:first-child::before {
-    color: var(--placeholder-color);
-    content: attr(data-placeholder);
-    float: left;
-    height: 0;
-    pointer-events: none;
-  }
+ 
+
+  /* Display placeholder on every new line*/
+  p.is-empty::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }
 
-// /* Optional: adjust for empty editor */
-// .tiptap[data-empty='true'] .ProseMirror::before {
-//   content: attr(data-placeholder);
-//   color: var(--placeholder-color);
-//   font-style: italic;
-//   position: absolute;
-//   left: 1rem;
-//   top: 1rem;
-//   pointer-events: none;
+[data-placeholder]:empty:before {
+  content: attr(data-placeholder);
+  pointer-events: none;
+  color: #999;
+  font-style: italic;
+}
+
+.slash-command-active[data-placeholder]:empty:before {
+  color: #007bff;
+  font-weight: 500;
+  content: attr(data-placeholder);
+}
+
+// .slash-command-active{
+//    color: #007bff;
+//   font-weight: 500;
+//   background-color: aqua;
 // }
+}

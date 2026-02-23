@@ -2,9 +2,7 @@
 
   /* Table-specific styling */
   table {
-    @include font(body, regular);
     border-collapse: collapse;
-    margin: 0;
     overflow: hidden;
     table-layout: fixed;
     width: 100%;
@@ -20,8 +18,11 @@
       vertical-align: top;
       
       > * {
+         @include font(body, medium);
         margin-bottom: 0;
         color: inherit;
+        font-size: 14px;
+
       }
 
       &.active-cell{

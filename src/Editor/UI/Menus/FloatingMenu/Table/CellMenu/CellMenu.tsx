@@ -5,7 +5,6 @@ import { Grip } from 'lucide-react'
 import { getMenuItems } from '../utils/menuBuilder'
 import { MenuItemsRenderer } from '../../../Shared'
 import { CellHandle } from '../CellHandle/CellHandle'
-import { offset } from '@floating-ui/dom'
 
 export function CellMenuContent({ editor, cellPos, multiple = false }: { editor: Editor, cellPos: number, multiple: boolean }) {
 
@@ -41,11 +40,11 @@ export function CellMenu({ editor }: { editor: Editor }) {
       }}
       computePositionConfig={{
         placement: 'right',
-        middleware: [
-          offset(({ rects }) => {
-            return -rects.floating.width / 2
-          })
-        ]
+        // middleware: [
+        //   offset(({ rects }) => {
+        //     return -rects.floating.width / 2
+        //   })
+        // ]
       }}
     >
       <>
@@ -59,6 +58,10 @@ export function CellMenu({ editor }: { editor: Editor }) {
           >
             <DropdownMenu.Trigger asChild>
               <button
+                style={{
+                  position: 'relative',
+                  transform: 'translateX(-50%)'
+                }}
                 onPointerDownCapture={() => {
                   editor.commands.selectCell(cellPos)
                 }}

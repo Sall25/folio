@@ -65,7 +65,8 @@ export function EditorApp() {
       DuplicateNodeExtension,
       DeleteNodeAtExtension,
       Placeholder.configure({
-        placeholder: 'Write Something here...',
+        placeholder: "Write, type '/' from commands..."
+
       }),
 
       TextAlign.configure({
@@ -119,7 +120,13 @@ export function EditorApp() {
       MentionExtension,
       //  Emoji
       EmojiExtension,
-      GlobalCommands
+      GlobalCommands,
+      // SlashCommandPlaceholder.configure({
+      //   slashPlaceholder: 'Commands: /heading, /list, /table...',
+      //   placeholder: ({ isSlashActive }) =>
+      //     isSlashActive ? 'Type a command' : 'Write something...',
+      // }),
+
     ],
 
     editorProps: {

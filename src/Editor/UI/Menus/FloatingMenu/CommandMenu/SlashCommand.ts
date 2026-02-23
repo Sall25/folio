@@ -226,7 +226,7 @@ export const SlashCommand = Extension.create({
       startOfLine: true,
       decorationClass: 'slash-suggestion',
       allowSpaces: true,
-
+      decorationContent: 'Filter',
       items: ({ query }) => {
         const q = (query || '').toLowerCase()
         return (this.options.commands as SlashItem[]).filter((c) =>

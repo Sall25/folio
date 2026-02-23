@@ -5,7 +5,7 @@ import type { Editor } from '@tiptap/core'
 import { DragHandle } from '@tiptap/extension-drag-handle-react'
 import { useState } from 'react'
 import { Grip, Plus } from 'lucide-react'
-import { offset, shift } from '@floating-ui/dom'
+
 
 type DocMenuContentProps = {
   editor: Editor,
@@ -54,10 +54,7 @@ export function DocHandle({ editor }: { editor: Editor }) {
       computePositionConfig={
         {
           placement: 'left-start',
-          middleware: [
-            offset(50)
-            //shift({ padding: '50px' })
-          ]
+
         }
       }
       onNodeChange={({ node, pos }) => {
@@ -107,18 +104,10 @@ export function DocHandle({ editor }: { editor: Editor }) {
               position: 'relative',
               display: 'flex',
               alignItems: 'center',
+              transform: 'translateX(-60px)', // push fully outside
 
             }}
           >
-            {/* invisible bridge */}
-            <div
-              style={{
-                position: 'absolute',
-                right: '100%',
-                width: '60px',   // must match your visual gap
-                height: '100%',
-              }}
-            />
 
             {/* actual UI */}
             <div
@@ -126,14 +115,13 @@ export function DocHandle({ editor }: { editor: Editor }) {
                 display: 'flex',
                 gap: '10px',
                 pointerEvents: 'auto',
+                border: '2px solid white',
+
               }}
             >
               <button
                 onClick={() => {
-
-                  editor.chain().insertLineAfter(options.props.pos).hideDragHandle().run()
-
-
+                  editor.chain().insertLineAfter(options.props.pos).run()
                 }}
               >
                 <Plus
@@ -164,8 +152,6 @@ export function DocHandle({ editor }: { editor: Editor }) {
 
 
               </DropdownMenu.Root>
-
-
             </div>
           </div>
           // <div
