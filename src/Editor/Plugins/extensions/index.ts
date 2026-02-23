@@ -11,6 +11,7 @@ import { DuplicateNodeExtension } from "./DuplicateNodeExtension";
 import { SlashCommand } from "../../UI/Menus";
 import { MentionExtension } from "../../UI/Menus";
 import { EmojiExtension } from "../../UI/Menus";
+import { GlobalCommands } from "./GlobalCommands";
 
 import {
   EmojiInputRules,
@@ -36,5 +37,6 @@ export {
   DateInputRules,
   SlashCommand,
   MentionExtension,
-  EmojiExtension
+  EmojiExtension,
+  GlobalCommands
 }

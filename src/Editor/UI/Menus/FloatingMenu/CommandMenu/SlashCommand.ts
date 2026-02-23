@@ -187,10 +187,24 @@ export const SlashCommand = Extension.create({
       // })
     }
 
-    function destroyRenderer() {
+    function destroyRenderer(props: SuggestionProps<SlashItem>) {
+      const { editor, range } = props
+      const { state } = editor
+
+      const textAtRange = state.doc.textBetween(range.from, range.to, '\0', '\0')
+      const cursorPos = state.selection.from
+
+      const stillSlash = textAtRange.startsWith('/')
+      const cursorInside = cursorPos >= range.from && cursorPos <= range.to + 1
+
+      if (stillSlash && cursorInside) {
+        // Ignore transient exit caused by our own transaction
+        return
+      }
 
       if (reactRenderer) {
         try {
+
           reactRenderer.destroy()
         }
         catch {
@@ -211,6 +225,8 @@ export const SlashCommand = Extension.create({
       char: '/',
       startOfLine: true,
       decorationClass: 'slash-suggestion',
+      allowSpaces: true,
+
       items: ({ query }) => {
         const q = (query || '').toLowerCase()
         return (this.options.commands as SlashItem[]).filter((c) =>
@@ -225,6 +241,7 @@ export const SlashCommand = Extension.create({
         onStart: createRenderer,
         onUpdate: updateRenderer,
         onExit: destroyRenderer,
+
         onKeyDown: ({ event }) => {
           if (!currentProps) return false
           const items = currentProps.items || []
@@ -245,11 +262,13 @@ export const SlashCommand = Extension.create({
               const item = items[selectedIndex]
               if (item) {
                 currentProps.command(item)
+
                 exitSuggestion(editor.view)
                 return true
               }
               return false
             }
+
             case 'Escape':
               exitSuggestion(editor.view)
               return true

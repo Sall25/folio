@@ -2,7 +2,7 @@
 import type { SuggestionProps } from '@tiptap/suggestion'
 import type { Editor } from '@tiptap/core'
 import type { Level } from '@tiptap/extension-heading'
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import clsx from 'clsx';
 
 
@@ -26,23 +26,15 @@ type Props = SuggestionProps<SlashItem> & {
 
 export default function SlashList(props: Props) {
   const { items = [], selectedIndex = 0, onClickItem } = props
-  const [menuVisible, setMenuVisible] = useState(false)
 
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
-
-  useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      setMenuVisible(true)
-    })
-    return () => cancelAnimationFrame(id)
-  }, [])
 
   useEffect(() => {
     const el = itemRefs.current[selectedIndex]
     if (!el) return
 
     el.scrollIntoView({
-      block: 'nearest', 
+      block: 'nearest',
       inline: 'nearest',
       behavior: 'smooth',
     })
@@ -54,9 +46,13 @@ export default function SlashList(props: Props) {
 
   return (
     <div
-      className={clsx('slash-menu', { active: menuVisible })}
+      className={'slash-menu active'/*clsx('slash-menu active', { active: menuVisible })*/}
       role="listbox"
       aria-label="Slash commands"
+      onMouseLeave={(e) => {
+        e.preventDefault()
+        console.log('mouse left')
+      }}
     >
       {items.length === 0 ? (
         <div className="slash-empty">No commands</div>
@@ -79,6 +75,8 @@ export default function SlashList(props: Props) {
                 'is-title': item.mark?.type === 'title',
                 'is-separator': item.mark?.type === 'separator',
               })}
+
+
               onMouseDown={(e) => {
                 if (!selectable) return
                 e.preventDefault()

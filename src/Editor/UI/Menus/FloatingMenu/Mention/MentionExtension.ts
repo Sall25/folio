@@ -5,7 +5,7 @@ import { Mention } from '@tiptap/extension-mention'
 import type { MentionItem, MentionListRef } from './types'
 import { Editor, posToDOMRect, ReactRenderer } from '@tiptap/react'
 import MentionList from './MentionList'
-import { type SuggestionKeyDownProps } from '@tiptap/suggestion'
+import { type SuggestionKeyDownProps, type SuggestionProps } from '@tiptap/suggestion'
 import { type MentionSuggestion } from './types'
 import { computePosition, flip, shift, type VirtualElement } from '@floating-ui/dom'
 
@@ -94,7 +94,21 @@ export const MentionExtension = Mention.configure({
           return reactRenderer?.ref?.onKeyDown(props) ?? false
         },
 
-        onExit() {
+        onExit(props: SuggestionProps<MentionItem>) {
+          const { editor, range } = props
+          const { state } = editor
+
+          const textAtRange = state.doc.textBetween(range.from, range.to, '\0', '\0')
+          const cursorPos = state.selection.from
+
+          const stillSlash = textAtRange.startsWith('@')
+          const cursorInside = cursorPos >= range.from && cursorPos <= range.to + 1
+
+          if (stillSlash && cursorInside) {
+            // Ignore transient exit caused by our own transaction
+            return
+          }
+
           reactRenderer?.element.remove()
           reactRenderer?.destroy()
         },

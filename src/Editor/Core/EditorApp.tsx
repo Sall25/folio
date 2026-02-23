@@ -9,7 +9,7 @@ import { FontFamily } from '@tiptap/extension-font-family'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
 import Link from '@tiptap/extension-link'
-import HorizontalRule from '@tiptap/extension-horizontal-rule'
+
 
 // custom extensions
 import {
@@ -24,7 +24,7 @@ import {
   CopyNodeExtension,
   DeleteNodeAtExtension,
   DuplicateNodeExtension,
-  EmojiInputRules,
+  GlobalCommands,
   TableShortcutInputRules,
   DateInputRules,
   SlashCommand,
@@ -58,6 +58,7 @@ export function EditorApp() {
           depth: 100,
           newGroupDelay: 500
         },
+        link: false
 
       }),
       CopyNodeExtension,
@@ -87,7 +88,7 @@ export function EditorApp() {
       Selection.configure({
         className: 'selection'
       }),
-      HorizontalRule,
+      //HorizontalRule,
 
       // MentionExtension,
       // SlashCommand,
@@ -117,7 +118,8 @@ export function EditorApp() {
       SlashCommand,
       MentionExtension,
       //  Emoji
-      EmojiExtension
+      EmojiExtension,
+      GlobalCommands
     ],
 
     editorProps: {

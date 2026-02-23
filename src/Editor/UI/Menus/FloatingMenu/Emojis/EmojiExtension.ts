@@ -1,89 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-
 import Emoji, { type EmojiItem } from '@tiptap/extension-emoji'
 import { ReactRenderer } from '@tiptap/react'
 import { EmojiList } from './EmojiList'
 import { computePosition, type VirtualElement } from '@floating-ui/dom'
-
-export const gitHubEmojis: EmojiItem[] = [
-  {
-    name: "smile",
-    shortcodes: ["smile"],
-    tags: ["happy", "joy", "face"],
-    emoji: "😄",
-    fallbackImage: "https://github.githubassets.com/images/icons/emoji/unicode/1f604.png",
-  },
-  {
-    name: "thumbsup",
-    shortcodes: ["thumbsup", "like", "+1"],
-    tags: ["approve", "ok", "good"],
-    emoji: "👍",
-    fallbackImage: "https://github.githubassets.com/images/icons/emoji/unicode/1f44d.png",
-  },
-  {
-    name: "heart",
-    shortcodes: ["heart", "love"],
-    tags: ["like", "favorite", "love"],
-    emoji: "❤️",
-    fallbackImage: "https://github.githubassets.com/images/icons/emoji/unicode/2764.png",
-  },
-  {
-    name: "rocket",
-    shortcodes: ["rocket"],
-    tags: ["launch", "ship", "deploy"],
-    emoji: "🚀",
-    fallbackImage: "https://github.githubassets.com/images/icons/emoji/unicode/1f680.png",
-  },
-  {
-    name: "tada",
-    shortcodes: ["tada", "congrats", "party"],
-    tags: ["celebrate", "congratulations"],
-    emoji: "🎉",
-    fallbackImage: "https://github.githubassets.com/images/icons/emoji/unicode/1f389.png",
-  },
-  {
-    name: "bug",
-    shortcodes: ["bug"],
-    tags: ["issue", "problem", "error"],
-    emoji: "🐛",
-    fallbackImage: "https://github.githubassets.com/images/icons/emoji/unicode/1f41b.png",
-  },
-  {
-    name: "eyes",
-    shortcodes: ["eyes", "look"],
-    tags: ["watch", "attention"],
-    emoji: "👀",
-    fallbackImage: "https://github.githubassets.com/images/icons/emoji/unicode/1f440.png",
-  },
-  {
-    name: "fire",
-    shortcodes: ["fire", "hot"],
-    tags: ["lit", "awesome"],
-    emoji: "🔥",
-    fallbackImage: "https://github.githubassets.com/images/icons/emoji/unicode/1f525.png",
-  },
-  {
-    name: "clap",
-    shortcodes: ["clap"],
-    tags: ["applause", "congrats"],
-    emoji: "👏",
-    fallbackImage: "https://github.githubassets.com/images/icons/emoji/unicode/1f44f.png",
-  },
-  {
-    name: "thinking",
-    shortcodes: ["thinking"],
-    tags: ["ponder", "question"],
-    emoji: "🤔",
-    fallbackImage: "https://github.githubassets.com/images/icons/emoji/unicode/1f914.png",
-  },
-];
-
-
+import type { SuggestionProps } from '@tiptap/suggestion';
 
 export const EmojiExtension = Emoji.configure({
-  // emojis: gitHubEmojis,
-  // enableEmoticons: true,
 
   HTMLAttributes: {
     class: 'emoji'
@@ -103,8 +25,6 @@ export const EmojiExtension = Emoji.configure({
     char: ':',
 
     command: ({ editor, range, props }) => {
-      // Remove the trigger character and any query text
-      const { tr } = editor.state
 
       const nodeAfter = editor.state.selection.$to.nodeAfter
 
@@ -180,7 +100,20 @@ export const EmojiExtension = Emoji.configure({
 
         onKeyDown: (props: any) => component.ref?.onKeyDown(props) ?? false,
 
-        onExit: () => {
+        onExit: (props: SuggestionProps<EmojiItem>) => {
+          const { editor, range } = props
+          const { state } = editor
+
+          const textAtRange = state.doc.textBetween(range.from, range.to, '\0', '\0')
+          const cursorPos = state.selection.from
+
+          const stillSlash = textAtRange.startsWith(':')
+          const cursorInside = cursorPos >= range.from && cursorPos <= range.to + 1
+
+          if (stillSlash && cursorInside) {
+            // Ignore transient exit caused by our own transaction
+            return
+          }
           if (document.body.contains(component.element)) {
             document.body.removeChild(component.element)
           }
