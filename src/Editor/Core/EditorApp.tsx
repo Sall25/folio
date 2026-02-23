@@ -8,6 +8,8 @@ import { BackgroundColor, Color, FontSize, TextStyle } from '@tiptap/extension-t
 import { FontFamily } from '@tiptap/extension-font-family'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
+import Image from '@tiptap/extension-image'
+
 import Link from '@tiptap/extension-link'
 
 
@@ -121,6 +123,7 @@ export function EditorApp() {
       //  Emoji
       EmojiExtension,
       GlobalCommands,
+      Image
       // SlashCommandPlaceholder.configure({
       //   slashPlaceholder: 'Commands: /heading, /list, /table...',
       //   placeholder: ({ isSlashActive }) =>

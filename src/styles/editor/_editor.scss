@@ -2,6 +2,7 @@
 @import './placeholders';
 @import './link-popover';
 @import './suggestions';
+@import './selection';
 
 .editor{
   width: 100%;
@@ -10,10 +11,7 @@
   background-color: var(--tt-bg-color);
   overflow-y: auto;
  
-  .ProseMirror-selectednode{
-    background-color: var(--tt-selection-color);
-      border-radius: 6px;
-  }
+ 
 
   .drag-handle{
     width: 33px;

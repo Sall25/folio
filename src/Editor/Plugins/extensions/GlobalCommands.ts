@@ -5,6 +5,9 @@ import {
 import {
   hideDragHandle as hideDragHandleCmd
 } from '../commands/hideDragHandle'
+import {
+  clearSelection as clearSelectionCmd
+} from '../commands/clearSelection'
 
 export const GlobalCommands = Extension.create({
   name: 'globalCommandsExtension',
@@ -16,6 +19,9 @@ export const GlobalCommands = Extension.create({
       },
       hideDragHandle() {
         return hideDragHandleCmd()
+      },
+      clearSelection(pos) {
+        return clearSelectionCmd(pos)
       },
     }
   }

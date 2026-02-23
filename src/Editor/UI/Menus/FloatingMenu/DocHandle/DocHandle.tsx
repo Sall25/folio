@@ -46,7 +46,7 @@ const getLabel = (name: string, level: 1 | 2 | 3 | 4 = 1): Label => {
 
 export function DocHandle({ editor }: { editor: Editor }) {
   const [options, setOptions] = useState<Options | null>(null)
-
+  const [open, setOpen] = useState(false)
 
   return (
     <DragHandle
@@ -129,16 +129,19 @@ export function DocHandle({ editor }: { editor: Editor }) {
                 />
               </button>
               <DropdownMenu.Root
-                onOpenChange={(open) => {
-                  if (!open) {
-                    editor.commands.blur()
-                  }
+                onOpenChange={(next) => {
+                  setOpen(next)
                 }}
               >
                 <DropdownMenu.Trigger asChild>
                   <button
                     onPointerDownCapture={() => {
-                      editor.commands.setNodeSelection(options.props.pos)
+                      if (open) {
+                        editor.commands.clearSelection(options.props.pos)
+                      } else {
+                        editor.commands.setNodeSelection(options.props.pos)
+                      }
+
                     }}
                   >
                     <Grip size={20} />
