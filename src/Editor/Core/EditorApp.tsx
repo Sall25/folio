@@ -37,8 +37,6 @@ import {
 // components
 import {
   BubbleMenu,
-  ColumnMenu,
-  RowMenu,
   CellMenu,
   DocHandle
 } from '../UI/Menus'
@@ -189,13 +187,13 @@ export function EditorApp() {
           editor={editor}
         />
 
-        <ColumnMenu
+        {/* <ColumnMenu
           editor={editor}
         />
 
         <RowMenu
           editor={editor}
-        />
+        /> */}
 
         <CellMenu
           editor={editor}

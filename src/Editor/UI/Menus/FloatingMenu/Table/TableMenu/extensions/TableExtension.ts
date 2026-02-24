@@ -1,22 +1,52 @@
 import { Table } from "@tiptap/extension-table"
 import { tableContextPlugin } from "../plugins"
+import { ReactNodeViewRenderer } from "@tiptap/react"
+import { TableComponent } from "../components"
 
-export const TableMenuExtension = Table.extend({
+type Col = {
+  index: number,
+  width: number
+}
+
+type Row = {
+  index: number,
+  height: number
+}
+
+
+interface TableMenuStorage {
+  currentCol: Col | null;
+  currentRow: Row | null;
+  colCount: number;
+  rowCount: number;
+  cols: number[];
+  rows: number[];
+}
+
+declare module '@tiptap/core' {
+  interface Storage {
+    table: TableMenuStorage;
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const TableMenuExtension = Table.extend<any, TableMenuStorage>({
+  addStorage() {
+    return {
+      ...this.parent?.(),
+      currentCol: null,
+      currentRow: null,
+      colCount: 0,
+      rowCount: 0,
+      cols: [],
+      rows: []
+    }
+  },
   addProseMirrorPlugins() {
     return [
       ...(this.parent?.() || []),
-      tableContextPlugin,
-      // new Plugin({
-      //   key: new PluginKey('tableAwarePlugin'),
-      //   props: {
-      //     handleDOMEvents: {
-      //       mouseleave(view) {
+      tableContextPlugin(this.editor),
 
-
-      //       },
-      //     }
-      //   }
-      // })
     ]
   },
 
@@ -57,5 +87,9 @@ export const TableMenuExtension = Table.extend({
         },
       }
     }
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(TableComponent)
   },
 })
