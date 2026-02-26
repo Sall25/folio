@@ -68,14 +68,8 @@ export const EmojiList = forwardRef<EmojiListRef, EmojiListProps>(
                 selectItem(index)
               }}
             >
-              {/* <img
-                width={20}
-                height={20}
-                alt={item.shortcodes[0]}
-                src={item.fallbackImage || ''}
-              /> */}
               <span>{item.emoji}</span>
-              <span className='slash-item'>{item.name}</span>
+              <span className='slash-item border-none'>{item.name}</span>
             </div>
           ))
         }

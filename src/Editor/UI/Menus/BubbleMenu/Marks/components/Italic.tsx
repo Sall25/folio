@@ -23,7 +23,9 @@ export default function Italic() {
       active={italicActive}
       onClick={() => editor.chain().focus().toggleItalic().run()}
     >
-      <ItalicIcon className="icon" />
+      <ItalicIcon
+        className="tiptap-button-icon"
+      />
 
     </BubbleButton>
   )

@@ -1,0 +1,143 @@
+/* ------------------------------
+   Reusable Button Mixin
+------------------------------ */
+@mixin btn {
+  width: 25px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  border-radius: 15px;
+  color: var(--tt-table-control-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scale: 1;
+  position: relative;
+  overflow: visible;
+  cursor: grab;
+
+  transition:
+    background 0.15s ease,
+    scale 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    scale: 1.1;
+    background: var(--tt-table-control-bg);
+  }
+
+  &:active {
+    cursor: grabbing;
+    scale: 0.96;
+  }
+}
+
+
+/* ------------------------------
+   Drag Handle Container
+------------------------------ */
+.drag-handle {
+ 
+   transition: left 0.32s cubic-bezier(0.22, 1, 0.36, 1), 
+              top 0.32s cubic-bezier(0.22, 1, 0.36, 1); 
+
+  .handle-container {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+
+    .plus-btn {
+      @include btn;
+    }
+
+    .drag-handle-btn {
+      @include btn;
+
+      /* ----------------------------------
+         Hover Aura (Pseudo Element Layer)
+         Creates spatial "magnetic" feedback
+      ---------------------------------- */
+      &::before {
+        content: "";
+        position: absolute;
+        inset: -6px;
+        border-radius: 20px;
+        background: var(--tt-table-control-bg);
+        opacity: 0;
+        transform: scale(0.85);
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease;
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      &:hover::before {
+        opacity: 0.6;
+        transform: scale(1);
+      }
+
+      /* ----------------------------------
+         Grab Tension Line
+         Suggests draggable affordance
+      ---------------------------------- */
+      &::after {
+        content: "";
+        position: absolute;
+        width: 60%;
+        height: 2px;
+        background: currentColor;
+        border-radius: 2px;
+        top: 50%;
+        left: 20%;
+        transform: scaleX(0.3);
+        opacity: 0;
+        transition:
+          transform 0.15s ease,
+          opacity 0.15s ease;
+      }
+
+      &:active::after {
+        transform: scaleX(1);
+        opacity: 1;
+      }
+    }
+
+    .shrink-0 {
+      flex-shrink: 0;
+    }
+  }
+}
+
+
+/* ------------------------------
+   Subtle Idle Animation
+   (suggests interactivity before hover)
+------------------------------ */
+@keyframes handle-breathe {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+.drag-handle-btn {
+  animation: handle-breathe 2.4s ease-in-out infinite;
+}
+
+.drag-handle-btn:hover {
+  animation: none;
+}
+
+
+/* ------------------------------
+   Optional: Active Drag State
+   (toggle `.is-dragging` on body via JS)
+------------------------------ */
+.is-dragging .drag-handle-btn {
+  scale: 1.05;
+}
+
+.is-dragging .drag-handle-btn::before {
+  opacity: 0.8;
+  transform: scale(1.1);
+}

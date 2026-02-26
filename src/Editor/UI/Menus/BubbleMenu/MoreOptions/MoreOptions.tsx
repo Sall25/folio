@@ -12,6 +12,7 @@ import {
 import { Root, Trigger, Content } from '@radix-ui/react-popover';
 import BubbleButton from '../BubbleButton/BubbleButton';
 import { Divider } from '../Divider';
+import { Card } from '../../../Components/card';
 
 
 export default function MoreOptions({ editor }: { editor: Editor }) {
@@ -66,12 +67,10 @@ export default function MoreOptions({ editor }: { editor: Editor }) {
         }
       }}
     >
-      <Trigger className='bubble-button'>
-        <BubbleButton>
-          <MoreVertical
-            className='icon'
-          />
-        </BubbleButton>
+      <Trigger className='tiptap-button'>
+        <MoreVertical
+          className='tiptap-button-icon'
+        />
       </Trigger>
 
       <Content
@@ -79,60 +78,80 @@ export default function MoreOptions({ editor }: { editor: Editor }) {
         align="end"
         sideOffset={12}
         alignOffset={-8}
-        className="m-0 p-0 outline-0 bubble-menu active"
 
       >
-        {/*Superscript */}
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleSuperscript().run()}
-          active={superscriptActive}
+        <Card
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '8px',
+            padding: '3px 8px'
+          }}
         >
-          <Superscript />
-        </BubbleButton>
+          {/*Superscript */}
+          <BubbleButton
+            onClick={() => editor.chain().focus().toggleSuperscript().run()}
+            active={superscriptActive}
+          >
+            <Superscript
+              className="tiptap-button-icon"
+            />
+          </BubbleButton>
 
-        {/*Subscript*/}
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleSubscript().run()}
-          active={subscriptActive}
-        >
-          <Subscript />
-        </BubbleButton>
+          {/*Subscript*/}
+          <BubbleButton
+            onClick={() => editor.chain().focus().toggleSubscript().run()}
+            active={subscriptActive}
+          >
+            <Subscript
+              className="tiptap-button-icon"
+            />
+          </BubbleButton>
 
-        {/* Divider */}
-        <Divider />
+          {/* Divider */}
+          <Divider />
 
-        {/* Align Left */}
-        <BubbleButton
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          active={align === 'left'}
-        >
-          <AlignLeft className='w-4 h-4' />
-        </BubbleButton>
+          {/* Align Left */}
+          <BubbleButton
+            onClick={() => editor.chain().focus().setTextAlign('left').run()}
+            active={align === 'left'}
+          >
+            <AlignLeft
+              className="tiptap-button-icon"
+            />
+          </BubbleButton>
 
-        {/* Align Center */}
-        <BubbleButton
-          onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          active={align === 'center'}
-        >
-          <AlignCenter className='w-4 h-4' />
-        </BubbleButton>
+          {/* Align Center */}
+          <BubbleButton
+            onClick={() => editor.chain().focus().setTextAlign('center').run()}
+            active={align === 'center'}
+          >
+            <AlignCenter
+              className="tiptap-button-icon"
+            />
+          </BubbleButton>
 
-        {/* Align Right */}
-        <BubbleButton
-          onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          active={align === 'right'}
-        >
-          <AlignRight className='w-4 h-4' />
-        </BubbleButton>
+          {/* Align Right */}
+          <BubbleButton
+            onClick={() => editor.chain().focus().setTextAlign('right').run()}
+            active={align === 'right'}
+          >
+            <AlignRight
+              className="tiptap-button-icon"
+            />
+          </BubbleButton>
 
-        {/* Align Justify */}
-        <BubbleButton
-          onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-          active={align === 'justify'}
-        >
-          <AlignJustify className='w-4 h-4' />
-        </BubbleButton>
+          {/* Align Justify */}
+          <BubbleButton
+            onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+            active={align === 'justify'}
+          >
+            <AlignJustify
+              className="tiptap-button-icon"
+            />
+          </BubbleButton>
 
+        </Card>
       </Content>
     </Root>
   )

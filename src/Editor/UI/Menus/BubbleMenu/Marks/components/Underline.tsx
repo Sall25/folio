@@ -22,7 +22,9 @@ export default function Underline() {
       active={underlineActive}
       onClick={() => editor.chain().focus().toggleUnderline().run()}
     >
-      <UnderlineIcon className="icon" />
+      <UnderlineIcon
+        className="tiptap-button-icon"
+      />
 
     </BubbleButton>
   );

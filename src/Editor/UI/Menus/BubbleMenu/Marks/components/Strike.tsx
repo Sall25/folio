@@ -22,7 +22,9 @@ export default function Strike() {
       active={strikeActive}
       onClick={() => editor.chain().focus().toggleStrike().run()}
     >
-      <StrikeIcon className="icon" />
+      <StrikeIcon
+        className="tiptap-button-icon"
+      />
 
     </BubbleButton>
   );

@@ -1,20 +1,21 @@
 import { Editor } from "@tiptap/react";
 import { MoreOptions } from "./MoreOptions";
 import { Divider } from "./Divider";
-import { useState } from 'react';
 import { Link } from "./Link";
 import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus";
-import clsx from 'clsx'
 import { StyleTrigger } from "./Style";
 import { MarkMenu } from "./Marks";
-import { ColorDropdown } from "./Color";
 import { CellSelection } from "prosemirror-tables";
 import { TextSelection } from "@tiptap/pm/state";
 import { StyleBase } from "./Style/components/StyleBase";
+import { ButtonGroup } from "../../Components";
+import { Card } from "../../Components/card";
+import { ColorDropdown } from "./Color";
 
 export default function BubbleMenu({ editor }: { editor: Editor }) {
 
-  const [menuVisible, setMenuVisible] = useState(false);
+  //const [isVisible, setIsVisible] = useState(true)
+
   return (
 
     <StyleBase
@@ -28,12 +29,6 @@ export default function BubbleMenu({ editor }: { editor: Editor }) {
           flip: true, offset: 8,
 
           strategy: 'fixed',
-          onShow() {
-            setMenuVisible(true);
-          },
-          onHide() {
-            setMenuVisible(false)
-          },
 
         }}
         shouldShow={({ state }) => {
@@ -56,11 +51,16 @@ export default function BubbleMenu({ editor }: { editor: Editor }) {
           return true
         }}
       >
-        <div
-          className={clsx(
-            'bubble-menu',
-            menuVisible ? 'active' : ''
-          )}
+
+        <Card
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '5px',
+            padding: '3px 10px',
+
+          }}
+
         >
           {/* Text Style */}
           <StyleTrigger
@@ -75,20 +75,59 @@ export default function BubbleMenu({ editor }: { editor: Editor }) {
 
           <Divider />
 
-          <div className='flex items-center gap-2.5 px-2.5'>
+
+          <ButtonGroup
+            orientation="horizontal"
+            style={{
+              gap: '10px'
+            }}
+          >
             {/*Link */}
             <Link editor={editor} />
 
             {/* Color */}
-            <ColorDropdown editor={editor} />
-          </div>
+            {/* <Root
+              open={open}
+              onOpenChange={setOpen}
+            >
+              <Trigger asChild>
+                <ColorHighlightButton
+                  editor={editor}
+                // onMouseDown={(e) => {
+                //   e.preventDefault()
+                //   setOpen(!open)
+                // }}
+                >
+                  <Icon
+                    className="tiptap-button-icon"
+                  />
+                </ColorHighlightButton>
+              </Trigger>
+              <Portal>
+                <Content>
+                  <ColorHighlightPopoverContent editor={editor} />
+                </Content>
+              </Portal>
+            </Root> */}
+
+
+            <ColorDropdown
+              editor={editor}
+            />
+          </ButtonGroup>
 
           <Divider />
 
           {/* More options */}
           <MoreOptions editor={editor} />
 
-        </div>
+        </Card>
+
+        {/* <ButtonGroup
+          orientation="horizontal"
+        >
+         
+        </ButtonGroup> */}
       </TiptapBubbleMenu>
     </StyleBase>
   );

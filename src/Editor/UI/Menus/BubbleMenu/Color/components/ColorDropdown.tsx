@@ -6,10 +6,15 @@ import { Content, Root, Trigger } from "@radix-ui/react-popover";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
+import { ButtonGroup } from "../../../../Components";
+import { Card, CardBody, CardItemGroup } from "../../../../Components/card";
+import { useIsBreakpoint } from "../../../../Components/hooks/use-is-breakpoint";
+import { Separator } from "../../../../Components/separator";
 
 export function ColorDropdown({ editor }: { editor: Editor }) {
 
   const [menuVisible, setMenuVisible] = useState(false)
+  const isMobile = useIsBreakpoint()
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
@@ -28,27 +33,47 @@ export function ColorDropdown({ editor }: { editor: Editor }) {
           }
         }}
       >
-        <Trigger className="bubble-button" onMouseDown={(e) => e.preventDefault()}>
-          <span
-            className=""
+        <Trigger
+          className="tiptap-button"
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <ButtonGroup
+            orientation="horizontal"
           >
             <span> A</span>
-            <ChevronDown className="icon" />
-          </span>
+            <ChevronDown
+              className="tiptap-button-dropdown-arrows"
+            />
+          </ButtonGroup>
         </Trigger>
 
         <Content
           sideOffset={8}
-          className={clsx('dropdown-menu', { active: menuVisible })}
+
           onMouseDown={(e) => e.preventDefault()}
+          style={{
+            outline: 'none'
+          }}
         >
-          <div className="dropdown-scroll">
-            <ColorPalette />
-            <hr className="dropdown-divider" />
-            <HighlightPalette />
-          </div>
+          <Card
+            style={isMobile ? { boxShadow: "none", border: 0 } : {}}
+
+          >
+            <CardBody>
+              <CardItemGroup
+                orientation="vertical"
+              >
+                <ColorPalette />
+                <Separator
+                  orientation="horizontal"
+                />
+                <HighlightPalette />
+              </CardItemGroup>
+            </CardBody>
+          </Card>
         </Content>
       </Root>
     </ColorComponentBase>
+
   );
 }

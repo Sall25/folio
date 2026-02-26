@@ -133,6 +133,8 @@ export const tableContextPlugin = (editor: Editor) => {
           }
           editor.storage.table.colCount = map.width
           editor.storage.table.rowCount = map.height
+          editor.storage.table.overLastColumn = isLastColumn
+          editor.storage.table.overLastRow = isLastRow
 
 
           view.dispatch(

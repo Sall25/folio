@@ -23,4 +23,82 @@
   --highlight-red:    rgba(235, 51, 36, 0.4);
 }
 
+/* Highlight mark styling */
+mark {
+  background-color: transparent;
+  color: inherit;
+}
+
+mark[data-color="var(--tt-color-highlight-gray)"] {
+  background-color: var(--tt-color-highlight-gray);
+}
+
+mark[data-color="var(--tt-color-highlight-brown)"] {
+  background-color: var(--tt-color-highlight-brown);
+}
+
+mark[data-color="var(--tt-color-highlight-orange)"] {
+  background-color: var(--tt-color-highlight-orange);
+}
+
+mark[data-color="var(--tt-color-highlight-yellow)"] {
+  background-color: var(--tt-color-highlight-yellow);
+}
+
+mark[data-color="var(--tt-color-highlight-green)"] {
+  background-color: var(--tt-color-highlight-green);
+}
+
+mark[data-color="var(--tt-color-highlight-blue)"] {
+  background-color: var(--tt-color-highlight-blue);
+}
+
+mark[data-color="var(--tt-color-highlight-purple)"] {
+  background-color: var(--tt-color-highlight-purple);
+}
+
+mark[data-color="var(--tt-color-highlight-pink)"] {
+  background-color: var(--tt-color-highlight-pink);
+}
+
+mark[data-color="var(--tt-color-highlight-red)"] {
+  background-color: var(--tt-color-highlight-red);
+}
+
+/* Support for hex color values */
+mark[data-color="#f8f8f7"] {
+  background-color: #f8f8f7;
+}
+
+mark[data-color="#f4eeee"] {
+  background-color: #f4eeee;
+}
+
+mark[data-color="#fbecdd"] {
+  background-color: #fbecdd;
+}
+
+mark[data-color="#fef9c3"] {
+  background-color: #fef9c3;
+}
+
+mark[data-color="#dcfce7"] {
+  background-color: #dcfce7;
+}
+
+mark[data-color="#e0f2fe"] {
+  background-color: #e0f2fe;
+}
+
+mark[data-color="#f3e8ff"] {
+  background-color: #f3e8ff;
+}
+
+mark[data-color="#fcf1f6"] {
+  background-color: #fcf1f6;
+}
+
+mark[data-color="#ffe4e6"] {
+  background-color: #ffe4e6;
+}
 

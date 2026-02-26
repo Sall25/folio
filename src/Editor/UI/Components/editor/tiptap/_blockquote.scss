@@ -1,0 +1,10 @@
+.tiptap{
+    blockquote{
+        @include font(body, regular);
+        border-left: 4px solid var(--tt-paragraph-color);
+        margin: 1.5rem 0;
+        padding-left: 0.6rem;
+        border-radius: 2px;
+        
+    }
+}

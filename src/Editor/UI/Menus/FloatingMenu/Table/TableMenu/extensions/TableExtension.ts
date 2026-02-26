@@ -21,6 +21,8 @@ interface TableMenuStorage {
   rowCount: number;
   cols: number[];
   rows: number[];
+  overLastColumn: boolean;
+  overLastRow: boolean;
 }
 
 declare module '@tiptap/core' {
@@ -39,7 +41,9 @@ export const TableMenuExtension = Table.extend<any, TableMenuStorage>({
       colCount: 0,
       rowCount: 0,
       cols: [],
-      rows: []
+      rows: [],
+      overLastColumn: false,
+      overLastRow: false
     }
   },
   addProseMirrorPlugins() {

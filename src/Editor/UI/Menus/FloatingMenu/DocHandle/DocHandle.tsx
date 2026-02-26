@@ -4,7 +4,7 @@ import { getMenuItems, type MenuProps } from './utils/menuBuilder'
 import type { Editor } from '@tiptap/core'
 import { DragHandle } from '@tiptap/extension-drag-handle-react'
 import { useState } from 'react'
-import { Grip, Plus } from 'lucide-react'
+import { GripVertical, Plus } from 'lucide-react'
 
 
 type DocMenuContentProps = {
@@ -104,28 +104,24 @@ export function DocHandle({ editor }: { editor: Editor }) {
               position: 'relative',
               display: 'flex',
               alignItems: 'center',
-              transform: 'translateX(-60px)', // push fully outside
+              transform: 'translateX(-10px)', // push fully outside
 
             }}
           >
 
             {/* actual UI */}
             <div
-              style={{
-                display: 'flex',
-                gap: '10px',
-                pointerEvents: 'auto',
-                border: '2px solid white',
-
-              }}
+              className="handle-container"
             >
               <button
                 onClick={() => {
                   editor.chain().insertLineAfter(options.props.pos).run()
                 }}
+                className="plus-btn"
               >
                 <Plus
-                  size={20}
+                  className='shrink-0'
+                  size={16}
                 />
               </button>
               <DropdownMenu.Root
@@ -135,6 +131,7 @@ export function DocHandle({ editor }: { editor: Editor }) {
               >
                 <DropdownMenu.Trigger asChild>
                   <button
+                    className="drag-handle-btn"
                     onPointerDownCapture={() => {
                       if (open) {
                         editor.commands.clearSelection(options.props.pos)
@@ -144,7 +141,7 @@ export function DocHandle({ editor }: { editor: Editor }) {
 
                     }}
                   >
-                    <Grip size={20} />
+                    <GripVertical className='shrink-0' size={16} />
                   </button>
                 </DropdownMenu.Trigger>
 

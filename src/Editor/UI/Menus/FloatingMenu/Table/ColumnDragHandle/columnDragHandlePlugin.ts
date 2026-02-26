@@ -139,12 +139,6 @@ export const ColumnDragHandlePlugin = ({
               return
             }
 
-            if (locked) {
-              element.draggable = false
-            } else {
-              element.draggable = true
-            }
-
             // Recalculate popup position if doc has changend and drag handler is visible.
             if (view.state.doc.eq(prevState.doc) || currentColumnIndex === -1) {
               return
@@ -190,9 +184,6 @@ export const ColumnDragHandlePlugin = ({
             return false
           },
           mouseleave(_, e) {
-            if (locked) {
-              return false
-            }
             if (e.target && !wrapper.contains(e.relatedTarget as HTMLElement)) {
               hideHandle()
 

@@ -2,7 +2,7 @@
 import type { SuggestionProps } from '@tiptap/suggestion'
 import type { Editor } from '@tiptap/core'
 import type { Level } from '@tiptap/extension-heading'
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 
 
@@ -29,6 +29,14 @@ export default function SlashList(props: Props) {
 
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
 
+  const [menuVisible, setMenuVisible] = useState(false)
+
+  // toggle it after mount (or after 500ms for demo)
+  useEffect(() => {
+    const id = setTimeout(() => setMenuVisible(true), 500)
+    return () => clearTimeout(id)
+  }, [])
+
   useEffect(() => {
     const el = itemRefs.current[selectedIndex]
     if (!el) return
@@ -46,7 +54,7 @@ export default function SlashList(props: Props) {
 
   return (
     <div
-      className={'slash-menu active'/*clsx('slash-menu active', { active: menuVisible })*/}
+      className={clsx('slash-menu', { active: menuVisible })}
       role="listbox"
       aria-label="Slash commands"
       onMouseLeave={(e) => {

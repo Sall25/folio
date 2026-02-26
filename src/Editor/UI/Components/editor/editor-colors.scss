@@ -1,0 +1,7 @@
+:root{
+  --editor-bg: var(--white);
+}
+
+[data-theme="dark"]{
+  --editor-bg: var(--black);
+}

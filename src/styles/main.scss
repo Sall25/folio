@@ -5,14 +5,16 @@
 @import './abstracts/variables';
 @import './abstracts/themes';
 
-@import './abstracts/fonts';
-@import './abstracts/typography';
-@import './abstracts/mixins';
+// @import './abstracts/fonts';
+// @import './abstracts/typography';
+// @import './abstracts/mixins';
+
+@import './components/card';
 
 @import './ui/toolbar';
-@import './ui/bubble-menu';
-@import './ui/dropdown-menu';
-@import './ui/slash-menu';
+//@import './ui/dropdown-menu';
+// @import './ui/slash-menu';
+
 @import './ui/icon';
 @import './ui/color-palette';
 @import './ui/recent-colors';
@@ -21,8 +23,13 @@
 @import './ui/gutter-floating-menu';
 @import './ui/floating-table-menu';
 @import './ui/row-add-menu';
-@import './editor/editor';
+
+@import './editor/plugins/button_colors';
+
+// @import './editor/editor';
 @import './abstracts/colors';
+// @import './editor/plugins/dropdown_menu';
+// @import './editor/plugins/bubble-menu';
 @import './app';
 
 *{

@@ -7,8 +7,10 @@ export function Link({ editor }: { editor: Editor }) {
 
   return (
     <Root>
-      <Trigger className="bubble-button">
-        <LinkIcon />
+      <Trigger className="tiptap-button">
+        <LinkIcon
+          className="tiptap-button-icon"
+        />
       </Trigger>
 
       <Content

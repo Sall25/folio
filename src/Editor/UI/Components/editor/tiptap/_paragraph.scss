@@ -1,0 +1,111 @@
+.tiptap {
+  /**************************
+   * Font & text defaults
+   **************************/
+  p, blockquote, pre, li {
+    @include font(body, regular);
+    color: var(--tt-paragraph-color);
+    line-height: 1.8rem;
+    letter-spacing: 0.015em;
+  }
+
+  /**************************
+   * CSS variables for spacing
+   **************************/
+  --spacing-paragraph: 0.5rem;
+  --spacing-paragraph-after-heading: 0.6rem;
+  --spacing-heading-before: 2rem;
+  --spacing-nested: 0.25rem;
+  --spacing-after-code: 1.25rem;
+
+  /**************************
+   * Paragraphs
+   **************************/
+  p {
+    margin: 0;                // reset all margins
+    margin-top: var(--spacing-paragraph);
+
+    &::selection,
+    & *::selection {
+      background: var(--tt-selection-color);
+      border-radius: 6px;
+    }
+  }
+
+  > p:first-child {
+    margin-top: 0;
+  }
+
+  p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    color: var(--tt-paragraph-placeholder-color);
+    pointer-events: none;
+    display: inline-block;
+    font-weight: 100;
+  }
+
+  /**************************
+   * Headings
+   **************************/
+  h1, h2, h3, h4, h5, h6 {
+    margin: 0; // reset margin
+    margin-top: var(--spacing-heading-before);
+  }
+
+  /* Paragraph immediately after heading */
+  h1 + p,
+  h2 + p,
+  h3 + p,
+  h4 + p,
+  h5 + p,
+  h6 + p {
+    margin-top: var(--spacing-paragraph-after-heading);
+  }
+
+  /**************************
+   * Blockquotes
+   **************************/
+  blockquote {
+    margin: var(--spacing-nested) 0;
+
+    p {
+      margin: var(--spacing-nested) 0;
+    }
+  }
+
+  /**************************
+   * Lists
+   **************************/
+  ul, ol {
+    margin: var(--spacing-paragraph) 0;
+    padding-left: 1.5rem;
+
+    li {
+      margin-top: var(--spacing-nested);
+      p {
+        margin: var(--spacing-nested) 0;
+      }
+    }
+  }
+
+  /**************************
+   * Code / pre blocks
+   **************************/
+  pre, code {
+    margin: 0;
+    margin-top: var(--spacing-paragraph);
+  }
+
+  /* Paragraph after code block */
+  pre + p,
+  code + p {
+    margin-top: var(--spacing-after-code);
+  }
+
+  /**************************
+   * Smooth transitions (optional)
+   **************************/
+  p, h1, h2, h3, h4, h5, h6, blockquote, li, pre {
+    transition: all 0.1s ease-in-out;
+  }
+}

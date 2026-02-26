@@ -1,0 +1,26 @@
+.tiptap {
+  hr {
+    position: relative;
+    border: none;
+    height: 1px;          // clickable area
+    margin: 2rem 0;
+    cursor: pointer;
+    background: var(--tt-paragraph-color);
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      transform: translate(0%, -50%);
+
+      width: 100%;
+    //  border-top: 1px solid var(--tt-hr-color);
+    }
+
+    &.ProseMirror-selectednode::after {
+      border-top: 1px solid var(--tt-selection-color);
+    }
+  }
+}

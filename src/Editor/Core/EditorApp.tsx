@@ -8,6 +8,7 @@ import { BackgroundColor, Color, FontSize, TextStyle } from '@tiptap/extension-t
 import { FontFamily } from '@tiptap/extension-font-family'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
+import { Highlight } from '@tiptap/extension-highlight'
 import Image from '@tiptap/extension-image'
 
 import Link from '@tiptap/extension-link'
@@ -46,6 +47,8 @@ import {
 
 import { getEditorContent } from './editorContent'
 import { useEffect, useState } from 'react'
+import { NodeBackground } from '../UI/Components/tiptap-extension'
+import { EditorComp } from '../UI/Components/editor'
 
 
 export function EditorApp() {
@@ -81,6 +84,7 @@ export function EditorApp() {
       BackgroundColor,
       Superscript,
       Subscript,
+      // Highlight.configure({}),
       Link.configure({
         openOnClick: false,
         autolink: true,
@@ -122,6 +126,10 @@ export function EditorApp() {
       //  Emoji
       EmojiExtension,
       GlobalCommands,
+      NodeBackground,
+      Highlight.configure({
+        multicolor: true
+      }),
       Image.configure({
         resize: {
           enabled: true,
@@ -170,24 +178,25 @@ export function EditorApp() {
       <Toolbar
         editor={editor}
       />
-      <div
-        className="editor-container"
-        style={{ visibility: fontsLoaded ? 'visible' : 'hidden' }}
-      >
-        <EditorContent
-          className="editor"
-          editor={editor}
-        />
+      {
+        fontsLoaded && (
+          <EditorComp
 
-        <BubbleMenu
-          editor={editor}
-        />
+          >
+            <EditorContent
+              className="editor"
+              editor={editor}
+            />
 
-        <DocHandle
-          editor={editor}
-        />
+            <BubbleMenu
+              editor={editor}
+            />
 
-        {/* <ColumnMenu
+            <DocHandle
+              editor={editor}
+            />
+
+            {/* <ColumnMenu
           editor={editor}
         />
 
@@ -195,14 +204,14 @@ export function EditorApp() {
           editor={editor}
         /> */}
 
-        <CellMenu
-          editor={editor}
-        />
+            <CellMenu
+              editor={editor}
+            />
 
-        {/* <TableFloatingMenu
-          editor={editor}
-        /> */}
-      </div>
+          </EditorComp>
+        )
+      }
+
     </main>
   );
 }

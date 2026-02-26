@@ -1,0 +1,33 @@
+
+@import './abstract/colors';
+@import './abstract/fonts';
+@import './abstract/mixins';
+@import './abstract/typography';
+
+@import './blockquote';
+@import './codeblock';
+@import './emoji';
+@import './handle';
+@import './headings';
+@import './horizontal_rule';
+@import './image';
+@import './list';
+@import './mention';
+@import './paragraph';
+@import './table';
+
+
+.tiptap{
+  &:first-child{
+    margin-top: 0px;
+  }
+ 
+  &.disable-selection{
+    user-select: none;
+    opacity: 0;
+  }
+
+  outline: none;
+  overflow-y: auto;
+  margin-top: 50px;
+}

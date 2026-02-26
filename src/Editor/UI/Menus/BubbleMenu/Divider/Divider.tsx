@@ -1,8 +1,11 @@
+import { Separator } from "../../../Components/separator";
 
 export default function Divider() {
   return (
-    <div
-      className="bubble-divider"
-    />
+    <Separator
+      orientation="vertical"
+    >
+
+    </Separator>
   );
 }

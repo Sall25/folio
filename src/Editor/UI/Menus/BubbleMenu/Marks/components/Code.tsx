@@ -20,7 +20,9 @@ export function Code() {
       active={codeActive}
       onClick={() => editor.chain().focus().toggleCode().run()}
     >
-      <CodeIcon className="icon" />
+      <CodeIcon
+        className="tiptap-button-icon"
+      />
     </BubbleButton>
   );
 }

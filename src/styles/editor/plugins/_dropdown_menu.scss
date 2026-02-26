@@ -1,0 +1,160 @@
+:root{
+  --tt-menu-color: gray;
+  --tt-menu-bg: #d0cbcb;
+  --tt-menu-border: 1px solid #dad3d3;
+  --tt-menu-shadow: 2px 2px 5px rgba(184, 180, 180, 0.238);
+  --tt-menu-scrollbar-color: #aaa7a7;
+  --tt-menu-item-bg: #c1bbbb;
+  --tt-menu-separator: #54525215;
+}
+[data-theme="dark"]{
+  --tt-menu-color:gray;
+  --tt-menu-bg: #101010;
+  --tt-menu-border: 1px solid #1e1d1d87;
+  --tt-menu-shadow: 0 0 10px rgba(0, 0, 0, 0.511);
+  --tt-menu-scrollbar-color: #1d1b1b;
+  --tt-menu-item-bg: #322f2f0b;
+  --tt-menu-separator: #3f3e3e15;
+}
+
+
+@mixin menu{
+  @include font(body, medium);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--tt-menu-bg);
+  border: var(--tt-menu-border);
+  border-radius: 24px;
+  min-width: 220px;
+  max-width: 300px;
+  max-height: 350px;
+  box-shadow:var(--tt-menu-shadow);
+  overflow: hidden;
+  padding: 4px 14px;
+  color: var(--tt-menu-color);
+  z-index: 60;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.96);
+  transition: opacity 150ms ease, transform 0.15s ease;
+  overflow-y: auto;
+
+  
+  scroll-padding-bottom: 12px;
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--tt-menu-scrollbar-color) transparent;
+}
+
+@mixin menu-item{
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  color: var(--tt-menu-color);
+  background-color: var(--tt-menu-item-bg);
+  border-radius: 5px;
+  border: var(--tt-menu-border);
+}
+
+.slash-menu {
+ @include menu;
+ min-width: 260px;
+ padding: 10px 18px;
+
+  &.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+  }
+
+  .slash-title{
+    font-size: 12px !important;
+    padding: 2px 4px !important;
+    font-weight: bold !important;
+   
+  }
+
+  /* Individual menu items */
+  .slash-item {
+    @include menu-item;
+    transition: scale 0.15s;
+ 
+    &:hover,
+    &.selected {
+      background: var(--tt-menu-bg);
+      opacity: 0.8;
+      scale: 1.03;    
+    }
+
+    &.border-none{
+      border: none;
+    }
+
+    /* Icon inside item */
+    .icon {
+      width: 1.02rem;
+      height: 1.02rem;
+       transition: transform 0.2s ease, color 0.15s ease;
+    }
+
+    &.selected .icon {
+      transform: scale(1.01); // subtle pop for selected item
+      color: var(--purple-6);
+    }
+
+    
+  &.is-title {
+    font-size: 4px;
+    font-weight: 800;
+    opacity: 1;
+    cursor: default;
+   
+   pointer-events: none;
+    color: var(--gray-9);
+    border: none;
+    background: transparent !important;
+  }
+
+  &.is-separator {
+    pointer-events: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    hr {
+      width: 100%;
+      padding: 0;
+      margin: 0 -20px;
+     
+      background-color: var(--tt-menu-separator);
+     
+    }
+  }
+  }
+
+  @include breakpoint(sm) {
+  .slash-menu {
+    min-width: 100px;
+    max-width: 150px;
+    font-size: 0.75rem;
+
+    .slash-item {
+      padding: 5px 10px;
+
+      svg {
+        width: 0.875rem;
+        height: 0.875rem;
+      }
+    }
+  }
+}
+
+}
+

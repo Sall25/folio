@@ -5,15 +5,23 @@ import Italic from "./Italic";
 import Strike from "./Strike";
 import Underline from "./Underline";
 import { Code } from "./Code";
+import { ButtonGroup } from "../../../../Components";
 
 export default function MarkMenu({ editor }: { editor: Editor }) {
   return (
     <MarkBase editor={editor}>
-      <Bold />
-      <Italic />
-      <Strike />
-      <Underline />
-      <Code />
+      <ButtonGroup
+        orientation="horizontal"
+        style={{
+          gap: '8px'
+        }}
+      >
+        <Bold />
+        <Italic />
+        <Strike />
+        <Underline />
+        <Code />
+      </ButtonGroup>
     </MarkBase>
   );
 }

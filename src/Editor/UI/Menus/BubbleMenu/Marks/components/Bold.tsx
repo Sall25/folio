@@ -22,7 +22,9 @@ export default function Bold() {
       active={boldActive}
       onClick={() => editor.chain().focus().toggleBold().run()}
     >
-      <BoldIcon className="icon" />
+      <BoldIcon
+        className="tiptap-button-icon"
+      />
 
 
     </BubbleButton>
