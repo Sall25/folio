@@ -1,0 +1,11 @@
+.toc-progress-bar{
+   position: absolute;     /* or fixed if it's viewport-based */
+   top: 0;
+   bottom: 0;
+   right: 3px;
+   display: flex;
+   flex-direction: column;
+   justify-content: flex-end;
+   align-items: end;
+   gap: 15px;
+}

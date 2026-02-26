@@ -11,7 +11,13 @@
   background-color: var(--editor-bg);
   overflow-y: auto;
   overflow: visible;
- 
+
+  visibility: hidden;
+
+  &[data-ready="true"]{
+    visibility: visible;
+  }
+  
   .ProseMirror{
     margin: 0 5% auto;
     position: relative;

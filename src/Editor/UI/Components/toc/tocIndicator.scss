@@ -1,0 +1,17 @@
+// :root{
+//   --toc-bg: var(--tt-gray-light-a-50);
+//   --toc-highlight: var(--tt-gray-dark-a-50);
+// }
+
+// [data-theme="dark"]{
+//   --toc-bg: var(--tt-gray-dark-a-50);
+//   --toc-highlight: var(--tt-gray-light-a-50);
+// }
+.toc-indicator{
+  background-color: var(--toc-bg);
+  height: 4px;
+  border-radius: 5px;
+  &.highlight{
+    background-color: var(--toc-highlight);
+  }
+}

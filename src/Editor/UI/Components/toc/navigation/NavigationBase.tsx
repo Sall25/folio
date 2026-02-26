@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
-import { NavigationContext } from "../context";
+import { NavigationContext } from "./context";
+import { CardItemGroup } from "../../card";
 
 interface NavigationBaseProps {
   children: ReactNode;
@@ -21,7 +22,8 @@ export function NavigationBase({ children, className }: NavigationBaseProps) {
         hideFloatingTOC
       }
       }>
-      <div className={className}
+      <div
+        className={className}
       >
         {children}
       </div>

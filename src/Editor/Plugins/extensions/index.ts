@@ -1,4 +1,4 @@
-import HeadingWithId from "../../UI/Navigation/toc/extensions";
+import HeadingWithId from "../../UI/Components/toc/extensions";
 import { BlurSelection } from "../../UI/Menus/BubbleMenu/extensions";
 import { TableMenuExtension } from "../../UI/Menus/FloatingMenu/Table/TableMenu/extensions/TableExtension";
 import { ColumnExtension } from "../../UI/Menus/FloatingMenu/Table/ColumnMenu/extensions";

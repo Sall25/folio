@@ -49,6 +49,8 @@ import { getEditorContent } from './editorContent'
 import { useEffect, useState } from 'react'
 import { NodeBackground } from '../UI/Components/tiptap-extension'
 import { EditorComp } from '../UI/Components/editor'
+import TocNavigationPanel from '../UI/Components/toc'
+
 
 
 export function EditorApp() {
@@ -178,39 +180,31 @@ export function EditorApp() {
       <Toolbar
         editor={editor}
       />
-      {
-        fontsLoaded && (
-          <EditorComp
 
-          >
-            <EditorContent
-              className="editor"
-              editor={editor}
-            />
-
-            <BubbleMenu
-              editor={editor}
-            />
-
-            <DocHandle
-              editor={editor}
-            />
-
-            {/* <ColumnMenu
+      <EditorComp
+        ready={fontsLoaded}
+      >
+        <EditorContent
           editor={editor}
         />
 
-        <RowMenu
+        <BubbleMenu
           editor={editor}
-        /> */}
+        />
 
-            <CellMenu
-              editor={editor}
-            />
+        <DocHandle
+          editor={editor}
+        />
 
-          </EditorComp>
-        )
-      }
+        <CellMenu
+          editor={editor}
+        />
+
+      </EditorComp>
+
+      <TocNavigationPanel
+        editor={editor}
+      />
 
     </main>
   );

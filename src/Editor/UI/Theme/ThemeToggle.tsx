@@ -2,6 +2,7 @@ import { Root } from '@radix-ui/react-toggle';
 import { useEffect, useState } from 'react';
 import { applyTheme, getTheme, type Theme } from './theme';
 import { Moon, Sun } from 'lucide-react';
+import { Button } from '../Components';
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>(() => getTheme());
@@ -23,9 +24,17 @@ export function ThemeToggle() {
     <Root
       pressed={isDark} // controlled state
       onPressedChange={handleToggle} // Radix fires after state changes
-      className="toolbar-button"
+      className='tiptap-button'
     >
-      {isDark ? <Moon size={16} /> : <Sun size={16} />}
+      {isDark ?
+        <Moon
+          size={16}
+          className='tiptap-button-icon'
+        />
+        : <Sun
+          size={16}
+          className='tiptap-button-icon'
+        />}
     </Root>
   );
 }

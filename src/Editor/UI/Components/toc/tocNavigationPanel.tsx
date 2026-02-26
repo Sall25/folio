@@ -1,7 +1,10 @@
 import { Editor } from "@tiptap/react";
-import { Navigation } from "../..";
-import { TocProgressBar } from "./TocProgressBar";
-import { TocContent } from "./TocContent";
+import { Navigation } from "./navigation";
+import { TocProgressBar } from "./tocProgressBar";
+import { TocContent } from "./tocContent";
+
+import './colors.scss'
+import './tocNavigationPanel.scss'
 
 export default function TocNavigationPanel({ editor }: { editor: Editor }) {
 
@@ -9,7 +12,7 @@ export default function TocNavigationPanel({ editor }: { editor: Editor }) {
 
   return (
     <Navigation
-      className="fixed right-4 top-1/5 z-50 w-min-45"
+      className="toc-navigation-panel"
     >
       <TocProgressBar editor={editor} />
       <TocContent editor={editor} />

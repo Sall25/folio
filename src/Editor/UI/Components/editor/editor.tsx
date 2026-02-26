@@ -7,6 +7,7 @@ import { forwardRef } from "react";
 interface EditorProps {
   className?: string;
   children: React.ReactNode;
+  ready?: boolean;
 }
 
 export const Editor = forwardRef<HTMLDivElement, EditorProps>((
@@ -15,11 +16,13 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>((
 ) => {
   const {
     className = "editor",
-    children
+    children,
+    ready = false
   } = props
 
   return (
     <div
+      data-ready={ready}
       ref={ref}
       className={className}
     >

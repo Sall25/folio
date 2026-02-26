@@ -6,4 +6,5 @@ export type Heading = {
   level: Level;
   from: number;
   to: number;
+  pos: number;
 }

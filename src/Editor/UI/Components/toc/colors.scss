@@ -1,0 +1,9 @@
+:root{
+  --toc-bg: var(--tt-gray-light-a-200);
+  --toc-highlight: var(--tt-gray-light-a-800);
+}
+
+[data-theme="dark"]{
+  --toc-bg: var(--tt-gray-dark-a-200);
+  --toc-highlight: var(--tt-gray-dark-a-800);
+}

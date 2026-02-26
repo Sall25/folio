@@ -1,4 +1,3 @@
-import { TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/core'
 
 export function focusHeadingById(editor: Editor, id: string) {
@@ -19,9 +18,10 @@ export function focusHeadingById(editor: Editor, id: string) {
   if (targetPos === null) return
 
   const tr = state.tr
-    .setSelection(TextSelection.create(state.doc, targetPos))
+    // .setSelection(TextSelection.create(state.doc, targetPos))
     .scrollIntoView()
 
   view.dispatch(tr)
+  editor.commands.setNodeSelection(targetPos)
   editor.commands.focus()
 }
