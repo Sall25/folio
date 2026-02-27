@@ -9,12 +9,12 @@ export interface IndicatorProps {
 
 export function TocIndicator({ level, highlight = false }: IndicatorProps) {
   const widths = {
-    1: '22px',
-    2: '18px',
-    3: '16px',
-    4: '12px',
-    5: '8px',
-    6: '6px'
+    1: '16px',
+    2: '14px',
+    3: '12px',
+    4: '8px',
+    5: '5px',
+    6: '3px'
   }
 
 

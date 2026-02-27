@@ -1,10 +1,12 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { MenuItemsRenderer } from '../../Shared'
+import { MenuItemsRenderer } from '../../Menus/Shared'
 import { getMenuItems, type MenuProps } from './utils/menuBuilder'
 import type { Editor } from '@tiptap/core'
 import { DragHandle } from '@tiptap/extension-drag-handle-react'
 import { useState } from 'react'
 import { GripVertical, Plus } from 'lucide-react'
+import { CardItemGroup } from '../card'
+import { Button } from '../button'
 
 
 type DocMenuContentProps = {
@@ -19,9 +21,16 @@ export function DocMenuContent({ editor, options }: DocMenuContentProps) {
   return (
     <DropdownMenu.Portal>
       <DropdownMenu.Content
-        className="dropdown-menu active"
+        className="tiptap-card"
         sideOffset={6}
         side='left'
+        style={{
+          justifyContent: 'left',
+          alignItems: 'flex-start',
+          minWidth: '200px',
+          gap: '8px',
+          padding: '10px'
+        }}
       >
         <MenuItemsRenderer items={items} />
       </DropdownMenu.Content>
@@ -113,45 +122,52 @@ export function DocHandle({ editor }: { editor: Editor }) {
             <div
               className="handle-container"
             >
-              <button
-                onClick={() => {
-                  editor.chain().insertLineAfter(options.props.pos).run()
-                }}
-                className="plus-btn"
+              <CardItemGroup
+                orientation='horizontal'
               >
-                <Plus
-                  className='shrink-0'
-                  size={16}
-                />
-              </button>
-              <DropdownMenu.Root
-                onOpenChange={(next) => {
-                  setOpen(next)
-                }}
-              >
-                <DropdownMenu.Trigger asChild>
-                  <button
-                    className="drag-handle-btn"
-                    onPointerDownCapture={() => {
-                      if (open) {
-                        editor.commands.clearSelection(options.props.pos)
-                      } else {
-                        editor.commands.setNodeSelection(options.props.pos)
-                      }
+                <Button
+                  onClick={() => {
+                    editor.chain().insertLineAfter(options.props.pos).run()
+                  }}
+                // className="plus-btn"
+                >
+                  <Plus
+                    className='tiptap-button-icon'
+                    size={16}
+                  />
+                </Button>
 
-                    }}
-                  >
-                    <GripVertical className='shrink-0' size={16} />
-                  </button>
-                </DropdownMenu.Trigger>
+                <DropdownMenu.Root
+                  onOpenChange={(next) => {
+                    setOpen(next)
+                  }}
+                >
+                  <DropdownMenu.Trigger asChild>
+                    <Button
+                      //  className="drag-handle-btn"
+                      onPointerDownCapture={() => {
+                        if (open) {
+                          editor.commands.clearSelection(options.props.pos)
+                        } else {
+                          editor.commands.setNodeSelection(options.props.pos)
+                        }
 
-                <DocMenuContent
-                  editor={editor}
-                  options={options}
-                />
+                      }}
+                    >
+                      <GripVertical
+                        className='tiptap-button-icon'
+                        size={16} />
+                    </Button>
+                  </DropdownMenu.Trigger>
+
+                  <DocMenuContent
+                    editor={editor}
+                    options={options}
+                  />
 
 
-              </DropdownMenu.Root>
+                </DropdownMenu.Root>
+              </CardItemGroup>
             </div>
           </div>
           // <div

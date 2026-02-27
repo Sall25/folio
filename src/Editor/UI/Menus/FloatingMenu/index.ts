@@ -4,7 +4,7 @@ import { MentionExtension } from "./Mention";
 import { ColumnMenu } from "./Table";
 import { RowMenuComp as RowMenu } from "./Table";
 import { CellMenu } from "./Table";
-import { DocHandle } from "./DocHandle";
+import { DocHandle } from "../../Components/handle";
 
 export {
   SlashCommand,

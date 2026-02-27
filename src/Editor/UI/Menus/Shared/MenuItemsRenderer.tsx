@@ -1,6 +1,9 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { type MenuItem } from "../types";
 import { ChevronRight } from 'lucide-react';
+import { Button, ButtonGroup } from '../../Components';
+import { CardGroupLabel, CardItemGroup } from '../../Components/card';
+import { Separator } from '../../Components/separator';
 
 interface IMenuItemsRenderer {
   items: MenuItem[];
@@ -16,15 +19,83 @@ export function MenuItemsRenderer({ items }: IMenuItemsRenderer) {
           if (item.type === "Sub" && item.content) {
             return (
               <DropdownMenu.Sub key={index}>
-                <DropdownMenu.SubTrigger className="dropdown-item-select">
-                  <span className="dropdown-item">
-                    {Icon && <Icon size={16} />}
-                    <span>{item.label}</span>
-                  </span>
-                  <ChevronRight size={16} />
+                <DropdownMenu.SubTrigger
+                  style={{
+                    outline: 'none'
+                  }}
+                >
+
+                  <Button
+                    style={{
+
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      minWidth: '200px',
+                      cursor: 'pointer'
+
+                    }}
+                  >
+                    <CardItemGroup
+                      orientation='horizontal'
+
+                    >
+                      {Icon && <Icon className="tiptap-button-icon" size={16} />}
+                      <CardGroupLabel
+                        style={{
+                          fontSize: '14px'
+                        }}
+                      >
+                        {item.label}
+                      </CardGroupLabel>
+                      {/* <CardGroupLabel>
+                     
+                    </CardGroupLabel>
+                    <CardGroupLabel
+                      style={{
+                        fontSize: '14px'
+                      }}
+                    >
+                     
+                    </CardGroupLabel> */}
+
+                    </CardItemGroup>
+
+                    <CardGroupLabel>
+                      <ChevronRight
+                        className='tiptap-button-icon-sub'
+                        size={16} />
+                    </CardGroupLabel>
+                  </Button>
+
+
+                  {/*                         
+                  <CardItemGroup
+                    orientation='horizontal'
+                    style={{
+
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                   
+
+                    <CardGroupLabel>
+                      
+                    </CardGroupLabel>
+                  </CardItemGroup> */}
+
+
                 </DropdownMenu.SubTrigger>
                 <DropdownMenu.Portal >
-                  <DropdownMenu.SubContent className='dropdown-menu active dropdown-scroll'>
+                  <DropdownMenu.SubContent
+                    className='tiptap-card'
+                    style={{
+                      justifyContent: 'left',
+                      alignItems: 'flex-start',
+                      minWidth: '200px',
+                      gap: '8px',
+                      padding: '10px'
+                    }}
+                  >
                     {/* 🔥 RECURSION HAPPENS HERE */}
                     <MenuItemsRenderer items={item.content} />
                   </DropdownMenu.SubContent>
@@ -34,14 +105,17 @@ export function MenuItemsRenderer({ items }: IMenuItemsRenderer) {
           }
 
           if (item.type === "Separator") {
-            return <DropdownMenu.Separator className='dropdown-divider' key={index} />;
+            return <Separator key={index} orientation='horizontal' />
           }
 
           if (item.type === "Title") {
             return (
-              <DropdownMenu.Label key={index} className="dropdown-title">
+              <CardGroupLabel key={index}>
                 {item.label}
-              </DropdownMenu.Label>
+              </CardGroupLabel>
+              // <DropdownMenu.Label className="dropdown-title">
+
+              // </DropdownMenu.Label>
             );
           }
 
@@ -49,26 +123,43 @@ export function MenuItemsRenderer({ items }: IMenuItemsRenderer) {
           return (
             <DropdownMenu.Item
               key={index}
-              className="dropdown-item"
+              className="tiptap-button"
               onSelect={() => {
                 item.action?.();
               }}
             >
-              {item.color && item.color.type === 'text' && (
-                <span style={{ color: item.color.color }}>A</span>
-              )}
-              {item.color && item.color.type === 'highlight' && (
-                <>
-                  {Icon && <Icon fill={item.color.color} size={16} />}
-                </>
-              )}
-              {!item.color && (
-                <>
-                  {Icon && <Icon size={16} />}
-                </>
-              )}
+              <CardItemGroup
+                orientation='horizontal'
+                style={{
+                  cursor: 'pointer'
+                }}
+              >
 
-              <span>{item.label}</span>
+                <CardItemGroup>
+                  {item.color && item.color.type === 'text' && (
+                    <span style={{ color: item.color.color }}>A</span>
+                  )}
+                  {item.color && item.color.type === 'highlight' && (
+                    <>
+                      {Icon && <Icon fill={item.color.color} size={16} />}
+                    </>
+                  )}
+
+                  {!item.color && (
+                    <>
+                      {Icon && <Icon size={16} />}
+                    </>
+                  )}
+                </CardItemGroup>
+
+                <CardGroupLabel
+                  style={{
+                    fontSize: '14px'
+                  }}
+                >
+                  <span>{item.label}</span>
+                </CardGroupLabel>
+              </CardItemGroup>
             </DropdownMenu.Item>
           );
         })}

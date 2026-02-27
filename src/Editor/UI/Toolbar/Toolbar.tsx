@@ -83,13 +83,14 @@ function UndoRedoComponent({ editor }: { editor: Editor }) {
 export function Toolbar({ editor }: { editor: Editor }) {
   return (
     <Card
+      className="toolbar"
       style={{
         position: 'fixed',
         left: 0,
         right: 0,
         top: 0,
         borderRadius: '0',
-        boxShadow: 'none',
+        //boxShadow: 'none',
         zIndex: 10,
         transition: 'none'
         // display: 'flex',

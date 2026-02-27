@@ -1,6 +1,6 @@
 import { AlignCenter, AlignJustify, AlignLeft, AlignRight } from "lucide-react";
 import { RowNode, type EditorNode } from "../../GutterFloatingMenu/classes";
-import type { MenuItem } from "../../../types";
+import type { MenuItem } from "../../../Menus/types";
 import { ColumnNode } from "../../GutterFloatingMenu/classes/ColumnNode";
 
 export function getAlignMenuItems(node: EditorNode): MenuItem[] {

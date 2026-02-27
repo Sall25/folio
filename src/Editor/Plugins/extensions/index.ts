@@ -4,7 +4,7 @@ import { TableMenuExtension } from "../../UI/Menus/FloatingMenu/Table/TableMenu/
 import { ColumnExtension } from "../../UI/Menus/FloatingMenu/Table/ColumnMenu/extensions";
 import { RowExtension } from "../../UI/Menus/FloatingMenu/Table/RowMenu/extensions";
 import { CustomTableCell, CustomTableHeader } from "../../UI/Menus/FloatingMenu/Table/CellMenu/extensions";
-import { DocExtension } from "../../UI/Menus/FloatingMenu/DocHandle/extensions";
+import { DocExtension } from "../../UI/Components/handle/extensions";
 import { CopyNodeExtension } from "./CopyNodeExtension";
 import { DeleteNodeAtExtension } from "./DeleteNodeAtExtension";
 import { DuplicateNodeExtension } from "./DuplicateNodeExtension";

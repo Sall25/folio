@@ -1,8 +1,16 @@
+:root{
+  --app-bg-color: var(--white);
+}
+
+[data-theme="dark"]{
+  --app-bg-color: var(--black);
+}
+
 #root {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--tt-bg-color);
+  background: var(--app-bg-color);
   color: var(--tt-color-text-gray);
 }
 

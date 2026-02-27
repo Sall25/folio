@@ -2,12 +2,17 @@
   --tiptap-card-bg-color: var(--white);
   --tiptap-card-border-color: var(--tt-gray-light-a-100);
   --tiptap-card-group-label-color: var(--tt-gray-light-a-800);
+  --toolbar-bg-color: var(--white);
+  --toolbar-border-color: var(--tt-gray-light-a-200);
+  
 }
 
 [data-theme="dark"] {
   --tiptap-card-bg-color: var(--tt-gray-dark-50);
   --tiptap-card-border-color: var(--tt-gray-dark-a-100);
   --tiptap-card-group-label-color: var(--tt-gray-dark-a-800);
+  --toolbar-bg-color: var(--black);
+  --toolbar-border-color: var(--tt-gray-dark-a-200);
 }
 
 .tiptap-card {
@@ -43,6 +48,14 @@
      transform: translateX(12px) ;
    // transform: scale(0.95);
   }
+
+  /*toolbar*/
+  &.toolbar{
+    background-color: var(--toolbar-bg-color);
+    box-shadow: var(--tt-shadow-elevated-xm);
+    border-color: var(--toolbar-border-color);
+  }
+  
 }
 
 .tiptap-card-header {

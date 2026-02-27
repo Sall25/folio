@@ -1,5 +1,5 @@
 import type { Editor } from "@tiptap/core"
-import type { MenuItem } from "../../../types";
+import type { MenuItem } from "../../../Menus/types";
 import { ClipboardCopy, Copy, Download, PaintBucket, Redo, Turntable } from "lucide-react";
 import { getColorMenuItems } from "./getColorMenuItems";
 import { getFormatMenuItems } from "./getFormatMenuItems";

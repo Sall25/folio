@@ -1,4 +1,4 @@
-import { type MenuItem } from "../../../types";
+import { type MenuItem } from "../../../Menus/types";
 import { Type, Circle } from "lucide-react";
 import type { MenuProps } from "./menuBuilder";
 import type { Editor } from "@tiptap/core";

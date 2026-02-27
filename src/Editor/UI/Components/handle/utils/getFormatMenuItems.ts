@@ -1,4 +1,4 @@
-import type { MenuItem } from "../../../types";
+import type { MenuItem } from "../../../Menus/types";
 import { Code2, Heading1, Heading2, Heading3, List, ListOrdered, Quote, Type } from "lucide-react";
 import type { Editor } from "@tiptap/core";
 import type { MenuProps } from "./menuBuilder";
