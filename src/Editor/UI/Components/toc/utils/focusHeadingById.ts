@@ -22,6 +22,6 @@ export function focusHeadingById(editor: Editor, id: string) {
     .scrollIntoView()
 
   view.dispatch(tr)
-  editor.commands.setNodeSelection(targetPos)
+  //editor.commands.setNodeSelection(targetPos)
   editor.commands.focus()
 }

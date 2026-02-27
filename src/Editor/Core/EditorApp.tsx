@@ -74,7 +74,6 @@ export function EditorApp() {
         placeholder: "Write, type '/' from commands..."
 
       }),
-
       TextAlign.configure({
         types: ['heading', 'paragraph', 'listItem'],
         alignments: ['left', 'right', 'center']
@@ -140,12 +139,8 @@ export function EditorApp() {
           minHeight: 50,
           alwaysPreserveAspectRatio: true,
         }
-      })
-      // SlashCommandPlaceholder.configure({
-      //   slashPlaceholder: 'Commands: /heading, /list, /table...',
-      //   placeholder: ({ isSlashActive }) =>
-      //     isSlashActive ? 'Type a command' : 'Write something...',
-      // }),
+      }),
+
 
     ],
 

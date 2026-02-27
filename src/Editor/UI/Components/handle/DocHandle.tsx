@@ -8,20 +8,23 @@ import { GripVertical, Plus } from 'lucide-react'
 import { CardItemGroup } from '../card'
 import { Button } from '../button'
 
+import './docHandle.scss'
 
 type DocMenuContentProps = {
   editor: Editor,
-  options: MenuProps['options']
+  options: MenuProps['options'],
+  open?: boolean;
 }
 
 
-export function DocMenuContent({ editor, options }: DocMenuContentProps) {
+export function DocMenuContent({ editor, options, open }: DocMenuContentProps) {
   const items = getMenuItems({ editor, options })
 
   return (
     <DropdownMenu.Portal>
       <DropdownMenu.Content
-        className="tiptap-card"
+        data-open={open}
+        className="tiptap-card doc-menu-content"
         sideOffset={6}
         side='left'
         style={{
@@ -120,7 +123,7 @@ export function DocHandle({ editor }: { editor: Editor }) {
 
             {/* actual UI */}
             <div
-              className="handle-container"
+            // className="handle-container"
             >
               <CardItemGroup
                 orientation='horizontal'
@@ -163,6 +166,7 @@ export function DocHandle({ editor }: { editor: Editor }) {
                   <DocMenuContent
                     editor={editor}
                     options={options}
+                    open={open}
                   />
 
 
@@ -170,44 +174,6 @@ export function DocHandle({ editor }: { editor: Editor }) {
               </CardItemGroup>
             </div>
           </div>
-          // <div
-          //   style={{
-          //     display: 'flex',
-          //     gap: '10px'
-          //   }}
-          // >
-          //   <button>
-          //     <Plus
-          //       size={20}
-          //     />
-          //   </button>
-          //   <DropdownMenu.Root
-          //     onOpenChange={(open) => {
-          //       if (!open) {
-          //         editor.commands.blur()
-          //       }
-          //     }}
-          //   >
-          //     <DropdownMenu.Trigger asChild>
-          //       <button
-          //         onPointerDownCapture={() => {
-          //           editor.commands.setNodeSelection(options.props.pos)
-          //         }}
-          //       >
-          //         <Grip size={20} />
-          //       </button>
-          //     </DropdownMenu.Trigger>
-
-          //     <DocMenuContent
-          //       editor={editor}
-          //       options={options}
-          //     />
-
-
-          //   </DropdownMenu.Root>
-
-
-          // </div>
         )}
 
 

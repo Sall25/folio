@@ -3,7 +3,11 @@ import type { SuggestionProps } from '@tiptap/suggestion'
 import type { Editor } from '@tiptap/core'
 import type { Level } from '@tiptap/extension-heading'
 import { useEffect, useRef, useState } from 'react';
-import clsx from 'clsx';
+import { Card, CardGroupLabel, CardItemGroup } from '../card';
+import { Separator } from '../separator';
+import { Button } from '../button';
+
+import './slashCommandList.scss'
 
 
 type MarkType = 'paragraph' | 'heading' | 'bulletList' | 'orderedList' | 'codeBlock' | (string & {});
@@ -29,7 +33,7 @@ export default function SlashList(props: Props) {
 
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
 
-  const [menuVisible, setMenuVisible] = useState(false)
+  const [/*menuVisible*/, setMenuVisible] = useState(false)
 
   // toggle it after mount (or after 500ms for demo)
   useEffect(() => {
@@ -53,17 +57,15 @@ export default function SlashList(props: Props) {
     item.mark?.type !== 'title' && item.mark?.type !== 'separator'
 
   return (
-    <div
-      className={clsx('slash-menu', { active: menuVisible })}
+    <Card
+      className='slash-menu'
       role="listbox"
       aria-label="Slash commands"
-      onMouseLeave={(e) => {
-        e.preventDefault()
-        console.log('mouse left')
-      }}
     >
       {items.length === 0 ? (
-        <div className="slash-empty">No commands</div>
+        <CardGroupLabel>
+          No commands
+        </CardGroupLabel>
       ) : (
         items.map((item, i) => {
           const selectable = isSelectable(item)
@@ -71,18 +73,23 @@ export default function SlashList(props: Props) {
           const Icon = item.icon
 
           return (
-            <div
+            <CardItemGroup
+              style={{
+                minWidth: '200px'
+              }}
+              orientation='vertical'
+
               key={item.id}
               ref={(node) => {
                 if (selectable) itemRefs.current[i] = node
               }}
               role={selectable ? 'option' : undefined}
               aria-selected={selectable ? isActive : undefined}
-              className={clsx('slash-item', {
-                selected: isActive,
-                'is-title': item.mark?.type === 'title',
-                'is-separator': item.mark?.type === 'separator',
-              })}
+              // className={clsx('', {
+              //   selected: isActive,
+              //   'is-title': item.mark?.type === 'title',
+              //   'is-separator': item.mark?.type === 'separator',
+              // })}
 
 
               onMouseDown={(e) => {
@@ -92,24 +99,30 @@ export default function SlashList(props: Props) {
               }}
             >
               {item.mark?.type === 'title' && (
-                <span className="slash-title">{item.title}</span>
+                <CardGroupLabel className="slash-title">{item.title}</CardGroupLabel>
               )}
 
-              {item.mark?.type === 'separator' && <hr />}
+              {item.mark?.type === 'separator' && (
+                <Separator
+                  orientation='horizontal'
+                />
+              )}
 
               {selectable && (
-                <>
-                  <span className="icon">
-                    {Icon && <Icon className="icon" />}
-                  </span>
+                <Button
+                  data-highlighted={selectedIndex === i}
+                  className='slash-item'
+
+                >
+                  {Icon && <Icon className="tiptap-button-icon" />}
                   <span>{item.title}</span>
-                </>
+                </Button>
               )}
-            </div>
+            </CardItemGroup>
           )
         })
       )}
-    </div>
+    </Card>
   )
 }
 

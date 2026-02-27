@@ -36,8 +36,6 @@ export const insertLineAfter: RawCommands['insertLineAfter'] =
         tr = tr.setSelection(
           TextSelection.create(tr.doc, mappedPos + 2)
         )
-
-
         dispatch(tr)
       }
       return true

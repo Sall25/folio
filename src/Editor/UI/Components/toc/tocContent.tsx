@@ -51,6 +51,7 @@ export function TocContent({ editor }: ContentProps) {
               scrollIntoView(heading.id);
             }}
             highlight={activeHeading?.id === heading.id}
+            level={heading.level}
 
 
           // className={`cursor-pointer transition-all duration-200 

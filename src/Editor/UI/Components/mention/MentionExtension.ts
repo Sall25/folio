@@ -8,6 +8,7 @@ import MentionList from './MentionList'
 import { type SuggestionKeyDownProps, type SuggestionProps } from '@tiptap/suggestion'
 import { type MentionSuggestion } from './types'
 import { computePosition, flip, shift, type VirtualElement } from '@floating-ui/dom'
+import { users } from './users'
 
 export const MentionExtension = Mention.configure({
   HTMLAttributes: {
@@ -19,11 +20,11 @@ export const MentionExtension = Mention.configure({
     startOfLine: false,
 
     items: async ({ query }: { query: string }): Promise<MentionItem[]> => {
-      const users: MentionItem[] = [
-        { id: '1', label: 'Jule' },
-        { id: '2', label: 'Alice' },
-        { id: '3', label: 'Bob' },
-      ]
+      // const users: MentionItem[] = [
+      //   { id: '1', label: 'Jule' },
+      //   { id: '2', label: 'Alice' },
+      //   { id: '3', label: 'Bob' },
+      // ]
 
       return users.filter(user =>
         user.label.toLowerCase().includes(query.toLowerCase())

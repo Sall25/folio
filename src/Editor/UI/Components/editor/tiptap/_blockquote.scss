@@ -2,9 +2,10 @@
     blockquote{
         @include font(body, regular);
         border-left: 4px solid var(--tt-paragraph-color);
-        margin: 1.5rem 0;
-        padding-left: 0.6rem;
-        border-radius: 2px;
-        
+        margin: 1.2rem 0;
+        padding-top: 0.2rem;
+         padding-bottom: 0.2rem;
+        padding-left: 1rem;
+        border-radius: 4px;
     }
 }

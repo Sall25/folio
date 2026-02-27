@@ -14,9 +14,9 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--tt-radius-lg, 0.75rem);
-  transition-property: background, color, opacity;
-  transition-duration: var(--tt-transition-duration-default);
-  transition-timing-function: var(--tt-transition-easing-default);
+  // transition-property: background, color, opacity;
+  // transition-duration: var(--tt-transition-duration-short);
+  // transition-timing-function: var(--tt-transition-easing-default);
 
   background-color: transparent;
   color: var(--color-text);
@@ -29,9 +29,10 @@
   &[data-highlighted="true"],
   &[data-focus-visible="true"],
   &[data-active-item="true"] {
-    background-color: var(--tt-button-hover-bg-color);
+   // background-color: var(--tt-button-hover-bg-color);
+   background-color: var(--tt-button-active-bg-color);
     color: var(--tt-button-hover-text-color);
-    // outline: 2px solid var(--tt-button-active-icon-color);
+   // outline: 2px solid var(--tt-button-active-icon-color);
   }
 
   &[data-weight="small"] {

@@ -3,7 +3,10 @@ import type { SuggestionKeyDownProps } from '@tiptap/suggestion'
 
 import { forwardRef, useImperativeHandle, useState } from 'react'
 import type { EmojiListRef, EmojiListProps } from '.'
+import { Card, CardGroupLabel } from '../card';
+import { Button } from '../button';
 
+import './emojiList.scss'
 
 export const EmojiList = forwardRef<EmojiListRef, EmojiListProps>(
   ({ items, command }, ref) => {
@@ -51,28 +54,41 @@ export const EmojiList = forwardRef<EmojiListRef, EmojiListProps>(
     }, [items, command, selectedIndex]);
 
     return (
-      <div
-        className='slash-menu active'
-
+      <Card
+        //  className='slash-menu active'
+        style={{
+          justifyContent: 'left',
+          alignItems: 'flex-start',
+          minWidth: '230px',
+          gap: '8px',
+          padding: '10px'
+        }}
       >
         {items.length === 0 && (
-          <span className='slash-empty'>No Result</span>
+          <CardGroupLabel className='slash-empty'>No Result</CardGroupLabel>
         )}
         {
           items.map((item, index) => (
-            <div
-              className={`slash-item ${index === selectedIndex ? 'selected' : ''}`}
+            <Button
+              className='emoji-item'
+              data-highlighted={index === selectedIndex}
+              //   className={`slash-item ${index === selectedIndex ? 'selected' : ''}`}
               key={index}
               onMouseDown={(e) => {
                 e.preventDefault()
                 selectItem(index)
               }}
+
             >
               <span>{item.emoji}</span>
-              <span className='slash-item border-none'>{item.name}</span>
-            </div>
+              <span
+              //className='slash-item border-none'
+              >
+                {item.name}
+              </span>
+            </Button>
           ))
         }
-      </div>
+      </Card>
     )
   })

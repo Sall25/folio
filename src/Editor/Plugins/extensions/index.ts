@@ -13,6 +13,7 @@ import { MentionExtension } from "../../UI/Menus";
 import { EmojiExtension } from "../../UI/Menus";
 import { GlobalCommands } from "./GlobalCommands";
 
+
 import {
   EmojiInputRules,
   TableShortcutInputRules,
@@ -38,5 +39,6 @@ export {
   SlashCommand,
   MentionExtension,
   EmojiExtension,
-  GlobalCommands
+  GlobalCommands,
+
 }

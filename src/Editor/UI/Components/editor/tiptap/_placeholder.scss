@@ -1,0 +1,21 @@
+
+.tiptap{
+ 
+  /* Display placeholder on every new line*/
+  p.is-empty::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  font-style: italic;
+  }
+
+  .slash-suggestion[data-decoration-content]::after{
+    @include font(body, medium);
+    content: attr(data-decoration-content);
+    color: #adb5bd;
+    font-style: italic;
+    pointer-events: none;
+  }
+}

@@ -62,16 +62,7 @@
     margin-top: var(--spacing-paragraph-after-heading);
   }
 
-  /**************************
-   * Blockquotes
-   **************************/
-  blockquote {
-    margin: var(--spacing-nested) 0;
-
-    p {
-      margin: var(--spacing-nested) 0;
-    }
-  }
+ 
 
   /**************************
    * Lists

@@ -9,7 +9,7 @@ interface ContentProps {
   className?: string;
 }
 
-export default function Content({ children, className }: ContentProps) {
+export default function Content({ children }: ContentProps) {
   const { open, setOpen } = useNavigation();
   const [visible, setVisible] = useState(false);
 
@@ -23,23 +23,14 @@ export default function Content({ children, className }: ContentProps) {
       data-open={visible}
     >
       <CardBody
-
+        style={{
+          gap: '15px',
+          padding: '10px 10px'
+        }}
       >
         {children}
       </CardBody>
 
     </Card>
-
-    // <div
-    //   onMouseLeave={() => setOpen(false)}
-    //   className={clsx(
-    //     className,
-    //     "transition-all duration-1000 ease-in-out transform",
-    //     open ? "opacity-100 scale-105" : "opacity-0 scale-95",
-    //     !visible && "hidden"
-    //   )}
-    // >
-    //   {children}
-    // </div>
   );
 }

@@ -19,18 +19,13 @@ export function TocIndicator({ level, highlight = false }: IndicatorProps) {
 
 
   return (
-    // <CardItemGroup
-    //   orientation="vertical"
-    // >
-
-    // </CardItemGroup>
     <div
       className={`toc-indicator ${highlight ? 'highlight' : ''}`}
       // className='toc-indicator'
       style={{
         width: `${widths[level]}`,
-        // background: 'white',
-        // height: '20px'
+
+
       }}
 
     />

@@ -7,6 +7,9 @@ import type { SuggestionKeyDownProps } from '@tiptap/suggestion'
 import type { MentionListProps } from './types'
 import type { MentionListRef } from './types'
 
+import './mentionList.scss'
+import { Card, CardGroupLabel } from '../card'
+import { Button } from '../button'
 
 const MentionList = forwardRef<MentionListRef, MentionListProps>(
   ({ items, command }, ref) => {
@@ -50,20 +53,32 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
     }))
 
     return (
-      <div className="slash-menu active">
-        {items.length === 0 && <div className="p-2 text-sm">No results</div>}
+      <Card
+        className="mention-menu"
+      >
+        {items.length === 0 && <CardGroupLabel>No results</CardGroupLabel>}
 
         {items.map((item, index) => (
-          <span
+          <Button
+            className='mention-item'
             key={item.id}
-            className={`slash-item ${index === selectedIndex ? 'selected' : ''
-              }`}
+            data-highlighted={index === selectedIndex}
             onClick={() => selectItem(index)}
           >
-            @{item.label}
-          </span>
+
+            <img
+              style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '100%'
+              }}
+              src={item.avatart} alt='profile' />
+            <CardGroupLabel>
+              {item.label}
+            </CardGroupLabel>
+          </Button>
         ))}
-      </div>
+      </Card>
     )
   }
 )

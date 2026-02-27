@@ -26,7 +26,5 @@ export default function getHeadings(editor: Editor): HeadingType[] {
     current.to = next ? next.from - 1 : editor.state.doc.nodeSize
   }
 
-  console.log('headings', headings)
-
   return headings
 }

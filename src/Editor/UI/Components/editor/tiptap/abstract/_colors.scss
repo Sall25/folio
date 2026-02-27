@@ -33,11 +33,11 @@
 //-----------------------------------------
 // Light mode
 :root{
-  --tt-hr-color: var(--tt-gray-light-400);
+  --tt-hr-color: var(--tt-gray-light-a-400);
 }
 // Dark mode
 [data-theme="dark"]{
-  --tt-hr-color: var(--tt-gray-dark-200);
+  --tt-hr-color: var(--tt-gray-dark-a-200);
 }
 
 //-----------------------------------------

@@ -3,9 +3,9 @@
     position: relative;
     border: none;
     height: 1px;          // clickable area
-    margin: 2rem 0;
+    margin: 0.5rem 0;
     cursor: pointer;
-    background: var(--tt-paragraph-color);
+    background: var(--tt-hr-color);
 
     &::after {
       content: "";

@@ -1,6 +1,6 @@
-import { SlashCommand } from "./CommandMenu";
-import { EmojiExtension } from "./Emojis";
-import { MentionExtension } from "./Mention";
+import { SlashCommand } from "../../Components/command-menu";
+import { EmojiExtension } from "../../Components/emojis";
+import { MentionExtension } from "../../Components/mention";
 import { ColumnMenu } from "./Table";
 import { RowMenuComp as RowMenu } from "./Table";
 import { CellMenu } from "./Table";
