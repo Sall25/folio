@@ -1,14 +1,24 @@
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { MenuItemsRenderer } from '../../Menus/Shared'
+//import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+// import { MenuItemsRenderer } from '../../Menus/Shared'
+import { MenuItemsRenderer } from '../menu-renderer'
 import { getMenuItems, type MenuProps } from './utils/menuBuilder'
 import type { Editor } from '@tiptap/core'
 import { DragHandle } from '@tiptap/extension-drag-handle-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { GripVertical, Plus } from 'lucide-react'
 import { CardItemGroup } from '../card'
 import { Button } from '../button'
 
 import './docHandle.scss'
+import { Popover, PopoverTrigger, PopoverContent } from '../popover'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger
+} from '../dropdown-menu/dropdown-menu'
+import { Root } from '@radix-ui/react-dropdown-menu'
+import { useAnimationFrame } from '../hooks/use-animation-frame'
+
 
 type DocMenuContentProps = {
   editor: Editor,
@@ -17,27 +27,25 @@ type DocMenuContentProps = {
 }
 
 
-export function DocMenuContent({ editor, options, open }: DocMenuContentProps) {
+export function DocMenuContent({ editor, options }: DocMenuContentProps) {
   const items = getMenuItems({ editor, options })
 
   return (
-    <DropdownMenu.Portal>
-      <DropdownMenu.Content
-        data-open={open}
-        className="tiptap-card doc-menu-content"
-        sideOffset={6}
-        side='left'
-        style={{
-          justifyContent: 'left',
-          alignItems: 'flex-start',
-          minWidth: '200px',
-          gap: '8px',
-          padding: '10px'
-        }}
-      >
-        <MenuItemsRenderer items={items} />
-      </DropdownMenu.Content>
-    </DropdownMenu.Portal>
+    <DropdownMenuContent
+
+      //className="doc-menu-content"
+      sideOffset={6}
+      side='left'
+      style={{
+        justifyContent: 'left',
+        alignItems: 'flex-start',
+        minWidth: '200px',
+        gap: '8px',
+        padding: '10px'
+      }}
+    >
+      <MenuItemsRenderer items={items} />
+    </DropdownMenuContent>
 
   )
 }
@@ -60,8 +68,43 @@ export function DocHandle({ editor }: { editor: Editor }) {
   const [options, setOptions] = useState<Options | null>(null)
   const [open, setOpen] = useState(false)
 
+  const visualRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const visual = visualRef.current
+    if (!visual) return
+
+    const root = visual.closest('[data-dragging]') as HTMLElement | null
+    if (!root) return
+
+    let currentY = root.offsetTop
+
+    let targetY = 0
+
+    let raf = 0
+
+    const follow = () => {
+      // where plugin ACTUALLY placed the handle
+
+      targetY = root.offsetTop
+
+      currentY += (targetY - currentY) * 0.18
+
+      const dy = currentY - targetY
+
+      visual.style.transform = `translateY(${-dy}px)`
+
+      raf = requestAnimationFrame(follow)
+    }
+
+    raf = requestAnimationFrame(follow)
+
+    return () => cancelAnimationFrame(raf)
+  }, [options])
+
   return (
     <DragHandle
+
       editor={editor}
       computePositionConfig={
         {
@@ -70,6 +113,10 @@ export function DocHandle({ editor }: { editor: Editor }) {
         }
       }
       onNodeChange={({ node, pos }) => {
+        if (open) {
+          console.log('open')
+          return
+        }
         if (pos === -1 || node === null) {
           setOptions(null)
           return
@@ -112,11 +159,13 @@ export function DocHandle({ editor }: { editor: Editor }) {
       <>
         {options && (
           <div
+            ref={visualRef}
+            className="doc-handle-visual"
             style={{
               position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              transform: 'translateX(-10px)', // push fully outside
+              // display: 'flex',
+              // alignItems: 'center',
+              // transform: 'translateX(-10px)', // push fully outside
 
             }}
           >
@@ -140,7 +189,7 @@ export function DocHandle({ editor }: { editor: Editor }) {
                   />
                 </Button>
 
-                <DropdownMenu.Root
+                {/* <DropdownMenu.Root
                   onOpenChange={(next) => {
                     setOpen(next)
                   }}
@@ -170,7 +219,42 @@ export function DocHandle({ editor }: { editor: Editor }) {
                   />
 
 
-                </DropdownMenu.Root>
+                </DropdownMenu.Root> */}
+
+
+                <Root
+                  open={open}
+                  onOpenChange={setOpen}
+                // onOpenChange={(next) => {
+                //   setOpen(next)
+                // }}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      //  className="drag-handle-btn"
+                      onPointerDownCapture={() => {
+                        if (open) {
+                          editor.commands.clearSelection(options.props.pos)
+                        } else {
+                          editor.commands.setNodeSelection(options.props.pos)
+                        }
+
+                      }}
+                    >
+                      <GripVertical
+                        className='tiptap-button-icon'
+                        size={16} />
+                    </Button>
+                  </DropdownMenuTrigger>
+
+                  <DocMenuContent
+                    editor={editor}
+                    options={options}
+                    open={open}
+                  />
+
+
+                </Root>
               </CardItemGroup>
             </div>
           </div>

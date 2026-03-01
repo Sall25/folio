@@ -1,0 +1,52 @@
+.doc-menu-item {
+  background: transparent;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-height: fit-content;
+  pointer-events: auto;
+  background: transparent;
+
+  transition: background 120ms ease, color 120ms ease;
+  &[data-menu-item-highlighted="true"],
+  &[data-focus-visible="true"],
+  &[data-active-item="true"]{
+    color: var(--tt-brand-color-400);
+  }
+  :hover{
+    color: var(--tt-brand-color-400);
+  }
+  // }
+  // &:hover{
+  //   color: var(--tt-brand-color-400);
+  // }
+}
+
+/* Level 1 — Root */
+.doc-menu-item[data-level="1"] {
+  font-size: 16px;
+  font-weight: 500;
+  opacity: 1;
+}
+
+/* Level 2 — Section */
+.doc-menu-item[data-level="2"] {
+  font-size: 15px;
+  font-weight: 450;
+  opacity: 0.9;
+}
+
+/* Level 3 — Nested */
+.doc-menu-item[data-level="3"] {
+  font-size: 14px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+/* Level 4+ — Deep options */
+.doc-menu-item[data-level="4"],
+.doc-menu-item[data-level="5"],
+.doc-menu-item[data-level="6"] {
+  font-size: 13px;
+  font-weight: 400;
+  opacity: 0.65;
+}

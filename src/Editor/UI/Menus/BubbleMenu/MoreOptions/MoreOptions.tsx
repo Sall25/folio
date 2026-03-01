@@ -9,10 +9,11 @@ import {
   Subscript,
   Superscript
 } from 'lucide-react';
-import { Root, Trigger, Content } from '@radix-ui/react-popover';
+//import { Root, Trigger, Content } from '@radix-ui/react-popover';
 import BubbleButton from '../BubbleButton/BubbleButton';
 import { Divider } from '../Divider';
 import { Card } from '../../../Components/card';
+import { Popover, PopoverContent, PopoverTrigger } from '../../../Components/popover';
 
 
 export default function MoreOptions({ editor }: { editor: Editor }) {
@@ -60,27 +61,114 @@ export default function MoreOptions({ editor }: { editor: Editor }) {
   }, [editor]);
 
   return (
-    <Root
-      onOpenChange={(open) => {
-        if (!open) {
-          editor.view.focus()
-        }
-      }}
-    >
-      <Trigger className='tiptap-button'>
+    // <Root
+    //   onOpenChange={(open) => {
+    //     if (!open) {
+    //       editor.view.focus()
+    //     }
+    //   }}
+    // >
+    //   <Trigger className='tiptap-button'>
+    //     <MoreVertical
+    //       className='tiptap-button-icon'
+    //     />
+    //   </Trigger>
+
+    //   <Content
+    //     side="top"
+    //     align="end"
+    //     sideOffset={12}
+    //     alignOffset={-8}
+
+    //   >
+    //     <Card
+    //       style={{
+    //         display: 'flex',
+    //         flexDirection: 'row',
+    //         gap: '8px',
+    //         padding: '3px 8px'
+    //       }}
+    //     >
+    //       {/*Superscript */}
+    //       <BubbleButton
+    //         onClick={() => editor.chain().focus().toggleSuperscript().run()}
+    //         active={superscriptActive}
+    //       >
+    //         <Superscript
+    //           className="tiptap-button-icon"
+    //         />
+    //       </BubbleButton>
+
+    //       {/*Subscript*/}
+    //       <BubbleButton
+    //         onClick={() => editor.chain().focus().toggleSubscript().run()}
+    //         active={subscriptActive}
+    //       >
+    //         <Subscript
+    //           className="tiptap-button-icon"
+    //         />
+    //       </BubbleButton>
+
+    //       {/* Divider */}
+    //       <Divider />
+
+    //       {/* Align Left */}
+    //       <BubbleButton
+    //         onClick={() => editor.chain().focus().setTextAlign('left').run()}
+    //         active={align === 'left'}
+    //       >
+    //         <AlignLeft
+    //           className="tiptap-button-icon"
+    //         />
+    //       </BubbleButton>
+
+    //       {/* Align Center */}
+    //       <BubbleButton
+    //         onClick={() => editor.chain().focus().setTextAlign('center').run()}
+    //         active={align === 'center'}
+    //       >
+    //         <AlignCenter
+    //           className="tiptap-button-icon"
+    //         />
+    //       </BubbleButton>
+
+    //       {/* Align Right */}
+    //       <BubbleButton
+    //         onClick={() => editor.chain().focus().setTextAlign('right').run()}
+    //         active={align === 'right'}
+    //       >
+    //         <AlignRight
+    //           className="tiptap-button-icon"
+    //         />
+    //       </BubbleButton>
+
+    //       {/* Align Justify */}
+    //       <BubbleButton
+    //         onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+    //         active={align === 'justify'}
+    //       >
+    //         <AlignJustify
+    //           className="tiptap-button-icon"
+    //         />
+    //       </BubbleButton>
+
+    //     </Card>
+    //   </Content>
+    // </Root>
+    <Popover>
+      <PopoverTrigger
+        className='tiptap-button'
+      >
         <MoreVertical
           className='tiptap-button-icon'
         />
-      </Trigger>
-
-      <Content
-        side="top"
-        align="end"
-        sideOffset={12}
-        alignOffset={-8}
-
+      </PopoverTrigger>
+      <PopoverContent
+        side='top'
+        align='end'
       >
         <Card
+
           style={{
             display: 'flex',
             flexDirection: 'row',
@@ -152,7 +240,7 @@ export default function MoreOptions({ editor }: { editor: Editor }) {
           </BubbleButton>
 
         </Card>
-      </Content>
-    </Root>
+      </PopoverContent>
+    </Popover>
   )
 }

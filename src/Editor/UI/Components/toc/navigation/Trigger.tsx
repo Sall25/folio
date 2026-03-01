@@ -38,7 +38,9 @@ export default function Trigger({ children, className }: TriggerProps) {
 
       className={className}
       style={{
-        display: open ? 'none' : 'flex'
+        display: open ? 'none' : 'flex',
+        pointerEvents: 'auto',
+        zIndex: 80
       }}
     >
       {children}

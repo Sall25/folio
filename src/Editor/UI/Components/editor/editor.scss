@@ -14,14 +14,27 @@
 
   visibility: hidden;
 
+  
+ 
+
   &[data-ready="true"]{
     visibility: visible;
   }
   
   .ProseMirror{
     margin: 0 5% auto;
-    position: relative;
     overflow: visible;
+    scroll-margin-top: 34px;
+    
+
+     .pm-selection-decoration{
+      width: 100%;
+      
+      background-color: var(--tt-selection-color);
+      border-radius: var(--tt-radius-sm);
+      border-radius: 5px;
+   // background-color: aqua;
+      }
 
     .table-controls{
       overflow: visible;

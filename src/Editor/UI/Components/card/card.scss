@@ -33,9 +33,44 @@
   word-wrap: break-word;
   background-clip: border-box;
 
+  z-index: 50;
+
   transition: all 250ms ease-in-out;
   transform-origin: center;
   will-change: transform, opacity; /* smoother GPU animation */
+
+  // scroll-padding-bottom: 12px;
+
+  &::-webkit-scrollbar-thumb{
+  background-color: var(--tt-scrollbar-color);
+  border-radius: 999px;
+
+  border: 2px solid transparent;  /* creates inner gap */
+  background-clip: content-box;   /* makes it look thinner */
+  }
+
+  /* Firefox */
+  scrollbar-width:thin;
+  scrollbar-color: var(--tt-scrollbar-color) transparent;
+  scroll-margin: 0;
+  scroll-padding: 0;
+
+  /* Chromium / Safari */
+&::-webkit-scrollbar {
+  width: 6px;
+}
+
+&::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: 6px;
+}
+
+&::-webkit-scrollbar-thumb {
+  background-color: var(--tt-scrollbar-color);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
 
   /* attrs*/
   &[data-open="true"]{
@@ -46,6 +81,7 @@
   &[data-open="false"]{
     visibility: hidden;
      transform: translateX(12px) ;
+     pointer-events: none;
    // transform: scale(0.95);
   }
 

@@ -7,6 +7,7 @@ import { Card, CardGroupLabel, CardItemGroup } from '../card';
 import { Separator } from '../separator';
 import { Button } from '../button';
 
+
 import './slashCommandList.scss'
 
 
@@ -33,12 +34,12 @@ export default function SlashList(props: Props) {
 
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
 
-  const [/*menuVisible*/, setMenuVisible] = useState(false)
+  const [menuVisible, setMenuVisible] = useState(false)
 
-  // toggle it after mount (or after 500ms for demo)
+  // toggle it after mount (or after 150ms for demo)
   useEffect(() => {
-    const id = setTimeout(() => setMenuVisible(true), 500)
-    return () => clearTimeout(id)
+    const raf = requestAnimationFrame(() => setMenuVisible(true))
+    return () => cancelAnimationFrame(raf)
   }, [])
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export default function SlashList(props: Props) {
       className='slash-menu'
       role="listbox"
       aria-label="Slash commands"
+      data-slash-menu-open={menuVisible}
     >
       {items.length === 0 ? (
         <CardGroupLabel>

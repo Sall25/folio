@@ -8,6 +8,7 @@ import './tocNavigationPanel.scss'
 
 export default function TocNavigationPanel({ editor }: { editor: Editor }) {
 
+
   if (!editor) return null;
 
   return (

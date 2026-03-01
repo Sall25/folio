@@ -1,24 +1,36 @@
 .doc-menu-content{
   /* use transform/opacity to animate smoothly instead of the nonexistent `scale` property */
-  transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+  transition: transform 0.7s ease, opacity 0.7s ease;
   transform-origin: left center;
   opacity: 0;
-  visibility: hidden;
-  transform: scale(0.85); /* start slightly shrunk */
+  //visibility: hidden;
+  //transform: scale(0.85); /* start slightly shrunk */
   padding: 10px;
-}
 
-/* Radix adds data-state="open"/"closed"; we also keep data-open for compatibility */
-.doc-menu-content[data-state="open"],
-.doc-menu-content[data-open="true"]{
-  visibility: visible;
-  opacity: 1;
-  transform: scale(1);
-}
+    
+  /* Radix adds data-state="open"/"closed"; we also keep data-open for compatibility */
+  &[data-state="open"]{
+    
+    opacity: 1;
+    transform: scale(1);
+    background: goldenrod;
+  }
 
-.doc-menu-content[data-state="closed"],
-.doc-menu-content[data-open="false"]{
-  opacity: 0;
-  transform: scale(0.85);
-  visibility: hidden;
+  &[data-state="closed"]{
+    opacity: 0;
+    transform: scale(0.45);
+  }
+
+  .doc-handle-visual {
+    display: flex;
+    align-items: center;
+
+    transform: translate3d(0, 0, 0);
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* `will-change` hints to the browser that we'll be animating the
+      transform property, which helps keep scrolling and drag animations
+      smooth. */
+    will-change: transform;
+  }
 }

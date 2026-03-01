@@ -1,7 +1,33 @@
-.emoji-item{
-  outline: none;
-  border: 1px solid var(--slash-item-border-color);
-  min-width: 200px;
-  justify-content: flex-start;
-  font-size: 15px;
+.emoji-menu  {
+ padding: 5px;
+  justify-content: left;
+  align-items: flex-start;
+  min-width: 230px;
+  gap: 8px;
+ 
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+
+  transition:
+    opacity var(--anim-duration) var(--anim-ease-standard),
+    transform var(--anim-duration) var(--anim-ease-standard);
+
+  &[data-emoji-menu-open="false"]{
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+    pointer-events: none;
+  }
+
+  &[data-emoji-menu-open="true"]{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .emoji-item{
+    outline: none;
+    border: 1px solid var(--slash-item-border-color);
+    min-width: 100%;
+    justify-content: flex-start;
+    font-size: 15px;
+  }
 }

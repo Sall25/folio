@@ -133,7 +133,15 @@ export const SlashCommand = Extension.create({
       computePosition(virtualElement, element, {
         placement: 'bottom-start',
         strategy: 'absolute',
-        middleware: [shift({ padding: 8 }), flip(), offset(4)]
+        middleware: [offset(({ placement }) => {
+          const isFlipped = placement.startsWith('top')
+
+          return {
+            mainAxis: isFlipped ? 8 : -10, // smaller gap when flipped
+            crossAxis: 0,
+          }
+        }),
+        shift(), flip(),]
       }).then(({ x, y, strategy }) => {
         element.style.width = 'max-content'
         element.style.position = strategy

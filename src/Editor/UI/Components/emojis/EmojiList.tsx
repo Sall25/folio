@@ -7,6 +7,7 @@ import { Card, CardGroupLabel } from '../card';
 import { Button } from '../button';
 
 import './emojiList.scss'
+import { useAnimationFrame } from '../hooks/use-animation-frame';
 
 export const EmojiList = forwardRef<EmojiListRef, EmojiListProps>(
   ({ items, command }, ref) => {
@@ -53,16 +54,12 @@ export const EmojiList = forwardRef<EmojiListRef, EmojiListProps>(
       };
     }, [items, command, selectedIndex]);
 
+    const { open } = useAnimationFrame()
+
     return (
       <Card
-        //  className='slash-menu active'
-        style={{
-          justifyContent: 'left',
-          alignItems: 'flex-start',
-          minWidth: '230px',
-          gap: '8px',
-          padding: '10px'
-        }}
+        className='emoji-menu'
+        data-emoji-menu-open={open}
       >
         {items.length === 0 && (
           <CardGroupLabel className='slash-empty'>No Result</CardGroupLabel>
@@ -78,6 +75,7 @@ export const EmojiList = forwardRef<EmojiListRef, EmojiListProps>(
                 e.preventDefault()
                 selectItem(index)
               }}
+
 
             >
               <span>{item.emoji}</span>

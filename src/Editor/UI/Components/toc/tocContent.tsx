@@ -15,6 +15,7 @@ export function TocContent({ editor }: ContentProps) {
   const [activeHeading, setActiveHeading] = useState<HeadingType | null>(null);
   const [headings, setHeadings] = useState<HeadingType[] | null>(getHeadings(editor));
 
+
   useEffect(() => {
     if (!editor) return;
 
@@ -27,12 +28,14 @@ export function TocContent({ editor }: ContentProps) {
 
     editor.on('update', update);
     editor.on('selectionUpdate', update);
+    editor.on('transaction', update)
 
     update();
 
     return () => {
       editor.off('update', update);
       editor.off('selectionUpdate', update);
+      editor.off('transaction', update)
     };
   }, [editor]);
 
@@ -40,28 +43,20 @@ export function TocContent({ editor }: ContentProps) {
 
   return (
     <Navigation.Content
-
+      className="toc-content"
     >
       <>
         {headings?.map((heading, index) => (
           <Navigation.Item
             key={index}
             onSelect={() => {
-              focusHeadingById(editor, heading.id);
-              scrollIntoView(heading.id);
+
+              focusHeadingById(editor, heading.id)
+              scrollIntoView(heading.id)
+
             }}
             highlight={activeHeading?.id === heading.id}
             level={heading.level}
-
-
-          // className={`cursor-pointer transition-all duration-200 
-          //           hover:bg-neutral-100 hover:dark:bg-neutral-800
-          //             rounded-lg flex justify-start items-center
-          //               max-w-50 w-full
-          //             whitespace-nowrap overflow-hidden text-ellipsis
-          //           ${heading.id === activeHeading?.id ? 'text-cyan-600' : 'dark:text-neutral-400'}
-          //           `}
-
           >
             {heading.title}
 

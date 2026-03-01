@@ -20,7 +20,26 @@
 
   /* Firefox */
   scrollbar-width: thin;
-  scrollbar-color: var(--slash-item-border-color) transparent;
+  scrollbar-color: var(--tt-scrollbar-color) transparent;
+
+  //transition: scale 0.15s ease-in-out;
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+
+  transition:
+    opacity var(--anim-duration) var(--anim-ease-standard),
+    transform var(--anim-duration) var(--anim-ease-standard);
+
+  &[data-slash-menu-open="false"]{
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+    pointer-events: none;
+  }
+
+  &[data-slash-menu-open="true"]{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .slash-item{

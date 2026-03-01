@@ -1,4 +1,4 @@
-export default function scrollIntoView(id: string, offset = 40) {
+export default function scrollIntoView(id: string, offset = 55) {
   requestAnimationFrame(() => {
     const el = document.getElementById(id)
     if (!el) return

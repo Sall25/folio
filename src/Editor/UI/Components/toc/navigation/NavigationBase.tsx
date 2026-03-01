@@ -23,6 +23,9 @@ export function NavigationBase({ children, className }: NavigationBaseProps) {
       }
       }>
       <div
+        style={{
+          pointerEvents: `${open ? 'auto' : 'none'}`
+        }}
         className={className}
       >
         {children}

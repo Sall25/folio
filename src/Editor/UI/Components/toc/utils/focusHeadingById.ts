@@ -1,4 +1,5 @@
-import type { Editor } from '@tiptap/core'
+import { type Editor } from '@tiptap/core'
+import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 
 export function focusHeadingById(editor: Editor, id: string) {
   const { state, view } = editor
@@ -17,11 +18,24 @@ export function focusHeadingById(editor: Editor, id: string) {
 
   if (targetPos === null) return
 
+  const node = doc.nodeAt(targetPos)
+  if (!node) return
+
   const tr = state.tr
-    // .setSelection(TextSelection.create(state.doc, targetPos))
+    .setSelection(TextSelection.create(state.doc, targetPos))
+    //.setSelection(NodeSelection.create(doc, targetPos))
     .scrollIntoView()
+    .setMeta('decorateSelection', { from: targetPos, to: targetPos + node.nodeSize })
+
+
+
 
   view.dispatch(tr)
+
+  requestAnimationFrame(() => {
+    view.focus()
+
+  })
   //editor.commands.setNodeSelection(targetPos)
-  editor.commands.focus()
+  // editor.commands.focus()
 }

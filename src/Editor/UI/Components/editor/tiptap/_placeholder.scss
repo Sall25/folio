@@ -1,3 +1,11 @@
+:root{
+  --tt-suggestion-placeholder-bg-color: var(--tt-gray-light-a-100);
+  --tt-suggestion-placeholder-text-color: var(--tt-gray-light-a-500);
+}
+[data-theme="dark"]{
+  --tt-suggestion-placeholder-bg-color: var(--tt-gray-dark-a-100);
+  --tt-suggestion-placeholder-text-color: var(--tt-gray-dark-a-500);
+}
 
 .tiptap{
  
@@ -14,8 +22,11 @@
   .slash-suggestion[data-decoration-content]::after{
     @include font(body, medium);
     content: attr(data-decoration-content);
-    color: #adb5bd;
+    color: var(--tt-suggestion-placeholder-text-color);
     font-style: italic;
     pointer-events: none;
+    background: var(--tt-suggestion-placeholder-bg-color);
+    border-radius: 10px;
+    padding: 5px 8px;
   }
 }

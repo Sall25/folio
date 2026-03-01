@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { Button } from "../../button";
 
+import './item.scss'
+
 interface ItemProps {
   children: ReactNode;
   className?: string;
@@ -19,12 +21,14 @@ export default function Item({
 
   return (
     <Button
+      className="doc-menu-item"
       onClick={onSelect}
-      data-highlighted={highlight}
+      data-menu-item-highlighted={highlight}
+      data-level={level}
       style={{
         paddingLeft: `${(level - 1) * indentStep + 12}px`,
         background: 'transparent',
-        justifyContent: 'flex-start'
+
       }}
     >
       {children}

@@ -92,7 +92,8 @@ export function Toolbar({ editor }: { editor: Editor }) {
         borderRadius: '0',
         //boxShadow: 'none',
         zIndex: 10,
-        transition: 'none'
+        transition: 'none',
+        marginBottom: '34px'
         // display: 'flex',
         // flexDirection: 'row',
         // justifyContent: 'flex-start'

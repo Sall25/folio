@@ -2,7 +2,7 @@
 import Emoji, { type EmojiItem } from '@tiptap/extension-emoji'
 import { ReactRenderer } from '@tiptap/react'
 import { EmojiList } from './EmojiList'
-import { computePosition, type VirtualElement } from '@floating-ui/dom'
+import { computePosition, flip, offset, shift, type VirtualElement } from '@floating-ui/dom'
 import type { SuggestionProps } from '@tiptap/suggestion';
 
 export const EmojiExtension = Emoji.configure({
@@ -71,12 +71,21 @@ export const EmojiExtension = Emoji.configure({
         computePosition(virtualEl, element, {
           placement: 'bottom-start',
           // strategy: 'absolute',
-          // middleware: [shift(), flip()]
+          middleware: [offset(({ placement }) => {
+            const isFlipped = placement.startsWith('top')
+
+            return {
+              mainAxis: isFlipped ? 10 : -10, // smaller gap when flipped
+              crossAxis: 0,
+            }
+          }), flip()]
         }).then(pos => {
           Object.assign(component.element.style, {
+            width: 'max-content',
+            position: pos.strategy,
             left: `${pos.x}px`,
             top: `${pos.y}px`,
-            position: pos.strategy === 'fixed' ? 'fixed' : 'absolute',
+            // position: pos.strategy === 'fixed' ? 'fixed' : 'absolute',
           })
         })
       }

@@ -10,6 +10,7 @@ import type { MentionListRef } from './types'
 import './mentionList.scss'
 import { Card, CardGroupLabel } from '../card'
 import { Button } from '../button'
+import { useAnimationFrame } from '../hooks/use-animation-frame'
 
 const MentionList = forwardRef<MentionListRef, MentionListProps>(
   ({ items, command }, ref) => {
@@ -52,8 +53,11 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
       },
     }))
 
+    const { open } = useAnimationFrame()
+
     return (
       <Card
+        data-slash-menu-open={open}
         className="mention-menu"
       >
         {items.length === 0 && <CardGroupLabel>No results</CardGroupLabel>}
