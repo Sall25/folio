@@ -8,9 +8,10 @@ import { MarkMenu } from "./Marks";
 import { CellSelection } from "prosemirror-tables";
 import { TextSelection } from "@tiptap/pm/state";
 import { StyleBase } from "./Style/components/StyleBase";
-import { ButtonGroup } from "../../Components";
+import { Button, ButtonGroup } from "../../Components";
 import { Card } from "../../Components/card";
 import { ColorDropdown } from "./Color";
+import { MessageSquare } from "lucide-react";
 
 export default function BubbleMenu({ editor }: { editor: Editor }) {
 
@@ -117,6 +118,15 @@ export default function BubbleMenu({ editor }: { editor: Editor }) {
           </ButtonGroup>
 
           <Divider />
+
+          {/* Comment */}
+          <Button
+            onClick={() => {
+              editor.commands.addComment('You')
+            }}
+          >
+            <MessageSquare className='tiptap-button-icon' />
+          </Button>
 
           {/* More options */}
           <MoreOptions editor={editor} />

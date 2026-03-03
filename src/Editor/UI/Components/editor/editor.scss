@@ -36,6 +36,13 @@
    // background-color: aqua;
       }
 
+      .comment-anchor{
+        background-color: var(--tt-color-highlight-yellow-contrast);
+      }
+      .comment-flash{
+        background-color: green;
+      }
+
     .table-controls{
       overflow: visible;
     }

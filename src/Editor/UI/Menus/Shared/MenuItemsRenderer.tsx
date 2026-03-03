@@ -68,22 +68,6 @@ export function MenuItemsRenderer({ items }: IMenuItemsRenderer) {
                   </Button>
 
 
-                  {/*                         
-                  <CardItemGroup
-                    orientation='horizontal'
-                    style={{
-
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                   
-
-                    <CardGroupLabel>
-                      
-                    </CardGroupLabel>
-                  </CardItemGroup> */}
-
-
                 </DropdownMenu.SubTrigger>
                 <DropdownMenu.Portal >
                   <DropdownMenu.SubContent

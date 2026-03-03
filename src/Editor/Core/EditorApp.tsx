@@ -32,7 +32,8 @@ import {
   DateInputRules,
   SlashCommand,
   MentionExtension,
-  EmojiExtension
+  EmojiExtension,
+  CommentExtension
 } from '../Plugins/extensions'
 
 // components
@@ -50,7 +51,7 @@ import { useEffect, useState } from 'react'
 import { NodeBackground } from '../UI/Components/tiptap-extension'
 import { EditorComp } from '../UI/Components/editor'
 import TocNavigationPanel from '../UI/Components/toc'
-
+import { CommentSidebar } from '../UI/Components/comment'
 
 
 export function EditorApp() {
@@ -140,7 +141,7 @@ export function EditorApp() {
           alwaysPreserveAspectRatio: true,
         }
       }),
-
+      CommentExtension
 
     ],
 
@@ -198,6 +199,10 @@ export function EditorApp() {
       </EditorComp>
 
       <TocNavigationPanel
+        editor={editor}
+      />
+
+      <CommentSidebar
         editor={editor}
       />
 
