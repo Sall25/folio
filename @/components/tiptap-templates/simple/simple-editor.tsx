@@ -35,24 +35,25 @@ import "@/components/tiptap-node/heading-node/heading-node.scss"
 import "@/components/tiptap-node/paragraph-node/paragraph-node.scss"
 
 // --- Tiptap UI ---
-import { HeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-menu"
+// import { HeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-menu"
 import { ImageUploadButton } from "@/components/tiptap-ui/image-upload-button"
-import { ListDropdownMenu } from "@/components/tiptap-ui/list-dropdown-menu"
-import { BlockquoteButton } from "@/components/tiptap-ui/blockquote-button"
-import { CodeBlockButton } from "@/components/tiptap-ui/code-block-button"
-import {
-  ColorHighlightPopover,
-  ColorHighlightPopoverContent,
-  ColorHighlightPopoverButton,
-} from "@/components/tiptap-ui/color-highlight-popover"
-import {
-  LinkPopover,
-  LinkContent,
-  LinkButton,
-} from "@/components/tiptap-ui/link-popover"
-import { MarkButton } from "@/components/tiptap-ui/mark-button"
-import { TextAlignButton } from "@/components/tiptap-ui/text-align-button"
+// import { ListDropdownMenu } from "@/components/tiptap-ui/list-dropdown-menu"
+// import { BlockquoteButton } from "@/components/tiptap-ui/blockquote-button"
+// import { CodeBlockButton } from "@/components/tiptap-ui/code-block-button"
+// import {
+//   ColorHighlightPopover,
+//   ColorHighlightPopoverContent,
+//   ColorHighlightPopoverButton,
+// } from "@/components/tiptap-ui/color-highlight-popover"
+// import {
+//  // LinkPopover,
+//   LinkContent,
+//   //LinkButton,
+// } from "@/components/tiptap-ui/link-popover"
+//import { MarkButton } from "@/components/tiptap-ui/mark-button"
+//import { TextAlignButton } from "@/components/tiptap-ui/text-align-button"
 import { UndoRedoButton } from "@/components/tiptap-ui/undo-redo-button"
+import { BubbleMenu } from "@/components/tiptap-ui/bubble-menu/bubble-menu"
 
 // --- Icons ---
 import { ArrowLeftIcon } from "@/components/tiptap-icons/arrow-left-icon"
@@ -76,12 +77,12 @@ import "@/components/tiptap-templates/simple/simple-editor.scss"
 import content from "@/components/tiptap-templates/simple/data/content.json"
 
 const MainToolbarContent = ({
-  onHighlighterClick,
-  onLinkClick,
+  // onHighlighterClick,
+  // onLinkClick,
   isMobile,
 }: {
-  onHighlighterClick: () => void
-  onLinkClick: () => void
+  // onHighlighterClick: () => void
+  // onLinkClick: () => void
   isMobile: boolean
 }) => {
   return (
@@ -92,7 +93,7 @@ const MainToolbarContent = ({
         <UndoRedoButton action="undo" />
         <UndoRedoButton action="redo" />
       </ToolbarGroup>
-
+      {/* 
       <ToolbarSeparator />
 
       <ToolbarGroup>
@@ -137,7 +138,7 @@ const MainToolbarContent = ({
         <TextAlignButton align="justify" />
       </ToolbarGroup>
 
-      <ToolbarSeparator />
+      <ToolbarSeparator /> */}
 
       <ToolbarGroup>
         <ImageUploadButton text="Add" />
@@ -174,12 +175,12 @@ const MobileToolbarContent = ({
     </ToolbarGroup>
 
     <ToolbarSeparator />
-
+    {/* 
     {type === "highlighter" ? (
       <ColorHighlightPopoverContent />
     ) : (
       <LinkContent />
-    )}
+    )} */}
   </>
 )
 
@@ -245,6 +246,7 @@ export function SimpleEditor() {
         upload: handleImageUpload,
         onError: (error) => console.error("Upload failed:", error),
       }),
+
     ],
     content,
   })
@@ -276,8 +278,8 @@ export function SimpleEditor() {
         >
           {mobileView === "main" ? (
             <MainToolbarContent
-              onHighlighterClick={() => setMobileView("highlighter")}
-              onLinkClick={() => setMobileView("link")}
+              // onHighlighterClick={() => setMobileView("highlighter")}
+              // onLinkClick={() => setMobileView("link")}
               isMobile={isMobile}
             />
           ) : (
@@ -292,6 +294,10 @@ export function SimpleEditor() {
           editor={editor}
           role="presentation"
           className="simple-editor-content"
+        />
+
+        <BubbleMenu
+          editor={editor}
         />
       </EditorContext.Provider>
     </div>
