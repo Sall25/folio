@@ -1,5 +1,3 @@
-"use client"
-
 import { forwardRef, Fragment, useMemo } from "react"
 
 // --- Tiptap UI Primitive ---
@@ -16,12 +14,15 @@ import "@/components/tiptap-ui-primitive/button/button-colors.scss"
 import "@/components/tiptap-ui-primitive/button/button-group.scss"
 import "@/components/tiptap-ui-primitive/button/button.scss"
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  className?: string
+export type ButtonVariant = "ghost" | "primary"
+export type ButtonSize = "small" | "default" | "large"
+
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   showTooltip?: boolean
   tooltip?: React.ReactNode
   shortcutKeys?: string
+  variant?: ButtonVariant
+  size?: ButtonSize
 }
 
 export const ShortcutDisplay: React.FC<{ shortcuts: string[] }> = ({
@@ -49,7 +50,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       tooltip,
       showTooltip = true,
       shortcutKeys,
-      "aria-label": ariaLabel,
+      variant,
+      size,
       ...props
     },
     ref
@@ -64,7 +66,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         <button
           className={cn("tiptap-button", className)}
           ref={ref}
-          aria-label={ariaLabel}
+          data-style={variant}
+          data-size={size}
           {...props}
         >
           {children}
@@ -77,7 +80,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         <TooltipTrigger
           className={cn("tiptap-button", className)}
           ref={ref}
-          aria-label={ariaLabel}
+          data-style={variant}
+          data-size={size}
           {...props}
         >
           {children}

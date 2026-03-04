@@ -1,10 +1,10 @@
-import { EditorApp } from "./Editor/Core/EditorApp";
+import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 
 function App() {
 
   return (
     <div>
-      <EditorApp />
+      <SimpleEditor />
 
     </div>
 

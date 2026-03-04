@@ -18,6 +18,7 @@ import {
 } from '../dropdown-menu/dropdown-menu'
 import { Root } from '@radix-ui/react-dropdown-menu'
 import { useAnimationFrame } from '../hooks/use-animation-frame'
+import { offset } from '@floating-ui/dom'
 
 
 type DocMenuContentProps = {
@@ -68,48 +69,49 @@ export function DocHandle({ editor }: { editor: Editor }) {
   const [options, setOptions] = useState<Options | null>(null)
   const [open, setOpen] = useState(false)
 
-  const visualRef = useRef<HTMLDivElement | null>(null)
+  // const visualRef = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    const visual = visualRef.current
-    if (!visual) return
+  // useEffect(() => {
+  //   const visual = visualRef.current
+  //   if (!visual) return
 
-    const root = visual.closest('[data-dragging]') as HTMLElement | null
-    if (!root) return
+  //   const root = visual.closest('[data-dragging]') as HTMLElement | null
+  //   if (!root) return
 
-    let currentY = root.offsetTop
+  //   let currentY = root.offsetTop
 
-    let targetY = 0
+  //   let targetY = 0
 
-    let raf = 0
+  //   let raf = 0
 
-    const follow = () => {
-      // where plugin ACTUALLY placed the handle
+  //   const follow = () => {
+  //     // where plugin ACTUALLY placed the handle
 
-      targetY = root.offsetTop
+  //     targetY = root.offsetTop
 
-      currentY += (targetY - currentY) * 0.18
+  //     currentY += (targetY - currentY) * 0.18
 
-      const dy = currentY - targetY
+  //     const dy = currentY - targetY
 
-      visual.style.transform = `translateY(${-dy}px)`
+  //     visual.style.transform = `translateY(${-dy}px)`
 
-      raf = requestAnimationFrame(follow)
-    }
+  //     raf = requestAnimationFrame(follow)
+  //   }
 
-    raf = requestAnimationFrame(follow)
+  //   raf = requestAnimationFrame(follow)
 
-    return () => cancelAnimationFrame(raf)
-  }, [options])
+  //   return () => cancelAnimationFrame(raf)
+  // }, [options])
 
   return (
     <DragHandle
-
       editor={editor}
       computePositionConfig={
         {
           placement: 'left-start',
-
+          // middleware: [
+          //   offset(5)
+          // ]
         }
       }
       onNodeChange={({ node, pos }) => {
@@ -156,40 +158,23 @@ export function DocHandle({ editor }: { editor: Editor }) {
         }
       }}
     >
-      <>
-        {options && (
-          <div
-            ref={visualRef}
-            className="doc-handle-visual"
-            style={{
-              position: 'relative',
-              // display: 'flex',
-              // alignItems: 'center',
-              // transform: 'translateX(-10px)', // push fully outside
+      <CardItemGroup
+        orientation='horizontal'
+      >
+        <Button
+          onClick={() => {
+            if (options)
+              editor.chain().insertLineAfter(options.props.pos).run()
+          }}
+        // className="plus-btn"
+        >
+          <Plus
+            className='tiptap-button-icon'
+            size={16}
+          />
+        </Button>
 
-            }}
-          >
-
-            {/* actual UI */}
-            <div
-            // className="handle-container"
-            >
-              <CardItemGroup
-                orientation='horizontal'
-              >
-                <Button
-                  onClick={() => {
-                    editor.chain().insertLineAfter(options.props.pos).run()
-                  }}
-                // className="plus-btn"
-                >
-                  <Plus
-                    className='tiptap-button-icon'
-                    size={16}
-                  />
-                </Button>
-
-                {/* <DropdownMenu.Root
+        {/* <DropdownMenu.Root
                   onOpenChange={(next) => {
                     setOpen(next)
                   }}
@@ -222,46 +207,43 @@ export function DocHandle({ editor }: { editor: Editor }) {
                 </DropdownMenu.Root> */}
 
 
-                <Root
-                  open={open}
-                  onOpenChange={setOpen}
-                // onOpenChange={(next) => {
-                //   setOpen(next)
-                // }}
-                >
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      //  className="drag-handle-btn"
-                      onPointerDownCapture={() => {
-                        if (open) {
-                          editor.commands.clearSelection(options.props.pos)
-                        } else {
-                          editor.commands.setNodeSelection(options.props.pos)
-                        }
+        <Root
+          open={open}
+          onOpenChange={setOpen}
+        // onOpenChange={(next) => {
+        //   setOpen(next)
+        // }}
+        >
+          <DropdownMenuTrigger asChild>
+            <Button
+              //  className="drag-handle-btn"
+              onPointerDownCapture={() => {
+                if (!options) return
+                if (open) {
+                  editor.commands.clearSelection(options.props.pos)
+                } else {
+                  editor.commands.setNodeSelection(options.props.pos)
+                }
 
-                      }}
-                    >
-                      <GripVertical
-                        className='tiptap-button-icon'
-                        size={16} />
-                    </Button>
-                  </DropdownMenuTrigger>
+              }}
+            >
+              <GripVertical
+                className='tiptap-button-icon'
+                size={16} />
+            </Button>
+          </DropdownMenuTrigger>
 
-                  <DocMenuContent
-                    editor={editor}
-                    options={options}
-                    open={open}
-                  />
-
-
-                </Root>
-              </CardItemGroup>
-            </div>
-          </div>
-        )}
+          {options && (
+            <DocMenuContent
+              editor={editor}
+              options={options}
+              open={open}
+            />
+          )}
 
 
-      </>
+        </Root>
+      </CardItemGroup>
 
     </DragHandle>
   )

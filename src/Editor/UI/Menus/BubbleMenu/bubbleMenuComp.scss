@@ -1,0 +1,25 @@
+.bubble-menu {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  transform-origin: bottom center;
+
+  opacity: 0;
+    transform: scale(0.9) translateY(4px);
+    pointer-events: none;
+    
+
+  &.active{
+     opacity: 1;
+     pointer-events: auto;
+    transform: scale(1) translateY(0);
+  }
+    
+  .menu-hidden {
+    opacity: 0;
+    
+  }
+
+  .menu-visible {
+    opacity: 1;
+    
+  }
+}

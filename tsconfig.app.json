@@ -18,6 +18,12 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path aliases */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./@/*"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
@@ -27,6 +33,7 @@
     "noUncheckedSideEffectImports": true
   },
   "include": [
+    "@",
     "src",
     "src/components/Editor/Menus/FloatingMenu/components/Emojis/EmojiList.tsx"
   ]

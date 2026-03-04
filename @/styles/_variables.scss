@@ -189,7 +189,7 @@
 }
 
 /* Global colors - Dark mode */
-[data-theme='dark'] {
+.dark {
   --tt-bg-color: var(--black);
   --tt-border-color: var(--tt-gray-dark-a-200);
   --tt-border-color-tint: var(--tt-gray-dark-a-100);
@@ -207,7 +207,6 @@
 
 /* Text colors */
 :root {
-   --tt-color-text: hsl(0, 2%, 12%);
   --tt-color-text-gray: hsl(45, 2%, 46%);
   --tt-color-text-brown: hsl(19, 31%, 47%);
   --tt-color-text-orange: hsl(30, 89%, 45%);
@@ -229,7 +228,7 @@
   --tt-color-text-red-contrast: hsla(8, 79%, 79%, 0.4);
 }
 
-[data-theme='dark'] {
+.dark {
   --tt-color-text-gray: hsl(0, 0%, 61%);
   --tt-color-text-brown: hsl(18, 35%, 58%);
   --tt-color-text-orange: hsl(25, 53%, 53%);
@@ -274,7 +273,7 @@
   --tt-color-highlight-pink-contrast: rgba(225, 136, 179, 0.27);
 }
 
-[data-theme='dark'] {
+.dark {
   --tt-color-highlight-yellow: #6b6524;
   --tt-color-highlight-green: #509568;
   --tt-color-highlight-blue: #6e92aa;
