@@ -50,24 +50,24 @@ html, body{
   color: var(--text-primary);   
 }
 
-/* Entire scrollbar */
-::-webkit-scrollbar {
-   width: 4px;
-  height: 4px;
-}
+// /* Entire scrollbar */
+// ::-webkit-scrollbar {
+//    width: 4px;
+//   height: 4px;
+// }
 
 
-/* Scrollbar styling */
-body::-webkit-scrollbar {
- // margin-top: 50px;
-  width: 8px;
-}
+// /* Scrollbar styling */
+// body::-webkit-scrollbar {
+//  // margin-top: 50px;
+//   width: 8px;
+// }
 
-body::-webkit-scrollbar-thumb {
-  background: var(--tt-scrollbar-color);
-  border-radius: 5px;
-}
+// body::-webkit-scrollbar-thumb {
+//   background: var(--tt-scrollbar-color);
+//   border-radius: 5px;
+// }
 
-body::-webkit-scrollbar-track {
-  background: var(--tt-scrollbar-color);
-}
+// body::-webkit-scrollbar-track {
+//   background: var(--tt-scrollbar-color);
+// }

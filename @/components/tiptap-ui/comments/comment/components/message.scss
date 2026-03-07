@@ -1,0 +1,50 @@
+:root{
+  --tt-message-input-color: var(--tt-gray-light-a-600);
+  --tt-message-input-bg-color: var(--tt-gray-light-a-600);
+}
+.dark{
+  --tt-message-input-color: var(--tt-gray-dark-a-600);
+   --tt-message-input-bg-color: var(--tt-gray-dark-a-50);
+}
+
+.message-input{
+   width: 240px;
+   min-height: 15px;
+   max-height: 100px;
+   color: var(--tt-message-input-color);
+   background-color: transparent;
+ // background-color: var(--tt-message-input-bg-color);
+  // border: 1px solid var(--tt-message-input-bg-color);
+   border:none;
+ //  border: 1px solid #ddd;
+   border-radius: 6px;
+   padding: 3px 5px;
+
+   font-size: 14px;
+   line-height: 1.4;
+
+   resize: none;
+   overflow: hidden;
+   outline: none;
+
+   transition: min-height 0.2s ease;
+
+   &:focus{
+    min-height: 50px;
+   }
+  }
+
+  .message-popover-content{
+    min-width: 150px;
+    
+    background-color: var(--tt-bg-color);
+    border-radius: 8px;
+
+    .message-popover-item{
+      font-size: 13px;
+      justify-content: flex-start;
+      align-items: flex-start;
+      min-width: 130px;
+
+    }
+  }

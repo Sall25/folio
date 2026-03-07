@@ -51,7 +51,7 @@ import { useEffect, useState } from 'react'
 import { NodeBackground } from '../UI/Components/tiptap-extension'
 import { EditorComp } from '../UI/Components/editor'
 import TocNavigationPanel from '../UI/Components/toc'
-import { CommentSidebar } from '../UI/Components/comment'
+import { CommentSidebar } from '../../../@/components/tiptap-ui/comments/comment'
 
 
 export function EditorApp() {
@@ -72,6 +72,7 @@ export function EditorApp() {
       DuplicateNodeExtension,
       DeleteNodeAtExtension,
       Placeholder.configure({
+
         placeholder: "Write, type '/' from commands..."
 
       }),

@@ -1,0 +1,57 @@
+:root{
+  --slash-item-border-color: var(--tt-gray-light-100);
+  --slash-item-separator-color: var(--tt-gray-light-a-100);
+}
+[data-theme="dark"]{
+  --slash-item-border-color: var(--tt-gray-dark-100);
+  --slash-item-separator-color: var(--tt-gray-dark-a-100);
+}
+
+.slash-menu{
+  justify-content: 'left';
+  align-items: 'flex-start';
+  min-width: 220px;
+  max-height: 350px;
+  gap: 4px;
+  padding: 8px;
+  overflow-y: scroll;
+  margin: 0 -12px;
+  
+  scroll-padding-bottom: 12px;
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--tt-scrollbar-color) transparent;
+
+  //transition: scale 0.15s ease-in-out;
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+
+  transition:
+    opacity 0.15s ease-in,
+    transform 0.15s ease-in;
+
+  &[data-slash-menu-open="false"]{
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+    pointer-events: none;
+  }
+
+  &[data-slash-menu-open="true"]{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.slash-item{
+  outline: none;
+  min-width: 200px;
+  justify-content: flex-start;
+  font-size: 14px;
+  background: transparent;
+}
+
+.slash-item-separator{
+  width: fit-content;
+}
+

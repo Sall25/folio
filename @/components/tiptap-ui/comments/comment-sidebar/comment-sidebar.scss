@@ -1,0 +1,27 @@
+:root{
+  --comment-anchor-bg-color: rgba(245, 245, 140, 0.362);
+}
+.dark{
+  --comment-anchor-bg-color: rgba(244, 244, 182, 0.208);
+}
+.comment-sidebar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100%;
+  pointer-events: none; // allows editor interaction through gaps
+  display: flex;
+  flex-direction: column;
+  flex-grow: 0;
+  flex-shrink: 0;
+
+  > * {
+    pointer-events: auto;
+  }
+}
+.ProseMirror{
+  .comment-anchor{
+      background-color: var(--comment-anchor-bg-color);
+    }
+}

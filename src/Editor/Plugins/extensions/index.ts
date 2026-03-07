@@ -12,7 +12,7 @@ import { SlashCommand } from "../../UI/Menus";
 import { MentionExtension } from "../../UI/Menus";
 import { EmojiExtension } from "../../UI/Menus";
 import { GlobalCommands } from "./GlobalCommands";
-import { CommentExtension } from "../../UI/Components/comment";
+import { CommentExtension } from "../../../../@/components/tiptap-ui/comments/comment";
 
 
 import {

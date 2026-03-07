@@ -13,6 +13,15 @@ import { Highlight } from "@tiptap/extension-highlight"
 import { Subscript } from "@tiptap/extension-subscript"
 import { Superscript } from "@tiptap/extension-superscript"
 import { Selection } from "@tiptap/extensions"
+import { Color, TextStyle } from "@tiptap/extension-text-style"
+import { Placeholder } from "@tiptap/extensions"
+
+// --- Custom Extensions ---
+import { SlashCommand } from "@/components/tiptap-ui/slash-menu"
+import { MentionExtension } from "@/components/tiptap-ui/mention-menu"
+import { EmojiExtension } from "@/components/tiptap-ui/emoji-menu"
+import { CommentExtension } from '@/components/tiptap-ui/comments'
+
 
 // --- UI Primitives ---
 import { Button } from "@/components/tiptap-ui-primitive/button"
@@ -35,23 +44,7 @@ import "@/components/tiptap-node/heading-node/heading-node.scss"
 import "@/components/tiptap-node/paragraph-node/paragraph-node.scss"
 
 // --- Tiptap UI ---
-// import { HeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-menu"
 import { ImageUploadButton } from "@/components/tiptap-ui/image-upload-button"
-// import { ListDropdownMenu } from "@/components/tiptap-ui/list-dropdown-menu"
-// import { BlockquoteButton } from "@/components/tiptap-ui/blockquote-button"
-// import { CodeBlockButton } from "@/components/tiptap-ui/code-block-button"
-// import {
-//   ColorHighlightPopover,
-//   ColorHighlightPopoverContent,
-//   ColorHighlightPopoverButton,
-// } from "@/components/tiptap-ui/color-highlight-popover"
-// import {
-//  // LinkPopover,
-//   LinkContent,
-//   //LinkButton,
-// } from "@/components/tiptap-ui/link-popover"
-//import { MarkButton } from "@/components/tiptap-ui/mark-button"
-//import { TextAlignButton } from "@/components/tiptap-ui/text-align-button"
 import { UndoRedoButton } from "@/components/tiptap-ui/undo-redo-button"
 import { BubbleMenu } from "@/components/tiptap-ui/bubble-menu/bubble-menu"
 
@@ -75,14 +68,12 @@ import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
 import "@/components/tiptap-templates/simple/simple-editor.scss"
 
 import content from "@/components/tiptap-templates/simple/data/content.json"
+import { DragHandle } from "@/components/tiptap-ui/drag-handle/drag-handle"
+import { CommentSidebar } from "@/components/tiptap-ui/comments/comment-sidebar/comment-sidebar"
 
 const MainToolbarContent = ({
-  // onHighlighterClick,
-  // onLinkClick,
   isMobile,
 }: {
-  // onHighlighterClick: () => void
-  // onLinkClick: () => void
   isMobile: boolean
 }) => {
   return (
@@ -93,52 +84,6 @@ const MainToolbarContent = ({
         <UndoRedoButton action="undo" />
         <UndoRedoButton action="redo" />
       </ToolbarGroup>
-      {/* 
-      <ToolbarSeparator />
-
-      <ToolbarGroup>
-        <HeadingDropdownMenu levels={[1, 2, 3, 4]} portal={isMobile} />
-        <ListDropdownMenu
-          types={["bulletList", "orderedList", "taskList"]}
-          portal={isMobile}
-        />
-        <BlockquoteButton />
-        <CodeBlockButton />
-      </ToolbarGroup>
-
-      <ToolbarSeparator />
-
-      <ToolbarGroup>
-        <MarkButton type="bold" />
-        <MarkButton type="italic" />
-        <MarkButton type="strike" />
-        <MarkButton type="code" />
-        <MarkButton type="underline" />
-        {!isMobile ? (
-          <ColorHighlightPopover />
-        ) : (
-          <ColorHighlightPopoverButton onClick={onHighlighterClick} />
-        )}
-        {!isMobile ? <LinkPopover /> : <LinkButton onClick={onLinkClick} />}
-      </ToolbarGroup>
-
-      <ToolbarSeparator />
-
-      <ToolbarGroup>
-        <MarkButton type="superscript" />
-        <MarkButton type="subscript" />
-      </ToolbarGroup>
-
-      <ToolbarSeparator />
-
-      <ToolbarGroup>
-        <TextAlignButton align="left" />
-        <TextAlignButton align="center" />
-        <TextAlignButton align="right" />
-        <TextAlignButton align="justify" />
-      </ToolbarGroup>
-
-      <ToolbarSeparator /> */}
 
       <ToolbarGroup>
         <ImageUploadButton text="Add" />
@@ -175,12 +120,6 @@ const MobileToolbarContent = ({
     </ToolbarGroup>
 
     <ToolbarSeparator />
-    {/* 
-    {type === "highlighter" ? (
-      <ColorHighlightPopoverContent />
-    ) : (
-      <LinkContent />
-    )} */}
   </>
 )
 
@@ -232,6 +171,8 @@ export function SimpleEditor() {
       HorizontalRule,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       TaskList,
+      TextStyle,
+      Color,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
       Image,
@@ -246,7 +187,19 @@ export function SimpleEditor() {
         upload: handleImageUpload,
         onError: (error) => console.error("Upload failed:", error),
       }),
-
+      Placeholder.configure({
+        placeholder: ({ editor }) => {
+          const meta = editor.state.tr.getMeta('/Filter')
+          if (meta) {
+            return '/Filter'
+          }
+          return "Write, type '/' from commands..."
+        }
+      }),
+      SlashCommand,
+      MentionExtension,
+      EmojiExtension,
+      CommentExtension
     ],
     content,
   })
@@ -296,7 +249,15 @@ export function SimpleEditor() {
           className="simple-editor-content"
         />
 
+        <DragHandle
+          editor={editor}
+        />
+
         <BubbleMenu
+          editor={editor}
+        />
+
+        <CommentSidebar
           editor={editor}
         />
       </EditorContext.Provider>

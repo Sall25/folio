@@ -4,7 +4,6 @@ import { MarkButton } from "../mark-button";
 import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus";
 import { Card, CardItemGroup } from "@/components/tiptap-ui-primitive/card";
 import { HeadingDropdownMenu } from "../heading-dropdown-menu";
-import { ListDropdownMenu } from "../list-dropdown-menu";
 import { BlockquoteButton } from "../blockquote-button";
 import { Separator } from "@/components/tiptap-ui-primitive/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/tiptap-ui-primitive/popover";
@@ -14,17 +13,30 @@ import { TextAlignButton } from "../text-align-button";
 import './bubble-menu.scss'
 import { ColorHighlightPopover } from "../color-highlight-popover";
 import { LinkPopover } from "../link-popover";
+import { TextColorPopover } from "../text-color-popover";
+import { Button } from "@/components/tiptap-ui-primitive/button";
+import { CommentButton } from "../comment-button";
+
 
 function MoreOptionsPopover({ editor }: { editor: Editor }) {
 
   return (
     <Popover>
-      <PopoverTrigger
-        className="tiptap-button"
-      >
-        <MoreOptionsIcon
-          className="tiptap-button-icon"
-        />
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          data-appearance="default"
+          role="button"
+          tabIndex={-1}
+          aria-label="More options"
+          tooltip="More"
+        >
+          <MoreOptionsIcon
+            className="tiptap-button-icon"
+          />
+        </Button>
+
       </PopoverTrigger>
       <PopoverContent>
         <Card
@@ -81,9 +93,9 @@ export function BubbleMenu({ editor }: { editor: Editor | null }) {
           <HeadingDropdownMenu
             editor={editor}
           />
-          <ListDropdownMenu
+          {/* <ListDropdownMenu
             editor={editor}
-          />
+          /> */}
           <BlockquoteButton
             editor={editor}
           />
@@ -119,9 +131,17 @@ export function BubbleMenu({ editor }: { editor: Editor | null }) {
           <ColorHighlightPopover
             editor={editor}
           />
+          <TextColorPopover
+            editor={editor}
+          />
           <LinkPopover
             editor={editor}
           />
+
+          <CommentButton
+            editor={editor}
+          />
+
           <MoreOptionsPopover
             editor={editor}
           />

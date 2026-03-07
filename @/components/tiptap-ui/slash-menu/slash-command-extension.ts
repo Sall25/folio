@@ -4,10 +4,11 @@ import Suggestion, { exitSuggestion, type SuggestionProps } from '@tiptap/sugges
 import { ReactRenderer } from '@tiptap/react'
 import { Editor } from '@tiptap/core'
 import type { Plugin } from '@tiptap/pm/state'
-import SlashList, { type SlashItem } from './SlashCommandList'
+import SlashList, { type SlashItem } from './slash-command-list'
 import { AtSign, Heading1, Heading2, Heading3, Image, List, ListOrdered, Minus, Pilcrow, Quote, Table } from 'lucide-react'
 import { computePosition, flip, offset, shift, type VirtualElement } from '@floating-ui/dom'
 
+import './slash-command-extension.scss'
 
 export const SlashCommand = Extension.create({
   name: 'slash-command',
@@ -25,6 +26,7 @@ export const SlashCommand = Extension.create({
           title: 'Text',
           icon: Pilcrow,
           mark: { type: 'paragraph' },
+          isActive: (editor) => editor.isActive('paragraph') ?? false,
           run: (editor: Editor) => editor.chain().focus().setParagraph().run(),
         },
         {
@@ -32,6 +34,7 @@ export const SlashCommand = Extension.create({
           title: 'Heading 1',
           icon: Heading1,
           mark: { type: 'heading', level: 1 },
+          isActive: (editor) => editor.isActive('heading', { level: 1 }) ?? false,
           run: (editor: Editor) => editor.chain().focus().setNode('heading', { level: 1 }).run(),
         },
         {
@@ -39,6 +42,7 @@ export const SlashCommand = Extension.create({
           title: 'Heading 2',
           icon: Heading2,
           mark: { type: 'heading', level: 2 },
+          isActive: (editor) => editor.isActive('heading', { level: 2 }) ?? false,
           run: (editor: Editor) => editor.chain().focus().setNode('heading', { level: 2 }).run(),
         },
         {
@@ -46,18 +50,21 @@ export const SlashCommand = Extension.create({
           title: 'Heading 3',
           icon: Heading3,
           mark: { type: 'heading', level: 3 },
-          run: (editor: Editor) => editor.chain().focus().setNode('heading', { level: 1 }).run(),
+          isActive: (editor) => editor.isActive('heading', { level: 3 }) ?? false,
+          run: (editor: Editor) => editor.chain().focus().setNode('heading', { level: 3 }).run(),
         },
         {
           id: 'bulletList',
           title: 'Bullet List',
           icon: List,
+          isActive: (editor) => editor.isActive('bulletList') ?? false,
           run: (editor: Editor) => editor.chain().focus().toggleBulletList().run()
         },
         {
           id: 'orderedList',
           title: 'Numbered List',
           icon: ListOrdered,
+          isActive: (editor) => editor.isActive('orderedList') ?? false,
           run: (editor: Editor) => editor.chain().focus().toggleOrderedList().run()
         },
         {
@@ -65,6 +72,7 @@ export const SlashCommand = Extension.create({
           title: 'Blockquote',
           icon: Quote,
           mark: { type: 'blockQuote' },
+          isActive: (editor) => editor.isActive('blockquote') ?? false,
           run: (editor: Editor) => editor.chain().focus().toggleBlockquote().run(),
         },
         {
@@ -133,15 +141,8 @@ export const SlashCommand = Extension.create({
       computePosition(virtualElement, element, {
         placement: 'bottom-start',
         strategy: 'absolute',
-        middleware: [offset(({ placement }) => {
-          const isFlipped = placement.startsWith('top')
-
-          return {
-            mainAxis: isFlipped ? 8 : -10, // smaller gap when flipped
-            crossAxis: 0,
-          }
-        }),
-        shift(), flip(),]
+        middleware: [
+          offset(2), shift(), flip(),]
       }).then(({ x, y, strategy }) => {
         element.style.width = 'max-content'
         element.style.position = strategy
@@ -153,10 +154,6 @@ export const SlashCommand = Extension.create({
     function createRenderer(props: SuggestionProps<SlashItem>) {
       currentProps = props
       selectedIndex = 0
-
-      props.editor.view.dispatch(
-        props.editor.state.tr.setMeta('/Filter', true)
-      )
 
       reactRenderer = new ReactRenderer(SlashList, {
         editor,
@@ -238,7 +235,7 @@ export const SlashCommand = Extension.create({
       startOfLine: true,
       decorationClass: 'slash-suggestion',
       allowSpaces: true,
-      decorationContent: 'Filter',
+      decorationContent: 'Filter...',
       items: ({ query }) => {
         const q = (query || '').toLowerCase()
         return (this.options.commands as SlashItem[]).filter((c) =>
