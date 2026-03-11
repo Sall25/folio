@@ -9,6 +9,7 @@ import { ReplyBox } from "./replyBox"
 //import { scrollToComment } from "../../plugins/utils"
 import { Message } from "./message"
 import { Separator } from "@/components/tiptap-ui-primitive/separator"
+import { scrollToComment } from "../../plugins/utils"
 
 function forceMeasure(editor: Editor) {
   editor.view.dispatch(
@@ -16,22 +17,17 @@ function forceMeasure(editor: Editor) {
   )
 }
 
+
 interface MessagesProps {
   comment: Comment
   editor: Editor
 }
 
-function expand(el: HTMLElement | null) {
-  if (el) {
-    el.style.maxHeight = `${el.scrollHeight + 160}px`
-  }
-  console.log('expanded')
-}
-
-function shrink(el: HTMLElement | null) {
-  if (el) {
-    el.style.maxHeight = '0px'
-  }
+function decorateHoveredComment(editor: Editor, commentId: string, open = true) {
+  editor.view.dispatch(
+    open ? editor.state.tr.setMeta('comment-hover', { commentId })
+      : editor.state.tr.setMeta('comment-hover', null)
+  )
 }
 
 export const Messages = forwardRef<HTMLDivElement | null, MessagesProps>((
@@ -42,55 +38,31 @@ export const Messages = forwardRef<HTMLDivElement | null, MessagesProps>((
   const [open, setOpen] = useState(false)
 
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const remainingMessagesRef = useRef<HTMLDivElement | null>(null)
-  const replyRef = useRef<HTMLFormElement | null>(null)
 
   const handleClickInside = () => {
 
-    requestAnimationFrame(() => {
+    scrollToComment(comment.id)
 
+    // if (containerRef.current) {
+    //   containerRef.current.scrollIntoView({
+    //     behavior: 'smooth',
+    //     block: 'start',
+    //     inline: 'nearest'
+    //   })
+    // }
 
-      if (!remainingMessagesRef.current || !replyRef.current) return
-
-      expand(remainingMessagesRef.current)
-      expand(replyRef.current)
-
-      setOpen(true)
-      forceMeasure(editor)
-    })
+    setOpen(true)
   }
-
-  // useEffect(() => {
-  //   const editorDom = editor.view.dom as HTMLElement | null
-  //   if (!editorDom) return
-
-  //   function handleClickOutside(e: MouseEvent) {
-
-  //     if (!containerRef.current) return
-
-  //     if (!containerRef.current.contains(e.target as Node)) {
-  //       requestAnimationFrame(() => {
-  //         if (!remainingMessagesRef.current || !replyRef.current) return
-
-  //         shrink(remainingMessagesRef.current)
-  //         shrink(replyRef.current)
-  //         setOpen(false)
-  //       })
-
-  //     }
-  //   }
-
-  //   editorDom.addEventListener('mousedown', handleClickOutside)
-
-  //   return () =>
-  //     editorDom.removeEventListener('mousedown', handleClickOutside)
-  // }, [editor, comment])
-
 
   useEffect(() => {
     forceMeasure(editor)
-    console.log('force measure')
-  }, [open, editor])
+    if (open) {
+      editor.view.dispatch(
+        editor.state.tr.setMeta('active-comment', { activeId: comment.id })
+      )
+      decorateHoveredComment(editor, comment.id)
+    }
+  }, [open, editor, comment])
 
 
   useImperativeHandle(ref, () => containerRef.current!)
@@ -98,17 +70,7 @@ export const Messages = forwardRef<HTMLDivElement | null, MessagesProps>((
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (!containerRef.current?.contains(e.target as Node)) {
-
-        requestAnimationFrame(() => {
-          if (!remainingMessagesRef.current || !replyRef.current) return
-
-          shrink(remainingMessagesRef.current)
-          shrink(replyRef.current)
-          setOpen(false)
-
-          forceMeasure(editor)
-        })
-
+        setOpen(false)
       }
     }
 
@@ -117,7 +79,7 @@ export const Messages = forwardRef<HTMLDivElement | null, MessagesProps>((
       document.removeEventListener('mousedown', handleClickOutside)
     }
 
-  }, [])
+  }, [editor])
 
   return (
     <Card
@@ -125,12 +87,16 @@ export const Messages = forwardRef<HTMLDivElement | null, MessagesProps>((
         containerRef.current = el
       }}
       className="messages"
+      data-comment-id={comment.id}
       data-comment-thread-id={comment.id}
       data-messages-open={open}
-      // onMouseDown={() => {
-      //   setActive(true)
-      // }}
       onMouseDown={handleClickInside}
+      onMouseOver={() => {
+        decorateHoveredComment(editor, comment.id)
+      }}
+      onMouseLeave={() => {
+        decorateHoveredComment(editor, comment.id, false)
+      }}
     >
       {/* First messgae */}
       {comment.messages.slice(0, 1).map(m => (
@@ -144,42 +110,35 @@ export const Messages = forwardRef<HTMLDivElement | null, MessagesProps>((
         </CardItemGroup>
       ))}
       {/* More messages */}
-      <CardItemGroup
-        ref={(el) => {
-          remainingMessagesRef.current = el
-        }}
-        className="collapsible"
-        data-collapsible-open={!comment.draft && open}
-      >
-        {comment.messages.slice(1, comment.messages.length).map(m => (
+      {
+        open && !comment.draft && (
           <CardItemGroup
-            key={m.id}
           >
-            <Separator
-              orientation="horizontal"
-            />
+            {comment.messages.slice(1, comment.messages.length).map(m => (
+              <CardItemGroup
+                key={m.id}
+              >
+                <Separator
+                  orientation="horizontal"
+                />
 
-            <Message
-              open={open}
-              firstMessage={false}
-              message={m}
-              editor={editor}
+                <Message
+                  open={open}
+                  firstMessage={false}
+                  message={m}
+                  editor={editor}
+                />
+              </CardItemGroup>
+            ))}
+            <ReplyBox
+              onSubmit={(text) =>
+                editor.commands.replyComment(comment.id, text, "You")
+              }
+              setOpen={setOpen}
             />
           </CardItemGroup>
-        ))}
-      </CardItemGroup>
-
-      <ReplyBox
-        ref={(el) => {
-          replyRef.current = el
-        }}
-        className="collapsible"
-        data-collapsible-open={!comment.draft && open}
-        onSubmit={(text) =>
-          editor.commands.replyComment(comment.id, text, "You")
-        }
-        setOpen={setOpen}
-      />
+        )
+      }
 
       {comment.draft && (
         <CardItemGroup

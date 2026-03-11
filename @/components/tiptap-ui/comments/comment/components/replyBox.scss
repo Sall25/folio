@@ -22,24 +22,40 @@
 
   .reply-box-input {
     flex: 1;
-    border-radius: 20px;
-    padding: 3px 15px;
-    width: 100%;
-    min-height:40px;
+    border-radius: 10px;
+    padding: 3px 6px;
+    min-width: 240px;
+    min-height:20px;
     color: var(--text-color);
     border: 1px solid var(--tt-border-color);
-    background-color: var(--message-input-bg-color);
+    background-color: var(--tt-bg-color);
     font-size: 13px;
 
-    transition: border-color 220ms ease, min-height 220ms ease-in-out;
+    outline: none;
+
+    transition: min-height 220ms ease-in-out;
 
     &:focus {
-      outline: none;
-      border-color: #4c9ffe;
-      box-shadow: 0 0 0 2px rgba(76, 159, 254, 0.15);
+     
+    
       min-height: 50px;
     }
+  }
+  .submit-button{
+    background-color: var(--tt-brand-color-500);
+    width: 4rem;
+    height: 1.9rem;
 
-   
+    // &[data-disabled = "true"]{
+    //   background-color: var(--tt-brand-color-100);
+    // }
+
+    :hover{
+      opacity: 0.8;
+    }
+    // &:hover{
+    //   background-color: var(--tt-brand-color-400);
+    // }
+
   }
 }

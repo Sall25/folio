@@ -16,19 +16,25 @@
   gap:  4px;
   align-items: flex-start;
   padding: 5px 10px;
-  z-index: 0;
+  z-index: 16;
   box-shadow: none;
   
   
   //box-shadow: none;
-  background-color: var(--messages-bg-color);
+  background-color: var(--tt-bg-color);
   border: 1px solid var(--tt-border-color);
 
+  scale: 1;
+
+  transition: scale 0.15s ease-in-out;
+
   &[data-messages-open="true"]{
-    z-index: 10;
+    scale: 1.03;
+    
+//    border: 1px solid var(--tt-brand-color-500);
   }
   &[data-messages-open="false"]{
-    z-index: 0;
+    scale: 1;
   }
 
   .control-button{

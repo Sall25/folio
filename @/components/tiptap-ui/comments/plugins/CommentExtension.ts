@@ -1,11 +1,11 @@
 import { Extension } from "@tiptap/core";
-import {
-  addComment as addCommentCmd,
-  replyComment as replyCommentCmd,
-  removeComment as removeCommentCmd,
-  updateDraft as updateDraftCmd,
-  submitDraft as submitDraftCmd
-} from "../comment/commands";
+// import {
+//   addComment as addCommentCmd,
+//   replyComment as replyCommentCmd,
+//   removeComment as removeCommentCmd,
+//   updateDraft as updateDraftCmd,
+//   submitDraft as submitDraftCmd
+// } from "../comment/commands";
 import { CommentDecorations } from "./CommentDecorations";
 
 interface CommentStorage {
@@ -36,23 +36,23 @@ export const CommentExtension = Extension.create<unknown, CommentStorage>({
   },
 
 
-  addCommands() {
-    return {
-      addComment(authorId) {
-        return addCommentCmd(authorId)
-      },
-      replyComment(commentId, text, authorId) {
-        return replyCommentCmd(commentId, text, authorId)
-      },
-      removeComment(id) {
-        return removeCommentCmd(id)
-      },
-      submitDraft() {
-        return submitDraftCmd()
-      },
-      updateDraft(text) {
-        return updateDraftCmd(text)
-      },
-    }
-  }
+  // addCommands() {
+  //   return {
+  //     addComment(authorId) {
+  //       return addCommentCmd(authorId)
+  //     },
+  //     replyComment(commentId, text, authorId) {
+  //       return replyCommentCmd(commentId, text, authorId)
+  //     },
+  //     removeComment(id) {
+  //       return removeCommentCmd(id)
+  //     },
+  //     submitDraft() {
+  //       return submitDraftCmd()
+  //     },
+  //     updateDraft(text) {
+  //       return updateDraftCmd(text)
+  //     },
+  //   }
+  // }
 })

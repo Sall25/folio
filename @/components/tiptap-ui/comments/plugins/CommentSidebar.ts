@@ -23,6 +23,7 @@ export const CommentSidebarPlugin = ({ editor, onActiveCommentChange }: CommentS
   function measureAllComments(editor: Editor, comments: Comment[]): MeasuredComment[] {
     const scrollY = window.scrollY
 
+
     return comments
       .filter(c => c.status === 'active')
       .map(c => {
@@ -35,7 +36,6 @@ export const CommentSidebarPlugin = ({ editor, onActiveCommentChange }: CommentS
         const height = el?.offsetHeight ?? 150
 
         // console.log(el)
-
         return {
           id: c.id,
           from: c.anchor.from,
@@ -58,6 +58,8 @@ export const CommentSidebarPlugin = ({ editor, onActiveCommentChange }: CommentS
     }
     return comments
   }
+  
+
   const resolveCollisions = (measuredComments: MeasuredComment[]) => {
     const GAP = 12
     let cursor = 0
@@ -70,6 +72,50 @@ export const CommentSidebarPlugin = ({ editor, onActiveCommentChange }: CommentS
 
         return { ...comment, resolvedTop: top }
       })
+  }
+
+  function resolveActiveCollisions(
+    comments: MeasuredComment[],
+    activeId: string
+  ): PositionedComment[] {
+
+    const GAP = 12
+
+    const sorted = [...comments].sort(
+      (a, b) => a.anchorTop - b.anchorTop
+    )
+
+    const activeIndex = sorted.findIndex(c => c.id === activeId)
+
+    const resolved = sorted.map(c => ({
+      ...c,
+      resolvedTop: c.anchorTop
+    }))
+
+    // push downward
+    for (let i = activeIndex + 1; i < resolved.length; i++) {
+      const prev = resolved[i - 1]
+      const curr = resolved[i]
+
+      const minTop = prev.resolvedTop + prev.height + GAP
+
+      curr.resolvedTop = Math.max(curr.anchorTop, minTop)
+    }
+
+    // push upward
+    for (let i = activeIndex - 1; i >= 0; i--) {
+      const next = resolved[i + 1]
+      const curr = resolved[i]
+
+      const maxTop = next.resolvedTop - curr.height - GAP
+
+      curr.resolvedTop = Math.min(curr.anchorTop, maxTop)
+    }
+
+    return resolved.map(comment => ({
+      ...comment,
+      offset: comment.resolvedTop - comment.anchorTop
+    }))
   }
 
   return {
@@ -99,6 +145,21 @@ export const CommentSidebarPlugin = ({ editor, onActiveCommentChange }: CommentS
 
             next.measuredComments = measured
             next.positionedComments = positioned
+          }
+
+          if (tr.getMeta('active-comment')) {
+            const measured = measureAllComments(editor, comments)
+            let positioned = resolveCollisions(measured)
+            const meta = tr.getMeta('active-comment')
+            if (meta) {
+              const { activeId } = meta
+              positioned = resolveActiveCollisions(measured, activeId)
+
+            }
+
+            next.measuredComments = measured
+            next.positionedComments = positioned
+
           }
 
           if (tr.getMeta('setActiveCommentId')) {

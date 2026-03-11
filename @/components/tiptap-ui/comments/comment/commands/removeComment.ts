@@ -1,18 +1,18 @@
-import type { RawCommands } from "@tiptap/core"
-import { commentSectionPluginKey } from "../../plugins/CommentSection"
+// import type { RawCommands } from "@tiptap/core"
+// import { commentSectionPluginKey } from "../../plugins/CommentSection"
 
-export const removeComment: RawCommands['removeComment'] =
-  (id: string) =>
-    ({ state, dispatch }) => {
+// export const removeComment: RawCommands['removeComment'] =
+//   (id: string) =>
+//     ({ state, dispatch }) => {
 
-      if (dispatch) {
-        dispatch(
-          state.tr.setMeta(commentSectionPluginKey, {
-            type: 'remove',
-            id,
-          }).setMeta('forceMeasure', true)
-        )
-      }
+//       if (dispatch) {
+//         dispatch(
+//           state.tr.setMeta(commentSectionPluginKey, {
+//             type: 'remove',
+//             id,
+//           }).setMeta('forceMeasure', true)
+//         )
+//       }
 
-      return true
-    }
+//       return true
+//     }

@@ -1,6 +1,7 @@
 import { forwardRef, useState } from "react"
 
 import './replyBox.scss'
+import { Button } from "@/components/tiptap-ui-primitive/button"
 
 interface ReplyBoxProps {
   onSubmit: (text: string) => void
@@ -9,9 +10,10 @@ interface ReplyBoxProps {
 }
 
 export const ReplyBox = forwardRef<HTMLFormElement, ReplyBoxProps>((
-  { onSubmit, setOpen, className }, ref
+  { onSubmit, className }, ref
 ) => {
   const [text, setText] = useState("")
+  const [focused, setFocused] = useState(false)
 
   return (
     <form
@@ -22,15 +24,25 @@ export const ReplyBox = forwardRef<HTMLFormElement, ReplyBoxProps>((
         if (!text.trim()) return
         onSubmit(text)
         setText("")
-        setOpen(false)
+        setFocused(false)
       }}
     >
-      <input
+      <textarea
         className="reply-box-input"
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Reply..."
+        onFocus={() => setFocused(true)}
       />
+      {focused && (
+        <Button
+          className="submit-button"
+          type="submit"
+          disabled={!text.length}
+        >
+          Submit
+        </Button>
+      )}
     </form>
   )
 })

@@ -1,3 +1,6 @@
 .drag-handle{
   padding-right: 0.5rem;
+  transition-property: top;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-out;
 }

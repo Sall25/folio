@@ -20,7 +20,7 @@ import { Placeholder } from "@tiptap/extensions"
 import { SlashCommand } from "@/components/tiptap-ui/slash-menu"
 import { MentionExtension } from "@/components/tiptap-ui/mention-menu"
 import { EmojiExtension } from "@/components/tiptap-ui/emoji-menu"
-import { CommentExtension } from '@/components/tiptap-ui/comments'
+// import { CommentExtension } from '@/components/tiptap-ui/comments'
 
 
 // --- UI Primitives ---
@@ -69,7 +69,11 @@ import "@/components/tiptap-templates/simple/simple-editor.scss"
 
 import content from "@/components/tiptap-templates/simple/data/content.json"
 import { DragHandle } from "@/components/tiptap-ui/drag-handle/drag-handle"
-import { CommentSidebar } from "@/components/tiptap-ui/comments/comment-sidebar/comment-sidebar"
+// import { CommentSidebar } from "@/components/tiptap-ui/comments/comment-sidebar/comment-sidebar"
+import { CommentThreadExtension } from "@/components/tiptap-ui/comments/extensions/comment-thread-extension"
+import { ThreadSidebar } from "@/components/tiptap-ui/comments/components/thread-sidebar"
+import { Separator } from "@/components/tiptap-ui-primitive/separator"
+import { AvatarDemo } from "@/components/tiptap-ui-primitive/avatar"
 
 const MainToolbarContent = ({
   isMobile,
@@ -80,10 +84,6 @@ const MainToolbarContent = ({
     <>
       <Spacer />
 
-      <ToolbarGroup>
-        <UndoRedoButton action="undo" />
-        <UndoRedoButton action="redo" />
-      </ToolbarGroup>
 
       <ToolbarGroup>
         <ImageUploadButton text="Add" />
@@ -94,7 +94,12 @@ const MainToolbarContent = ({
       {isMobile && <ToolbarSeparator />}
 
       <ToolbarGroup>
+        <UndoRedoButton action="undo" />
+        <UndoRedoButton action="redo" />
+        <Separator orientation="vertical" />
         <ThemeToggle />
+        <Separator orientation="vertical" />
+        <AvatarDemo />
       </ToolbarGroup>
     </>
   )
@@ -156,6 +161,7 @@ export function SimpleEditor() {
         autocomplete: "off",
         autocorrect: "off",
         autocapitalize: "off",
+        spellcheck: 'false',
         "aria-label": "Main content area, start typing to enter text.",
         class: "simple-editor",
       },
@@ -199,7 +205,8 @@ export function SimpleEditor() {
       SlashCommand,
       MentionExtension,
       EmojiExtension,
-      CommentExtension
+      CommentThreadExtension
+      // CommentExtension
     ],
     content,
   })
@@ -215,6 +222,8 @@ export function SimpleEditor() {
       setMobileView("main")
     }
   }, [isMobile, mobileView])
+
+
 
   return (
     <div className="simple-editor-wrapper">
@@ -257,7 +266,7 @@ export function SimpleEditor() {
           editor={editor}
         />
 
-        <CommentSidebar
+        <ThreadSidebar
           editor={editor}
         />
       </EditorContext.Provider>

@@ -24,7 +24,9 @@ export function Thread({
       data-active={active}
       style={{
         position: "absolute",
-        top: layout.resolvedTop,
+        top: layout.anchorTop,
+        transform: `translateY(${layout.resolvedTop - layout.anchorTop}px)`,
+        transition: 'transform 0.2s ease',
         //height: messagesRef?.current?.style.height, //?? layout.height,
         height: 'fit-content',
         width: 280,

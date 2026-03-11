@@ -52,7 +52,8 @@ export const CommentButton = forwardRef<
         tabIndex={-1}
         tooltip="comment"
         onClick={() => {
-          editor?.commands.addComment('You')
+          editor?.commands.draftThread()
+          console.log('thread drafted')
         }}
         {...buttonProps}
         ref={ref}
