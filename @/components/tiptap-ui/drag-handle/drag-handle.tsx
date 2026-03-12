@@ -252,15 +252,15 @@
 
 
 import type { Editor } from "@tiptap/core";
-import { DragHandle as TiptapDragHandle } from "@tiptap/extension-drag-handle-react";
+import { DragHandle as TiptapDragHandle } from './drag-handle-extension-react';
 import { useState } from "react";
 import { DragHandleMenu, type DragHandleTarget } from "./drag-handle-menu/drag-handle-menu";
 //import type { Node } from "@tiptap/pm/model";
 import { CardItemGroup } from "@/components/tiptap-ui-primitive/card";
 import { Button } from "@/components/tiptap-ui-primitive/button";
 import { GripVertical, Plus } from "lucide-react";
-import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
-import { DropdownMenuTrigger } from "@/components/tiptap-ui-primitive/dropdown-menu";
+//import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger } from "@/components/tiptap-ui-primitive/dropdown-menu";
 
 import './drag-handle.scss'
 
@@ -327,7 +327,10 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
             className="tiptap-button-icon"
           />
         </Button>
-        <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenu
+          open={open}
+          onOpenChange={setOpen}
+        >
           <DropdownMenuTrigger asChild>
             <Button
               type="button"

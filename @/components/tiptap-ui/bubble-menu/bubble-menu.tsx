@@ -16,6 +16,7 @@ import { LinkPopover } from "../link-popover";
 import { TextColorPopover } from "../text-color-popover";
 import { Button } from "@/components/tiptap-ui-primitive/button";
 import { CommentButton } from "../comment-button";
+import { NodeSelection } from "@tiptap/pm/state";
 
 
 function MoreOptionsPopover({ editor }: { editor: Editor }) {
@@ -85,6 +86,20 @@ export function BubbleMenu({ editor }: { editor: Editor | null }) {
   return (
     <TiptapBubbleMenu
       editor={editor}
+      shouldShow={({ editor, state }) => {
+        // const meta = state.tr.getMeta('lockDragHandle')
+        // if (meta) {
+        //   return false
+        // }
+        if (editor.isActive('image')) {
+          return false
+        }
+        const selection = state.tr.selection
+        if (selection instanceof NodeSelection) {
+          return false
+        }
+        return !state.tr.selection.empty
+      }}
     >
       <Card
         className="bubble-menu-content"

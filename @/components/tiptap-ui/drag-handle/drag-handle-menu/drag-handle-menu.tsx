@@ -20,7 +20,7 @@ import {
 } from "@/components/tiptap-ui-primitive/dropdown-menu";
 import { Separator } from "@/components/tiptap-ui-primitive/separator";
 import type { Editor } from "@tiptap/core";
-import { ChevronRight, Circle, ClipboardCopy, Copy, Download, Trash } from "lucide-react";
+import { ChevronRight, Circle, ClipboardCopy, Copy, Download, PaintBucket, Repeat2, Trash } from "lucide-react";
 
 import './drag-handle-menu-colors.scss'
 import './drag-handle-menu.scss'
@@ -54,7 +54,7 @@ function TextBlockMenu(props: TextBlockMenuProps) {
               background: 'transparent'
             }}
           >
-            <ColorIcon
+            <PaintBucket
               className="dropdown-menu-item-icon"
             />
             <span>Color</span>
@@ -82,7 +82,7 @@ function TextBlockMenu(props: TextBlockMenuProps) {
               background: 'transparent'
             }}
           >
-            <Circle
+            <Repeat2
               className="dropdown-menu-item-icon"
             />
             <span>Turn into</span>
@@ -265,7 +265,7 @@ export function DragHandleMenu(props: DragHandleMenuProps) {
 
   return (
     <DropdownMenuContent
-      align="start"
+      align="center"
       side="left"
     >
       <Card
