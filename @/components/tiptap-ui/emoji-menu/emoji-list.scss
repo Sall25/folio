@@ -8,8 +8,8 @@
 }
 
 .emoji-menu{
-  justify-content: 'left';
-  align-items: 'flex-start';
+  justify-content: flex-start;
+  align-items: flex-start;
   min-width: 220px;
   max-height: 350px;
   gap: 4px;
@@ -45,10 +45,12 @@
   
   .emoji-item{
     outline: none;
-    min-width: 200px;
+    width: 100%;
+    align-items: flex-start;
     justify-content: flex-start;
     font-size: 14px;
     background: transparent;
+
   }
 
   .emoji-item-separator{

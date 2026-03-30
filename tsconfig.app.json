@@ -32,9 +32,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": [
-    "@",
-    "src",
-    "src/components/Editor/Menus/FloatingMenu/components/Emojis/EmojiList.tsx"
-  ]
+  "include": ["@", "src"]
 }

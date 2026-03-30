@@ -10,4 +10,10 @@ export default defineConfig({
       '@': resolve(__dirname, './@'),
     },
   },
+  optimizeDeps: {
+    include: [
+      '@tiptap/react',
+      '@tiptap/core',
+    ]
+  }
 })
