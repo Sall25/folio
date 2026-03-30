@@ -1,0 +1,14 @@
+/* globals.css or your editor stylesheet */
+.anchor-highlight {
+  animation: anchor-flash 1.5s ease-out forwards;
+  background-color: var(--tt-selection-color);
+}
+
+@keyframes anchor-flash {
+  0% {
+    background-color: rgba(254, 240, 138, 0.6);
+  } /* yellow-200 */
+  100% {
+    background-color: transparent;
+  }
+}/*# sourceMappingURL=use-scroll-to-anchor.css.map */

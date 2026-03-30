@@ -1,6 +1,17 @@
-import { DragHandle } from './drag-handle.js'
+import { DragHandle as DragHandleExtension } from "./drag-handle";
+import {
+  type DragHandlePluginProps,
+  defaultComputePositionConfig,
+  DragHandlePlugin,
+  dragHandlePluginDefaultKey,
+} from "@tiptap/extension-drag-handle";
 
-export * from './drag-handle.js'
-export * from './drag-handle-plugin.js'
+export {
+  DragHandleExtension,
+  type DragHandlePluginProps,
+  defaultComputePositionConfig,
+  DragHandlePlugin,
+  dragHandlePluginDefaultKey,
+};
 
-export default DragHandle
+export default DragHandleExtension;

@@ -1,0 +1,128 @@
+@charset "UTF-8";
+/* ── Light Mode ── */
+:root {
+  --cream: #fbf7f2; /* field background */
+  --ink: #2f2a26; /* main text */
+  --warm: #8c7f73; /* labels / placeholder */
+  --rust: #b04a2a; /* error color */
+  --shadow: rgba(47, 42, 38, 0.08); /* focus ring */
+  --radius: 8px;
+}
+
+/* ── Dark Mode ── */
+.dark {
+  --cream: #1b1816; /* field background */
+  --ink: #f3eee8; /* main text */
+  --warm: #9a8f84; /* labels / placeholder */
+  --rust: #d06a4c; /* error color */
+  --shadow: rgba(243, 238, 232, 0.12); /* focus ring */
+  --radius: 8px;
+}
+
+/* ── Wrapper ── */
+.ta-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.8rem;
+}
+
+.ta-wrapper[data-disabled=true] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ── Label ── */
+.ta-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--warm);
+  font-weight: 500;
+}
+
+/* ── Field shell ── */
+.ta-field {
+  position: relative;
+  background: var(--cream);
+  border: 1.5px solid var(--warm);
+  border-radius: var(--radius);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ta-field:focus-within {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--shadow);
+}
+
+.ta-field--error {
+  border-color: var(--rust) !important;
+}
+
+.ta-field--error:focus-within {
+  box-shadow: 0 0 0 3px rgba(176, 74, 42, 0.12);
+}
+
+/* ── Hidden shadow ── */
+.ta-shadow {
+  position: absolute !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  z-index: -1;
+  resize: none;
+  border: none;
+  outline: none;
+}
+
+/* ── Real textarea ── */
+.ta-input {
+  display: block;
+  width: 100%;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0.7rem 2.4rem 0.7rem 0.9rem;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--ink);
+  line-height: 1.6;
+  transition: height 0.12s ease;
+  overflow: hidden;
+}
+
+.ta-input::-moz-placeholder {
+  color: var(--warm);
+  font-style: italic;
+}
+
+.ta-input::placeholder {
+  color: var(--warm);
+  font-style: italic;
+}
+
+/* ── Character count corner ── */
+.ta-corner {
+  position: absolute;
+  bottom: 0.4rem;
+  right: 0.6rem;
+  pointer-events: none;
+}
+
+.ta-char-count {
+  font-size: 0.6rem;
+  color: var(--warm);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+/* ── Hint / Error ── */
+.ta-hint {
+  font-size: 0.68rem;
+  color: var(--warm);
+  letter-spacing: 0.04em;
+}
+
+.ta-hint--error {
+  color: var(--rust);
+}/*# sourceMappingURL=textarea-auto-size.css.map */

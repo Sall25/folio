@@ -2,10 +2,10 @@ import type { User } from "./types";
 import { Avatar } from "./avatar";
 
 const user: User = {
-  name: 'Alice Johnson',
-  src: 'https://template.tiptap.dev/avatars/memoji_14.png',
-  online: false
-}
+  name: "Alice Johnson",
+  src: "https://template.tiptap.dev/avatars/memoji_14.png",
+  online: false,
+};
 
 export function AvatarDemo() {
   return (
@@ -15,10 +15,9 @@ export function AvatarDemo() {
       online={user.online}
       size="xs"
       style={{
-        margin: '0 5px'
+        margin: "0 3px",
+        background: "#d9f99d",
       }}
-    >
-
-    </Avatar>
-  )
+    ></Avatar>
+  );
 }

@@ -1,16 +1,16 @@
-import { Button, ButtonGroup } from "@/components/tiptap-ui-primitive/button"
-import { Edit, Trash } from "lucide-react"
-import { useCallback, useState, type FormEvent } from "react"
-
+import { AvatarDemo } from "@/components/tiptap-ui-primitive/avatar";
+import { Button, ButtonGroup } from "@/components/tiptap-ui-primitive/button";
+import { Edit, Trash } from "lucide-react";
+import { useCallback, useState, type FormEvent } from "react";
 
 interface CommentCardProps {
-  name: string
-  createdAt: number
-  deleted: boolean
-  content: string
-  onEdit: (content: string) => void
-  onDelete: () => void
-  showActions: boolean
+  name: string;
+  createdAt: number;
+  deleted: boolean;
+  content: string;
+  onEdit: (content: string) => void;
+  onDelete: () => void;
+  showActions: boolean;
 }
 export const CommentCard = ({
   name,
@@ -19,31 +19,36 @@ export const CommentCard = ({
   content,
   onEdit,
   onDelete,
-  showActions
+  showActions,
 }: CommentCardProps) => {
-  const [isComposing, setIsComposing] = useState(false)
-  const [composeValue, setComposeValue] = useState(content)
+  const [isComposing, setIsComposing] = useState(false);
+  const [composeValue, setComposeValue] = useState(content);
 
-  const handleSubmit = useCallback((e: FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = useCallback(
+    (e: FormEvent) => {
+      e.preventDefault();
 
-    setIsComposing(false)
+      setIsComposing(false);
 
-    onEdit(composeValue)
+      onEdit(composeValue);
+    },
+    [composeValue, onEdit],
+  );
 
-  }, [composeValue, onEdit])
-
-  const commentWrapperClass: string[] = ['comment']
+  const commentWrapperClass: string[] = ["comment"];
 
   if (deleted) {
-    commentWrapperClass.push('deleted')
+    commentWrapperClass.push("deleted");
   }
 
   return (
-    <div className={commentWrapperClass.join(' ')}>
-      <div className="label-group">
-        <label>{name}</label>
-        <label>{new Date(createdAt).toLocaleTimeString()}</label>
+    <div className={commentWrapperClass.join(" ")}>
+      <div className="profile-group">
+        <AvatarDemo />
+        <div className="label-group">
+          <label>{name}</label>
+          <label>{new Date(createdAt).toLocaleTimeString()}</label>
+        </div>
       </div>
 
       {deleted && (
@@ -56,19 +61,16 @@ export const CommentCard = ({
         <div className="comment-content">
           <p>{content}</p>
           {showActions && (
-            <ButtonGroup
-              orientation="horizontal"
-            >
+            <ButtonGroup orientation="horizontal">
               <Button
                 className="edit-btn"
                 variant="ghost"
                 type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
 
-                onClick={e => {
-                  e.preventDefault()
-                  e.stopPropagation()
-
-                  setIsComposing(true)
+                  setIsComposing(true);
                 }}
               >
                 <Edit size={11} />
@@ -79,11 +81,11 @@ export const CommentCard = ({
                   className="delete-btn"
                   type="button"
                   variant="ghost"
-                  onClick={e => {
-                    e.preventDefault()
-                    e.stopPropagation()
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
 
-                    onDelete()
+                    onDelete();
                   }}
                 >
                   <Trash size={11} />
@@ -98,26 +100,31 @@ export const CommentCard = ({
       {isComposing && !deleted && (
         <div className="comment-edit">
           <form onSubmit={handleSubmit}>
-            <textarea onChange={e => setComposeValue(e.currentTarget.value)} value={composeValue} />
-            <div className="flex-row">
-              <button
+            <textarea
+              onChange={(e) => setComposeValue(e.currentTarget.value)}
+              value={composeValue}
+            />
+            <ButtonGroup orientation="horizontal">
+              <Button
                 //className="tiptap-button"
+                variant="ghost"
                 type="reset"
                 onClick={() => setIsComposing(false)}
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 //  className="tiptap-button"
                 type="submit"
                 disabled={!composeValue.length || composeValue === content}
               >
                 Accept
-              </button>
-            </div>
+              </Button>
+            </ButtonGroup>
           </form>
         </div>
       )}
     </div>
-  )
-}
+  );
+};

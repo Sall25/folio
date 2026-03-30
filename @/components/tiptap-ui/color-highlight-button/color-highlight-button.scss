@@ -1,3 +1,11 @@
+.color-highlight-button{
+  display: flex;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
 .tiptap-button-highlight {
   position: relative;
   width: 1.25rem;

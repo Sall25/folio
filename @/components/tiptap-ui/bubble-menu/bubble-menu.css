@@ -1,0 +1,6 @@
+.bubble-menu-content {
+  z-index: 11;
+  background-color: var(--tt-toolbar-bg-color);
+  font-family: var(--font-ui);
+  padding: 0.188rem;
+}/*# sourceMappingURL=bubble-menu.css.map */

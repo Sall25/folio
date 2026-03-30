@@ -222,9 +222,9 @@
       ]
     },
     {
-      "type": "image",
+      "type": "figure",
       "attrs": {
-        "src": "https://assets-global.website-files.com/645a9acecda2e0594fac6126/65f04930ffe00f8469ab787a_og-tiptap-comments.jpg",
+        "src": "https://template.tiptap.dev/images/tiptap-ui-placeholder-image.jpg",
         "alt": "placeholder-image",
         "title": "placeholder-image"
       }

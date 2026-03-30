@@ -1,19 +1,21 @@
-import type { Node as PMNode } from "@tiptap/pm/model"
-import type { Transaction } from "@tiptap/pm/state"
+import { Slice, type Node as PMNode } from "@tiptap/pm/model";
+import type { EditorState, Transaction } from "@tiptap/pm/state";
 import {
   AllSelection,
   NodeSelection,
   Selection,
   TextSelection,
-} from "@tiptap/pm/state"
-import { cellAround, CellSelection } from "@tiptap/pm/tables"
+} from "@tiptap/pm/state";
+import { cellAround, CellSelection } from "@tiptap/pm/tables";
 import {
   findParentNodeClosestToPos,
   type Editor,
   type NodeWithPos,
-} from "@tiptap/react"
+} from "@tiptap/react";
 
-export const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+import { useState, useCallback } from "react";
+
+export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export const MAC_SYMBOLS: Record<string, string> = {
   mod: "⌘",
@@ -29,7 +31,7 @@ export const MAC_SYMBOLS: Record<string, string> = {
   enter: "⏎",
   escape: "⎋",
   capslock: "⇪",
-} as const
+} as const;
 
 export const SR_ONLY = {
   position: "absolute",
@@ -41,12 +43,12 @@ export const SR_ONLY = {
   clip: "rect(0, 0, 0, 0)",
   whiteSpace: "nowrap",
   borderWidth: 0,
-} as const
+} as const;
 
 export function cn(
   ...classes: (string | boolean | undefined | null)[]
 ): string {
-  return classes.filter(Boolean).join(" ")
+  return classes.filter(Boolean).join(" ");
 }
 
 /**
@@ -57,7 +59,7 @@ export function isMac(): boolean {
   return (
     typeof navigator !== "undefined" &&
     navigator.platform.toLowerCase().includes("mac")
-  )
+  );
 }
 
 /**
@@ -70,15 +72,15 @@ export function isMac(): boolean {
 export const formatShortcutKey = (
   key: string,
   isMac: boolean,
-  capitalize: boolean = true
+  capitalize: boolean = true,
 ) => {
   if (isMac) {
-    const lowerKey = key.toLowerCase()
-    return MAC_SYMBOLS[lowerKey] || (capitalize ? key.toUpperCase() : key)
+    const lowerKey = key.toLowerCase();
+    return MAC_SYMBOLS[lowerKey] || (capitalize ? key.toUpperCase() : key);
   }
 
-  return capitalize ? key.charAt(0).toUpperCase() + key.slice(1) : key
-}
+  return capitalize ? key.charAt(0).toUpperCase() + key.slice(1) : key;
+};
 
 /**
  * Parses a shortcut key string into an array of formatted key symbols
@@ -88,19 +90,19 @@ export const formatShortcutKey = (
  * @returns Array of formatted shortcut key symbols
  */
 export const parseShortcutKeys = (props: {
-  shortcutKeys: string | undefined
-  delimiter?: string
-  capitalize?: boolean
+  shortcutKeys: string | undefined;
+  delimiter?: string;
+  capitalize?: boolean;
 }) => {
-  const { shortcutKeys, delimiter = "+", capitalize = true } = props
+  const { shortcutKeys, delimiter = "+", capitalize = true } = props;
 
-  if (!shortcutKeys) return []
+  if (!shortcutKeys) return [];
 
   return shortcutKeys
     .split(delimiter)
     .map((key) => key.trim())
-    .map((key) => formatShortcutKey(key, isMac(), capitalize))
-}
+    .map((key) => formatShortcutKey(key, isMac(), capitalize));
+};
 
 /**
  * Checks if a mark exists in the editor schema
@@ -110,11 +112,11 @@ export const parseShortcutKeys = (props: {
  */
 export const isMarkInSchema = (
   markName: string,
-  editor: Editor | null
+  editor: Editor | null,
 ): boolean => {
-  if (!editor?.schema) return false
-  return editor.schema.spec.marks.get(markName) !== undefined
-}
+  if (!editor?.schema) return false;
+  return editor.schema.spec.marks.get(markName) !== undefined;
+};
 
 /**
  * Checks if a node exists in the editor schema
@@ -124,11 +126,11 @@ export const isMarkInSchema = (
  */
 export const isNodeInSchema = (
   nodeName: string,
-  editor: Editor | null
+  editor: Editor | null,
 ): boolean => {
-  if (!editor?.schema) return false
-  return editor.schema.spec.nodes.get(nodeName) !== undefined
-}
+  if (!editor?.schema) return false;
+  return editor.schema.spec.nodes.get(nodeName) !== undefined;
+};
 
 /**
  * Moves the focus to the next node in the editor
@@ -136,30 +138,30 @@ export const isNodeInSchema = (
  * @returns boolean indicating if the focus was moved
  */
 export function focusNextNode(editor: Editor) {
-  const { state, view } = editor
-  const { doc, selection } = state
+  const { state, view } = editor;
+  const { doc, selection } = state;
 
-  const nextSel = Selection.findFrom(selection.$to, 1, true)
+  const nextSel = Selection.findFrom(selection.$to, 1, true);
   if (nextSel) {
-    view.dispatch(state.tr.setSelection(nextSel).scrollIntoView())
-    return true
+    view.dispatch(state.tr.setSelection(nextSel).scrollIntoView());
+    return true;
   }
 
-  const paragraphType = state.schema.nodes.paragraph
+  const paragraphType = state.schema.nodes.paragraph;
   if (!paragraphType) {
-    console.warn("No paragraph node type found in schema.")
-    return false
+    console.warn("No paragraph node type found in schema.");
+    return false;
   }
 
-  const end = doc.content.size
-  const para = paragraphType.create()
-  let tr = state.tr.insert(end, para)
+  const end = doc.content.size;
+  const para = paragraphType.create();
+  let tr = state.tr.insert(end, para);
 
   // Place the selection inside the new paragraph
-  const $inside = tr.doc.resolve(end + 1)
-  tr = tr.setSelection(TextSelection.near($inside)).scrollIntoView()
-  view.dispatch(tr)
-  return true
+  const $inside = tr.doc.resolve(end + 1);
+  tr = tr.setSelection(TextSelection.near($inside)).scrollIntoView();
+  view.dispatch(tr);
+  return true;
 }
 
 /**
@@ -168,7 +170,7 @@ export function focusNextNode(editor: Editor) {
  * @returns boolean indicating if the value is a valid number
  */
 export function isValidPosition(pos: number | null | undefined): pos is number {
-  return typeof pos === "number" && pos >= 0
+  return typeof pos === "number" && pos >= 0;
 }
 
 /**
@@ -179,25 +181,25 @@ export function isValidPosition(pos: number | null | undefined): pos is number {
  */
 export function isExtensionAvailable(
   editor: Editor | null,
-  extensionNames: string | string[]
+  extensionNames: string | string[],
 ): boolean {
-  if (!editor) return false
+  if (!editor) return false;
 
   const names = Array.isArray(extensionNames)
     ? extensionNames
-    : [extensionNames]
+    : [extensionNames];
 
   const found = names.some((name) =>
-    editor.extensionManager.extensions.some((ext) => ext.name === name)
-  )
+    editor.extensionManager.extensions.some((ext) => ext.name === name),
+  );
 
   if (!found) {
     console.warn(
-      `None of the extensions [${names.join(", ")}] were found in the editor schema. Ensure they are included in the editor configuration.`
-    )
+      `None of the extensions [${names.join(", ")}] were found in the editor schema. Ensure they are included in the editor configuration.`,
+    );
   }
 
-  return found
+  return found;
 }
 
 /**
@@ -208,15 +210,15 @@ export function isExtensionAvailable(
  */
 export function findNodeAtPosition(editor: Editor, position: number) {
   try {
-    const node = editor.state.doc.nodeAt(position)
+    const node = editor.state.doc.nodeAt(position);
     if (!node) {
-      console.warn(`No node found at position ${position}`)
-      return null
+      console.warn(`No node found at position ${position}`);
+      return null;
     }
-    return node
+    return node;
   } catch (error) {
-    console.error(`Error getting node at position ${position}:`, error)
-    return null
+    console.error(`Error getting node at position ${position}:`, error);
+    return null;
   }
 }
 
@@ -229,52 +231,52 @@ export function findNodeAtPosition(editor: Editor, position: number) {
  * @returns An object with the position and node, or null if not found
  */
 export function findNodePosition(props: {
-  editor: Editor | null
-  node?: PMNode | null
-  nodePos?: number | null
+  editor: Editor | null;
+  node?: PMNode | null;
+  nodePos?: number | null;
 }): { pos: number; node: PMNode } | null {
-  const { editor, node, nodePos } = props
+  const { editor, node, nodePos } = props;
 
-  if (!editor || !editor.state?.doc) return null
+  if (!editor || !editor.state?.doc) return null;
 
   // Zero is valid position
-  const hasValidNode = node !== undefined && node !== null
-  const hasValidPos = isValidPosition(nodePos)
+  const hasValidNode = node !== undefined && node !== null;
+  const hasValidPos = isValidPosition(nodePos);
 
   if (!hasValidNode && !hasValidPos) {
-    return null
+    return null;
   }
 
   // First search for the node in the document if we have a node
   if (hasValidNode) {
-    let foundPos = -1
-    let foundNode: PMNode | null = null
+    let foundPos = -1;
+    let foundNode: PMNode | null = null;
 
     editor.state.doc.descendants((currentNode, pos) => {
       // TODO: Needed?
       // if (currentNode.type && currentNode.type.name === node!.type.name) {
       if (currentNode === node) {
-        foundPos = pos
-        foundNode = currentNode
-        return false
+        foundPos = pos;
+        foundNode = currentNode;
+        return false;
       }
-      return true
-    })
+      return true;
+    });
 
     if (foundPos !== -1 && foundNode !== null) {
-      return { pos: foundPos, node: foundNode }
+      return { pos: foundPos, node: foundNode };
     }
   }
 
   // If we have a valid position, use findNodeAtPosition
   if (hasValidPos) {
-    const nodeAtPos = findNodeAtPosition(editor, nodePos!)
+    const nodeAtPos = findNodeAtPosition(editor, nodePos!);
     if (nodeAtPos) {
-      return { pos: nodePos!, node: nodeAtPos }
+      return { pos: nodePos!, node: nodeAtPos };
     }
   }
 
-  return null
+  return null;
 }
 
 /**
@@ -287,31 +289,33 @@ export function findNodePosition(props: {
 export function isNodeTypeSelected(
   editor: Editor | null,
   nodeTypeNames: string[] = [],
-  checkAncestorNodes: boolean = false
+  checkAncestorNodes: boolean = false,
 ): boolean {
-  if (!editor || !editor.state.selection) return false
+  if (!editor || !editor.state.selection) return false;
 
-  const { selection } = editor.state
-  if (selection.empty) return false
+  const { selection } = editor.state;
+  if (selection.empty) return false;
 
   // Direct node selection check
   if (selection instanceof NodeSelection) {
-    const selectedNode = selection.node
-    return selectedNode ? nodeTypeNames.includes(selectedNode.type.name) : false
+    const selectedNode = selection.node;
+    return selectedNode
+      ? nodeTypeNames.includes(selectedNode.type.name)
+      : false;
   }
 
   // Depth-based ancestor node check
   if (checkAncestorNodes) {
-    const { $from } = selection
+    const { $from } = selection;
     for (let depth = $from.depth; depth > 0; depth--) {
-      const ancestorNode = $from.node(depth)
+      const ancestorNode = $from.node(depth);
       if (nodeTypeNames.includes(ancestorNode.type.name)) {
-        return true
+        return true;
       }
     }
   }
 
-  return false
+  return false;
 }
 
 /**
@@ -323,32 +327,182 @@ export function isNodeTypeSelected(
  */
 export function selectionWithinConvertibleTypes(
   editor: Editor,
-  types: string[] = []
+  types: string[] = [],
 ): boolean {
-  if (!editor || types.length === 0) return false
+  if (!editor || types.length === 0) return false;
 
-  const { state } = editor
-  const { selection } = state
-  const allowed = new Set(types)
+  const { state } = editor;
+  const { selection } = state;
+  const allowed = new Set(types);
 
   if (selection instanceof NodeSelection) {
-    const nodeType = selection.node?.type?.name
-    return !!nodeType && allowed.has(nodeType)
+    const nodeType = selection.node?.type?.name;
+    return !!nodeType && allowed.has(nodeType);
   }
 
   if (selection instanceof TextSelection || selection instanceof AllSelection) {
-    let valid = true
+    let valid = true;
     state.doc.nodesBetween(selection.from, selection.to, (node) => {
       if (node.isTextblock && !allowed.has(node.type.name)) {
-        valid = false
-        return false // stop early
+        valid = false;
+        return false; // stop early
       }
-      return valid
-    })
-    return valid
+      return valid;
+    });
+    return valid;
   }
 
-  return false
+  return false;
+}
+/**
+ * -------------------------------------------------
+ *            IMAGE
+ * -------------------------------------------------
+ */
+export interface FileItem {
+  id: string;
+  file: File;
+  url?: string; // URL to insert into editor
+  progress: number;
+  status: "uploading" | "success" | "error";
+  abortController: AbortController;
+}
+
+export interface UploadOptions {
+  maxSize: number;
+  limit?: number;
+  upload: (
+    file: File,
+    onProgress?: (event: { progress: number }) => void,
+    abortSignal?: AbortSignal,
+  ) => Promise<string>;
+  onError?: (error: Error) => void;
+  onSuccess?: (url: string) => void;
+}
+
+export function useFileUpload(options: UploadOptions) {
+  const [fileItems, setFileItems] = useState<FileItem[]>([]);
+
+  const uploadFile = useCallback(
+    async (file: File): Promise<string | null> => {
+      if (file.size > options.maxSize) {
+        const error = new Error(
+          `File size exceeds maximum allowed (${(
+            options.maxSize /
+            1024 /
+            1024
+          ).toFixed(2)}MB)`,
+        );
+        options.onError?.(error);
+        return null;
+      }
+
+      const abortController = new AbortController();
+      const fileId = crypto.randomUUID();
+
+      const newFileItem: FileItem = {
+        id: fileId,
+        file,
+        progress: 0,
+        status: "uploading",
+        abortController,
+      };
+
+      setFileItems((prev) => [...prev, newFileItem]);
+
+      try {
+        const url = await options.upload(
+          file,
+          (event) => {
+            setFileItems((prev) =>
+              prev.map((item) =>
+                item.id === fileId
+                  ? { ...item, progress: event.progress }
+                  : item,
+              ),
+            );
+          },
+          abortController.signal,
+        );
+
+        if (!url) throw new Error("Upload failed: No URL returned");
+
+        if (!abortController.signal.aborted) {
+          setFileItems((prev) =>
+            prev.map((item) =>
+              item.id === fileId
+                ? { ...item, status: "success", url, progress: 100 }
+                : item,
+            ),
+          );
+          options.onSuccess?.(url);
+          return url;
+        }
+
+        return null;
+      } catch (error) {
+        if (!abortController.signal.aborted) {
+          setFileItems((prev) =>
+            prev.map((item) =>
+              item.id === fileId
+                ? { ...item, status: "error", progress: 0 }
+                : item,
+            ),
+          );
+          options.onError?.(
+            error instanceof Error ? error : new Error("Upload failed"),
+          );
+        }
+        return null;
+      }
+    },
+    [options],
+  );
+
+  const uploadFiles = useCallback(
+    async (files: File[]): Promise<string[]> => {
+      if (!files || files.length === 0) {
+        options.onError?.(new Error("No files to upload"));
+        return [];
+      }
+      if (options.limit && files.length > options.limit) {
+        options.onError?.(
+          new Error(
+            `Maximum ${options.limit} file${options.limit === 1 ? "" : "s"} allowed`,
+          ),
+        );
+        return [];
+      }
+
+      const results = await Promise.all(files.map(uploadFile));
+      return results.filter((url): url is string => url !== null);
+    },
+    [uploadFile, options],
+  );
+
+  const removeFileItem = useCallback((fileId: string) => {
+    setFileItems((prev) => {
+      const item = prev.find((i) => i.id === fileId);
+      item?.abortController.abort();
+      if (item?.url) URL.revokeObjectURL(item.url);
+      return prev.filter((i) => i.id !== fileId);
+    });
+  }, []);
+
+  const clearAllFiles = useCallback(() => {
+    fileItems.forEach((item) => {
+      item.abortController.abort();
+      if (item.url) URL.revokeObjectURL(item.url);
+    });
+    setFileItems([]);
+  }, [fileItems]);
+
+  return {
+    fileItems,
+    uploadFiles,
+    removeFileItem,
+    clearAllFiles,
+  };
 }
 
 /**
@@ -361,31 +515,49 @@ export function selectionWithinConvertibleTypes(
 export const handleImageUpload = async (
   file: File,
   onProgress?: (event: { progress: number }) => void,
-  abortSignal?: AbortSignal
+  abortSignal?: AbortSignal,
 ): Promise<string> => {
-  // Validate file
-  if (!file) {
-    throw new Error("No file provided")
+  // Validate file type/size here or inside the hook
+  // For demo: simulate upload
+  const totalSteps = 10;
+  for (let i = 1; i <= totalSteps; i++) {
+    if (abortSignal?.aborted) throw new Error("Upload cancelled");
+    await new Promise((resolve) => setTimeout(resolve, 100)); // simulate network delay
+    onProgress?.({ progress: Math.round((i / totalSteps) * 100) });
   }
 
-  if (file.size > MAX_FILE_SIZE) {
-    throw new Error(
-      `File size exceeds maximum allowed (${MAX_FILE_SIZE / (1024 * 1024)}MB)`
-    )
-  }
+  // Use a unique temporary URL for demonstration
+  return URL.createObjectURL(file);
+};
 
-  // For demo/testing: Simulate upload progress. In production, replace the following code
-  // with your own upload implementation.
-  for (let progress = 0; progress <= 100; progress += 10) {
-    if (abortSignal?.aborted) {
-      throw new Error("Upload cancelled")
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    onProgress?.({ progress })
-  }
+// export const handleImageUpload = async (
+//   file: File,
+//   onProgress?: (event: { progress: number }) => void,
+//   abortSignal?: AbortSignal
+// ): Promise<string> => {
+//   // Validate file
+//   if (!file) {
+//     throw new Error("No file provided")
+//   }
 
-  return "/images/tiptap-ui-placeholder-image.jpg"
-}
+//   if (file.size > MAX_FILE_SIZE) {
+//     throw new Error(
+//       `File size exceeds maximum allowed (${MAX_FILE_SIZE / (1024 * 1024)}MB)`
+//     )
+//   }
+
+//   // For demo/testing: Simulate upload progress. In production, replace the following code
+//   // with your own upload implementation.
+//   for (let progress = 0; progress <= 100; progress += 10) {
+//     if (abortSignal?.aborted) {
+//       throw new Error("Upload cancelled")
+//     }
+//     await new Promise((resolve) => setTimeout(resolve, 500))
+//     onProgress?.({ progress })
+//   }
+
+//   return "/images/tiptap-ui-placeholder-image.jpg"
+// }
 
 type ProtocolOptions = {
   /**
@@ -394,25 +566,25 @@ type ProtocolOptions = {
    * @example 'ftp'
    * @example 'git'
    */
-  scheme: string
+  scheme: string;
 
   /**
    * If enabled, it allows optional slashes after the protocol.
    * @default false
    * @example true
    */
-  optionalSlashes?: boolean
-}
+  optionalSlashes?: boolean;
+};
 
-type ProtocolConfig = Array<ProtocolOptions | string>
+type ProtocolConfig = Array<ProtocolOptions | string>;
 
 const ATTR_WHITESPACE =
   // eslint-disable-next-line no-control-regex
-  /[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205F\u3000]/g
+  /[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205F\u3000]/g;
 
 export function isAllowedUri(
   uri: string | undefined,
-  protocols?: ProtocolConfig
+  protocols?: ProtocolConfig,
 ) {
   const allowedProtocols: string[] = [
     "http",
@@ -425,17 +597,17 @@ export function isAllowedUri(
     "sms",
     "cid",
     "xmpp",
-  ]
+  ];
 
   if (protocols) {
     protocols.forEach((protocol) => {
       const nextProtocol =
-        typeof protocol === "string" ? protocol : protocol.scheme
+        typeof protocol === "string" ? protocol : protocol.scheme;
 
       if (nextProtocol) {
-        allowedProtocols.push(nextProtocol)
+        allowedProtocols.push(nextProtocol);
       }
-    })
+    });
   }
 
   return (
@@ -444,27 +616,27 @@ export function isAllowedUri(
       new RegExp(
         // eslint-disable-next-line no-useless-escape
         `^(?:(?:${allowedProtocols.join("|")}):|[^a-z]|[a-z0-9+.\-]+(?:[^a-z+.\-:]|$))`,
-        "i"
-      )
+        "i",
+      ),
     )
-  )
+  );
 }
 
 export function sanitizeUrl(
   inputUrl: string,
   baseUrl: string,
-  protocols?: ProtocolConfig
+  protocols?: ProtocolConfig,
 ): string {
   try {
-    const url = new URL(inputUrl, baseUrl)
+    const url = new URL(inputUrl, baseUrl);
 
     if (isAllowedUri(url.href, protocols)) {
-      return url.href
+      return url.href;
     }
   } catch {
     // If URL creation fails, it's considered invalid
   }
-  return "#"
+  return "#";
 }
 
 /**
@@ -481,40 +653,41 @@ export function updateNodesAttr<A extends string = string, V = unknown>(
   tr: Transaction,
   targets: readonly NodeWithPos[],
   attrName: A,
-  next: V | ((prev: V | undefined) => V | undefined)
-): boolean {
-  if (!targets.length) return false
+  next: V | ((prev: V | undefined) => V | undefined),
+): Transaction {
+  if (!targets.length) return tr;
 
-  let changed = false
+  let changed = false;
 
   for (const { pos } of targets) {
     // Always re-read from the transaction's current doc
-    const currentNode = tr.doc.nodeAt(pos)
-    if (!currentNode) continue
+    const currentNode = tr.doc.nodeAt(pos);
+    if (!currentNode) continue;
 
     const prevValue = (currentNode.attrs as Record<string, unknown>)[
       attrName
-    ] as V | undefined
+    ] as V | undefined;
     const resolvedNext =
       typeof next === "function"
         ? (next as (p: V | undefined) => V | undefined)(prevValue)
-        : next
+        : next;
 
-    if (prevValue === resolvedNext) continue
+    if (prevValue === resolvedNext) continue;
 
-    const nextAttrs: Record<string, unknown> = { ...currentNode.attrs }
+    const nextAttrs: Record<string, unknown> = { ...currentNode.attrs };
     if (resolvedNext === undefined) {
       // Remove the key entirely instead of setting null
-      delete nextAttrs[attrName]
+      delete nextAttrs[attrName];
     } else {
-      nextAttrs[attrName] = resolvedNext
+      nextAttrs[attrName] = resolvedNext;
+      console.log("nextAttrs", nextAttrs);
     }
 
-    tr.setNodeMarkup(pos, undefined, nextAttrs)
-    changed = true
+    tr.setNodeMarkup(pos, undefined, nextAttrs);
+    changed = true;
   }
 
-  return changed
+  return tr;
 }
 
 /**
@@ -523,36 +696,36 @@ export function updateNodesAttr<A extends string = string, V = unknown>(
  * @param editor The Tiptap editor instance
  */
 export function selectCurrentBlockContent(editor: Editor) {
-  const { selection, doc } = editor.state
+  const { selection, doc } = editor.state;
 
-  if (!selection.empty) return
+  if (!selection.empty) return;
 
-  const $pos = selection.$from
-  let blockNode = null
-  let blockPos = -1
+  const $pos = selection.$from;
+  let blockNode = null;
+  let blockPos = -1;
 
   for (let depth = $pos.depth; depth >= 0; depth--) {
-    const node = $pos.node(depth)
-    const pos = $pos.start(depth)
+    const node = $pos.node(depth);
+    const pos = $pos.start(depth);
 
     if (node.isBlock && node.textContent.trim()) {
-      blockNode = node
-      blockPos = pos
-      break
+      blockNode = node;
+      blockPos = pos;
+      break;
     }
   }
 
   if (blockNode && blockPos >= 0) {
-    const from = blockPos
-    const to = blockPos + blockNode.nodeSize - 2 // -2 to exclude the closing tag
+    const from = blockPos;
+    const to = blockPos + blockNode.nodeSize - 2; // -2 to exclude the closing tag
 
     if (from < to) {
-      const $from = doc.resolve(from)
-      const $to = doc.resolve(to)
-      const newSelection = TextSelection.between($from, $to, 1)
+      const $from = doc.resolve(from);
+      const $to = doc.resolve(to);
+      const newSelection = TextSelection.between($from, $to, 1);
 
       if (newSelection && !selection.eq(newSelection)) {
-        editor.view.dispatch(editor.state.tr.setSelection(newSelection))
+        editor.view.dispatch(editor.state.tr.setSelection(newSelection));
       }
     }
   }
@@ -566,68 +739,102 @@ export function selectCurrentBlockContent(editor: Editor) {
  */
 export function getSelectedNodesOfType(
   selection: Selection,
-  allowedNodeTypes: string[]
+  allowedNodeTypes: string[],
 ): NodeWithPos[] {
-  const results: NodeWithPos[] = []
-  const allowed = new Set(allowedNodeTypes)
+  const results: NodeWithPos[] = [];
+  const allowed = new Set(allowedNodeTypes);
 
   if (selection instanceof CellSelection) {
     selection.forEachCell((node: PMNode, pos: number) => {
       if (allowed.has(node.type.name)) {
-        results.push({ node, pos })
+        results.push({ node, pos });
       }
-    })
-    return results
+    });
+    return results;
   }
 
   if (selection instanceof NodeSelection) {
-    const { node, from: pos } = selection
+    const { node, from: pos } = selection;
     if (node && allowed.has(node.type.name)) {
-      results.push({ node, pos })
+      results.push({ node, pos });
     }
-    return results
+    return results;
   }
 
-  const { $anchor } = selection
-  const cell = cellAround($anchor)
+  const { $anchor } = selection;
+  const cell = cellAround($anchor);
 
   if (cell) {
-    const cellNode = selection.$anchor.doc.nodeAt(cell.pos)
+    const cellNode = selection.$anchor.doc.nodeAt(cell.pos);
     if (cellNode && allowed.has(cellNode.type.name)) {
-      results.push({ node: cellNode, pos: cell.pos })
-      return results
+      results.push({ node: cellNode, pos: cell.pos });
+      return results;
     }
   }
 
   // Fallback: find parent nodes of allowed types
   const parentNode = findParentNodeClosestToPos($anchor, (node) =>
-    allowed.has(node.type.name)
-  )
+    allowed.has(node.type.name),
+  );
 
   if (parentNode) {
-    results.push({ node: parentNode.node, pos: parentNode.pos })
+    results.push({ node: parentNode.node, pos: parentNode.pos });
   }
 
-  return results
+  return results;
 }
 
 export function getSelectedBlockNodes(editor: Editor): PMNode[] {
-  const { doc } = editor.state
-  const { from, to } = editor.state.selection
+  const { doc } = editor.state;
+  const { from, to } = editor.state.selection;
 
-  const blocks: PMNode[] = []
-  const seen = new Set<number>()
+  const blocks: PMNode[] = [];
+  const seen = new Set<number>();
 
   doc.nodesBetween(from, to, (node, pos) => {
-    if (!node.isBlock) return
+    if (!node.isBlock) return;
 
     if (!seen.has(pos)) {
-      seen.add(pos)
-      blocks.push(node)
+      seen.add(pos);
+      blocks.push(node);
     }
 
-    return false
-  })
+    return false;
+  });
 
-  return blocks
+  return blocks;
+}
+
+/**
+ * Clears the content of any allowed node type
+ */
+export type DispatchFn = ((arg?: unknown) => unknown) | undefined;
+
+export function clearNodesContent(
+  state: EditorState,
+  dispatch: DispatchFn,
+  allowed: string[] = [],
+) {
+  const { tr, selection } = state;
+
+  if (selection instanceof CellSelection) {
+    selection.replace(tr, Slice.empty);
+    console.log("replaced");
+    return;
+  }
+  const nodes = getSelectedNodesOfType(selection, allowed);
+
+  if (!nodes.length) return false;
+
+  nodes.forEach(({ node, pos }) => {
+    if (node.content.size === 0) return;
+
+    const empty = node.type.createAndFill();
+    if (!empty) return;
+
+    tr.replaceWith(pos + 1, pos + node.nodeSize - 1, empty.content);
+  });
+
+  if (dispatch) dispatch(tr);
+  return true;
 }

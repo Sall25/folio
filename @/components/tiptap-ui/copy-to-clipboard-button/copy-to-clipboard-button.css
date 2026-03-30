@@ -1,0 +1,42 @@
+.tiptap-copy-btn {
+  --copy-btn-bg: #fff;
+  --copy-btn-border: rgba(0, 0, 0, 0.15);
+  --copy-btn-color: #444;
+  --copy-btn-success-bg: #EAF3DE;
+  --copy-btn-success-border: #3B6D11;
+  --copy-btn-success-color: #3B6D11;
+  min-width: -moz-fit-content;
+  min-width: fit-content;
+  cursor: not-allowed;
+  transition: all 0.15s ease;
+}
+.tiptap-copy-btn.is-copied {
+  border-color: var(--copy-btn-success-border);
+  background-color: var(--copy-btn-success-bg);
+  color: var(--copy-btn-success-color);
+  font-family: var(--font-ui);
+}
+.tiptap-copy-btn.can-copy {
+  cursor: pointer;
+}
+
+/**
+  display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '6px 12px',
+        borderRadius: 8,
+        border: '1px solid',
+        borderColor: isCopied ? 'var(--copy-btn-success-border, #3B6D11)' : 'var(--copy-btn-border, rgba(0,0,0,0.15))',
+        background: isCopied ? 'var(--copy-btn-success-bg, #EAF3DE)' : 'var(--copy-btn-bg, #fff)',
+        color: isCopied ? 'var(--copy-btn-success-color, #3B6D11)' : 'var(--copy-btn-color, #444)',
+        fontSize: 13,
+        fontWeight: 500,
+        fontFamily: 'inherit',
+        cursor: canCopy ? 'pointer' : 'not-allowed',
+        opacity: canCopy ? 1 : 0.4,
+        transition: 'all 0.15s ease',
+        outline: 'none',
+        whiteSpace: 'nowrap',
+
+*//*# sourceMappingURL=copy-to-clipboard-button.css.map */

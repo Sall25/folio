@@ -1,94 +1,109 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
+import { useEffect, useRef, useState } from "react";
+import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 
 // --- Tiptap Core Extensions ---
-import { StarterKit } from "@tiptap/starter-kit"
-import { Image } from "@tiptap/extension-image"
-import { TaskItem, TaskList } from "@tiptap/extension-list"
-import { TextAlign } from "@tiptap/extension-text-align"
-import { Typography } from "@tiptap/extension-typography"
-import { Highlight } from "@tiptap/extension-highlight"
-import { Subscript } from "@tiptap/extension-subscript"
-import { Superscript } from "@tiptap/extension-superscript"
-import { Selection } from "@tiptap/extensions"
-import { Color, TextStyle } from "@tiptap/extension-text-style"
-import { Placeholder } from "@tiptap/extensions"
+import { StarterKit } from "@tiptap/starter-kit";
+import { Image } from "@tiptap/extension-image";
+import { TaskItem, TaskList } from "@tiptap/extension-list";
+import { TextAlign } from "@tiptap/extension-text-align";
+import { Typography } from "@tiptap/extension-typography";
+import { Highlight } from "@tiptap/extension-highlight";
+import { Subscript } from "@tiptap/extension-subscript";
+import { Superscript } from "@tiptap/extension-superscript";
+import { Selection } from "@tiptap/extensions";
+import { Color, TextStyle } from "@tiptap/extension-text-style";
+import { Placeholder } from "@tiptap/extensions";
+import { TableOfContents } from "@tiptap/extension-table-of-contents";
 
 // --- Custom Extensions ---
-import { SlashCommand } from "@/components/tiptap-ui/slash-menu"
-import { MentionExtension } from "@/components/tiptap-ui/mention-menu"
-import { EmojiExtension } from "@/components/tiptap-ui/emoji-menu"
+import { SlashCommand } from "@/components/tiptap-ui/slash-menu";
+import { MentionExtension } from "@/components/tiptap-ui/mention-menu";
+import { EmojiExtension } from "@/components/tiptap-ui/emoji-menu";
+
 // import { CommentExtension } from '@/components/tiptap-ui/comments'
 
-
 // --- UI Primitives ---
-import { Button } from "@/components/tiptap-ui-primitive/button"
-import { Spacer } from "@/components/tiptap-ui-primitive/spacer"
+import { Button } from "@/components/tiptap-ui-primitive/button";
+import { Spacer } from "@/components/tiptap-ui-primitive/spacer";
 import {
   Toolbar,
   ToolbarGroup,
   ToolbarSeparator,
-} from "@/components/tiptap-ui-primitive/toolbar"
+} from "@/components/tiptap-ui-primitive/toolbar";
 
 // --- Tiptap Node ---
-import { ImageUploadNode } from "@/components/tiptap-node/image-upload-node/image-upload-node-extension"
-import { HorizontalRule } from "@/components/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension"
-import "@/components/tiptap-node/blockquote-node/blockquote-node.scss"
-import "@/components/tiptap-node/code-block-node/code-block-node.scss"
-import "@/components/tiptap-node/horizontal-rule-node/horizontal-rule-node.scss"
-import "@/components/tiptap-node/list-node/list-node.scss"
-import "@/components/tiptap-node/image-node/image-node.scss"
-import "@/components/tiptap-node/heading-node/heading-node.scss"
-import "@/components/tiptap-node/paragraph-node/paragraph-node.scss"
+import { ImageUploadNode } from "@/components/tiptap-node/image-upload-node/image-upload-node-extension";
+import { HorizontalRule } from "@/components/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension";
+import {
+  NodeBackground,
+  NodeAlignment,
+  NodeClearContents,
+  NodeColor,
+  NodeFit,
+} from "@/components/tiptap-extension";
+import "@/components/tiptap-node/blockquote-node/blockquote-node.scss";
+import "@/components/tiptap-node/code-block-node/code-block-node.scss";
+import "@/components/tiptap-node/horizontal-rule-node/horizontal-rule-node.scss";
+import "@/components/tiptap-node/list-node/list-node.scss";
+import "@/components/tiptap-node/image-node/image-node.scss";
+import "@/components/tiptap-node/heading-node/heading-node.scss";
+import "@/components/tiptap-node/paragraph-node/paragraph-node.scss";
 
 // --- Tiptap UI ---
-import { ImageUploadButton } from "@/components/tiptap-ui/image-upload-button"
-import { UndoRedoButton } from "@/components/tiptap-ui/undo-redo-button"
-import { BubbleMenu } from "@/components/tiptap-ui/bubble-menu/bubble-menu"
+import { UndoRedoButton } from "@/components/tiptap-ui/undo-redo-button";
+import { BubbleMenu } from "@/components/tiptap-ui/bubble-menu/bubble-menu";
 
 // --- Icons ---
-import { ArrowLeftIcon } from "@/components/tiptap-icons/arrow-left-icon"
-import { HighlighterIcon } from "@/components/tiptap-icons/highlighter-icon"
-import { LinkIcon } from "@/components/tiptap-icons/link-icon"
+import { ArrowLeftIcon } from "@/components/tiptap-icons/arrow-left-icon";
+import { HighlighterIcon } from "@/components/tiptap-icons/highlighter-icon";
+import { LinkIcon } from "@/components/tiptap-icons/link-icon";
 
 // --- Hooks ---
-import { useIsBreakpoint } from "@/hooks/use-is-breakpoint"
-import { useWindowSize } from "@/hooks/use-window-size"
-import { useCursorVisibility } from "@/hooks/use-cursor-visibility"
+import { useIsBreakpoint } from "@/hooks/use-is-breakpoint";
+import { useWindowSize } from "@/hooks/use-window-size";
+import { useCursorVisibility } from "@/hooks/use-cursor-visibility";
 
 // --- Components ---
-import { ThemeToggle } from "@/components/tiptap-templates/simple/theme-toggle"
+import { ThemeToggle } from "@/components/tiptap-templates/simple/theme-toggle";
 
 // --- Lib ---
-import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
+import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils";
 
 // --- Styles ---
-import "@/components/tiptap-templates/simple/simple-editor.scss"
+import "@/components/tiptap-templates/simple/simple-editor.scss";
+import "@/components/tiptap-templates/simple/toc.scss";
 
-import content from "@/components/tiptap-templates/simple/data/content.json"
-import { DragHandle } from "@/components/tiptap-ui/drag-handle/drag-handle"
+import content from "@/components/tiptap-templates/simple/data/content.json";
+
+import DragHandleExtension from "@/components/tiptap-ui/drag-handle/drag-handle-extension";
+import { DragHandle } from "@/components/tiptap-ui/drag-handle/drag-handle";
 // import { CommentSidebar } from "@/components/tiptap-ui/comments/comment-sidebar/comment-sidebar"
-import { CommentThreadExtension } from "@/components/tiptap-ui/comments/extensions/comment-thread-extension"
-import { ThreadSidebar } from "@/components/tiptap-ui/comments/components/thread-sidebar"
-import { Separator } from "@/components/tiptap-ui-primitive/separator"
-import { AvatarDemo } from "@/components/tiptap-ui-primitive/avatar"
+import { CommentThreadExtension } from "@/components/tiptap-ui/comments/extensions/comment-thread-extension";
+import { ThreadSidebar } from "@/components/tiptap-ui/comments/components/thread-sidebar";
+import { Separator } from "@/components/tiptap-ui-primitive/separator";
+import { AvatarDemo } from "@/components/tiptap-ui-primitive/avatar";
+import UniqueID from "@tiptap/extension-unique-id";
+import { useScrollToAnchor } from "@/components/tiptap-ui/copy-anchor-link-button";
+import { ImageBubble } from "@/components/tiptap-ui/image-bubble";
+import { useToc } from "@/components/tiptap-node/toc-node/use-toc";
+import { TocNode } from "@/components/tiptap-node/toc-node/toc-node-extension";
+import { TocProvider } from "@/components/tiptap-node/toc-node/toc-provider";
+import { TocSidebar } from "@/components/tiptap-node/toc-node/toc-sidebar";
+import { Figure, FigureCaption } from "@/components/tiptap-node/figure-node";
+import {
+  TableCell,
+  TableHeader,
+  TableKit,
+  TableRow,
+} from "@tiptap/extension-table";
+import { TableContextExtension } from "@/components/tiptap-node/table-node";
+import { TableWrapperNode } from "@/components/tiptap-node/table-node/extensions/table-context";
 
-const MainToolbarContent = ({
-  isMobile,
-}: {
-  isMobile: boolean
-}) => {
+const MainToolbarContent = ({ isMobile }: { isMobile: boolean }) => {
   return (
     <>
-      <Spacer />
-
-
-      <ToolbarGroup>
-        <ImageUploadButton text="Add" />
-      </ToolbarGroup>
-
       <Spacer />
 
       {isMobile && <ToolbarSeparator />}
@@ -102,15 +117,15 @@ const MainToolbarContent = ({
         <AvatarDemo />
       </ToolbarGroup>
     </>
-  )
-}
+  );
+};
 
 const MobileToolbarContent = ({
   type,
   onBack,
 }: {
-  type: "highlighter" | "link"
-  onBack: () => void
+  type: "highlighter" | "link";
+  onBack: () => void;
 }) => (
   <>
     <ToolbarGroup>
@@ -126,33 +141,34 @@ const MobileToolbarContent = ({
 
     <ToolbarSeparator />
   </>
-)
+);
 
-export function SimpleEditor() {
-  const isMobile = useIsBreakpoint()
-  const { height } = useWindowSize()
+function SimpleEditorInner() {
+  const { setTocContent } = useToc();
+  const isMobile = useIsBreakpoint();
+  const { height } = useWindowSize();
   const [mobileView, setMobileView] = useState<"main" | "highlighter" | "link">(
-    "main"
-  )
-  const toolbarRef = useRef<HTMLDivElement>(null)
+    "main",
+  );
+  const toolbarRef = useRef<HTMLDivElement>(null);
 
   // store toolbar height in state so we never read ref during render
-  const [overlayHeight, setOverlayHeight] = useState(0)
+  const [overlayHeight, setOverlayHeight] = useState(0);
 
   useEffect(() => {
     const update = () => {
-      const h = toolbarRef.current?.getBoundingClientRect().height
-      if (h != null) setOverlayHeight(h)
-    }
-    update()
+      const h = toolbarRef.current?.getBoundingClientRect().height;
+      if (h != null) setOverlayHeight(h);
+    };
+    update();
 
-    let observer: ResizeObserver | null = null
+    let observer: ResizeObserver | null = null;
     if (toolbarRef.current) {
-      observer = new ResizeObserver(update)
-      observer.observe(toolbarRef.current)
+      observer = new ResizeObserver(update);
+      observer.observe(toolbarRef.current);
     }
-    return () => observer?.disconnect()
-  }, [])
+    return () => observer?.disconnect();
+  }, []);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -161,7 +177,7 @@ export function SimpleEditor() {
         autocomplete: "off",
         autocorrect: "off",
         autocapitalize: "off",
-        spellcheck: 'false',
+        spellcheck: "false",
         "aria-label": "Main content area, start typing to enter text.",
         class: "simple-editor",
       },
@@ -174,6 +190,12 @@ export function SimpleEditor() {
           enableClickSelection: true,
         },
       }),
+      TableOfContents.configure({
+        onUpdate(content) {
+          setTocContent(content);
+        },
+      }),
+      TocNode.configure({ topOffset: 80, maxShowCount: 20, showTitle: true }),
       HorizontalRule,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       TaskList,
@@ -181,7 +203,20 @@ export function SimpleEditor() {
       Color,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
-      Image,
+      FigureCaption,
+      Figure.configure({
+        directions: ["left", "right"],
+        preserveAspectRatio: true,
+        min: { width: 10, height: 10 },
+        max: { width: 2000, height: 2000 },
+      }),
+      Image.configure({
+        resize: {
+          enabled: true,
+          directions: ["left", "right"],
+          alwaysPreserveAspectRatio: true,
+        },
+      }),
       Typography,
       Superscript,
       Subscript,
@@ -195,35 +230,69 @@ export function SimpleEditor() {
       }),
       Placeholder.configure({
         placeholder: ({ editor }) => {
-          const meta = editor.state.tr.getMeta('/Filter')
+          const meta = editor.state.tr.getMeta("/Filter");
           if (meta) {
-            return '/Filter'
+            return "/Filter";
           }
-          return "Write, type '/' from commands..."
-        }
+          return "Write, type '/' from commands...";
+        },
       }),
       SlashCommand,
       MentionExtension,
       EmojiExtension,
-      CommentThreadExtension
+      CommentThreadExtension,
+      UniqueID.configure({
+        types: [
+          "paragraph",
+          "heading",
+          "blockquote",
+          "figure",
+          "codeBlock",
+          "table",
+        ],
+        attributeName: "id",
+      }),
+      DragHandleExtension,
+      NodeBackground.configure({
+        useStyle: false,
+      }),
+      NodeAlignment.configure({
+        useStyle: false,
+      }),
+      NodeColor.configure({
+        useStyle: false,
+      }),
+      NodeFit.configure({
+        useStyle: false,
+      }),
+      NodeClearContents,
+      TableKit.configure({
+        table: false,
+      }),
+
+      TableContextExtension.configure({
+        resizable: true,
+        handleWidth: 1,
+      }),
+      TableWrapperNode,
       // CommentExtension
     ],
     content,
-  })
+  });
 
   const rect = useCursorVisibility({
     editor,
     overlayHeight,
-  })
+  });
 
   useEffect(() => {
     if (!isMobile && mobileView !== "main") {
       // eslint-disable-next-line
-      setMobileView("main")
+      setMobileView("main");
     }
-  }, [isMobile, mobileView])
+  }, [isMobile, mobileView]);
 
-
+  useScrollToAnchor({ editor });
 
   return (
     <div className="simple-editor-wrapper">
@@ -233,8 +302,8 @@ export function SimpleEditor() {
           style={{
             ...(isMobile
               ? {
-                bottom: `calc(100% - ${height - rect.y}px)`,
-              }
+                  bottom: `calc(100% - ${height - rect.y}px)`,
+                }
               : {}),
           }}
         >
@@ -258,18 +327,24 @@ export function SimpleEditor() {
           className="simple-editor-content"
         />
 
-        <DragHandle
-          editor={editor}
-        />
+        <DragHandle editor={editor} />
 
-        <BubbleMenu
-          editor={editor}
-        />
+        <BubbleMenu editor={editor} />
 
-        <ThreadSidebar
-          editor={editor}
-        />
+        <ImageBubble editor={editor} />
+
+        <ThreadSidebar editor={editor} />
+
+        <TocSidebar topOffset={80} maxShowCount={20} />
       </EditorContext.Provider>
     </div>
-  )
+  );
+}
+
+export function SimpleEditor() {
+  return (
+    <TocProvider>
+      <SimpleEditorInner />
+    </TocProvider>
+  );
 }

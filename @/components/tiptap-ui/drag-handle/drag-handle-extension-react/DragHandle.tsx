@@ -3,24 +3,31 @@ import {
   defaultComputePositionConfig,
   DragHandlePlugin,
   dragHandlePluginDefaultKey,
-} from '../drag-handle-extension'
+} from "../drag-handle-extension";
 
-import type { Node } from '@tiptap/pm/model'
-import type { Plugin } from '@tiptap/pm/state'
-import type { Editor } from '@tiptap/react'
-import { type ReactNode, useEffect, useRef, useState } from 'react'
+import type { Node } from "@tiptap/pm/model";
+import type { Plugin } from "@tiptap/pm/state";
+import type { Editor } from "@tiptap/react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
-type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>
+type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
-export type DragHandleProps = Omit<Optional<DragHandlePluginProps, 'pluginKey'>, 'element'> & {
-  className?: string
-  onNodeChange?: (data: { node: Node | null; editor: Editor; pos: number }) => void
-  children: ReactNode
-}
+export type DragHandleProps = Omit<
+  Optional<DragHandlePluginProps, "pluginKey">,
+  "element"
+> & {
+  className?: string;
+  onNodeChange?: (data: {
+    node: Node | null;
+    editor: Editor;
+    pos: number;
+  }) => void;
+  children: ReactNode;
+};
 
 export const DragHandle = (props: DragHandleProps) => {
   const {
-    className = 'drag-handle',
+    className = "drag-handle",
     children,
     editor,
     pluginKey = dragHandlePluginDefaultKey,
@@ -28,64 +35,69 @@ export const DragHandle = (props: DragHandleProps) => {
     onElementDragStart,
     onElementDragEnd,
     computePositionConfig = defaultComputePositionConfig,
-  } = props
-  const [element, setElement] = useState<HTMLDivElement | null>(null)
-  const plugin = useRef<Plugin | null>(null)
+  } = props;
+
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const plugin = useRef<Plugin | null>(null);
+
+  // Stable refs so the effect never needs to re-run due to callback identity changes
+  const onNodeChangeRef = useRef(onNodeChange);
+  const onElementDragStartRef = useRef(onElementDragStart);
+  const onElementDragEndRef = useRef(onElementDragEnd);
+  const computePositionConfigRef = useRef(computePositionConfig);
+
+  // Keep refs current without triggering the effect
+  useEffect(() => {
+    onNodeChangeRef.current = onNodeChange;
+  }, [onNodeChange]);
+  useEffect(() => {
+    onElementDragStartRef.current = onElementDragStart;
+  }, [onElementDragStart]);
+  useEffect(() => {
+    onElementDragEndRef.current = onElementDragEnd;
+  }, [onElementDragEnd]);
+  useEffect(() => {
+    computePositionConfigRef.current = computePositionConfig;
+  }, [computePositionConfig]);
 
   useEffect(() => {
-    let initPlugin: {
-      plugin: Plugin
-      unbind: () => void
-    } | null = null
-
-    if (!element) {
+    if (!element || editor.isDestroyed) {
       return () => {
-        plugin.current = null
-      }
+        plugin.current = null;
+      };
     }
 
-    if (editor.isDestroyed) {
-      return () => {
-        plugin.current = null
-      }
-    }
+    const initPlugin = DragHandlePlugin({
+      editor,
+      element,
+      pluginKey,
+      computePositionConfig: {
+        ...defaultComputePositionConfig,
+        ...computePositionConfigRef.current,
+      },
+      onElementDragStart: (e) => onElementDragStartRef.current?.(e),
+      onElementDragEnd: (e) => onElementDragEndRef.current?.(e),
+      onNodeChange: (data) => onNodeChangeRef.current?.(data),
+    });
 
-    if (!plugin.current) {
-      initPlugin = DragHandlePlugin({
-        editor,
-        element,
-        pluginKey,
-        computePositionConfig: {
-          ...defaultComputePositionConfig,
-          ...computePositionConfig,
-        },
-        onElementDragStart,
-        onElementDragEnd,
-        onNodeChange,
-      })
-      plugin.current = initPlugin.plugin
-
-      editor.registerPlugin(plugin.current)
-    }
+    plugin.current = initPlugin.plugin;
+    editor.registerPlugin(plugin.current);
 
     return () => {
-      editor.unregisterPlugin(pluginKey)
-      plugin.current = null
-      if (initPlugin) {
-        initPlugin.unbind()
-        initPlugin = null
-      }
-    }
-  }, [element, editor, onNodeChange, pluginKey, computePositionConfig, onElementDragStart, onElementDragEnd])
+      editor.unregisterPlugin(pluginKey);
+      plugin.current = null;
+      initPlugin.unbind();
+    };
+  }, [element, editor, pluginKey]); // ← only truly stable deps
 
   return (
     <div
       className={className}
-      style={{ visibility: 'hidden', position: 'absolute' }}
+      style={{ visibility: "hidden", position: "absolute" }}
       data-dragging="false"
       ref={setElement}
     >
       {children}
     </div>
-  )
-}
+  );
+};

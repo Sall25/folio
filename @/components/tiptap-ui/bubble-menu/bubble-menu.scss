@@ -1,4 +1,7 @@
 .bubble-menu-content{
-  padding: 2px 10px;
+  //padding: 2px 10px;
   z-index: 11;
+  background-color:var(--tt-toolbar-bg-color);
+  font-family: var(--font-ui);
+  padding: .188rem;
 }

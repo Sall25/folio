@@ -1,0 +1,91 @@
+/// Spacing variables
+$turninto-gap: 6px;
+$turninto-padding-y: 6px;
+$turninto-padding-x: 10px;
+$turninto-content-padding-y: 4px;
+$turninto-content-padding-x: 0;
+
+.turninto-trigger {
+  display: flex;
+  align-items: center;
+  gap: $turninto-gap;
+  padding: $turninto-padding-y $turninto-padding-x;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+
+  &.card-layout {
+    border: 1px solid #ddd;
+    background: #fafafa;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.turninto-label {
+  font-weight: 500;
+}
+
+.turninto-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.turninto-content {
+ 
+  justify-content: flex-start;
+  align-items: flex-start;
+  
+   /* Animation states */
+  &[data-state="open"] {
+    animation:
+      fadeIn 150ms var(--tt-transition-easing-cubic) /*cubic-bezier(0.16, 1, 0.3, 1)*/,
+      zoomIn 150ms var(--tt-transition-easing-cubic) /*cubic-bezier(0.16, 1, 0.3, 1)*/;
+  }
+
+  &[data-state="closed"] {
+    animation:
+      fadeOut 150ms var(--tt-transition-easing-cubic) /*150ms cubic-bezier(0.16, 1, 0.3, 1)*/,
+      zoomOut 150ms var(--tt-transition-easing-cubic) /*150ms cubic-bezier(0.16, 1, 0.3, 1)*/;
+  }
+
+}
+
+.turninto-item {
+  padding: $turninto-padding-y $turninto-padding-x;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  &.active {
+    background-color: #007aff;
+    color: white;
+  }
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
+}
+
+.turninto-check-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.menu-button {
+  display: flex;
+  font-family: var(--font-ui);
+  align-items: center;
+  width: 100%;
+}
+
+.menu-button .chevron {
+  margin-left: auto;
+}
+ 

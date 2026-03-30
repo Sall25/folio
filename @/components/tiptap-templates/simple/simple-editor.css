@@ -1,0 +1,666 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+body {
+  --tt-toolbar-height: 44px;
+  --tt-theme-text: var(--tt-gray-light-900);
+}
+.dark body {
+  --tt-theme-text: var(--tt-gray-dark-900);
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  color: var(--tt-theme-text);
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  padding: 0;
+  overflow-y: hidden;
+}
+
+html {
+  overflow-y: scroll;
+}
+
+html,
+body {
+  overscroll-behavior-x: none;
+  overflow-x: hidden;
+}
+
+html,
+body,
+#root,
+#app {
+  background-color: var(--tt-bg-color);
+}
+
+#root,
+#app {
+  height: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 0.25rem;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--tt-scrollbar-color) transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--tt-scrollbar-color);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tiptap.ProseMirror {
+  font-family: "DM Sans", sans-serif;
+}
+.tiptap.ProseMirror p[data-background-color="var(--tt-color-highlight-purple)"] {
+  background-color: var(--tt-color-highlight-purple);
+}
+.tiptap.ProseMirror p[data-color="var(--tt-color-text-purple)"] {
+  color: var(--tt-color-text-purple);
+}
+.tiptap.ProseMirror h1[data-background-color="var(--tt-color-highlight-purple)"] {
+  background-color: var(--tt-color-highlight-purple);
+}
+.tiptap.ProseMirror h1[data-color="var(--tt-color-text-purple)"] {
+  color: var(--tt-color-text-purple);
+}
+.tiptap.ProseMirror h2[data-background-color="var(--tt-color-highlight-purple)"] {
+  background-color: var(--tt-color-highlight-purple);
+}
+.tiptap.ProseMirror h2[data-color="var(--tt-color-text-purple)"] {
+  color: var(--tt-color-text-purple);
+}
+.tiptap.ProseMirror h3[data-background-color="var(--tt-color-highlight-purple)"] {
+  background-color: var(--tt-color-highlight-purple);
+}
+.tiptap.ProseMirror h3[data-color="var(--tt-color-text-purple)"] {
+  color: var(--tt-color-text-purple);
+}
+.tiptap.ProseMirror h4[data-background-color="var(--tt-color-highlight-purple)"] {
+  background-color: var(--tt-color-highlight-purple);
+}
+.tiptap.ProseMirror h4[data-color="var(--tt-color-text-purple)"] {
+  color: var(--tt-color-text-purple);
+}
+.tiptap.ProseMirror h5[data-background-color="var(--tt-color-highlight-purple)"] {
+  background-color: var(--tt-color-highlight-purple);
+}
+.tiptap.ProseMirror h5[data-color="var(--tt-color-text-purple)"] {
+  color: var(--tt-color-text-purple);
+}
+.tiptap.ProseMirror h6[data-background-color="var(--tt-color-highlight-purple)"] {
+  background-color: var(--tt-color-highlight-purple);
+}
+.tiptap.ProseMirror h6[data-color="var(--tt-color-text-purple)"] {
+  color: var(--tt-color-text-purple);
+}
+.tiptap.ProseMirror blockquote[data-background-color="var(--tt-color-highlight-purple)"] {
+  background-color: var(--tt-color-highlight-purple);
+}
+.tiptap.ProseMirror blockquote[data-color="var(--tt-color-text-purple)"] {
+  color: var(--tt-color-text-purple);
+}
+.tiptap.ProseMirror li[data-background-color="var(--tt-color-highlight-purple)"] {
+  background-color: var(--tt-color-highlight-purple);
+}
+.tiptap.ProseMirror li[data-color="var(--tt-color-text-purple)"] {
+  color: var(--tt-color-text-purple);
+}
+.tiptap.ProseMirror ul[data-background-color="var(--tt-color-highlight-purple)"] {
+  background-color: var(--tt-color-highlight-purple);
+}
+.tiptap.ProseMirror ul[data-color="var(--tt-color-text-purple)"] {
+  color: var(--tt-color-text-purple);
+}
+.tiptap.ProseMirror ol[data-background-color="var(--tt-color-highlight-purple)"] {
+  background-color: var(--tt-color-highlight-purple);
+}
+.tiptap.ProseMirror ol[data-color="var(--tt-color-text-purple)"] {
+  color: var(--tt-color-text-purple);
+}
+.tiptap.ProseMirror th[data-background-color="var(--tt-color-highlight-purple)"] {
+  background-color: var(--tt-color-highlight-purple);
+}
+.tiptap.ProseMirror th[data-color="var(--tt-color-text-purple)"] {
+  color: var(--tt-color-text-purple);
+}
+.tiptap.ProseMirror td[data-background-color="var(--tt-color-highlight-purple)"] {
+  background-color: var(--tt-color-highlight-purple);
+}
+.tiptap.ProseMirror td[data-color="var(--tt-color-text-purple)"] {
+  color: var(--tt-color-text-purple);
+}
+.tiptap.ProseMirror p[data-background-color="var(--tt-color-highlight-yellow)"] {
+  background-color: var(--tt-color-highlight-yellow);
+}
+.tiptap.ProseMirror p[data-color="var(--tt-color-text-yellow)"] {
+  color: var(--tt-color-text-yellow);
+}
+.tiptap.ProseMirror h1[data-background-color="var(--tt-color-highlight-yellow)"] {
+  background-color: var(--tt-color-highlight-yellow);
+}
+.tiptap.ProseMirror h1[data-color="var(--tt-color-text-yellow)"] {
+  color: var(--tt-color-text-yellow);
+}
+.tiptap.ProseMirror h2[data-background-color="var(--tt-color-highlight-yellow)"] {
+  background-color: var(--tt-color-highlight-yellow);
+}
+.tiptap.ProseMirror h2[data-color="var(--tt-color-text-yellow)"] {
+  color: var(--tt-color-text-yellow);
+}
+.tiptap.ProseMirror h3[data-background-color="var(--tt-color-highlight-yellow)"] {
+  background-color: var(--tt-color-highlight-yellow);
+}
+.tiptap.ProseMirror h3[data-color="var(--tt-color-text-yellow)"] {
+  color: var(--tt-color-text-yellow);
+}
+.tiptap.ProseMirror h4[data-background-color="var(--tt-color-highlight-yellow)"] {
+  background-color: var(--tt-color-highlight-yellow);
+}
+.tiptap.ProseMirror h4[data-color="var(--tt-color-text-yellow)"] {
+  color: var(--tt-color-text-yellow);
+}
+.tiptap.ProseMirror h5[data-background-color="var(--tt-color-highlight-yellow)"] {
+  background-color: var(--tt-color-highlight-yellow);
+}
+.tiptap.ProseMirror h5[data-color="var(--tt-color-text-yellow)"] {
+  color: var(--tt-color-text-yellow);
+}
+.tiptap.ProseMirror h6[data-background-color="var(--tt-color-highlight-yellow)"] {
+  background-color: var(--tt-color-highlight-yellow);
+}
+.tiptap.ProseMirror h6[data-color="var(--tt-color-text-yellow)"] {
+  color: var(--tt-color-text-yellow);
+}
+.tiptap.ProseMirror blockquote[data-background-color="var(--tt-color-highlight-yellow)"] {
+  background-color: var(--tt-color-highlight-yellow);
+}
+.tiptap.ProseMirror blockquote[data-color="var(--tt-color-text-yellow)"] {
+  color: var(--tt-color-text-yellow);
+}
+.tiptap.ProseMirror li[data-background-color="var(--tt-color-highlight-yellow)"] {
+  background-color: var(--tt-color-highlight-yellow);
+}
+.tiptap.ProseMirror li[data-color="var(--tt-color-text-yellow)"] {
+  color: var(--tt-color-text-yellow);
+}
+.tiptap.ProseMirror ul[data-background-color="var(--tt-color-highlight-yellow)"] {
+  background-color: var(--tt-color-highlight-yellow);
+}
+.tiptap.ProseMirror ul[data-color="var(--tt-color-text-yellow)"] {
+  color: var(--tt-color-text-yellow);
+}
+.tiptap.ProseMirror ol[data-background-color="var(--tt-color-highlight-yellow)"] {
+  background-color: var(--tt-color-highlight-yellow);
+}
+.tiptap.ProseMirror ol[data-color="var(--tt-color-text-yellow)"] {
+  color: var(--tt-color-text-yellow);
+}
+.tiptap.ProseMirror th[data-background-color="var(--tt-color-highlight-yellow)"] {
+  background-color: var(--tt-color-highlight-yellow);
+}
+.tiptap.ProseMirror th[data-color="var(--tt-color-text-yellow)"] {
+  color: var(--tt-color-text-yellow);
+}
+.tiptap.ProseMirror td[data-background-color="var(--tt-color-highlight-yellow)"] {
+  background-color: var(--tt-color-highlight-yellow);
+}
+.tiptap.ProseMirror td[data-color="var(--tt-color-text-yellow)"] {
+  color: var(--tt-color-text-yellow);
+}
+.tiptap.ProseMirror p[data-background-color="var(--tt-color-highlight-blue)"] {
+  background-color: var(--tt-color-highlight-blue);
+}
+.tiptap.ProseMirror p[data-color="var(--tt-color-text-blue)"] {
+  color: var(--tt-color-text-blue);
+}
+.tiptap.ProseMirror h1[data-background-color="var(--tt-color-highlight-blue)"] {
+  background-color: var(--tt-color-highlight-blue);
+}
+.tiptap.ProseMirror h1[data-color="var(--tt-color-text-blue)"] {
+  color: var(--tt-color-text-blue);
+}
+.tiptap.ProseMirror h2[data-background-color="var(--tt-color-highlight-blue)"] {
+  background-color: var(--tt-color-highlight-blue);
+}
+.tiptap.ProseMirror h2[data-color="var(--tt-color-text-blue)"] {
+  color: var(--tt-color-text-blue);
+}
+.tiptap.ProseMirror h3[data-background-color="var(--tt-color-highlight-blue)"] {
+  background-color: var(--tt-color-highlight-blue);
+}
+.tiptap.ProseMirror h3[data-color="var(--tt-color-text-blue)"] {
+  color: var(--tt-color-text-blue);
+}
+.tiptap.ProseMirror h4[data-background-color="var(--tt-color-highlight-blue)"] {
+  background-color: var(--tt-color-highlight-blue);
+}
+.tiptap.ProseMirror h4[data-color="var(--tt-color-text-blue)"] {
+  color: var(--tt-color-text-blue);
+}
+.tiptap.ProseMirror h5[data-background-color="var(--tt-color-highlight-blue)"] {
+  background-color: var(--tt-color-highlight-blue);
+}
+.tiptap.ProseMirror h5[data-color="var(--tt-color-text-blue)"] {
+  color: var(--tt-color-text-blue);
+}
+.tiptap.ProseMirror h6[data-background-color="var(--tt-color-highlight-blue)"] {
+  background-color: var(--tt-color-highlight-blue);
+}
+.tiptap.ProseMirror h6[data-color="var(--tt-color-text-blue)"] {
+  color: var(--tt-color-text-blue);
+}
+.tiptap.ProseMirror blockquote[data-background-color="var(--tt-color-highlight-blue)"] {
+  background-color: var(--tt-color-highlight-blue);
+}
+.tiptap.ProseMirror blockquote[data-color="var(--tt-color-text-blue)"] {
+  color: var(--tt-color-text-blue);
+}
+.tiptap.ProseMirror li[data-background-color="var(--tt-color-highlight-blue)"] {
+  background-color: var(--tt-color-highlight-blue);
+}
+.tiptap.ProseMirror li[data-color="var(--tt-color-text-blue)"] {
+  color: var(--tt-color-text-blue);
+}
+.tiptap.ProseMirror ul[data-background-color="var(--tt-color-highlight-blue)"] {
+  background-color: var(--tt-color-highlight-blue);
+}
+.tiptap.ProseMirror ul[data-color="var(--tt-color-text-blue)"] {
+  color: var(--tt-color-text-blue);
+}
+.tiptap.ProseMirror ol[data-background-color="var(--tt-color-highlight-blue)"] {
+  background-color: var(--tt-color-highlight-blue);
+}
+.tiptap.ProseMirror ol[data-color="var(--tt-color-text-blue)"] {
+  color: var(--tt-color-text-blue);
+}
+.tiptap.ProseMirror th[data-background-color="var(--tt-color-highlight-blue)"] {
+  background-color: var(--tt-color-highlight-blue);
+}
+.tiptap.ProseMirror th[data-color="var(--tt-color-text-blue)"] {
+  color: var(--tt-color-text-blue);
+}
+.tiptap.ProseMirror td[data-background-color="var(--tt-color-highlight-blue)"] {
+  background-color: var(--tt-color-highlight-blue);
+}
+.tiptap.ProseMirror td[data-color="var(--tt-color-text-blue)"] {
+  color: var(--tt-color-text-blue);
+}
+.tiptap.ProseMirror p[data-background-color="var(--tt-color-highlight-red)"] {
+  background-color: var(--tt-color-highlight-red);
+}
+.tiptap.ProseMirror p[data-color="var(--tt-color-text-red)"] {
+  color: var(--tt-color-text-red);
+}
+.tiptap.ProseMirror h1[data-background-color="var(--tt-color-highlight-red)"] {
+  background-color: var(--tt-color-highlight-red);
+}
+.tiptap.ProseMirror h1[data-color="var(--tt-color-text-red)"] {
+  color: var(--tt-color-text-red);
+}
+.tiptap.ProseMirror h2[data-background-color="var(--tt-color-highlight-red)"] {
+  background-color: var(--tt-color-highlight-red);
+}
+.tiptap.ProseMirror h2[data-color="var(--tt-color-text-red)"] {
+  color: var(--tt-color-text-red);
+}
+.tiptap.ProseMirror h3[data-background-color="var(--tt-color-highlight-red)"] {
+  background-color: var(--tt-color-highlight-red);
+}
+.tiptap.ProseMirror h3[data-color="var(--tt-color-text-red)"] {
+  color: var(--tt-color-text-red);
+}
+.tiptap.ProseMirror h4[data-background-color="var(--tt-color-highlight-red)"] {
+  background-color: var(--tt-color-highlight-red);
+}
+.tiptap.ProseMirror h4[data-color="var(--tt-color-text-red)"] {
+  color: var(--tt-color-text-red);
+}
+.tiptap.ProseMirror h5[data-background-color="var(--tt-color-highlight-red)"] {
+  background-color: var(--tt-color-highlight-red);
+}
+.tiptap.ProseMirror h5[data-color="var(--tt-color-text-red)"] {
+  color: var(--tt-color-text-red);
+}
+.tiptap.ProseMirror h6[data-background-color="var(--tt-color-highlight-red)"] {
+  background-color: var(--tt-color-highlight-red);
+}
+.tiptap.ProseMirror h6[data-color="var(--tt-color-text-red)"] {
+  color: var(--tt-color-text-red);
+}
+.tiptap.ProseMirror blockquote[data-background-color="var(--tt-color-highlight-red)"] {
+  background-color: var(--tt-color-highlight-red);
+}
+.tiptap.ProseMirror blockquote[data-color="var(--tt-color-text-red)"] {
+  color: var(--tt-color-text-red);
+}
+.tiptap.ProseMirror li[data-background-color="var(--tt-color-highlight-red)"] {
+  background-color: var(--tt-color-highlight-red);
+}
+.tiptap.ProseMirror li[data-color="var(--tt-color-text-red)"] {
+  color: var(--tt-color-text-red);
+}
+.tiptap.ProseMirror ul[data-background-color="var(--tt-color-highlight-red)"] {
+  background-color: var(--tt-color-highlight-red);
+}
+.tiptap.ProseMirror ul[data-color="var(--tt-color-text-red)"] {
+  color: var(--tt-color-text-red);
+}
+.tiptap.ProseMirror ol[data-background-color="var(--tt-color-highlight-red)"] {
+  background-color: var(--tt-color-highlight-red);
+}
+.tiptap.ProseMirror ol[data-color="var(--tt-color-text-red)"] {
+  color: var(--tt-color-text-red);
+}
+.tiptap.ProseMirror th[data-background-color="var(--tt-color-highlight-red)"] {
+  background-color: var(--tt-color-highlight-red);
+}
+.tiptap.ProseMirror th[data-color="var(--tt-color-text-red)"] {
+  color: var(--tt-color-text-red);
+}
+.tiptap.ProseMirror td[data-background-color="var(--tt-color-highlight-red)"] {
+  background-color: var(--tt-color-highlight-red);
+}
+.tiptap.ProseMirror td[data-color="var(--tt-color-text-red)"] {
+  color: var(--tt-color-text-red);
+}
+.tiptap.ProseMirror p[data-background-color="var(--tt-color-highlight-green)"] {
+  background-color: var(--tt-color-highlight-green);
+}
+.tiptap.ProseMirror p[data-color="var(--tt-color-text-green)"] {
+  color: var(--tt-color-text-green);
+}
+.tiptap.ProseMirror h1[data-background-color="var(--tt-color-highlight-green)"] {
+  background-color: var(--tt-color-highlight-green);
+}
+.tiptap.ProseMirror h1[data-color="var(--tt-color-text-green)"] {
+  color: var(--tt-color-text-green);
+}
+.tiptap.ProseMirror h2[data-background-color="var(--tt-color-highlight-green)"] {
+  background-color: var(--tt-color-highlight-green);
+}
+.tiptap.ProseMirror h2[data-color="var(--tt-color-text-green)"] {
+  color: var(--tt-color-text-green);
+}
+.tiptap.ProseMirror h3[data-background-color="var(--tt-color-highlight-green)"] {
+  background-color: var(--tt-color-highlight-green);
+}
+.tiptap.ProseMirror h3[data-color="var(--tt-color-text-green)"] {
+  color: var(--tt-color-text-green);
+}
+.tiptap.ProseMirror h4[data-background-color="var(--tt-color-highlight-green)"] {
+  background-color: var(--tt-color-highlight-green);
+}
+.tiptap.ProseMirror h4[data-color="var(--tt-color-text-green)"] {
+  color: var(--tt-color-text-green);
+}
+.tiptap.ProseMirror h5[data-background-color="var(--tt-color-highlight-green)"] {
+  background-color: var(--tt-color-highlight-green);
+}
+.tiptap.ProseMirror h5[data-color="var(--tt-color-text-green)"] {
+  color: var(--tt-color-text-green);
+}
+.tiptap.ProseMirror h6[data-background-color="var(--tt-color-highlight-green)"] {
+  background-color: var(--tt-color-highlight-green);
+}
+.tiptap.ProseMirror h6[data-color="var(--tt-color-text-green)"] {
+  color: var(--tt-color-text-green);
+}
+.tiptap.ProseMirror blockquote[data-background-color="var(--tt-color-highlight-green)"] {
+  background-color: var(--tt-color-highlight-green);
+}
+.tiptap.ProseMirror blockquote[data-color="var(--tt-color-text-green)"] {
+  color: var(--tt-color-text-green);
+}
+.tiptap.ProseMirror li[data-background-color="var(--tt-color-highlight-green)"] {
+  background-color: var(--tt-color-highlight-green);
+}
+.tiptap.ProseMirror li[data-color="var(--tt-color-text-green)"] {
+  color: var(--tt-color-text-green);
+}
+.tiptap.ProseMirror ul[data-background-color="var(--tt-color-highlight-green)"] {
+  background-color: var(--tt-color-highlight-green);
+}
+.tiptap.ProseMirror ul[data-color="var(--tt-color-text-green)"] {
+  color: var(--tt-color-text-green);
+}
+.tiptap.ProseMirror ol[data-background-color="var(--tt-color-highlight-green)"] {
+  background-color: var(--tt-color-highlight-green);
+}
+.tiptap.ProseMirror ol[data-color="var(--tt-color-text-green)"] {
+  color: var(--tt-color-text-green);
+}
+.tiptap.ProseMirror th[data-background-color="var(--tt-color-highlight-green)"] {
+  background-color: var(--tt-color-highlight-green);
+}
+.tiptap.ProseMirror th[data-color="var(--tt-color-text-green)"] {
+  color: var(--tt-color-text-green);
+}
+.tiptap.ProseMirror td[data-background-color="var(--tt-color-highlight-green)"] {
+  background-color: var(--tt-color-highlight-green);
+}
+.tiptap.ProseMirror td[data-color="var(--tt-color-text-green)"] {
+  color: var(--tt-color-text-green);
+}
+.tiptap.ProseMirror table[data-align=left] {
+  text-align: left;
+  margin-inline-start: 0;
+  margin-inline-end: auto;
+}
+.tiptap.ProseMirror th[data-align=left] {
+  text-align: left;
+}
+.tiptap.ProseMirror td[data-align=left] {
+  text-align: left;
+}
+.tiptap.ProseMirror tr[data-align=left] {
+  text-align: left;
+}
+.tiptap.ProseMirror figure[data-align=left] {
+  text-align: left;
+  margin-inline-start: 0;
+  margin-inline-end: auto;
+}
+.tiptap.ProseMirror img[data-align=left] {
+  text-align: left;
+  display: block;
+  margin-inline-start: 0;
+  margin-inline-end: auto;
+}
+.tiptap.ProseMirror table[data-align=center] {
+  text-align: center;
+  margin-inline-start: auto;
+  margin-inline-end: auto;
+}
+.tiptap.ProseMirror th[data-align=center] {
+  text-align: center;
+}
+.tiptap.ProseMirror td[data-align=center] {
+  text-align: center;
+}
+.tiptap.ProseMirror tr[data-align=center] {
+  text-align: center;
+}
+.tiptap.ProseMirror figure[data-align=center] {
+  text-align: center;
+  margin-inline-start: auto;
+  margin-inline-end: auto;
+}
+.tiptap.ProseMirror img[data-align=center] {
+  text-align: center;
+  display: block;
+  margin-inline-start: auto;
+  margin-inline-end: auto;
+}
+.tiptap.ProseMirror table[data-align=right] {
+  text-align: right;
+  margin-inline-start: auto;
+  margin-inline-end: 0;
+}
+.tiptap.ProseMirror th[data-align=right] {
+  text-align: right;
+}
+.tiptap.ProseMirror td[data-align=right] {
+  text-align: right;
+}
+.tiptap.ProseMirror tr[data-align=right] {
+  text-align: right;
+}
+.tiptap.ProseMirror figure[data-align=right] {
+  text-align: right;
+  margin-inline-start: auto;
+  margin-inline-end: 0;
+}
+.tiptap.ProseMirror img[data-align=right] {
+  text-align: right;
+  display: block;
+  margin-inline-start: auto;
+  margin-inline-end: 0;
+}
+.tiptap.ProseMirror table[data-align=justify] {
+  text-align: justify;
+}
+.tiptap.ProseMirror th[data-align=justify] {
+  text-align: justify;
+}
+.tiptap.ProseMirror td[data-align=justify] {
+  text-align: justify;
+}
+.tiptap.ProseMirror tr[data-align=justify] {
+  text-align: justify;
+}
+.tiptap.ProseMirror figure[data-align=justify] {
+  text-align: justify;
+}
+.tiptap.ProseMirror img[data-align=justify] {
+  text-align: justify;
+  display: block;
+}
+.tiptap.ProseMirror table[data-align=top] {
+  vertical-align: top;
+}
+.tiptap.ProseMirror th[data-align=top] {
+  vertical-align: top;
+}
+.tiptap.ProseMirror td[data-align=top] {
+  vertical-align: top;
+}
+.tiptap.ProseMirror tr[data-align=top] {
+  vertical-align: top;
+}
+.tiptap.ProseMirror table[data-align=middle] {
+  vertical-align: middle;
+}
+.tiptap.ProseMirror th[data-align=middle] {
+  vertical-align: middle;
+}
+.tiptap.ProseMirror td[data-align=middle] {
+  vertical-align: middle;
+}
+.tiptap.ProseMirror tr[data-align=middle] {
+  vertical-align: middle;
+}
+.tiptap.ProseMirror table[data-align=bottom] {
+  vertical-align: bottom;
+}
+.tiptap.ProseMirror th[data-align=bottom] {
+  vertical-align: bottom;
+}
+.tiptap.ProseMirror td[data-align=bottom] {
+  vertical-align: bottom;
+}
+.tiptap.ProseMirror tr[data-align=bottom] {
+  vertical-align: bottom;
+}
+
+.simple-editor-wrapper {
+  width: 100vw;
+  overflow: auto;
+}
+
+.simple-editor-content {
+  max-width: 708px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.simple-editor-content .tiptap.ProseMirror.simple-editor {
+  flex: 1;
+  padding: 4.5rem 3rem 30vh;
+}
+
+@media screen and (max-width: 480px) {
+  .simple-editor-content .tiptap.ProseMirror.simple-editor {
+    padding: 1rem 1.5rem 30vh;
+  }
+}
+/*
+TABLE STYLE
+*/
+:root {
+  --tt-table-border-color: var(--tt-gray-light-a-300);
+  --tt-table-selected-bg: #c3bdff66;
+  --tt-table-selected-stroke: var(--tt-brand-color-400);
+  --tt-table-column-resize-handle-bg: var(--tt-brand-color-400);
+  --tt-table-cell-padding: .5rem;
+  --tt-table-margin-block: 1.25rem;
+  --tt-table-pad-block-start: 1rem;
+  --tt-table-pad-block-end: 1.5rem;
+  --tt-table-pad-inline-start: 1rem;
+  --tt-table-pad-inline-end: 1.5rem;
+}
+
+.dark {
+  --tt-table-border-color: var(--tt-gray-dark-a-300);
+  --tt-table-selected-bg: #c3bdff33;
+  --tt-table-selected-stroke: var(--tt-brand-color-400);
+  --tt-table-column-resize-handle-bg: var(--tt-brand-color-400);
+}
+
+.table-of-contents {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.875rem;
+  gap: 0.25rem;
+  overflow: auto;
+  text-decoration: none;
+}
+.table-of-contents > div {
+  border-radius: 0.25rem;
+  padding-left: calc(0.875rem * (var(--level) - 1));
+  transition: all 0.2s cubic-bezier(0.65, 0.05, 0.36, 1);
+}
+.table-of-contents > div:hover {
+  background-color: var(--gray-2);
+}
+.table-of-contents .empty-state {
+  color: var(--gray-5);
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+}
+.table-of-contents .is-active a {
+  color: var(--purple);
+}
+.table-of-contents .is-scrolled-over a {
+  color: var(--gray-5);
+}
+.table-of-contents a {
+  color: var(--black);
+  display: flex;
+  gap: 0.25rem;
+  text-decoration: none;
+}
+.table-of-contents a::before {
+  content: attr(data-item-index) ".";
+}/*# sourceMappingURL=simple-editor.css.map */
