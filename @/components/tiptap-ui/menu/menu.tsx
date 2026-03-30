@@ -38,7 +38,11 @@ export function Menu({
           />
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <AlignmentDropdownMenu hideWhenUnavailable={true} editor={editor} />
+          <AlignmentDropdownMenu
+            className="menu-button"
+            hideWhenUnavailable={true}
+            editor={editor}
+          />
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <TurnIntoDropdown hideWhenUnavailable={true} editor={editor} />

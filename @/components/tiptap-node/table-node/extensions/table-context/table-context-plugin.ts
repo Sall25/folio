@@ -102,8 +102,7 @@ export const TableContextPlugin = () => {
           if (view.state.selection.eq(prevState.selection)) return;
 
           const { selection } = view.state;
-          console.log("selection type", selection.constructor.name);
-          console.log("is CellSelection", selection instanceof CellSelection);
+
           const meta = tableContextPluginKey.getState(view.state);
 
           // Resolve the target cell — head cell for CellSelection, anchor for regular
@@ -193,10 +192,6 @@ export const TableContextPlugin = () => {
     },
     props: {
       handleDOMEvents: {
-        mousedown: () => {},
-        mouseenter() {
-          console.log("mouseentered");
-        },
         // inside props.handleDOMEvents
         mousemove(view, event) {
           if (locked) return false;

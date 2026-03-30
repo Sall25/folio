@@ -22,14 +22,6 @@ export function useIsRowColEmpty(
       // nodeAfter at this position is the table node (child of tableWrapper)
       const tableNode = $pos.nodeAfter ?? ctx.editor.state.doc.nodeAt(tablePos);
 
-      // Add this temporarily
-      console.log(
-        "tableNode type:",
-        tableNode?.type.name,
-        "| tableRole:",
-        tableNode?.type.spec.tableRole,
-      );
-
       if (!tableNode || tableNode.type.spec.tableRole !== "table") return true; // guard
       if (!tableNode) return true;
 

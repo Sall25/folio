@@ -92,14 +92,10 @@ import { TocNode } from "@/components/tiptap-node/toc-node/toc-node-extension";
 import { TocProvider } from "@/components/tiptap-node/toc-node/toc-provider";
 import { TocSidebar } from "@/components/tiptap-node/toc-node/toc-sidebar";
 import { Figure, FigureCaption } from "@/components/tiptap-node/figure-node";
-import {
-  TableCell,
-  TableHeader,
-  TableKit,
-  TableRow,
-} from "@tiptap/extension-table";
+import { TableKit } from "@tiptap/extension-table";
 import { TableContextExtension } from "@/components/tiptap-node/table-node";
 import { TableWrapperNode } from "@/components/tiptap-node/table-node/extensions/table-context";
+import { ToastProvider } from "@/components/tiptap-ui/copy-toast";
 
 const MainToolbarContent = ({ isMobile }: { isMobile: boolean }) => {
   return (
@@ -297,45 +293,46 @@ function SimpleEditorInner() {
   return (
     <div className="simple-editor-wrapper">
       <EditorContext.Provider value={{ editor }}>
-        <Toolbar
-          ref={toolbarRef}
-          style={{
-            ...(isMobile
-              ? {
-                  bottom: `calc(100% - ${height - rect.y}px)`,
-                }
-              : {}),
-          }}
-        >
-          {mobileView === "main" ? (
-            <MainToolbarContent
-              // onHighlighterClick={() => setMobileView("highlighter")}
-              // onLinkClick={() => setMobileView("link")}
-              isMobile={isMobile}
-            />
-          ) : (
-            <MobileToolbarContent
-              type={mobileView === "highlighter" ? "highlighter" : "link"}
-              onBack={() => setMobileView("main")}
-            />
-          )}
-        </Toolbar>
+        <ToastProvider>
+          <Toolbar
+            ref={toolbarRef}
+            style={{
+              ...(isMobile
+                ? {
+                    bottom: `calc(100% - ${height - rect.y}px)`,
+                  }
+                : {}),
+            }}
+          >
+            {mobileView === "main" ? (
+              <MainToolbarContent
+                // onHighlighterClick={() => setMobileView("highlighter")}
+                // onLinkClick={() => setMobileView("link")}
+                isMobile={isMobile}
+              />
+            ) : (
+              <MobileToolbarContent
+                type={mobileView === "highlighter" ? "highlighter" : "link"}
+                onBack={() => setMobileView("main")}
+              />
+            )}
+          </Toolbar>
 
-        <EditorContent
-          editor={editor}
-          role="presentation"
-          className="simple-editor-content"
-        />
+          <EditorContent
+            editor={editor}
+            role="presentation"
+            className="simple-editor-content"
+          />
+          <DragHandle editor={editor} />
 
-        <DragHandle editor={editor} />
+          <BubbleMenu editor={editor} />
 
-        <BubbleMenu editor={editor} />
+          <ImageBubble editor={editor} />
 
-        <ImageBubble editor={editor} />
+          <ThreadSidebar editor={editor} />
 
-        <ThreadSidebar editor={editor} />
-
-        <TocSidebar topOffset={80} maxShowCount={20} />
+          <TocSidebar topOffset={80} maxShowCount={20} />
+        </ToastProvider>
       </EditorContext.Provider>
     </div>
   );

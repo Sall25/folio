@@ -54,8 +54,6 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
 
         setTarget(NODE_LABELS[node.type.name]);
 
-        console.log(node.type.name);
-
         setPos(pos);
       }}
     >

@@ -1,0 +1,38 @@
+:root{
+  --copy-toast-bg-color: var(--tt-gray-light-200);
+  --copy-toast-text-color: var(--tt-gray-dark-100);
+  
+}
+.dark{
+  --copy-toast-bg-color: var(--tt-gray-dark-200);
+  --copy-toast-text-color: var(--tt-gray-light-100);
+}
+
+// copy-toast.scss
+.copy-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  background: var(--copy-toast-bg-color);
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md);
+  padding: 8px 16px;
+  font-size: 14px;
+  color: var(--copy-toast-text-color);
+  white-space: nowrap;
+  z-index: 9999;
+
+  &--visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
