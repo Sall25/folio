@@ -1,0 +1,164 @@
+.ProseMirror .table-overlays {
+  width: -moz-fit-content;
+  width: fit-content;
+}
+.ProseMirror .tableWrapper {
+  overflow-x: auto;
+}
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  overflow: hidden;
+  --default-cell-min-width: 120px;
+}
+.ProseMirror td,
+.ProseMirror th {
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+.ProseMirror td p,
+.ProseMirror th p {
+  margin: 0px !important;
+  padding: 0px !important;
+}
+.ProseMirror td:not([data-colwidth]):not(.column-resize-dragging),
+.ProseMirror th:not([data-colwidth]):not(.column-resize-dragging) {
+  min-width: var(--default-cell-min-width);
+}
+.ProseMirror .column-resize-handle {
+  z-index: 20;
+  pointer-events: none;
+  background-color: #adf;
+  width: 4px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -2px;
+}
+.ProseMirror.resize-cursor {
+  cursor: ew-resize;
+  cursor: col-resize;
+}
+.ProseMirror .selectedCell:after {
+  z-index: 2;
+  content: "";
+  pointer-events: none;
+  background: rgba(200, 200, 255, 0.4);
+  position: absolute;
+  inset: 0;
+}
+.ProseMirror td,
+.ProseMirror th {
+  min-width: auto !important;
+}
+.ProseMirror td:not([colwidth]):not(.column-resize-dragging),
+.ProseMirror th:not([colwidth]):not(.column-resize-dragging) {
+  min-width: var(--default-cell-min-width) !important;
+}
+.ProseMirror .column-resize-handle {
+  margin-inline-start: -1px;
+  background: var(--tt-table-column-resize-handle-bg);
+  cursor: col-resize;
+  z-index: 1;
+  pointer-events: auto;
+  width: 2px;
+  height: calc(100% + 2px);
+  margin-top: -1px;
+  transition: background 0.15s 50ms;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+:root {
+  --tt-table-border-color: var(--tt-gray-light-a-300);
+  --tt-table-selected-bg: #c3bdff66;
+  --tt-table-selected-stroke: var(--tt-brand-color-400);
+  --tt-table-column-resize-handle-bg: var(--tt-brand-color-400);
+  --tt-table-cell-padding: .5rem;
+  --tt-table-margin-block: 1.25rem;
+  --tt-table-pad-block-start: 1rem;
+  --tt-table-pad-block-end: 1.5rem;
+  --tt-table-pad-inline-start: 1rem;
+  --tt-table-pad-inline-end: 1.5rem;
+}
+
+.dark {
+  --tt-table-border-color: var(--tt-gray-dark-a-300);
+  --tt-table-selected-bg: #c3bdff33;
+  --tt-table-selected-stroke: var(--tt-brand-color-400);
+  --tt-table-column-resize-handle-bg: var(--tt-brand-color-400);
+}
+
+.tiptap [data-content-type=table] {
+  margin-block: var(--tt-table-margin-block);
+}
+.tiptap [data-content-type=table] .tableWrapper {
+  width: 100%;
+  margin-left: -1rem;
+  padding-block-start: var(--tt-table-pad-block-start);
+  padding-block-end: var(--tt-table-pad-block-end);
+  padding-inline-start: var(--tt-table-pad-inline-start);
+  padding-inline-end: var(--tt-table-pad-inline-end);
+  position: relative;
+  overflow-y: hidden;
+}
+.tiptap [data-content-type=table] td[data-text-align=left],
+.tiptap [data-content-type=table] th[data-text-align=left] {
+  text-align: left;
+}
+.tiptap [data-content-type=table] td[data-text-align=center],
+.tiptap [data-content-type=table] th[data-text-align=center] {
+  text-align: center;
+}
+.tiptap [data-content-type=table] td[data-text-align=right],
+.tiptap [data-content-type=table] th[data-text-align=right] {
+  text-align: right;
+}
+.tiptap [data-content-type=table] td[data-text-align=justify],
+.tiptap [data-content-type=table] th[data-text-align=justify] {
+  text-align: justify;
+}
+.tiptap [data-content-type=table] td[data-vertical-align=top],
+.tiptap [data-content-type=table] th[data-vertical-align=top] {
+  vertical-align: top;
+}
+.tiptap [data-content-type=table] td[data-vertical-align=middle],
+.tiptap [data-content-type=table] th[data-vertical-align=middle] {
+  vertical-align: middle;
+}
+.tiptap [data-content-type=table] td[data-vertical-align=bottom],
+.tiptap [data-content-type=table] th[data-vertical-align=bottom] {
+  vertical-align: bottom;
+}
+.tiptap table {
+  word-break: break-word;
+  width: auto !important;
+}
+.tiptap table th,
+.tiptap table td {
+  border: 1px solid var(--tt-table-border-color);
+  padding: var(--tt-table-cell-padding);
+}
+.tiptap table th {
+  background-color: var(--tt-gray-light-a-100);
+  text-align: left;
+  font-weight: 700;
+}
+
+.tiptap-table-dropcursor {
+  z-index: 20;
+  background-color: var(--tt-table-column-resize-handle-bg);
+  pointer-events: none;
+  position: absolute;
+}
+
+.table-cell-dragging-source {
+  z-index: 2;
+  content: "";
+  background: rgba(200, 200, 255, 0.4);
+  position: absolute;
+  inset: 0;
+}/*# sourceMappingURL=table-wrapper-view.css.map */
