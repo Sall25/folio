@@ -1,7 +1,0 @@
-.tiptap{
-  .slash-suggestion[data-decoration-content]::after{
-    content: attr(data-decoration-content);
-    color: blue;
-    pointer-events: none;
-  }
-}

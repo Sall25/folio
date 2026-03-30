@@ -1,4 +1,0 @@
-
-/**
- * CHECK columnIndex, tablePos, pendingCommand initialization if something goes wrong
- */
