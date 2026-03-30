@@ -1,0 +1,105 @@
+@charset "UTF-8";
+.thread-submit-form {
+  width: 100%;
+  padding: 0.9rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-family: var(--font-ui);
+  /**
+  font-family: var(--font-ui);
+
+  textarea {
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 450;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  */
+}
+
+/* ── Textarea ── */
+.thread-submit-form textarea {
+  font-family: inherit;
+  width: 100%;
+  min-height: 2.5rem;
+  resize: none;
+  padding: 0.45rem 0.65rem;
+  line-height: 1.4;
+  border-radius: 6px;
+  border: 1px solid var(--tt-border-color);
+  background-color: var(--gray-1);
+  color: var(--tt-text-color);
+  font-size: 0.85rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.thread-submit-form textarea::-moz-placeholder {
+  color: var(--tt-text-color);
+  opacity: 0.55;
+}
+
+.thread-submit-form textarea::placeholder {
+  color: var(--tt-text-color);
+  opacity: 0.55;
+}
+
+/* Focus state */
+.thread-submit-form textarea:focus,
+.thread-submit-form textarea:focus-visible {
+  outline: none;
+  border-color: var(--tt-text-color);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Button row ── */
+.thread-submit-form .actions {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+/* ── Buttons ── */
+.thread-submit-form button {
+  font-family: inherit;
+  height: 1.7rem;
+  padding: 0 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.18s ease, transform 0.08s ease, opacity 0.18s ease;
+}
+
+.thread-submit-form button:active {
+  transform: scale(0.96);
+}
+
+/* ── Cancel button ── */
+.thread-submit-form .cancel-btn {
+  background-color: var(--tt-color-red-base);
+  color: white;
+}
+
+.thread-submit-form .cancel-btn:hover {
+  background-color: var(--tt-color-red-inc-1);
+}
+
+/* ── Submit button ── */
+.thread-submit-form .submit-btn {
+  background-color: var(--tt-color-green-base);
+  color: white;
+}
+
+.thread-submit-form .submit-btn:hover {
+  background-color: var(--tt-color-green-inc-1);
+}/*# sourceMappingURL=thread-composer-submit.css.map */

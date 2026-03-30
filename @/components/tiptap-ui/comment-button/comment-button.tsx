@@ -1,27 +1,26 @@
-import { Editor } from "@tiptap/core"
+import { Editor } from "@tiptap/core";
 
-import { forwardRef } from "react"
+import { forwardRef } from "react";
 
 // --- Hooks ---
-import { useTiptapEditor } from "@/hooks/use-tiptap-editor"
+import { useTiptapEditor } from "@/hooks/use-tiptap-editor";
 
 // --- Icons ---
-import { MessageCircle, MessageSquareMore } from "lucide-react"
+import { MessageCircleMore } from "lucide-react";
 
 // --- UI Primitives ---
-import type { ButtonProps } from "@/components/tiptap-ui-primitive/button"
-import { Button } from "@/components/tiptap-ui-primitive/button"
+import type { ButtonProps } from "@/components/tiptap-ui-primitive/button";
+import { Button } from "@/components/tiptap-ui-primitive/button";
 
-
-
-export interface CommentButtonProps
-  extends Omit<ButtonProps, "type"> {
+export interface CommentButtonProps extends Omit<ButtonProps, "type"> {
   /**
    * Optional text to display alongside the icon.
    */
-  text?: string
+  text?: string;
 
-  editor?: Editor
+  editor?: Editor;
+
+  onClick?: () => void;
 }
 
 /**
@@ -29,20 +28,18 @@ export interface CommentButtonProps
  *
  * For custom button implementations, use the `useImage` hook instead.
  */
-export const CommentButton = forwardRef<
-  HTMLButtonElement,
-  CommentButtonProps
->(
+export const CommentButton = forwardRef<HTMLButtonElement, CommentButtonProps>(
   (
     {
       editor: providedEditor,
-      text,
+      //text,
       children,
+      onClick,
       ...buttonProps
     },
-    ref
+    ref,
   ) => {
-    const { editor } = useTiptapEditor(providedEditor)
+    const { editor } = useTiptapEditor(providedEditor);
 
     return (
       <Button
@@ -52,20 +49,20 @@ export const CommentButton = forwardRef<
         tabIndex={-1}
         tooltip="comment"
         onClick={() => {
-          editor?.commands.draftThread()
-          console.log('thread drafted')
+          editor?.commands.draftThread();
+          onClick?.();
         }}
         {...buttonProps}
         ref={ref}
       >
         {children ?? (
           <>
-            <MessageSquareMore className="tiptap-button-icon" />
+            <MessageCircleMore className="tiptap-button-icon" />
           </>
         )}
       </Button>
-    )
-  }
-)
+    );
+  },
+);
 
-CommentButton.displayName = "CommentButton"
+CommentButton.displayName = "CommentButton";
