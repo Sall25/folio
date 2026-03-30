@@ -1,0 +1,10 @@
+.menu-button {
+  width: 100%;
+}
+
+.menu {
+  width: -moz-fit-content;
+  width: fit-content;
+  border: 2px solid white;
+  background: green;
+}/*# sourceMappingURL=color-dropdown-menu.css.map */

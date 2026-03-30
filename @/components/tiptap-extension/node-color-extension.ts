@@ -6,17 +6,17 @@ import { updateNodesAttr } from "@/lib/tiptap-utils";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
-    nodeBackground: {
-      setNodeBackgroundColor: (backgroundColor: string) => ReturnType;
-      unsetNodeBackgroundColor: () => ReturnType;
-      toggleNodeBackgroundColor: (backgroundColor: string) => ReturnType;
+    nodeColor: {
+      setNodeColor: (color: string) => ReturnType;
+      unsetNodeColor: () => ReturnType;
+      toggleNodeColor: (color: string) => ReturnType;
     };
   }
 }
 
-export interface NodeBackgroundOptions {
+export interface NodeColorOptions {
   /**
-   * Node types that should support background colors
+   * Node types that should support colors
    * @default ["paragraph", "heading", "blockquote", "taskList", "bulletList", "orderedList", "tableCell", "tableHeader"]
    */
   types: string[];
@@ -37,7 +37,7 @@ function getToggleColor(
   if (targets.length === 0) return null;
 
   for (const target of targets) {
-    const currentColor = target.node.attrs?.backgroundColor ?? null;
+    const currentColor = target.node.attrs?.color ?? null;
     if (currentColor !== inputColor) {
       return inputColor;
     }
@@ -46,8 +46,8 @@ function getToggleColor(
   return null;
 }
 
-export const NodeBackground = Extension.create<NodeBackgroundOptions>({
-  name: "nodeBackground",
+export const NodeColor = Extension.create<NodeColorOptions>({
+  name: "nodeColor",
 
   addOptions() {
     return {
@@ -70,28 +70,28 @@ export const NodeBackground = Extension.create<NodeBackgroundOptions>({
       {
         types: this.options.types,
         attributes: {
-          backgroundColor: {
+          color: {
             default: null as string | null,
 
             parseHTML: (element: HTMLElement) => {
-              const styleColor = element.style?.backgroundColor;
+              const styleColor = element.style?.color;
               if (styleColor) return styleColor;
 
-              const dataColor = element.getAttribute("data-background-color");
+              const dataColor = element.getAttribute("data-color");
               return dataColor || null;
             },
 
             renderHTML: (attributes) => {
-              const color = attributes.backgroundColor as string | null;
+              const color = attributes.color as string | null;
               if (!color) return {};
 
               if (this.options.useStyle) {
                 return {
-                  style: `background-color: ${color}`,
+                  style: `color: ${color}`,
                 };
               } else {
                 return {
-                  "data-background-color": color,
+                  "data-color": color,
                 };
               }
             },
@@ -103,9 +103,9 @@ export const NodeBackground = Extension.create<NodeBackgroundOptions>({
 
   addCommands() {
     /**
-     * Generic command executor for background color operations
+     * Generic command executor for Color color operations
      */
-    const executeBackgroundCommand = (
+    const executeColorCommand = (
       getTargetColor: (
         targets: NodeWithPos[],
         inputColor?: string,
@@ -131,9 +131,7 @@ export const NodeBackground = Extension.create<NodeBackgroundOptions>({
           const targetColor = getTargetColor(targets, inputColor);
 
           if (dispatch) {
-            dispatch(
-              updateNodesAttr(tr, targets, "backgroundColor", targetColor),
-            );
+            dispatch(updateNodesAttr(tr, targets, "color", targetColor));
           }
 
           return true;
@@ -142,22 +140,20 @@ export const NodeBackground = Extension.create<NodeBackgroundOptions>({
 
     return {
       /**
-       * Set background color to specific value
+       * Set Color color to specific value
        */
-      setNodeBackgroundColor: executeBackgroundCommand(
-        (_, inputColor) => inputColor || null,
-      ),
+      setNodeColor: executeColorCommand((_, inputColor) => inputColor || null),
 
       /**
-       * Remove background color
+       * Remove Color color
        */
-      unsetNodeBackgroundColor: executeBackgroundCommand(() => null),
+      unsetNodeColor: executeColorCommand(() => null),
 
       /**
-       * Toggle background color (set if different/missing, unset if all have it)
+       * Toggle Color color (set if different/missing, unset if all have it)
        */
-      toggleNodeBackgroundColor: executeBackgroundCommand(
-        (targets, inputColor) => getToggleColor(targets, inputColor || ""),
+      toggleNodeColor: executeColorCommand((targets, inputColor) =>
+        getToggleColor(targets, inputColor || ""),
       ),
     };
   },

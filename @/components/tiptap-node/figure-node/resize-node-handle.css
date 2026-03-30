@@ -1,0 +1,133 @@
+.resize-handle {
+  position: absolute;
+  width: 8px;
+  height: 15%;
+  margin: 0 15px;
+  border-radius: 5px;
+  background: var(--tt-brand-color-400);
+  cursor: ew-resize;
+}
+.resize-handle[data-top=true] {
+  top: 0;
+}
+.resize-handle[data-bottom=true] {
+  bottom: 0;
+}
+.resize-handle[data-left=true] {
+  left: 0;
+}
+.resize-handle[data-right=true] {
+  right: 0;
+}
+.resize-handle[data-direction=top], .resize-handle[data-direction=bottom] {
+  left: 0;
+  right: 0;
+}
+.resize-handle[data-direction=left], .resize-handle[data-direction=right] {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/**
+:root {
+    --tiptap-image-handle-bg: var(--tt-brand-color-600)
+}
+
+.dark {
+    --tiptap-image-handle-bg: var(--tt-brand-color-400)
+}
+
+.tiptap.ProseMirror .ProseMirror-selectednode .tiptap-image .tiptap-image-container {
+    outline: .125rem solid #0000;
+    outline-color: var(--tt-brand-color-500);
+    border-radius: var(--tt-radius-xs,.25rem)
+}
+
+.tiptap.ProseMirror .tiptap-image {
+    width: 100%;
+    margin: 1.5rem 0;
+    display: flex
+}
+
+.tiptap.ProseMirror .tiptap-image[data-align=right] {
+    text-align: right;
+    justify-content: flex-end
+}
+
+.tiptap.ProseMirror .tiptap-image[data-align=center] {
+    text-align: center;
+    justify-content: center
+}
+
+.tiptap.ProseMirror .tiptap-image-container {
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    flex-direction: column;
+    display: flex
+}
+
+.tiptap.ProseMirror .tiptap-image-content {
+    align-items: center;
+    max-width: 100%;
+    display: flex;
+    position: relative
+}
+
+.tiptap.ProseMirror .tiptap-image-img {
+    border-radius: var(--tt-radius-xs,.25rem);
+    width: 100%
+}
+
+.tiptap.ProseMirror .tiptap-image-handle {
+    background-color: var(--tiptap-image-handle-bg);
+    cursor: ew-resize;
+    z-index: 10;
+    border-radius: 1.875rem;
+    width: .375rem;
+    height: 3rem;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%)
+}
+
+.tiptap.ProseMirror .tiptap-image-handle.tiptap-image-handle-left {
+    left: 4px
+}
+
+.tiptap.ProseMirror .tiptap-image-handle.tiptap-image-handle-right {
+    right: 4px
+}
+
+.tiptap.ProseMirror .tiptap-image-caption {
+    cursor: text;
+    text-align: center;
+    white-space: break-spaces;
+    word-break: break-word;
+    outline: none;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 1rem;
+    font-size: 15px;
+    position: relative
+}
+
+.tiptap.ProseMirror .tiptap-image-caption:has(>[data-node-view-content-react]>.ProseMirror-trailingBreak:only-child):before {
+    content: attr(data-placeholder);
+    color: #9ca3af;
+    pointer-events: none;
+    position: absolute;
+    left: 0;
+    right: 0
+}
+
+.tiptap.ProseMirror .tiptap-image-caption:has(>[data-node-view-content-react]:empty):before {
+    content: attr(data-placeholder);
+    color: #9ca3af;
+    pointer-events: none;
+    position: absolute;
+    left: 0;
+    right: 0
+}
+
+*//*# sourceMappingURL=resize-node-handle.css.map */

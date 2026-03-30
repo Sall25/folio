@@ -1,0 +1,93 @@
+:root {
+  --tiptap-image-handle-bg: var(--tt-brand-color-600) ;
+}
+
+.dark {
+  --tiptap-image-handle-bg: var(--tt-brand-color-400) ;
+}
+
+.tiptap img {
+  width: 100%;
+}
+.tiptap .tiptap-image-container {
+  cursor: pointer;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+  flex-direction: column;
+  display: flex;
+  width: -moz-fit-content;
+  width: fit-content;
+}
+.tiptap .tiptap-image-container[data-align=center] {
+  margin-left: auto;
+  margin-right: auto;
+}
+.tiptap .tiptap-image-container[data-align=right] {
+  margin-left: auto;
+}
+.tiptap .tiptap-image-container[data-align=left] {
+  margin-right: auto;
+}
+.tiptap .tiptap-image-container.ProseMirror-selectednode {
+  outline: 0.125rem solid rgba(0, 0, 0, 0);
+  outline-color: var(--tt-brand-color-500);
+}
+.tiptap .tiptap-image-container .tiptap-image-caption {
+  cursor: text;
+  text-align: center;
+  font-size: 15px;
+  max-width: 100%;
+  width: 100%;
+  white-space: break-spaces;
+  word-break: break-word;
+  margin-top: 1rem;
+  outline: none;
+  position: relative;
+}
+.tiptap .tiptap-image-container .tiptap-image-content {
+  align-items: center;
+  max-width: 100%;
+  display: flex;
+  position: relative;
+}
+.tiptap .tiptap-image-container .tiptap-image-content .tiptap-image-img {
+  display: flex;
+  width: auto;
+  max-width: 100%;
+  border-radius: var(--tt-radius-sm, 0.25rem);
+}
+.tiptap .tiptap-image-container .tiptap-image-content .tiptap-image-handle {
+  position: absolute;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 0.5rem !important;
+  height: 3rem;
+  background-color: var(--tiptap-image-handle-bg);
+  border-radius: 1.875rem;
+  cursor: ew-resize;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.tiptap .tiptap-image-container .tiptap-image-content .tiptap-image-handle.visible {
+  opacity: 1;
+}
+.tiptap .tiptap-image-container .tiptap-image-content .tiptap-image-handle[data-resize-handle=left] {
+  left: 10px !important;
+}
+.tiptap .tiptap-image-container .tiptap-image-content .tiptap-image-handle[data-resize-handle=right] {
+  right: 10px !important;
+}
+.tiptap .tiptap-image-container .tiptap-image-caption {
+  cursor: text;
+  text-align: center;
+  font-size: 15px;
+  max-width: 100%;
+  width: 100%;
+  white-space: break-spaces;
+  word-break: break-word;
+  margin-top: 1rem;
+  outline: none;
+  position: relative;
+}/*# sourceMappingURL=image-node.css.map */

@@ -1,0 +1,52 @@
+.react-renderer {
+  margin-bottom: 40px;
+}
+.react-renderer.node-figure {
+  width: -moz-fit-content;
+  width: fit-content;
+}
+.react-renderer.node-figure:has(figure[data-align=center]) {
+  margin-left: auto;
+  margin-right: auto;
+}
+.react-renderer.node-figure:has(figure[data-align=right]) {
+  margin-left: auto;
+  margin-right: 0;
+}
+.react-renderer.node-figure:has(figure[data-align=left]) {
+  margin-left: 0;
+  margin-right: auto;
+}
+.react-renderer.node-figure.ProseMirror-selectednode {
+  outline: 2px solid var(--tt-brand-color-400);
+}
+.react-renderer figure {
+  margin: 0;
+}
+.react-renderer figcaption.caption {
+  cursor: text;
+  text-align: center;
+  white-space: break-spaces;
+  word-break: break-word;
+  font-size: 15px;
+  color: var(----tt-color-text-gray);
+  margin-top: 6px;
+  outline: none;
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+  pointer-events: auto;
+  min-height: 1.5em;
+}
+.react-renderer figcaption.caption[data-empty=true]::before {
+  content: attr(data-placeholder);
+  color: #bbb;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-style: italic;
+  font-size: 15px;
+  white-space: nowrap;
+}/*# sourceMappingURL=figure-view.css.map */
