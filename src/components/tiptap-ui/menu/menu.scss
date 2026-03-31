@@ -1,0 +1,52 @@
+:root{
+  --tt-combobox-bg-color: var(--white);
+  --tt-combobox-border-color: var(--tt-gray-light-a-100);
+  --tt-combobox-text-color: var(--tt-gray-light-a-600);
+}
+
+.dark{
+  --tt-combobox-border-color: var(--tt-gray-dark-a-50);
+  --tt-combobox-bg-color: var(--tt-gray-dark-50);
+  --tt-combobox-text-color: var(--tt-gray-dark-a-600);
+}
+
+.menu{
+  // padding: 5px 10px;
+  // min-width: 220px;
+  // justify-content: flex-start;
+  // align-items: flex-start;
+  // gap: 10px;
+
+  min-width: 15rem;
+  font-family: var(--font-ui);
+
+  --padding: .375rem;
+  --border-width: 1px;
+  border-radius: calc(var(--padding) + var(--tt-radius-lg) + var(--border-width));
+  border: var(--border-width) solid var(--tt-combobox-border-color);
+  background-color: var(--tt-combobox-bg-color);
+  height: 100%;
+  color: var(--tt-combobox-text-color);
+  padding: var(--padding);
+  box-shadow: var(--tt-shadow-elevated-md);
+  max-width: 16rem;
+  max-height: var(--popover-available-height);
+  outline: none;
+  margin-block:.375rem;overflow-y: auto;
+  align-items: flex-start;
+
+
+  .title{
+    margin-bottom: 7px !important;
+  }
+  .group{
+    width: 100%;
+    gap: .3rem;
+  
+  }
+
+  .menu-button{
+    width: 100%;
+  }
+}
+

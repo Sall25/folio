@@ -1,0 +1,22 @@
+.tiptap .thread-anchor {
+  border-bottom: 2px dashed var(--yellow);
+}
+.tiptap .thread-anchor.selected {
+  background-color: var(--yellow);
+}
+
+.thread-sidebar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100%;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+.thread-sidebar > * {
+  pointer-events: auto;
+}/*# sourceMappingURL=thread-sidebar.css.map */

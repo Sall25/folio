@@ -1,0 +1,70 @@
+.turninto-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+.turninto-trigger.card-layout {
+  border: 1px solid #ddd;
+  background: #fafafa;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+.turninto-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.turninto-label {
+  font-weight: 500;
+}
+
+.turninto-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.turninto-content {
+  min-width: 200px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 4px 0;
+}
+.turninto-content.card-layout {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.turninto-item {
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.turninto-item.active {
+  background-color: #007aff;
+  color: white;
+}
+.turninto-item:hover {
+  background-color: #f0f0f0;
+}
+
+.turninto-check-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.menu-button {
+  display: flex;
+  font-family: var(--font-ui);
+  align-items: center;
+  width: 100%;
+}
+
+.menu-button .chevron {
+  margin-left: auto;
+}/*# sourceMappingURL=turn-into-dropdown.css.map */

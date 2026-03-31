@@ -1,0 +1,403 @@
+@charset "UTF-8";
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap");
+/* Colors*/
+:root {
+  --font-ui: "Inter", system-ui, -apple-system, sans-serif;
+  --thread-font-ui: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --gray-1: var(--tt-gray-light-100);
+  --gray-2: var(--tt-gray-light-a-200);
+  --gray-3: var(--tt-gray-light-300);
+  --gray-4: var(--tt-gray-light-400);
+  --gray-5: var(--tt-gray-light-500);
+  --green: #22c55e;
+  --purple: #6a00f5;
+  --purple-contrast: #5800cc;
+  --purple-light: rgba(88, 5, 255, .05);
+  --yellow-contrast: #facc15;
+  --yellow: rgba(250, 204, 21, .4);
+  --yellow-light: #fffae5;
+  --red: #ff5c33;
+  --red-light: #ffebe5;
+  --red-light-contrast: #ffd6cc;
+  --shadow: 0px 12px 33px 0px rgba(0, 0, 0, .06), 0px 3.618px 9.949px 0px rgba(0, 0, 0, .04);
+  --delete-btn-color: #c0392b; /* warm crimson — not the screaming #ff5c33 */
+  --edit-btn-color: #92620a; /* deep amber — legible, not neon yellow */
+}
+
+.dark {
+  --gray-1: var(--tt-gray-dark-50);
+  --gray-2: var(--tt-gray-dark-a-200);
+  --gray-3: var(--tt-gray-dark-300);
+  --gray-4: var(--tt-gray-dark-400);
+  --gray-5: var(--tt-gray-dark-500);
+  --green: #22c55e;
+  --purple: #6a00f5;
+  --purple-contrast: #5800cc;
+  --purple-light: rgba(88, 5, 255, .05);
+  --yellow-contrast: #facc15;
+  --yellow: rgba(250, 204, 21, .4);
+  --yellow-light: #fffae5;
+  --red: #ff5c33;
+  --red-light: #ffebe5;
+  --red-light-contrast: #ffd6cc;
+  --shadow: 0px 12px 33px 0px rgba(0, 0, 0, .06), 0px 3.618px 9.949px 0px rgba(0, 0, 0, .04);
+  --edit-btn-color: var(--tt-color-yellow-inc-2);
+  --delete-btn-color: var(--tt-color-red-inc-2);
+  --delete-btn-color: #f87171; /* soft rose — enough contrast on dark bg */
+  --edit-btn-color: #fbbf24; /* warm gold — reads clearly without glaring */
+}
+
+/* Comments & Threads */
+.threads-group {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0 -1rem;
+  overflow: auto;
+  padding: 0 1rem;
+}
+@media (max-width: 540px) {
+  .threads-group {
+    margin: 0 -1.5rem;
+    max-height: 40vh;
+    padding: 0 1.5rem 1.5rem;
+    width: calc(100% + 3rem);
+  }
+}
+.threads-group .thread {
+  font-family: var(---thread-font-ui);
+  background-color: var(--tt-toolbar-bg-color);
+  border-radius: 0.5rem;
+  border: 1px solid var(--tt-border-color);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(0);
+  transition: transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.2s ease;
+}
+.threads-group .thread.is-active, .threads-group .thread:hover {
+  box-shadow: 0px 0px 0px 1px var(--gray-2) inset;
+}
+.threads-group .thread.is-open {
+  box-shadow: var(--tt-shadow-elevated-md);
+  transform: translateY(-8px);
+}
+.threads-group .thread {
+  /* Thread header */
+}
+.threads-group .thread .header-group {
+  border-bottom: 1px solid var(--gray-3);
+  padding: 0.375rem 0.5rem;
+}
+.threads-group .thread .header-group button {
+  background-color: unset;
+  border: none;
+}
+.threads-group .thread .header-group button:hover {
+  background-color: var(--gray-2);
+}
+.threads-group .thread {
+  /* Hint */
+}
+.threads-group .thread .hint {
+  align-items: center;
+  background-color: var(--yellow-light);
+  border: 1px solid var(--gray-2);
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  font-size: 0.75rem;
+  gap: 0.5rem;
+  line-height: 1.15;
+  min-height: 1.75rem;
+  padding: 0.25rem 0.5rem;
+  margin: 0.8rem 0.8rem 0;
+}
+.threads-group .thread {
+  /* Closed thread */
+}
+.threads-group .thread:not(.is-open) .comments-group .comment:not(:last-child) {
+  padding-bottom: 0;
+}
+.threads-group .thread:not(.is-open) .comments-group .comment .comment-content {
+  padding: 8px 0;
+}
+.threads-group .thread:not(.is-open) .comments-group .comment .comment-content p {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  align-self: stretch;
+  display: -webkit-box;
+  font-family: var(--thread-font-ui);
+}
+.threads-group .thread:not(.is-open) .comments-group .comment .comment-content .button-group {
+  display: none;
+}
+.threads-group .thread:not(.is-open) .comments-group .comment .comment-content label {
+  display: inherit;
+}
+.threads-group .thread:not(.is-open) .comments-group .comments-count {
+  margin-top: 0.1rem;
+}
+.threads-group .thread {
+  /* Comments */
+}
+.threads-group .thread .comments-group {
+  display: flex;
+  flex-direction: column;
+  padding: 0.8rem;
+}
+.threads-group .thread .comments-group .comment {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.threads-group .thread .comments-group .comment.deleted {
+  opacity: 0.5;
+}
+.threads-group .thread .comments-group .comment:not(:first-child) {
+  border-top: 1px solid var(--gray-3);
+  padding-top: 0.75rem;
+}
+.threads-group .thread .comments-group .comment:not(:last-child) {
+  padding-bottom: 0.75rem;
+}
+.threads-group .thread .comments-group .comment .comment-edit {
+  padding: unset;
+}
+.threads-group .thread .comments-group .comment .comment-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+.threads-group {
+  /* Basic styling */
+}
+.threads-group button {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.375rem;
+  border-radius: 0.375rem;
+  border: none;
+  box-shadow: none;
+}
+.threads-group .button-group {
+  gap: 0.125rem;
+}
+.threads-group .delete-btn {
+  color: var(--delete-btn-color);
+}
+.threads-group .edit-btn {
+  color: var(--edit-btn-color);
+}
+.threads-group label {
+  color: var(--gray-5);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.threads-group p {
+  font-size: 0.75rem;
+  line-height: 1.6;
+  margin: 0;
+  overflow: hidden;
+}
+.threads-group .label-group,
+.threads-group .profile-group {
+  -moz-column-gap: 0.25rem;
+       column-gap: 0.25rem;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+.threads-group .label-group label:not(:first-child)::before,
+.threads-group .profile-group label:not(:first-child)::before {
+  content: "·";
+  padding-right: 0.25rem;
+}
+.threads-group .label-group label:first-of-type,
+.threads-group .profile-group label:first-of-type {
+  font-weight: 700;
+  color: var(--tt-text-color);
+}
+.threads-group .profile-group {
+  align-items: center;
+}
+.threads-group {
+  /* Reply input styling */
+}
+.threads-group .reply-group,
+.threads-group .comment-edit {
+  font-family: var(--thread-font-ui);
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.2rem 0.8rem 0.8rem;
+}
+.threads-group .reply-group textarea,
+.threads-group .comment-edit textarea {
+  font-family: inherit;
+  height: 4.5rem;
+  resize: none;
+  padding: 0.375rem 0.625rem;
+  line-height: 1.3;
+  width: 100%;
+  outline-width: 1px;
+  border-radius: 5px;
+  background-color: var(--tt-bg-color);
+  color: var(--tt-text-color);
+}
+.threads-group .reply-group textarea:focus, .threads-group .reply-group textarea:focus-visible,
+.threads-group .comment-edit textarea:focus,
+.threads-group .comment-edit textarea:focus-visible {
+  border-color: var(--tt-border-color);
+  outline: none;
+}
+.threads-group .reply-group .flex-row,
+.threads-group .comment-edit .flex-row {
+  -moz-column-gap: 0.5rem;
+       column-gap: 0.5rem;
+  row-gap: 0.25rem;
+}
+.threads-group .reply-group:not(:has(textarea:focus)) .flex-row {
+  display: none;
+}
+.threads-group .reply-group textarea:-moz-placeholder:not(:focus) {
+  height: 2rem;
+}
+.threads-group .reply-group textarea:placeholder-shown:not(:focus) {
+  height: 2rem;
+}
+.threads-group .reply-group textarea:not(:-moz-placeholder) {
+  height: 4.5rem;
+}
+.threads-group .reply-group textarea:not(:placeholder-shown) {
+  height: 4.5rem;
+}
+.threads-group .reply-group:has(textarea:not(:-moz-placeholder)) .flex-row {
+  display: flex;
+}
+.threads-group .reply-group:has(textarea:not(:placeholder-shown)) .flex-row {
+  display: flex;
+}
+
+/* Structue */
+.col-group {
+  display: flex;
+  flex-direction: row;
+}
+@media (max-width: 540px) {
+  .col-group {
+    flex-direction: column-reverse;
+  }
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.sidebar {
+  border-left: 1px solid var(--gray-3);
+  flex-grow: 0;
+  flex-shrink: 0;
+  padding: 1rem;
+  width: 15rem;
+  position: sticky;
+  height: 100vh;
+  top: 0;
+  width: 20rem;
+}
+@media (max-width: 540px) {
+  .sidebar {
+    border-bottom: 1px solid var(--gray-3);
+    border-left: unset;
+    width: 100%;
+    height: auto;
+    position: unset;
+    padding: 1.5rem;
+  }
+}
+
+.sidebar-options {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 1rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.option-group {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  width: 100%;
+}
+.option-group form {
+  width: 100%;
+}
+.option-group form input {
+  width: 100%;
+}
+
+[data-viewmode=open] .tiptap .tiptap-thread[data-status-all=open][data-type=block] > :not(p, h1, h2, h3, h4, h5, h6, ul, li) {
+  background-color: var(--yellow);
+  outline-color: var(--yellow);
+}
+[data-viewmode=open] .tiptap .tiptap-thread[data-status-all=open][data-type=block]:hover > :not(p, h1, h2, h3, h4, h5, h6, ul, li), [data-viewmode=open] .tiptap .tiptap-thread[data-status-all=open][data-type=block][data-state=selected] > :not(p, h1, h2, h3, h4, h5, h6, ul, li), [data-viewmode=open] .tiptap .tiptap-thread[data-status-all=open][data-type=block][data-state=hovered] > :not(p, h1, h2, h3, h4, h5, h6, ul, li) {
+  background-color: var(--yellow-contrast);
+  outline-color: var(--yellow-contrast);
+}
+[data-viewmode=open] .tiptap .tiptap-thread[data-status-all=open][data-type=inline] {
+  border-bottom: 2px dashed var(--yellow-contrast);
+}
+[data-viewmode=open] .tiptap .tiptap-thread[data-status-all=open][data-type=inline]:hover, [data-viewmode=open] .tiptap .tiptap-thread[data-status-all=open][data-type=inline][data-state=selected], [data-viewmode=open] .tiptap .tiptap-thread[data-status-all=open][data-type=inline][data-state=hovered] {
+  background-color: var(--yellow);
+}
+
+[data-viewmode=resolved] .tiptap .tiptap-thread[data-status=closed][data-type=block] > :not(p, h1, h2, h3, h4, h5, h6, ul, li) {
+  background-color: var(--yellow);
+  outline-color: var(--yellow);
+}
+[data-viewmode=resolved] .tiptap .tiptap-thread[data-status=closed][data-type=block]:hover > :not(p, h1, h2, h3, h4, h5, h6, ul, li), [data-viewmode=resolved] .tiptap .tiptap-thread[data-status=closed][data-type=block][data-state=selected] > :not(p, h1, h2, h3, h4, h5, h6, ul, li), [data-viewmode=resolved] .tiptap .tiptap-thread[data-status=closed][data-type=block][data-state=hovered] > :not(p, h1, h2, h3, h4, h5, h6, ul, li) {
+  background-color: var(--yellow-contrast);
+  outline-color: var(--yellow-contrast);
+}
+[data-viewmode=resolved] .tiptap .tiptap-thread[data-status=closed][data-type=inline] {
+  border-bottom: 2px dashed var(--yellow-contrast);
+}
+[data-viewmode=resolved] .tiptap .tiptap-thread[data-status=closed][data-type=inline]:hover, [data-viewmode=resolved] .tiptap .tiptap-thread[data-status=closed][data-type=inline][data-state=selected], [data-viewmode=resolved] .tiptap .tiptap-thread[data-status=closed][data-type=inline][data-state=hovered] {
+  background-color: var(--yellow);
+}
+
+/* [data-viewmode="open"] .tiptap .tiptap-thread:not([data-status="closed"]),
+[data-viewmode="resolved"] .tiptap .tiptap-thread:not([data-status="open"]) {
+  &[data-type="block"] {
+    > :not(p, h1, h2, h3, h4, h5, h6, ul, li) {
+      background-color: var(--yellow);
+      outline-color: var(--yellow);
+    }
+
+    &:hover,
+    &[data-state="selected"],
+    &[data-state="hovered"] {
+      > :not(p, h1, h2, h3, h4, h5, h6, ul, li) {
+        background-color: var(--yellow-contrast);
+        outline-color: var(--yellow-contrast);
+      }
+    }
+  }
+
+  &[data-type="inline"] {
+    border-bottom: 2px dashed var(--yellow-contrast);
+
+    &:hover,
+    &[data-state="selected"],
+    &[data-state="hovered"] {
+      background-color: var(--yellow);
+    }
+  }
+} *//*# sourceMappingURL=styles.css.map */

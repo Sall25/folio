@@ -1,0 +1,8 @@
+.drag-handle{
+  position: absolute;
+  pointer-events: auto;
+  transform: translateX(-15px);
+  transition-property: top;
+    transition-duration: .25s;
+    transition-timing-function: ease-out;
+}
