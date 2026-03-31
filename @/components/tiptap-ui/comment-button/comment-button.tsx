@@ -6,7 +6,7 @@ import { forwardRef } from "react";
 import { useTiptapEditor } from "@/hooks/use-tiptap-editor";
 
 // --- Icons ---
-import { MessageCircleMore } from "lucide-react";
+import { MessageSquareText } from "lucide-react";
 
 // --- UI Primitives ---
 import type { ButtonProps } from "@/components/tiptap-ui-primitive/button";
@@ -19,8 +19,6 @@ export interface CommentButtonProps extends Omit<ButtonProps, "type"> {
   text?: string;
 
   editor?: Editor;
-
-  onClick?: () => void;
 }
 
 /**
@@ -30,13 +28,7 @@ export interface CommentButtonProps extends Omit<ButtonProps, "type"> {
  */
 export const CommentButton = forwardRef<HTMLButtonElement, CommentButtonProps>(
   (
-    {
-      editor: providedEditor,
-      //text,
-      children,
-      onClick,
-      ...buttonProps
-    },
+    { editor: providedEditor, text, children, onClick, ...buttonProps },
     ref,
   ) => {
     const { editor } = useTiptapEditor(providedEditor);
@@ -48,16 +40,17 @@ export const CommentButton = forwardRef<HTMLButtonElement, CommentButtonProps>(
         role="button"
         tabIndex={-1}
         tooltip="comment"
-        onClick={() => {
+        onClick={(e) => {
           editor?.commands.draftThread();
-          onClick?.();
+          onClick?.(e);
         }}
         {...buttonProps}
         ref={ref}
       >
         {children ?? (
           <>
-            <MessageCircleMore className="tiptap-button-icon" />
+            <MessageSquareText className="tiptap-button-icon" />
+            {text && <span>{text}</span>}
           </>
         )}
       </Button>

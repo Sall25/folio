@@ -51,7 +51,7 @@ export default function AlignmentDropdownMenu({
   });
 
   const { open, setOpen, handleMouseEnter, handleMouseLeave, containerRef } =
-    useHoverMenu(350);
+    useHoverMenu(50);
 
   // inside the component
   const alignState = useEditorState({

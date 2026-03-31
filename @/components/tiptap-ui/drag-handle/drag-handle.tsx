@@ -34,8 +34,11 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
   const [pos, setPos] = useState(-1);
 
   const onAction = useCallback(() => {
-    setOpen(false);
+    console.log("onAction", Date.now());
     editor?.commands.unlockDragHandle();
+    setOpen(false);
+
+    console.log("unlocked");
   }, [editor]);
 
   if (!editor) return null;
@@ -64,10 +67,12 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
         <DropdownMenu
           open={open}
           onOpenChange={(next) => {
+            console.log("onOpenChange", Date.now());
             if (next) {
               editor.commands.lockDragHandle();
             } else {
               editor.commands.unlockDragHandle();
+              console.log("onOpenChange");
             }
 
             setOpen(next);
@@ -87,11 +92,13 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
                 <GripVertical className="tiptap-button-icon" />
               </Button>
             </DropdownMenuTrigger>
-            <DragHandleMenu
-              onAction={onAction}
-              target={target}
-              editor={editor}
-            />
+            {open && (
+              <DragHandleMenu
+                onAction={onAction}
+                target={target}
+                editor={editor}
+              />
+            )}
           </ColorDropdownProvider>
         </DropdownMenu>
       </CardItemGroup>

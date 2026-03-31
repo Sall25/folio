@@ -6,7 +6,7 @@ import { removeThread } from "./utils/removeThread";
 import { resolveThread } from "./utils/resolveThread";
 import { unresolveThread } from "./utils/unresolveThread";
 import { updateComment } from "./utils/updateComment";
-import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { NodeSelection, Plugin, PluginKey } from "@tiptap/pm/state";
 import { mapThreads } from "./utils/mapThreads";
 import { measureAllThreads } from "./utils/measureAllThreads";
 import { resolveThreadCollisions } from "./utils/resolveThreadCollisions";
@@ -15,6 +15,7 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { addComment } from "./utils/addComment";
 import { removeComment } from "./utils/removeComment";
 import { scrollToThread } from "./utils/scrollToThread";
+import { CellSelection } from "prosemirror-tables";
 
 interface CommentThreadStorage {
   draftId: string | null;
@@ -65,7 +66,14 @@ export const CommentThreadExtension = Extension.create<
       },
       removeThread(threadId) {
         return ({ editor }) => {
-          removeThread(editor, threadId);
+          if (!threadId) {
+            const storedId = editor.storage.commentThreadExtension.draftId;
+            if (!storedId) return false;
+            removeThread(editor, storedId);
+          } else {
+            removeThread(editor, threadId);
+          }
+
           return true;
         };
       },
@@ -96,14 +104,24 @@ export const CommentThreadExtension = Extension.create<
         };
       },
       hoverThread(threadId) {
-        return ({ dispatch, tr }) => {
+        return ({ dispatch, tr, editor }) => {
           if (dispatch) {
-            dispatch(
-              tr.setMeta(commentThreadPluginKey, {
-                type: "hoverThread",
-                threadId,
-              }),
-            );
+            if (!threadId) {
+              const storedId = editor.storage.commentThreadExtension.draftId;
+              dispatch(
+                tr.setMeta(commentThreadPluginKey, {
+                  type: "hoverThread",
+                  storedId,
+                }),
+              );
+            } else {
+              dispatch(
+                tr.setMeta(commentThreadPluginKey, {
+                  type: "hoverThread",
+                  threadId,
+                }),
+              );
+            }
           }
           return true;
         };
@@ -382,61 +400,6 @@ export const CommentThreadExtension = Extension.create<
               );
             }
 
-            // if (tr.getMeta('force-measure')) {
-            //   const measuredThreads = measureAllThreads(editor, next.threads)
-            //   const positionedThreads = resolveThreadCollisions(measuredThreads)
-
-            //   next.measuredThreads = measuredThreads
-            //   next.positionedThreads = positionedThreads
-
-            //   console.log('positioned', next.positionedThreads)
-            // }
-
-            // if (tr.getMeta('thread-hovered')) {
-            //   const { selectedId } = tr.getMeta('thread-hovered')
-            //   const selectedThread = next.threads.find(thread => thread.id === selectedId)
-            //   if (selectedThread) {
-            //     next.selectedThreads = updateSelectedThreads(next.selectedThreads, selectedThread, 'select')
-            //   }
-            // }
-
-            // if (tr.getMeta('thread-hovered-off')) {
-            //   const { selectedId } = tr.getMeta('thread-hovered-off')
-            //   const selectedThread = next.threads.find(thread => thread.id === selectedId)
-            //   if (selectedThread) {
-            //     next.selectedThreads = updateSelectedThreads(next.selectedThreads, selectedThread, 'unselect')
-            //   }
-            // }
-
-            // if (tr.getMeta('thread-selected')) {
-            //   const measuredThreads = measureAllThreads(editor, threads)
-            //   let positionedThreads = resolveThreadCollisions(measuredThreads)
-
-            //   const { selectedId } = tr.getMeta('thread-selected')
-
-            //   positionedThreads = resolveActiveThreadCollisions(measuredThreads, selectedId)
-
-            //   next.measuredThreads = measuredThreads
-            //   next.positionedThreads = positionedThreads
-
-            //   const selectedThread = next.threads.find(thread => thread.id === selectedId)
-            //   if (selectedThread) {
-            //     next.selectedThreads = updateSelectedThreads(next.selectedThreads, selectedThread, 'select')
-            //     next.selectedThread = selectedThread
-            //   }
-            // }
-
-            // if (tr.getMeta('thread-unselected')) {
-            //   const measuredThreads = measureAllThreads(editor, threads)
-            //   const positionedThreads = resolveThreadCollisions(measuredThreads)
-
-            //   next.measuredThreads = measuredThreads
-            //   next.positionedThreads = positionedThreads
-
-            //   next.selectedThreads = []
-            //   next.selectedThread = null
-            // }
-
             return next;
           },
         },
@@ -447,6 +410,12 @@ export const CommentThreadExtension = Extension.create<
 
               // Only run if selection changed
               if (prevState.selection.eq(state.selection)) return;
+
+              if (
+                state.selection instanceof NodeSelection ||
+                state.selection instanceof CellSelection
+              )
+                return;
 
               const pluginState = commentThreadPluginKey.getState(state);
               if (!pluginState) return;

@@ -14,6 +14,7 @@ import { scrollToThread } from "../extensions/utils/scrollToThread.js";
 
 import "./thread-list-item.scss";
 import { Check, RotateCw, Trash } from "lucide-react";
+import { ThreadComposerSubmit } from "./thread-composer-submit.js";
 
 interface ThreadListItemProps {
   thread: Thread;
@@ -60,137 +61,156 @@ export const ThreadsListItem = ({
     unresolveThread?.(thread.id);
   }, [thread.id, unresolveThread]);
 
-  if (thread.status === "drafted") return null;
+  // if (thread.status === "drafted") return null;
 
   return (
-    <div
-      data-thread-list-item-id={thread.id}
-      className="thread-list-item"
-      style={{
-        top: layout.anchorTop,
-        transform: `translateY(${layout.resolvedTop - layout.anchorTop}px)`,
-        width: "280px",
-      }}
-      tabIndex={0}
-      onMouseEnter={() => onHoverThread?.(thread.id)}
-      onMouseLeave={() => onLeaveThread?.(thread.id)}
-    >
-      <ThreadCard
-        id={thread.id}
-        active={active}
-        open={open}
-        onClick={
-          !open
-            ? (threadId: string) => {
-                onClickThread?.(threadId);
-                scrollToThread(threadId);
-              }
-            : null
-        }
-        onClickOutside={() => {
-          editor.commands.unselectThread();
-        }}
-        // onClickOutside
-      >
-        {open ? (
-          <>
-            <div className="header-group">
-              <ButtonGroup orientation="horizontal">
-                {thread.status === "active" ? (
-                  <Button
-                    type="button"
-                    role="menuitem"
-                    variant="ghost"
-                    onClick={handleResolveClick}
-                  >
-                    <Check size={12} />
-                    <span>Resolve</span>
-                    {/* ✓ Resolve */}
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    role="menuitem"
-                    variant="ghost"
-                    onClick={handleUnresolveClick}
-                  >
-                    <RotateCw size={12} />
-                    <span>Unresolve</span>
-                    {/* ⟲ Unresolve */}
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  role="menuitem"
-                  variant="ghost"
-                  onClick={handleDeleteClick}
-                >
-                  {/* × Delete */}
-                  <Trash size={12} />
-                  <span>Delete</span>
-                </Button>
-              </ButtonGroup>
-            </div>
+    <>
+      {thread.status === "drafted" && (
+        <span
+          style={{
+            position: "absolute",
+            top: layout.anchorTop,
+            transform: `translateY(${layout.resolvedTop - layout.anchorTop}px)`,
+          }}
+        >
+          <ThreadComposerSubmit editor={editor} threadId={thread.id} />
+        </span>
+      )}
+      {thread.status !== "drafted" && (
+        <div
+          data-thread-list-item-id={thread.id}
+          className="thread-list-item"
+          style={{
+            top: layout.anchorTop,
+            transform: `translateY(${layout.resolvedTop - layout.anchorTop}px)`,
+            width: "280px",
+          }}
+          tabIndex={0}
+          onMouseEnter={() => onHoverThread?.(thread.id)}
+          onMouseLeave={() => onLeaveThread?.(thread.id)}
+        >
+          <ThreadCard
+            id={thread.id}
+            active={active}
+            open={open}
+            onClick={
+              !open
+                ? (threadId: string) => {
+                    onClickThread?.(threadId);
+                    scrollToThread(threadId);
+                  }
+                : null
+            }
+            onClickOutside={() => {
+              editor.commands.unselectThread();
+            }}
+            // onClickOutside
+          >
+            {open ? (
+              <>
+                <div className="header-group">
+                  <ButtonGroup orientation="horizontal">
+                    {thread.status === "active" ? (
+                      <Button
+                        type="button"
+                        role="menuitem"
+                        variant="ghost"
+                        onClick={handleResolveClick}
+                      >
+                        <Check size={12} />
+                        <span>Resolve</span>
+                        {/* ✓ Resolve */}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        role="menuitem"
+                        variant="ghost"
+                        onClick={handleUnresolveClick}
+                      >
+                        <RotateCw size={12} />
+                        <span>Unresolve</span>
+                        {/* ⟲ Unresolve */}
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      role="menuitem"
+                      variant="ghost"
+                      onClick={handleDeleteClick}
+                    >
+                      {/* × Delete */}
+                      <Trash size={12} />
+                      <span>Delete</span>
+                    </Button>
+                  </ButtonGroup>
+                </div>
 
-            {thread.status === "resolved" ? (
-              <div className="hint">💡 Resolved at</div>
+                {thread.status === "resolved" ? (
+                  <div className="hint">💡 Resolved at</div>
+                ) : null}
+
+                <div className="comments-group">
+                  {comments.map((comment) => (
+                    <CommentCard
+                      key={comment.id}
+                      name={comment.authorId}
+                      content={comment.text}
+                      createdAt={comment.createdAt}
+                      deleted={false}
+                      onEdit={(val) => {
+                        editor.commands.updateComment(
+                          thread.id,
+                          comment.id,
+                          val,
+                        );
+                      }}
+                      onDelete={() => {
+                        editor.commands.removeComment(thread.id, comment.id);
+                      }}
+                      showActions={true}
+                    />
+                  ))}
+                </div>
+                <div className="reply-group">
+                  <ThreadComposer editor={editor} threadId={thread.id} />
+                </div>
+              </>
             ) : null}
 
-            <div className="comments-group">
-              {comments.map((comment) => (
+            {!open && firstComment ? (
+              <div className="comments-group">
                 <CommentCard
-                  key={comment.id}
-                  name={comment.authorId}
-                  content={comment.text}
-                  createdAt={comment.createdAt}
+                  key={firstComment.id}
+                  name={firstComment.authorId}
+                  content={firstComment.text}
+                  createdAt={firstComment.createdAt}
                   deleted={false}
-                  onEdit={(val) => {
-                    editor.commands.updateComment(thread.id, comment.id, val);
-                  }}
                   onDelete={() => {
-                    editor.commands.removeComment(thread.id, comment.id);
+                    editor.commands.removeComment(thread.id, firstComment.id);
                   }}
-                  showActions={true}
+                  onEdit={() => {
+                    // if (val) {
+                    //   editComment(firstComment.id, val)
+                    // }
+                  }}
+                  showActions={false}
                 />
-              ))}
-            </div>
-            <div className="reply-group">
-              <ThreadComposer editor={editor} threadId={thread.id} />
-            </div>
-          </>
-        ) : null}
-
-        {!open && firstComment ? (
-          <div className="comments-group">
-            <CommentCard
-              key={firstComment.id}
-              name={firstComment.authorId}
-              content={firstComment.text}
-              createdAt={firstComment.createdAt}
-              deleted={false}
-              onDelete={() => {
-                editor.commands.removeComment(thread.id, firstComment.id);
-              }}
-              onEdit={() => {
-                // if (val) {
-                //   editComment(firstComment.id, val)
-                // }
-              }}
-              showActions={false}
-            />
-            <div className="comments-count">
-              <label>
-                {Math.max(0, comments.length - 1) || 0}{" "}
-                {(comments.length - 1 || 0) === 1 ? "reply" : "replies"}
-              </label>
-            </div>
-          </div>
-        ) : null}
-
-        {/* {thread.status === "drafted" && (
-          <ThreadComposerSubmit editor={editor} threadId={thread.id} />
-        )} */}
-      </ThreadCard>
-    </div>
+                <div className="comments-count">
+                  <label
+                    style={{
+                      marginLeft: "10px",
+                    }}
+                  >
+                    {Math.max(0, comments.length - 1) || 0}{" "}
+                    {(comments.length - 1 || 0) === 1 ? "reply" : "replies"}
+                  </label>
+                </div>
+              </div>
+            ) : null}
+          </ThreadCard>
+        </div>
+      )}
+    </>
   );
 };

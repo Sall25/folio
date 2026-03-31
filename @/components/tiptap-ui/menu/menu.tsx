@@ -16,6 +16,7 @@ import { DeleteNodeButton } from "@/components/tiptap-ui/delete-node-button";
 
 import "./menu.scss";
 import { DropdownMenuItem } from "@/components/tiptap-ui-primitive/dropdown-menu";
+import { CommentButton } from "../comment-button";
 
 export function Menu({
   title,
@@ -35,6 +36,7 @@ export function Menu({
             className="menu-button"
             hideWhenUnavailable={true}
             editor={editor}
+            onAction={onAction}
           />
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
@@ -42,6 +44,7 @@ export function Menu({
             className="menu-button"
             hideWhenUnavailable={true}
             editor={editor}
+            onAction={onAction}
           />
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
@@ -53,6 +56,17 @@ export function Menu({
             hideWhenUnavailable={true}
             editor={editor}
             onResetAllFormatting={onAction}
+          />
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <CommentButton
+            style={{
+              justifyContent: "flex-start",
+            }}
+            showTooltip={false}
+            text="Comment"
+            editor={editor}
+            onClick={onAction}
           />
         </DropdownMenuItem>
       </CardItemGroup>

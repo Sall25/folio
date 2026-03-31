@@ -51,6 +51,7 @@ export function ColorTextMenuList({
       ) as HTMLElement;
       if (textedElement) textedElement.click();
       if (item.value === "none") handleRemovetext();
+      onAction?.();
       return true;
     },
     autoSelectFirstItem: false,

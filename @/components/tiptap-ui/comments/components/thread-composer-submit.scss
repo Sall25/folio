@@ -1,53 +1,50 @@
+:root{
+  --form-bg-color: var(--tt-gray-light-50);
+}
+.dark{
+  --form-bg-color: var(--tt-gray-dark-50);
+}
 
 
 .thread-submit-form {
   width: 100%;
-  padding: 0.9rem 0.6rem;
+  padding: 4px;
   display: flex;
-  flex-direction: column;
   gap: 0.5rem;
+  align-items: center;
+  min-width: 300px;
+  border-radius: var(--tt-radius-xl);
+  background-color: var(--form-bg-color);
 
-  font-family: var(--font-ui);
+  border: 1px solid var(--tt-border-color);
 
-  /**
-  font-family: var(--font-ui);
-
-  textarea {
-    font-family: inherit;
-    font-size: 0.85rem;
-    font-weight: 450;
-  }
-
-  button {
-    font-family: inherit;
-    font-size: 0.75rem;
-    font-weight: 600;
-  }
-  */
 }
 
 /* ── Textarea ── */
 .thread-submit-form textarea {
   font-family: inherit;
-  width: 100%;
+  flex: 1;
+  background-color: transparent;
+  overflow: hidden;
+
+  outline: none;
+  
   min-height: 2.5rem;
   resize: none;
 
   padding: 0.45rem 0.65rem;
   line-height: 1.4;
 
-  border-radius: 6px;
-  border: 1px solid var(--tt-border-color);
-
-  background-color: var(--gray-1);
+  border: none;
+  
   color: var(--tt-text-color);
 
   font-size: 0.85rem;
 
   transition:
-    border-color 0.15s ease,
     box-shadow 0.15s ease,
     background-color 0.15s ease;
+
 }
 
 .thread-submit-form textarea::placeholder {
@@ -59,8 +56,7 @@
 .thread-submit-form textarea:focus,
 .thread-submit-form textarea:focus-visible {
   outline: none;
-  border-color: var(--tt-text-color);
-  box-shadow: 0 0 0 2px rgba(0,0,0,0.06);
+ // box-shadow: 0 0 0 2px rgba(0,0,0,0.06);
 }
 
 /* ── Button row ── */
@@ -71,27 +67,12 @@
 }
 
 /* ── Buttons ── */
-.thread-submit-form button {
-  font-family: inherit;
-  height: 1.7rem;
-  padding: 0 0.65rem;
-
-  font-size: 0.75rem;
-  font-weight: 600;
-
-  border-radius: 5px;
-  border: none;
-
+.thread-submit-form .tiptap-button {
   cursor: pointer;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  transition:
-    background-color 0.18s ease,
-    transform 0.08s ease,
-    opacity 0.18s ease;
+  border-radius: var(--tt-radius-xl);
+  min-width: 28px !important;
+  min-height: 8px !important;
+  height: 28px;
 }
 
 .thread-submit-form button:active {

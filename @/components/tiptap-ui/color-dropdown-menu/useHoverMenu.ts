@@ -10,6 +10,11 @@ export function useHoverMenu(delay = 100) {
     setOpen(true);
   }, []);
 
+  const closeImmediately = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setOpen(false);
+  }, []);
+
   const handleMouseLeave = useCallback(
     (e: React.MouseEvent) => {
       // Check if we're still moving within the same group
@@ -23,5 +28,12 @@ export function useHoverMenu(delay = 100) {
     [delay],
   );
 
-  return { open, setOpen, containerRef, handleMouseEnter, handleMouseLeave };
+  return {
+    open,
+    setOpen,
+    containerRef,
+    handleMouseEnter,
+    handleMouseLeave,
+    closeImmediately,
+  };
 }

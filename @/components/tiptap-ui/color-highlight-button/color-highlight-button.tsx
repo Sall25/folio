@@ -132,8 +132,6 @@ export const ColorHighlightButton = forwardRef<
       return null;
     }
 
-    console.log("text", text);
-
     return (
       <Button
         type="button"

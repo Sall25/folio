@@ -55,6 +55,7 @@ export function ColorHighlightMenuList({
       ) as HTMLElement;
       if (highlightedElement) highlightedElement.click();
       if (item.value === "none") handleRemoveHighlight();
+      onAction?.();
       return true;
     },
     autoSelectFirstItem: true,

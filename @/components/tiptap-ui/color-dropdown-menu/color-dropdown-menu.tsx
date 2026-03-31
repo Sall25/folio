@@ -59,7 +59,7 @@ export default function ColorDropdownMenu({
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   const { open, setOpen, handleMouseEnter, handleMouseLeave, containerRef } =
-    useHoverMenu(150);
+    useHoverMenu(50);
 
   const { recentColors } = useColorDropdownContext();
 
@@ -118,7 +118,12 @@ export default function ColorDropdownMenu({
 
               <CardItemGroup>
                 <CardGroupLabel>Colors</CardGroupLabel>
-                <ColorTextMenuList editor={editor} onAction={onAction} />
+                <ColorTextMenuList
+                  editor={editor}
+                  onAction={() => {
+                    onAction?.();
+                  }}
+                />
               </CardItemGroup>
             </CardItemGroup>
 
@@ -126,7 +131,13 @@ export default function ColorDropdownMenu({
 
             <CardItemGroup style={{ width: "100%" }}>
               <CardGroupLabel>Background colors</CardGroupLabel>
-              <ColorHighlightMenuList editor={editor} onAction={onAction} />
+              <ColorHighlightMenuList
+                editor={editor}
+                onAction={() => {
+                  // closeImmediately();
+                  onAction?.();
+                }}
+              />
             </CardItemGroup>
           </Card>
         </DropdownMenuContent>

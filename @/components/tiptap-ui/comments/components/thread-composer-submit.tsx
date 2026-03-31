@@ -1,47 +1,75 @@
-import { Button } from "@/components/tiptap-ui-primitive/button"
-import type { Editor } from "@tiptap/core"
-import { useCallback, useState, type FormEvent } from "react"
+import { Button } from "@/components/tiptap-ui-primitive/button";
+import type { Editor } from "@tiptap/core";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 
-import './thread-composer-submit.scss'
+import "./thread-composer-submit.scss";
+import { ArrowUp } from "lucide-react";
 
-export function ThreadComposerSubmit({ editor, threadId }: { editor: Editor | null, threadId: string }) {
-  const [comment, setComment] = useState('')
+function SubmitBtn({ disabled = false }: { disabled?: boolean }) {
+  return (
+    <Button
+      type="submit"
+      data-state-active={!disabled ? "on" : "off"}
+      disabled={disabled}
+    >
+      <ArrowUp className="tiptap-button-icon" />
+    </Button>
+  );
+}
 
-  const handleSubmit = useCallback((e: FormEvent) => {
-    e.preventDefault()
+export function ThreadComposerSubmit({
+  editor,
+  threadId,
+}: {
+  editor: Editor | null;
+  threadId: string;
+}) {
+  const [comment, setComment] = useState("");
+  //  const [focused, setFocused] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    if (!comment) {
-      return
-    }
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  }, [comment]); // runs after every render caused by comment change
 
-    if (editor) {
-      editor.commands.submitThread(comment)
-    }
-
-    setComment('')
-  }, [editor, comment])
-
-  const handleCancel = useCallback(() => {
-
-    if (editor) {
-      editor.commands.removeThread(threadId)
-    }
-  }, [editor, threadId])
-
+  const handleSubmit = useCallback(
+    (e: FormEvent) => {
+      e.preventDefault();
+      if (!comment.trim() || !editor) return;
+      editor.commands.submitThread(comment);
+      setComment("");
+      //    setFocused(false);
+      if (textareaRef.current) textareaRef.current.style.height = "auto";
+    },
+    [editor, comment],
+  );
 
   // if (!editor) return null
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className='thread-submit-form'
-    >
+    <form onSubmit={handleSubmit} className="thread-submit-form">
       <textarea
+        ref={textareaRef}
+        rows={1}
         placeholder="Submit your thread..."
-        onChange={e => setComment(e.currentTarget.value)} value={comment}
+        onChange={(e) => {
+          setComment(e.currentTarget.value);
+        }}
+        value={comment}
       />
 
-      <div
+      <SubmitBtn disabled={!comment.length} />
+
+      {/* <div
         className="actions"
       >
         <Button
@@ -61,7 +89,7 @@ export function ThreadComposerSubmit({ editor, threadId }: { editor: Editor | nu
           Submit
         </Button>
 
-      </div>
+      </div> */}
     </form>
-  )
+  );
 }

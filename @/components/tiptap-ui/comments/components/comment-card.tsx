@@ -59,7 +59,13 @@ export const CommentCard = ({
 
       {!isComposing && !deleted && (
         <div className="comment-content">
-          <p>{content}</p>
+          <p
+            style={{
+              marginLeft: "10px",
+            }}
+          >
+            {content}
+          </p>
           {showActions && (
             <ButtonGroup orientation="horizontal">
               <Button

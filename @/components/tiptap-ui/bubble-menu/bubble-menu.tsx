@@ -22,12 +22,9 @@ import {
   Button,
   type ButtonProps,
 } from "@/components/tiptap-ui-primitive/button";
-import { CommentButton } from "@/components/tiptap-ui/comment-button";
-import CaptionButton from "@/components/tiptap-ui/caption-button";
-import { useEffect, useRef, useState } from "react";
-import { ImageAlignButton } from "../image-align-button/image-align-button";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { NodeSelection } from "@tiptap/pm/state";
-import { CommentPopover } from "../comment-popover";
+import { CommentButton } from "../comment-button";
 
 interface MoreOptionsPopoverProps
   extends Omit<ButtonProps, "type">, UseMarkConfig {}
@@ -113,81 +110,104 @@ export function Group({ children }: { children: React.ReactNode }) {
 }
 
 export function BubbleMenu({ editor }: { editor: Editor | null }) {
-  const suppressBubbleMenu = useRef(false);
-  const [isNodeSelection, setIsNodeSelection] = useState(false);
+  const [visible, setVisible] = useState(true);
+
+  const onAction = useCallback(() => {
+    setVisible(false);
+    //editor?.commands.setTextSelection(editor.state.selection.anchor);
+    editor?.commands.hoverThread();
+  }, [editor]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const handler = () => {
+      setVisible(true);
+      editor.commands.removeThread();
+    };
+    editor.on("selectionUpdate", handler);
+    return () => {
+      editor.off("selectionUpdate", handler);
+    };
+  }, [editor]);
 
   if (!editor) return null;
 
   return (
-    <TiptapBubbleMenu
-      editor={editor}
-      shouldShow={({ state }) => {
-        if (suppressBubbleMenu.current) {
-          return false;
-        }
+    <>
+      {visible && (
+        <TiptapBubbleMenu
+          editor={editor}
+          shouldShow={({ state, editor }) => {
+            if (
+              editor.isActive("image") ||
+              editor.isActive("figure") ||
+              editor.isActive("table")
+            ) {
+              return false;
+            }
 
-        if (
-          editor.isActive("image") ||
-          editor.isActive("figure") ||
-          editor.isActive("table")
-        ) {
-          return false;
-        }
+            const selection = state.tr.selection;
+            if (selection instanceof NodeSelection) {
+              return false;
+            }
 
-        const selection = state.tr.selection;
-        if (selection instanceof NodeSelection) {
-          return false;
-        }
+            return !state.tr.selection.empty;
+          }}
+        >
+          <Card className="bubble-menu-content">
+            <CardItemGroup orientation="horizontal">
+              {/* Group 1 — block type */}
+              <Group>
+                <HeadingDropdownMenu
+                  hideWhenUnavailable={true}
+                  editor={editor}
+                />
+                <BlockquoteButton hideWhenUnavailable={true} editor={editor} />
+                <CodeBlockButton hideWhenUnavailable={true} editor={editor} />
+              </Group>
 
-        return !state.tr.selection.empty;
-      }}
-    >
-      <Card className="bubble-menu-content">
-        <CardItemGroup orientation="horizontal">
-          {/* Group 1 — block type */}
-          <Group>
-            <HeadingDropdownMenu hideWhenUnavailable={true} editor={editor} />
-            <BlockquoteButton hideWhenUnavailable={true} editor={editor} />
-            <CodeBlockButton hideWhenUnavailable={true} editor={editor} />
-          </Group>
+              {/* Group 2 — inline marks */}
+              <Group>
+                <MarkButton
+                  hideWhenUnavailable={true}
+                  type="bold"
+                  editor={editor}
+                />
+                <MarkButton
+                  hideWhenUnavailable={true}
+                  type="italic"
+                  editor={editor}
+                />
+                <MarkButton
+                  hideWhenUnavailable={true}
+                  type="strike"
+                  editor={editor}
+                />
+                <MarkButton
+                  hideWhenUnavailable={true}
+                  type="code"
+                  editor={editor}
+                />
+                <MarkButton
+                  hideWhenUnavailable={true}
+                  type="underline"
+                  editor={editor}
+                />
+              </Group>
 
-          {/* Group 2 — inline marks */}
-          <Group>
-            <MarkButton
-              hideWhenUnavailable={true}
-              type="bold"
-              editor={editor}
-            />
-            <MarkButton
-              hideWhenUnavailable={true}
-              type="italic"
-              editor={editor}
-            />
-            <MarkButton
-              hideWhenUnavailable={true}
-              type="strike"
-              editor={editor}
-            />
-            <MarkButton
-              hideWhenUnavailable={true}
-              type="code"
-              editor={editor}
-            />
-            <MarkButton
-              hideWhenUnavailable={true}
-              type="underline"
-              editor={editor}
-            />
-          </Group>
+              {/* Group 3 — enrichment */}
+              <Group>
+                <ColorHighlightPopover
+                  hideWhenUnavailable={true}
+                  editor={editor}
+                />
+                <ColorTextPopover hideWhenUnavailable={true} editor={editor} />
+                <LinkPopover hideWhenUnavailable={true} editor={editor} />
+              </Group>
 
-          {/* Group 3 — enrichment */}
-          <Group>
-            <ColorHighlightPopover hideWhenUnavailable={true} editor={editor} />
-            <ColorTextPopover hideWhenUnavailable={true} editor={editor} />
-            <LinkPopover hideWhenUnavailable={true} editor={editor} />
-          </Group>
+              <CommentButton onClick={onAction} editor={editor} />
 
-          {/* <CommentButton
+              {/* <CommentButton
             editor={editor}
             onClick={() => {
               suppressBubbleMenu.current = true;
@@ -201,15 +221,16 @@ export function BubbleMenu({ editor }: { editor: Editor | null }) {
               editor.on("selectionUpdate", handler);
             }}
           /> */}
-          <CommentPopover editor={editor} />
 
-          <MoreOptionsPopover
-            type="bold"
-            hideWhenUnavailable={true}
-            editor={editor}
-          />
-        </CardItemGroup>
-      </Card>
-    </TiptapBubbleMenu>
+              <MoreOptionsPopover
+                type="bold"
+                hideWhenUnavailable={true}
+                editor={editor}
+              />
+            </CardItemGroup>
+          </Card>
+        </TiptapBubbleMenu>
+      )}
+    </>
   );
 }
