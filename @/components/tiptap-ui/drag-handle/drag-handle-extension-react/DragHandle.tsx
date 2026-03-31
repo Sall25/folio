@@ -80,6 +80,11 @@ export const DragHandle = (props: DragHandleProps) => {
       onNodeChange: (data) => onNodeChangeRef.current?.(data),
     });
 
+    // We override it here so only the grip button is draggable.
+    requestAnimationFrame(() => {
+      element.draggable = false;
+    });
+
     plugin.current = initPlugin.plugin;
     editor.registerPlugin(plugin.current);
 
