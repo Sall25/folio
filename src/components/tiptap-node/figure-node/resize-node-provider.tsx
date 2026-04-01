@@ -193,33 +193,6 @@ export function ResizableNodeProvider({
     [startWidth, startHeight, applyAspectRatio],
   );
 
-  // const handleResize = useCallback(
-  //   (deltaX: number, deltaY: number) => {
-  //     if (!activeHandle) {
-  //       return;
-  //     }
-
-  //     const shouldPreserveAspectRatio =
-  //       preserveAspectRatio.current || isShiftKeyPressed.current;
-  //     const { width, height } = calculateNewDimensions(
-  //       activeHandle,
-  //       deltaX,
-  //       deltaY,
-  //     );
-  //     const constrained = applyConstraints(
-  //       width,
-  //       height,
-  //       shouldPreserveAspectRatio,
-  //     );
-
-  //     if (nodeRef.current) {
-  //       nodeRef.current.style.width = `${constrained.width}px`;
-  //       nodeRef.current.style.height = `${constrained.height}px`;
-  //     }
-  //   },
-  //   [activeHandle, calculateNewDimensions, applyConstraints],
-  // );
-
   const frameRef = useRef<number | null>(null);
 
   const handleResize = useCallback(
@@ -245,11 +218,25 @@ export function ResizableNodeProvider({
           height,
           shouldPreserveAspectRatio,
         );
-
         if (nodeRef.current) {
+          const isHorizontal =
+            activeHandle === "left" || activeHandle === "right";
+
+          console.log("horizontal", isHorizontal);
+
+          // if (!isHorizontal) {
+          //   nodeRef.current.style.height = `${constrained.height}px`;
+          // }
           nodeRef.current.style.width = `${constrained.width}px`;
-          nodeRef.current.style.height = `${constrained.height}px`;
+          nodeRef.current.style.flexBasis = `${constrained.width}px`;
         }
+
+        // if (nodeRef.current) {
+        //   nodeRef.current.style.width = `${constrained.width}px`;
+        //   nodeRef.current.style.height = `${constrained.height}px`;
+        //   nodeRef.current.style.flexBasis = `${constrained.width}px`;
+        //   //  nodeRef.current.style.flexBasis = `${constrained.width}px`;
+        // }
       });
     },
     [activeHandle, calculateNewDimensions, applyConstraints],
@@ -328,6 +315,9 @@ export function ResizableNodeProvider({
 
       const width = nodeRef.current?.offsetWidth;
       const height = nodeRef.current?.offsetHeight;
+
+      console.log("offsetWidth", width);
+      console.log("offsetHeight", height);
 
       setStartWidth(width ?? 0);
       setStartHeight(height ?? 0);

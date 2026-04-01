@@ -1,7 +1,0 @@
-.drag-handle {
-  position: absolute;
-  pointer-events: auto;
-  transition-property: top;
-  transition-duration: 0.2s;
-  transition-timing-function: ease-out;
-}/*# sourceMappingURL=drag-handle.css.map */

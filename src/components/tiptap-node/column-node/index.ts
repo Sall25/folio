@@ -1,4 +1,5 @@
-import { ColumnGroup } from "./column-group";
+import "./index.scss";
+import { ColumnBlock } from "./column-block";
 import { Column } from "./column";
 
-export { Column, ColumnGroup };
+export { Column, ColumnBlock };

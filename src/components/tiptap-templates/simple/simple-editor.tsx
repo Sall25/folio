@@ -95,10 +95,18 @@ import { TableKit } from "@tiptap/extension-table";
 import { TableContextExtension } from "src/components/tiptap-node/table-node";
 import { TableWrapperNode } from "src/components/tiptap-node/table-node/extensions/table-context";
 import { ToastProvider } from "src/components/tiptap-ui/copy-toast";
+import { Column, ColumnBlock } from "src/components/tiptap-node/column-node";
+import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
 
 const MainToolbarContent = ({ isMobile }: { isMobile: boolean }) => {
+  const { editor } = useTiptapEditor();
   return (
     <>
+      <ToolbarGroup>
+        <Button onClick={() => editor?.commands.insertColumns(3)}>
+          Column
+        </Button>
+      </ToolbarGroup>
       <Spacer />
 
       {isMobile && <ToolbarSeparator />}
@@ -270,6 +278,8 @@ function SimpleEditorInner() {
         handleWidth: 1,
       }),
       TableWrapperNode,
+      Column,
+      ColumnBlock,
       // CommentExtension
     ],
     content,
