@@ -35,6 +35,7 @@ export const DragHandle = (props: DragHandleProps) => {
     onElementDragStart,
     onElementDragEnd,
     computePositionConfig = defaultComputePositionConfig,
+    nestedOptions,
   } = props;
 
   const [element, setElement] = useState<HTMLDivElement | null>(null);
@@ -67,6 +68,8 @@ export const DragHandle = (props: DragHandleProps) => {
       };
     }
 
+    console.log("drag handle effect");
+
     const initPlugin = DragHandlePlugin({
       editor,
       element,
@@ -78,6 +81,7 @@ export const DragHandle = (props: DragHandleProps) => {
       onElementDragStart: (e) => onElementDragStartRef.current?.(e),
       onElementDragEnd: (e) => onElementDragEndRef.current?.(e),
       onNodeChange: (data) => onNodeChangeRef.current?.(data),
+      nestedOptions,
     });
 
     // We override it here so only the grip button is draggable.
@@ -93,7 +97,7 @@ export const DragHandle = (props: DragHandleProps) => {
       plugin.current = null;
       initPlugin.unbind();
     };
-  }, [element, editor, pluginKey]); // ← only truly stable deps
+  }, [element, editor, pluginKey, nestedOptions]); // ← only truly stable deps
 
   return (
     <div
