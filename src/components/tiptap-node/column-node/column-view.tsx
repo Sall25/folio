@@ -78,7 +78,7 @@ export default function ColumnView(props: ReactNodeViewProps) {
         as="div"
         style={{
           width: "100%",
-          minHeight: "1lh",
+          minHeight: "5rem",
           display: "block",
         }}
         draggable={true}

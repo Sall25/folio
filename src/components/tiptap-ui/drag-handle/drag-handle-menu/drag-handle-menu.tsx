@@ -8,16 +8,20 @@ interface DragHandleMenuProps {
   editor: Editor;
   target: string;
   onAction?: () => void;
+  side?: "right" | "top" | "bottom" | "left";
+  sideOffset?: number;
 }
 
 export function DragHandleMenu(props: DragHandleMenuProps) {
-  const { target, editor, onAction } = props;
+  const { target, editor, onAction, side, sideOffset } = props;
 
   return (
     <DropdownMenuContent
       className="drag-handle-menu-content"
       align="center"
-      side="left"
+      side={side}
+      sideOffset={sideOffset}
+      //side={side ?? "left"}
     >
       <Menu onAction={onAction} editor={editor} title={target} />
     </DropdownMenuContent>

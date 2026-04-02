@@ -8,8 +8,8 @@ import { Node as PMNode } from "@tiptap/pm/model";
 export const TableWrapperNode = Node.create({
   name: "tableWrapper",
   group: "block",
-  content: "table",
-  defining: true,
+  content: "table*",
+  //defining: true,
 
   parseHTML() {
     return [{ tag: 'div[data-type="table-wrapper"]' }];

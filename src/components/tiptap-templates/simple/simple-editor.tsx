@@ -97,6 +97,7 @@ import { TableWrapperNode } from "src/components/tiptap-node/table-node/extensio
 import { ToastProvider } from "src/components/tiptap-ui/copy-toast";
 import { Column, ColumnBlock } from "src/components/tiptap-node/column-node";
 import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
+import { ColumnDragHandle } from "src/components/tiptap-ui/drag-handle/column-drag-handle";
 
 const MainToolbarContent = ({ isMobile }: { isMobile: boolean }) => {
   const { editor } = useTiptapEditor();
@@ -332,6 +333,7 @@ function SimpleEditorInner() {
             role="presentation"
             className="simple-editor-content"
           />
+          <ColumnDragHandle editor={editor} />
           <DragHandle editor={editor} />
 
           <BubbleMenu editor={editor} />

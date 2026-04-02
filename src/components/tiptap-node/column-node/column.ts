@@ -8,6 +8,7 @@ export const Column = Node.create({
   group: "block",
   isolating: true,
   defining: true,
+  draggable: true,
 
   addAttributes() {
     return {
@@ -35,5 +36,33 @@ export const Column = Node.create({
 
   addNodeView() {
     return ReactNodeViewRenderer(WrappedColumnView);
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      Enter: ({ editor }) => {
+        const { state } = editor.view;
+        const { selection } = state;
+        const { $from } = selection;
+
+        // Only handle when inside a column
+        let insideColumn = false;
+        for (let i = $from.depth; i >= 0; i--) {
+          if ($from.node(i).type.name === "column") {
+            insideColumn = true;
+            break;
+          }
+        }
+        if (!insideColumn) return false;
+
+        // Let ProseMirror split the block normally first,
+        // then clear the marks on the new block
+        const handled = editor.commands.splitBlock();
+        if (handled) {
+          editor.commands.unsetAllMarks();
+        }
+        return handled;
+      },
+    };
   },
 });

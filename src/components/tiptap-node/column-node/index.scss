@@ -53,7 +53,7 @@
   display: flex;
   width: 100%;
 
-  
+ 
   
 
   // last column always fills remaining space
@@ -85,6 +85,11 @@
       min-height: 0;
       //position: relative;
       padding: 0 12px;
+
+      &.ProseMirror-selectednode{
+        border-radius: var(--tt-radius-md);
+        background-color: var(--tt-selection-color);
+      }
 
       &:has(.resized) {
         width: fit-content;

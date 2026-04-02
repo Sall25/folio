@@ -18,14 +18,39 @@ export function TableWrapperView(props: ReactNodeViewProps) {
   const { editor, getPos, selected } = props;
   const tablePos = getPos()! + 1;
 
+  // useEffect(() => {
+  //   if (!selected) return;
+
+  //   const pos = getPos();
+  //   if (pos === undefined) return;
+
+  //   const { state, dispatch } = editor.view;
+  //   dispatch(state.tr.setSelection(NodeSelection.create(state.doc, pos + 1)));
+  // }, [selected, editor, getPos]);
+
   useEffect(() => {
     if (!selected) return;
 
     const pos = getPos();
     if (pos === undefined) return;
 
-    const { state, dispatch } = editor.view;
-    dispatch(state.tr.setSelection(NodeSelection.create(state.doc, pos + 1)));
+    const frame = requestAnimationFrame(() => {
+      // After the frame, dragging will have cleared if it was a drop
+      if (editor.view.dragging) return;
+
+      const { state, dispatch } = editor.view;
+      const currentSelection = state.selection;
+
+      if (
+        !(currentSelection instanceof NodeSelection) ||
+        currentSelection.from !== pos
+      )
+        return;
+
+      dispatch(state.tr.setSelection(NodeSelection.create(state.doc, pos + 1)));
+    });
+
+    return () => cancelAnimationFrame(frame);
   }, [selected, editor, getPos]);
 
   const { open, handleMouseEnter, handleMouseLeave } = useHoverMenu();

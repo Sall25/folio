@@ -6,3 +6,10 @@
     transition-duration: .25s;
     transition-timing-function: ease-out;
 }
+
+.column-drag-handle{
+   position: absolute;
+  pointer-events: auto;
+  transform: translateX(-15px);
+  transition: top 0.25s ease-out, left 0.25s ease-out;
+}
