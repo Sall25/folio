@@ -308,6 +308,14 @@ export default function SlashList(props: Props) {
                       className="tiptap-button-icon slash-color-swatch"
                       style={{ backgroundColor: item.highlightColor }}
                     />
+                  ) : item.textColor ? (
+                    <span
+                      style={{
+                        color: item.textColor,
+                      }}
+                    >
+                      A
+                    </span>
                   ) : (
                     Icon && <Icon className="tiptap-button-icon" />
                   )}

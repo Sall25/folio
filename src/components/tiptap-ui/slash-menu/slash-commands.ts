@@ -31,6 +31,7 @@ export interface SlashCommand {
   title: string;
   icon?: LucideIcon;
   highlightColor?: string;
+  textColor?: string;
   isActive?: (editor: Editor) => boolean;
   run?: (editor: Editor) => void;
 }
@@ -227,6 +228,14 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         .run(),
   },
   {
+    id: "color-text-red",
+    type: "command",
+    title: "Red",
+    textColor: "var(--tt-color-text-red)",
+    run: (e) =>
+      e.chain().focus().toggleNodeColor("var(--tt-color-text-red)").run(),
+  },
+  {
     id: "color-orange",
     type: "command",
     title: "Orange",
@@ -237,6 +246,14 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         .focus()
         .toggleNodeBackgroundColor("var(--tt-color-highlight-orange)")
         .run(),
+  },
+  {
+    id: "color-text-orange",
+    type: "command",
+    title: "Orange",
+    textColor: "var(--tt-color-text-orange)",
+    run: (e) =>
+      e.chain().focus().toggleNodeColor("var(--tt-color-text-orange)").run(),
   },
   {
     id: "color-yellow",
@@ -251,6 +268,14 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         .run(),
   },
   {
+    id: "color-text-yellow",
+    type: "command",
+    title: "Yellow",
+    textColor: "var(--tt-color-text-yellow)",
+    run: (e) =>
+      e.chain().focus().toggleNodeColor("var(--tt-color-text-yellow)").run(),
+  },
+  {
     id: "color-green",
     type: "command",
     title: "Green",
@@ -261,6 +286,14 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         .focus()
         .toggleNodeBackgroundColor("var(--tt-color-highlight-green)")
         .run(),
+  },
+  {
+    id: "color-text-green",
+    type: "command",
+    title: "Green",
+    textColor: "var(--tt-color-text-green)",
+    run: (e) =>
+      e.chain().focus().toggleNodeColor("var(--tt-color-text-green)").run(),
   },
   {
     id: "color-blue",
@@ -275,6 +308,14 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         .run(),
   },
   {
+    id: "color-text-blue",
+    type: "command",
+    title: "Blue",
+    textColor: "var(--tt-color-text-blue)",
+    run: (e) =>
+      e.chain().focus().toggleNodeColor("var(--tt-color-text-blue)").run(),
+  },
+  {
     id: "color-purple",
     type: "command",
     title: "Purple",
@@ -285,5 +326,13 @@ export const SLASH_COMMANDS: SlashCommand[] = [
         .focus()
         .toggleNodeBackgroundColor("var(--tt-color-highlight-purple)")
         .run(),
+  },
+  {
+    id: "color-text-purple",
+    type: "command",
+    title: "Purple",
+    textColor: "var(--tt-color-text-purple)",
+    run: (e) =>
+      e.chain().focus().toggleNodeColor("var(--tt-color-text-purple)").run(),
   },
 ];
