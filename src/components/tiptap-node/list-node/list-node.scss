@@ -23,9 +23,9 @@
   // Common list styles
   ol,
   ul {
-    margin-top: 1.5em;
-    margin-bottom: 1.5em;
-    padding-left: 1.5em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    padding-left: 1em;
 
     &:first-child {
       margin-top: 0;
@@ -45,7 +45,7 @@
   li {
     p {
       margin-top: 0;
-      line-height: 1.6;
+      line-height: 1.45;
     }
   }
 

@@ -74,7 +74,8 @@ import { handleImageUpload, MAX_FILE_SIZE } from "src/lib/tiptap-utils";
 import "src/components/tiptap-templates/simple/simple-editor.scss";
 import "src/components/tiptap-templates/simple/toc.scss";
 
-import content from "src/components/tiptap-templates/simple/data/content.json";
+import content from "src/components/tiptap-templates/simple/data/test-content.json";
+// import content from "src/components/tiptap-templates/simple/data/content.json";
 
 import DragHandleExtension from "src/components/tiptap-ui/drag-handle/drag-handle-extension";
 import { DragHandle } from "src/components/tiptap-ui/drag-handle/drag-handle";
@@ -96,18 +97,10 @@ import { TableContextExtension } from "src/components/tiptap-node/table-node";
 import { TableWrapperNode } from "src/components/tiptap-node/table-node/extensions/table-context";
 import { ToastProvider } from "src/components/tiptap-ui/copy-toast";
 import { Column, ColumnBlock } from "src/components/tiptap-node/column-node";
-import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
-import { ColumnDragHandle } from "src/components/tiptap-ui/drag-handle/column-drag-handle";
 
 const MainToolbarContent = ({ isMobile }: { isMobile: boolean }) => {
-  const { editor } = useTiptapEditor();
   return (
     <>
-      <ToolbarGroup>
-        <Button onClick={() => editor?.commands.insertColumns(3)}>
-          Column
-        </Button>
-      </ToolbarGroup>
       <Spacer />
 
       {isMobile && <ToolbarSeparator />}
@@ -233,8 +226,19 @@ function SimpleEditorInner() {
         onError: (error) => console.error("Upload failed:", error),
       }),
       Placeholder.configure({
-        placeholder: ({ editor }) => {
+        includeChildren: true,
+        placeholder: ({ editor, node }) => {
+          // Don't show placeholder inside table cells/headers
+          if (
+            node.type.name === "tableCell" ||
+            node.type.name === "tableHeader" ||
+            node.type.name === "table"
+          ) {
+            return "";
+          }
+
           const meta = editor.state.tr.getMeta("/Filter");
+
           if (meta) {
             return "/Filter";
           }
@@ -333,7 +337,6 @@ function SimpleEditorInner() {
             role="presentation"
             className="simple-editor-content"
           />
-          <ColumnDragHandle editor={editor} />
           <DragHandle editor={editor} />
 
           <BubbleMenu editor={editor} />

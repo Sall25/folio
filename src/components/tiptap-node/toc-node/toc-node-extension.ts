@@ -1,27 +1,28 @@
 // toc-node-extension.ts
-import { Node, mergeAttributes } from '@tiptap/core'
-import { ReactNodeViewRenderer } from '@tiptap/react'
-import { TocNodeView } from './toc-node-view'
+import { Node, mergeAttributes } from "@tiptap/core";
+import { ReactNodeViewRenderer } from "@tiptap/react";
+import { TocNodeView } from "./toc-node-view";
+import "./toc-node.scss";
 
 export interface TocNodeOptions {
-  topOffset: number
-  maxShowCount: number
-  showTitle: boolean
+  topOffset: number;
+  maxShowCount: number;
+  showTitle: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  HTMLAttributes: Record<string, any>
+  HTMLAttributes: Record<string, any>;
 }
 
-declare module '@tiptap/core' {
+declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     tocNode: {
-      insertTocNode: (attrs?: Partial<TocNodeOptions>) => ReturnType
-    }
+      insertTocNode: (attrs?: Partial<TocNodeOptions>) => ReturnType;
+    };
   }
 }
 
 export const TocNode = Node.create<TocNodeOptions>({
-  name: 'tocNode',
-  group: 'block',
+  name: "tocNode",
+  group: "block",
   atom: true, // treated as a single unit, not editable inside
 
   addOptions() {
@@ -30,7 +31,7 @@ export const TocNode = Node.create<TocNodeOptions>({
       maxShowCount: 20,
       showTitle: true,
       HTMLAttributes: {},
-    }
+    };
   },
 
   addAttributes() {
@@ -38,31 +39,38 @@ export const TocNode = Node.create<TocNodeOptions>({
       topOffset: { default: this.options.topOffset },
       maxShowCount: { default: this.options.maxShowCount },
       showTitle: { default: this.options.showTitle },
-    }
+    };
   },
 
   parseHTML() {
-    return [{ tag: 'div[data-type="toc-node"]' }]
+    return [{ tag: 'div[data-type="toc-node"]' }];
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['div', mergeAttributes({ 'data-type': 'toc-node' }, this.options.HTMLAttributes, HTMLAttributes)]
+    return [
+      "div",
+      mergeAttributes(
+        { "data-type": "toc-node" },
+        this.options.HTMLAttributes,
+        HTMLAttributes,
+      ),
+    ];
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(TocNodeView)
+    return ReactNodeViewRenderer(TocNodeView);
   },
 
   addCommands() {
     return {
       insertTocNode:
         (attrs = {}) =>
-          ({ commands }) => {
-            return commands.insertContent({
-              type: this.name,
-              attrs,
-            })
-          },
-    }
+        ({ commands }) => {
+          return commands.insertContent({
+            type: this.name,
+            attrs,
+          });
+        },
+    };
   },
-})
+});

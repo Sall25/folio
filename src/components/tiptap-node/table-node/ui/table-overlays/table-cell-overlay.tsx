@@ -60,26 +60,5 @@ export function TableCellOverlay({ className }: TableCellOverlayProps) {
         </Card>
       </PopoverContent>
     </Popover>
-    // <div
-    //   style={{
-    //     // position: "absolute",
-    //     top: cellRect ? cellRect.top + cellRect.height / 3 : 0,
-    //     left: cellRect ? cellRect?.left + cellRect.width - 8 : 0,
-    //     // width: 16,
-    //     // height: cellRect?.height,
-    //     // background: "rgba(0,0,0,0.15)",
-    //     // borderRadius: "4px",
-    //     zIndex: 20,
-    //   }}
-    //   className={className}
-    //   onMouseOver={() => {
-    //     editor?.commands.lockTableHandle();
-    //   }}
-    //   onMouseLeave={() => {
-    //     editor?.commands.unlockTableHandle();
-    //   }}
-    // >
-    //   {children}
-    // </div>
   );
 }

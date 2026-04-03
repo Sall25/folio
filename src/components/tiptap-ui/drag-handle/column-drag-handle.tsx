@@ -71,7 +71,7 @@ export function ColumnDragHandle({ editor }: { editor: Editor | null }) {
     const handler = (e: Event) => {
       const { isResizing } = (e as CustomEvent<{ isResizing: boolean }>).detail;
       isColumnResizingRef.current = isResizing;
-      const handleEl = document.querySelector(".drag-handle");
+      const handleEl = document.querySelector(".column-drag-handle");
       if (handleEl instanceof HTMLElement) {
         handleEl.style.opacity = isResizing ? "0" : "";
         handleEl.style.pointerEvents = isResizing ? "none" : "";

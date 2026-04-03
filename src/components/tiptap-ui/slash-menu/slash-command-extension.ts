@@ -5,23 +5,8 @@ import Suggestion, {
   type SuggestionProps,
 } from "@tiptap/suggestion";
 import { ReactRenderer } from "@tiptap/react";
-import { Editor } from "@tiptap/core";
 import type { Plugin } from "@tiptap/pm/state";
-import SlashList, { type SlashItem } from "./slash-command-list";
-import {
-  AtSign,
-  Heading1,
-  Heading2,
-  Heading3,
-  Image,
-  List,
-  ListOrdered,
-  Minus,
-  Pilcrow,
-  Quote,
-  Smile,
-  Table,
-} from "lucide-react";
+import SlashList from "./slash-command-list";
 import {
   computePosition,
   flip,
@@ -31,175 +16,23 @@ import {
 } from "@floating-ui/dom";
 
 import "./slash-command-extension.scss";
-import { CodeBlockIcon, TodoListIcon } from "src/components/tiptap-icons";
+import {
+  SLASH_COMMANDS,
+  type SlashCommand as SlashItem,
+} from "./slash-commands";
+
+const COLOR_TRIGGER_KEYWORDS = ["color", "highlight", "colour"];
+
+const isColorItem = (cmd: SlashItem) => cmd.id.startsWith("color-");
+const isColorStructural = (cmd: SlashItem) =>
+  cmd.id === "colorsDivider" || cmd.id === "colors";
 
 export const SlashCommand = Extension.create({
   name: "slash-command",
 
   addOptions() {
     return {
-      commands: [
-        {
-          id: "style",
-          title: "Style",
-          mark: { type: "title" },
-        },
-        {
-          id: "p",
-          title: "Text",
-          icon: Pilcrow,
-          mark: { type: "paragraph" },
-          isActive: (editor) => editor.isActive("paragraph") ?? false,
-          run: (editor: Editor) => editor.chain().focus().setParagraph().run(),
-        },
-        {
-          id: "h1",
-          title: "Heading 1",
-          icon: Heading1,
-          mark: { type: "heading", level: 1 },
-          isActive: (editor) =>
-            editor.isActive("heading", { level: 1 }) ?? false,
-          run: (editor: Editor) =>
-            editor.chain().focus().setNode("heading", { level: 1 }).run(),
-        },
-        {
-          id: "h2",
-          title: "Heading 2",
-          icon: Heading2,
-          mark: { type: "heading", level: 2 },
-          isActive: (editor) =>
-            editor.isActive("heading", { level: 2 }) ?? false,
-          run: (editor: Editor) =>
-            editor.chain().focus().setNode("heading", { level: 2 }).run(),
-        },
-        {
-          id: "h3",
-          title: "Heading 3",
-          icon: Heading3,
-          mark: { type: "heading", level: 3 },
-          isActive: (editor) =>
-            editor.isActive("heading", { level: 3 }) ?? false,
-          run: (editor: Editor) =>
-            editor.chain().focus().setNode("heading", { level: 3 }).run(),
-        },
-        {
-          id: "bulletList",
-          title: "Bullet List",
-          icon: List,
-          isActive: (editor) => editor.isActive("bulletList") ?? false,
-          run: (editor: Editor) =>
-            editor.chain().focus().toggleBulletList().run(),
-        },
-        {
-          id: "orderedList",
-          title: "Numbered List",
-          icon: ListOrdered,
-          isActive: (editor) => editor.isActive("orderedList") ?? false,
-          run: (editor: Editor) =>
-            editor.chain().focus().toggleOrderedList().run(),
-        },
-        {
-          id: "taskList",
-          title: "To-do List",
-          icon: TodoListIcon,
-          isActive: (editor) => editor.isActive("taskList") ?? false,
-          run: (editor: Editor) =>
-            editor.chain().focus().toggleTaskList().run(),
-        },
-        {
-          id: "quote",
-          title: "Blockquote",
-          icon: Quote,
-          mark: { type: "blockQuote" },
-          isActive: (editor) => editor.isActive("blockquote") ?? false,
-          run: (editor: Editor) =>
-            editor.chain().focus().toggleBlockquote().run(),
-        },
-        {
-          id: "codeBlock",
-          title: "Code block",
-          icon: CodeBlockIcon,
-          mark: { type: "blockQuote" },
-          isActive: (editor) => editor.isActive("codeBlock") ?? false,
-          run: (editor: Editor) =>
-            editor.chain().focus().toggleCodeBlock().run(),
-        },
-        {
-          id: "styleDivider",
-          title: "separator",
-          mark: { type: "separator" },
-        },
-        {
-          id: "insert",
-          title: "Insert",
-          mark: { type: "title" },
-        },
-        {
-          id: "separator",
-          title: "Separator",
-          icon: Minus,
-          run(editor) {
-            editor.chain().focus().setHorizontalRule().run();
-          },
-        },
-        {
-          id: "mention",
-          title: "Mention",
-          icon: AtSign,
-          run(editor) {
-            editor.chain().focus().insertContent("@").run();
-          },
-        },
-        {
-          id: "emoji",
-          title: "Emoji",
-          icon: Smile,
-          run(editor) {
-            editor.chain().focus().insertContent(":").run();
-          },
-        },
-        {
-          id: "table",
-          title: "Table",
-          icon: Table,
-          run(editor) {
-            editor.chain().focus().insertTable().run();
-          },
-        },
-
-        {
-          id: "toc",
-          title: "Table of Contents",
-          icon: List,
-          run(editor) {
-            editor.chain().focus().insertTocNode().run();
-          },
-        },
-        {
-          id: "insertDivider",
-          title: "separator",
-          mark: { type: "separator" },
-        },
-        {
-          id: "upload",
-          title: "Upload",
-          mark: { type: "title" },
-        },
-        {
-          id: "image",
-          title: "Image",
-          icon: Image,
-          run: (editor) => {
-            editor
-              .chain()
-              .focus()
-              .insertContent({
-                type: "imageUpload",
-              })
-              .run();
-          },
-        },
-      ] as SlashItem[],
+      commands: SLASH_COMMANDS,
     };
   },
 
@@ -207,7 +40,7 @@ export const SlashCommand = Extension.create({
     const editor = this.editor;
     let reactRenderer: ReactRenderer<any> | null = null;
     let selectedIndex = 0;
-    let currentProps: SuggestionProps<SlashItem> | null = null;
+    //let currentProps: SuggestionProps<SlashItem> | null = null;
     let resizeObserver: ResizeObserver | null = null;
 
     const updatePosition = (element: HTMLElement) => {
@@ -232,7 +65,7 @@ export const SlashCommand = Extension.create({
     };
 
     function createRenderer(props: SuggestionProps<SlashItem>) {
-      currentProps = props;
+      // currentProps = props;
       selectedIndex = 0;
 
       reactRenderer = new ReactRenderer(SlashList, {
@@ -261,7 +94,7 @@ export const SlashCommand = Extension.create({
     }
 
     function updateRenderer(props: SuggestionProps<SlashItem>) {
-      currentProps = props;
+      //currentProps = props;
       if (!reactRenderer) {
         createRenderer(props);
         return;
@@ -287,7 +120,7 @@ export const SlashCommand = Extension.create({
       if (range.from >= docSize) {
         reactRenderer?.destroy();
         reactRenderer = null;
-        currentProps = null;
+        // currentProps = null;
         return;
       }
 
@@ -327,64 +160,56 @@ export const SlashCommand = Extension.create({
         }
         reactRenderer = null;
       }
-      currentProps = null;
+      //currentProps = null;
     }
-
-    // function destroyRenderer(props: SuggestionProps<SlashItem>) {
-    //   const { editor, range } = props;
-    //   const { state } = editor;
-
-    //   const textAtRange = state.doc.textBetween(
-    //     range.from,
-    //     range.to,
-    //     "\0",
-    //     "\0",
-    //   );
-    //   const cursorPos = state.selection.from;
-
-    //   const stillSlash = textAtRange.startsWith("/");
-    //   const cursorInside = cursorPos >= range.from && cursorPos <= range.to + 1;
-
-    //   if (stillSlash && cursorInside) {
-    //     // Ignore transient exit caused by our own transaction
-    //     return;
-    //   }
-
-    //   if (reactRenderer) {
-    //     try {
-    //       reactRenderer.destroy();
-
-    //       if (resizeObserver) {
-    //         resizeObserver.disconnect();
-    //         resizeObserver = null;
-    //       }
-    //     } catch {
-    //       console.log("Failed to destroy reactRenderer");
-    //     }
-    //     try {
-    //       if (reactRenderer.element?.parentNode)
-    //         reactRenderer.element.parentNode.removeChild(reactRenderer.element);
-    //     } catch {
-    //       console.log("Failed to remove element");
-    //     }
-    //     reactRenderer = null;
-    //   }
-    //   currentProps = null;
-    // }
 
     const suggestion = Suggestion<SlashItem>({
       editor,
       char: "/",
-      startOfLine: true,
+      startOfLine: false,
       decorationClass: "slash-suggestion",
       allowSpaces: true,
       decorationContent: "Filter...",
       items: ({ query }) => {
         const q = (query || "").toLowerCase();
-        return (this.options.commands as SlashItem[]).filter((c) =>
-          c.title.toLowerCase().includes(q),
-        );
+
+        const showColorSection =
+          q.length > 0 &&
+          (this.options.commands as SlashItem[])
+            .filter(isColorItem)
+            .some(
+              (cmd) =>
+                cmd.title.toLowerCase().includes(q) ||
+                COLOR_TRIGGER_KEYWORDS.some(
+                  (kw) => kw.includes(q) || q.includes(kw),
+                ),
+            );
+
+        return (this.options.commands as SlashItem[]).filter((cmd) => {
+          // Structural color markers only show when a color item will be visible
+          if (isColorStructural(cmd)) return showColorSection;
+
+          // Color items use the same title filter as everything else
+          if (isColorItem(cmd)) {
+            return (
+              q.length > 0 &&
+              (cmd.title.toLowerCase().includes(q) ||
+                COLOR_TRIGGER_KEYWORDS.some(
+                  (kw) => kw.includes(q) || q.includes(kw),
+                ))
+            );
+          }
+
+          // Everything else
+          return cmd.title.toLowerCase().includes(q);
+        });
       },
+      // items: ({ query }) => {
+      //   const q = (query || "").toLowerCase();
+      //   return (this.options.commands as SlashItem[]).filter((c) =>
+      //     c.title.toLowerCase().includes(q),
+      //   );
+      // },
       command: ({ editor: ed, range, props }) => {
         ed.chain().focus().deleteRange(range).run();
         props.run(ed);

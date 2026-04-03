@@ -1,6 +1,6 @@
 import type { Editor } from "@tiptap/core";
 import { DragHandle as TiptapDragHandle } from "./drag-handle-extension-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragHandleMenu } from "./drag-handle-menu/drag-handle-menu";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -12,7 +12,8 @@ import {
 
 import "./drag-handle.scss";
 import { ColorDropdownProvider } from "../color-dropdown-menu/color-dropdown-provider";
-import { Node as PMNode } from "@tiptap/pm/model";
+import { Node, Node as PMNode } from "@tiptap/pm/model";
+import type { NormalizedNestedOptions } from "@tiptap/extension-drag-handle";
 
 const NODE_LABELS: Record<string, string> = {
   paragraph: "Text",
@@ -28,6 +29,50 @@ const NODE_LABELS: Record<string, string> = {
   tocNode: "Table of Contents",
   figure: "Image",
   columnBlock: "Columns",
+  column: "Column",
+};
+
+const nestedOptions = {
+  enabled: true,
+  edgeDetection: {
+    threshold: -80,
+    edges: ["left"],
+    strength: 500,
+  },
+
+  rules: [
+    {
+      id: "preferNodeLabels",
+      evaluate: ({
+        node,
+        parent,
+        depth,
+      }: {
+        node: Node;
+        parent: Node | null;
+        depth: number;
+      }) => {
+        const name = node.type.name;
+        if (name === "column" || name === "columnBlock") {
+          return 1000;
+        }
+        // if (parent?.type.name === "column") {
+        //   return -250;
+        // }
+        if (
+          name === "bulletList" ||
+          name === "orderedList" ||
+          name === "taskList" ||
+          name === "blockquote" ||
+          name === "table"
+          // name === "column"
+        ) {
+          return -200;
+        }
+        return 500; // Small penalty for other nodes
+      },
+    },
+  ],
 };
 
 export function DragHandle({ editor }: { editor: Editor | null }) {
@@ -66,7 +111,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
 
   return (
     <TiptapDragHandle
-      className="drag-handle"
+      className={`drag-handle`}
       editor={editor}
       computePositionConfig={{
         placement: "left-start",
@@ -80,9 +125,16 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
       onElementDragEnd={() => {
         isDraggingRef.current = false;
       }}
+      nestedOptions={nestedOptions as unknown as NormalizedNestedOptions}
     >
       <CardItemGroup orientation="horizontal">
-        <Button type="button" variant="ghost" role="button" tabIndex={-1}>
+        <Button
+          className="plus-button"
+          type="button"
+          variant="ghost"
+          role="button"
+          tabIndex={-1}
+        >
           <Plus className="tiptap-button-icon" />
         </Button>
 
@@ -96,6 +148,11 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
               editor.commands.unlockDragHandle();
             }
             setOpen(next);
+            // Broadcast to column views
+            // document.dispatchEvent(
+            //   new CustomEvent("draghandle:menu", { detail: { isOpen: next } }),
+            // );
+            //console.log("dispatched draghandle:menu", next);
           }}
         >
           <ColorDropdownProvider>
@@ -116,6 +173,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
               type="button"
               variant="ghost"
               role="button"
+              className="grip-button"
               tabIndex={-1}
               onPointerDown={() => {
                 editor.commands.setNodeSelection(pos);

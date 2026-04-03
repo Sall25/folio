@@ -145,49 +145,6 @@ export const TableContextPlugin = () => {
             }),
           );
         },
-        // update(view, prevState) {
-        //   if (locked) return;
-
-        //   if (view.state.selection.eq(prevState.selection)) return;
-
-        //   const { $anchor } = view.state.selection;
-
-        //   // Guard: make sure we're deep enough to have a cell parent
-        //   if ($anchor.depth < 2) return;
-
-        //   // Guard: make sure the parent is actually a table cell
-        //   const cellNode = $anchor.node(-1);
-        //   if (
-        //     !cellNode ||
-        //     !["tableCell", "tableHeader"].includes(cellNode.type.name)
-        //   )
-        //     return;
-
-        //   const cellPos = $anchor.before(-1);
-
-        //   const cellDOM = view.nodeDOM(cellPos) as HTMLElement | null;
-        //   const meta = tableContextPluginKey.getState(view.state);
-
-        //   if (!cellDOM || !meta?.parentTableDOM) return;
-
-        //   const cellBox = cellDOM.getBoundingClientRect();
-        //   const tableBox = meta.parentTableDOM.getBoundingClientRect();
-
-        //   const cellRect = {
-        //     top: cellBox.top - tableBox.top,
-        //     left: cellBox.left - tableBox.left,
-        //     width: cellBox.width,
-        //     height: cellBox.height,
-        //   };
-
-        //   view.dispatch(
-        //     view.state.tr.setMeta(tableContextPluginKey, {
-        //       ...meta,
-        //       cellPos,
-        //       cellRect,
-        //     }),
-        //   );
-        // },
       };
     },
     props: {
@@ -279,28 +236,9 @@ export const TableContextPlugin = () => {
           const colCount = map.width;
           const rowCount = map.height;
 
-          const prevRect = tableContextPluginKey.getState(view.state)?.cellRect;
-          const prevPos = tableContextPluginKey.getState(view.state)?.cellPos;
-          let cellRect = prevRect;
-          let cellPos = prevPos;
-          // initialize cellRect / cellPos
-          if (!prevRect || prevPos === -1) {
-            const cellDOM = view.nodeDOM(cell.pos) as HTMLElement | null;
-            if (!cellDOM) return false;
-            const cellBox = cellDOM.getBoundingClientRect();
-            const tableBox = parentTableDOM.getBoundingClientRect();
-
-            cellRect = {
-              top: cellBox.top - tableBox.top,
-              left: cellBox.left - tableBox.left,
-              width: cellBox.width,
-              height: cellBox.height,
-            };
-            cellPos = cell.pos;
-          }
-
           view.dispatch(
             view.state.tr.setMeta(tableContextPluginKey, {
+              ...meta,
               currentCol,
               currentRow,
               colCount,
@@ -319,10 +257,6 @@ export const TableContextPlugin = () => {
               headerCellRect,
               rowRect,
               tablePos,
-              cellPos,
-              cellRect,
-              //  cellPos: cell.pos,
-              //    cellRect,
             }),
           );
 

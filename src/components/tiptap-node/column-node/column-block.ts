@@ -13,7 +13,7 @@ declare module "@tiptap/core" {
 export const ColumnBlock = Node.create({
   name: "columnBlock",
   group: "block",
-  content: "column{2,4}",
+  content: "column*",
   draggable: true,
   isolating: true,
 

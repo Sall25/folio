@@ -1,45 +1,54 @@
 .tiptap.ProseMirror {
-  h1,
-  h2,
-  h3,
-  h4 {
+  h1, h2, h3, h4, h5, h6 {
     position: relative;
     color: inherit;
     font-style: inherit;
+    line-height: 1.3;
+    margin-bottom: 2px;
   }
 
-  > h1:first-child,
-  > h2:first-child,
-  > h3:first-child,
-  > h4:first-child,
-  > .ProseMirror-widget + h1,
-  > .ProseMirror-widget + h2,
-  > .ProseMirror-widget + h3,
-  > .ProseMirror-widget + h4 {
+  > h1:first-child, > h2:first-child, > h3:first-child,
+  > h4:first-child, > h5:first-child, > h6:first-child,
+  > .ProseMirror-widget + h1, > .ProseMirror-widget + h2,
+  > .ProseMirror-widget + h3, > .ProseMirror-widget + h4,
+  > .ProseMirror-widget + h5, > .ProseMirror-widget + h6 {
     margin-top: 0;
   }
 
   h1 {
-    font-size: 1.5em;
+    font-size: 1.875em;
     font-weight: 700;
-    margin-top: 3em;
+    margin-top: 1.5em;
   }
 
   h2 {
-    font-size: 1.25em;
+    font-size: 1.5em;
     font-weight: 700;
-    margin-top: 2.5em;
+    margin-top: 1.1em;
   }
 
   h3 {
-    font-size: 1.125em;
+    font-size: 1.25em;
     font-weight: 600;
-    margin-top: 2em;
+    margin-top: 1em;
   }
 
   h4 {
+    font-size: 1.125em;
+    font-weight: 600;
+    margin-top: 0.75em;
+  }
+
+  h5 {
     font-size: 1em;
     font-weight: 600;
-    margin-top: 2em;
+    margin-top: 0.75em;
+  }
+
+  h6 {
+    font-size: 0.875em;
+    font-weight: 600;
+    margin-top: 0.75em;
+    color: var(--tt-muted-foreground, #6b7280);
   }
 }

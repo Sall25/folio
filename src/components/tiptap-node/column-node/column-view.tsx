@@ -36,12 +36,13 @@ import {
   NodeViewContent,
   type ReactNodeViewProps,
 } from "@tiptap/react";
-import { useEffect, useState, type Ref } from "react";
+import { useCallback, useEffect, useRef, useState, type Ref } from "react";
 import { useResizableNode } from "../figure-node";
 
 export default function ColumnView(props: ReactNodeViewProps) {
-  const [isVisible, setVisible] = useState(false);
   const [hasBeenResized, setHasBeenResized] = useState(false);
+  const { editor } = props;
+  const timerRef = useRef<number | null>(null);
 
   const { nodeRef, handleResizeStart, isResizing } = useResizableNode();
 
@@ -55,6 +56,50 @@ export default function ColumnView(props: ReactNodeViewProps) {
       new CustomEvent("column:resize", { detail: { isResizing } }),
     );
   }, [isResizing]);
+
+  // const isMenuOpenRef = useRef(false);
+
+  // useEffect(() => {
+  //   const handler = (e: Event) => {
+  //     isMenuOpenRef.current = (e as CustomEvent).detail.isOpen;
+  //     console.log("isMenuOpenRef", isMenuOpenRef);
+  //     console.log("received draghandle:menu", (e as CustomEvent).detail.isOpen);
+  //   };
+  //   document.addEventListener("draghandle:menu", handler);
+  //   return () => document.removeEventListener("draghandle:menu", handler);
+  // }, []);
+
+  // const handleMouseLeave = useCallback(
+  //   (e: React.MouseEvent) => {
+  //     const related = e.relatedTarget as HTMLElement | null;
+  //     const landedOnColumn =
+  //       related?.hasAttribute("data-node-view-content") ||
+  //       related?.classList.contains("column-resizer");
+  //     console.log("landed on", landedOnColumn);
+
+  //     // Always clear any previous pending unlock
+  //     if (timerRef.current) {
+  //       clearTimeout(timerRef.current);
+  //       timerRef.current = null;
+  //     }
+
+  //     editor.commands.lockDragHandle();
+
+  //     if (landedOnColumn) {
+  //       //  editor.commands.lockDragHandle();
+  //       timerRef.current = window.setTimeout(() => {
+  //         if (!isMenuOpenRef.current) {
+  //           editor.commands.unlockDragHandle();
+  //         }
+  //         timerRef.current = null;
+  //       }, 350);
+  //     } else {
+  //       // Left the entire column group
+  //       editor.commands.unlockDragHandle();
+  //     }
+  //   },
+  //   [editor],
+  // );
 
   return (
     <NodeViewWrapper
@@ -71,8 +116,7 @@ export default function ColumnView(props: ReactNodeViewProps) {
         //width: "50px",
       }}
       className={hasBeenResized ? "resized" : ""}
-      onMouseEnter={() => setVisible(true)}
-      onMouseLeave={() => setVisible(false)}
+      // onMouseLeave={handleMouseLeave}
     >
       <NodeViewContent
         as="div"
