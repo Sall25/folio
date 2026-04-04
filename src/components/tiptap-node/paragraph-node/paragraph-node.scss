@@ -440,6 +440,16 @@
   [data-type="mention"] {
     display: inline-block;
     color: var(--tt-brand-color-500);
+    cursor: pointer;
+    max-height: 25px;
+    margin: 0;
+    padding: 0;
+
+   &:hover{
+   
+    color: var(--tt-brand-color-600);
+    background-color: transparent;
+   }
   }
 }
 

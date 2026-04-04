@@ -106,7 +106,7 @@
       "content": [
         {
           "type": "taskItem",
-          "attrs": { "checked": false },
+          "attrs": { "checked": true },
           "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add text colors to the slash menu" }] }]
         },
         {

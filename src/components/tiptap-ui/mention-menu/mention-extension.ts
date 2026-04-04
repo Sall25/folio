@@ -1,119 +1,173 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { Mention } from "@tiptap/extension-mention";
+import type { MentionItem, MentionListRef } from "./types";
+import {
+  Editor,
+  posToDOMRect,
+  ReactNodeViewRenderer,
+  ReactRenderer,
+} from "@tiptap/react";
+import MentionList from "./mention-list";
+import {
+  type SuggestionKeyDownProps,
+  type SuggestionProps,
+} from "@tiptap/suggestion";
+import { type MentionSuggestion } from "./types";
+import {
+  computePosition,
+  flip,
+  shift,
+  type VirtualElement,
+} from "@floating-ui/dom";
+import { users } from "./users";
 
-import { Mention } from '@tiptap/extension-mention'
-import type { MentionItem, MentionListRef } from './types'
-import { Editor, posToDOMRect, ReactRenderer } from '@tiptap/react'
-import MentionList from './mention-list'
-import { type SuggestionKeyDownProps, type SuggestionProps } from '@tiptap/suggestion'
-import { type MentionSuggestion } from './types'
-import { computePosition, flip, shift, type VirtualElement } from '@floating-ui/dom'
-import { users } from './users'
+import "./mention-extension.scss";
+import { MentionView } from "./mention-view";
 
-import './mention-extension.scss'
+const MentionWithView = Mention.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(MentionView);
+  },
+});
 
-export const MentionExtension = Mention.configure({
+export const MentionExtension = MentionWithView.configure({
   HTMLAttributes: {
-    class: 'mention',
+    class: "mention",
   },
 
   suggestion: {
-    char: '@',
+    char: "@",
     startOfLine: false,
-    decorationClass: 'mention-suggestion',
+    decorationClass: "mention-suggestion",
     allowSpaces: true,
-    decorationContent: 'Search...',
-
+    decorationContent: "Mention dates or people...",
 
     items: async ({ query }: { query: string }): Promise<MentionItem[]> => {
-      return users.filter(user =>
-        user.label.toLowerCase().includes(query.toLowerCase())
-      )
+      return users.filter((user) =>
+        user.label.toLowerCase().includes(query.toLowerCase()),
+      );
     },
 
-    command: ({ editor, range, props }: { editor: any, range: any, props: any }) => {
+    command: ({
+      editor,
+      range,
+      props,
+    }: {
+      editor: any;
+      range: any;
+      props: any;
+    }) => {
       editor
         .chain()
         .focus()
         .insertContentAt(range, [
           {
-            type: 'mention',
+            type: "mention",
             attrs: {
               id: props.id,
               label: props.label,
-              mentionSuggestionChar: '@',
+              mentionSuggestionChar: "@",
             },
           },
-          { type: 'text', text: ' ' },
+          { type: "text", text: " " },
         ])
-        .run()
+        .run();
     },
 
     render: () => {
-      let reactRenderer: ReactRenderer<MentionListRef> | null = null
+      let reactRenderer: ReactRenderer<MentionListRef> | null = null;
 
       const updatePosition = (editor: Editor, element: HTMLElement) => {
         const virtualEl: VirtualElement = {
-          getBoundingClientRect: () => posToDOMRect(editor.view, editor.state.selection.from, editor.state.selection.to)
-        }
+          getBoundingClientRect: () =>
+            posToDOMRect(
+              editor.view,
+              editor.state.selection.from,
+              editor.state.selection.to,
+            ),
+        };
         computePosition(virtualEl, element, {
-          placement: 'bottom-start',
-          strategy: 'absolute',
-          middleware: [shift(), flip()]
+          placement: "bottom-start",
+          strategy: "absolute",
+          middleware: [shift(), flip()],
         }).then(({ x, y, strategy }) => {
-          element.style.width = 'max-content'
-          element.style.position = strategy
-          element.style.left = `${x}px`
-          element.style.top = `${y}px`
-        })
-      }
+          element.style.width = "max-content";
+          element.style.position = strategy;
+          element.style.left = `${x}px`;
+          element.style.top = `${y}px`;
+        });
+      };
 
       return {
         onStart: (props: any) => {
           reactRenderer = new ReactRenderer(MentionList, {
             props,
             editor: props.editor,
-          })
+          });
 
-          reactRenderer.element.style.position = 'absolute'
+          reactRenderer.element.style.position = "absolute";
 
-          document.body.appendChild(reactRenderer.element)
+          document.body.appendChild(reactRenderer.element);
 
-          updatePosition(props.editor, reactRenderer.element)
+          updatePosition(props.editor, reactRenderer.element);
+
+          requestAnimationFrame(() => {
+            const el = props.editor.view.dom.querySelector(
+              ".mention-suggestion",
+            );
+            el?.classList.add("is-empty");
+          });
         },
 
         onUpdate(props: any) {
-          reactRenderer?.updateProps(props)
+          reactRenderer?.updateProps(props);
+          requestAnimationFrame(() => {
+            const el = props.editor.view.dom.querySelector(
+              ".mention-suggestion",
+            );
+            if (props.query.length > 0) {
+              el?.classList.remove("is-empty");
+            } else {
+              el?.classList.add("is-empty");
+            }
+          });
         },
 
         onKeyDown(props: SuggestionKeyDownProps) {
-          if (props.event.key === 'Escape') {
-            reactRenderer?.destroy()
-            return true
+          if (props.event.key === "Escape") {
+            reactRenderer?.destroy();
+            return true;
           }
 
-          return reactRenderer?.ref?.onKeyDown(props) ?? false
+          return reactRenderer?.ref?.onKeyDown(props) ?? false;
         },
 
         onExit(props: SuggestionProps<MentionItem>) {
-          const { editor, range } = props
-          const { state } = editor
+          const { editor, range } = props;
+          const { state } = editor;
 
-          const textAtRange = state.doc.textBetween(range.from, range.to, '\0', '\0')
-          const cursorPos = state.selection.from
+          const textAtRange = state.doc.textBetween(
+            range.from,
+            range.to,
+            "\0",
+            "\0",
+          );
+          const cursorPos = state.selection.from;
 
-          const stillSlash = textAtRange.startsWith('@')
-          const cursorInside = cursorPos >= range.from && cursorPos <= range.to + 1
+          const stillSlash = textAtRange.startsWith("@");
+          const cursorInside =
+            cursorPos >= range.from && cursorPos <= range.to + 1;
 
           if (stillSlash && cursorInside) {
             // Ignore transient exit caused by our own transaction
-            return
+            return;
           }
 
-          reactRenderer?.element.remove()
-          reactRenderer?.destroy()
+          reactRenderer?.element.remove();
+          reactRenderer?.destroy();
         },
-      }
+      };
     },
   } satisfies MentionSuggestion,
-})
+});

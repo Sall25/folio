@@ -1,0 +1,15 @@
+
+
+.mention-wrapper{
+  display: inline-block;
+
+  .mention-label{
+    &:hover{
+      background-color: transparent;
+    }
+
+    &.mention-past{
+       color: var(--tt-color-red-dec-2) !important;
+    }
+  }
+}
