@@ -97,6 +97,10 @@ import { TableContextExtension } from "src/components/tiptap-node/table-node";
 import { TableWrapperNode } from "src/components/tiptap-node/table-node/extensions/table-context";
 import { ToastProvider } from "src/components/tiptap-ui/copy-toast";
 import { Column, ColumnBlock } from "src/components/tiptap-node/column-node";
+import {
+  NotificationBell,
+  NotificationProvider,
+} from "src/components/tiptap-ui/notification";
 
 const MainToolbarContent = ({ isMobile }: { isMobile: boolean }) => {
   return (
@@ -111,6 +115,7 @@ const MainToolbarContent = ({ isMobile }: { isMobile: boolean }) => {
         <Separator orientation="vertical" />
         <ThemeToggle />
         <Separator orientation="vertical" />
+        <NotificationBell />
         <AvatarDemo />
       </ToolbarGroup>
     </>
@@ -307,46 +312,48 @@ function SimpleEditorInner() {
   return (
     <div className="simple-editor-wrapper">
       <EditorContext.Provider value={{ editor }}>
-        <ToastProvider>
-          <Toolbar
-            ref={toolbarRef}
-            style={{
-              ...(isMobile
-                ? {
-                    bottom: `calc(100% - ${height - rect.y}px)`,
-                  }
-                : {}),
-            }}
-          >
-            {mobileView === "main" ? (
-              <MainToolbarContent
-                // onHighlighterClick={() => setMobileView("highlighter")}
-                // onLinkClick={() => setMobileView("link")}
-                isMobile={isMobile}
-              />
-            ) : (
-              <MobileToolbarContent
-                type={mobileView === "highlighter" ? "highlighter" : "link"}
-                onBack={() => setMobileView("main")}
-              />
-            )}
-          </Toolbar>
+        <NotificationProvider>
+          <ToastProvider>
+            <Toolbar
+              ref={toolbarRef}
+              style={{
+                ...(isMobile
+                  ? {
+                      bottom: `calc(100% - ${height - rect.y}px)`,
+                    }
+                  : {}),
+              }}
+            >
+              {mobileView === "main" ? (
+                <MainToolbarContent
+                  // onHighlighterClick={() => setMobileView("highlighter")}
+                  // onLinkClick={() => setMobileView("link")}
+                  isMobile={isMobile}
+                />
+              ) : (
+                <MobileToolbarContent
+                  type={mobileView === "highlighter" ? "highlighter" : "link"}
+                  onBack={() => setMobileView("main")}
+                />
+              )}
+            </Toolbar>
 
-          <EditorContent
-            editor={editor}
-            role="presentation"
-            className="simple-editor-content"
-          />
-          <DragHandle editor={editor} />
+            <EditorContent
+              editor={editor}
+              role="presentation"
+              className="simple-editor-content"
+            />
+            <DragHandle editor={editor} />
 
-          <BubbleMenu editor={editor} />
+            <BubbleMenu editor={editor} />
 
-          <ImageBubble editor={editor} />
+            <ImageBubble editor={editor} />
 
-          <ThreadSidebar editor={editor} />
+            <ThreadSidebar editor={editor} />
 
-          <TocSidebar topOffset={80} maxShowCount={20} />
-        </ToastProvider>
+            <TocSidebar topOffset={80} maxShowCount={20} />
+          </ToastProvider>
+        </NotificationProvider>
       </EditorContext.Provider>
     </div>
   );

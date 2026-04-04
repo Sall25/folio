@@ -14,6 +14,7 @@ import { Card, CardGroupLabel } from "src/components/tiptap-ui-primitive/card";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import CalendarView from "./calendar-view";
+import { useMentionNotification } from "../notification";
 
 function getMentionItem(id?: string): MentionItem | undefined {
   if (id) {
@@ -46,6 +47,16 @@ export function MentionView({ node }: ReactNodeViewProps) {
     () => getMentionItem(node.attrs.id ?? node.attrs.label),
     [node],
   );
+
+  const isUserMention = Boolean(mentionItem?.role);
+
+  // ── Wire up notifications ──────────────────────────────────────────────
+  useMentionNotification({
+    mentionId: node.attrs.id ?? node.attrs.label ?? "unknown",
+    mentionLabel: mentionItem?.label ?? node.attrs.label ?? "",
+    isUserMention,
+    date,
+  });
 
   // const today = useMemo(()=>new Date().getDate(),
   // [])
