@@ -102,19 +102,37 @@ export const TableContextPlugin = () => {
           if (view.state.selection.eq(prevState.selection)) return;
 
           const { selection } = view.state;
-
           const meta = tableContextPluginKey.getState(view.state);
 
-          // Resolve the target cell — head cell for CellSelection, anchor for regular
           const $cell =
             selection instanceof CellSelection
-              ? selection.$headCell
+              ? selection.$anchorCell
               : selection.$anchor;
 
-          // Guard: make sure we're deep enough to have a cell parent
+          const { $anchor } = selection;
+          // Walk up the depth to find a cell — don't assume -1 is always the cell
+          let isInTable = false;
+          for (let d = $anchor.depth; d >= 1; d--) {
+            const node = $anchor.node(d);
+            if (["tableCell", "tableHeader"].includes(node.type.name)) {
+              isInTable = true;
+              break;
+            }
+          }
+
+          if (!isInTable) {
+            view.dispatch(
+              view.state.tr.setMeta(tableContextPluginKey, {
+                ...meta,
+                cellPos: -1,
+                cellRect: null,
+              }),
+            );
+            return;
+          }
+
           if ($cell.depth < 2) return;
 
-          // Guard: make sure the parent is actually a table cell
           const cellNode = $cell.node(-1);
           if (
             !cellNode ||
@@ -123,28 +141,77 @@ export const TableContextPlugin = () => {
             return;
 
           const cellPos = $cell.before(-1);
-          const cellDOM = view.nodeDOM(cellPos) as HTMLElement | null;
 
-          if (!cellDOM || !meta?.parentTableDOM) return;
+          // Defer rect calculation until after browser paint
+          requestAnimationFrame(() => {
+            const cellDOM = view.nodeDOM(cellPos) as HTMLElement | null;
+            if (!cellDOM || !meta?.parentTableDOM) return;
 
-          const cellBox = cellDOM.getBoundingClientRect();
-          const tableBox = meta.parentTableDOM.getBoundingClientRect();
+            const cellBox = cellDOM.getBoundingClientRect();
+            const tableBox = meta.parentTableDOM.getBoundingClientRect();
 
-          const cellRect = {
-            top: cellBox.top - tableBox.top,
-            left: cellBox.left - tableBox.left,
-            width: cellBox.width,
-            height: cellBox.height,
-          };
-
-          view.dispatch(
-            view.state.tr.setMeta(tableContextPluginKey, {
-              ...meta,
-              cellPos,
-              cellRect,
-            }),
-          );
+            view.dispatch(
+              view.state.tr.setMeta(tableContextPluginKey, {
+                ...meta,
+                cellPos,
+                cellRect: {
+                  top: cellBox.top - tableBox.top,
+                  left: cellBox.left - tableBox.left,
+                  width: cellBox.width,
+                  height: cellBox.height,
+                },
+              }),
+            );
+          });
         },
+        // update(view, prevState) {
+        //   if (locked) return;
+        //   if (view.state.selection.eq(prevState.selection)) return;
+
+        //   const { selection } = view.state;
+
+        //   const meta = tableContextPluginKey.getState(view.state);
+
+        //   // Resolve the target cell — head cell for CellSelection, anchor for regular
+        //   const $cell =
+        //     selection instanceof CellSelection
+        //       ? selection.$headCell
+        //       : selection.$anchor;
+
+        //   // Guard: make sure we're deep enough to have a cell parent
+        //   if ($cell.depth < 2) return;
+
+        //   // Guard: make sure the parent is actually a table cell
+        //   const cellNode = $cell.node(-1);
+        //   if (
+        //     !cellNode ||
+        //     !["tableCell", "tableHeader"].includes(cellNode.type.name)
+        //   )
+        //     return;
+
+        //   const cellPos = $cell.before(-1);
+        //   const cellDOM = view.nodeDOM(cellPos) as HTMLElement | null;
+
+        //   if (!cellDOM || !meta?.parentTableDOM) return;
+
+        //   const cellBox = cellDOM.getBoundingClientRect();
+        //   const tableBox = meta.parentTableDOM.getBoundingClientRect();
+
+        //   const cellRect = {
+        //     top: cellBox.top - tableBox.top,
+        //     left: cellBox.left - tableBox.left,
+        //     width: cellBox.width,
+        //     height: cellBox.height,
+        //   };
+
+        //   view.dispatch(
+        //     view.state.tr.setMeta(tableContextPluginKey, {
+        //       ...meta,
+        //       cellPos,
+        //       cellRect,
+        //     }),
+        //   );
+        // },
       };
     },
     props: {
@@ -153,8 +220,49 @@ export const TableContextPlugin = () => {
         mousemove(view, event) {
           if (locked) return false;
 
-          // Don't overwrite cell position during cell selection/drag
-          if (view.state.selection instanceof CellSelection) return false;
+          const meta = tableContextPluginKey.getState(view.state);
+
+          // During cell selection drag — update cellRect to follow the head cell
+          if (view.state.selection instanceof CellSelection) {
+            const pos = view.posAtCoords({
+              left: event.clientX,
+              top: event.clientY,
+            });
+            if (!pos) return false;
+
+            const $pos = view.state.doc.resolve(pos.pos);
+            if ($pos.depth < 2) return false;
+
+            const cellNode = $pos.node(-1);
+            if (
+              !cellNode ||
+              !["tableCell", "tableHeader"].includes(cellNode.type.name)
+            )
+              return false;
+
+            const cellPos = $pos.before(-1);
+            if (cellPos === meta?.cellPos) return false; // no change
+
+            const cellDOM = view.nodeDOM(cellPos) as HTMLElement | null;
+            if (cellDOM && meta?.parentTableDOM) {
+              const cellBox = cellDOM.getBoundingClientRect();
+              const tableBox = meta.parentTableDOM.getBoundingClientRect();
+
+              view.dispatch(
+                view.state.tr.setMeta(tableContextPluginKey, {
+                  ...meta,
+                  cellPos,
+                  cellRect: {
+                    top: cellBox.top - tableBox.top,
+                    left: cellBox.left - tableBox.left,
+                    width: cellBox.width,
+                    height: cellBox.height,
+                  },
+                }),
+              );
+            }
+            return false;
+          }
 
           const ctx = getTableContext(view, event);
           if (!ctx) {
@@ -178,7 +286,7 @@ export const TableContextPlugin = () => {
           );
 
           // Perf guard
-          const meta = tableContextPluginKey.getState(view.state);
+
           if (meta?.columnIndex === columnIndex && meta.rowIndex === rowIndex) {
             return false;
           }
@@ -261,6 +369,9 @@ export const TableContextPlugin = () => {
           );
 
           return false;
+        },
+        blur: () => {
+          console.log("blur");
         },
       },
     },

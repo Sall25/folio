@@ -92,6 +92,7 @@ export function TableWrapperView(props: ReactNodeViewProps) {
               className={clsx("table-overlays-fade", {
                 "table-overlays-fade--visible": visible,
               })}
+              // showOverlays={showOverlays}
               tablePos={tablePos}
               editor={editor}
             />

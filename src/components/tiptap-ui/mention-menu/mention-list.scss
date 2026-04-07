@@ -45,19 +45,26 @@
   opacity: 0;
   transform: translateY(-4px) scale(0.98);
 
-  transition:
-    opacity 0.15s ease-in,
-    transform 0.15s ease-in;
+  // transition:
+  //   opacity 0.15s ease-in,
+  //   transform 0.15s ease-in;
 
-  &[data-mention-menu-open="false"]{
-    opacity: 0;
-    transform: translateY(-4px) scale(0.98);
-    pointer-events: none;
-  }
+  // &[data-mention-menu-open="false"]{
+  //   opacity: 0;
+  //   transform: translateY(-4px) scale(0.98);
+  //   pointer-events: none;
+  // }
 
-  &[data-mention-menu-open="true"]{
-    opacity: 1;
-    transform: translateY(0) scale(1);
+  // &[data-mention-menu-open="true"]{
+  //   opacity: 1;
+  //   transform: translateY(0) scale(1);
+  // }
+
+  
+  &[data-mention-menu-open="true"] {
+    animation:
+      slashFadeIn     150ms linear forwards,
+      slashSlideScale 150ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
     

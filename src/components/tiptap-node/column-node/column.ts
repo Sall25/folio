@@ -8,7 +8,7 @@ export const Column = Node.create({
   name: "column",
   content: "block*",
   group: "block",
-  isolating: true,
+  isolating: false,
   defining: true,
   draggable: true,
 
@@ -43,81 +43,25 @@ export const Column = Node.create({
   // addProseMirrorPlugins() {
   //   return [
   //     new Plugin({
-  //       key: new PluginKey("columnEmptyCleanup"),
+  //       key: new PluginKey("ensureColumnParagraph"),
   //       appendTransaction(transactions, oldState, newState) {
-  //         // Only run if the doc actually changed
-  //         if (!transactions.some((tr) => tr.docChanged)) return null;
-
   //         const tr = newState.tr;
   //         let modified = false;
 
-  //         newState.doc.forEach((topNode, topOffset) => {
-  //           if (topNode.type.name !== "columnBlock") return;
+  //         newState.doc.descendants((node, pos) => {
+  //           if (node.type.name !== "column") return;
 
-  //           const columnBlockPos = topOffset;
-  //           const emptyColumns: { pos: number; node: any; index: number }[] =
-  //             [];
+  //           const lastChild = node.lastChild;
+  //           const needsEmptyParagraph =
+  //             !lastChild ||
+  //             lastChild.type.name !== "paragraph" ||
+  //             lastChild.textContent !== "";
 
-  //           topNode.forEach((child, childOffset, index) => {
-  //             if (child.type.name !== "column") return;
-  //             if (isColumnEffectivelyEmpty(child)) {
-  //               emptyColumns.push({
-  //                 pos: columnBlockPos + 1 + childOffset,
-  //                 node: child,
-  //                 index,
-  //               });
-  //             }
-  //           });
-
-  //           if (emptyColumns.length === 0) return;
-
-  //           // If all columns are empty or only one would remain, delete the whole columnBlock
-  //           const remainingCount = topNode.childCount - emptyColumns.length;
-  //           if (remainingCount <= 0) {
-  //             tr.delete(columnBlockPos, columnBlockPos + topNode.nodeSize);
-  //             const paragraphType = newState.schema.nodes.paragraph;
-  //             if (paragraphType) {
-  //               tr.insert(columnBlockPos, paragraphType.create());
-  //             }
+  //           if (needsEmptyParagraph) {
+  //             const endPos = pos + node.nodeSize - 1;
+  //             tr.insert(endPos, newState.schema.nodes.paragraph.create());
   //             modified = true;
-  //             return;
   //           }
-
-  //           // Delete empty columns in reverse order to preserve positions
-  //           const sorted = [...emptyColumns].sort((a, b) => b.pos - a.pos);
-  //           for (const { pos, node } of sorted) {
-  //             tr.delete(pos, pos + node.nodeSize);
-  //           }
-
-  //           // Redistribute widths among remaining columns
-  //           const newWidthValue = `${Math.round(100 / remainingCount)}%`;
-  //           const emptyIndices = new Set(emptyColumns.map((c) => c.index));
-
-  //           let childOffset = 0;
-  //           let adjustedOffset = 0;
-  //           topNode.forEach((child, _, index) => {
-  //             if (child.type.name === "column") {
-  //               if (!emptyIndices.has(index)) {
-  //                 const absPos = columnBlockPos + 1 + childOffset;
-  //                 // Calculate how much was deleted before this node
-  //                 let deletedBefore = 0;
-  //                 for (const {
-  //                   pos,
-  //                   node: deletedNode,
-  //                   index: di,
-  //                 } of emptyColumns) {
-  //                   if (di < index) deletedBefore += deletedNode.nodeSize;
-  //                 }
-  //                 tr.setNodeMarkup(absPos - deletedBefore, undefined, {
-  //                   ...child.attrs,
-  //                   width: newWidthValue,
-  //                 });
-  //               }
-  //             }
-  //             childOffset += child.nodeSize;
-  //           });
-
-  //           modified = true;
   //         });
 
   //         return modified ? tr : null;
@@ -132,6 +76,14 @@ export const Column = Node.create({
         const { state } = editor.view;
         const { selection } = state;
         const { $from } = selection;
+
+        if (this.editor.isActive("listItem")) {
+          return editor.commands.splitListItem("listItem");
+        }
+
+        if (this.editor.isActive("taskItem")) {
+          return editor.commands.splitListItem("taskItem");
+        }
 
         let insideColumn = false;
         for (let i = $from.depth; i >= 0; i--) {

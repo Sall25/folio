@@ -176,14 +176,19 @@ import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import "./slash-command-list.scss";
 import { useMenuNavigation } from "src/hooks/use-menu-navigation";
 import type { SlashCommand as SlashItem } from "./slash-commands";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { Badge } from "src/components/tiptap-ui-primitive/badge";
 
 type Props = SuggestionProps<SlashItem> & {
   selectedIndex?: number;
   onClickItem?: (item: SlashItem) => void;
+  onClose?: () => void;
+  dismissed?: boolean;
 };
 
 export default function SlashList(props: Props) {
-  const { items = [], onClickItem } = props;
+  const { items = [], onClickItem, onClose, dismissed } = props;
+  const [visible, setVisible] = useState(true);
 
   const isSelectable = (item: SlashItem) => item.type === "command";
 
@@ -200,6 +205,11 @@ export default function SlashList(props: Props) {
     autoSelectFirstItem: true,
     onSelect: (item) => {
       onClickItem?.(item);
+    },
+    onClose() {
+      onClose?.();
+      setVisible(false);
+      console.log("closed");
     },
   });
 
@@ -250,6 +260,8 @@ export default function SlashList(props: Props) {
     }
   }, [selectedIndex, selectedFullIndex]);
 
+  if (!visible) return null;
+
   return (
     <Card
       ref={containerRef}
@@ -260,7 +272,16 @@ export default function SlashList(props: Props) {
       data-slash-menu-open={menuVisible}
     >
       {items.length === 0 ? (
-        <CardGroupLabel>No commands</CardGroupLabel>
+        <Button
+          variant="ghost"
+          style={{
+            width: "100%",
+          }}
+        >
+          <span>No commands</span>
+          <Spacer orientation="horizontal" />
+          <Badge>Escape</Badge>
+        </Button>
       ) : (
         items.map((item, i) => {
           const selectable = isSelectable(item);

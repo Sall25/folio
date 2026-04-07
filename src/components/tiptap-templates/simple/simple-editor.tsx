@@ -6,7 +6,13 @@ import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit";
 import { Image } from "@tiptap/extension-image";
-import { TaskItem, TaskList } from "@tiptap/extension-list";
+import {
+  BulletList,
+  ListItem,
+  OrderedList,
+  TaskItem,
+  TaskList,
+} from "@tiptap/extension-list";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { Typography } from "@tiptap/extension-typography";
 import { Highlight } from "@tiptap/extension-highlight";
@@ -145,6 +151,11 @@ const MobileToolbarContent = ({
   </>
 );
 
+function loadContent() {
+  const saved = localStorage.getItem("editor-content");
+  return saved ? JSON.parse(saved) : "<p></p>"; // fallback to empty doc
+}
+
 function SimpleEditorInner() {
   const { setTocContent } = useToc();
   const isMobile = useIsBreakpoint();
@@ -172,6 +183,8 @@ function SimpleEditorInner() {
     return () => observer?.disconnect();
   }, []);
 
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const editor = useEditor({
     immediatelyRender: false,
     editorProps: {
@@ -187,6 +200,9 @@ function SimpleEditorInner() {
     extensions: [
       StarterKit.configure({
         horizontalRule: false,
+        listItem: false,
+        bulletList: false,
+        orderedList: false,
         link: {
           openOnClick: false,
           enableClickSelection: true,
@@ -200,6 +216,9 @@ function SimpleEditorInner() {
       TocNode.configure({ topOffset: 80, maxShowCount: 20, showTitle: true }),
       HorizontalRule,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
+      BulletList,
+      OrderedList,
+      ListItem,
       TaskList,
       TextStyle,
       Color,
@@ -292,7 +311,16 @@ function SimpleEditorInner() {
       ColumnBlock,
       // CommentExtension
     ],
-    content,
+    onUpdate(props) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        localStorage.setItem(
+          "editor-content",
+          JSON.stringify(props.editor.getJSON()),
+        );
+      }, 500);
+    },
+    content: loadContent(),
   });
 
   const rect = useCursorVisibility({
@@ -341,6 +369,7 @@ function SimpleEditorInner() {
             <EditorContent
               editor={editor}
               role="presentation"
+              data-size="full"
               className="simple-editor-content"
             />
             <DragHandle editor={editor} />

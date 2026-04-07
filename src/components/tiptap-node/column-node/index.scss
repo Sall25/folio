@@ -2,6 +2,10 @@
   width: 100%;
 }
 
+.node-columnBlock{
+  margin-bottom: 0;
+}
+
 .column-block-inner {
   position: relative;
   display: flex;
@@ -52,22 +56,9 @@
 .column-block-columns {
   display: flex;
   width: 100%;
+  align-items: flex-start;
     
 
- 
-  
-
-  // last column always fills remaining space
-  // [data-node-view-wrapper]:last-child {
-  //   flex: 1 !important;
-  //   min-width: 0;
-  // }
-
-  // [data-node-view-wrapper]:not(:last-child) {
-  //   flex-shrink: 0;
-  //   flex-grow: 0;
-  //   min-width: 0;
-  // }
 
   [data-node-view-wrapper] {
     display: inherit;
@@ -85,10 +76,17 @@
       width: 100%;
       height: auto !important;
       min-height: 0;
+      height: fit-content;
       margin: 0;
+      height: fit-content;
+      margin-bottom: 0;
      // gap:5px;
       //position: relative;
       padding: 0 12px;
+
+      &.node-emoji{
+        display: inline;
+      }
 
       &.ProseMirror-selectednode{
         border-radius: var(--tt-radius-md);
@@ -131,17 +129,9 @@
       // ← this is the NodeViewContent div — must fill the column
       > div {
         width: 100%;
-        min-height: 5em; // ensures clickable area even when empty
       }
 
-      // [data-type="column"] {
-      //   width: 100%;
-      //   white-space: pre-wrap;
-      //   overflow-wrap: break-word;
-      //   word-break: break-all;
-      //   min-width: 0;
-
-      // }
+      
     }
   }
 }

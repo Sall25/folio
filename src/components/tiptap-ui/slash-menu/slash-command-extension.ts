@@ -40,7 +40,9 @@ export const SlashCommand = Extension.create({
     const editor = this.editor;
     let reactRenderer: ReactRenderer<any> | null = null;
     let selectedIndex = 0;
-    //let currentProps: SuggestionProps<SlashItem> | null = null;
+    let dismissed = false;
+    let dismissedAt: number | null = null;
+    //  let currentProps: SuggestionProps<SlashItem> | null = null;
     let resizeObserver: ResizeObserver | null = null;
 
     const updatePosition = (element: HTMLElement) => {
@@ -65,7 +67,7 @@ export const SlashCommand = Extension.create({
     };
 
     function createRenderer(props: SuggestionProps<SlashItem>) {
-      // currentProps = props;
+      //  currentProps = props;
       selectedIndex = 0;
 
       reactRenderer = new ReactRenderer(SlashList, {
@@ -77,6 +79,11 @@ export const SlashCommand = Extension.create({
             props.command(item);
             exitSuggestion(editor.view);
           },
+          onClose: () => {
+            forceDestroyRenderer();
+            exitSuggestion(editor.view);
+          },
+          dismissed,
         },
       });
 
@@ -95,8 +102,14 @@ export const SlashCommand = Extension.create({
 
     function updateRenderer(props: SuggestionProps<SlashItem>) {
       //currentProps = props;
-      if (!reactRenderer) {
-        createRenderer(props);
+      if (!reactRenderer || dismissed) {
+        return;
+      }
+
+      console.log("update renderer, dismissed", dismissed);
+
+      if (dismissed) {
+        console.log("return");
         return;
       }
 
@@ -107,6 +120,11 @@ export const SlashCommand = Extension.create({
           props.command(item);
           exitSuggestion(editor.view);
         },
+        onClose: () => {
+          forceDestroyRenderer();
+          exitSuggestion(editor.view);
+        },
+        dismissed,
       });
     }
 
@@ -120,7 +138,7 @@ export const SlashCommand = Extension.create({
       if (range.from >= docSize) {
         reactRenderer?.destroy();
         reactRenderer = null;
-        // currentProps = null;
+        //currentProps = null;
         return;
       }
 
@@ -162,6 +180,27 @@ export const SlashCommand = Extension.create({
       }
       //currentProps = null;
     }
+    function forceDestroyRenderer() {
+      if (reactRenderer) {
+        try {
+          reactRenderer.destroy();
+        } catch {
+          /* ignore */
+        }
+        try {
+          if (reactRenderer.element?.parentNode)
+            reactRenderer.element.parentNode.removeChild(reactRenderer.element);
+        } catch {
+          /* ignore */
+        }
+        reactRenderer = null;
+      }
+      resizeObserver?.disconnect();
+      resizeObserver = null;
+      dismissed = true;
+      dismissedAt = editor.state.selection.from;
+      console.log("dismissed", dismissed);
+    }
 
     const suggestion = Suggestion<SlashItem>({
       editor,
@@ -170,7 +209,13 @@ export const SlashCommand = Extension.create({
       decorationClass: "slash-suggestion",
       allowSpaces: true,
       decorationContent: "Filter...",
+
       items: ({ query }) => {
+        if (dismissed) {
+          dismissed = false; // reset so next fresh "/" works
+          return [];
+        }
+
         const q = (query || "").toLowerCase();
 
         const showColorSection =
@@ -204,18 +249,33 @@ export const SlashCommand = Extension.create({
           return cmd.title.toLowerCase().includes(q);
         });
       },
-      // items: ({ query }) => {
-      //   const q = (query || "").toLowerCase();
-      //   return (this.options.commands as SlashItem[]).filter((c) =>
-      //     c.title.toLowerCase().includes(q),
-      //   );
-      // },
+
       command: ({ editor: ed, range, props }) => {
         ed.chain().focus().deleteRange(range).run();
         props.run(ed);
       },
       render: () => ({
         onStart: (props) => {
+          const { from } = editor.state.selection;
+          // const charBefore = editor.state.doc.textBetween(
+          //   Math.max(0, from - 2),
+          //   from - 1,
+          //   "\0",
+          //   "\0",
+          // );
+          // const precededBySpace = charBefore === " ";
+          // if (precededBySpace) {
+          //   return;
+          // }
+          console.log("onStart");
+          if (dismissed) {
+            console.log("onStart should dismiss");
+            return;
+          }
+          const currentPos = editor.state.selection.from;
+          if (dismissed && dismissedAt !== null && currentPos !== dismissedAt)
+            return;
+          dismissed = false;
           createRenderer(props);
           requestAnimationFrame(() => {
             const el = editor.view.dom.querySelector(".slash-suggestion");
@@ -223,6 +283,9 @@ export const SlashCommand = Extension.create({
           });
         },
         onUpdate: (props) => {
+          if (props.items.length === 0) return;
+          if (dismissed || !reactRenderer) return;
+
           updateRenderer(props);
 
           requestAnimationFrame(() => {
@@ -233,6 +296,13 @@ export const SlashCommand = Extension.create({
               el?.classList.add("is-empty");
             }
           });
+        },
+        onKeyDown({ event }) {
+          if (event.key === "Escape") {
+            reactRenderer?.destroy();
+            return true;
+          }
+          return false;
         },
         onExit: destroyRenderer,
       }),

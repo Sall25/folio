@@ -154,7 +154,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     type: "command",
     title: "Table",
     icon: Table,
-    run: (e) => e.chain().focus().insertTable().run(),
+    run: (e) => e.chain().focus().insertTable({ withHeaderRow: false }).run(),
   },
   {
     id: "toc",

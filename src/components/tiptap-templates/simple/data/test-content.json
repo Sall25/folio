@@ -3,36 +3,18 @@
   "content": [
     {
       "type": "heading",
-      "attrs": { "textAlign": null, "level": 1 },
-      "content": [{ "type": "text", "text": "The Last Debugging Session" }]
+      "attrs": { "textAlign": "center", "level": 1 },
+      "content": [{ "type": "text", "text": "📅 Weekly Schedule" }]
     },
     {
       "type": "paragraph",
-      "attrs": { "textAlign": null },
+      "attrs": { "textAlign": "center" },
       "content": [
-        { "type": "text", "text": "It was " },
-        { "type": "text", "marks": [{ "type": "bold" }], "text": "2:47 AM" },
-        { "type": "text", "text": " when the engineer finally understood why the drag handle kept flying away. The answer, like most answers in software, was " },
-        { "type": "text", "marks": [{ "type": "italic" }, { "type": "highlight", "attrs": { "color": "var(--tt-color-highlight-yellow)" } }], "text": "embarrassingly simple" },
-        { "type": "text", "text": "." }
+        { "type": "text", "marks": [{ "type": "italic" }], "text": "Monday → Sunday · Deployment week 🚀" }
       ]
     },
     {
-      "type": "blockquote",
-      "content": [
-        {
-          "type": "paragraph",
-          "attrs": { "textAlign": null },
-          "content": [
-            { "type": "text", "marks": [{ "type": "italic" }], "text": "\"The mouse doesn't lie. But the timer? The timer will betray you every time.\"" }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "heading",
-      "attrs": { "textAlign": null, "level": 2 },
-      "content": [{ "type": "text", "text": "The Suspects" }]
+      "type": "horizontalRule"
     },
     {
       "type": "columnBlock",
@@ -43,15 +25,36 @@
             {
               "type": "heading",
               "attrs": { "textAlign": null, "level": 3 },
-              "content": [{ "type": "text", "text": "🕵️ relatedTarget" }]
+              "content": [{ "type": "text", "marks": [{ "type": "bold" }], "text": "Monday" }]
             },
             {
-              "type": "paragraph",
-              "attrs": { "textAlign": null },
+              "type": "taskList",
               "content": [
-                { "type": "text", "text": "Looked innocent. Sometimes returned " },
-                { "type": "text", "marks": [{ "type": "code" }], "text": "null" },
-                { "type": "text", "text": ". Couldn't be trusted on its own. Required corroboration." }
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add text colors to slash menu" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Fix mention dropdown (Notion ref)" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Fix placeholders on list items" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Review overall editor UX" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Write daily standup notes" }] }]
+                }
               ]
             }
           ]
@@ -62,15 +65,36 @@
             {
               "type": "heading",
               "attrs": { "textAlign": null, "level": 3 },
-              "content": [{ "type": "text", "text": "⏱️ The Timer" }]
+              "content": [{ "type": "text", "marks": [{ "type": "bold" }], "text": "Tuesday" }]
             },
             {
-              "type": "paragraph",
-              "attrs": { "textAlign": null },
+              "type": "taskList",
               "content": [
-                { "type": "text", "text": "Set to " },
-                { "type": "text", "marks": [{ "type": "highlight", "attrs": { "color": "var(--tt-color-highlight-blue)" } }], "text": "3050ms" },
-                { "type": "text", "text": " by a sleep-deprived developer. Fired at the worst possible moment. The real culprit." }
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Fix table overlays once and for all" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Fix cell handle menu layout" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Fix table drag and drop problem" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Test table interactions end-to-end" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Document table bugs fixed" }] }]
+                }
               ]
             }
           ]
@@ -81,15 +105,36 @@
             {
               "type": "heading",
               "attrs": { "textAlign": null, "level": 3 },
-              "content": [{ "type": "text", "text": "📡 Custom Events" }]
+              "content": [{ "type": "text", "marks": [{ "type": "bold" }], "text": "Wednesday" }]
             },
             {
-              "type": "paragraph",
-              "attrs": { "textAlign": null },
+              "type": "taskList",
               "content": [
-                { "type": "text", "text": "The hero of the story. " },
-                { "type": "text", "marks": [{ "type": "code" }], "text": "draghandle:menu" },
-                { "type": "text", "text": " whispered across the document, keeping everyone in sync." }
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add callout block" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add video block" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add audio block" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Test new blocks in editor" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Mid-week progress review" }] }]
+                }
               ]
             }
           ]
@@ -97,81 +142,194 @@
       ]
     },
     {
-      "type": "heading",
-      "attrs": { "textAlign": null, "level": 2 },
-      "content": [{ "type": "text", "text": "The Fix" }]
+      "type": "horizontalRule"
     },
     {
-      "type": "taskList",
+      "type": "columnBlock",
       "content": [
         {
-          "type": "taskItem",
-          "attrs": { "checked": true },
-          "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add text colors to the slash menu" }] }]
+          "type": "column",
+          "content": [
+            {
+              "type": "heading",
+              "attrs": { "textAlign": null, "level": 3 },
+              "content": [{ "type": "text", "marks": [{ "type": "bold" }], "text": "Thursday" }]
+            },
+            {
+              "type": "taskList",
+              "content": [
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add export to Word support" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add export to PDF support" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add pages (Notion ref)" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add breadcrumbs navigation" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Test page navigation flow" }] }]
+                }
+              ]
+            }
+          ]
         },
         {
-          "type": "taskItem",
-          "attrs": { "checked": false },
-          "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Fix the mention dropdown (use Notion as reference)" }] }]
+          "type": "column",
+          "content": [
+            {
+              "type": "heading",
+              "attrs": { "textAlign": null, "level": 3 },
+              "content": [{ "type": "text", "marks": [{ "type": "bold" }], "text": "Friday" }]
+            },
+            {
+              "type": "taskList",
+              "content": [
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add icons support (Notion ref)" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Build first template (scheduling)" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Final QA pass on all features" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Write release notes" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "marks": [{ "type": "bold" }], "text": "🚀 Deploy first app!" }] }]
+                }
+              ]
+            }
+          ]
         },
         {
-          "type": "taskItem",
-          "attrs": { "checked": false },
-          "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Fix the table overlays once and for all" }] }]
-        },
-        {
-          "type": "taskItem",
-          "attrs": { "checked": false },
-          "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Fix the placeholders on list items" }] }]
-        },
-        {
-          "type": "taskItem",
-          "attrs": { "checked": false },
-          "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Fix the cell handle menu layout" }] }]
-        },
-         {
-          "type": "taskItem",
-          "attrs": { "checked": false },
-          "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Fix the table drag and drop problem" }] }]
-        },
-         {
-          "type": "taskItem",
-          "attrs": { "checked": false },
-          "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add callout, video and audio" }] }]
-        },
-        {
-          "type": "taskItem",
-          "attrs": { "checked": false },
-          "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add suport for exporting to word, or as pdf" }] }]
-        },
-         {
-          "type": "taskItem",
-          "attrs": { "checked": false },
-          "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add pages (use Notion as reference)" }] }]
-        },
-         {
-          "type": "taskItem",
-          "attrs": { "checked": false },
-          "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Add breadcrumbs" }] }]
-        },
-         {
-          "type": "taskItem",
-          "attrs": { "checked": false },
-          "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Create your first template" }] }]
+          "type": "column",
+          "content": [
+            {
+              "type": "heading",
+              "attrs": { "textAlign": null, "level": 3 },
+              "content": [{ "type": "text", "marks": [{ "type": "bold" }], "text": "Saturday" }]
+            },
+            {
+              "type": "taskList",
+              "content": [
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Monitor deployment & fix hotfixes" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Collect early user feedback" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Personal project / rest" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Exercise & recharge" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Celebrate the launch 🎉" }] }]
+                }
+              ]
+            }
+          ]
         }
       ]
     },
     {
-      "type": "codeBlock",
-      "attrs": { "language": "typescript" },
-      "content": [{ "type": "text", "text": "// The line that saved the night\nif (!isMenuOpenRef.current) {\n  editor.commands.unlockDragHandle();\n}" }]
+      "type": "horizontalRule"
     },
     {
-      "type": "paragraph",
-      "attrs": { "textAlign": null },
+      "type": "columnBlock",
       "content": [
-        { "type": "text", "text": "And somewhere, a drag handle stayed exactly where it was supposed to be. " },
-        { "type": "text", "marks": [{ "type": "bold" }], "text": "Finally." }
+        {
+          "type": "column",
+          "content": [
+            {
+              "type": "heading",
+              "attrs": { "textAlign": null, "level": 3 },
+              "content": [{ "type": "text", "marks": [{ "type": "bold" }], "text": "Sunday" }]
+            },
+            {
+              "type": "taskList",
+              "content": [
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Weekly review & retrospective" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Plan next week's priorities" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Read & learn something new" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Family / social time" }] }]
+                },
+                {
+                  "type": "taskItem",
+                  "attrs": { "checked": false },
+                  "content": [{ "type": "paragraph", "attrs": { "textAlign": null }, "content": [{ "type": "text", "text": "Early bedtime 🌙" }] }]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "horizontalRule"
+    },
+    {
+      "type": "blockquote",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": { "textAlign": null },
+          "content": [
+            { "type": "text", "marks": [{ "type": "italic" }], "text": "\"Ship it, learn from it, improve it. One week at a time.\"" }
+          ]
+        }
       ]
     }
   ]

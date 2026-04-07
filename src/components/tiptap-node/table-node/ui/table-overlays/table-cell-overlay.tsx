@@ -17,15 +17,26 @@ interface TableCellOverlayProps {
 }
 
 export function TableCellOverlay({ className }: TableCellOverlayProps) {
-  const { cellRect, cellPos } = useTableOverlays();
+  const { cellRect, cellPos, editor } = useTableOverlays();
   const [open, setOpen] = useState(false);
 
-  const onAction = useCallback(() => setOpen(false), []);
+  const onAction = useCallback(() => {
+    setOpen(false);
+    editor?.commands.unlockTableHandle();
+  }, [editor]);
 
   if (cellPos === -1) return null;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) {
+          editor?.commands.unlockTableHandle();
+        }
+        setOpen(next);
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           style={{
@@ -33,6 +44,10 @@ export function TableCellOverlay({ className }: TableCellOverlayProps) {
             top: cellRect ? cellRect.top + cellRect.height / 3 : 0,
             left: cellRect ? cellRect?.left + cellRect.width - 8 : 0,
             zIndex: 20,
+          }}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            editor?.commands.lockTableHandle();
           }}
           className={className}
         />
@@ -47,8 +62,13 @@ export function TableCellOverlay({ className }: TableCellOverlayProps) {
           }}
         >
           <TableMergeOrSplitCellButton onAction={onAction} />
-          <ColorDropdownMenu hideWhenUnavailable={true} onAction={onAction} />
+          <ColorDropdownMenu
+            className="menu-button"
+            hideWhenUnavailable={true}
+            onAction={onAction}
+          />
           <AlignmentDropdownMenu
+            className="menu-button"
             hideWhenUnavailable={true}
             onAction={onAction}
           />

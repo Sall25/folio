@@ -12,7 +12,7 @@
 .tiptap.ProseMirror {
   hr {
     border: none;
-    height: 1px;
+    height: 0.5px;
     background-color: var(--horizontal-rule-color);
     margin: .5rem 0;
 
@@ -20,6 +20,6 @@
 
   [data-type="horizontalRule"] {
     margin: .5rem 0;
-    padding: 0.15rem 0;
+    padding: 0;
   }
 }

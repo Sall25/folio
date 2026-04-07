@@ -23,8 +23,8 @@
   // Common list styles
   ol,
   ul {
-    margin-top: 1em;
-    margin-bottom: 1em;
+    margin-top: 0;
+    margin-bottom: 0;
     padding-left: 1em;
 
     &:first-child {
@@ -44,8 +44,8 @@
 
   li {
     p {
-      margin-top: 0;
-      line-height: 1.45;
+      margin: 0;
+      line-height: 1.6;
     }
   }
 

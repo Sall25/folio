@@ -10,17 +10,18 @@ export function TableOverlays({
   editor,
   tablePos,
   className,
+  //showOverlays = false,
 }: {
   editor: Editor;
   tablePos?: number;
   className?: string;
+  showOverlays?: boolean;
 }) {
   return (
     <TableOverlaysProvider editor={editor}>
       <div className={className}>
         {/* Cell overlay */}
         <TableCellOverlay className="expandable-menu-button" />
-
         {/* Column overlay */}
         <TableRowColOverlay orientation="column">
           <TableOverlayRowColButton tablePos={tablePos} orientation="col" />

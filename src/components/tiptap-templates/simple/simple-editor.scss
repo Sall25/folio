@@ -1,4 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap');
+
 
 body {
   --tt-toolbar-height: 44px;
@@ -16,6 +18,7 @@ body {
   font-weight: 400;
   font-style: normal;
   padding: 0;
+  color: var(--tt-theme-text);
   overflow-y: hidden;
 }
 
@@ -140,6 +143,15 @@ body,
   display: flex;
   flex-direction: column;
   flex: 1;
+
+
+  &[data-size="medium"] {
+    max-width: 800px;
+  }
+
+  &[data-size="full"] {
+    max-width: 950px;
+  }
 }
 
 .simple-editor-content .tiptap.ProseMirror.simple-editor {
