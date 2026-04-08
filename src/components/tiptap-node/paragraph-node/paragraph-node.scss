@@ -35,7 +35,7 @@
      ===================== */
 .tiptap.ProseMirror {
   font-family: 'Inter', sans-serif;
-  font-size: 16px;
+  font-size: inherit;
   white-space: pre-wrap;
   outline: none;
   caret-color: var(--tt-cursor-color);
@@ -45,7 +45,6 @@
 
   // Paragraph spacing
   p:not(:first-child):not(td p):not(th p) {
-    font-size: 1rem;
     line-height: 1.75;
     font-weight: 400;
     margin: 0;

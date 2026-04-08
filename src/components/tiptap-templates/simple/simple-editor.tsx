@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 
 // --- Tiptap Core Extensions ---
@@ -80,7 +80,6 @@ import { handleImageUpload, MAX_FILE_SIZE } from "src/lib/tiptap-utils";
 import "src/components/tiptap-templates/simple/simple-editor.scss";
 import "src/components/tiptap-templates/simple/toc.scss";
 
-import content from "src/components/tiptap-templates/simple/data/test-content.json";
 // import content from "src/components/tiptap-templates/simple/data/content.json";
 
 import DragHandleExtension from "src/components/tiptap-ui/drag-handle/drag-handle-extension";
@@ -107,8 +106,25 @@ import {
   NotificationBell,
   NotificationProvider,
 } from "src/components/tiptap-ui/notification";
+import { MorePopover } from "./more-popover";
 
-const MainToolbarContent = ({ isMobile }: { isMobile: boolean }) => {
+const MainToolbarContent = ({
+  isMobile,
+  fullWidth,
+  smallText,
+  locked,
+  onFullWidthChanged,
+  onSmallTextChanged,
+  onLockedChanged,
+}: {
+  isMobile: boolean;
+  fullWidth: boolean;
+  smallText: boolean;
+  locked: boolean;
+  onFullWidthChanged: (v: boolean) => void;
+  onSmallTextChanged: (v: boolean) => void;
+  onLockedChanged: (v: boolean) => void;
+}) => {
   return (
     <>
       <Spacer />
@@ -120,8 +136,15 @@ const MainToolbarContent = ({ isMobile }: { isMobile: boolean }) => {
         <UndoRedoButton action="redo" />
         <Separator orientation="vertical" />
         <ThemeToggle />
-        <Separator orientation="vertical" />
         <NotificationBell />
+        <MorePopover
+          fullWidth={fullWidth}
+          smallText={smallText}
+          locked={locked}
+          onFullWidthChange={onFullWidthChanged}
+          onSmallTextChange={onSmallTextChanged}
+          onLockedChange={onLockedChanged}
+        />
         <AvatarDemo />
       </ToolbarGroup>
     </>
@@ -184,6 +207,24 @@ function SimpleEditorInner() {
   }, []);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [width, setWidth] = useState<"medium" | "full">("medium");
+  const [text, setText] = useState<"small" | "normal">("normal");
+  const [locked, setLocked] = useState(false);
+
+  const onFullWidthChanged = useCallback((checked: boolean) => {
+    if (checked) {
+      setWidth("full");
+    } else {
+      setWidth("medium");
+    }
+  }, []);
+  const onSmallTextChanged = useCallback((checked: boolean) => {
+    if (checked) {
+      setText("small");
+    } else {
+      setText("normal");
+    }
+  }, []);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -328,6 +369,14 @@ function SimpleEditorInner() {
     overlayHeight,
   });
 
+  const onLockedChanged = useCallback(
+    (checked: boolean) => {
+      setLocked(checked);
+      editor?.setEditable(!checked);
+    },
+    [editor],
+  );
+
   useEffect(() => {
     if (!isMobile && mobileView !== "main") {
       // eslint-disable-next-line
@@ -354,9 +403,13 @@ function SimpleEditorInner() {
             >
               {mobileView === "main" ? (
                 <MainToolbarContent
-                  // onHighlighterClick={() => setMobileView("highlighter")}
-                  // onLinkClick={() => setMobileView("link")}
                   isMobile={isMobile}
+                  fullWidth={width === "full"}
+                  onFullWidthChanged={onFullWidthChanged}
+                  smallText={text === "small"}
+                  onSmallTextChanged={onSmallTextChanged}
+                  locked={locked}
+                  onLockedChanged={onLockedChanged}
                 />
               ) : (
                 <MobileToolbarContent
@@ -369,7 +422,9 @@ function SimpleEditorInner() {
             <EditorContent
               editor={editor}
               role="presentation"
-              data-size="full"
+              data-size={width}
+              data-text={text}
+              data-locked={locked}
               className="simple-editor-content"
             />
             <DragHandle editor={editor} />

@@ -1,0 +1,43 @@
+:root{
+  --thumb-bg-color: var(--tt-gray-light-100);
+  --toggle-bg-color: var(--tt-gray-light-300);
+}
+.dark{
+  --thumb-bg-color: var(--tt-gray-dark-100);
+  --toggle-bg-color: var(--tt-gray-dark-300);
+}
+
+.toggle {
+  width: 32px;
+  height: 18px;
+  border-radius: 999px;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  transition: background 200ms ease;
+  background: var(--toggle-bg-color);
+  display: flex;
+  align-items: center;
+
+  &[data-state="on"] {
+    background: var(--tt-brand-color-500); // Notion's blue
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &__thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--thumb-bg-color); //white;
+    transition: transform 200ms ease;
+    flex-shrink: 0;
+
+    .toggle[data-state="on"] & {
+      transform: translateX(14px);
+    }
+  }
+}

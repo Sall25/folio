@@ -144,13 +144,24 @@ body,
   flex-direction: column;
   flex: 1;
 
+  font-size: 1rem;
+
 
   &[data-size="medium"] {
     max-width: 800px;
   }
 
   &[data-size="full"] {
-    max-width: 950px;
+    max-width: 980px;
+  }
+
+  &[data-text="small"]{
+    font-size: 0.85em;
+  }
+
+  &[data-locked="true"]{
+    pointer-events: none;
+    user-select: none;
   }
 }
 
