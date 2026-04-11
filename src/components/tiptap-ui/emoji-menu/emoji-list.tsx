@@ -59,11 +59,10 @@ export const EmojiList = forwardRef<EmojiListRef, EmojiListProps>(
       return () => cancelAnimationFrame(raf);
     }, []);
 
+    if (items.length === 0) return null;
+
     return (
       <Card className="emoji-menu" data-emoji-menu-open={menuVisible}>
-        {items.length === 0 && (
-          <CardGroupLabel className="emoji-empty">No Result</CardGroupLabel>
-        )}
         {items.map((item, index) => (
           <Button
             className="emoji-item"
