@@ -24,12 +24,14 @@ const NODE_LABELS: Record<string, string> = {
   blockquote: "Blockquote",
   codeBlock: "Code Block",
   horizontalRule: "Separator",
+  hr: "Seapartor",
   table: "Table",
-  tableWrapper: "Table",
+  tableWrapper: "TableWrapper",
   tocNode: "Table of Contents",
   figure: "Image",
   columnBlock: "Columns",
   column: "Column",
+  database: "Database",
 };
 
 const nestedOptions = {
@@ -124,7 +126,23 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
       }}
       onElementDragEnd={() => {
         isDraggingRef.current = false;
+
+        const pos = posRef.current;
+        if (pos === -1 || !editor) return;
+
+        // Give ProseMirror a tick to finish the drop transaction
+        requestAnimationFrame(() => {
+          const node = editor.state.doc.nodeAt(pos);
+
+          // If the wrapper still exists but has no table children, delete it
+          if (node?.type.name === "tableWrapper") {
+            editor.chain().setNodeSelection(pos).deleteSelection().run();
+          }
+        });
       }}
+      // onElementDragEnd={() => {
+      //   isDraggingRef.current = false;
+      // }}
       nestedOptions={nestedOptions as unknown as NormalizedNestedOptions}
     >
       <CardItemGroup orientation="horizontal">
@@ -134,6 +152,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
           variant="ghost"
           role="button"
           tabIndex={-1}
+          draggable={false}
         >
           <Plus className="tiptap-button-icon" />
         </Button>
@@ -148,11 +167,6 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
               editor.commands.unlockDragHandle();
             }
             setOpen(next);
-            // Broadcast to column views
-            // document.dispatchEvent(
-            //   new CustomEvent("draghandle:menu", { detail: { isOpen: next } }),
-            // );
-            //console.log("dispatched draghandle:menu", next);
           }}
         >
           <ColorDropdownProvider>

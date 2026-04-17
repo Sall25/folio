@@ -7,9 +7,46 @@ import type { SelectionRange } from "@tiptap/pm/state";
 
 import { cloneElement } from "./cloneElement.js";
 import { findElementNextToCoords } from "./findNextElementFromCursor.js";
-import { getInnerCoords } from "./getInnerCoords.js";
 import { removeNode } from "./removeNode.js";
 
+// function getDragHandleRanges(
+//   event: DragEvent,
+//   editor: Editor,
+// ): SelectionRange[] {
+//   const { doc } = editor.view.state;
+
+//   const result = findElementNextToCoords({
+//     editor,
+//     x: event.clientX,
+//     y: event.clientY,
+//     direction: "right",
+//   });
+
+//   if (!result.resultNode || result.pos === null) {
+//     return [];
+//   }
+
+//   const x = event.clientX;
+
+//   const coords = getInnerCoords(editor.view, x, event.clientY);
+//   const posAtCoords = editor.view.posAtCoords(coords);
+
+//   if (!posAtCoords) {
+//     return [];
+//   }
+
+//   const { pos } = posAtCoords;
+//   const nodeAt = doc.resolve(pos).parent;
+
+//   if (!nodeAt) {
+//     return [];
+//   }
+
+//   const $from = doc.resolve(result.pos);
+//   const $to = doc.resolve(result.pos + 1);
+
+//   return getSelectionRanges($from, $to, 0);
+// }
 function getDragHandleRanges(
   event: DragEvent,
   editor: Editor,
@@ -27,24 +64,18 @@ function getDragHandleRanges(
     return [];
   }
 
-  const x = event.clientX;
+  // Resolve to depth 1 (direct child of doc) to always get the outermost node
+  const $resolved = doc.resolve(result.pos);
+  const topPos = $resolved.before(1); // position before the depth-1 ancestor
+  const topNode = doc.nodeAt(topPos);
 
-  const coords = getInnerCoords(editor.view, x, event.clientY);
-  const posAtCoords = editor.view.posAtCoords(coords);
+  console.log("handle ranges empty");
+  if (!topNode) return [];
 
-  if (!posAtCoords) {
-    return [];
-  }
+  console.log("topNode", topNode);
 
-  const { pos } = posAtCoords;
-  const nodeAt = doc.resolve(pos).parent;
-
-  if (!nodeAt) {
-    return [];
-  }
-
-  const $from = doc.resolve(result.pos);
-  const $to = doc.resolve(result.pos + 1);
+  const $from = doc.resolve(topPos);
+  const $to = doc.resolve(topPos + topNode.nodeSize);
 
   return getSelectionRanges($from, $to, 0);
 }
@@ -53,6 +84,7 @@ export function dragHandler(event: DragEvent, editor: Editor) {
   const { view } = editor;
 
   if (!event.dataTransfer) {
+    console.log("return from dragHandler");
     return;
   }
 

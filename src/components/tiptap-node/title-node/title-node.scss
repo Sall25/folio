@@ -1,0 +1,6 @@
+h1[data-type="title"]:empty::before {
+  content: "New page";
+  color: var(--tt-gray-light-a-300);
+  pointer-events: none;
+  cursor: text;
+}

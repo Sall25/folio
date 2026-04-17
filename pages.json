@@ -1,0 +1,238 @@
+{
+  "pages": [
+    {
+      "title": "Todo",
+      "parentId": null,
+      "children": [],
+      "settings": {
+        "width": "medium",
+        "text": "normal",
+        "locked": false
+      },
+      "cover": {
+        "iconName": "✅",
+        "coverImage": null,
+        "target": "Emoji"
+      },
+      "content": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "title",
+            "content": [
+              {
+                "type": "text",
+                "text": "Todo"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "attrs": {
+              "id": "1b54a72a-fff6-45e2-a9ab-cf7bdd939ade",
+              "textAlign": null,
+              "backgroundColor": null,
+              "nodeAlign": null,
+              "nodeVerticalAlign": null,
+              "color": null
+            }
+          },
+          {
+            "type": "taskList",
+            "attrs": {
+              "backgroundColor": null,
+              "nodeAlign": null,
+              "nodeVerticalAlign": null,
+              "color": null
+            },
+            "content": [
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "8276121b-5043-4265-b79e-dbb609f0db28",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Learn about "
+                      },
+                      {
+                        "type": "text",
+                        "marks": [
+                          {
+                            "type": "bold"
+                          }
+                        ],
+                        "text": "React locations"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "788baefe-64f1-450e-9828-53742bb98709",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Implement Notion like inlines pages"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "6e2338cc-dd3d-4779-8fe3-c078b36ab3c8",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Fix the z-index problems"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "5eaeed17-b988-4c5c-8145-735205527640",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Write a list of all the things you want to change about the sidebar, and implement them one by one"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "attrs": {
+              "id": "c82ca09a-9c49-4906-811f-407dc4b4599b",
+              "textAlign": null,
+              "backgroundColor": null,
+              "nodeAlign": null,
+              "nodeVerticalAlign": null,
+              "color": null
+            }
+          }
+        ]
+      },
+      "createdAt": "1776465480980",
+      "updatedAt": "1776466789981",
+      "id": 1
+    },
+    {
+      "title": "Second Page",
+      "parentId": null,
+      "children": [],
+      "settings": {
+        "width": "medium",
+        "text": "normal",
+        "locked": false
+      },
+      "cover": {
+        "iconName": "🐶",
+        "coverImage": null,
+        "target": "Emoji"
+      },
+      "content": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "title",
+            "content": [
+              {
+                "type": "text",
+                "text": "Second Page"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "attrs": {
+              "id": "54031dae-4c03-475c-9c0d-8eb959063af3",
+              "textAlign": null,
+              "backgroundColor": null,
+              "nodeAlign": null,
+              "nodeVerticalAlign": null,
+              "color": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Some more text"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "attrs": {
+              "id": "ab9a3a52-3b2c-4259-bec6-f7a7884f0287",
+              "textAlign": null,
+              "backgroundColor": null,
+              "nodeAlign": null,
+              "nodeVerticalAlign": null,
+              "color": null
+            }
+          }
+        ]
+      },
+      "createdAt": "1776465578734",
+      "updatedAt": "1776467863719",
+      "id": 2
+    }
+  ]
+}

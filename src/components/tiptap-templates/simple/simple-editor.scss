@@ -5,9 +5,11 @@
 body {
   --tt-toolbar-height: 44px;
   --tt-theme-text: var(--tt-gray-light-900);
+  --tt-text-color: var(--tt-gray-dark-400);
 
   .dark & {
     --tt-theme-text: var(--tt-gray-dark-900);
+    --tt-text-color: var(--tt-gray-light-400);
   }
 }
 
@@ -29,7 +31,8 @@ html{
 html,
 body {
   overscroll-behavior-x: none;
-  overflow-x: hidden;
+  margin: 0;
+//  overflow-x: hidden;
 }
 
 html,
@@ -128,31 +131,76 @@ body,
 
 
 .simple-editor-wrapper {
-  width: 100vw;
-  // height: 100vh;
+  width: 100%;
+  display: flex;
   overflow: auto;
-
 }
 
-.simple-editor-content {
-  max-width: 858px;
-  // max-width: 648px;
-  // width: 100%;
-  margin: 0 auto;
-  // height: 100%;
+
+// Left sidebar slot — drag handle, nav, etc.
+.simple-editor-sidebar-left {
+  width: 340px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+// TOC right sidebar
+.simple-editor-sidebar-right {
+  width: 30px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.simple-editor-main {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
+ // margin-left: 260px;          // matches $sidebar-width
+  padding-top: var(--tt-toolbar-height); // clears the fixed toolbar
+  min-height: 100vh;
+}
 
+
+.simple-editor-center{
+  z-index: 300;
+  flex: 1;
+  min-width: 0; // prevent flex overflow
+  margin: 0;
+  max-width: none; // let flex control width
+  display: flex;
+  flex-direction: column;
+   align-items: center;
+}
+
+// Tablet — hide TOC only
+@media screen and (max-width: 768px) {
+  .simple-editor-sidebar-right {
+    display: none;
+  }
+
+  .simple-editor-sidebar-left {
+    width: 60px; // collapsed
+  }
+}
+
+// Center editor takes all remaining space
+.simple-editor-content {
   font-size: 1rem;
-
+  min-width: 800px;
 
   &[data-size="medium"] {
     max-width: 800px;
   }
 
   &[data-size="full"] {
-    max-width: 980px;
+    max-width: 900px;
   }
 
   &[data-text="small"]{
@@ -163,11 +211,23 @@ body,
     pointer-events: none;
     user-select: none;
   }
+
+   // Allow cover child to bleed full width
+  overflow-x: visible;
+}
+
+
+
+.cover-full-bleed {
+z-index: 0;
+  width: 105vw;
+  margin-left: calc(50% - 50vw);  // ← the classic full-bleed trick
+  position: relative;
 }
 
 .simple-editor-content .tiptap.ProseMirror.simple-editor {
   flex: 1;
-  padding: 4.5rem 3rem 30vh;
+  padding: 1.2rem 2rem 30vh;
 }
 
 @media screen and (max-width: 480px) {

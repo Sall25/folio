@@ -52,7 +52,7 @@ export function TocContent({ maxShowCount = 20, topOffset = 0 }: Props) {
       style={{
         pointerEvents: `${open ? "auto" : "none"}`,
         visibility: `${open ? "visible" : "hidden"}`,
-        transform: `${open ? "translateX(4px)" : "translateX(0)"}`,
+        transform: `${open ? "translateX(-4px)" : "translateX(0)"}`,
       }}
       onMouseLeave={() => hideTocContent()}
     >

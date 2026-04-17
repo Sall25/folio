@@ -48,25 +48,6 @@
     --edit-btn-color:   #fbbf24;  /* warm gold — reads clearly without glaring */
 }
 
-/* Comments & Threads */
-// body {
-//   overflow: hidden;
-
-//   .main {
-//     height: 100vh;
-//     overflow: auto;
-//   }
-
-//   .sidebar {
-//     width: 20rem;
-
-//     @media (max-width: 540px) {
-//       padding-bottom: 0;
-//       width: 100%;
-//     }
-//   }
-// }
-
 .threads-group {
   align-self: stretch;
   display: flex;
@@ -75,6 +56,7 @@
   margin: 0 -1rem;
   overflow: auto;
   padding: 0 1rem;
+  z-index: 400;
 
   @media (max-width: 540px) {
     margin: 0 -1.5rem;

@@ -1,0 +1,51 @@
+.page-item-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.page-expand-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: var(--tt-text-color);
+  border-radius: 3px;
+  visibility: hidden;
+  display: none;
+
+
+  &.visible {
+    visibility: visible;
+    display: block;
+  }
+}
+
+.page-item-children {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.page-title-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  color: var(--tt-text-color);
+  padding: 0;
+  caret-color: var(--tt-text-color);
+
+  &::selection {
+    background: var(--tt-gray-light-a-200);
+  }
+}

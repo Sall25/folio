@@ -1,10 +1,15 @@
 import { SimpleEditor } from "src/components/tiptap-templates/simple/simple-editor";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const client = new QueryClient();
 
 function App() {
   return (
-    <div>
-      <SimpleEditor />
-    </div>
+    <QueryClientProvider client={client}>
+      <div>
+        <SimpleEditor />
+      </div>
+    </QueryClientProvider>
   );
 }
 

@@ -303,8 +303,13 @@ th .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::bef
 }
 /* Suppress placeholder inside list items and task list items */
 li .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before,
-li[data-type="taskList"] .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before {
-  content: none !important;
+blockquote .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before  
+{
+  //content: none !important;
+ left: 1rem; 
+}
+li[data-type="taskList"] .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before{
+  left: 1.5rem;
 }
 
 /* =====================

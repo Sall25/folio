@@ -9,6 +9,9 @@ export const TableWrapperNode = Node.create({
   name: "tableWrapper",
   group: "block",
   content: "table*",
+  draggable: true,
+  atom: true,
+  // defining: true,
   //defining: true,
 
   parseHTML() {
@@ -50,6 +53,30 @@ export const TableWrapperNode = Node.create({
           },
         },
       }),
+      // new Plugin({
+      //   key: new PluginKey("tableWrapperDropCleanup"),
+      //   appendTransaction(transactions, oldState, newState) {
+      //     const dropTr = transactions.find(
+      //       (tr) => tr.getMeta("uiEvent") === "drop",
+      //     );
+      //     if (!dropTr) return null;
+
+      //     const tr = newState.tr;
+      //     let modified = false;
+
+      //     newState.doc.descendants((node, pos) => {
+      //       if (node.type === tableWrapperType && node.childCount === 0) {
+      //         tr.delete(
+      //           tr.mapping.map(pos),
+      //           tr.mapping.map(pos + node.nodeSize),
+      //         );
+      //         modified = true;
+      //       }
+      //     });
+
+      //     return modified ? tr : null;
+      //   },
+      // }),
     ];
   },
 

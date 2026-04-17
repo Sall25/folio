@@ -1,53 +1,22 @@
+// simple-editor.tsx
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 
-// --- Tiptap Core Extensions ---
-import { StarterKit } from "@tiptap/starter-kit";
-import { Image } from "@tiptap/extension-image";
-import {
-  BulletList,
-  ListItem,
-  OrderedList,
-  TaskItem,
-  TaskList,
-} from "@tiptap/extension-list";
-import { TextAlign } from "@tiptap/extension-text-align";
-import { Typography } from "@tiptap/extension-typography";
-import { Highlight } from "@tiptap/extension-highlight";
-import { Subscript } from "@tiptap/extension-subscript";
-import { Superscript } from "@tiptap/extension-superscript";
-import { Selection } from "@tiptap/extensions";
-import { Color, TextStyle } from "@tiptap/extension-text-style";
-import { Placeholder } from "@tiptap/extensions";
-import { TableOfContents } from "@tiptap/extension-table-of-contents";
+// --- Providers ---
+import { ToastProvider } from "src/components/tiptap-ui/copy-toast";
+import { NotificationProvider } from "src/components/tiptap-ui/notification";
+import { TocProvider } from "src/components/tiptap-node/toc-node/toc-provider";
 
-// --- Custom Extensions ---
-import { SlashCommand } from "src/components/tiptap-ui/slash-menu";
-import { MentionExtension } from "src/components/tiptap-ui/mention-menu";
-import { EmojiExtension } from "src/components/tiptap-ui/emoji-menu";
-// import { CommentExtension } from 'src/components/tiptap-ui/comments'
+// --- Hooks ---
+import { useIsBreakpoint } from "src/hooks/use-is-breakpoint";
+import { useWindowSize } from "src/hooks/use-window-size";
 
-// --- UI Primitives ---
-import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import {
-  Toolbar,
-  ToolbarGroup,
-  ToolbarSeparator,
-} from "src/components/tiptap-ui-primitive/toolbar";
+// --- Local ---
+import { SimpleEditorToolbar, type MobileView } from "./simple-editor-toolbar";
+import { SimpleEditorContent } from "./simple-editor-content";
 
-// --- Tiptap Node ---
-import { ImageUploadNode } from "src/components/tiptap-node/image-upload-node/image-upload-node-extension";
-import { HorizontalRule } from "src/components/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension";
-import {
-  NodeBackground,
-  NodeAlignment,
-  NodeClearContents,
-  NodeColor,
-  NodeFit,
-} from "src/components/tiptap-extension";
+// --- Styles ---
 import "src/components/tiptap-node/blockquote-node/blockquote-node.scss";
 import "src/components/tiptap-node/code-block-node/code-block-node.scss";
 import "src/components/tiptap-node/horizontal-rule-node/horizontal-rule-node.scss";
@@ -55,390 +24,112 @@ import "src/components/tiptap-node/list-node/list-node.scss";
 import "src/components/tiptap-node/image-node/image-node.scss";
 import "src/components/tiptap-node/heading-node/heading-node.scss";
 import "src/components/tiptap-node/paragraph-node/paragraph-node.scss";
-
-// --- Tiptap UI ---
-import { UndoRedoButton } from "src/components/tiptap-ui/undo-redo-button";
-import { BubbleMenu } from "src/components/tiptap-ui/bubble-menu/bubble-menu";
-
-// --- Icons ---
-import { ArrowLeftIcon } from "src/components/tiptap-icons/arrow-left-icon";
-import { HighlighterIcon } from "src/components/tiptap-icons/highlighter-icon";
-import { LinkIcon } from "src/components/tiptap-icons/link-icon";
-
-// --- Hooks ---
-import { useIsBreakpoint } from "src/hooks/use-is-breakpoint";
-import { useWindowSize } from "src/hooks/use-window-size";
-import { useCursorVisibility } from "src/hooks/use-cursor-visibility";
-
-// --- Components ---
-import { ThemeToggle } from "src/components/tiptap-templates/simple/theme-toggle";
-
-// --- Lib ---
-import { handleImageUpload, MAX_FILE_SIZE } from "src/lib/tiptap-utils";
-
-// --- Styles ---
 import "src/components/tiptap-templates/simple/simple-editor.scss";
 import "src/components/tiptap-templates/simple/toc.scss";
+import { useActivePage } from "./use-active-page";
+import { SimpleEditorSidebar } from "./simple-editor-sidebar";
+import type { Page } from "./types";
 
-// import content from "src/components/tiptap-templates/simple/data/content.json";
+const SIDEBAR_WIDTH = 240;
+const SIDEBAR_COLLAPSED_WIDTH = 52;
 
-import DragHandleExtension from "src/components/tiptap-ui/drag-handle/drag-handle-extension";
-import { DragHandle } from "src/components/tiptap-ui/drag-handle/drag-handle";
-// import { CommentSidebar } from "src/components/tiptap-ui/comments/comment-sidebar/comment-sidebar"
-import { CommentThreadExtension } from "src/components/tiptap-ui/comments/extensions/comment-thread-extension";
-import { ThreadSidebar } from "src/components/tiptap-ui/comments/components/thread-sidebar";
-import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
-import UniqueID from "@tiptap/extension-unique-id";
-import { useScrollToAnchor } from "src/components/tiptap-ui/copy-anchor-link-button";
-import { ImageBubble } from "src/components/tiptap-ui/image-bubble";
-import { useToc } from "src/components/tiptap-node/toc-node/use-toc";
-import { TocNode } from "src/components/tiptap-node/toc-node/toc-node-extension";
-import { TocProvider } from "src/components/tiptap-node/toc-node/toc-provider";
-import { TocSidebar } from "src/components/tiptap-node/toc-node/toc-sidebar";
-import { Figure, FigureCaption } from "src/components/tiptap-node/figure-node";
-import { TableKit } from "@tiptap/extension-table";
-import { TableContextExtension } from "src/components/tiptap-node/table-node";
-import { TableWrapperNode } from "src/components/tiptap-node/table-node/extensions/table-context";
-import { ToastProvider } from "src/components/tiptap-ui/copy-toast";
-import { Column, ColumnBlock } from "src/components/tiptap-node/column-node";
-import {
-  NotificationBell,
-  NotificationProvider,
-} from "src/components/tiptap-ui/notification";
-import { MorePopover } from "./more-popover";
+// ============================================================
+// Inner
+// ============================================================
 
-const MainToolbarContent = ({
-  isMobile,
-  fullWidth,
-  smallText,
-  locked,
-  onFullWidthChanged,
-  onSmallTextChanged,
-  onLockedChanged,
-}: {
-  isMobile: boolean;
-  fullWidth: boolean;
-  smallText: boolean;
-  locked: boolean;
-  onFullWidthChanged: (v: boolean) => void;
-  onSmallTextChanged: (v: boolean) => void;
-  onLockedChanged: (v: boolean) => void;
-}) => {
-  return (
-    <>
-      <Spacer />
-
-      {isMobile && <ToolbarSeparator />}
-
-      <ToolbarGroup>
-        <UndoRedoButton action="undo" />
-        <UndoRedoButton action="redo" />
-        <Separator orientation="vertical" />
-        <ThemeToggle />
-        <NotificationBell />
-        <MorePopover
-          fullWidth={fullWidth}
-          smallText={smallText}
-          locked={locked}
-          onFullWidthChange={onFullWidthChanged}
-          onSmallTextChange={onSmallTextChanged}
-          onLockedChange={onLockedChanged}
-        />
-        <AvatarDemo />
-      </ToolbarGroup>
-    </>
-  );
-};
-
-const MobileToolbarContent = ({
-  type,
-  onBack,
-}: {
-  type: "highlighter" | "link";
-  onBack: () => void;
-}) => (
-  <>
-    <ToolbarGroup>
-      <Button variant="ghost" onClick={onBack}>
-        <ArrowLeftIcon className="tiptap-button-icon" />
-        {type === "highlighter" ? (
-          <HighlighterIcon className="tiptap-button-icon" />
-        ) : (
-          <LinkIcon className="tiptap-button-icon" />
-        )}
-      </Button>
-    </ToolbarGroup>
-
-    <ToolbarSeparator />
-  </>
-);
-
-function loadContent() {
-  const saved = localStorage.getItem("editor-content");
-  return saved ? JSON.parse(saved) : "<p></p>"; // fallback to empty doc
+function findPage(pages: Page[], id: string): Page | undefined {
+  for (const page of pages) {
+    if (page.id === id) return page;
+    const found = findPage(page.children, id);
+    if (found) return found;
+  }
 }
 
 function SimpleEditorInner() {
-  const { setTocContent } = useToc();
+  const {
+    activePage,
+    isLoading,
+    updateSettings,
+    pages,
+    addPage,
+    deletePage,
+    setActivePageId,
+    query,
+    onSearch,
+    updateCover,
+    updatePage,
+  } = useActivePage();
+  const [mobileView, setMobileView] = useState<MobileView>("main");
+  const toolbarRef = useRef<HTMLDivElement | null>(null);
   const isMobile = useIsBreakpoint();
   const { height } = useWindowSize();
-  const [mobileView, setMobileView] = useState<"main" | "highlighter" | "link">(
-    "main",
-  );
-  const toolbarRef = useRef<HTMLDivElement>(null);
 
-  // store toolbar height in state so we never read ref during render
-  const [overlayHeight, setOverlayHeight] = useState(0);
-
+  // --- Effects ---
   useEffect(() => {
-    const update = () => {
-      const h = toolbarRef.current?.getBoundingClientRect().height;
-      if (h != null) setOverlayHeight(h);
-    };
-    update();
-
-    let observer: ResizeObserver | null = null;
-    if (toolbarRef.current) {
-      observer = new ResizeObserver(update);
-      observer.observe(toolbarRef.current);
-    }
-    return () => observer?.disconnect();
-  }, []);
-
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [width, setWidth] = useState<"medium" | "full">("medium");
-  const [text, setText] = useState<"small" | "normal">("normal");
-  const [locked, setLocked] = useState(false);
-
-  const onFullWidthChanged = useCallback((checked: boolean) => {
-    if (checked) {
-      setWidth("full");
-    } else {
-      setWidth("medium");
-    }
-  }, []);
-  const onSmallTextChanged = useCallback((checked: boolean) => {
-    if (checked) {
-      setText("small");
-    } else {
-      setText("normal");
-    }
-  }, []);
-
-  const editor = useEditor({
-    immediatelyRender: false,
-    editorProps: {
-      attributes: {
-        autocomplete: "off",
-        autocorrect: "off",
-        autocapitalize: "off",
-        spellcheck: "false",
-        "aria-label": "Main content area, start typing to enter text.",
-        class: "simple-editor",
-      },
-    },
-    extensions: [
-      StarterKit.configure({
-        horizontalRule: false,
-        listItem: false,
-        bulletList: false,
-        orderedList: false,
-        link: {
-          openOnClick: false,
-          enableClickSelection: true,
-        },
-      }),
-      TableOfContents.configure({
-        onUpdate(content) {
-          setTocContent(content);
-        },
-      }),
-      TocNode.configure({ topOffset: 80, maxShowCount: 20, showTitle: true }),
-      HorizontalRule,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      BulletList,
-      OrderedList,
-      ListItem,
-      TaskList,
-      TextStyle,
-      Color,
-      TaskItem.configure({ nested: true }),
-      Highlight.configure({ multicolor: true }),
-      FigureCaption,
-      Figure.configure({
-        directions: ["left", "right"],
-        preserveAspectRatio: true,
-        min: { width: 10, height: 10 },
-        max: { width: 2000, height: 2000 },
-      }),
-      Image.configure({
-        resize: {
-          enabled: true,
-          directions: ["left", "right"],
-          alwaysPreserveAspectRatio: true,
-        },
-      }),
-      Typography,
-      Superscript,
-      Subscript,
-      Selection,
-      ImageUploadNode.configure({
-        accept: "image/*",
-        maxSize: MAX_FILE_SIZE,
-        limit: 3,
-        upload: handleImageUpload,
-        onError: (error) => console.error("Upload failed:", error),
-      }),
-      Placeholder.configure({
-        includeChildren: true,
-        placeholder: ({ editor, node }) => {
-          // Don't show placeholder inside table cells/headers
-          if (
-            node.type.name === "tableCell" ||
-            node.type.name === "tableHeader" ||
-            node.type.name === "table"
-          ) {
-            return "";
-          }
-
-          const meta = editor.state.tr.getMeta("/Filter");
-
-          if (meta) {
-            return "/Filter";
-          }
-          return "Write, type '/' from commands...";
-        },
-      }),
-      SlashCommand,
-      MentionExtension,
-      EmojiExtension,
-      CommentThreadExtension,
-      UniqueID.configure({
-        types: [
-          "paragraph",
-          "heading",
-          "blockquote",
-          "figure",
-          "codeBlock",
-          "table",
-        ],
-        attributeName: "id",
-      }),
-      DragHandleExtension,
-      NodeBackground.configure({
-        useStyle: false,
-      }),
-      NodeAlignment.configure({
-        useStyle: false,
-      }),
-      NodeColor.configure({
-        useStyle: false,
-      }),
-      NodeFit.configure({
-        useStyle: false,
-      }),
-      NodeClearContents,
-      TableKit.configure({
-        table: false,
-      }),
-
-      TableContextExtension.configure({
-        resizable: true,
-        handleWidth: 1,
-      }),
-      TableWrapperNode,
-      Column,
-      ColumnBlock,
-      // CommentExtension
-    ],
-    onUpdate(props) {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => {
-        localStorage.setItem(
-          "editor-content",
-          JSON.stringify(props.editor.getJSON()),
-        );
-      }, 500);
-    },
-    content: loadContent(),
-  });
-
-  const rect = useCursorVisibility({
-    editor,
-    overlayHeight,
-  });
-
-  const onLockedChanged = useCallback(
-    (checked: boolean) => {
-      setLocked(checked);
-      editor?.setEditable(!checked);
-    },
-    [editor],
-  );
-
-  useEffect(() => {
-    if (!isMobile && mobileView !== "main") {
-      // eslint-disable-next-line
-      setMobileView("main");
-    }
+    if (!isMobile && mobileView !== "main")
+      requestAnimationFrame(() => setMobileView("main"));
   }, [isMobile, mobileView]);
 
-  useScrollToAnchor({ editor });
+  const [collapsed, setCollapsed] = useState(false);
+  const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH;
+
+  if (isLoading) return <div className="simple-editor-loading">Loading...</div>;
+  if (!activePage) return null;
 
   return (
     <div className="simple-editor-wrapper">
-      <EditorContext.Provider value={{ editor }}>
-        <NotificationProvider>
-          <ToastProvider>
-            <Toolbar
-              ref={toolbarRef}
-              style={{
-                ...(isMobile
-                  ? {
-                      bottom: `calc(100% - ${height - rect.y}px)`,
-                    }
-                  : {}),
-              }}
-            >
-              {mobileView === "main" ? (
-                <MainToolbarContent
-                  isMobile={isMobile}
-                  fullWidth={width === "full"}
-                  onFullWidthChanged={onFullWidthChanged}
-                  smallText={text === "small"}
-                  onSmallTextChanged={onSmallTextChanged}
-                  locked={locked}
-                  onLockedChanged={onLockedChanged}
-                />
-              ) : (
-                <MobileToolbarContent
-                  type={mobileView === "highlighter" ? "highlighter" : "link"}
-                  onBack={() => setMobileView("main")}
-                />
-              )}
-            </Toolbar>
+      <NotificationProvider>
+        <ToastProvider>
+          <SimpleEditorToolbar
+            toolbarRef={toolbarRef as RefObject<HTMLDivElement>}
+            isMobile={isMobile}
+            mobileView={mobileView}
+            height={height}
+            rectY={0}
+            settings={activePage.settings}
+            onFullWidthChanged={(v) =>
+              updateSettings({ width: v ? "full" : "medium" })
+            }
+            onSmallTextChanged={(v) =>
+              updateSettings({ text: v ? "small" : "normal" })
+            }
+            onLockedChanged={(v) => updateSettings({ locked: v })}
+            onMobileViewChange={setMobileView}
+            sidebarWidth={sidebarWidth}
+          />
 
-            <EditorContent
-              editor={editor}
-              role="presentation"
-              data-size={width}
-              data-text={text}
-              data-locked={locked}
-              className="simple-editor-content"
+          <SimpleEditorSidebar
+            pages={pages ?? []}
+            activePage={activePage}
+            onSelect={(page) => setActivePageId(page.id)}
+            onDelete={(id) => deletePage(id)}
+            onAddPage={(title, parentId) => addPage({ title, parentId })}
+            onNewPage={() => addPage({ title: "Untitled", parentId: null })}
+            // onRename: (id: string, title: string) => void;
+            onRename={(id: string, title: string) => {
+              const page = findPage(pages ?? [], id);
+              if (!page) return;
+              updatePage({ ...page, title });
+            }}
+            query={query}
+            onSearch={onSearch}
+            collapsed={collapsed}
+            onToggle={() => setCollapsed((c) => !c)}
+          />
+
+          <div className="simple-editor-main">
+            <SimpleEditorContent
+              collapsed={collapsed}
+              sidebarWidth={sidebarWidth}
+              activePage={activePage}
+              updateCover={updateCover}
+              updatePage={updatePage}
             />
-            <DragHandle editor={editor} />
 
-            <BubbleMenu editor={editor} />
-
-            <ImageBubble editor={editor} />
-
-            <ThreadSidebar editor={editor} />
-
-            <TocSidebar topOffset={80} maxShowCount={20} />
-          </ToastProvider>
-        </NotificationProvider>
-      </EditorContext.Provider>
+            <aside className="simple-editor-sidebar-right" />
+          </div>
+        </ToastProvider>
+      </NotificationProvider>
     </div>
   );
 }

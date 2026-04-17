@@ -12,46 +12,10 @@ import "./table-wrapper-view.scss";
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { ColorDropdownProvider } from "src/components/tiptap-ui/color-dropdown-menu/color-dropdown-provider";
-import { NodeSelection } from "@tiptap/pm/state";
 
 export function TableWrapperView(props: ReactNodeViewProps) {
-  const { editor, getPos, selected } = props;
+  const { editor, getPos, selected, deleteNode } = props;
   const tablePos = getPos()! + 1;
-
-  // useEffect(() => {
-  //   if (!selected) return;
-
-  //   const pos = getPos();
-  //   if (pos === undefined) return;
-
-  //   const { state, dispatch } = editor.view;
-  //   dispatch(state.tr.setSelection(NodeSelection.create(state.doc, pos + 1)));
-  // }, [selected, editor, getPos]);
-
-  useEffect(() => {
-    if (!selected) return;
-
-    const pos = getPos();
-    if (pos === undefined) return;
-
-    const frame = requestAnimationFrame(() => {
-      // After the frame, dragging will have cleared if it was a drop
-      if (editor.view.dragging) return;
-
-      const { state, dispatch } = editor.view;
-      const currentSelection = state.selection;
-
-      if (
-        !(currentSelection instanceof NodeSelection) ||
-        currentSelection.from !== pos
-      )
-        return;
-
-      dispatch(state.tr.setSelection(NodeSelection.create(state.doc, pos + 1)));
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [selected, editor, getPos]);
 
   const { open, handleMouseEnter, handleMouseLeave } = useHoverMenu();
   const isLocked = useEditorState({
@@ -81,7 +45,10 @@ export function TableWrapperView(props: ReactNodeViewProps) {
 
   return (
     <NodeViewWrapper
-      style={{ width: "100%" }}
+      style={{
+        width: "100%",
+        // display: "contents",
+      }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

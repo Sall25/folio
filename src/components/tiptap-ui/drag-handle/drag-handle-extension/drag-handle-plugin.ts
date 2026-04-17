@@ -169,8 +169,9 @@ export const DragHandlePlugin = ({
 
   function onDragStart(e: DragEvent) {
     onElementDragStart?.(e);
-    // Push this to the end of the event cue
-    // Fixes bug where incorrect drag pos is returned if drag handle has position: absolute
+
+    console.log("onDragStart");
+
     dragHandler(e, editor);
 
     if (element) {

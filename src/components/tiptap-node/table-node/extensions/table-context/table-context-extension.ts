@@ -46,6 +46,7 @@ declare module "@tiptap/core" {
 }
 
 export const TableContextExtension = Table.extend({
+  draggable: false,
   addCommands() {
     return {
       ...this.parent?.(),

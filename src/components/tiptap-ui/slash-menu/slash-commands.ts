@@ -212,6 +212,13 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     run: (e) => e.chain().focus().insertContent({ type: "imageUpload" }).run(),
   },
 
+  //  ─── Database ─────────────────────────────────────────────
+  {
+    id: "database-view",
+    type: "command",
+    title: "Inline Database",
+    run: (e) => e.chain().focus().insertDatabase().run(),
+  },
   //  ─── Colors ─────────────────────────────────────────────
   // { id: "colorsDivider", type: "separator", title: "separator" },
   // { id: "colors", type: "title", title: "Colors" },

@@ -62,6 +62,11 @@ export const DragHandle = (props: DragHandleProps) => {
   }, [computePositionConfig]);
 
   useEffect(() => {
+    let initPlugin: {
+      plugin: Plugin;
+      unbind: () => void;
+    } | null = null;
+
     if (!element || editor.isDestroyed) {
       return () => {
         plugin.current = null;
@@ -70,32 +75,37 @@ export const DragHandle = (props: DragHandleProps) => {
 
     console.log("drag handle effect");
 
-    const initPlugin = DragHandlePlugin({
-      editor,
-      element,
-      pluginKey,
-      computePositionConfig: {
-        ...defaultComputePositionConfig,
-        ...computePositionConfigRef.current,
-      },
-      onElementDragStart: (e) => onElementDragStartRef.current?.(e),
-      onElementDragEnd: (e) => onElementDragEndRef.current?.(e),
-      onNodeChange: (data) => onNodeChangeRef.current?.(data),
-      nestedOptions,
-    });
+    if (!plugin.current) {
+      initPlugin = DragHandlePlugin({
+        editor,
+        element,
+        pluginKey,
+        computePositionConfig: {
+          ...defaultComputePositionConfig,
+          ...computePositionConfigRef.current,
+        },
+        onElementDragStart: (e) => onElementDragStartRef.current?.(e),
+        onElementDragEnd: (e) => onElementDragEndRef.current?.(e),
+        onNodeChange: (data) => onNodeChangeRef.current?.(data),
+        nestedOptions,
+      });
 
-    // We override it here so only the grip button is draggable.
-    requestAnimationFrame(() => {
-      element.draggable = false;
-    });
+      // We override it here so only the grip button is draggable.
+      // requestAnimationFrame(() => {
+      //   element.draggable = false;
+      // });
 
-    plugin.current = initPlugin.plugin;
-    editor.registerPlugin(plugin.current);
+      plugin.current = initPlugin.plugin;
+      editor.registerPlugin(plugin.current);
+    }
 
     return () => {
       editor.unregisterPlugin(pluginKey);
       plugin.current = null;
-      initPlugin.unbind();
+      if (initPlugin) {
+        initPlugin.unbind();
+        initPlugin = null;
+      }
     };
   }, [element, editor, pluginKey, nestedOptions]); // ← only truly stable deps
 
