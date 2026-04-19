@@ -1,5 +1,5 @@
 import Paragraph from "@tiptap/extension-paragraph";
-import { Plugin, PluginKey, TextSelection } from "@tiptap/pm/state";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 
 const ensureTrailingParagraphKey = new PluginKey("EnsureTrailingParagraph");
 
@@ -17,12 +17,6 @@ export const ParagraphNode = Paragraph.extend({
 
             // ── Backspace ─────────────────────────────────────────────
             if (event.key === "Backspace") {
-              // Quick exit: if not inside a list at all, bail immediately
-              const inList = $from.path.some?.(
-                (n) =>
-                  n?.type?.name === "listItem" || n?.type?.name === "taskItem",
-              );
-
               // Walk up only if potentially in a list
               let depth = $from.depth;
               let listItemNode = null;
@@ -50,32 +44,10 @@ export const ParagraphNode = Paragraph.extend({
               return false;
             }
 
-            // ── Enter ─────────────────────────────────────────────────
             if (event.key === "Enter") {
-              // Skip code blocks
-              for (let d = $from.depth; d > 0; d--) {
-                if ($from.node(d).type.name === "codeBlock") return false;
-              }
-
-              const nodeName = $from.node(-1).type.name;
-              if (
-                nodeName !== "paragraph" &&
-                nodeName !== "doc" &&
-                nodeName !== "column"
-              ) {
-                return false;
-              }
-
-              const paragraph = state.schema.nodes.paragraph.create();
-              let tr = state.tr.replaceSelectionWith(paragraph);
-              const newPos = tr.doc.resolve($from.pos + 1);
-              tr = tr.setSelection(TextSelection.near(newPos));
-              // tr.selection.from is already updated to the post-replace position
-              // const resolvedPos = tr.doc.resolve(tr.selection.from);
-              // tr = tr.setSelection(TextSelection.near(resolvedPos));
-
-              dispatch(tr);
-              return true;
+              const { tr } = state;
+              dispatch(tr.setStoredMarks(null));
+              return false;
             }
 
             return false;
@@ -167,30 +139,28 @@ export const ParagraphNode = Paragraph.extend({
       }),
 
       // ── Ensure always a trailing empty paragraph ──────────────────────
-      // new Plugin({
-      //   key: ensureTrailingParagraphKey,
-      //   appendTransaction(transactions, _oldState, newState) {
-      //     // Only run if the document actually changed
-      //     const docChanged = transactions.some((tr) => tr.docChanged);
-      //     if (!docChanged) return null;
+      new Plugin({
+        key: ensureTrailingParagraphKey,
+        appendTransaction(transactions, _oldState, newState) {
+          // Only run if the document actually changed
+          const docChanged = transactions.some((tr) => tr.docChanged);
+          if (!docChanged) return null;
 
-      //     const { doc, schema, tr } = newState;
-      //     const lastNode = doc.lastChild;
+          const { doc, schema, tr } = newState;
+          const lastNode = doc.lastChild;
 
-      //     console.log("append paragraph ran again");
+          // Already ends with an empty paragraph — nothing to do
+          if (
+            lastNode?.type === schema.nodes.paragraph &&
+            lastNode.content.size === 0
+          ) {
+            return null;
+          }
 
-      //     // Already ends with an empty paragraph — nothing to do
-      //     if (
-      //       lastNode?.type === schema.nodes.paragraph &&
-      //       lastNode.content.size === 0
-      //     ) {
-      //       return null;
-      //     }
-
-      //     // Append an empty paragraph at the end
-      //     return tr.insert(doc.content.size, schema.nodes.paragraph.create());
-      //   },
-      // }),
+          // Append an empty paragraph at the end
+          return tr.insert(doc.content.size, schema.nodes.paragraph.create());
+        },
+      }),
     ];
   },
 });

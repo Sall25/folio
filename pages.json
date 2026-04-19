@@ -55,6 +55,31 @@
                   {
                     "type": "paragraph",
                     "attrs": {
+                      "id": "a7fede6e-ca03-4bc5-97cb-bd383ff4ae33",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Prevent the title floating menu from flipping"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
                       "id": "8276121b-5043-4265-b79e-dbb609f0db28",
                       "textAlign": null,
                       "backgroundColor": null,
@@ -383,6 +408,14 @@
                     "content": [
                       {
                         "type": "text",
+                        "marks": [
+                          {
+                            "type": "highlight",
+                            "attrs": {
+                              "color": "var(--tt-color-highlight-yellow)"
+                            }
+                          }
+                        ],
                         "text": "Include comments in the page types and store them"
                       }
                     ]
@@ -541,7 +574,7 @@
         ]
       },
       "createdAt": "1776465480980",
-      "updatedAt": "1776543248724",
+      "updatedAt": "1776557763602",
       "id": 1
     },
     {
@@ -609,12 +642,29 @@
               "nodeAlign": null,
               "nodeVerticalAlign": null,
               "color": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Okey some text"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "attrs": {
+              "id": "39e4a6ea-467d-48fb-8135-116d117a731f",
+              "textAlign": null,
+              "backgroundColor": null,
+              "nodeAlign": null,
+              "nodeVerticalAlign": null,
+              "color": null
             }
           }
         ]
       },
       "createdAt": "1776514559047",
-      "updatedAt": "1776537519363",
+      "updatedAt": "1776603070828",
       "id": 2
     }
   ]
