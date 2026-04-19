@@ -1,0 +1,31 @@
+// _floating-actions.scss
+@use "../../../styles/keyframe-animations" as *;
+
+.floating-actions {
+  display: flex;
+  gap: 6px;
+
+  .tiptap-button{
+    opacity: 0.6;
+  }
+  // Staggered entrance for each button
+  &__btn {
+    @include float-animate();
+
+    &--icon    { @include float-animate(0ms); }
+    &--cover   { @include float-animate(50ms); }
+    &--comment { @include float-animate(100ms); }
+  }
+
+}
+
+
+.floating-show {
+  animation: float-in 0.15s ease-out both;
+  pointer-events: auto;
+}
+
+.floating-hide {
+  animation: float-out 0.15s ease-in both;
+  pointer-events: none;
+}

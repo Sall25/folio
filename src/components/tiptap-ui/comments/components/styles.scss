@@ -5,8 +5,8 @@
 :root{
     --font-ui: "Inter", system-ui, -apple-system, sans-serif;
     --thread-font-ui: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-    --gray-1: var(--tt-gray-light-50);
-    --gray-2: var(--tt-gray-light-100);
+    --gray-1: var(--white);
+    --gray-2: var(--tt-gray-light-50);
     --gray-3: var(--tt-gray-light-300);
     --gray-4: var(--tt-gray-light-400);
     --gray-5: var(--tt-gray-light-500);
@@ -26,8 +26,8 @@
   --edit-btn-color:   #92620a;  /* deep amber — legible, not neon yellow */
 }
 .dark{
-  --gray-1: var(--tt-gray-dark-50);
-    --gray-2: var(--tt-gray-dark-100);
+    --gray-1: var(--black);
+    --gray-2: var(--tt-gray-dark-50);
     --gray-3: var(--tt-gray-dark-300);
     --gray-4: var(--tt-gray-dark-400);
     --gray-5: var(--tt-gray-dark-500);

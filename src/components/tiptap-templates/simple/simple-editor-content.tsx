@@ -1,7 +1,7 @@
 // simple-editor-content.tsx
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 
 import { BubbleMenu } from "src/components/tiptap-ui/bubble-menu/bubble-menu";
@@ -17,7 +17,7 @@ import { TocSidebar } from "src/components/tiptap-node/toc-node/toc-sidebar";
 import { buildExtensions } from "./simple-editor-extensions";
 import type { Page } from "./types";
 import { Node } from "@tiptap/pm/model";
-import { EditorState } from "@tiptap/pm/state";
+import { EditorState, TextSelection } from "@tiptap/pm/state";
 import { FloatingMenu } from "@tiptap/react/menus";
 import {
   Popover,
@@ -25,10 +25,18 @@ import {
   PopoverPortal,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { Image, MessageSquare, Pencil, Smile } from "lucide-react";
+import {
+  Image,
+  MessageSquare,
+  MessageSquareText,
+  Pencil,
+  Smile,
+} from "lucide-react";
 import type { Target } from "src/components/tiptap-ui/cover/types";
 import { IconPickerCard } from "src/components/tiptap-ui/cover/icon-picker-card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+
+import "./floating-actions.scss";
 
 // ============================================================
 // FloatingActions
@@ -56,17 +64,20 @@ function FloatingActions({
 }) {
   return (
     <div
-      style={{
-        paddingTop: hasIcon ? 8 : hasCover ? 8 : 48,
-        display: "flex",
-        gap: 6,
-      }}
+      // style={{
+      //   paddingTop: hasIcon ? 8 : hasCover ? 8 : 48,
+      //   display: "flex",
+      //   gap: 6,
+      // }}
+      className="floating-actions"
+      style={{ paddingTop: hasIcon ? 8 : hasCover ? 8 : 48 }}
     >
       {!hasIcon && (
         <Popover open={open} onOpenChange={onOpenChange}>
           <PopoverTrigger asChild>
             <Button variant="ghost">
-              <Smile className="tiptap-button-icon" /> Add icon
+              <Smile className="tiptap-button-icon" />
+              <span>Add icon</span>
             </Button>
           </PopoverTrigger>
           <PopoverPortal container={document.getElementById("modal-root")}>
@@ -87,12 +98,14 @@ function FloatingActions({
 
       {!hasCover && (
         <Button variant="ghost" onClick={onAddCover}>
-          <Image className="tiptap-button-icon" /> Add cover
+          <Image className="tiptap-button-icon" />
+          <span>Add cover</span>
         </Button>
       )}
 
       <Button variant="ghost">
-        <MessageSquare className="tiptap-button-icon" /> Comment
+        <MessageSquareText className="tiptap-button-icon" />
+        <span>Comment</span>
       </Button>
     </div>
   );
@@ -106,6 +119,7 @@ type SimpleEditorContentProps = {
   sidebarWidth: number;
   collapsed: boolean;
   updatePage: (page: Page) => void;
+  addCover: (id: string) => void;
 };
 
 // ============================================================
@@ -118,6 +132,7 @@ export function SimpleEditorContent({
   sidebarWidth,
   collapsed,
   updatePage,
+  addCover,
 }: SimpleEditorContentProps) {
   const { setTocContent } = useToc();
 
@@ -128,7 +143,8 @@ export function SimpleEditorContent({
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState<Target>("Emoji");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [hasThreads, setHasThreads] = useState(false);
+  const floatingRef = useRef<HTMLDivElement>(null);
   const activePageRef = useRef(activePage);
   useEffect(() => {
     activePageRef.current = activePage;
@@ -161,7 +177,7 @@ export function SimpleEditorContent({
       docCache.current.delete(activePageRef.current.id);
 
       updatePage({
-        ...activePage,
+        ...activePageRef.current,
         content: editor.getJSON(),
       });
 
@@ -172,7 +188,7 @@ export function SimpleEditorContent({
         setSaveState("saved");
       }, 600);
     },
-    [activePage, updatePage],
+    [updatePage],
   );
 
   const editor = useEditor({
@@ -193,12 +209,51 @@ export function SimpleEditorContent({
       isDirty.current = true;
       setSaveState("unsaved");
 
-      // ← read title directly from editor on every update
-      const firstNode = editor?.state.doc.firstChild;
-      if (firstNode?.type.name === "title") {
-        updatePage({ ...activePageRef.current, title: firstNode.textContent });
+      // Only care about title changes
+      const selection = editor?.state.selection;
+      if (!selection) return;
+      const { $from } = selection;
+      const isInTitle =
+        $from.node().type.name === "title" ||
+        $from.node(1)?.type.name === "title";
+      if (!isInTitle) return;
+
+      const titleNode = editor?.state.doc.firstChild;
+      const newTitle = titleNode?.textContent;
+      if (newTitle !== activePageRef.current.title) {
+        activePageRef.current = {
+          ...activePageRef.current,
+          title: newTitle ?? "New Page",
+        };
+        updatePage({
+          ...activePageRef.current,
+          title: newTitle ?? "New Page",
+        });
+
+        // Debounce save to persist full content including new title
+        if (savingTimerRef.current) clearTimeout(savingTimerRef.current);
+        savingTimerRef.current = setTimeout(() => {
+          save(editor!);
+        }, 1000);
       }
     },
+    // onUpdate() {
+    //   if (!isReady.current) return;
+    //   isDirty.current = true;
+    //   setSaveState("unsaved");
+
+    //   // ← read title directly from editor on every update
+    //   const selection = editor?.state.selection;
+    //   if (!selection) return;
+    //   const { $from } = selection;
+    //   const node = $from.node();
+    //   if (node.type.name === "title") {
+    //     updatePage({
+    //       ...activePageRef.current,
+    //       title: node.textContent,
+    //     });
+    //   }
+    // },
     content: activePage.content,
   });
 
@@ -210,42 +265,21 @@ export function SimpleEditorContent({
   }, []);
 
   useEffect(() => {
-    console.log("effect 1 ran");
     if (!editor) return;
     isReady.current = false;
     isDirty.current = false;
     if (!activePage?.id) return;
-    // setSaveState("saved");
-
-    // const raf = requestAnimationFrame(() => {
-    //   console.time("setContent");
-    //   editor.commands.setContent(activePage.content);
-    //   console.timeEnd("setContent");
-    //   isReady.current = true;
-    // });
-
-    // const raf = requestAnimationFrame(() => {
-    //   console.time("setContent");
-    //   const doc = Node.fromJSON(editor.schema, activePage.content);
-    //   const state = EditorState.create({
-    //     doc,
-    //     schema: editor.schema,
-    //     plugins: editor.state.plugins,
-    //   });
-    //   editor.view.updateState(state);
-    //   console.timeEnd("setContent");
-    //   isReady.current = true;
-    // });
 
     const raf = requestAnimationFrame(() => {
-      console.time("setContent");
-
       let doc = docCache.current.get(activePage.id);
 
       if (!doc) {
         doc = Node.fromJSON(editor.schema, activePage.content);
         docCache.current.set(activePage.id, doc);
       }
+
+      // Save current selection before wiping state
+      const { from, to } = editor.state.selection;
 
       const state = EditorState.create({
         doc,
@@ -254,10 +288,17 @@ export function SimpleEditorContent({
       });
 
       editor.view.updateState(state);
-      console.timeEnd("setContent");
+
+      // Restore selection after state update
+      try {
+        const restoredSelection = TextSelection.create(state.doc, from, to);
+        editor.view.dispatch(editor.state.tr.setSelection(restoredSelection));
+      } catch {
+        // If position is out of bounds (e.g. doc shrunk), do nothing
+      }
+
       isReady.current = true;
     });
-
     return () => cancelAnimationFrame(raf);
   }, [activePage.id, editor, activePage.content]);
 
@@ -288,44 +329,28 @@ export function SimpleEditorContent({
 
   const editorWrapperRef = useRef<HTMLDivElement>(null);
   const [editorLeft, setEditorLeft] = useState(0);
-  useEffect(() => {
-    const measure = () => {
-      const tiptap = editorWrapperRef.current;
-      if (!tiptap) return;
-      const { left } = tiptap.getBoundingClientRect();
-      setEditorLeft(left);
-    };
-
-    // measure after sidebar transition finishes (0.2s)
-    const timeout = setTimeout(measure, 200);
-
-    const observer = new ResizeObserver(measure);
-    if (editorWrapperRef.current) {
-      observer.observe(editorWrapperRef.current);
-    }
-
-    return () => {
-      clearTimeout(timeout);
-      observer.disconnect();
-    };
-  }, [sidebarWidth]);
+  const paddingLeft = 250;
+  const translateX = -80;
 
   useEffect(() => {
     if (!editorWrapperRef.current) return;
-    const { left } = editorWrapperRef.current.getBoundingClientRect();
-    setEditorLeft(left);
-  }, []);
+
+    const raf = requestAnimationFrame(() => {
+      const { left } = editorWrapperRef.current!.getBoundingClientRect();
+      setEditorLeft(left);
+      console.log("left ", left);
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [sidebarWidth, collapsed]);
+
+  const onAddCover = useCallback(
+    () => addCover(activePageRef.current.id),
+    [addCover],
+  );
 
   return (
     <EditorContext.Provider value={{ editor }}>
-      <CoverHeader
-        collapsed={collapsed}
-        sidebarWidth={sidebarWidth}
-        activePage={activePage}
-        updateCover={updateCover}
-        saveState={saveState}
-        editorLeft={editorLeft}
-      />
       <section
         className="simple-editor-center"
         style={{
@@ -334,31 +359,67 @@ export function SimpleEditorContent({
           transition: "margin-left 0.2s ease, width 0.2s ease",
         }}
       >
-        <EditorContent
-          ref={editorWrapperRef}
-          editor={editor}
-          role="presentation"
-          data-size={activePage.settings.width}
-          data-text={activePage.settings.text}
-          data-locked={activePage.settings.locked}
-          className="simple-editor-content"
+        <CoverHeader
+          collapsed={collapsed}
+          sidebarWidth={sidebarWidth}
+          activePage={activePage}
+          updateCover={updateCover}
+          saveState={saveState}
+          paddingLeft={paddingLeft}
+          translateX={translateX}
+          hasThreads={hasThreads}
         />
+        <div
+          ref={editorWrapperRef}
+          style={
+            {
+              paddingLeft: paddingLeft,
+              "--x": `${translateX}px`,
+            } as React.CSSProperties
+          } // Todo: Make 250 constant (e.g: const PaddingLeft = 250)
+        >
+          <EditorContent
+            // ref={editorWrapperRef}
+            editor={editor}
+            role="presentation"
+            data-size={activePage.settings.width}
+            data-text={activePage.settings.text}
+            data-locked={activePage.settings.locked}
+            className={`simple-editor-content ${hasThreads ? "has-threads" : ""}`}
+          />
+        </div>
+        <ThreadSidebar editor={editor} setHasThreads={setHasThreads} />
+
         <FloatingMenu
           editor={editor}
           shouldShow={() => !!editor?.isActive("title")}
-          options={{ placement: "top" }}
+          options={{
+            placement: "top",
+            //offset: 8,
+            //  updateDelay: 0,
+            onShow() {
+              floatingRef.current?.classList.remove("floating-hide");
+              floatingRef.current?.classList.add("floating-show");
+            },
+            onHide: () => {
+              floatingRef.current?.classList.remove("floating-show");
+              floatingRef.current?.classList.add("floating-hide");
+            },
+          }}
         >
-          <FloatingActions
-            hasIcon={!!activePage.cover.iconName}
-            hasCover={!!activePage.cover.coverImage}
-            editorLeft={editorLeft}
-            open={open}
-            onOpenChange={setOpen}
-            target={target}
-            onTargetChange={setTarget}
-            onSelect={onSelect}
-            onAddCover={() => fileInputRef.current?.click()}
-          />
+          <div ref={floatingRef}>
+            <FloatingActions
+              hasIcon={!!activePage.cover.iconName}
+              hasCover={!!activePage.cover.coverImage}
+              editorLeft={editorLeft}
+              open={open}
+              onOpenChange={setOpen}
+              target={target}
+              onTargetChange={setTarget}
+              onSelect={onSelect}
+              onAddCover={onAddCover}
+            />
+          </div>
         </FloatingMenu>
       </section>
 
@@ -366,7 +427,6 @@ export function SimpleEditorContent({
       <DragHandle editor={editor} />
       <BubbleMenu editor={editor} />
       <ImageBubble editor={editor} />
-      <ThreadSidebar editor={editor} />
     </EditorContext.Provider>
   );
 }

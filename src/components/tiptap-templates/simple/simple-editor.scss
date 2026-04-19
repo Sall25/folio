@@ -169,14 +169,14 @@ body,
 
 
 .simple-editor-center{
-  z-index: 300;
+  // z-index: 300;
   flex: 1;
   min-width: 0; // prevent flex overflow
   margin: 0;
   max-width: none; // let flex control width
   display: flex;
   flex-direction: column;
-   align-items: center;
+  // align-items: center;
 }
 
 // Tablet — hide TOC only
@@ -194,7 +194,17 @@ body,
 .simple-editor-content {
   font-size: 1rem;
   min-width: 800px;
+  margin-top: 20px;
 
+  transition: transform 0.2s ease;
+ 
+  // &.has-threads{
+  //    margin-left: -140px;
+  // }
+
+  &.has-threads{
+    transform: translateX(var(--x));
+  }
   &[data-size="medium"] {
     max-width: 800px;
   }

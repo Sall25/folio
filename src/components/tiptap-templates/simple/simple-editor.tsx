@@ -1,7 +1,13 @@
 // simple-editor.tsx
 "use client";
 
-import { useEffect, useRef, useState, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 
 // --- Providers ---
 import { ToastProvider } from "src/components/tiptap-ui/copy-toast";
@@ -58,6 +64,7 @@ function SimpleEditorInner() {
     onSearch,
     updateCover,
     updatePage,
+    addCover,
   } = useActivePage();
   const [mobileView, setMobileView] = useState<MobileView>("main");
   const toolbarRef = useRef<HTMLDivElement | null>(null);
@@ -72,6 +79,8 @@ function SimpleEditorInner() {
 
   const [collapsed, setCollapsed] = useState(false);
   const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH;
+
+  const onToggle = useCallback(() => setCollapsed((c) => !c), []);
 
   if (isLoading) return <div className="simple-editor-loading">Loading...</div>;
   if (!activePage) return null;
@@ -114,7 +123,7 @@ function SimpleEditorInner() {
             query={query}
             onSearch={onSearch}
             collapsed={collapsed}
-            onToggle={() => setCollapsed((c) => !c)}
+            onToggle={onToggle}
           />
 
           <div className="simple-editor-main">
@@ -124,6 +133,7 @@ function SimpleEditorInner() {
               activePage={activePage}
               updateCover={updateCover}
               updatePage={updatePage}
+              addCover={addCover}
             />
 
             <aside className="simple-editor-sidebar-right" />

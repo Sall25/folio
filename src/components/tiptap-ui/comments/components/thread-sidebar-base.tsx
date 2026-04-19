@@ -5,71 +5,98 @@ import { getCommentThreadState } from "../extensions/utils/getCommentThreadState
 
 import type { Thread } from "../types";
 
-export function ThreadSidebarBase({ editor, children }: { editor: Editor | null, children: ReactNode }) {
-
-  const [threads, setThreads] = useState<Thread[]>([])
-  const [selectedThreads, setSelectedThreads] = useState<Thread[]>([])
-  const [selectedThread, setSelectedThread] = useState<Thread | null>(null)
-
-
-  const deleteTread = useCallback((threadId: string) => {
-    if (!editor) return
-
-    editor.commands.removeThread(threadId)
-
-  }, [editor])
-
-  const onClickThread = useCallback((threadId: string) => {
-    if (!editor) return
-
-    editor.commands.unselectThread()
-
-    editor.commands.selectThread(threadId)
-  }, [editor])
-
-  const onHoverThread = useCallback((threadId: string) => {
-    if (!editor) return
-
-    editor.commands.hoverThread(threadId)
-  }, [editor])
-
-  const onLeaveThread = useCallback((threadId: string) => {
-    if (!editor) return
-
-    editor.commands.hoverOffThread(threadId)
-  }, [editor])
-
-  const onResolveThread = useCallback((threadId: string) => {
-    if (!editor) return
-
-    editor.commands.resolveThread(threadId)
-  }, [editor])
-
-  const onUnresolveThread = useCallback((threadId: string) => {
-    if (!editor) return
-
-    editor.commands.unresolveThread(threadId)
-  }, [editor])
+export function ThreadSidebarBase({
+  editor,
+  children,
+  setHasThreads,
+}: {
+  editor: Editor | null;
+  children: ReactNode;
+  setHasThreads: (v: boolean) => void;
+}) {
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [selectedThreads, setSelectedThreads] = useState<Thread[]>([]);
+  const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
 
   useEffect(() => {
-    if (!editor) return
+    const hasThreads = threads.length > 0;
+    setHasThreads(hasThreads);
+  }, [threads, setHasThreads]);
+
+  const deleteTread = useCallback(
+    (threadId: string) => {
+      if (!editor) return;
+
+      editor.commands.removeThread(threadId);
+    },
+    [editor],
+  );
+
+  const onClickThread = useCallback(
+    (threadId: string) => {
+      if (!editor) return;
+
+      editor.commands.unselectThread();
+
+      editor.commands.selectThread(threadId);
+    },
+    [editor],
+  );
+
+  const onHoverThread = useCallback(
+    (threadId: string) => {
+      if (!editor) return;
+
+      editor.commands.hoverThread(threadId);
+    },
+    [editor],
+  );
+
+  const onLeaveThread = useCallback(
+    (threadId: string) => {
+      if (!editor) return;
+
+      editor.commands.hoverOffThread(threadId);
+    },
+    [editor],
+  );
+
+  const onResolveThread = useCallback(
+    (threadId: string) => {
+      if (!editor) return;
+
+      editor.commands.resolveThread(threadId);
+    },
+    [editor],
+  );
+
+  const onUnresolveThread = useCallback(
+    (threadId: string) => {
+      if (!editor) return;
+
+      editor.commands.unresolveThread(threadId);
+    },
+    [editor],
+  );
+
+  useEffect(() => {
+    if (!editor) return;
 
     const update = () => {
-      const state = getCommentThreadState(editor)
-      if (!state) return
+      const state = getCommentThreadState(editor);
+      if (!state) return;
 
-      setThreads(state.threads)
-      setSelectedThreads(state.selectedThreads)
-      setSelectedThread(state.selectedThread)
-    }
+      setThreads(state.threads);
+      setSelectedThreads(state.selectedThreads);
+      setSelectedThread(state.selectedThread);
+    };
 
-    editor.on('transaction', update)
+    editor.on("transaction", update);
 
     return () => {
-      editor.off('transaction', update)
-    }
-  }, [editor])
-
+      editor.off("transaction", update);
+    };
+  }, [editor]);
 
   return (
     <ThreadsProvider
@@ -84,7 +111,6 @@ export function ThreadSidebarBase({ editor, children }: { editor: Editor | null,
       onUnresolveThread={onUnresolveThread}
     >
       {children}
-
     </ThreadsProvider>
-  )
+  );
 }

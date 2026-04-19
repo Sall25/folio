@@ -1,5 +1,5 @@
 // cover-header.tsx
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Pencil, Trash2, Check } from "lucide-react";
 import { DynamicIcon } from "./dynamic-icon";
 
@@ -136,7 +136,9 @@ function IconButton({
   target,
   onTargetChange,
   onSelect,
-  editorLeft,
+  paddingLeft,
+  translateX,
+  hasThreads,
 }: {
   cover: Page["cover"];
   hasCover: boolean;
@@ -145,13 +147,17 @@ function IconButton({
   target: Target;
   onTargetChange: (t: Target) => void;
   onSelect: (name: string, color?: string) => void;
-  editorLeft: number;
+  paddingLeft: number;
+  translateX: number;
+  hasThreads?: boolean;
 }) {
   return (
     <div
       style={{
-        paddingLeft: editorLeft + 30,
+        // paddingLeft: editorLeft,
         paddingTop: hasCover ? 0 : 24,
+        paddingLeft,
+        transform: hasThreads ? `translateX(${translateX}px)` : `translateX(0)`,
       }}
     >
       <Popover open={open} onOpenChange={onOpenChange}>
@@ -203,20 +209,29 @@ interface CoverHeaderProps {
   saveState: SaveState;
   sidebarWidth: number;
   collapsed: boolean;
-  editorLeft: number;
+  paddingLeft: number;
+  translateX: number;
+  hasThreads?: boolean;
 }
 
 export function CoverHeader({
   activePage,
   updateCover,
   saveState,
-  editorLeft,
+  paddingLeft,
+  translateX,
+  hasThreads,
 }: CoverHeaderProps) {
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState<Target>("Emoji");
 
   const hasIcon = !!activePage.cover.iconName;
   const hasCover = !!activePage.cover.coverImage;
+
+  useEffect(() => {
+    console.log("hasThreads", hasThreads);
+    console.log("cover header mounted");
+  }, [hasThreads]);
 
   const onSelect = useCallback(
     (name: string, color?: string) => {
@@ -251,7 +266,9 @@ export function CoverHeader({
           target={target}
           onTargetChange={setTarget}
           onSelect={onSelect}
-          editorLeft={editorLeft}
+          paddingLeft={paddingLeft}
+          translateX={translateX}
+          hasThreads={hasThreads}
         />
       )}
     </div>

@@ -5,38 +5,41 @@ import { useEffect, useState } from "react";
 import type { PositionedThread } from "../types";
 import { getCommentThreadState } from "../extensions/utils/getCommentThreadState";
 
-import './styles.scss'
-import './thread-sidebar.scss'
+import "./styles.scss";
+import "./thread-sidebar.scss";
 
-export function ThreadSidebar({ editor }: { editor: Editor | null }) {
-  const [positionedThreads, setPositionedThreads] = useState<PositionedThread[]>([])
+export function ThreadSidebar({
+  editor,
+  setHasThreads,
+}: {
+  editor: Editor | null;
+  setHasThreads: (v: boolean) => void;
+}) {
+  const [positionedThreads, setPositionedThreads] = useState<
+    PositionedThread[]
+  >([]);
 
   useEffect(() => {
-    if (!editor) return
+    if (!editor) return;
 
     const update = () => {
-      const state = getCommentThreadState(editor)
-      if (!state) return
-      setPositionedThreads(state.positionedThreads)
-    }
+      const state = getCommentThreadState(editor);
+      if (!state) return;
+      setPositionedThreads(state.positionedThreads);
+    };
 
-    editor.on('transaction', update)
+    editor.on("transaction", update);
 
     return () => {
-      editor.off('transaction', update)
-    }
-  }, [editor])
+      editor.off("transaction", update);
+    };
+  }, [editor]);
 
   return (
-    <ThreadSidebarBase
-      editor={editor}
-    >
+    <ThreadSidebarBase editor={editor} setHasThreads={setHasThreads}>
       <div className="thread-sidebar">
-        <ThreadsList
-          positionedThreads={positionedThreads}
-          editor={editor}
-        />
+        <ThreadsList positionedThreads={positionedThreads} editor={editor} />
       </div>
     </ThreadSidebarBase>
-  )
+  );
 }

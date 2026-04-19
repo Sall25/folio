@@ -1,7 +1,7 @@
 {
   "pages": [
     {
-      "title": "Todo",
+      "title": "Tasks for Tonight  ",
       "parentId": null,
       "children": [],
       "settings": {
@@ -11,7 +11,7 @@
       },
       "cover": {
         "iconName": "✅",
-        "coverImage": null,
+        "coverImage": "/covers/default-cover.jpg",
         "target": "Emoji"
       },
       "content": {
@@ -22,20 +22,20 @@
             "content": [
               {
                 "type": "text",
-                "text": "Todo"
+                "text": "Tasks for Tonight "
+              },
+              {
+                "type": "emoji",
+                "attrs": {
+                  "name": "sparkles",
+                  "src": "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2728.png"
+                }
+              },
+              {
+                "type": "text",
+                "text": " "
               }
             ]
-          },
-          {
-            "type": "paragraph",
-            "attrs": {
-              "id": "1b54a72a-fff6-45e2-a9ab-cf7bdd939ade",
-              "textAlign": null,
-              "backgroundColor": null,
-              "nodeAlign": null,
-              "nodeVerticalAlign": null,
-              "color": null
-            }
           },
           {
             "type": "taskList",
@@ -75,6 +75,165 @@
                           }
                         ],
                         "text": "React locations"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "6b2d4d4b-ed65-4194-a40e-7df214897680",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Learn about how to use"
+                      },
+                      {
+                        "type": "text",
+                        "marks": [
+                          {
+                            "type": "bold"
+                          }
+                        ],
+                        "text": " Claude in VS code (by Net Ninja)"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "b0a93ad8-3afd-4185-b38b-6fe18bd369ec",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Add a page title on the left handle of the toolbar"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "16a93ad7-3351-4abc-91e3-bfe4c75de69a",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Fix the annoying appearances of the floating menus"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "685d1198-b193-4786-8426-ffd7a654b7af",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Fix the conflict between the renaming on page item and renaming on editor content"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "0493dfcc-f1ca-48bd-b049-32b8bd366511",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Add a label for updated at the right handle side of the toolbar"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "c7736302-1efe-4f58-b060-8a0dc01b435e",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "See if automatic update where you delay the save doesn’t slow down the editor and if so use that"
                       }
                     ]
                   }
@@ -154,13 +313,224 @@
                     ]
                   }
                 ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "37073eec-320b-4f91-b78a-774a0649ce61",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Fix the problem of turning a Bullet list or Ordered list into a Task list"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "10ba03c8-6330-49fc-bdc9-5edbf877d3b5",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Fix the overall layout of the page to avoid conflicts (like for instance the conflict between the comment thread and the editor content)"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "098805a7-7bbf-43e1-b611-d0bf9f391dff",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Include comments in the page types and store them"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "bf8a55a6-c56f-4b08-beac-0bb4bb91a900",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Fix the placeholder in the task list item"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "bba10a0e-2bf8-40a1-b59c-44b176cd6588",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Improve the mention menu by adding the same functionalities as the ones in Notion"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "92f858a4-4ef2-4198-9280-596e0611d594",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Fix once and for all the suggestion menu closing problem"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "ac20335f-66a0-4753-b423-da566405aeb5",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Allow the user to copy the page as a whole"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "attrs": {
+                      "id": "d3e1c53b-045a-46c5-8ce1-aa731e254f61",
+                      "textAlign": null,
+                      "backgroundColor": null,
+                      "nodeAlign": null,
+                      "nodeVerticalAlign": null,
+                      "color": null
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Implement the insert button"
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           },
           {
             "type": "paragraph",
             "attrs": {
-              "id": "c82ca09a-9c49-4906-811f-407dc4b4599b",
+              "id": "3824b8fb-f330-4e61-8d4b-965f0e3c7fff",
+              "textAlign": null,
+              "backgroundColor": null,
+              "nodeAlign": null,
+              "nodeVerticalAlign": null,
+              "color": null
+            }
+          },
+          {
+            "type": "paragraph",
+            "attrs": {
+              "id": "1410c198-c4be-4d07-8407-e57c587b787b",
               "textAlign": null,
               "backgroundColor": null,
               "nodeAlign": null,
@@ -171,11 +541,11 @@
         ]
       },
       "createdAt": "1776465480980",
-      "updatedAt": "1776466789981",
+      "updatedAt": "1776543248724",
       "id": 1
     },
     {
-      "title": "Second Page",
+      "title": "Notebook",
       "parentId": null,
       "children": [],
       "settings": {
@@ -184,7 +554,7 @@
         "locked": false
       },
       "cover": {
-        "iconName": "🐶",
+        "iconName": "🌬️",
         "coverImage": null,
         "target": "Emoji"
       },
@@ -196,14 +566,14 @@
             "content": [
               {
                 "type": "text",
-                "text": "Second Page"
+                "text": "Notebook"
               }
             ]
           },
           {
             "type": "paragraph",
             "attrs": {
-              "id": "54031dae-4c03-475c-9c0d-8eb959063af3",
+              "id": "17db250e-449c-4778-8066-f76c7921bd02",
               "textAlign": null,
               "backgroundColor": null,
               "nodeAlign": null,
@@ -213,14 +583,27 @@
             "content": [
               {
                 "type": "text",
-                "text": "Some more text"
+                "text": "To start the server you need to run :"
+              }
+            ]
+          },
+          {
+            "type": "codeBlock",
+            "attrs": {
+              "id": "2474869f-90d3-465f-886d-a7fb7cd6dcb3",
+              "language": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "npx json-server db.json --port 3001"
               }
             ]
           },
           {
             "type": "paragraph",
             "attrs": {
-              "id": "ab9a3a52-3b2c-4259-bec6-f7a7884f0287",
+              "id": "c3e5f690-3328-4ef2-9d4e-ae984d6f02ed",
               "textAlign": null,
               "backgroundColor": null,
               "nodeAlign": null,
@@ -230,8 +613,8 @@
           }
         ]
       },
-      "createdAt": "1776465578734",
-      "updatedAt": "1776467863719",
+      "createdAt": "1776514559047",
+      "updatedAt": "1776537519363",
       "id": 2
     }
   ]

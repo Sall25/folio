@@ -288,7 +288,7 @@ export function SimpleEditorSidebar({
 
           {pages.length === 0 && <p className="sidebar-empty">No pages yet.</p>}
 
-          <CardItemGroup style={{ gap: 10 }}>
+          <CardItemGroup style={{ gap: 5 }}>
             {pages.map((page) => (
               <PageItem
                 key={page.id}

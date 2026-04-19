@@ -11,7 +11,7 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: 320px;
+  min-width: 320px;
   height: 100%;
   pointer-events: none; // allows editor interaction through gaps
   display: flex;

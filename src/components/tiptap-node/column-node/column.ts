@@ -2,7 +2,6 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { WrappedColumnView } from "./wrapped-column-view";
-import { Plugin, PluginKey } from "@tiptap/pm/state";
 
 export const Column = Node.create({
   name: "column",
@@ -39,36 +38,6 @@ export const Column = Node.create({
   addNodeView() {
     return ReactNodeViewRenderer(WrappedColumnView);
   },
-
-  // addProseMirrorPlugins() {
-  //   return [
-  //     new Plugin({
-  //       key: new PluginKey("ensureColumnParagraph"),
-  //       appendTransaction(transactions, oldState, newState) {
-  //         const tr = newState.tr;
-  //         let modified = false;
-
-  //         newState.doc.descendants((node, pos) => {
-  //           if (node.type.name !== "column") return;
-
-  //           const lastChild = node.lastChild;
-  //           const needsEmptyParagraph =
-  //             !lastChild ||
-  //             lastChild.type.name !== "paragraph" ||
-  //             lastChild.textContent !== "";
-
-  //           if (needsEmptyParagraph) {
-  //             const endPos = pos + node.nodeSize - 1;
-  //             tr.insert(endPos, newState.schema.nodes.paragraph.create());
-  //             modified = true;
-  //           }
-  //         });
-
-  //         return modified ? tr : null;
-  //       },
-  //     }),
-  //   ];
-  // },
 
   addKeyboardShortcuts() {
     return {
@@ -123,7 +92,7 @@ function handleColumnElimination(
   key: "Backspace" | "Delete",
 ): boolean {
   const { state } = editor.view;
-  const { selection, doc } = state;
+  const { selection } = state;
   const { $from } = selection;
 
   // Find the column node and its depth

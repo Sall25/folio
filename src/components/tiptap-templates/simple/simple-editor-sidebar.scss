@@ -5,6 +5,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
+  font-family: var(--thread-font-ui);
   height: 100vh;
   overflow: hidden;
   border-right: 0.5px solid var(--tt-border-color, rgba(0,0,0,0.08));
@@ -139,6 +140,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
+  font-family: inherit;
+  
   
   padding: 5px 6px;
   border-radius: var(--tt-radius, 6px);
@@ -171,7 +174,7 @@
   // font-size: 15px;
   line-height: 1;
   color: var(--tt-text-color);
-  font-size: 20px;
+  font-size: 16px;
 }
 
 .page-title {
@@ -182,6 +185,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--thread-font-ui) !important;
+  font-weight: 500;
 }
 
 .page-options-btn {

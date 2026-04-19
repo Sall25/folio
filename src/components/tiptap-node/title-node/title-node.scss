@@ -1,6 +1,19 @@
-h1[data-type="title"]:empty::before {
-  content: "New page";
-  color: var(--tt-gray-light-a-300);
+:root{
+  --placeholder-color: var(--tt-gray-light-a-50);
+}
+.dark{
+  --placeholder-color: var(--tt-gray-dark-a-50);
+}
+
+h1[data-type='title'] br:only-child ~ ::before,
+h1[data-type='title']:has(br:only-child)::before {
+  content: 'New Page';
+  color: var(--placeholder-color);
   pointer-events: none;
-  cursor: text;
+  position: absolute;
+}
+
+h1[data-type='title'] {
+  position: relative;
+  margin-bottom: 1.3rem !important;
 }

@@ -14,6 +14,8 @@ import "./drag-handle.scss";
 import { ColorDropdownProvider } from "../color-dropdown-menu/color-dropdown-provider";
 import { Node, Node as PMNode } from "@tiptap/pm/model";
 import type { NormalizedNestedOptions } from "@tiptap/extension-drag-handle";
+import { PopoverPortal } from "src/components/tiptap-ui-primitive/popover";
+import { createPortal } from "react-dom";
 
 const NODE_LABELS: Record<string, string> = {
   paragraph: "Text",
@@ -205,15 +207,17 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
               <GripVertical className="tiptap-button-icon" />
             </Button>
 
-            {open && (
-              <DragHandleMenu
-                onAction={onAction}
-                target={target}
-                editor={editor}
-                side="left"
-                sideOffset={0}
-              />
-            )}
+            {open &&
+              createPortal(
+                <DragHandleMenu
+                  onAction={onAction}
+                  target={target}
+                  editor={editor}
+                  side="left"
+                  sideOffset={0}
+                />,
+                document.body,
+              )}
           </ColorDropdownProvider>
         </DropdownMenu>
       </CardItemGroup>

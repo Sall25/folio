@@ -70,6 +70,7 @@ export function buildExtensions(setTocContent: (content: TocItem[]) => void) {
     Placeholder.configure({
       includeChildren: true,
       placeholder: ({ editor, node }) => {
+        if (node.type.name === "title") return "New Page";
         if (["tableCell", "tableHeader", "table"].includes(node.type.name))
           return "";
         if (editor.state.tr.getMeta("/Filter")) return "/Filter";

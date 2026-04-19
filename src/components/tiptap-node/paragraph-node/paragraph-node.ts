@@ -12,37 +12,36 @@ export const ParagraphNode = Paragraph.extend({
         key: new PluginKey("PreventMarkSpreading"),
         props: {
           handleKeyDown(view, event) {
-            // ── Backspace: cancel an empty list item ──────────────────────
-            if (event.key === "Backspace") {
-              const { state } = view;
-              const { $from } = state.selection;
+            const { state, dispatch } = view;
+            const { $from } = state.selection;
 
-              // Walk up to find the nearest list item ancestor
+            // ── Backspace ─────────────────────────────────────────────
+            if (event.key === "Backspace") {
+              // Quick exit: if not inside a list at all, bail immediately
+              const inList = $from.path.some?.(
+                (n) =>
+                  n?.type?.name === "listItem" || n?.type?.name === "taskItem",
+              );
+
+              // Walk up only if potentially in a list
               let depth = $from.depth;
+              let listItemNode = null;
               while (depth > 0) {
-                const ancestorType = $from.node(depth).type.name;
-                if (
-                  ancestorType === "listItem" ||
-                  ancestorType === "taskItem"
-                ) {
+                const name = $from.node(depth).type.name;
+                if (name === "listItem" || name === "taskItem") {
+                  listItemNode = $from.node(depth);
                   break;
                 }
                 depth--;
               }
 
-              const listItemNode = depth > 0 ? $from.node(depth) : null;
-
               if (listItemNode) {
                 const isEmpty =
                   $from.parent.content.size === 0 && $from.parentOffset === 0;
-
                 if (isEmpty) {
-                  // liftListItem lifts the item out of the list (same effect
-                  // as pressing Enter on an empty list item in default Tiptap)
                   const lifted = editor
                     .chain()
-                    .focus()
-                    .liftListItem(listItemNode.type)
+                    .liftListItem(listItemNode.type) // removed .focus() — avoids extra re-render
                     .run();
                   if (lifted) return true;
                 }
@@ -51,75 +50,147 @@ export const ParagraphNode = Paragraph.extend({
               return false;
             }
 
-            // ── Enter: insert a clean paragraph ──────────────────────────
+            // ── Enter ─────────────────────────────────────────────────
             if (event.key === "Enter") {
-              const { state, dispatch } = view;
-              const { $from } = state.selection;
-              const node = $from.node(-1);
-
-              // Check if we're inside a code block by walking up the node tree
+              // Skip code blocks
               for (let d = $from.depth; d > 0; d--) {
-                if ($from.node(d).type.name === "codeBlock") {
-                  return false; // let ProseMirror handle Enter inside code blocks
-                }
+                if ($from.node(d).type.name === "codeBlock") return false;
               }
 
-              //  Only handle Enter inside paragraphs
+              const nodeName = $from.node(-1).type.name;
               if (
-                node.type.name !== "paragraph" &&
-                node.type.name !== "doc" &&
-                node.type.name !== "column"
+                nodeName !== "paragraph" &&
+                nodeName !== "doc" &&
+                nodeName !== "column"
               ) {
-                return false; // allow Tiptap default behavior
+                return false;
               }
 
-              // Create a new paragraph node
-              const paragraph = state.schema.nodes.paragraph.create({
-                textAlign: undefined,
-              });
-
-              // Replace current selection with the new paragraph
+              const paragraph = state.schema.nodes.paragraph.create();
               let tr = state.tr.replaceSelectionWith(paragraph);
-              // Resolve the position **inside the new paragraph**
-              // $from.pos is where the paragraph was inserted
-              // +1 moves inside the paragraph content
-              const posInside = tr.doc.resolve($from.pos + 1);
-
-              // Set the selection at the start of the new paragraph
-              tr = tr.setSelection(TextSelection.create(tr.doc, posInside.pos));
+              const newPos = tr.doc.resolve($from.pos + 1);
+              tr = tr.setSelection(TextSelection.near(newPos));
+              // tr.selection.from is already updated to the post-replace position
+              // const resolvedPos = tr.doc.resolve(tr.selection.from);
+              // tr = tr.setSelection(TextSelection.near(resolvedPos));
 
               dispatch(tr);
-
-              return true; // prevent default Enter
+              return true;
             }
+
             return false;
           },
+          // handleKeyDown(view, event) {
+          //   // ── Backspace: cancel an empty list item ──────────────────────
+          //   if (event.key === "Backspace") {
+          //     const { state } = view;
+          //     const { $from } = state.selection;
+
+          //     // Walk up to find the nearest list item ancestor
+          //     let depth = $from.depth;
+          //     while (depth > 0) {
+          //       const ancestorType = $from.node(depth).type.name;
+          //       if (
+          //         ancestorType === "listItem" ||
+          //         ancestorType === "taskItem"
+          //       ) {
+          //         break;
+          //       }
+          //       depth--;
+          //     }
+
+          //     const listItemNode = depth > 0 ? $from.node(depth) : null;
+
+          //     if (listItemNode) {
+          //       const isEmpty =
+          //         $from.parent.content.size === 0 && $from.parentOffset === 0;
+
+          //       if (isEmpty) {
+          //         // liftListItem lifts the item out of the list (same effect
+          //         // as pressing Enter on an empty list item in default Tiptap)
+          //         const lifted = editor
+          //           .chain()
+          //           .focus()
+          //           .liftListItem(listItemNode.type)
+          //           .run();
+          //         if (lifted) return true;
+          //       }
+          //     }
+
+          //     return false;
+          //   }
+
+          //   // ── Enter: insert a clean paragraph ──────────────────────────
+          //   if (event.key === "Enter") {
+          //     const { state, dispatch } = view;
+          //     const { $from } = state.selection;
+          //     const node = $from.node(-1);
+
+          //     // Check if we're inside a code block by walking up the node tree
+          //     for (let d = $from.depth; d > 0; d--) {
+          //       if ($from.node(d).type.name === "codeBlock") {
+          //         return false; // let ProseMirror handle Enter inside code blocks
+          //       }
+          //     }
+
+          //     //  Only handle Enter inside paragraphs
+          //     if (
+          //       node.type.name !== "paragraph" &&
+          //       node.type.name !== "doc" &&
+          //       node.type.name !== "column"
+          //     ) {
+          //       return false; // allow Tiptap default behavior
+          //     }
+
+          //     // Create a new paragraph node
+          //     const paragraph = state.schema.nodes.paragraph.create({
+          //       textAlign: undefined,
+          //     });
+
+          //     // Replace current selection with the new paragraph
+          //     let tr = state.tr.replaceSelectionWith(paragraph);
+          //     // Resolve the position **inside the new paragraph**
+          //     // $from.pos is where the paragraph was inserted
+          //     // +1 moves inside the paragraph content
+          //     const posInside = tr.doc.resolve($from.pos + 1);
+
+          //     // Set the selection at the start of the new paragraph
+          //     tr = tr.setSelection(TextSelection.create(tr.doc, posInside.pos));
+
+          //     dispatch(tr);
+
+          //     return true; // prevent default Enter
+          //   }
+          //   return false;
+          // },
         },
       }),
 
       // ── Ensure always a trailing empty paragraph ──────────────────────
-      new Plugin({
-        key: ensureTrailingParagraphKey,
-        appendTransaction(transactions, _oldState, newState) {
-          // Only run if the document actually changed
-          const docChanged = transactions.some((tr) => tr.docChanged);
-          if (!docChanged) return null;
+      // new Plugin({
+      //   key: ensureTrailingParagraphKey,
+      //   appendTransaction(transactions, _oldState, newState) {
+      //     // Only run if the document actually changed
+      //     const docChanged = transactions.some((tr) => tr.docChanged);
+      //     if (!docChanged) return null;
 
-          const { doc, schema, tr } = newState;
-          const lastNode = doc.lastChild;
+      //     const { doc, schema, tr } = newState;
+      //     const lastNode = doc.lastChild;
 
-          // Already ends with an empty paragraph — nothing to do
-          if (
-            lastNode?.type === schema.nodes.paragraph &&
-            lastNode.content.size === 0
-          ) {
-            return null;
-          }
+      //     console.log("append paragraph ran again");
 
-          // Append an empty paragraph at the end
-          return tr.insert(doc.content.size, schema.nodes.paragraph.create());
-        },
-      }),
+      //     // Already ends with an empty paragraph — nothing to do
+      //     if (
+      //       lastNode?.type === schema.nodes.paragraph &&
+      //       lastNode.content.size === 0
+      //     ) {
+      //       return null;
+      //     }
+
+      //     // Append an empty paragraph at the end
+      //     return tr.insert(doc.content.size, schema.nodes.paragraph.create());
+      //   },
+      // }),
     ];
   },
 });

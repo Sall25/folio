@@ -126,7 +126,7 @@ export function usePages() {
         old.filter((p) => p.id !== id),
       );
     },
-    onError: (_, id) => {
+    onError: () => {
       // roll back on failure
       client.invalidateQueries({ queryKey: ["pages"] });
     },
@@ -141,12 +141,25 @@ export function usePages() {
 
   // Adds a child page under a given parent
   const addChildPage = (parentId: string) => {
-    addPage({ title: "Untitled", parentId });
+    addPage({ title: "New Page", parentId });
   };
 
   // Adds a root-level page
   const addRootPage = () => {
-    addPage({ title: "Untitled", parentId: null });
+    addPage({ title: "New Page", parentId: null });
+  };
+
+  const addCover = (id: string) => {
+    const page = pages?.flat().find((p) => p.id === id); // or however you look up a page
+    if (!page) return;
+
+    updatePage({
+      ...page,
+      cover: {
+        ...page.cover,
+        coverImage: "/covers/default-cover.jpg", // your default cover
+      },
+    });
   };
 
   return {
@@ -159,5 +172,6 @@ export function usePages() {
     updatePage,
     query,
     onSearch,
+    addCover,
   };
 }
