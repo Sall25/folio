@@ -25,7 +25,7 @@ function SubmitBtn({ disabled = false }: { disabled?: boolean }) {
 
 export function ThreadComposerSubmit({
   editor,
-  threadId,
+  // threadId,
   pageId,
 }: {
   editor: Editor | null;

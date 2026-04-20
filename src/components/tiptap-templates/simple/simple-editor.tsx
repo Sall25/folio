@@ -56,16 +56,16 @@ function SimpleEditorInner() {
   const {
     activePage,
     isLoading,
-    updateSettings,
+    updateSettingsAsync,
     pages,
-    addPage,
-    deletePage,
+    addPageAsync,
+    deletePageAsync,
     setActivePageId,
     query,
     onSearch,
-    updateCover,
-    updatePage,
-    addCover,
+    updateCoverAsync,
+    updatePageAsync,
+    addCoverAsync,
   } = useActivePage();
   const [mobileView, setMobileView] = useState<MobileView>("main");
   const toolbarRef = useRef<HTMLDivElement | null>(null);
@@ -97,13 +97,15 @@ function SimpleEditorInner() {
             height={height}
             rectY={0}
             settings={activePage.settings}
-            onFullWidthChanged={(v) =>
-              updateSettings({ width: v ? "full" : "medium" })
+            onFullWidthChanged={async (v) =>
+              await updateSettingsAsync({ width: v ? "full" : "medium" })
             }
-            onSmallTextChanged={(v) =>
-              updateSettings({ text: v ? "small" : "normal" })
+            onSmallTextChanged={async (v) =>
+              await updateSettingsAsync({ text: v ? "small" : "normal" })
             }
-            onLockedChanged={(v) => updateSettings({ locked: v })}
+            onLockedChanged={async (v) =>
+              await updateSettingsAsync({ locked: v })
+            }
             onMobileViewChange={setMobileView}
             sidebarWidth={sidebarWidth}
           />
@@ -111,18 +113,24 @@ function SimpleEditorInner() {
           <SimpleEditorSidebar
             pages={pages ?? []}
             activePage={activePage}
-            onSelect={(page) => setActivePageId(page.id)}
-            onDelete={(id) => deletePage(id)}
-            onAddPage={(title, parentId) => addPage({ title, parentId })}
-            onNewPage={() => addPage({ title: "Untitled", parentId: null })}
+            onSelectAsync={async (page) => setActivePageId(page.id)}
+            onDeleteAsync={async (id) => await deletePageAsync(id)}
+            onAddPageAsync={async (title, parentId) =>
+              addPageAsync({ title, parentId })
+            }
+            onNewPageAsync={async () =>
+              addPageAsync({ title: "Untitled", parentId: null })
+            }
             // onRename: (id: string, title: string) => void;
-            onRename={(id: string, title: string) => {
+            onRenameAsync={async (id: string, title: string) => {
               const page = findPage(pages ?? [], id);
               if (!page) return;
-              updatePage({ ...page, title });
+              await updatePageAsync({ ...page, title });
             }}
             query={query}
-            onSearch={onSearch}
+            onSearchAsync={async () => {
+              onSearch(query);
+            }}
             collapsed={collapsed}
             onToggle={onToggle}
           />
@@ -132,9 +140,9 @@ function SimpleEditorInner() {
               collapsed={collapsed}
               sidebarWidth={sidebarWidth}
               activePage={activePage}
-              updateCover={updateCover}
-              updatePage={updatePage}
-              addCover={addCover}
+              updateCoverAsync={updateCoverAsync}
+              updatePageAsync={updatePageAsync}
+              addCoverAsync={addCoverAsync}
             />
 
             <aside className="simple-editor-sidebar-right" />

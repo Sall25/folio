@@ -30,16 +30,21 @@ function buildTree(pages: Page[]): Page[] {
   return roots;
 }
 
-const fetchPages = () => fetch("/api/pages").then((res) => res.json());
+const fetchPagesAsync = async () => {
+  const res = await fetch("/api/pages");
+  if (!res.ok) throw new Error("Failed to fetch pages");
 
-const addPageFn = ({
+  return res.json();
+};
+
+const addPageFnAsync = async ({
   title,
   parentId,
 }: {
   title: string;
   parentId: string | null;
-}) =>
-  fetch("/api/pages", {
+}) => {
+  const res = await fetch("/api/pages", {
     method: "POST",
     body: JSON.stringify({
       title,
@@ -72,16 +77,27 @@ const addPageFn = ({
       updatedAt: null,
     }),
     headers: { "Content-Type": "application/json" },
-  }).then((res) => res.json());
+  });
 
-const deletePageFn = (id: string) =>
-  fetch(`/api/pages/${id}`, { method: "DELETE" }).then((res) => res.json());
+  if (!res.ok) throw new Error("Failed to add page");
 
-const searchPage = (query: string) =>
-  fetch(`/api/pages?name_like=${query}`).then((res) => res.json());
+  return res.json();
+};
 
-const updatePageFn = (page: Page) =>
-  fetch(`/api/pages/${page.id}`, {
+const deletePageFnAsync = async (id: string) => {
+  const res = await fetch(`/api/pages/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete page");
+};
+
+const searchPageAsync = async (query: string) => {
+  const res = await fetch(`/api/pages?name_like=${query}`);
+  if (!res.ok) throw new Error("Couldn't find page");
+
+  return res.json();
+};
+
+const updatePageFnAsync = async (page: Page) => {
+  const res = await fetch(`/api/pages/${page.id}`, {
     method: "PATCH",
     body: JSON.stringify({
       title: page.title,
@@ -91,10 +107,12 @@ const updatePageFn = (page: Page) =>
       updatedAt: Date.now().toString(),
     }),
     headers: { "Content-Type": "application/json" },
-  }).then((res) => {
-    if (!res.ok) throw new Error("Failed to update page");
-    return res.json();
   });
+  const data = res.json();
+  if (!res.ok) throw new Error("Failed to update page");
+
+  return data;
+};
 
 export function usePages() {
   const client = useQueryClient();
@@ -106,54 +124,54 @@ export function usePages() {
   const { data: pages, isLoading } = useQuery({
     queryKey: ["pages", debounceQuery],
     queryFn: () =>
-      debounceQuery.length > 0 ? searchPage(debounceQuery) : fetchPages(),
+      debounceQuery.length > 0
+        ? searchPageAsync(debounceQuery)
+        : fetchPagesAsync(),
     placeholderData: keepPreviousData,
     select: (data) => buildTree(data),
   });
 
-  const { mutateAsync: addPage } = useMutation({
-    mutationFn: addPageFn,
+  const { mutateAsync: addPageAsync } = useMutation({
+    mutationFn: addPageFnAsync,
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ["pages"] });
     },
   });
 
-  const { mutate: deletePage } = useMutation({
-    mutationFn: deletePageFn,
+  const { mutateAsync: deletePageAsync } = useMutation({
+    mutationFn: deletePageFnAsync,
     onMutate: (id) => {
-      // optimistically remove from cache immediately
       client.setQueryData<Page[]>(["pages", debounceQuery], (old = []) =>
         old.filter((p) => p.id !== id),
       );
     },
     onError: () => {
-      // roll back on failure
       client.invalidateQueries({ queryKey: ["pages"] });
     },
   });
 
-  const { mutate: updatePage } = useMutation({
-    mutationFn: updatePageFn,
+  const { mutateAsync: updatePageAsync } = useMutation({
+    mutationFn: updatePageFnAsync,
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ["pages"] });
     },
   });
 
   // Adds a child page under a given parent
-  const addChildPage = (parentId: string) => {
-    addPage({ title: "New Page", parentId });
+  const addChildPageAsync = async (parentId: string) => {
+    await addPageAsync({ title: "New Page", parentId });
   };
 
   // Adds a root-level page
-  const addRootPage = () => {
-    addPage({ title: "New Page", parentId: null });
+  const addRootPageAsync = async () => {
+    addPageAsync({ title: "New Page", parentId: null });
   };
 
-  const addCover = (id: string) => {
+  const addCoverAsync = async (id: string) => {
     const page = pages?.flat().find((p) => p.id === id); // or however you look up a page
     if (!page) return;
 
-    updatePage({
+    await updatePageAsync({
       ...page,
       cover: {
         ...page.cover,
@@ -165,13 +183,13 @@ export function usePages() {
   return {
     pages,
     isLoading,
-    addPage,
-    addChildPage,
-    addRootPage,
-    deletePage,
-    updatePage,
+    addPageAsync,
+    addChildPageAsync,
+    addRootPageAsync,
+    deletePageAsync,
+    updatePageAsync,
     query,
     onSearch,
-    addCover,
+    addCoverAsync,
   };
 }

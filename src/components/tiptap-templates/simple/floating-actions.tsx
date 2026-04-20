@@ -21,7 +21,7 @@ export function FloatingActions({
   target,
   onTargetChange,
   onSelect,
-  onAddCover,
+  onAddCoverAsync,
 }: {
   hasIcon: boolean;
   hasCover: boolean;
@@ -31,7 +31,7 @@ export function FloatingActions({
   target: Target;
   onTargetChange: (t: Target) => void;
   onSelect: (name: string, color?: string) => void;
-  onAddCover: () => void;
+  onAddCoverAsync: () => Promise<void>;
 }) {
   return (
     <div
@@ -63,7 +63,7 @@ export function FloatingActions({
       )}
 
       {!hasCover && (
-        <Button variant="ghost" onClick={onAddCover}>
+        <Button variant="ghost" onClick={async () => await onAddCoverAsync()}>
           <Image className="tiptap-button-icon" />
           <span>Add cover</span>
         </Button>

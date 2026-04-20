@@ -1,6 +1,6 @@
 // cover-header.tsx
 import { useState, useCallback, useEffect } from "react";
-import { Pencil, Trash2, Check } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { DynamicIcon } from "./dynamic-icon";
 
 import "./cover-header.scss";
@@ -13,60 +13,7 @@ import {
 import type { Target } from "./types";
 
 import type { Page } from "src/components/tiptap-templates/simple/types";
-import type { SaveState } from "src/components/tiptap-templates/simple/simple-editor-content";
-import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import { IconPickerCard } from "./icon-picker-card";
-// ============================================================
-// Save badge
-// ============================================================
-const SAVE_BADGE: Record<SaveState, { badge: React.ReactNode }> = {
-  saved: {
-    badge: (
-      <Badge data-style="green">
-        <Check className="tiptap-badge-icon" />
-        <span>Saved</span>
-      </Badge>
-    ),
-  },
-  saving: {
-    badge: (
-      <Badge data-style="ghost">
-        <Check className="tiptap-badge-icon" />
-        <span>Saving...</span>
-      </Badge>
-    ),
-  },
-  unsaved: {
-    badge: (
-      <Badge data-style="gray">
-        <span>Unsaved</span>
-      </Badge>
-    ),
-  },
-};
-
-// ============================================================
-// SaveBadge
-// ============================================================
-
-function SaveBadge({ saveState }: { saveState: SaveState }) {
-  const badge = SAVE_BADGE[saveState];
-  return (
-    <div
-      style={{
-        position: "fixed",
-        top: 12,
-        right: 24,
-        zIndex: 50,
-        pointerEvents: "none",
-        opacity: saveState === "saved" ? 0.5 : 1,
-        transition: "opacity 0.3s ease",
-      }}
-    >
-      {badge.badge}
-    </div>
-  );
-}
 
 // ============================================================
 // CoverImage
@@ -74,12 +21,12 @@ function SaveBadge({ saveState }: { saveState: SaveState }) {
 
 function CoverImage({
   coverImage,
-  onChangeCover,
-  onRemoveCover,
+  onChangeCoverAsync,
+  onRemoveCoverAsync,
 }: {
   coverImage: string;
-  onChangeCover: () => void;
-  onRemoveCover: () => void;
+  onChangeCoverAsync: () => Promise<void>;
+  onRemoveCoverAsync: () => Promise<void>;
 }) {
   const [hovering, setHovering] = useState(false);
 
@@ -109,12 +56,15 @@ function CoverImage({
             gap: 6,
           }}
         >
-          <button className="cover-action-btn" onClick={onChangeCover}>
+          <button
+            className="cover-action-btn"
+            onClick={async () => await onChangeCoverAsync()}
+          >
             <Pencil size={12} /> Change cover
           </button>
           <button
             className="cover-action-btn cover-action-btn--danger"
-            onClick={onRemoveCover}
+            onClick={async () => await onRemoveCoverAsync()}
           >
             <Trash2 size={12} /> Remove
           </button>
@@ -205,8 +155,7 @@ function IconButton({
 
 interface CoverHeaderProps {
   activePage: Page;
-  updateCover: (cover: Page["cover"]) => void;
-  saveState: SaveState;
+  updateCoverAsync: (cover: Page["cover"]) => Promise<void>;
   sidebarWidth: number;
   collapsed: boolean;
   paddingLeft: number;
@@ -216,8 +165,7 @@ interface CoverHeaderProps {
 
 export function CoverHeader({
   activePage,
-  updateCover,
-  saveState,
+  updateCoverAsync,
   paddingLeft,
   translateX,
   hasThreads,
@@ -233,26 +181,29 @@ export function CoverHeader({
     console.log("cover header mounted");
   }, [hasThreads]);
 
-  const onSelect = useCallback(
-    (name: string, color?: string) => {
+  const onSelectAsync = useCallback(
+    async (name: string, color?: string) => {
       setOpen(false);
-      updateCover({ ...activePage.cover, iconName: name, target, color });
+      await updateCoverAsync({
+        ...activePage.cover,
+        iconName: name,
+        target,
+        color,
+      });
     },
-    [updateCover, activePage, target],
+    [updateCoverAsync, activePage, target],
   );
 
   return (
     <div style={{ width: "100%", position: "relative", minHeight: 80 }}>
-      <SaveBadge saveState={saveState} />
-
       {hasCover && (
         <CoverImage
           coverImage={activePage.cover.coverImage!}
-          onChangeCover={() =>
-            updateCover({ ...activePage.cover, coverImage: null })
+          onChangeCoverAsync={async () =>
+            await updateCoverAsync({ ...activePage.cover, coverImage: null })
           }
-          onRemoveCover={() =>
-            updateCover({ ...activePage.cover, coverImage: null })
+          onRemoveCoverAsync={async () =>
+            await updateCoverAsync({ ...activePage.cover, coverImage: null })
           }
         />
       )}
@@ -265,7 +216,7 @@ export function CoverHeader({
           onOpenChange={setOpen}
           target={target}
           onTargetChange={setTarget}
-          onSelect={onSelect}
+          onSelect={onSelectAsync}
           paddingLeft={paddingLeft}
           translateX={translateX}
           hasThreads={hasThreads}

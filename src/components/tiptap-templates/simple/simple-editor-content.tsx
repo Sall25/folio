@@ -29,25 +29,25 @@ export type SaveState = "unsaved" | "saving" | "saved";
 
 export function SimpleEditorContent({
   activePage,
-  updateCover,
+  updateCoverAsync,
   sidebarWidth,
   collapsed,
-  updatePage,
-  addCover,
+  updatePageAsync,
+  addCoverAsync,
 }: SimpleEditorContentProps) {
   // const { save, saveState, isReady, isDirty, savingTimerRef, docCache } = useEditorSave({ activePage, updatePage });
 
-  const { editor, saveState } = useEditorSetup({ activePage, updatePage });
+  const { editor } = useEditorSetup({ activePage, updatePageAsync });
 
   const {
     open,
     setOpen,
     target,
     setTarget,
-    onSelect,
-    onAddCover,
+    onSelectAsync,
+    onAddCoverAsync,
     floatingRef,
-  } = useCoverActions({ activePage, updateCover, addCover });
+  } = useCoverActions({ activePage, updateCoverAsync, addCoverAsync });
 
   const { editorWrapperRef, editorLeft, paddingLeft, translateX } =
     useEditorLayout({ sidebarWidth, collapsed });
@@ -68,8 +68,7 @@ export function SimpleEditorContent({
           collapsed={collapsed}
           sidebarWidth={sidebarWidth}
           activePage={activePage}
-          updateCover={updateCover}
-          saveState={saveState}
+          updateCoverAsync={updateCoverAsync}
           paddingLeft={paddingLeft}
           translateX={translateX}
           hasThreads={hasThreads}
@@ -125,8 +124,8 @@ export function SimpleEditorContent({
               onOpenChange={setOpen}
               target={target}
               onTargetChange={setTarget}
-              onSelect={onSelect}
-              onAddCover={onAddCover}
+              onSelect={onSelectAsync}
+              onAddCoverAsync={onAddCoverAsync}
             />
           </div>
         </FloatingMenu>

@@ -14,15 +14,19 @@ type Emoji = {
   emoji: string;
 };
 
-const fetchEmojis = () =>
-  fetch("https://api.emojisworld.fr/v1/search?q=face&limit=30").then((res) =>
-    res.json(),
+const fetchEmojis = async () => {
+  const res = await fetch(
+    "https://api.emojisworld.fr/v1/search?q=face&limit=30",
   );
+  return res.json();
+};
 
-const searchEmoji = (query: string) =>
-  fetch(`https://api.emojisworld.fr/v1/search?q=${query}&limit=30`).then(
-    (res) => res.json(),
+const searchEmoji = async (query: string) => {
+  const res = await fetch(
+    `https://api.emojisworld.fr/v1/search?q=${query}&limit=30`,
   );
+  return res.json();
+};
 const EMOJIS_PER_ROW = 8;
 
 export function EmojiPicker({

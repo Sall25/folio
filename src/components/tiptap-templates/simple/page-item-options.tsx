@@ -14,16 +14,16 @@ import { PageItemIcon } from "./page-item-icon";
 
 interface PageItemOptionsProps {
   page: Page;
-  onDelete: (id: string) => void;
-  onAddPage: (title: string, parentId: string) => void;
-  onRename: () => void;
+  onDeleteAsync: (id: string) => Promise<void>;
+  onAddPageAsync: (title: string, parentId: string) => Promise<void>;
+  onRenameAsync: () => Promise<void>;
 }
 
 export function PageItemOptions({
   page,
-  onDelete,
-  onAddPage,
-  onRename,
+  onDeleteAsync,
+  onAddPageAsync,
+  onRenameAsync,
 }: PageItemOptionsProps) {
   return (
     <Popover>
@@ -55,9 +55,9 @@ export function PageItemOptions({
                 justifyContent: "flex-start",
                 gap: 10,
               }}
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                onRename();
+                await onRenameAsync();
               }}
             >
               <PencilIcon className="tiptap-button-icon" />
@@ -71,9 +71,9 @@ export function PageItemOptions({
                 justifyContent: "flex-start",
                 gap: 10,
               }}
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                onAddPage("Untitled", page.id);
+                await onAddPageAsync("Untitled", page.id);
               }}
             >
               <Plus className="tiptap-button-icon" />
@@ -87,9 +87,9 @@ export function PageItemOptions({
                 justifyContent: "flex-start",
                 gap: 10,
               }}
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                onDelete(page.id);
+                await onDeleteAsync(page.id);
               }}
             >
               <TrashIcon className="tiptap-button-icon" />

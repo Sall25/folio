@@ -31,18 +31,17 @@ import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
 import "./simple-editor-sidebar.scss";
 import { PageItem } from "./page-item";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { createPortal } from "react-dom";
 
 // ============================================================
 // Sub-components
 // ============================================================
-function UserSpace() {
+function UserSpace({ name }: { name: string }) {
   return (
     <Card>
       <CardHeader>
@@ -50,7 +49,7 @@ function UserSpace() {
           <CardItemGroup orientation="vertical">
             <CardGroupLabel>
               <AvatarDemo />
-              <span>Souleymane Sall's Space</span>
+              <span>{name}</span>
             </CardGroupLabel>
             <CardGroupLabel>Free Plan - 1 member</CardGroupLabel>
             <CardItemGroup orientation="horizontal">
@@ -87,7 +86,7 @@ function UserSpacePopover({ name }: { name: string }) {
         </Button>
       </PopoverTrigger>
       <PopoverContent style={{ zIndex: 999 }}>
-        <UserSpace />
+        <UserSpace name={name} />
       </PopoverContent>
     </Popover>
   );
@@ -117,10 +116,6 @@ function User({ name }: { name: string }) {
       {!hide && <UserSpacePopover name={name} />}
     </ButtonGroup>
   );
-}
-
-function Portal({ children }: { children: ReactNode }) {
-  return createPortal(children, document.body);
 }
 
 function WorkSpaceOptions() {
@@ -155,9 +150,19 @@ function WorkSpaceOptions() {
   );
 }
 
-function CreatePageButton({ onNewPage }: { onNewPage: () => void }) {
+function CreatePageButton({
+  onNewPageAsync,
+}: {
+  onNewPageAsync: () => Promise<void>;
+}) {
   return (
-    <Button variant="ghost" tooltip={"Add new page"} onClick={onNewPage}>
+    <Button
+      variant="ghost"
+      tooltip={"Add new page"}
+      onClick={async () => {
+        await onNewPageAsync();
+      }}
+    >
       <SquarePen className="tiptap-button-icon" />
     </Button>
   );
@@ -166,13 +171,13 @@ function CreatePageButton({ onNewPage }: { onNewPage: () => void }) {
 function WorkspaceHeader({
   collapsed,
   onToggle,
-  onNewPage,
+  onNewPageAsync,
 }: {
   collapsed: boolean;
   onToggle: () => void;
-  onNewPage: () => void;
+  onNewPageAsync: () => Promise<void>;
 }) {
-  const [hide, setHide] = useState(true);
+  const [, setHide] = useState(true);
 
   return (
     <CardHeader>
@@ -184,7 +189,7 @@ function WorkspaceHeader({
         <AvatarDemo />
         {!collapsed && <User name="Souleymane Sall" />}
 
-        {!collapsed && <CreatePageButton onNewPage={onNewPage} />}
+        {!collapsed && <CreatePageButton onNewPageAsync={onNewPageAsync} />}
         <Button
           variant="ghost"
           className="sidebar-collapse-btn"
@@ -236,23 +241,23 @@ export function SimpleEditorSidebar({
   activePage,
   // query,
   // onSearch,
-  onSelect,
-  onDelete,
-  onAddPage,
-  onNewPage,
-  onRename,
+  onSelectAsync,
+  onDeleteAsync,
+  onAddPageAsync,
+  onNewPageAsync,
+  onRenameAsync,
   collapsed,
   onToggle,
 }: {
   pages: Page[];
   activePage: Page | null;
   query: string;
-  onSearch: (q: string) => void;
-  onSelect: (page: Page) => void;
-  onDelete: (id: string) => void;
-  onAddPage: (title: string, parentId: string) => void;
-  onNewPage: () => void;
-  onRename: (id: string, title: string) => void;
+  onSearchAsync: (q: string) => Promise<void>;
+  onSelectAsync: (page: Page) => Promise<void>;
+  onDeleteAsync: (id: string) => Promise<void>;
+  onAddPageAsync: (title: string, parentId: string) => Promise<void>;
+  onNewPageAsync: () => Promise<void>;
+  onRenameAsync: (id: string, title: string) => Promise<void>;
   collapsed: boolean;
   onToggle: () => void;
 }) {
@@ -271,7 +276,7 @@ export function SimpleEditorSidebar({
     >
       {/* ── Workspace ── */}
       <WorkspaceHeader
-        onNewPage={onNewPage}
+        onNewPageAsync={onNewPageAsync}
         collapsed={collapsed}
         onToggle={onToggle}
       />
@@ -293,10 +298,10 @@ export function SimpleEditorSidebar({
                 key={page.id}
                 page={page}
                 activePage={activePage}
-                onSelect={onSelect}
-                onDelete={onDelete}
-                onAddPage={onAddPage}
-                onRename={onRename}
+                onSelectAsync={onSelectAsync}
+                onDeleteAsync={onDeleteAsync}
+                onAddPageAsync={onAddPageAsync}
+                onRenameAsync={onRenameAsync}
               />
             ))}
           </CardItemGroup>

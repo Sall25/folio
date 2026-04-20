@@ -17,12 +17,12 @@ export function useActivePage() {
   const {
     pages,
     isLoading,
-    addPage,
-    updatePage,
-    deletePage,
+    addPageAsync,
+    updatePageAsync,
+    deletePageAsync,
     query,
     onSearch,
-    addCover,
+    addCoverAsync,
   } = usePages();
   const { activePageId, setActivePageId } = useActivePageId();
 
@@ -33,40 +33,40 @@ export function useActivePage() {
 
   useEffect(() => {
     if (!isLoading && pages?.length === 0)
-      addPage({ title: "Untitled", parentId: null });
-  }, [isLoading, pages, addPage]);
+      addPageAsync({ title: "Untitled", parentId: null });
+  }, [isLoading, pages, addPageAsync]);
 
   useEffect(() => {
     if (!activePageId && pages?.length)
       requestAnimationFrame(() => setActivePageId(pages[0].id));
   }, [pages, activePageId, setActivePageId]);
 
-  const addPageAndActivate = useCallback(
-    async (data: Parameters<typeof addPage>[0]) => {
-      const newPage = await addPage(data);
+  const addPageAndActivateAsync = useCallback(
+    async (data: Parameters<typeof addPageAsync>[0]) => {
+      const newPage = await addPageAsync(data);
       if (newPage?.id) setActivePageId(newPage.id);
       return newPage;
     },
-    [addPage, setActivePageId],
+    [addPageAsync, setActivePageId],
   );
 
-  const updateSettings = useCallback(
-    (patch: Partial<Page["settings"]>) => {
+  const updateSettingsAsync = useCallback(
+    async (patch: Partial<Page["settings"]>) => {
       if (!activePage) return;
-      updatePage({
+      await updatePageAsync({
         ...activePage,
         settings: { ...activePage.settings, ...patch },
       });
     },
-    [activePage, updatePage],
+    [activePage, updatePageAsync],
   );
 
-  const updateCover = useCallback(
-    (cover: Page["cover"]) => {
+  const updateCoverAsync = useCallback(
+    async (cover: Page["cover"]) => {
       if (!activePage) return;
-      updatePage({ ...activePage, cover });
+      await updatePageAsync({ ...activePage, cover });
     },
-    [activePage, updatePage],
+    [activePage, updatePageAsync],
   );
 
   return {
@@ -74,13 +74,13 @@ export function useActivePage() {
     activePage,
     isLoading,
     setActivePageId,
-    updateSettings,
-    updateCover,
-    addPage: addPageAndActivate, // ← replaces the original addPage
-    deletePage,
+    updateSettingsAsync,
+    updateCoverAsync,
+    addPageAsync: addPageAndActivateAsync, // ← replaces the original addPage
+    deletePageAsync,
     query,
     onSearch,
-    updatePage,
-    addCover,
+    updatePageAsync,
+    addCoverAsync,
   };
 }

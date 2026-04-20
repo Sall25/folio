@@ -5,14 +5,14 @@ import type { Target } from "src/components/tiptap-ui/cover/types";
 
 type UseCoverActionsProps = {
   activePage: Page;
-  updateCover: (cover: Page["cover"]) => void;
-  addCover: (id: string) => void;
+  updateCoverAsync: (cover: Page["cover"]) => Promise<void>;
+  addCoverAsync: (id: string) => Promise<void>;
 };
 
 export function useCoverActions({
   activePage,
-  updateCover,
-  addCover,
+  updateCoverAsync,
+  addCoverAsync,
 }: UseCoverActionsProps) {
   const activePageRef = useRef(activePage);
   const floatingRef = useRef<HTMLDivElement>(null);
@@ -23,22 +23,22 @@ export function useCoverActions({
     activePageRef.current = activePage;
   }, [activePage]);
 
-  const onSelect = useCallback(
-    (name: string, color?: string) => {
+  const onSelectAsync = useCallback(
+    async (name: string, color?: string) => {
       setOpen(false);
-      updateCover({
+      await updateCoverAsync({
         ...activePageRef.current.cover,
         iconName: name,
         target,
         color,
       });
     },
-    [updateCover, target],
+    [updateCoverAsync, target],
   );
 
-  const onAddCover = useCallback(
-    () => addCover(activePageRef.current.id),
-    [addCover],
+  const onAddCoverAsync = useCallback(
+    async () => await addCoverAsync(activePageRef.current.id),
+    [addCoverAsync],
   );
 
   return {
@@ -48,7 +48,7 @@ export function useCoverActions({
     setOpen,
     target,
     setTarget,
-    onSelect,
-    onAddCover,
+    onSelectAsync,
+    onAddCoverAsync,
   };
 }
