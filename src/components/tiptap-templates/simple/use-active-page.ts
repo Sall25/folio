@@ -1,6 +1,7 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { usePages } from "./use-pages";
 import type { Page } from "./types";
+import { useActivePageId } from "./context/active-page-context";
 
 function findPage(pages: Page[], id: string): Page | undefined {
   for (const page of pages) {
@@ -13,9 +14,17 @@ function findPage(pages: Page[], id: string): Page | undefined {
 }
 
 export function useActivePage() {
-  const { pages, isLoading, addPage, updatePage, deletePage, query, onSearch, addCover } =
-    usePages();
-  const [activePageId, setActivePageId] = useState<string | null>(null);
+  const {
+    pages,
+    isLoading,
+    addPage,
+    updatePage,
+    deletePage,
+    query,
+    onSearch,
+    addCover,
+  } = usePages();
+  const { activePageId, setActivePageId } = useActivePageId();
 
   const activePage =
     (activePageId ? findPage(pages ?? [], activePageId) : null) ??
@@ -30,7 +39,7 @@ export function useActivePage() {
   useEffect(() => {
     if (!activePageId && pages?.length)
       requestAnimationFrame(() => setActivePageId(pages[0].id));
-  }, [pages, activePageId]);
+  }, [pages, activePageId, setActivePageId]);
 
   const addPageAndActivate = useCallback(
     async (data: Parameters<typeof addPage>[0]) => {
@@ -38,7 +47,7 @@ export function useActivePage() {
       if (newPage?.id) setActivePageId(newPage.id);
       return newPage;
     },
-    [addPage],
+    [addPage, setActivePageId],
   );
 
   const updateSettings = useCallback(
@@ -72,6 +81,6 @@ export function useActivePage() {
     query,
     onSearch,
     updatePage,
-    addCover
+    addCover,
   };
 }

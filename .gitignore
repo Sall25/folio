@@ -26,3 +26,7 @@ dist-ssr
 
 # Authentication tokens
 .npmrc
+
+# data
+threads.json
+pages.json

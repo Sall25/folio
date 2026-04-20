@@ -1,7 +1,15 @@
 import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
-import { Edit, Trash } from "lucide-react";
+import { Edit, Ellipsis, Trash } from "lucide-react";
 import { useCallback, useState, type FormEvent } from "react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverPortal,
+  PopoverTrigger,
+} from "src/components/tiptap-ui-primitive/popover";
+import { Card } from "src/components/tiptap-ui-primitive/card";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
 interface CommentCardProps {
   name: string;
@@ -58,7 +66,14 @@ export const CommentCard = ({
       )}
 
       {!isComposing && !deleted && (
-        <div className="comment-content">
+        <div
+          className="comment-content"
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
           <p
             style={{
               marginLeft: "10px",
@@ -66,39 +81,60 @@ export const CommentCard = ({
           >
             {content}
           </p>
+          <Spacer orientation="horizontal" />
           {showActions && (
-            <ButtonGroup orientation="horizontal">
-              <Button
-                className="edit-btn"
-                variant="ghost"
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-
-                  setIsComposing(true);
-                }}
-              >
-                <Edit size={11} />
-                <span>Edit</span>
-              </Button>
-              {onDelete && (
-                <Button
-                  className="delete-btn"
-                  type="button"
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    onDelete();
-                  }}
-                >
-                  <Trash size={11} />
-                  <span>Delete</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost">
+                  <Ellipsis className="tiptap-button-icon" />
                 </Button>
-              )}
-            </ButtonGroup>
+              </PopoverTrigger>
+              <PopoverPortal container={document.getElementById("#root")}>
+                <PopoverContent
+                  style={{ zIndex: 9999 }}
+                  align="center"
+                  sideOffset={5}
+                >
+                  <Card style={{ padding: "2px 5px" }}>
+                    <ButtonGroup orientation="vertical">
+                      <Button
+                        style={{ justifyContent: "flex-start" }}
+                        variant="ghost"
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+
+                          setIsComposing(true);
+                        }}
+                      >
+                        <Edit size={11} />
+                        <span>Edit</span>
+                      </Button>
+                      {onDelete && (
+                        <Button
+                          style={{
+                            justifyContent: "flex-start",
+                            minWidth: 100,
+                          }}
+                          type="button"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            onDelete();
+                          }}
+                        >
+                          <Trash size={11} />
+                          <span>Delete</span>
+                        </Button>
+                      )}
+                    </ButtonGroup>
+                  </Card>
+                </PopoverContent>
+              </PopoverPortal>
+            </Popover>
           )}
         </div>
       )}

@@ -11,9 +11,11 @@ import "./thread-sidebar.scss";
 export function ThreadSidebar({
   editor,
   setHasThreads,
+  pageId,
 }: {
   editor: Editor | null;
   setHasThreads: (v: boolean) => void;
+  pageId: string;
 }) {
   const [positionedThreads, setPositionedThreads] = useState<
     PositionedThread[]
@@ -38,7 +40,11 @@ export function ThreadSidebar({
   return (
     <ThreadSidebarBase editor={editor} setHasThreads={setHasThreads}>
       <div className="thread-sidebar">
-        <ThreadsList positionedThreads={positionedThreads} editor={editor} />
+        <ThreadsList
+          pageId={pageId}
+          positionedThreads={positionedThreads}
+          editor={editor}
+        />
       </div>
     </ThreadSidebarBase>
   );

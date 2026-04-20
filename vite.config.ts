@@ -18,6 +18,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
+      "/threads-api": {
+        target: "http://localhost:3002",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/threads-api/, ""),
+      },
     },
   },
   optimizeDeps: {

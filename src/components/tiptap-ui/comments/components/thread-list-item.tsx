@@ -22,6 +22,7 @@ interface ThreadListItemProps {
   active: boolean;
   open: boolean;
   layout: PositionedThread;
+  pageId: string;
 }
 
 export const ThreadsListItem = ({
@@ -30,6 +31,7 @@ export const ThreadsListItem = ({
   active,
   open,
   layout,
+  pageId,
 }: ThreadListItemProps) => {
   const {
     onClickThread,
@@ -73,7 +75,11 @@ export const ThreadsListItem = ({
             transform: `translateY(${layout.resolvedTop - layout.anchorTop}px)`,
           }}
         >
-          <ThreadComposerSubmit editor={editor} threadId={thread.id} />
+          <ThreadComposerSubmit
+            pageId={pageId}
+            editor={editor}
+            threadId={thread.id}
+          />
         </span>
       )}
       {thread.status !== "drafted" && (

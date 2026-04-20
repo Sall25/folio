@@ -35,6 +35,7 @@ import "src/components/tiptap-templates/simple/toc.scss";
 import { useActivePage } from "./use-active-page";
 import { SimpleEditorSidebar } from "./simple-editor-sidebar";
 import type { Page } from "./types";
+import { ActivePageProvider } from "./context/active-page-provider";
 
 const SIDEBAR_WIDTH = 240;
 const SIDEBAR_COLLAPSED_WIDTH = 52;
@@ -145,9 +146,17 @@ function SimpleEditorInner() {
 }
 
 export function SimpleEditor() {
+  const [activePageId, setActivePageId] = useState<string | undefined>(
+    undefined,
+  );
   return (
     <TocProvider>
-      <SimpleEditorInner />
+      <ActivePageProvider
+        activePageId={activePageId}
+        setActivePageId={setActivePageId}
+      >
+        <SimpleEditorInner />
+      </ActivePageProvider>
     </TocProvider>
   );
 }

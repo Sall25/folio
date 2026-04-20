@@ -16,14 +16,20 @@ import { addComment } from "./utils/addComment";
 import { removeComment } from "./utils/removeComment";
 import { scrollToThread } from "./utils/scrollToThread";
 import { CellSelection } from "prosemirror-tables";
+import type { UseThreadSetupReturn } from "src/components/tiptap-templates/simple/hooks/use-thread-setup";
 
 interface CommentThreadStorage {
   draftId: string | null;
 }
 
+type CommentThreadOptions = UseThreadSetupReturn;
+
 declare module "@tiptap/core" {
   interface Storage {
     commentThreadExtension: CommentThreadStorage;
+  }
+  interface Options {
+    commentThreadExtension: CommentThreadOptions;
   }
 }
 
@@ -39,7 +45,7 @@ export interface CommentThreadState {
 export const commentThreadPluginKey = new PluginKey("commentThreadPlugin");
 
 export const CommentThreadExtension = Extension.create<
-  unknown,
+  CommentThreadOptions,
   CommentThreadStorage
 >({
   name: "commentThreadExtension",
@@ -47,6 +53,20 @@ export const CommentThreadExtension = Extension.create<
   addStorage() {
     return {
       draftId: null,
+    };
+  },
+
+  addOptions() {
+    return {
+      threads: [],
+      isLoading: false,
+      onCreateThreadAsync: async () => {},
+      onDeleteThreadAsync: async () => {},
+      onResolveThreadAsync: async () => {},
+      onUnresolveThreadAsync: async () => {},
+      onAddCommentsAsync: async () => {},
+      onRemoveCommentsAsync: async () => {},
+      onUpdateCommentAsync: async () => {},
     };
   },
 
@@ -58,9 +78,9 @@ export const CommentThreadExtension = Extension.create<
           return true;
         };
       },
-      submitThread(content) {
+      submitThread(content, pageId) {
         return ({ editor }) => {
-          submitThread(editor, content);
+          submitThread(editor, content, pageId);
           return true;
         };
       },
@@ -190,6 +210,18 @@ export const CommentThreadExtension = Extension.create<
 
   addProseMirrorPlugins() {
     const editor = this.editor;
+    const {
+      threads: initialThreads,
+      onCreateThreadAsync,
+      onDeleteThreadAsync,
+      onResolveThreadAsync,
+      onUnresolveThreadAsync,
+      onAddCommentsAsync,
+      onRemoveCommentsAsync,
+      onUpdateCommentAsync,
+    } = this.options;
+
+    console.log("initial threads", initialThreads);
     return [
       new Plugin<CommentThreadState>({
         key: commentThreadPluginKey,
@@ -197,7 +229,7 @@ export const CommentThreadExtension = Extension.create<
         state: {
           init: () => {
             return {
-              threads: [],
+              threads: initialThreads ?? [],
               measuredThreads: [],
               positionedThreads: [],
               selectedThreads: [],
@@ -210,15 +242,17 @@ export const CommentThreadExtension = Extension.create<
             const meta = tr.getMeta(commentThreadPluginKey);
             if (!meta) return next;
 
-            //   const thread = next.threads.find(thread => thread.id === meta.threadId)
-            // if (!thread) return next
-
             switch (meta.type) {
+              case "initialThreads":
+                {
+                  next.threads = meta.providedThreads;
+                  console.log("initialThreads", meta.providedThreads);
+                }
+                break;
               case "addComment":
                 {
                   next.threads = next.threads.map((t) => {
                     if (t.id !== meta.threadId) return t;
-
                     return {
                       ...t,
                       comments: [
@@ -233,6 +267,10 @@ export const CommentThreadExtension = Extension.create<
                       ],
                     };
                   });
+                  const thread = next.threads.find(
+                    (t) => t.id === meta.threadId,
+                  );
+                  if (thread) onAddCommentsAsync(thread, thread.comments);
                 }
                 break;
 
@@ -240,7 +278,6 @@ export const CommentThreadExtension = Extension.create<
                 {
                   next.threads = next.threads.map((t) => {
                     if (t.id !== meta.threadId) return t;
-
                     return {
                       ...t,
                       comments: t.comments.filter(
@@ -248,6 +285,10 @@ export const CommentThreadExtension = Extension.create<
                       ),
                     };
                   });
+                  const thread = next.threads.find(
+                    (t) => t.id === meta.threadId,
+                  );
+                  if (thread) onRemoveCommentsAsync(thread);
                 }
                 break;
 
@@ -255,7 +296,6 @@ export const CommentThreadExtension = Extension.create<
                 {
                   next.threads = next.threads.map((t) => {
                     if (t.id !== meta.threadId) return t;
-
                     return {
                       ...t,
                       comments: t.comments.map((comment) =>
@@ -265,35 +305,90 @@ export const CommentThreadExtension = Extension.create<
                       ),
                     };
                   });
+                  const thread = next.threads.find(
+                    (t) => t.id === meta.threadId,
+                  );
+                  if (thread)
+                    onUpdateCommentAsync({
+                      thread,
+                      commentId: meta.commentId,
+                      newText: meta.newText,
+                    });
                 }
                 break;
+
               case "removeThread":
                 {
-                  const newThreads = next.threads.filter(
+                  const thread = next.threads.find(
+                    (t) => t.id === meta.threadId,
+                  );
+                  if (thread) onDeleteThreadAsync(thread);
+                  next.threads = next.threads.filter(
                     (t) => t.id !== meta.threadId,
                   );
-                  next.threads = newThreads;
                 }
                 break;
 
               case "resolveThread":
                 {
-                  const newThreads = next.threads.map((t) =>
+                  const thread = next.threads.find((t) => t.id === meta.t);
+                  if (thread) onResolveThreadAsync(thread);
+                  next.threads = next.threads.map((t) =>
                     t.id === meta.t ? { ...t, status: "resolved" } : t,
-                  );
-                  next.threads = newThreads as Thread[];
+                  ) as Thread[];
                 }
                 break;
 
               case "unresolveThread":
                 {
-                  const newThreads = next.threads.map((t) =>
+                  const thread = next.threads.find((t) => t.id === meta.t);
+                  if (thread) onUnresolveThreadAsync(thread);
+                  next.threads = next.threads.map((t) =>
                     t.id === meta.t ? { ...t, status: "open" } : t,
-                  );
-                  next.threads = newThreads as Thread[];
+                  ) as Thread[];
                 }
                 break;
 
+              case "submitThread":
+                {
+                  next.threads = next.threads.map((t) => {
+                    if (t.id !== meta.threadId) return t;
+                    return {
+                      ...t,
+                      status: "open",
+                      pageId: meta.pageId,
+                      content: meta.content,
+                      comments: [
+                        ...t.comments,
+                        {
+                          id: crypto.randomUUID(),
+                          threadId: meta.threadId,
+                          authorId: "You",
+                          text: meta.content,
+                          createdAt: Date.now(),
+                        },
+                      ],
+                    };
+                  });
+                  editor.storage.commentThreadExtension.draftId = null;
+                  const thread = next.threads.find(
+                    (t) => t.id === meta.threadId,
+                  );
+                  if (thread) onCreateThreadAsync(thread);
+                }
+                break;
+              case "draftThread":
+                {
+                  next.threads.push({
+                    id: meta.threadId,
+                    content: "",
+                    anchor: { from: meta.from, to: meta.to },
+                    status: "drafted",
+                    comments: [],
+                  });
+                  editor.storage.commentThreadExtension.draftId = meta.threadId;
+                }
+                break;
               case "selectThread":
               case "forceMeasure":
                 {
@@ -342,47 +437,6 @@ export const CommentThreadExtension = Extension.create<
                   );
                   next.selectedThreads = newSelectedThreads;
                 }
-                break;
-
-              case "draftThread":
-                {
-                  next.threads.push({
-                    id: meta.threadId,
-                    content: "",
-                    anchor: { from: meta.from, to: meta.to },
-                    status: "drafted",
-                    comments: [],
-                  });
-                  editor.storage.commentThreadExtension.draftId = meta.threadId;
-                  console.log("apply draft ");
-                }
-                break;
-
-              case "submitThread":
-                {
-                  next.threads = next.threads.map((t) => {
-                    if (t.id !== meta.threadId) return t;
-
-                    return {
-                      ...t,
-                      status: "open",
-                      comments: [
-                        ...t.comments,
-                        {
-                          id: crypto.randomUUID(),
-                          threadId: meta.threadId,
-                          authorId: "You",
-                          text: meta.content,
-                          createdAt: Date.now(),
-                        },
-                      ],
-                    };
-                  });
-
-                  editor.storage.commentThreadExtension.draftId = null;
-                }
-                break;
-              default:
                 break;
             }
 

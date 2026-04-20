@@ -3,7 +3,7 @@ declare module "@tiptap/core" {
     commentThreadExtension: {
       draftThread: () => ReturnType;
 
-      submitThread: (content: string) => ReturnType;
+      submitThread: (content: string, pageId?: string) => ReturnType;
 
       selectThread: (threadId: string, active?: boolean) => ReturnType;
 
@@ -19,6 +19,7 @@ declare module "@tiptap/core" {
         threadId: string,
         authorId: string,
         text: string,
+        pageId?: string,
       ) => ReturnType;
 
       removeComment: (threadId: string, commentId: string) => ReturnType;
@@ -27,6 +28,7 @@ declare module "@tiptap/core" {
         threadId: string,
         commentId: string,
         newText: string,
+        pageId?: string,
       ) => ReturnType;
 
       hoverThread: (threadId?: string) => ReturnType;

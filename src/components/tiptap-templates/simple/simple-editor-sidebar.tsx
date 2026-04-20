@@ -2,7 +2,6 @@
 import type { Page } from "./types";
 import {
   Search,
-  Plus,
   Home,
   FileEdit,
   LayoutTemplate,

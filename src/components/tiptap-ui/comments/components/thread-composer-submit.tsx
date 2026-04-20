@@ -26,9 +26,11 @@ function SubmitBtn({ disabled = false }: { disabled?: boolean }) {
 export function ThreadComposerSubmit({
   editor,
   threadId,
+  pageId,
 }: {
   editor: Editor | null;
   threadId: string;
+  pageId: string;
 }) {
   const [comment, setComment] = useState("");
   //  const [focused, setFocused] = useState(false);
@@ -45,12 +47,13 @@ export function ThreadComposerSubmit({
     (e: FormEvent) => {
       e.preventDefault();
       if (!comment.trim() || !editor) return;
-      editor.commands.submitThread(comment);
+      console.log("thread submit pageId", pageId);
+      editor.commands.submitThread(comment, pageId);
       setComment("");
       //    setFocused(false);
       if (textareaRef.current) textareaRef.current.style.height = "auto";
     },
-    [editor, comment],
+    [editor, comment, pageId],
   );
 
   // if (!editor) return null

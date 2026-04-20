@@ -24,3 +24,14 @@ export type Page = {
   parentId: string | null;
   children: Page[];
 };
+
+export type SimpleEditorContentProps = {
+  activePage: Page;
+  updateCover: (cover: Page["cover"]) => void;
+  sidebarWidth: number;
+  collapsed: boolean;
+  updatePage: (page: Page) => void;
+  addCover: (id: string) => void;
+};
+
+export type SaveState = "saved" | "unsaved" | "saving";
