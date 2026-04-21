@@ -137,12 +137,14 @@ function SimpleEditorInner() {
 
           <div className="simple-editor-main">
             <SimpleEditorContent
+              pages={pages ?? []}
               collapsed={collapsed}
               sidebarWidth={sidebarWidth}
               activePage={activePage}
               updateCoverAsync={updateCoverAsync}
               updatePageAsync={updatePageAsync}
               addCoverAsync={addCoverAsync}
+              addPageAsync={addPageAsync}
             />
 
             <aside className="simple-editor-sidebar-right" />

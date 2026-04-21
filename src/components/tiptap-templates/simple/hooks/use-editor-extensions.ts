@@ -47,6 +47,8 @@ import type { TocItem } from "src/components/tiptap-node/toc-node/toc-context";
 import { TitleNode } from "src/components/tiptap-node/title-node";
 import { useThreadSetup } from "./use-thread-setup";
 import { useMemo } from "react";
+import { PageLinkNode } from "src/components/tiptap-node/page-link-node";
+import { useActivePageId } from "../context/active-page-context";
 
 export function useEditorExtensions(
   setTocContent: (content: TocItem[]) => void,
@@ -62,6 +64,8 @@ export function useEditorExtensions(
     onUpdateCommentAsync,
     isLoading,
   } = useThreadSetup();
+
+  const { setActivePageId, activePageId } = useActivePageId();
 
   const extensions = useMemo(
     () => [
@@ -164,6 +168,11 @@ export function useEditorExtensions(
         onRemoveCommentsAsync,
         onUpdateCommentAsync,
       }),
+      PageLinkNode.configure({
+        onNavigate(pageId) {
+          setActivePageId(pageId);
+        },
+      }),
       UniqueID.configure({
         types: [
           "paragraph",
@@ -180,5 +189,5 @@ export function useEditorExtensions(
     [],
   );
 
-  return { extensions, threads, isLoading };
+  return { extensions, threads, isLoading, activePageId };
 }

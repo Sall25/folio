@@ -6,6 +6,7 @@ import {
   Columns2,
   Columns3,
   Columns4,
+  File,
   Heading1,
   Heading2,
   Heading3,
@@ -22,8 +23,18 @@ import {
   Table,
 } from "lucide-react";
 import { TodoListIcon, CodeBlockIcon } from "src/components/tiptap-icons";
+import type { Page } from "src/components/tiptap-templates/simple/types";
 
 export type SlashItemType = "command" | "title" | "separator";
+
+type Options = {
+  activePage?: Page;
+  addPageAsync: (data: {
+    title: string;
+    parentId: string | null;
+  }) => Promise<Page>;
+  setActivePageId: (pageId: string) => void;
+};
 
 export interface SlashCommand {
   id: string;
@@ -33,7 +44,8 @@ export interface SlashCommand {
   highlightColor?: string;
   textColor?: string;
   isActive?: (editor: Editor) => boolean;
-  run?: (editor: Editor) => void;
+  run?: (editor: Editor, page?: Page) => void;
+  runAsync?: (editor: Editor, options: Options) => Promise<void>;
 }
 
 export const SLASH_COMMANDS: SlashCommand[] = [
@@ -212,6 +224,39 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     run: (e) => e.chain().focus().insertContent({ type: "imageUpload" }).run(),
   },
 
+  //  ─── Pages ─────────────────────────────────────────────
+  {
+    id: "page-1",
+    type: "command",
+    title: "Page",
+    icon: File,
+    runAsync: async (editor, options) => {
+      const { activePage, addPageAsync, setActivePageId } = options;
+      if (!activePage) return;
+
+      const newPage = await addPageAsync({
+        title: "New Page",
+        parentId: activePage.id ?? null,
+      });
+
+      if (!newPage?.id) return;
+
+      editor.storage.pageLink.pages = [
+        ...editor.storage.pageLink.pages,
+        newPage,
+      ];
+
+      editor.commands.insertContent({
+        type: "pageLink",
+        attrs: {
+          pageId: newPage.id,
+          parentId: activePage.id ?? null,
+          title: newPage.title,
+        },
+      });
+      setActivePageId(newPage.id);
+    },
+  },
   //  ─── Database ─────────────────────────────────────────────
   {
     id: "database-view",

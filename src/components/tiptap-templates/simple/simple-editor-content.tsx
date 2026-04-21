@@ -34,10 +34,17 @@ export function SimpleEditorContent({
   collapsed,
   updatePageAsync,
   addCoverAsync,
+  addPageAsync,
+  pages,
 }: SimpleEditorContentProps) {
   // const { save, saveState, isReady, isDirty, savingTimerRef, docCache } = useEditorSave({ activePage, updatePage });
 
-  const { editor } = useEditorSetup({ activePage, updatePageAsync });
+  const { editor } = useEditorSetup({
+    activePage,
+    updatePageAsync,
+    addPageAsync,
+    pages,
+  });
 
   const {
     open,

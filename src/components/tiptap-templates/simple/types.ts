@@ -27,11 +27,19 @@ export type Page = {
 
 export type SimpleEditorContentProps = {
   activePage: Page;
+  pages: Page[];
   updateCoverAsync: (cover: Page["cover"]) => Promise<void>;
   sidebarWidth: number;
   collapsed: boolean;
   updatePageAsync: (page: Page) => Promise<void>;
   addCoverAsync: (id: string) => Promise<void>;
+  addPageAsync: ({
+    title,
+    parentId,
+  }: {
+    title: string;
+    parentId: string | null;
+  }) => Promise<Page>;
 };
 
 export type SaveState = "saved" | "unsaved" | "saving";

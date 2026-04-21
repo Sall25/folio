@@ -108,10 +108,13 @@ const updatePageFnAsync = async (page: Page) => {
     }),
     headers: { "Content-Type": "application/json" },
   });
-  const data = res.json();
-  if (!res.ok) throw new Error("Failed to update page");
+  if (!res.ok) {
+    const errorBody = await res.text();
+    console.error("Server error:", errorBody);
+    throw new Error(`Failed to update page: ${errorBody}`);
+  }
 
-  return data;
+  return res.json();
 };
 
 export function usePages() {
@@ -152,9 +155,14 @@ export function usePages() {
 
   const { mutateAsync: updatePageAsync } = useMutation({
     mutationFn: updatePageFnAsync,
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["pages"] });
+    onSuccess: (updatedPage) => {
+      client.setQueryData<Page[]>(["pages", debounceQuery], (old = []) =>
+        old.map((p) => (p.id === updatedPage.id ? updatedPage : p)),
+      );
     },
+    // onSuccess: () => {
+    //   client.invalidateQueries({ queryKey: ["pages"] });
+    // },
   });
 
   // Adds a child page under a given parent

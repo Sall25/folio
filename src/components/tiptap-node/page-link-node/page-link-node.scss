@@ -1,0 +1,13 @@
+.node-pageLink{
+  margin-bottom: 2px !important;
+}
+.page-link-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 100ms ease;
+  user-select: none;
+  border-bottom: 1px solid var(--tt-border-color);
+
+}
