@@ -14,6 +14,10 @@ import { LinkIcon } from "src/components/tiptap-icons/link-icon";
 import { ThemeToggle } from "src/components/tiptap-templates/simple/theme-toggle";
 import { NotificationBell } from "src/components/tiptap-ui/notification";
 import { MorePopover } from "./more-popover";
+import { PageBreadcrumb } from "src/components/tiptap-ui/page-breadcrumb/page-breadcrumb";
+import { useSimpleEditor } from "./context/simple-editor-context";
+import { buildBreadcrumb } from "src/lib/build-breadcrumb";
+import { PageItemIcon } from "./page-item-icon";
 
 // ============================================================
 // Types
@@ -44,21 +48,40 @@ type SimpleEditorToolbarProps = {
 // Main toolbar
 // ============================================================
 
-export const MainToolbarContent = ({ isMobile }: MainToolbarProps) => (
-  <>
-    <Spacer />
-    {isMobile && <ToolbarSeparator />}
-    <ToolbarGroup>
-      <UndoRedoButton action="undo" />
-      <UndoRedoButton action="redo" />
-      <Separator orientation="vertical" />
-      <ThemeToggle />
-      <NotificationBell />
-      <MorePopover />
-      <AvatarDemo />
-    </ToolbarGroup>
-  </>
-);
+/**
+ *
+ */
+export const MainToolbarContent = ({ isMobile }: MainToolbarProps) => {
+  const { activePage, pages, setActivePageId } = useSimpleEditor();
+
+  const breadcrumbItems = buildBreadcrumb(activePage!, pages ?? []).map(
+    (page) => ({
+      label: page.title || "New Page",
+      icon: <PageItemIcon cover={page.cover} styles={{ fontSize: 14 }} />,
+      locked: page.settings.locked,
+      onClick: () => setActivePageId(page.id),
+    }),
+  );
+  return (
+    <>
+      <ToolbarGroup>
+        <PageBreadcrumb items={breadcrumbItems} />
+      </ToolbarGroup>
+      <Spacer />
+
+      {isMobile && <ToolbarSeparator />}
+      <ToolbarGroup>
+        <UndoRedoButton action="undo" />
+        <UndoRedoButton action="redo" />
+        <Separator orientation="vertical" />
+        <ThemeToggle />
+        <NotificationBell />
+        <MorePopover />
+        <AvatarDemo />
+      </ToolbarGroup>
+    </>
+  );
+};
 
 // ============================================================
 // Mobile toolbar

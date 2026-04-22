@@ -205,23 +205,23 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
     const savedScroll = getScrollCache()[activePageId];
     const topOffset = 60;
 
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       if (savedHeadingId) {
         const el = document.getElementById(savedHeadingId);
         if (el) {
           const y = el.getBoundingClientRect().top + window.scrollY - topOffset;
-          window.scrollTo({ top: y, behavior: "instant" });
+          window.scrollTo({ top: y, behavior: "smooth" });
           hasRestoredRef.current = activePageId;
           return;
         }
       }
 
       if (savedScroll !== undefined) {
-        window.scrollTo({ top: savedScroll, behavior: "instant" });
+        window.scrollTo({ top: savedScroll, behavior: "smooth" });
       }
 
       hasRestoredRef.current = activePageId;
-    }, 150);
+    });
   }, [activePageId, tocContent]);
 
   // update activeId on editor update

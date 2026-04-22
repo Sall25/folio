@@ -4,6 +4,7 @@ import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import {
   Popover,
   PopoverContent,
+  PopoverPortal,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 
@@ -38,23 +39,23 @@ export function MorePopover() {
     async (checked: boolean) => {
       if (!activePage) return;
 
+      setSmallText(checked);
+
       await updateSettingsAsync({
         ...activePage.settings,
         text: checked ? "small" : "normal",
       });
-
-      setSmallText(checked);
     },
     [activePage, updateSettingsAsync],
   );
 
-  const onSmallLockedChangeAsync = useCallback(
+  const onLockedChangeAsync = useCallback(
     async (checked: boolean) => {
       if (!activePage) return;
 
-      await updateSettingsAsync({ ...activePage.settings, locked: checked });
-
       setLocked(checked);
+
+      await updateSettingsAsync({ ...activePage.settings, locked: checked });
     },
     [activePage, updateSettingsAsync],
   );
@@ -66,32 +67,38 @@ export function MorePopover() {
           <Ellipsis className="tiptap-button-icon" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent>
-        <Card className="more-content">
-          <CardItemGroup className="more-item">
-            <SettingsToggleButton
-              target="width"
-              text="Full Width"
-              onChangedAsync={onFullWidthChangeAsync}
-              checked={fullWidth}
-            />
-            <SettingsToggleButton
-              target="text"
-              text="Small Text"
-              onChangedAsync={onSmallTextChangeAsync}
-              checked={smallText}
-            />
-            <SettingsToggleButton
-              target="lock"
-              text="Lock Page"
-              onChangedAsync={onSmallLockedChangeAsync}
-              checked={locked}
-            />
-          </CardItemGroup>
-          <Separator orientation="horizontal" />
-          <ExportButtons documentTitle="First Document" />
-        </Card>
-      </PopoverContent>
+      <PopoverPortal container={document.getElementById("#root")}>
+        <PopoverContent
+          style={{ position: "fixed", zIndex: 9999 }}
+          align="center"
+          side="bottom"
+        >
+          <Card className="more-content">
+            <CardItemGroup className="more-item">
+              <SettingsToggleButton
+                target="width"
+                text="Full Width"
+                onChangedAsync={onFullWidthChangeAsync}
+                checked={fullWidth}
+              />
+              <SettingsToggleButton
+                target="text"
+                text="Small Text"
+                onChangedAsync={onSmallTextChangeAsync}
+                checked={smallText}
+              />
+              <SettingsToggleButton
+                target="lock"
+                text="Lock Page"
+                onChangedAsync={onLockedChangeAsync}
+                checked={locked}
+              />
+            </CardItemGroup>
+            <Separator orientation="horizontal" />
+            <ExportButtons documentTitle="First Document" />
+          </Card>
+        </PopoverContent>
+      </PopoverPortal>
     </Popover>
   );
 }
