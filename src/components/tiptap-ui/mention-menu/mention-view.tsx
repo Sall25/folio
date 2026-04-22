@@ -16,6 +16,29 @@ import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import CalendarView from "./calendar-view";
 import { useMentionNotification } from "../notification";
 
+function getRelativeLabel(date: Date): string {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const diff = Math.round(
+    (d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  if (diff === -1) return "Yesterday";
+  if (diff > 0 && diff < 7) return `In ${diff} days`;
+  if (diff < 0 && diff > -7) return `${Math.abs(diff)} days ago`;
+  if (diff >= 7 && diff < 14) return "Next week";
+  if (diff <= -7 && diff > -14) return "Last week";
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 function getMentionItem(id?: string): MentionItem | undefined {
   if (id) {
     return users.find((user) => user.id === id);
@@ -60,6 +83,28 @@ export function MentionView({
     [node],
   );
 
+  const handleRemindChange = (remind: string | null) => {
+    updateAttributes({ remind });
+  };
+
+  const onIncludeTimeChange = (v: boolean) => {
+    if (v && date) {
+      // set default time to 12:00 when toggling on
+      const withTime = new Date(date);
+      withTime.setHours(12, 0, 0, 0);
+      setDate(withTime);
+      updateAttributes({ date: withTime.toISOString(), includeTime: true });
+    } else if (!v && date) {
+      // strip time when toggling off
+      const stripped = new Date(date);
+      stripped.setHours(0, 0, 0, 0);
+      setDate(stripped);
+      updateAttributes({ date: stripped.toISOString(), includeTime: false });
+    } else {
+      updateAttributes({ includeTime: v });
+    }
+  };
+
   const isUserMention = Boolean(mentionItem?.role);
 
   // ── Wire up notifications ──────────────────────────────────────────────
@@ -71,6 +116,7 @@ export function MentionView({
     sourcePageId: Number(activePage?.id),
     sourcePageTitle: activePage?.title || "New Page",
     targetNodeId: node.attrs.nodeId,
+    remind: node.attrs.remind,
   });
 
   return (
@@ -88,11 +134,21 @@ export function MentionView({
             {/* @ {node.attrs.label ?? node.attrs.id} */}@
             {mentionItem?.date && date ? (
               <>
-                {date.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
+                <>
+                  {node.attrs.dateFormat === "relative"
+                    ? getRelativeLabel(date)
+                    : date.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                  {node.attrs.includeTime &&
+                    " " +
+                      date.toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                </>
               </>
             ) : (
               <>
@@ -103,7 +159,7 @@ export function MentionView({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent>
+        <PopoverContent side="right" align="center">
           <>
             {mentionItem && mentionItem.role ? (
               <Card
@@ -139,6 +195,14 @@ export function MentionView({
                   <CalendarView
                     value={date ?? today}
                     onChange={handleDateChange}
+                    remind={node.attrs.remind}
+                    onRemindChange={handleRemindChange}
+                    includeTime={node.attrs.includeTime}
+                    onIncludeTimeChange={onIncludeTimeChange}
+                    dateFormat={node.attrs.dateFormat ?? "relative"}
+                    onDateFormatChange={(fmt) =>
+                      updateAttributes({ dateFormat: fmt })
+                    }
                   />
                 ) : (
                   <CalendarView
@@ -146,6 +210,14 @@ export function MentionView({
                     onChange={(d) => {
                       setDate(d);
                     }}
+                    remind={node.attrs.remind}
+                    onRemindChange={handleRemindChange}
+                    includeTime={node.attrs.includeTime}
+                    onIncludeTimeChange={onIncludeTimeChange}
+                    dateFormat={node.attrs.dateFormat ?? "relative"}
+                    onDateFormatChange={(fmt) =>
+                      updateAttributes({ dateFormat: fmt })
+                    }
                   />
                 )}
               </>

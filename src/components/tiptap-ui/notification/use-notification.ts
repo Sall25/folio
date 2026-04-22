@@ -22,6 +22,7 @@ export function useMentionNotification({
   sourcePageId,
   sourcePageTitle,
   targetNodeId,
+  remind,
 }: {
   mentionId: string;
   mentionLabel: string;
@@ -30,6 +31,7 @@ export function useMentionNotification({
   sourcePageId?: string | number;
   sourcePageTitle?: string;
   targetNodeId?: string;
+  remind?: string | null;
 }) {
   const { addNotification, hasNotified, registerNotified } =
     useNotificationContext();
@@ -83,7 +85,7 @@ export function useMentionNotification({
         mentionLabel,
         sourcePageId,
         sourcePageTitle,
-        targetNodeId, // ← add
+        targetNodeId,
       });
     } else if (d.getTime() === today.getTime()) {
       const key = `date-due:${mentionId}:today`;
@@ -113,6 +115,51 @@ export function useMentionNotification({
         sourcePageTitle,
         targetNodeId, // ← add
       });
+    }
+
+    // add to the date effect, after the existing due/overdue checks:
+    if (remind && remind !== "none" && date) {
+      const remindLabels: Record<string, string> = {
+        on_day: "On the day",
+        "1_day_before": "1 day before",
+        "2_days_before": "2 days before",
+        "1_week_before": "1 week before",
+      };
+
+      const remindOffsets: Record<string, number> = {
+        on_day: 0,
+        "1_day_before": -1,
+        "2_days_before": -2,
+        "1_week_before": -7,
+      };
+
+      const offset = remindOffsets[remind] ?? 0;
+      const remindDate = new Date(date);
+      remindDate.setDate(remindDate.getDate() + offset);
+      remindDate.setHours(0, 0, 0, 0);
+
+      const todayNorm = new Date();
+      todayNorm.setHours(0, 0, 0, 0);
+
+      if (remindDate.getTime() === todayNorm.getTime()) {
+        const key = `remind:${mentionId}:${remind}:${date.toISOString()}`;
+        if (!hasNotified(key)) {
+          registerNotified(key);
+          addNotification({
+            type: "date-due",
+            title: "Reminder",
+            message:
+              remind === "on_day"
+                ? `Reminder for ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                : `${remindLabels[remind]} reminder for ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+            mentionId,
+            mentionLabel,
+            sourcePageId: String(sourcePageId),
+            sourcePageTitle,
+            targetNodeId,
+          });
+        }
+      }
     }
   }, [isUserMention, mentionId, targetNodeId]); // eslint-disable-line react-hooks/exhaustive-deps
 }
