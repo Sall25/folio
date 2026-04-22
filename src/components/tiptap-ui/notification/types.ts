@@ -1,4 +1,8 @@
-export type NotificationType = "user-mention" | "date-due" | "date-overdue";
+export type NotificationType =
+  | "user-mention"
+  | "date-due"
+  | "date-overdue"
+  | "backlink";
 
 export interface Notification {
   id: string;
@@ -7,8 +11,13 @@ export interface Notification {
   message: string;
   timestamp: Date;
   read: boolean;
+  // source context
+  sourcePageId?: string | number;
+  sourcePageTitle?: string;
+  // optional extras
   mentionLabel?: string;
   mentionId?: string;
+  targetNodeId?: string;
 }
 export interface NotificationContextValue {
   notifications: Notification[];

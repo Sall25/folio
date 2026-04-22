@@ -34,14 +34,26 @@ function isPast(date: Date) {
   return d < today;
 }
 
-export function MentionView({ node }: ReactNodeViewProps) {
-  const [date, setDate] = useState<Date | undefined>(undefined);
+export function MentionView({
+  node,
+  editor,
+  updateAttributes,
+}: ReactNodeViewProps) {
   const [today] = useState(new Date());
   const [tomorrow] = useState(() => {
     const t = new Date();
     t.setDate(t.getDate() + 1);
     return t;
   });
+  // read from attrs instead of local state
+  const savedDate = node.attrs.date ? new Date(node.attrs.date) : undefined;
+  const [date, setDate] = useState<Date | undefined>(savedDate);
+
+  const handleDateChange = (d: Date) => {
+    setDate(d);
+    updateAttributes({ date: d.toISOString() }); // ← persist to node attrs
+  };
+  const activePage = editor.storage.slashCommand.activePage;
 
   const mentionItem = useMemo(
     () => getMentionItem(node.attrs.id ?? node.attrs.label),
@@ -56,13 +68,16 @@ export function MentionView({ node }: ReactNodeViewProps) {
     mentionLabel: mentionItem?.label ?? node.attrs.label ?? "",
     isUserMention,
     date,
+    sourcePageId: Number(activePage?.id),
+    sourcePageTitle: activePage?.title || "New Page",
+    targetNodeId: node.attrs.nodeId,
   });
 
-  // const today = useMemo(()=>new Date().getDate(),
-  // [])
-
   return (
-    <NodeViewWrapper className="mention-wrapper">
+    <NodeViewWrapper
+      className="mention-wrapper"
+      data-node-id={node.attrs.nodeId}
+    >
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -86,19 +101,6 @@ export function MentionView({ node }: ReactNodeViewProps) {
                   : mentionItem?.label}
               </>
             )}
-            {/* <>
-              {mentionItem?.date && date ? (
-                <>{date.getDate().toString()}</>
-              ) : (
-                <>
-                  {mentionItem?.label === "Remind me" ? (
-                    <>Tomorrow</>
-                  ) : (
-                    <>{mentionItem?.label}</>
-                  )}
-                </>
-              )}
-            </> */}
           </Button>
         </PopoverTrigger>
         <PopoverContent>
@@ -136,9 +138,7 @@ export function MentionView({ node }: ReactNodeViewProps) {
                 {mentionItem?.date === "Today" ? (
                   <CalendarView
                     value={date ?? today}
-                    onChange={(d) => {
-                      setDate(d);
-                    }}
+                    onChange={handleDateChange}
                   />
                 ) : (
                   <CalendarView

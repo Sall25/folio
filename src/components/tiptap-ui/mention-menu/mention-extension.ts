@@ -39,6 +39,15 @@ const isInForbiddenBlock = (editor: Editor) =>
   FORBIDDEN_BLOCKS.some((block) => editor.isActive(block));
 
 const MentionWithView = Mention.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      date: {
+        default: null,
+      },
+      nodeId: { default: null },
+    };
+  },
   addNodeView() {
     return ReactNodeViewRenderer(MentionView);
   },
@@ -140,23 +149,9 @@ export const MentionExtension = MentionWithView.configure({
               ? String(editor.storage.slashCommand.activePage?.id)
               : null,
             title: "",
+            nodeId: `pageLink-${Date.now()}`,
           },
         });
-        // editor
-        //   .chain()
-        //   .focus()
-        //   .insertContentAt(range, [
-        //     {
-        //       type: "pageLink",
-        //       attrs: {
-        //         pageId: String(props.id),
-        //         parentId: editor.storage.slashCommand.activePage?.id
-        //           ? String(editor.storage.slashCommand.activePage.id)
-        //           : null,
-        //       },
-        //     },
-        //   ])
-        //   .run();
       } else {
         editor
           .chain()
@@ -168,6 +163,7 @@ export const MentionExtension = MentionWithView.configure({
                 id: props.id,
                 label: props.label,
                 mentionSuggestionChar: "@",
+                nodeId: `mention-${Date.now()}`,
               },
             },
             { type: "text", text: " " },

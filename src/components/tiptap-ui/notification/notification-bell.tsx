@@ -10,13 +10,14 @@ import {
   CardHeader,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
-import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Bell } from "lucide-react";
+import { useActivePageId } from "src/components/tiptap-templates/simple/context/active-page-context";
 // ── Icons (inline SVG, no extra dep) ──────────────────────────────────────
 
 function BellIcon() {
@@ -134,7 +135,7 @@ export function NotificationBell() {
   } = useNotificationContext();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-
+  const { setActivePageId } = useActivePageId();
   // Close on outside click
   useEffect(() => {
     if (!open) return;
@@ -147,14 +148,27 @@ export function NotificationBell() {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  function handleBellClick() {
-    setOpen((v) => !v);
-  }
+  const handleBellClick = () => setOpen((v) => !v);
 
-  function handleItemClick(n: Notification) {
-    markRead(n.id);
-  }
-
+  const handleNotificationClick = (notification: Notification) => {
+    markRead(notification.id);
+    if (notification.sourcePageId !== undefined) {
+      setActivePageId(Number(notification.sourcePageId));
+    }
+    // scroll after page has switched and content has rendered
+    if (notification.targetNodeId) {
+      setTimeout(() => {
+        const el = document.querySelector(
+          `[data-node-id="${notification.targetNodeId}"]`,
+        );
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("notification-highlight"); // ← briefly highlight
+          setTimeout(() => el.classList.remove("notification-highlight"), 2000);
+        }
+      }, 300); // give page switch time to settle
+    }
+  };
   return (
     <Popover>
       <div className="notif-bell-root">
@@ -210,7 +224,7 @@ export function NotificationBell() {
                     orientation="horizontal"
                     className={`notif-item${n.read ? "" : " unread"}`}
                     role="listitem"
-                    onClick={() => handleItemClick(n)}
+                    onClick={() => handleNotificationClick(n)}
                   >
                     {/* Type icon */}
                     <div className={`notif-icon type-${n.type}`}>
@@ -251,98 +265,5 @@ export function NotificationBell() {
         </PopoverContent>
       </div>
     </Popover>
-    // <div className="notif-bell-root" ref={rootRef}>
-    //   {/* Bell button */}
-    //   <button
-    //     className="notif-bell-btn"
-    //     onClick={handleBellClick}
-    //     aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
-    //   >
-    //     <BellIcon />
-    //     {unreadCount > 0 && (
-    //       <span className="notif-badge" aria-hidden="true">
-    //         {unreadCount > 99 ? "99+" : unreadCount}
-    //       </span>
-    //     )}
-    //   </button>
-
-    //   {/* Dropdown */}
-    //   {open && (
-    //     <Card
-    //       className="notif-dropdown"
-    //       role="dialog"
-    //       aria-label="Notifications"
-    //     >
-    //       {/* Header */}
-    //       <CardHeader className="notif-header">
-    //         <h3>Notifications</h3>
-    //         <div className="notif-header-actions">
-    //           {unreadCount > 0 && (
-    //             <button className="notif-action-btn" onClick={markAllRead}>
-    //               Mark all read
-    //             </button>
-    //           )}
-    //           {notifications.length > 0 && (
-    //             <button className="notif-action-btn" onClick={dismissAll}>
-    //               Clear all
-    //             </button>
-    //           )}
-    //         </div>
-    //       </CardHeader>
-
-    //       {/* List */}
-    //       <CardBody className="notif-list" role="list">
-    //         {notifications.length === 0 ? (
-    //           <CardGroupLabel className="notif-empty">
-    //             <BellIcon />
-    //             <span>No notifications yet</span>
-    //           </CardGroupLabel>
-    //         ) : (
-    //           notifications.map((n) => (
-    //             <CardItemGroup
-    //               key={n.id}
-    //               orientation="horizontal"
-    //               className={`notif-item${n.read ? "" : " unread"}`}
-    //               role="listitem"
-    //               onClick={() => handleItemClick(n)}
-    //             >
-    //               {/* Type icon */}
-    //               <div className={`notif-icon type-${n.type}`}>
-    //                 {typeIcon(n.type)}
-    //               </div>
-
-    //               {/* Text */}
-    //               <div className="notif-body">
-    //                 <div className="notif-title">{n.title}</div>
-    //                 <div className="notif-message">{n.message}</div>
-    //                 <div className="notif-time">
-    //                   {relativeTime(n.timestamp)}
-    //                 </div>
-    //               </div>
-
-    //               {/* Unread dot */}
-    //               {!n.read && (
-    //                 <div className="notif-unread-dot" aria-hidden="true" />
-    //               )}
-
-    //               {/* Per-item dismiss */}
-    //               <Button
-    //                 variant="ghost"
-    //                 className="notif-dismiss"
-    //                 aria-label="Dismiss notification"
-    //                 onClick={(e) => {
-    //                   e.stopPropagation();
-    //                   dismiss(n.id);
-    //                 }}
-    //               >
-    //                 <CloseIcon />
-    //               </Button>
-    //             </CardItemGroup>
-    //           ))
-    //         )}
-    //       </CardBody>
-    //     </Card>
-    //   )}
-    // </div>
   );
 }

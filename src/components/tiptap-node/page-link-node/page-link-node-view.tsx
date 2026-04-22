@@ -67,7 +67,7 @@ export function PageLinkNodeView({ node, extension, editor }: NodeViewProps) {
 
   if (!page)
     return (
-      <NodeViewWrapper>
+      <NodeViewWrapper data-node-id={node.attrs.nodeId}>
         <span>No page</span>
       </NodeViewWrapper>
     );
@@ -80,7 +80,10 @@ export function PageLinkNodeView({ node, extension, editor }: NodeViewProps) {
   };
 
   return (
-    <NodeViewWrapper style={{ display: "inline" }}>
+    <NodeViewWrapper
+      style={{ display: "inline" }}
+      data-node-id={node.attrs.nodeId}
+    >
       <div
         ref={linkRef}
         className="page-link-node"

@@ -294,3 +294,12 @@
     height: 0.75rem;
   }
 }
+
+.notification-highlight {
+  animation: highlight-flash 2s ease-out forwards;
+}
+
+@keyframes highlight-flash {
+  0%   { background: var(--tt-brand-color-200); }
+  100% { background: transparent; }
+}

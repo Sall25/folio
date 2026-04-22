@@ -13,38 +13,49 @@ export function useNotifications() {
  * @param isUserMention - True when the mention is a person (has a role)
  * @param date - The selected date (for date mentions)
  */
+
 export function useMentionNotification({
   mentionId,
   mentionLabel,
   isUserMention,
   date,
+  sourcePageId,
+  sourcePageTitle,
+  targetNodeId,
 }: {
   mentionId: string;
   mentionLabel: string;
   isUserMention: boolean;
   date?: Date;
+  sourcePageId?: string | number;
+  sourcePageTitle?: string;
+  targetNodeId?: string;
 }) {
   const { addNotification, hasNotified, registerNotified } =
     useNotificationContext();
 
-  // Fire user-mention notification once on mount
   useEffect(() => {
     if (!isUserMention) return;
+    if (!targetNodeId) return;
     const key = `user-mention:${mentionId}`;
     if (hasNotified(key)) return;
     registerNotified(key);
+
     addNotification({
       type: "user-mention",
       title: "New mention",
       message: `@${mentionLabel} was mentioned in a note.`,
       mentionId,
       mentionLabel,
+      sourcePageId,
+      sourcePageTitle,
+      targetNodeId,
     });
-  }, [isUserMention, mentionId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isUserMention, mentionId, targetNodeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fire date-related notifications whenever the date changes
   useEffect(() => {
     if (isUserMention || !date) return;
+    if (!targetNodeId) return; // ← add guard
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -70,6 +81,9 @@ export function useMentionNotification({
         })} is past due.`,
         mentionId,
         mentionLabel,
+        sourcePageId,
+        sourcePageTitle,
+        targetNodeId, // ← add
       });
     } else if (d.getTime() === today.getTime()) {
       const key = `date-due:${mentionId}:today`;
@@ -81,6 +95,9 @@ export function useMentionNotification({
         message: `Your reminder for today is due.`,
         mentionId,
         mentionLabel,
+        sourcePageId,
+        sourcePageTitle,
+        targetNodeId, // ← add
       });
     } else if (d.getTime() === tomorrow.getTime()) {
       const key = `date-due:${mentionId}:tomorrow`;
@@ -92,7 +109,10 @@ export function useMentionNotification({
         message: `You have a reminder set for tomorrow.`,
         mentionId,
         mentionLabel,
+        sourcePageId,
+        sourcePageTitle,
+        targetNodeId, // ← add
       });
     }
-  }, [date, isUserMention, mentionId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isUserMention, mentionId, targetNodeId]); // eslint-disable-line react-hooks/exhaustive-deps
 }

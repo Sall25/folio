@@ -49,6 +49,7 @@ export const PageLinkNode = Node.create<PageLinkOptions, PageLinkStorage>({
       title: {
         default: null,
       },
+      nodeId: { default: null },
     };
   },
 
