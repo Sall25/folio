@@ -32,41 +32,14 @@ import "src/components/tiptap-node/heading-node/heading-node.scss";
 import "src/components/tiptap-node/paragraph-node/paragraph-node.scss";
 import "src/components/tiptap-templates/simple/simple-editor.scss";
 import "src/components/tiptap-templates/simple/toc.scss";
-import { useActivePage } from "./use-active-page";
 import { SimpleEditorSidebar } from "./simple-editor-sidebar";
-import type { Page } from "./types";
 import { ActivePageProvider } from "./context/active-page-provider";
+import { SimpleEditorProvider } from "./context/simple-editor-provider";
 
 const SIDEBAR_WIDTH = 240;
 const SIDEBAR_COLLAPSED_WIDTH = 52;
 
-// ============================================================
-// Inner
-// ============================================================
-
-function findPage(pages: Page[], id: string): Page | undefined {
-  for (const page of pages) {
-    if (page.id === id) return page;
-    const found = findPage(page.children, id);
-    if (found) return found;
-  }
-}
-
 function SimpleEditorInner() {
-  const {
-    activePage,
-    isLoading,
-    updateSettingsAsync,
-    pages,
-    addPageAsync,
-    deletePageAsync,
-    setActivePageId,
-    query,
-    onSearch,
-    updateCoverAsync,
-    updatePageAsync,
-    addCoverAsync,
-  } = useActivePage();
   const [mobileView, setMobileView] = useState<MobileView>("main");
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const isMobile = useIsBreakpoint();
@@ -83,9 +56,6 @@ function SimpleEditorInner() {
 
   const onToggle = useCallback(() => setCollapsed((c) => !c), []);
 
-  if (isLoading) return <div className="simple-editor-loading">Loading...</div>;
-  if (!activePage) return null;
-
   return (
     <div className="simple-editor-wrapper">
       <NotificationProvider>
@@ -96,55 +66,16 @@ function SimpleEditorInner() {
             mobileView={mobileView}
             height={height}
             rectY={0}
-            settings={activePage.settings}
-            onFullWidthChanged={async (v) =>
-              await updateSettingsAsync({ width: v ? "full" : "medium" })
-            }
-            onSmallTextChanged={async (v) =>
-              await updateSettingsAsync({ text: v ? "small" : "normal" })
-            }
-            onLockedChanged={async (v) =>
-              await updateSettingsAsync({ locked: v })
-            }
             onMobileViewChange={setMobileView}
             sidebarWidth={sidebarWidth}
           />
 
-          <SimpleEditorSidebar
-            pages={pages ?? []}
-            activePage={activePage}
-            onSelectAsync={async (page) => setActivePageId(page.id)}
-            onDeleteAsync={async (id) => await deletePageAsync(id)}
-            onAddPageAsync={async (title, parentId) =>
-              addPageAsync({ title, parentId })
-            }
-            onNewPageAsync={async () =>
-              addPageAsync({ title: "Untitled", parentId: null })
-            }
-            // onRename: (id: string, title: string) => void;
-            onRenameAsync={async (id: string, title: string) => {
-              const page = findPage(pages ?? [], id);
-              if (!page) return;
-              await updatePageAsync({ ...page, title });
-            }}
-            query={query}
-            onSearchAsync={async () => {
-              onSearch(query);
-            }}
-            collapsed={collapsed}
-            onToggle={onToggle}
-          />
+          <SimpleEditorSidebar collapsed={collapsed} onToggle={onToggle} />
 
           <div className="simple-editor-main">
             <SimpleEditorContent
-              pages={pages ?? []}
-              collapsed={collapsed}
               sidebarWidth={sidebarWidth}
-              activePage={activePage}
-              updateCoverAsync={updateCoverAsync}
-              updatePageAsync={updatePageAsync}
-              addCoverAsync={addCoverAsync}
-              addPageAsync={addPageAsync}
+              collapsed={collapsed}
             />
 
             <aside className="simple-editor-sidebar-right" />
@@ -160,13 +91,15 @@ export function SimpleEditor() {
     undefined,
   );
   return (
-    <TocProvider>
-      <ActivePageProvider
-        activePageId={activePageId}
-        setActivePageId={setActivePageId}
-      >
-        <SimpleEditorInner />
-      </ActivePageProvider>
-    </TocProvider>
+    <ActivePageProvider
+      activePageId={activePageId}
+      setActivePageId={setActivePageId}
+    >
+      <SimpleEditorProvider>
+        <TocProvider>
+          <SimpleEditorInner />
+        </TocProvider>
+      </SimpleEditorProvider>
+    </ActivePageProvider>
   );
 }

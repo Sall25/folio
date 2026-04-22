@@ -14,7 +14,6 @@ import { LinkIcon } from "src/components/tiptap-icons/link-icon";
 import { ThemeToggle } from "src/components/tiptap-templates/simple/theme-toggle";
 import { NotificationBell } from "src/components/tiptap-ui/notification";
 import { MorePopover } from "./more-popover";
-import type { PageSettings } from "./types";
 
 // ============================================================
 // Types
@@ -24,10 +23,6 @@ export type MobileView = "main" | "highlighter" | "link";
 
 type MainToolbarProps = {
   isMobile: boolean;
-  settings: PageSettings;
-  onFullWidthChanged: (v: boolean) => void;
-  onSmallTextChanged: (v: boolean) => void;
-  onLockedChanged: (v: boolean) => void;
 };
 
 type MobileToolbarProps = {
@@ -41,10 +36,6 @@ type SimpleEditorToolbarProps = {
   mobileView: MobileView;
   height: number;
   rectY: number;
-  settings: PageSettings;
-  onFullWidthChanged: (v: boolean) => void;
-  onSmallTextChanged: (v: boolean) => void;
-  onLockedChanged: (v: boolean) => void;
   onMobileViewChange: (view: MobileView) => void;
   sidebarWidth?: number;
 };
@@ -53,13 +44,7 @@ type SimpleEditorToolbarProps = {
 // Main toolbar
 // ============================================================
 
-export const MainToolbarContent = ({
-  isMobile,
-  settings,
-  onFullWidthChanged,
-  onSmallTextChanged,
-  onLockedChanged,
-}: MainToolbarProps) => (
+export const MainToolbarContent = ({ isMobile }: MainToolbarProps) => (
   <>
     <Spacer />
     {isMobile && <ToolbarSeparator />}
@@ -69,14 +54,7 @@ export const MainToolbarContent = ({
       <Separator orientation="vertical" />
       <ThemeToggle />
       <NotificationBell />
-      <MorePopover
-        fullWidth={settings.width === "full"}
-        smallText={settings.text === "small"}
-        locked={settings.locked}
-        onFullWidthChange={onFullWidthChanged}
-        onSmallTextChange={onSmallTextChanged}
-        onLockedChange={onLockedChanged}
-      />
+      <MorePopover />
       <AvatarDemo />
     </ToolbarGroup>
   </>
@@ -112,10 +90,6 @@ export const SimpleEditorToolbar = ({
   mobileView,
   height,
   rectY,
-  settings,
-  onFullWidthChanged,
-  onSmallTextChanged,
-  onLockedChanged,
   onMobileViewChange,
   sidebarWidth,
 }: SimpleEditorToolbarProps) => (
@@ -129,13 +103,7 @@ export const SimpleEditorToolbar = ({
     }
   >
     {mobileView === "main" ? (
-      <MainToolbarContent
-        isMobile={isMobile}
-        settings={settings}
-        onFullWidthChanged={onFullWidthChanged}
-        onSmallTextChanged={onSmallTextChanged}
-        onLockedChanged={onLockedChanged}
-      />
+      <MainToolbarContent isMobile={isMobile} />
     ) : (
       <MobileToolbarContent
         type={mobileView === "highlighter" ? "highlighter" : "link"}

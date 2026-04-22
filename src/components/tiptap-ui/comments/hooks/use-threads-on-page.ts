@@ -2,7 +2,27 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Comment, Thread } from "../types";
 import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 
-export function useThreadsOnPage() {
+export interface UseThreadsOnPageReturn {
+  threads: Thread[] | undefined;
+  isLoading: boolean;
+  saveThreadsAsync: (threads: Thread[]) => Promise<Response[]>;
+  deleteThreadAsync: (thread: Thread) => Promise<void>;
+  createThreadAsync: (thread: Thread) => Promise<Thread>;
+  resolveThreadAsync: (thread: Thread) => Promise<Thread>;
+  unresolveThreadAsync: (thread: Thread) => Promise<Thread>;
+  addCommentsAsync: (data: {
+    thread: Thread;
+    newComments: Comment[];
+  }) => Promise<Thread>;
+  removeCommentsAsync: (thread: Thread) => Promise<Thread>;
+  updateCommentAsync: (data: {
+    thread: Thread;
+    commentId: string;
+    newText: string;
+  }) => Promise<Thread>;
+}
+
+export function useThreadsOnPage(): UseThreadsOnPageReturn {
   const client = useQueryClient();
   const { activePage } = useActivePage();
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { PageItemIcon } from "./page-item-icon";
 import { PageItemOptions } from "./page-item-options";
@@ -7,32 +7,25 @@ import type { Page } from "./types";
 
 import "./page-item.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+import { useSimpleEditor } from "./context/simple-editor-context";
+import { useActivePageId } from "./context/active-page-context";
 
 interface PageItemProps {
   page: Page;
-  activePage: Page | null;
   depth?: number;
-  onSelectAsync: (page: Page) => Promise<void>;
-  onDeleteAsync: (id: string) => Promise<void>;
-  onAddPageAsync: (title: string, parentId: string) => Promise<void>;
-  onRenameAsync: (id: string, title: string) => Promise<void>;
 }
 
-export function PageItem({
-  page,
-  activePage,
-  depth = 0,
-  onSelectAsync,
-  onDeleteAsync,
-  onAddPageAsync,
-  onRenameAsync,
-}: PageItemProps) {
+export function PageItem({ page, depth = 0 }: PageItemProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(page.title);
   const [expanded, setExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasChildren = page.children && page.children.length > 0;
   const [shouldShow, setShouldShow] = useState(false);
+
+  const { activePage, addPageAndActivateAsync, updatePageAsync } =
+    useSimpleEditor();
+  const { setActivePageId } = useActivePageId();
 
   useEffect(() => {
     if (editing) {
@@ -50,7 +43,7 @@ export function PageItem({
   const commit = async () => {
     const trimmed = draft.trim();
     if (trimmed && trimmed !== page.title) {
-      await onRenameAsync(page.id, trimmed);
+      await updatePageAsync({ ...page, title: trimmed });
     } else {
       setDraft(page.title);
     }
@@ -65,17 +58,21 @@ export function PageItem({
     }
   };
 
+  const onSelect = useCallback(
+    (pageId: string) => {
+      setActivePageId(pageId);
+    },
+    [setActivePageId],
+  );
+
   return (
     <div className="page-item-tree">
       <CardItemGroup
         orientation="horizontal"
         className={`page-item ${activePage?.id === page.id ? "active" : ""}`}
         style={{ paddingLeft: `${6 + depth * 14}px` }}
-        onClick={async () => {
-          if (!editing) {
-            await onSelectAsync(page);
-          }
-          console.log("clicked");
+        onClick={() => {
+          onSelect(page.id);
         }}
         onMouseOver={() => setShouldShow(true)}
         onMouseLeave={() => setShouldShow(false)}
@@ -92,7 +89,6 @@ export function PageItem({
           style={{
             zIndex: 10,
             opacity: shouldShow && hasChildren ? 1 : 0,
-            // pointerEvents: shouldShow && hasChildren ? "auto" : "none",
             transition: "opacity 150ms ease",
             position: "absolute",
           }}
@@ -130,8 +126,6 @@ export function PageItem({
 
         <PageItemOptions
           page={page}
-          onDeleteAsync={onDeleteAsync}
-          onAddPageAsync={onAddPageAsync}
           onRenameAsync={async () => setEditing(true)}
         />
         {shouldShow && (
@@ -139,7 +133,12 @@ export function PageItem({
             style={{ minWidth: 6, width: 6, minHeight: 6, height: 6 }}
             variant="ghost"
             tooltip="New page"
-            onClick={async () => await onAddPageAsync("Untitled", page.id)}
+            onClick={async () =>
+              await addPageAndActivateAsync({
+                title: "New Page",
+                parentId: page.id,
+              })
+            }
           >
             <Plus size={6} className="tiptap-button-icon" />
           </Button>
@@ -150,16 +149,7 @@ export function PageItem({
       {hasChildren && expanded && (
         <div className="page-item-children">
           {page.children.map((child) => (
-            <PageItem
-              key={child.id}
-              page={child}
-              activePage={activePage}
-              depth={depth + 1}
-              onSelectAsync={onSelectAsync}
-              onDeleteAsync={onDeleteAsync}
-              onAddPageAsync={onAddPageAsync}
-              onRenameAsync={onRenameAsync}
-            />
+            <PageItem key={child.id} page={child} depth={depth + 1} />
           ))}
         </div>
       )}

@@ -117,7 +117,23 @@ const updatePageFnAsync = async (page: Page) => {
   return res.json();
 };
 
-export function usePages() {
+export interface UsePagesReturn {
+  pages: Page[] | undefined;
+  isLoading: boolean;
+  addPageAsync: (data: {
+    title: string;
+    parentId: string | null;
+  }) => Promise<Page>;
+  addChildPageAsync: (parentId: string) => Promise<void>;
+  addRootPageAsync: () => Promise<void>;
+  deletePageAsync: (id: string) => Promise<void>;
+  updatePageAsync: (page: Page) => Promise<Page>;
+  query: string;
+  onSearch: (search: string) => void;
+  addCoverAsync: (id: string) => Promise<void>;
+}
+
+export function usePages(): UsePagesReturn {
   const client = useQueryClient();
   const [query, setQuery] = useState("");
   const [debounceQuery] = useDebounce(query, 300);

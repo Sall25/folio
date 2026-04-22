@@ -11,24 +11,54 @@ import "./more-popover.scss";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { SettingsToggleButton } from "src/components/tiptap-ui/settings-toggle-button";
 import { ExportButtons } from "src/components/tiptap-ui/export-buttons/export-buttons";
+import { useSimpleEditor } from "./context/simple-editor-context";
+import { useCallback, useState } from "react";
+export function MorePopover() {
+  const [fullWidth, setFullWidth] = useState<boolean>(false);
+  const [smallText, setSmallText] = useState<boolean>(false);
+  const [locked, setLocked] = useState<boolean>(false);
 
-interface MorePopoverProps {
-  fullWidth: boolean;
-  smallText: boolean;
-  locked: boolean;
-  onFullWidthChange: (v: boolean) => void;
-  onSmallTextChange: (v: boolean) => void;
-  onLockedChange: (v: boolean) => void;
-}
+  const { activePage, updateSettingsAsync } = useSimpleEditor();
 
-export function MorePopover({
-  fullWidth,
-  smallText,
-  locked,
-  onFullWidthChange,
-  onSmallTextChange,
-  onLockedChange,
-}: MorePopoverProps) {
+  const onFullWidthChangeAsync = useCallback(
+    async (checked: boolean) => {
+      if (!activePage) return;
+
+      setFullWidth(checked);
+
+      await updateSettingsAsync({
+        ...activePage.settings,
+        width: checked ? "full" : "medium",
+      });
+    },
+    [activePage, updateSettingsAsync],
+  );
+
+  const onSmallTextChangeAsync = useCallback(
+    async (checked: boolean) => {
+      if (!activePage) return;
+
+      await updateSettingsAsync({
+        ...activePage.settings,
+        text: checked ? "small" : "normal",
+      });
+
+      setSmallText(checked);
+    },
+    [activePage, updateSettingsAsync],
+  );
+
+  const onSmallLockedChangeAsync = useCallback(
+    async (checked: boolean) => {
+      if (!activePage) return;
+
+      await updateSettingsAsync({ ...activePage.settings, locked: checked });
+
+      setLocked(checked);
+    },
+    [activePage, updateSettingsAsync],
+  );
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -42,19 +72,19 @@ export function MorePopover({
             <SettingsToggleButton
               target="width"
               text="Full Width"
-              onChanged={onFullWidthChange}
+              onChangedAsync={onFullWidthChangeAsync}
               checked={fullWidth}
             />
             <SettingsToggleButton
               target="text"
               text="Small Text"
-              onChanged={onSmallTextChange}
+              onChangedAsync={onSmallTextChangeAsync}
               checked={smallText}
             />
             <SettingsToggleButton
               target="lock"
               text="Lock Page"
-              onChanged={onLockedChange}
+              onChangedAsync={onSmallLockedChangeAsync}
               checked={locked}
             />
           </CardItemGroup>

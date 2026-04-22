@@ -1,5 +1,5 @@
 // cover-header.tsx
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { DynamicIcon } from "./dynamic-icon";
 
@@ -14,6 +14,8 @@ import type { Target } from "./types";
 
 import type { Page } from "src/components/tiptap-templates/simple/types";
 import { IconPickerCard } from "./icon-picker-card";
+import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/simple-editor-context";
+import { createPortal } from "react-dom";
 
 // ============================================================
 // CoverImage
@@ -29,11 +31,24 @@ function CoverImage({
   onRemoveCoverAsync: () => Promise<void>;
 }) {
   const [hovering, setHovering] = useState(false);
+  const [btnPosition, setBtnPosition] = useState({ bottom: 0, right: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  const handleMouseEnter = () => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setBtnPosition({
+        bottom: window.innerHeight - rect.bottom + 12,
+        right: window.innerWidth - rect.right + 24,
+      });
+    }
+    setHovering(true);
+  };
   return (
     <div
       style={{ position: "relative", width: "100%", height: 200 }}
-      onMouseEnter={() => setHovering(true)}
+      ref={containerRef}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setHovering(false)}
     >
       <img
@@ -46,30 +61,34 @@ function CoverImage({
           display: "block",
         }}
       />
-      {hovering && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: 12,
-            right: 24,
-            display: "flex",
-            gap: 6,
-          }}
-        >
-          <button
-            className="cover-action-btn"
-            onClick={async () => await onChangeCoverAsync()}
+      {hovering &&
+        createPortal(
+          <div
+            style={{
+              position: "fixed",
+              bottom: btnPosition.bottom,
+              right: btnPosition.right,
+              display: "flex",
+              gap: 6,
+              zIndex: 9999,
+            }}
+            onMouseEnter={handleMouseEnter}
           >
-            <Pencil size={12} /> Change cover
-          </button>
-          <button
-            className="cover-action-btn cover-action-btn--danger"
-            onClick={async () => await onRemoveCoverAsync()}
-          >
-            <Trash2 size={12} /> Remove
-          </button>
-        </div>
-      )}
+            <button
+              className="cover-action-btn"
+              onClick={async () => await onChangeCoverAsync()}
+            >
+              <Pencil size={12} /> Change cover
+            </button>
+            <button
+              className="cover-action-btn cover-action-btn--danger"
+              onClick={async () => await onRemoveCoverAsync()}
+            >
+              <Trash2 size={12} /> Remove
+            </button>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -155,7 +174,6 @@ function IconButton({
 
 interface CoverHeaderProps {
   activePage: Page;
-  updateCoverAsync: (cover: Page["cover"]) => Promise<void>;
   sidebarWidth: number;
   collapsed: boolean;
   paddingLeft: number;
@@ -165,13 +183,13 @@ interface CoverHeaderProps {
 
 export function CoverHeader({
   activePage,
-  updateCoverAsync,
   paddingLeft,
   translateX,
   hasThreads,
 }: CoverHeaderProps) {
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState<Target>("Emoji");
+  const { updateCoverAsync } = useSimpleEditor();
 
   const hasIcon = !!activePage.cover.iconName;
   const hasCover = !!activePage.cover.coverImage;
@@ -195,7 +213,10 @@ export function CoverHeader({
   );
 
   return (
-    <div style={{ width: "100%", position: "relative", minHeight: 80 }}>
+    <div
+      className="cover-header-wrapper"
+      style={{ width: "100%", position: "relative", minHeight: 60 }}
+    >
       {hasCover && (
         <CoverImage
           coverImage={activePage.cover.coverImage!}

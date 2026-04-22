@@ -14,12 +14,12 @@ import { TocSidebar } from "src/components/tiptap-node/toc-node/toc-sidebar";
 
 import { FloatingMenu } from "@tiptap/react/menus";
 
-import type { SimpleEditorContentProps } from "./types";
 import { useCoverActions } from "./hooks/use-cover-actions";
 import { useEditorLayout } from "./hooks/use-editor-layout";
 import { useEditorSetup } from "./hooks/use-editor-setup";
 
 import { FloatingActions } from "./floating-actions";
+import { useSimpleEditor } from "./context/simple-editor-context";
 
 export type SaveState = "unsaved" | "saving" | "saved";
 
@@ -28,23 +28,17 @@ export type SaveState = "unsaved" | "saving" | "saved";
 // ============================================================
 
 export function SimpleEditorContent({
-  activePage,
-  updateCoverAsync,
   sidebarWidth,
   collapsed,
-  updatePageAsync,
-  addCoverAsync,
-  addPageAsync,
-  pages,
-}: SimpleEditorContentProps) {
+}: {
+  sidebarWidth: number;
+  collapsed: boolean;
+}) {
   // const { save, saveState, isReady, isDirty, savingTimerRef, docCache } = useEditorSave({ activePage, updatePage });
 
-  const { editor } = useEditorSetup({
-    activePage,
-    updatePageAsync,
-    addPageAsync,
-    pages,
-  });
+  const { activePage } = useSimpleEditor();
+
+  const { editor } = useEditorSetup();
 
   const {
     open,
@@ -54,12 +48,14 @@ export function SimpleEditorContent({
     onSelectAsync,
     onAddCoverAsync,
     floatingRef,
-  } = useCoverActions({ activePage, updateCoverAsync, addCoverAsync });
+  } = useCoverActions();
 
   const { editorWrapperRef, editorLeft, paddingLeft, translateX } =
     useEditorLayout({ sidebarWidth, collapsed });
 
   const [hasThreads, setHasThreads] = useState(false);
+
+  if (!activePage) return null;
 
   return (
     <EditorContext.Provider value={{ editor }}>
@@ -72,10 +68,9 @@ export function SimpleEditorContent({
         }}
       >
         <CoverHeader
+          activePage={activePage}
           collapsed={collapsed}
           sidebarWidth={sidebarWidth}
-          activePage={activePage}
-          updateCoverAsync={updateCoverAsync}
           paddingLeft={paddingLeft}
           translateX={translateX}
           hasThreads={hasThreads}

@@ -1,5 +1,4 @@
 // simple-editor-sidebar.tsx
-import type { Page } from "./types";
 import {
   Search,
   Home,
@@ -37,6 +36,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
+import { useSimpleEditor } from "./context/simple-editor-context";
 
 // ============================================================
 // Sub-components
@@ -150,17 +150,14 @@ function WorkSpaceOptions() {
   );
 }
 
-function CreatePageButton({
-  onNewPageAsync,
-}: {
-  onNewPageAsync: () => Promise<void>;
-}) {
+function CreatePageButton() {
+  const { addPageAndActivateAsync } = useSimpleEditor();
   return (
     <Button
       variant="ghost"
       tooltip={"Add new page"}
       onClick={async () => {
-        await onNewPageAsync();
+        await addPageAndActivateAsync({ title: "New Page", parentId: null });
       }}
     >
       <SquarePen className="tiptap-button-icon" />
@@ -171,11 +168,9 @@ function CreatePageButton({
 function WorkspaceHeader({
   collapsed,
   onToggle,
-  onNewPageAsync,
 }: {
   collapsed: boolean;
   onToggle: () => void;
-  onNewPageAsync: () => Promise<void>;
 }) {
   const [, setHide] = useState(true);
 
@@ -189,7 +184,7 @@ function WorkspaceHeader({
         <AvatarDemo />
         {!collapsed && <User name="Souleymane Sall" />}
 
-        {!collapsed && <CreatePageButton onNewPageAsync={onNewPageAsync} />}
+        {!collapsed && <CreatePageButton />}
         <Button
           variant="ghost"
           className="sidebar-collapse-btn"
@@ -237,30 +232,15 @@ function NavItems({ collapsed }: { collapsed: boolean }) {
 // ============================================================
 
 export function SimpleEditorSidebar({
-  pages,
-  activePage,
-  // query,
-  // onSearch,
-  onSelectAsync,
-  onDeleteAsync,
-  onAddPageAsync,
-  onNewPageAsync,
-  onRenameAsync,
   collapsed,
   onToggle,
 }: {
-  pages: Page[];
-  activePage: Page | null;
-  query: string;
-  onSearchAsync: (q: string) => Promise<void>;
-  onSelectAsync: (page: Page) => Promise<void>;
-  onDeleteAsync: (id: string) => Promise<void>;
-  onAddPageAsync: (title: string, parentId: string) => Promise<void>;
-  onNewPageAsync: () => Promise<void>;
-  onRenameAsync: (id: string, title: string) => Promise<void>;
   collapsed: boolean;
   onToggle: () => void;
 }) {
+  const { pages } = useSimpleEditor();
+
+  if (!pages) return null;
   return (
     <Card
       className={`sidebar ${collapsed ? "sidebar--collapsed" : ""}`}
@@ -275,11 +255,7 @@ export function SimpleEditorSidebar({
       }}
     >
       {/* ── Workspace ── */}
-      <WorkspaceHeader
-        onNewPageAsync={onNewPageAsync}
-        collapsed={collapsed}
-        onToggle={onToggle}
-      />
+      <WorkspaceHeader collapsed={collapsed} onToggle={onToggle} />
 
       <NavItems collapsed={collapsed} />
 
@@ -294,15 +270,7 @@ export function SimpleEditorSidebar({
 
           <CardItemGroup style={{ gap: 5 }}>
             {pages.map((page) => (
-              <PageItem
-                key={page.id}
-                page={page}
-                activePage={activePage}
-                onSelectAsync={onSelectAsync}
-                onDeleteAsync={onDeleteAsync}
-                onAddPageAsync={onAddPageAsync}
-                onRenameAsync={onRenameAsync}
-              />
+              <PageItem key={page.id} page={page} />
             ))}
           </CardItemGroup>
         </CardBody>

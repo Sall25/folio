@@ -62,10 +62,9 @@ export function useEditorExtensions(
     onAddCommentsAsync,
     onRemoveCommentsAsync,
     onUpdateCommentAsync,
-    isLoading,
   } = useThreadSetup();
 
-  const { setActivePageId, activePageId } = useActivePageId();
+  const { setActivePageId } = useActivePageId();
 
   const extensions = useMemo(
     () => [
@@ -141,7 +140,10 @@ export function useEditorExtensions(
       TableWrapperNode,
 
       // --- TOC ---
-      TableOfContents.configure({ onUpdate: setTocContent }),
+      TableOfContents.configure({
+        onUpdate: setTocContent,
+        anchorTypes: ["heading", "title"],
+      }),
       TocNode.configure({ topOffset: 80, maxShowCount: 20, showTitle: true }),
 
       // --- Node attributes ---
@@ -189,5 +191,5 @@ export function useEditorExtensions(
     [],
   );
 
-  return { extensions, threads, isLoading, activePageId };
+  return { extensions };
 }

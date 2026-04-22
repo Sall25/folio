@@ -3,18 +3,22 @@ import "./toggle.scss";
 
 type Props = {
   checked?: boolean;
-  onChange?: (checked: boolean) => void;
+  onChangeAsync?: (checked: boolean) => Promise<void>;
   disabled?: boolean;
 };
 
-export function Toggle({ checked = false, onChange, disabled = false }: Props) {
+export function Toggle({
+  checked = false,
+  onChangeAsync,
+  disabled = false,
+}: Props) {
   const [internal, setInternal] = useState(checked);
-  const isOn = onChange ? checked : internal;
+  const isOn = onChangeAsync ? checked : internal;
 
-  const handleClick = () => {
+  const handleClick = async () => {
     if (disabled) return;
-    if (onChange) {
-      onChange(!isOn);
+    if (onChangeAsync) {
+      await onChangeAsync(!isOn);
     } else {
       setInternal(!internal);
     }

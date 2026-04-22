@@ -11,13 +11,13 @@ export interface SettingsToggleProps {
   checked?: boolean;
   disabled?: boolean;
   target: "text" | "width" | "lock";
-  onChanged?: (checked: boolean) => void;
+  onChangedAsync?: (checked: boolean) => Promise<void>;
 }
 
 export function SettingsToggleButton({
   text,
   target,
-  onChanged,
+  onChangedAsync,
   checked,
   disabled,
 }: SettingsToggleProps) {
@@ -32,7 +32,11 @@ export function SettingsToggleButton({
       )}
       {text && <span>{text}</span>}
       <Spacer orientation="horizontal" />
-      <Toggle onChange={onChanged} checked={checked} disabled={disabled} />
+      <Toggle
+        onChangeAsync={onChangedAsync}
+        checked={checked}
+        disabled={disabled}
+      />
     </ButtonGroup>
   );
 }

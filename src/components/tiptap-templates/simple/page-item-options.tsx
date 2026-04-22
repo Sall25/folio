@@ -11,20 +11,16 @@ import { TrashIcon } from "src/components/tiptap-icons";
 import { Ellipsis, Plus, PencilIcon } from "lucide-react";
 import type { Page } from "./types";
 import { PageItemIcon } from "./page-item-icon";
+import { useSimpleEditor } from "./context/simple-editor-context";
 
 interface PageItemOptionsProps {
   page: Page;
-  onDeleteAsync: (id: string) => Promise<void>;
-  onAddPageAsync: (title: string, parentId: string) => Promise<void>;
   onRenameAsync: () => Promise<void>;
 }
 
-export function PageItemOptions({
-  page,
-  onDeleteAsync,
-  onAddPageAsync,
-  onRenameAsync,
-}: PageItemOptionsProps) {
+export function PageItemOptions({ page, onRenameAsync }: PageItemOptionsProps) {
+  const { addPageAndActivateAsync, deletePageAsync } = useSimpleEditor();
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -73,7 +69,10 @@ export function PageItemOptions({
               }}
               onClick={async (e) => {
                 e.stopPropagation();
-                await onAddPageAsync("Untitled", page.id);
+                await addPageAndActivateAsync({
+                  title: "New Page",
+                  parentId: page.id,
+                });
               }}
             >
               <Plus className="tiptap-button-icon" />
@@ -89,7 +88,7 @@ export function PageItemOptions({
               }}
               onClick={async (e) => {
                 e.stopPropagation();
-                await onDeleteAsync(page.id);
+                await deletePageAsync(page.id);
               }}
             >
               <TrashIcon className="tiptap-button-icon" />

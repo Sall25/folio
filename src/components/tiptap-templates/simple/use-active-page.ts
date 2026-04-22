@@ -13,7 +13,25 @@ function findPage(pages: Page[], id: string): Page | undefined {
   }
 }
 
-export function useActivePage() {
+export type UseActivePageReturn = {
+  pages: Page[] | undefined;
+  activePage: Page | null;
+  isLoading: boolean;
+  setActivePageId: (id: string) => void;
+  updateSettingsAsync: (patch: Partial<Page["settings"]>) => Promise<void>;
+  updateCoverAsync: (cover: Page["cover"]) => Promise<void>;
+  addPageAndActivateAsync: (data: {
+    title: string;
+    parentId: string | null;
+  }) => Promise<Page>;
+  deletePageAsync: (id: string) => Promise<void>;
+  query: string;
+  onSearch: (search: string) => void;
+  updatePageAsync: (page: Page) => Promise<Page>;
+  addCoverAsync: (id: string) => Promise<void>;
+};
+
+export function useActivePage(): UseActivePageReturn {
   const {
     pages,
     isLoading,
@@ -76,7 +94,7 @@ export function useActivePage() {
     setActivePageId,
     updateSettingsAsync,
     updateCoverAsync,
-    addPageAsync: addPageAndActivateAsync, // ← replaces the original addPage
+    addPageAndActivateAsync,
     deletePageAsync,
     query,
     onSearch,

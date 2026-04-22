@@ -2,7 +2,7 @@ import { NodeViewWrapper } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
 import "./page-link-node.scss";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Page } from "src/components/tiptap-templates/simple/types";
 
 function flattenPages(pages: Page[]): Page[] {
@@ -11,17 +11,7 @@ function flattenPages(pages: Page[]): Page[] {
 
 export function PageLinkNodeView({ node, extension, editor }: NodeViewProps) {
   const { pageId } = node.attrs;
-  const [pages, setPages] = useState(() => editor.storage.pageLink.pages);
-
-  // useEffect(() => {
-  //   const handler = () => {
-  //     setPages([...editor.storage.pageLink.pages]);
-  //   };
-  //   editor.on("transaction", handler);
-  //   return () => {
-  //     editor.off("transaction", handler);
-  //   };
-  // }, [editor]);
+  const [pages] = useState(() => editor.storage.pageLink.pages);
 
   const page =
     pages.find((p) => String(p.id) === String(pageId)) ??
