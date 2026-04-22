@@ -25,7 +25,7 @@ export function PageLinkNodeView({ node, extension, editor }: NodeViewProps) {
     );
 
   const handleClick = () => {
-    extension.options.onNavigate?.(pageId);
+    extension.options.onNavigate?.(Number(pageId));
   };
 
   return (

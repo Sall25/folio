@@ -1,6 +1,6 @@
 import type { Editor } from "@tiptap/core";
 import { DragHandle as TiptapDragHandle } from "./drag-handle-extension-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { DragHandleMenu } from "./drag-handle-menu/drag-handle-menu";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -14,7 +14,6 @@ import "./drag-handle.scss";
 import { ColorDropdownProvider } from "../color-dropdown-menu/color-dropdown-provider";
 import { Node, Node as PMNode } from "@tiptap/pm/model";
 import type { NormalizedNestedOptions } from "@tiptap/extension-drag-handle";
-import { PopoverPortal } from "src/components/tiptap-ui-primitive/popover";
 import { createPortal } from "react-dom";
 
 const NODE_LABELS: Record<string, string> = {
@@ -34,6 +33,8 @@ const NODE_LABELS: Record<string, string> = {
   columnBlock: "Columns",
   column: "Column",
   database: "Database",
+  title: "Title",
+  pageLink: "Page",
 };
 
 const nestedOptions = {
@@ -49,8 +50,8 @@ const nestedOptions = {
       id: "preferNodeLabels",
       evaluate: ({
         node,
-        parent,
-        depth,
+        // parent,
+        // depth,
       }: {
         node: Node;
         parent: Node | null;

@@ -249,8 +249,8 @@ export const SLASH_COMMANDS: SlashCommand[] = [
       editor.commands.insertContent({
         type: "pageLink",
         attrs: {
-          pageId: newPage.id,
-          parentId: activePage.id ?? null,
+          pageId: String(newPage.id),
+          parentId: activePage.id ? String(activePage.id) : null,
           title: newPage.title,
         },
       });

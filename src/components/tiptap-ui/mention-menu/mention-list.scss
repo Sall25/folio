@@ -34,7 +34,7 @@
   overflow-y: scroll;
   overflow-x: hidden;
   margin: 0 -12px;
-  z-index: 400;
+  z-index: 9990;
   
   scroll-padding-bottom: 12px;
 
@@ -46,21 +46,8 @@
   opacity: 0;
   transform: translateY(-4px) scale(0.98);
 
-  // transition:
-  //   opacity 0.15s ease-in,
-  //   transform 0.15s ease-in;
-
-  // &[data-mention-menu-open="false"]{
-  //   opacity: 0;
-  //   transform: translateY(-4px) scale(0.98);
-  //   pointer-events: none;
-  // }
-
-  // &[data-mention-menu-open="true"]{
-  //   opacity: 1;
-  //   transform: translateY(0) scale(1);
-  // }
-
+  box-shadow: none;
+  
   
   &[data-mention-menu-open="true"] {
     animation:
