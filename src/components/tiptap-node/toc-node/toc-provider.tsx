@@ -1,91 +1,3 @@
-// // toc-context.tsx
-// import React, { useState, useCallback, useEffect } from "react";
-// import type { TocItem } from "./toc-context";
-// import { TocContext } from "./toc-context";
-// import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
-
-// export function TocProvider({ children }: { children: React.ReactNode }) {
-//   const [tocContent, setTocContent] = useState<TocItem[]>([]);
-//   const [activeId, setActiveId] = useState<string | null>(null);
-//   const [open, setOpen] = useState(false);
-
-//   const showTocContent = () => setOpen(true);
-//   const hideTocContent = () => setOpen(false);
-
-//   const navigateToHeading = useCallback((item: TocItem, topOffset = 0) => {
-//     const el = document.getElementById(item.id);
-//     if (!el) return;
-//     const y = el.getBoundingClientRect().top + window.scrollY - topOffset;
-//     window.scrollTo({ top: y, behavior: "smooth" });
-//     setActiveId(item.id);
-//   }, []);
-
-//   const computeActiveHeading = useCallback(() => {
-//     const headings = tocContent
-//       .map((item) => ({
-//         id: item.id,
-//         el: document.getElementById(item.id),
-//       }))
-//       .filter((h) => h.el);
-
-//     let current: string | null = null;
-
-//     for (const h of headings) {
-//       const rect = h.el!.getBoundingClientRect();
-
-//       if (rect.top <= 120) {
-//         current = h.id;
-//       }
-//     }
-
-//     setActiveId(current);
-//   }, [tocContent]);
-
-//   const { editor } = useTiptapEditor();
-
-//   //update activeId on editor update
-//   useEffect(() => {
-//     if (!editor) return;
-
-//     const updateHandler = () => {
-//       computeActiveHeading();
-//     };
-
-//     editor.on("update", updateHandler);
-
-//     return () => {
-//       editor.off("update", updateHandler);
-//     };
-//   }, [editor, computeActiveHeading]);
-
-//   // update activeId on scroll
-//   useEffect(() => {
-//     window.addEventListener("scroll", computeActiveHeading);
-
-//     return () => {
-//       window.removeEventListener("scroll", computeActiveHeading);
-//     };
-//   }, [computeActiveHeading]);
-
-//   return (
-//     <TocContext.Provider
-//       value={{
-//         tocContent,
-//         setTocContent,
-//         activeId,
-//         setActiveId,
-//         navigateToHeading,
-//         normalizeDepths,
-//         open,
-//         showTocContent,
-//         hideTocContent,
-//       }}
-//     >
-//       {children}
-//     </TocContext.Provider>
-//   );
-// }
-
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import type { TocItem } from "./toc-context";
 import { TocContext } from "./toc-context";
@@ -183,7 +95,8 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handler = () => {
       computeActiveHeading();
-      if (activePageId) saveScrollPosition(activePageId, window.scrollY);
+      if (activePageId)
+        saveScrollPosition(activePageId as string, window.scrollY);
     };
     window.addEventListener("scroll", handler);
     return () => window.removeEventListener("scroll", handler);
@@ -191,8 +104,16 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
 
   // save activeId when it changes — only after restore is done
   useEffect(() => {
-    if (!activeId || !activePageId) return;
+    if (!activePageId) return;
     if (hasRestoredRef.current !== activePageId) return;
+
+    if (!activeId) {
+      const cache = getActiveHeadingCache();
+      delete cache[activePageId];
+      localStorage.setItem(ACTIVE_HEADING_KEY, JSON.stringify(cache));
+      return;
+    }
+
     saveActiveHeading(activePageId, activeId);
   }, [activeId, activePageId]);
 
@@ -206,21 +127,27 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
     const topOffset = 60;
 
     requestAnimationFrame(() => {
-      if (savedHeadingId) {
-        const el = document.getElementById(savedHeadingId);
-        if (el) {
-          const y = el.getBoundingClientRect().top + window.scrollY - topOffset;
-          window.scrollTo({ top: y, behavior: "smooth" });
-          hasRestoredRef.current = activePageId;
-          return;
-        }
+      // No saved heading means user was at the title — scroll to top
+      if (!savedHeadingId) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        hasRestoredRef.current = activePageId as string;
+        return;
       }
 
+      const el = document.getElementById(savedHeadingId);
+      if (el) {
+        const y = el.getBoundingClientRect().top + window.scrollY - topOffset;
+        window.scrollTo({ top: y, behavior: "smooth" });
+        hasRestoredRef.current = activePageId as string;
+        return;
+      }
+
+      // Heading ID saved but element not found — fall back to scroll position
       if (savedScroll !== undefined) {
         window.scrollTo({ top: savedScroll, behavior: "smooth" });
       }
 
-      hasRestoredRef.current = activePageId;
+      hasRestoredRef.current = activePageId as string;
     });
   }, [activePageId, tocContent]);
 
