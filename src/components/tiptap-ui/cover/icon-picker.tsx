@@ -51,7 +51,6 @@ function IconPopover({ Icon, color, name, onSelect }: IconPopoverProps) {
             style={{
               minWidth: 200,
               padding: "5px 10px",
-              background: "green",
             }}
           >
             <CardItemGroup orientation="vertical">

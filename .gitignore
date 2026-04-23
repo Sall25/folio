@@ -30,3 +30,4 @@ dist-ssr
 # data
 threads.json
 pages.json
+.env

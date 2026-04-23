@@ -11,6 +11,8 @@ export type PageCover = {
   coverImage: string | null;
   target: "Emoji" | "Icons" | null;
   color?: string;
+  gradient?: string;
+  positionY?: number;
 };
 
 export type Page = {
