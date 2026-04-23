@@ -49,6 +49,7 @@ const MentionWithView = Mention.extend({
       remind: { default: null },
       includeTime: { default: false },
       dateFormat: { default: "relative" }, // "relative" | "absolute"
+      endDate: { default: null },
     };
   },
   addNodeView() {

@@ -14,12 +14,20 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--tt-text-color);
   background-color: var(--tt-card-bg-color);
-  border: 1px solid var(---tt-border-color);
+  border: 1px solid var(--tt-border-color);
   border-radius: var(--tt-radius-lg);
+  z-index: 99999;
 
+  &-hint {
+    font-size: 11px;
+    color: #2383e2;
+    padding: 4px 4px 0;
+    text-align: center;
+  }
+ 
   &-input {
     padding: 6px 8px;
     border-radius: 4px;
@@ -122,11 +130,37 @@
     }
 
     &[data-today] {
-      color: var(--tt-text-color);
+      color: white;
       font-weight: 600;
+      background-color: var(--tt-color-red-inc-1);
+      border-radius: var(--tt-radius-xl);
     }
 
-    &[data-selected] {
+    &[data-disabled] {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    &[data-in-range] {
+      background: rgba(35, 131, 226, 0.15);
+      border-radius: 0;
+      color: var(--tt-text-color);
+    }
+
+    &[data-range-start] {
+      background: #2383e2;
+      color: #fff;
+      border-radius: 50% 0 0 50%;
+    }
+
+    &[data-range-end] {
+      background: #2383e2;
+      color: #fff;
+      border-radius: 0 50% 50% 0;
+    }
+
+    // single selected date with no range — must come last
+    &[data-selected]:not([data-range-start]):not([data-range-end]) {
       background: #2383e2;
       color: #fff;
       border-radius: 50%;
@@ -136,9 +170,9 @@
       }
     }
 
-    &[data-disabled] {
-      opacity: 0.3;
-      cursor: not-allowed;
+    // when start and end are the same day
+    &[data-range-start][data-range-end] {
+      border-radius: 50%;
     }
   }
 

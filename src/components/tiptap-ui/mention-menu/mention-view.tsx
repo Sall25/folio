@@ -3,6 +3,7 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Popover,
   PopoverContent,
+  PopoverPortal,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 
@@ -13,7 +14,7 @@ import { useMemo, useState } from "react";
 import { Card, CardGroupLabel } from "src/components/tiptap-ui-primitive/card";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
-import CalendarView from "./calendar-view";
+import CalendarView from "./calendar-view/calendar-view";
 import { useMentionNotification } from "../notification";
 
 function getRelativeLabel(date: Date): string {
@@ -118,6 +119,7 @@ export function MentionView({
     targetNodeId: node.attrs.nodeId,
     remind: node.attrs.remind,
   });
+  const endDateValue = node.attrs.endDate ? new Date(node.attrs.endDate) : null;
 
   return (
     <NodeViewWrapper
@@ -134,21 +136,29 @@ export function MentionView({
             {/* @ {node.attrs.label ?? node.attrs.id} */}@
             {mentionItem?.date && date ? (
               <>
-                <>
-                  {node.attrs.dateFormat === "relative"
-                    ? getRelativeLabel(date)
-                    : date.toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                  {node.attrs.includeTime &&
-                    " " +
-                      date.toLocaleTimeString("en-US", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                </>
+                {node.attrs.dateFormat === "relative"
+                  ? getRelativeLabel(date)
+                  : date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                {node.attrs.includeTime &&
+                  " " +
+                    date.toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                {node.attrs.endDate && (
+                  <>
+                    {" → "}
+                    {new Date(node.attrs.endDate).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </>
+                )}
               </>
             ) : (
               <>
@@ -159,71 +169,85 @@ export function MentionView({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent side="right" align="center">
-          <>
-            {mentionItem && mentionItem.role ? (
-              <Card
-                style={{
-                  minWidth: "10rem",
-                }}
-              >
-                <Button
-                  variant="ghost"
+        <PopoverPortal container={document.getElementById("#root")}>
+          <PopoverContent side="right" align="center" style={{ zIndex: 99999 }}>
+            <>
+              {mentionItem && mentionItem.role ? (
+                <Card
                   style={{
-                    width: "100%",
-                    alignItems: "center",
+                    minWidth: "10rem",
                   }}
                 >
-                  <img
+                  <Button
+                    variant="ghost"
                     style={{
-                      width: "20px",
-                      height: "20px",
-                      borderRadius: "100%",
+                      width: "100%",
+                      alignItems: "center",
                     }}
-                    src={mentionItem.avatar}
-                    alt="profile"
-                  />
-                  <CardGroupLabel>{mentionItem.label}</CardGroupLabel>
+                  >
+                    <img
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "100%",
+                      }}
+                      src={mentionItem.avatar}
+                      alt="profile"
+                    />
+                    <CardGroupLabel>{mentionItem.label}</CardGroupLabel>
 
-                  <Spacer orientation="horizontal" />
-                  <Badge>{mentionItem.role}</Badge>
-                </Button>
-              </Card>
-            ) : (
-              <>
-                {mentionItem?.date === "Today" ? (
-                  <CalendarView
-                    value={date ?? today}
-                    onChange={handleDateChange}
-                    remind={node.attrs.remind}
-                    onRemindChange={handleRemindChange}
-                    includeTime={node.attrs.includeTime}
-                    onIncludeTimeChange={onIncludeTimeChange}
-                    dateFormat={node.attrs.dateFormat ?? "relative"}
-                    onDateFormatChange={(fmt) =>
-                      updateAttributes({ dateFormat: fmt })
-                    }
-                  />
-                ) : (
-                  <CalendarView
-                    value={date ?? tomorrow}
-                    onChange={(d) => {
-                      setDate(d);
-                    }}
-                    remind={node.attrs.remind}
-                    onRemindChange={handleRemindChange}
-                    includeTime={node.attrs.includeTime}
-                    onIncludeTimeChange={onIncludeTimeChange}
-                    dateFormat={node.attrs.dateFormat ?? "relative"}
-                    onDateFormatChange={(fmt) =>
-                      updateAttributes({ dateFormat: fmt })
-                    }
-                  />
-                )}
-              </>
-            )}
-          </>
-        </PopoverContent>
+                    <Spacer orientation="horizontal" />
+                    <Badge>{mentionItem.role}</Badge>
+                  </Button>
+                </Card>
+              ) : (
+                <>
+                  {mentionItem?.date === "Today" ? (
+                    <CalendarView
+                      value={date ?? today}
+                      onChange={handleDateChange}
+                      remind={node.attrs.remind}
+                      onRemindChange={handleRemindChange}
+                      includeTime={node.attrs.includeTime}
+                      onIncludeTimeChange={onIncludeTimeChange}
+                      dateFormat={node.attrs.dateFormat ?? "relative"}
+                      onDateFormatChange={(fmt) =>
+                        updateAttributes({ dateFormat: fmt })
+                      }
+                      endDate={endDateValue}
+                      onEndDateChange={(d) =>
+                        updateAttributes({
+                          endDate: d ? d.toISOString() : null,
+                        })
+                      }
+                    />
+                  ) : (
+                    <CalendarView
+                      value={date ?? tomorrow}
+                      onChange={(d) => {
+                        setDate(d);
+                      }}
+                      remind={node.attrs.remind}
+                      onRemindChange={handleRemindChange}
+                      includeTime={node.attrs.includeTime}
+                      onIncludeTimeChange={onIncludeTimeChange}
+                      dateFormat={node.attrs.dateFormat ?? "relative"}
+                      onDateFormatChange={(fmt) =>
+                        updateAttributes({ dateFormat: fmt })
+                      }
+                      endDate={endDateValue}
+                      onEndDateChange={(d) =>
+                        updateAttributes({
+                          endDate: d ? d.toISOString() : null,
+                        })
+                      }
+                    />
+                  )}
+                </>
+              )}
+            </>
+          </PopoverContent>
+        </PopoverPortal>
       </Popover>
     </NodeViewWrapper>
   );
