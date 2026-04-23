@@ -4,12 +4,14 @@ interface RepositionTabProps {
   coverImage: string;
   positionY: number; // 0–100
   onPositionChange: (y: number) => void;
+  onDragEnd?: () => void;
 }
 
 export function RepositionTab({
   coverImage,
   positionY,
   onPositionChange,
+  onDragEnd,
 }: RepositionTabProps) {
   const previewRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
@@ -22,6 +24,7 @@ export function RepositionTab({
     (clientY: number) => {
       const h = previewRef.current?.offsetHeight ?? 1;
       const dy = startY.current - clientY;
+      // update local display immediately — no async call here
       onPositionChange(clamp(startPos.current + (dy / h) * 100));
     },
     [onPositionChange],
@@ -32,8 +35,11 @@ export function RepositionTab({
       if (!dragging.current) return;
       applyDelta(e.clientY);
     };
-    const onMouseUp = () => {
+    const onMouseUp = (e: MouseEvent) => {
+      if (!dragging.current) return;
       dragging.current = false;
+      applyDelta(e.clientY); // final position
+      onDragEnd?.(); // ← new prop, called only on release
     };
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
@@ -41,7 +47,7 @@ export function RepositionTab({
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [applyDelta]);
+  }, [applyDelta, onDragEnd]);
 
   const onMouseDown = (e: React.MouseEvent) => {
     dragging.current = true;

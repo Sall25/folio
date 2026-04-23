@@ -18,6 +18,8 @@ export interface CoverPickerCardProps {
   onPositionChange: (y: number) => void;
   /** Called when user picks a gradient — pass the CSS gradient string */
   onGradientChange: (gradient: string) => void;
+
+  handlePositionDragEndAsync?: () => Promise<void>;
 }
 
 export function CoverPickerCard({
@@ -26,6 +28,7 @@ export function CoverPickerCard({
   onCoverImageChange,
   onPositionChange,
   onGradientChange,
+  handlePositionDragEndAsync,
 }: CoverPickerCardProps) {
   const hasCoverImage = !!coverImage;
 
@@ -42,10 +45,10 @@ export function CoverPickerCard({
   };
 
   return (
-    <Card style={{ padding: "10px 15px", width: 360, overflow: "hidden" }}>
+    <Card style={{ padding: "5px 15px", width: 460, overflow: "hidden" }}>
       <CoverTabs active={activeTab} onActive={setActiveTab} />
 
-      <div style={{ marginTop: 4 }}>
+      <div style={{ marginTop: 4, width: "100%" }}>
         {activeTab === "reposition" && (
           <>
             {hasCoverImage ? (
@@ -53,12 +56,13 @@ export function CoverPickerCard({
                 coverImage={coverImage!}
                 positionY={positionY}
                 onPositionChange={onPositionChange}
+                onDragEnd={handlePositionDragEndAsync}
               />
             ) : (
               <p
                 style={{
                   fontSize: 13,
-                  color: "var(--tt-theme-muted)",
+                  color: "var(--tt-text-color)",
                   textAlign: "center",
                   padding: "20px 0",
                 }}

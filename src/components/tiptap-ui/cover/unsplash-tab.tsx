@@ -34,7 +34,14 @@ export function UnsplashTab({ onSelect }: PexelsTabProps) {
   }, []);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        width: "100%",
+      }}
+    >
       <input
         ref={inputRef}
         value={query}
@@ -48,8 +55,8 @@ export function UnsplashTab({ onSelect }: PexelsTabProps) {
           fontSize: 13,
           outline: "none",
           boxSizing: "border-box",
-          background: "var(--tt-theme-bg)",
-          color: "var(--tt-theme-text)",
+          background: "var(--tt-card-bg-color)",
+          color: "var(--tt-text-color)",
         }}
       />
 
@@ -73,6 +80,7 @@ export function UnsplashTab({ onSelect }: PexelsTabProps) {
               gap: 6,
               opacity: isFetching ? 0.5 : 1,
               transition: "opacity 0.2s",
+              overflowY: "scroll",
             }}
           >
             {/*eslint-disable-next-line @typescript-eslint/no-explicit-any */}

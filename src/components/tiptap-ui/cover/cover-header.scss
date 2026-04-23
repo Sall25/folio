@@ -20,6 +20,13 @@
   }
 }
 
+:root{
+  --action-buttons-bg-color: var(--tt-gray-light-200);
+}
+.dark{
+  --action-buttons-bg-color: var(--tt-gray-dark-200);
+}
+
 .cover-floating-btn {
   display: flex;
   align-items: center;

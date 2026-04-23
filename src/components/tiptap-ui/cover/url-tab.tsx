@@ -53,12 +53,13 @@ export function UrlTab({ onSelect }: UrlTabProps) {
             flex: 1,
             padding: "6px 10px",
             border: `1px solid ${status === "error" ? "var(--tt-danger-color, #ef4444)" : "var(--tt-border-color)"}`,
-            borderRadius: 6,
+            borderRadius: "var(--tt-radius-lg)",
             fontSize: 13,
             outline: "none",
             boxSizing: "border-box",
-            background: "var(--tt-theme-bg)",
-            color: "var(--tt-theme-text)",
+            background: "var(--tt-card-bg-color)",
+            color: "var(--tt-text-color)",
+            minHeight: 35,
           }}
         />
         <button

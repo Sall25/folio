@@ -15,42 +15,55 @@ import { IconPickerCard } from "./icon-picker-card";
 import { CoverPickerCard } from "./cover-picker-card";
 import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/simple-editor-context";
 import { createPortal } from "react-dom";
+import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
+import { Separator } from "src/components/tiptap-ui-primitive/separator";
 
-// ============================================================
-// CoverImage
-// ============================================================
-export function CoverImage({
-  coverImage,
+function CoverControlsGroup({
+  btnPosition,
   onRemoveCoverAsync,
+  onCoverImageChange,
+  handlePositionChange: handlePositionChangeProp,
+  handlePositionDragEndAsync,
+  popoverOpen,
+  onPopoverOpenChange,
 }: {
-  coverImage: string;
+  btnPosition: { top: number; right: number };
   onRemoveCoverAsync: () => Promise<void>;
+  handlePositionChange?: (y: number) => void;
+  onCoverImageChange?: (url: string) => void;
+  handlePositionDragEndAsync?: () => Promise<void>;
+  popoverOpen: boolean;
+  onPopoverOpenChange: (open: boolean) => void;
 }) {
   const [positionY, setPositionY] = useState(50);
   const [, setCoverPickerOpen] = useState(false);
   const { activePage, updateCoverAsync } = useSimpleEditor();
-  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [coverImage, setCoverImage] = useState(activePage?.cover.coverImage);
 
-  const onChangeCover = () => setCoverPickerOpen(true);
+  const onChangeCover = () => {
+    setCoverPickerOpen(true);
+    onPopoverOpenChange(true);
+  };
   const handlePositionChange = useCallback(
     async (y: number) => {
       if (!activePage) return;
       setPositionY(y);
-      // Debounce persistence in real usage — for now update immediately
-      await updateCoverAsync({ ...activePage.cover, positionY: y });
+      handlePositionChangeProp?.(y);
     },
-    [updateCoverAsync, activePage],
+    [activePage, handlePositionChangeProp],
   );
 
   const handleCoverImageChange = useCallback(
     async (url: string) => {
       if (!activePage) return;
       setCoverPickerOpen(false);
+      setCoverImage(url);
+      onCoverImageChange?.(url);
       const next = { ...activePage.cover, coverImage: url } as any;
       delete next.gradient;
       await updateCoverAsync(next);
     },
-    [updateCoverAsync, activePage],
+    [updateCoverAsync, activePage, onCoverImageChange],
   );
 
   const handleGradientChange = useCallback(
@@ -64,8 +77,137 @@ export function CoverImage({
 
   if (!activePage) return null;
 
+  return createPortal(
+    <ButtonGroup
+      orientation="horizontal"
+      style={{
+        position: "fixed",
+        top: btnPosition.top,
+        right: btnPosition.right,
+        display: "flex",
+        gap: 10,
+        zIndex: 9999,
+        border: "1px solid var(--tt-border-color)",
+        background: "var(--action-buttons-bg-color)",
+        borderRadius: "var(--tt-radius-sm)",
+        fontSize: 12,
+        padding: "2px 5px",
+        minWidth: 200,
+        height: 28,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Popover open={popoverOpen} onOpenChange={onPopoverOpenChange}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            style={{
+              fontSize: "inherit",
+              background: "transparent",
+              margin: 0,
+              padding: 0,
+              cursor: "pointer",
+            }}
+            onClick={onChangeCover}
+          >
+            <Pencil size={11} />
+            <span>Change cover</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverPortal container={document.getElementById("#root")}>
+          <PopoverContent style={{ zIndex: 9999 }}>
+            <CoverPickerCard
+              coverImage={coverImage}
+              positionY={positionY}
+              onCoverImageChange={handleCoverImageChange}
+              onPositionChange={handlePositionChange}
+              onGradientChange={handleGradientChange}
+              handlePositionDragEndAsync={handlePositionDragEndAsync}
+            />
+          </PopoverContent>
+        </PopoverPortal>
+      </Popover>
+      <Separator orientation="vertical" />
+      <Button
+        variant="ghost"
+        style={{
+          fontSize: "inherit",
+          background: "transparent",
+          margin: 0,
+          padding: 0,
+          cursor: "pointer",
+        }}
+        onClick={async () => await onRemoveCoverAsync()}
+      >
+        <Trash2 size={12} />
+        <span>Remove</span>
+      </Button>
+    </ButtonGroup>,
+    document.body,
+  );
+}
+
+// ============================================================
+// CoverImage
+// ============================================================
+export function CoverImage({
+  onRemoveCoverAsync,
+}: {
+  onRemoveCoverAsync: () => Promise<void>;
+}) {
+  const { activePage, updateCoverAsync } = useSimpleEditor();
+  const [btnPosition, setBtnPosition] = useState({ top: 0, right: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [hovering, setHovering] = useState(false);
+  const [coverImage, setCoverImage] = useState(activePage?.cover.coverImage);
+  const [localPositionY, setLocalPositionY] = useState(
+    (activePage?.cover as any)?.positionY ?? 50,
+  );
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
+  const onPopoverOpenChange = useCallback(
+    (open: boolean) => setPopoverOpen(open),
+    [],
+  );
+
+  const onCoverImageChange = useCallback(
+    (url: string) => setCoverImage(url),
+    [],
+  );
+  useEffect(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setBtnPosition({
+        top: 60,
+        right: window.innerWidth - rect.right + 24,
+      });
+    }
+  }, []);
+
+  // Fast — just updates local state, no async
+  const handlePositionChange = useCallback(
+    (y: number) => setLocalPositionY(y),
+    [],
+  );
+
+  // Slow — only fires on mouse up
+  const handlePositionDragEnd = useCallback(async () => {
+    if (!activePage) return;
+    await updateCoverAsync({ ...activePage.cover, positionY: localPositionY });
+  }, [updateCoverAsync, activePage, localPositionY]);
+
+  if (!activePage) return null;
+
+  const showControls = hovering || popoverOpen;
+
   return (
-    <div className="cover-image-root">
+    <div
+      className="cover-image-root"
+      ref={containerRef}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+    >
       <style>{`
         .cover-image-root {
           position: relative;
@@ -81,56 +223,26 @@ export function CoverImage({
           position: absolute;
           left: 0;
         }
-        .cover-image-actions {
-          position: absolute;
-          top: 12px;
-          right: 24px;
-          display: flex;
-          gap: 6px;
-          opacity: 0;
-          transform: translateY(4px);
-          transition: opacity 0.15s, transform 0.15s;
-          z-index: 990;
-        }
-        .cover-image-root:hover .cover-image-actions {
-          opacity: 1;
-          transform: translateY(0);
-        }
       `}</style>
 
       <img
-        src={coverImage}
+        src={coverImage ?? ""}
         alt="cover"
         draggable={false}
-        style={{ top: `${-(positionY / 100) * 50}%` }}
+        style={{ top: `${-(localPositionY / 100) * 50}%` }}
       />
 
-      <div className="cover-image-actions">
-        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-          <PopoverTrigger asChild>
-            <button className="cover-action-btn" onClick={onChangeCover}>
-              <Pencil size={12} /> Change cover
-            </button>
-          </PopoverTrigger>
-          <PopoverPortal container={document.getElementById("#root")}>
-            <PopoverContent style={{ zIndex: 9999 }}>
-              <CoverPickerCard
-                coverImage={activePage.cover.coverImage}
-                positionY={(activePage.cover as any).positionY ?? positionY}
-                onCoverImageChange={handleCoverImageChange}
-                onPositionChange={handlePositionChange}
-                onGradientChange={handleGradientChange}
-              />
-            </PopoverContent>
-          </PopoverPortal>
-        </Popover>
-        <button
-          className="cover-action-btn cover-action-btn--danger"
-          onClick={async () => await onRemoveCoverAsync()}
-        >
-          <Trash2 size={12} /> Remove
-        </button>
-      </div>
+      {showControls && (
+        <CoverControlsGroup
+          btnPosition={btnPosition}
+          onRemoveCoverAsync={onRemoveCoverAsync}
+          handlePositionChange={handlePositionChange}
+          handlePositionDragEndAsync={handlePositionDragEnd}
+          onCoverImageChange={onCoverImageChange}
+          popoverOpen={popoverOpen}
+          onPopoverOpenChange={onPopoverOpenChange}
+        />
+      )}
     </div>
   );
 }
@@ -146,55 +258,28 @@ function GradientCover({
   gradient: string;
   onRemoveCoverAsync: () => Promise<void>;
 }) {
-  const [positionY, setPositionY] = useState(50);
-  const [hovering, setHovering] = useState(false);
   const [btnPosition, setBtnPosition] = useState({ top: 0, right: 0 });
+  const [hovering, setHovering] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
-  const handleMouseEnter = () => {
+  const onPopoverOpenChange = useCallback(
+    (open: boolean) => setPopoverOpen(open),
+    [],
+  );
+
+  useEffect(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       setBtnPosition({
-        top: 56,
+        top: 60,
         right: window.innerWidth - rect.right + 24,
       });
     }
-    setHovering(true);
-  };
-  const [, setCoverPickerOpen] = useState(false);
-  const { activePage, updateCoverAsync } = useSimpleEditor();
-  const [popoverOpen, setPopoverOpen] = useState(false);
+  }, []);
+  const { activePage } = useSimpleEditor();
 
-  const onChangeCover = () => setCoverPickerOpen(true);
-  const handlePositionChange = useCallback(
-    async (y: number) => {
-      if (!activePage) return;
-      setPositionY(y);
-      // Debounce persistence in real usage — for now update immediately
-      await updateCoverAsync({ ...activePage.cover, positionY: y });
-    },
-    [updateCoverAsync, activePage],
-  );
-
-  const handleCoverImageChange = useCallback(
-    async (url: string) => {
-      if (!activePage) return;
-      setCoverPickerOpen(false);
-      const next = { ...activePage.cover, coverImage: url } as any;
-      delete next.gradient;
-      await updateCoverAsync(next);
-    },
-    [updateCoverAsync, activePage],
-  );
-
-  const handleGradientChange = useCallback(
-    async (gradient: string) => {
-      if (!activePage) return;
-      const next = { ...activePage.cover, coverImage: null, gradient } as any;
-      await updateCoverAsync(next);
-    },
-    [updateCoverAsync, activePage],
-  );
+  const showControls = hovering || popoverOpen;
 
   if (!activePage) return null;
 
@@ -207,49 +292,17 @@ function GradientCover({
         height: 200,
         background: gradient,
       }}
-      onMouseEnter={handleMouseEnter}
+      onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {hovering &&
-        createPortal(
-          <div
-            style={{
-              position: "fixed",
-              top: btnPosition.top,
-              right: btnPosition.right,
-              display: "flex",
-              gap: 6,
-              zIndex: 9999,
-            }}
-            onMouseEnter={handleMouseEnter}
-          >
-            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-              <PopoverTrigger asChild>
-                <button className="cover-action-btn" onClick={onChangeCover}>
-                  <Pencil size={12} /> Change cover
-                </button>
-              </PopoverTrigger>
-              <PopoverPortal container={document.getElementById("#root")}>
-                <PopoverContent style={{ zIndex: 9999 }}>
-                  <CoverPickerCard
-                    coverImage={activePage.cover.coverImage}
-                    positionY={(activePage.cover as any).positionY ?? positionY}
-                    onCoverImageChange={handleCoverImageChange}
-                    onPositionChange={handlePositionChange}
-                    onGradientChange={handleGradientChange}
-                  />
-                </PopoverContent>
-              </PopoverPortal>
-            </Popover>
-            <button
-              className="cover-action-btn cover-action-btn--danger"
-              onClick={async () => await onRemoveCoverAsync()}
-            >
-              <Trash2 size={12} /> Remove
-            </button>
-          </div>,
-          document.body,
-        )}
+      {showControls && (
+        <CoverControlsGroup
+          btnPosition={btnPosition}
+          onRemoveCoverAsync={onRemoveCoverAsync}
+          popoverOpen={popoverOpen}
+          onPopoverOpenChange={onPopoverOpenChange}
+        />
+      )}
     </div>
   );
 }
@@ -389,12 +442,7 @@ export function CoverHeader({
       style={{ width: "100%", position: "relative", minHeight: 60 }}
     >
       {/* ── Cover display ── */}
-      {hasCoverImage && (
-        <CoverImage
-          coverImage={activePage.cover.coverImage!}
-          onRemoveCoverAsync={handleRemoveCover}
-        />
-      )}
+      {hasCoverImage && <CoverImage onRemoveCoverAsync={handleRemoveCover} />}
 
       {hasGradient && !hasCoverImage && (
         <GradientCover

@@ -1,0 +1,34 @@
+// gradient-tab.scss
+
+.gradient-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--tt-text-color);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  &__swatch {
+    aspect-ratio: 4 / 3;
+    height: auto;   // remove fixed height, let aspect-ratio drive it
+    border-radius: 8px;
+    border: none;
+    // rest unchanged
+  }
+
+  &__preview {
+    display: none;  // no longer needed, swatches are big enough to see
+  }
+
+}
