@@ -26,11 +26,16 @@ export function SimpleEditorProvider({ children }: SimpleEditorProviderProps) {
   const [localPage, setLocalPage] = useState<Page | null>(null);
 
   useEffect(() => {
+    setLocalPage(null); // clear immediately on switch
+  }, [activePageId]);
+
+  useEffect(() => {
     if (activePage.activePage) {
       setLocalPage(activePage.activePage);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePageId, activePage.isLoading]);
+
   const activePageCallbacksRef = useRef(activePage);
   useEffect(() => {
     activePageCallbacksRef.current = activePage;

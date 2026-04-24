@@ -68,6 +68,7 @@ export function SimpleEditorContent({
         }}
       >
         <CoverHeader
+          key={activePage.id}
           activePage={activePage}
           collapsed={collapsed}
           sidebarWidth={sidebarWidth}
