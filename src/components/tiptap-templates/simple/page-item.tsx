@@ -58,12 +58,9 @@ export function PageItem({ page, depth = 0 }: PageItemProps) {
     }
   };
 
-  const onSelect = useCallback(
-    (pageId: string) => {
-      setActivePageId(pageId);
-    },
-    [setActivePageId],
-  );
+  const onSelect = (pageId: string | number) => {
+    setActivePageId(pageId);
+  };
 
   return (
     <div className="page-item-tree">

@@ -21,22 +21,26 @@ export function useEditorSetup(): { editor: Editor | null } {
   const { extensions } = useEditorExtensions(setTocContent);
   const isSwitchingPage = useRef(false);
   const pendingUpdate = useRef<Page | null>(null);
-  const { setActivePageId } = useActivePageId();
+  const { setActivePageId, activePageId } = useActivePageId();
   const {
     activePage,
     updatePageAsync,
     addPageAsync,
     pages,
     updatePageSilentAsync,
+    createVersionAsync,
   } = useSimpleEditor();
 
   const activePageRef = useRef<Page | null>(null);
   const titleSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastVersionTime = useRef<number>(Date.now());
+  const VERSION_INTERVAL = 10 * 60 * 1000; // 10 minutes
 
   console.log("use-editor-setup re-render");
 
   useEffect(() => {
     activePageRef.current = activePage;
+    lastVersionTime.current = 0; // ← reset so first edit on new page creates a version after interval
     if (titleSaveTimer.current) {
       clearTimeout(titleSaveTimer.current);
       titleSaveTimer.current = null;
@@ -60,14 +64,28 @@ export function useEditorSetup(): { editor: Editor | null } {
       };
       pendingUpdate.current = updatedPage;
 
-      if (newTitle !== activePageRef.current.title) {
-        activePageRef.current = updatedPage;
-        // Debounce title save — only persist after user stops typing for 500ms
-        if (titleSaveTimer.current) clearTimeout(titleSaveTimer.current);
+      if (titleSaveTimer.current) clearTimeout(titleSaveTimer.current);
+
+      // Only debounce-save when title changes — content is handled elsewhere
+      if (newTitle !== activePageRef.current?.title) {
         titleSaveTimer.current = setTimeout(() => {
           updatePageSilentAsync(updatedPage);
+
+          const now = Date.now();
+          if (now - lastVersionTime.current >= VERSION_INTERVAL) {
+            lastVersionTime.current = now;
+            createVersionAsync({
+              pageId: updatedPage.id,
+              title: updatedPage.title,
+              content: updatedPage.content,
+              isNamed: false,
+            });
+            console.log("version created");
+          }
         }, 500);
       }
+
+      activePageRef.current = updatedPage;
     },
     onDestroy() {
       if (pendingUpdate.current) {
@@ -108,7 +126,14 @@ export function useEditorSetup(): { editor: Editor | null } {
 
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePage?.id, editor, addPageAsync, updatePageAsync, setActivePageId]);
+  }, [
+    activePage?.id,
+    editor,
+    addPageAsync,
+    updatePageAsync,
+    setActivePageId,
+    activePageId,
+  ]);
 
   useInitThreads({ editor });
 

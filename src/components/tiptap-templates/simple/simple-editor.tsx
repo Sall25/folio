@@ -35,7 +35,10 @@ import "src/components/tiptap-templates/simple/toc.scss";
 import { SimpleEditorSidebar } from "./simple-editor-sidebar";
 import { ActivePageProvider } from "./context/active-page-provider";
 import { SimpleEditorProvider } from "./context/simple-editor-provider";
+import { useEditorSetup } from "./hooks/use-editor-setup";
+import { VersionHistorySidebar } from "src/components/tiptap-ui/version-history/version-history-sidebar";
 
+const VERSION_SIDEBAR_WIDTH = 260;
 const SIDEBAR_WIDTH = 240;
 const SIDEBAR_COLLAPSED_WIDTH = 52;
 
@@ -53,7 +56,10 @@ function SimpleEditorInner() {
 
   const [collapsed, setCollapsed] = useState(false);
   const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH;
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(true);
+  const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
 
+  const { editor } = useEditorSetup();
   const onToggle = useCallback(() => setCollapsed((c) => !c), []);
 
   return (
@@ -68,6 +74,8 @@ function SimpleEditorInner() {
             rectY={0}
             onMobileViewChange={setMobileView}
             sidebarWidth={sidebarWidth}
+            versionSidebarWidth={versionWidth}
+            onTriggerVersionHistory={() => setVersionHistoryOpen(true)}
           />
 
           <SimpleEditorSidebar collapsed={collapsed} onToggle={onToggle} />
@@ -76,8 +84,14 @@ function SimpleEditorInner() {
             <SimpleEditorContent
               sidebarWidth={sidebarWidth}
               collapsed={collapsed}
+              editor={editor}
             />
 
+            <VersionHistorySidebar
+              open={versionHistoryOpen}
+              onClose={() => setVersionHistoryOpen(false)}
+              editor={editor}
+            />
             <aside className="simple-editor-sidebar-right" />
           </div>
         </ToastProvider>
@@ -87,12 +101,12 @@ function SimpleEditorInner() {
 }
 
 export function SimpleEditor() {
-  const [activePageId, setActivePageId] = useState<string | undefined>(
+  const [activePageId, setActivePageId] = useState<string | number | undefined>(
     undefined,
   );
   return (
     <ActivePageProvider
-      activePageId={activePageId}
+      activePageId={activePageId as string | undefined}
       setActivePageId={setActivePageId}
     >
       <SimpleEditorProvider>

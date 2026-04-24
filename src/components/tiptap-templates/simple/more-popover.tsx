@@ -1,4 +1,4 @@
-import { Ellipsis } from "lucide-react";
+import { Ellipsis, Timer } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import {
@@ -14,7 +14,11 @@ import { SettingsToggleButton } from "src/components/tiptap-ui/settings-toggle-b
 import { ExportButtons } from "src/components/tiptap-ui/export-buttons/export-buttons";
 import { useSimpleEditor } from "./context/simple-editor-context";
 import { useCallback, useState } from "react";
-export function MorePopover() {
+export function MorePopover({
+  onTriggerVersionHistory,
+}: {
+  onTriggerVersionHistory?: () => void;
+}) {
   const [fullWidth, setFullWidth] = useState<boolean>(false);
   const [smallText, setSmallText] = useState<boolean>(false);
   const [locked, setLocked] = useState<boolean>(false);
@@ -95,7 +99,17 @@ export function MorePopover() {
               />
             </CardItemGroup>
             <Separator orientation="horizontal" />
-            <ExportButtons documentTitle="First Document" />
+            <CardItemGroup className="more-item">
+              <ExportButtons documentTitle="First Document" />
+              <Button
+                className="version-history-btn"
+                variant="ghost"
+                onClick={onTriggerVersionHistory}
+              >
+                <Timer className="tiptap-button-icon" />
+                <span>Version History</span>
+              </Button>
+            </CardItemGroup>
           </Card>
         </PopoverContent>
       </PopoverPortal>

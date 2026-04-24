@@ -11,6 +11,7 @@ import {
 import { SimpleEditorContext } from "./simple-editor-context";
 import type { Page } from "../types";
 import { useActivePageId } from "./active-page-context";
+import { useVersions } from "src/components/tiptap-ui/version-history/use-versions";
 
 interface SimpleEditorProviderProps {
   children: ReactNode;
@@ -21,8 +22,8 @@ export function SimpleEditorProvider({ children }: SimpleEditorProviderProps) {
   const { activePageId } = useActivePageId();
   const { addPageAsync } = usePages();
   const threads = useThreadsOnPage();
+  const versions = useVersions(activePageId as string | null);
 
-  const prevPageId = useRef<string | null>(null);
   const [localPage, setLocalPage] = useState<Page | null>(null);
 
   useEffect(() => {
@@ -76,6 +77,7 @@ export function SimpleEditorProvider({ children }: SimpleEditorProviderProps) {
         addPageAsync,
         updatePageSilentAsync,
         ...threads,
+        ...versions,
       }}
     >
       {children}

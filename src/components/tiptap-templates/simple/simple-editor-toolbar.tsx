@@ -27,6 +27,7 @@ export type MobileView = "main" | "highlighter" | "link";
 
 type MainToolbarProps = {
   isMobile: boolean;
+  onTriggerVersionHistory?: () => void;
 };
 
 type MobileToolbarProps = {
@@ -42,6 +43,8 @@ type SimpleEditorToolbarProps = {
   rectY: number;
   onMobileViewChange: (view: MobileView) => void;
   sidebarWidth?: number;
+  versionSidebarWidth?: number;
+  onTriggerVersionHistory?: () => void;
 };
 
 // ============================================================
@@ -51,7 +54,10 @@ type SimpleEditorToolbarProps = {
 /**
  *
  */
-export const MainToolbarContent = ({ isMobile }: MainToolbarProps) => {
+export const MainToolbarContent = ({
+  isMobile,
+  onTriggerVersionHistory,
+}: MainToolbarProps) => {
   const { activePage, pages, setActivePageId } = useSimpleEditor();
 
   const breadcrumbItems = buildBreadcrumb(activePage!, pages ?? []).map(
@@ -76,7 +82,7 @@ export const MainToolbarContent = ({ isMobile }: MainToolbarProps) => {
         <Separator orientation="vertical" />
         <ThemeToggle />
         <NotificationBell />
-        <MorePopover />
+        <MorePopover onTriggerVersionHistory={onTriggerVersionHistory} />
         <AvatarDemo />
       </ToolbarGroup>
     </>
@@ -115,18 +121,24 @@ export const SimpleEditorToolbar = ({
   rectY,
   onMobileViewChange,
   sidebarWidth,
+  versionSidebarWidth,
+  onTriggerVersionHistory,
 }: SimpleEditorToolbarProps) => (
   <Toolbar
     ref={toolbarRef}
     style={
       {
         "--sidebar-width": `${sidebarWidth}px`,
+        "--version-sidebar-width": `${versionSidebarWidth ?? 0}px`,
         ...(isMobile ? { bottom: `calc(100% - ${height - rectY}px)` } : {}),
       } as React.CSSProperties
     }
   >
     {mobileView === "main" ? (
-      <MainToolbarContent isMobile={isMobile} />
+      <MainToolbarContent
+        isMobile={isMobile}
+        onTriggerVersionHistory={onTriggerVersionHistory}
+      />
     ) : (
       <MobileToolbarContent
         type={mobileView === "highlighter" ? "highlighter" : "link"}

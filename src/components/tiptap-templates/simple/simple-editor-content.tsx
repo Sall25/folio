@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { EditorContent, EditorContext } from "@tiptap/react";
+import { Editor, EditorContent, EditorContext } from "@tiptap/react";
 
 import { BubbleMenu } from "src/components/tiptap-ui/bubble-menu/bubble-menu";
 import { DragHandle } from "src/components/tiptap-ui/drag-handle/drag-handle";
@@ -16,7 +16,6 @@ import { FloatingMenu } from "@tiptap/react/menus";
 
 import { useCoverActions } from "./hooks/use-cover-actions";
 import { useEditorLayout } from "./hooks/use-editor-layout";
-import { useEditorSetup } from "./hooks/use-editor-setup";
 
 import { FloatingActions } from "./floating-actions";
 import { useSimpleEditor } from "./context/simple-editor-context";
@@ -30,15 +29,15 @@ export type SaveState = "unsaved" | "saving" | "saved";
 export function SimpleEditorContent({
   sidebarWidth,
   collapsed,
+  editor,
 }: {
   sidebarWidth: number;
   collapsed: boolean;
+  editor: Editor | null;
 }) {
   // const { save, saveState, isReady, isDirty, savingTimerRef, docCache } = useEditorSave({ activePage, updatePage });
 
   const { activePage } = useSimpleEditor();
-
-  const { editor } = useEditorSetup();
 
   const {
     open,
