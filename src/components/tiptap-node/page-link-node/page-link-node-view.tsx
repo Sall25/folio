@@ -50,15 +50,33 @@ export function PageLinkNodeView({ node, extension, editor }: NodeViewProps) {
   const [previewPos, setPreviewPos] = useState({ top: 0, left: 0 });
   const linkRef = useRef<HTMLDivElement>(null);
 
+  // const handleMouseEnter = () => {
+  //   if (linkRef.current) {
+  //     const rect = linkRef.current.getBoundingClientRect();
+  //     setPreviewPos({
+  //       top: rect.top - 8, // above the link, will be adjusted by transform
+  //       left: rect.left,
+  //     });
+  //   }
+  //   setIsHovered(true);
+  // };
+
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleMouseEnter = () => {
     if (linkRef.current) {
       const rect = linkRef.current.getBoundingClientRect();
-      setPreviewPos({
-        top: rect.top - 8, // above the link, will be adjusted by transform
-        left: rect.left,
-      });
+      setPreviewPos({ top: rect.top - 8, left: rect.left });
     }
-    setIsHovered(true);
+    hoverTimer.current = setTimeout(() => setIsHovered(true), 600);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimer.current) {
+      clearTimeout(hoverTimer.current);
+      hoverTimer.current = null;
+    }
+    hoverTimer.current = setTimeout(() => setIsHovered(false), 200);
   };
 
   const page =
@@ -83,14 +101,10 @@ export function PageLinkNodeView({ node, extension, editor }: NodeViewProps) {
     <NodeViewWrapper
       style={{ display: "inline" }}
       data-node-id={node.attrs.nodeId}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
-      <div
-        ref={linkRef}
-        className="page-link-node"
-        onClick={handleClick}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={() => setIsHovered(false)}
-      >
+      <div ref={linkRef} className="page-link-node" onClick={handleClick}>
         <PageItemIcon cover={page.cover} />
         <span>{page.title || "New Page"}</span>
       </div>
@@ -106,8 +120,8 @@ export function PageLinkNodeView({ node, extension, editor }: NodeViewProps) {
               transform: "translateY(33%)",
               zIndex: 9999,
             }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseEnter={handleMouseLeave}
+            // onMouseLeave={handleMouseLeave}
           >
             <div className="page-link-preview__icon">
               <PageItemIcon cover={page.cover} styles={{ fontSize: 32 }} />

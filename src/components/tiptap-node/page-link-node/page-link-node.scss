@@ -1,5 +1,5 @@
 .node-pageLink{
-  margin-bottom: 2px !important;
+  margin-bottom: 8px !important;
 }
 .page-link-node {
   display: inline-flex;
@@ -10,6 +10,7 @@
   transition: background 100ms ease;
   user-select: none;
   border-bottom: 1px solid var(--tt-border-color);
+  padding-bottom: 2px;
 
 }
 
