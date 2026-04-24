@@ -3,7 +3,7 @@ import { usePages } from "./use-pages";
 import type { Page } from "./types";
 import { useActivePageId } from "./context/active-page-context";
 
-function findPage(pages: Page[], id: string): Page | undefined {
+function findPage(pages: Page[], id: string | number): Page | undefined {
   for (const page of pages) {
     if (page.id === id) return page;
     if (page.children?.length) {
