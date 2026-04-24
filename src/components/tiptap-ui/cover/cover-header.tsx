@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { DynamicIcon } from "./dynamic-icon";
 import "./cover-header.scss";
@@ -17,6 +17,7 @@ import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/
 import { createPortal } from "react-dom";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
+import { useActivePageId } from "src/components/tiptap-templates/simple/context/active-page-context";
 
 function CoverControlsGroup({
   btnPosition,
@@ -310,30 +311,67 @@ function GradientCover({
 // ============================================================
 // IconButton
 // ============================================================
-
 function IconButton({
-  cover,
-  hasCover,
   open,
   onOpenChange,
   target,
   onTargetChange,
-  onSelect,
   paddingLeft,
   translateX,
   hasThreads,
 }: {
-  cover: Page["cover"];
-  hasCover: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   target: Target;
   onTargetChange: (t: Target) => void;
-  onSelect: (name: string, color?: string) => void;
   paddingLeft: number;
   translateX: number;
   hasThreads?: boolean;
 }) {
+  const { activePage, updateCoverAsync } = useSimpleEditor();
+  const { activePageId } = useActivePageId();
+  const hasCoverImage = !!activePage?.cover.coverImage;
+
+  const hasGradient = !!(activePage?.cover as any).gradient;
+  const hasCover = hasCoverImage || hasGradient;
+
+  // Syncs automatically on page switch — no effect needed
+  const cover = useMemo(
+    () => activePage?.cover,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activePageId, activePage],
+  );
+
+  // Only for optimistic local update after icon select
+  const [optimisticCover, setOptimisticCover] = useState<
+    Page["cover"] | undefined
+  >();
+
+  // Use optimistic if available, fall back to real
+  const displayCover = optimisticCover ?? cover;
+
+  const onSelectIconAsync = useCallback(
+    async (name: string, color?: string) => {
+      if (!activePage || !cover) return;
+      // Optimistic update — feels instant
+      setOptimisticCover({ ...cover, iconName: name, color, target });
+      await updateCoverAsync({
+        ...activePage.cover,
+        iconName: name,
+        target,
+        color,
+      });
+      // Clear optimistic after persist — real data takes over
+      setOptimisticCover(undefined);
+    },
+    [updateCoverAsync, activePage, target, cover],
+  );
+
+  // Clear optimistic on page switch
+  useEffect(() => {
+    setOptimisticCover(undefined);
+  }, [activePageId]);
+
   return (
     <div
       style={{
@@ -350,16 +388,16 @@ function IconButton({
             style={{
               fontSize: 60,
               marginTop: hasCover ? -60 : 0,
-              color: cover.color ?? "var(--tt-theme-text)",
+              color: displayCover?.color ?? "var(--tt-text-color)",
             }}
           >
-            {cover.target === "Emoji" && cover.iconName}
-            {cover.target === "Icons" && (
+            {displayCover?.target === "Emoji" && displayCover?.iconName}
+            {displayCover?.target === "Icons" && (
               <DynamicIcon
-                name={cover.iconName!}
-                stroke={cover.color ?? "var(--tt-text-color)"}
-                size={80}
-                strokeWidth={1.25}
+                name={displayCover.iconName!}
+                stroke={displayCover.color ?? "var(--tt-text-color)"}
+                size={85}
+                strokeWidth={2}
               />
             )}
           </button>
@@ -373,7 +411,7 @@ function IconButton({
             <IconPickerCard
               target={target}
               onTargetChange={onTargetChange}
-              onSelect={onSelect}
+              onSelect={onSelectIconAsync}
             />
           </PopoverContent>
         </PopoverPortal>
@@ -411,24 +449,10 @@ export function CoverHeader({
   const hasCoverImage = !!activePage.cover.coverImage;
   // Gradient stored on cover.gradient (extend your Page type if needed)
   const hasGradient = !!(activePage.cover as any).gradient;
-  const hasCover = hasCoverImage || hasGradient;
 
   useEffect(() => {
     console.log("hasThreads", hasThreads);
   }, [hasThreads]);
-
-  const onSelectIconAsync = useCallback(
-    async (name: string, color?: string) => {
-      setIconPickerOpen(false);
-      await updateCoverAsync({
-        ...activePage.cover,
-        iconName: name,
-        target,
-        color,
-      });
-    },
-    [updateCoverAsync, activePage, target],
-  );
 
   const handleRemoveCover = useCallback(async () => {
     const next = { ...activePage.cover, coverImage: null } as any;
@@ -454,13 +478,10 @@ export function CoverHeader({
       {/* ── Icon button ── */}
       {hasIcon && (
         <IconButton
-          cover={activePage.cover}
-          hasCover={hasCover}
           open={iconPickerOpen}
           onOpenChange={setIconPickerOpen}
           target={target}
           onTargetChange={setTarget}
-          onSelect={onSelectIconAsync}
           paddingLeft={paddingLeft}
           translateX={translateX}
           hasThreads={hasThreads}

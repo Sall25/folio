@@ -27,7 +27,7 @@ const searchEmoji = async (query: string) => {
   );
   return res.json();
 };
-const EMOJIS_PER_ROW = 8;
+const EMOJIS_PER_ROW = 7;
 
 export function EmojiPicker({
   onSelect,
@@ -68,12 +68,13 @@ export function EmojiPicker({
         style={{
           width: "100%",
           padding: "6px 10px",
-          border: "1px solid #e5e7eb",
+          border: "1px solid var(--tt-border-color)",
           borderRadius: 6,
           fontSize: 13,
           outline: "none",
           boxSizing: "border-box",
-          color: "#111827",
+          background: "transparent",
+          color: "var(--tt-text-color)",
         }}
       />
       <Spacer orientation="vertical" />
@@ -82,8 +83,8 @@ export function EmojiPicker({
       <ButtonGroup
         orientation="vertical"
         style={{
-          minWidth: 300,
-          maxHeight: 200,
+          minWidth: 330,
+          maxHeight: 300,
           overflowY: "auto",
         }}
       >
@@ -107,7 +108,8 @@ export function EmojiPicker({
                   variant="ghost"
                   tooltip={emo.name}
                   style={{
-                    fontSize: "20px",
+                    fontSize: "24px",
+                    // background: "transparent",
                   }}
                   onClick={() => onSelect(emo.emoji)}
                 >
