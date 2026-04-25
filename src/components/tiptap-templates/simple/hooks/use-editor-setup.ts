@@ -1,7 +1,7 @@
 import { useToc } from "src/components/tiptap-node/toc-node/use-toc";
 import type { Page } from "../types";
-import { Editor, useEditor } from "@tiptap/react";
-import { useEffect, useRef } from "react";
+import { useEditor } from "@tiptap/react";
+import { useCallback, useEffect, useRef } from "react";
 import { useEditorExtensions } from "./use-editor-extensions";
 import { useInitThreads } from "./use-init-threads";
 import { useActivePageId } from "../context/active-page-context";
@@ -16,7 +16,7 @@ const EDITOR_ATTRIBUTES = {
   class: "simple-editor",
 };
 
-export function useEditorSetup(): { editor: Editor | null } {
+export function useEditorSetup() {
   const { setTocContent } = useToc();
   const { extensions } = useEditorExtensions(setTocContent);
   const isSwitchingPage = useRef(false);
@@ -27,24 +27,34 @@ export function useEditorSetup(): { editor: Editor | null } {
     updatePageAsync,
     addPageAsync,
     pages,
-    updatePageSilentAsync,
     createVersionAsync,
+    onVersionHistoryOpenChanged,
   } = useSimpleEditor();
 
-  const activePageRef = useRef<Page | null>(null);
+  const activePageRef = useRef<Page | null>(activePage);
+  const originalContentRef = useRef<Page["content"] | undefined>(
+    activePage?.content,
+  );
+  const isPreviewingVersion = useRef(false);
   const titleSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastVersionTime = useRef<number>(Date.now());
   const VERSION_INTERVAL = 10 * 60 * 1000; // 10 minutes
-
-  console.log("use-editor-setup re-render");
+  const versionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    if (!activePage) return;
     activePageRef.current = activePage;
     lastVersionTime.current = 0; // ← reset so first edit on new page creates a version after interval
     if (titleSaveTimer.current) {
       clearTimeout(titleSaveTimer.current);
       titleSaveTimer.current = null;
     }
+    if (versionTimer.current) {
+      clearTimeout(versionTimer.current);
+      versionTimer.current = null;
+    }
+    originalContentRef.current = activePage?.content;
+    onVersionHistoryOpenChanged(false);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePage?.id]);
@@ -54,7 +64,12 @@ export function useEditorSetup(): { editor: Editor | null } {
     editorProps: { attributes: EDITOR_ATTRIBUTES },
     extensions: extensions,
     onUpdate({ editor }) {
-      if (isSwitchingPage.current || !activePageRef.current) return;
+      if (
+        isSwitchingPage.current ||
+        isPreviewingVersion.current ||
+        !activePageRef.current
+      )
+        return;
 
       const newTitle = editor.state.doc.firstChild?.textContent;
       const updatedPage = {
@@ -63,29 +78,40 @@ export function useEditorSetup(): { editor: Editor | null } {
         content: editor.getJSON(),
       };
       pendingUpdate.current = updatedPage;
+      activePageRef.current = updatedPage;
 
       if (titleSaveTimer.current) clearTimeout(titleSaveTimer.current);
+      titleSaveTimer.current = setTimeout(() => {
+        updatePageAsync(updatedPage);
+      }, 500);
 
-      // Only debounce-save when title changes — content is handled elsewhere
-      if (newTitle !== activePageRef.current?.title) {
-        titleSaveTimer.current = setTimeout(() => {
-          updatePageSilentAsync(updatedPage);
+      // const { $from } = editor.state.selection;
 
-          const now = Date.now();
-          if (now - lastVersionTime.current >= VERSION_INTERVAL) {
-            lastVersionTime.current = now;
-            createVersionAsync({
-              pageId: updatedPage.id,
-              title: updatedPage.title,
-              content: updatedPage.content,
-              isNamed: false,
-            });
-            console.log("version created");
+      // // Title save — only when title changes
+      // if ($from.node().type.name === "title" || versionHistoryOpen) {
+      //   if (titleSaveTimer.current) clearTimeout(titleSaveTimer.current);
+      //   titleSaveTimer.current = setTimeout(() => {
+      //     updatePageSilentAsync(updatedPage);
+      //   }, 500);
+      // }
+
+      // Version creation — independent, fires on any edit after interval
+      if (versionTimer.current) clearTimeout(versionTimer.current);
+      versionTimer.current = setTimeout(() => {
+        const now = Date.now();
+        if (now - lastVersionTime.current >= VERSION_INTERVAL) {
+          lastVersionTime.current = now;
+          createVersionAsync({
+            pageId: updatedPage.id,
+            title: updatedPage.title,
+            content: updatedPage.content,
+            isNamed: false,
+          });
+          if (pendingUpdate.current) {
+            updatePageAsync(pendingUpdate.current);
           }
-        }, 500);
-      }
-
-      activePageRef.current = updatedPage;
+        }
+      }, 500);
     },
     onDestroy() {
       if (pendingUpdate.current) {
@@ -97,6 +123,7 @@ export function useEditorSetup(): { editor: Editor | null } {
   });
 
   useEffect(() => {
+    if (isPreviewingVersion.current) return;
     if (!editor) return;
     if (!activePage) return;
     if (!activePageRef.current) return;
@@ -137,5 +164,13 @@ export function useEditorSetup(): { editor: Editor | null } {
 
   useInitThreads({ editor });
 
-  return { editor };
+  const startVersionPreview = useCallback(() => {
+    isPreviewingVersion.current = true;
+  }, []);
+
+  const endVersionPreview = useCallback(() => {
+    isPreviewingVersion.current = false;
+  }, []);
+
+  return { editor, startVersionPreview, endVersionPreview, originalContentRef };
 }

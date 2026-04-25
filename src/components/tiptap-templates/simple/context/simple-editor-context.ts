@@ -10,6 +10,8 @@ type ContextType = UseActivePageReturn &
   UseThreadsOnPageReturn &
   ReturnType<typeof useVersions> & {
     updatePageSilentAsync: (page: Page) => Promise<Page>;
+    versionHistoryOpen: boolean;
+    onVersionHistoryOpenChanged: (v: boolean) => void;
   };
 
 export const SimpleEditorContext = createContext<ContextType | null>(null);

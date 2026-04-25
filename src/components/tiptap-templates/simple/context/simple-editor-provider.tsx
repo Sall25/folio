@@ -63,8 +63,14 @@ export function SimpleEditorProvider({ children }: SimpleEditorProviderProps) {
   }, []); // ← stable
 
   const updatePageSilentAsync = useCallback(async (page: Page) => {
+    setLocalPage((p) => (p ? { ...p, title: page.title } : p));
     return await activePageCallbacksRef.current.updatePageAsync(page);
   }, []); // ← stable
+
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
+  const onVersionHistoryOpenChanged = useCallback((v: boolean) => {
+    setVersionHistoryOpen(v);
+  }, []);
 
   return (
     <SimpleEditorContext.Provider
@@ -78,6 +84,8 @@ export function SimpleEditorProvider({ children }: SimpleEditorProviderProps) {
         updatePageSilentAsync,
         ...threads,
         ...versions,
+        versionHistoryOpen,
+        onVersionHistoryOpenChanged,
       }}
     >
       {children}

@@ -25,7 +25,7 @@ body {
 }
 
 html{
-  overflow-y: scroll;
+  overflow-y: hidden;
 }
 
 html,
@@ -134,6 +134,9 @@ body,
   width: 100%;
   display: flex;
   overflow: auto;
+   overflow-y: auto;
+  transition: right 0.2s ease;
+
 }
 
 
@@ -162,9 +165,17 @@ body,
   flex-direction: column;
   flex: 1;
   min-width: 0;
- // margin-left: 260px;          // matches $sidebar-width
   padding-top: var(--tt-toolbar-height); // clears the fixed toolbar
-  min-height: 100vh;
+  height: calc(100vh - var(--tt-toolbar-height));
+  overflow-y: scroll;
+  overflow-x: hidden;
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--tt-border-color);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-track { background: transparent; }
+ 
 }
 
 

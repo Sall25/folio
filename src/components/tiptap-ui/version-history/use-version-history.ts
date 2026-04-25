@@ -1,6 +1,7 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/simple-editor-context";
 import type { Version } from "./types";
+import type { PageSettings } from "src/components/tiptap-templates/simple/types";
 
 export function useVersionHistory() {
   const {
@@ -15,11 +16,16 @@ export function useVersionHistory() {
   const [namingVersionId, setNamingVersionId] = useState<string | null>(null);
   const [nameInput, setNameInput] = useState("");
 
-  // Snapshot current content when sidebar opens so we can restore on cancel
-  const currentContent = useMemo(() => {
-    if (selectedVersion === null) return undefined;
-    return activePage?.content;
-  }, [activePage?.content, selectedVersion]);
+  useEffect(() => {
+    if (!activePage) return;
+
+    const settings: PageSettings = {
+      ...activePage.settings,
+      locked: selectedVersion !== null,
+    };
+    updatePageAsync({ ...activePage, settings });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedVersion]);
 
   const selectVersion = useCallback((version: Version | null) => {
     setSelectedVersion(version);
@@ -76,7 +82,6 @@ export function useVersionHistory() {
     selectedVersion,
     isCurrentVersion: selectedVersion === null,
     selectVersion,
-    currentContent: currentContent,
     namingVersionId,
     nameInput,
     setNameInput,

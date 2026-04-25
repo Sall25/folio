@@ -37,6 +37,7 @@ import { ActivePageProvider } from "./context/active-page-provider";
 import { SimpleEditorProvider } from "./context/simple-editor-provider";
 import { useEditorSetup } from "./hooks/use-editor-setup";
 import { VersionHistorySidebar } from "src/components/tiptap-ui/version-history/version-history-sidebar";
+import { useSimpleEditor } from "./context/simple-editor-context";
 
 const VERSION_SIDEBAR_WIDTH = 260;
 const SIDEBAR_WIDTH = 240;
@@ -56,10 +57,11 @@ function SimpleEditorInner() {
 
   const [collapsed, setCollapsed] = useState(false);
   const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH;
-  const [versionHistoryOpen, setVersionHistoryOpen] = useState(true);
+
+  const { editor, startVersionPreview, endVersionPreview } = useEditorSetup();
+  const { versionHistoryOpen, onVersionHistoryOpenChanged } = useSimpleEditor();
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
 
-  const { editor } = useEditorSetup();
   const onToggle = useCallback(() => setCollapsed((c) => !c), []);
 
   return (
@@ -75,12 +77,20 @@ function SimpleEditorInner() {
             onMobileViewChange={setMobileView}
             sidebarWidth={sidebarWidth}
             versionSidebarWidth={versionWidth}
-            onTriggerVersionHistory={() => setVersionHistoryOpen(true)}
+            onTriggerVersionHistory={() => {
+              onVersionHistoryOpenChanged(true);
+            }}
           />
 
           <SimpleEditorSidebar collapsed={collapsed} onToggle={onToggle} />
 
-          <div className="simple-editor-main">
+          <div
+            className="simple-editor-main"
+            style={{
+              marginRight: versionWidth,
+              transition: "margin-right 0.2s ease",
+            }}
+          >
             <SimpleEditorContent
               sidebarWidth={sidebarWidth}
               collapsed={collapsed}
@@ -89,8 +99,13 @@ function SimpleEditorInner() {
 
             <VersionHistorySidebar
               open={versionHistoryOpen}
-              onClose={() => setVersionHistoryOpen(false)}
+              onClose={() => {
+                onVersionHistoryOpenChanged(false);
+              }}
               editor={editor}
+              startVersionPreview={startVersionPreview}
+              endVersionPreview={endVersionPreview}
+              userColor="#7c3aed"
             />
             <aside className="simple-editor-sidebar-right" />
           </div>

@@ -1,3 +1,4 @@
+import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import type { Version } from "./types";
 import { formatVersionTime } from "./utils";
 
@@ -33,9 +34,7 @@ export function VersionHistoryItem({
         <span className="vh-item__time">
           {formatVersionTime(version.createdAt)}
         </span>
-        {version.isNamed && (
-          <span className="vh-item__badge">{version.name}</span>
-        )}
+        {version.isNamed && <Badge data-style="gray">{version.name}</Badge>}
       </div>
 
       <div className="vh-item__meta">

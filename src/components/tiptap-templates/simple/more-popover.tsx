@@ -22,6 +22,7 @@ export function MorePopover({
   const [fullWidth, setFullWidth] = useState<boolean>(false);
   const [smallText, setSmallText] = useState<boolean>(false);
   const [locked, setLocked] = useState<boolean>(false);
+  const [open, setOpen] = useState(false);
 
   const { activePage, updateSettingsAsync } = useSimpleEditor();
 
@@ -65,7 +66,7 @@ export function MorePopover({
   );
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost">
           <Ellipsis className="tiptap-button-icon" />
@@ -104,7 +105,10 @@ export function MorePopover({
               <Button
                 className="version-history-btn"
                 variant="ghost"
-                onClick={onTriggerVersionHistory}
+                onClick={() => {
+                  setOpen(false);
+                  onTriggerVersionHistory?.();
+                }}
               >
                 <Timer className="tiptap-button-icon" />
                 <span>Version History</span>

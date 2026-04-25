@@ -1,4 +1,6 @@
 import type { Version } from "./types";
+import type { Page } from "src/components/tiptap-templates/simple/types";
+import { diffWords } from "diff";
 
 export type VersionGroup = {
   label: string;
@@ -53,4 +55,64 @@ export function formatVersionTime(createdAt: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+export type DiffRange = {
+  from: number;
+  to: number;
+  type: "added" | "removed";
+};
+
+// Extract plain text from Tiptap JSON content
+export function extractText(content: Page["content"]): string {
+  if (!content) return "";
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function extractFromNodes(nodes: any[]): string {
+    return nodes
+      .map((node) => {
+        if (node.type === "text") return node.text ?? "";
+        if (node.content) return extractFromNodes(node.content);
+        return "";
+      })
+      .join("");
+  }
+
+  return extractFromNodes(content.content ?? []);
+}
+
+export type DiffResult = {
+  added: DiffRange[];
+  removed: DiffRange[];
+};
+
+export function computeDiff(
+  oldContent: Page["content"],
+  newContent: Page["content"],
+): DiffResult {
+  const oldText = extractText(oldContent);
+  const newText = extractText(newContent);
+  const parts = diffWords(oldText, newText);
+
+  const added: DiffRange[] = [];
+  const removed: DiffRange[] = [];
+
+  let oldPos = 1; // ProseMirror positions are 1-based
+  let newPos = 1;
+
+  for (const part of parts) {
+    const len = part.value.length;
+    if (part.removed) {
+      removed.push({ from: oldPos, to: oldPos + len, type: "removed" });
+      oldPos += len;
+    } else if (part.added) {
+      added.push({ from: newPos, to: newPos + len, type: "added" });
+      newPos += len;
+    } else {
+      oldPos += len;
+      newPos += len;
+    }
+  }
+
+  return { added, removed };
 }

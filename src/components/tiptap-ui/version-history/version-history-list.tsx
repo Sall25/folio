@@ -1,6 +1,7 @@
 import type { Version } from "./types";
 import { VersionHistoryItem } from "./version-history-item";
 import { groupVersionsByDate } from "./utils";
+import { Badge } from "src/components/tiptap-ui-primitive/badge";
 
 interface VersionHistoryListProps {
   versions: Version[];
@@ -37,7 +38,7 @@ export function VersionHistoryList({
       >
         <div className="vh-item__header">
           <span className="vh-item__time">Now</span>
-          <span className="vh-item__badge vh-item__badge--current">Live</span>
+          <Badge data-style="green">Live</Badge>
         </div>
         <div className="vh-item__meta">Current version</div>
       </div>

@@ -49,6 +49,7 @@ import { useThreadSetup } from "./use-thread-setup";
 import { useMemo } from "react";
 import { PageLinkNode } from "src/components/tiptap-node/page-link-node";
 import { useActivePageId } from "../context/active-page-context";
+import { DiffExtension } from "src/components/tiptap-ui/version-history";
 
 export function useEditorExtensions(
   setTocContent: (content: TocItem[]) => void,
@@ -186,8 +187,9 @@ export function useEditorExtensions(
         ],
         attributeName: "id",
       }),
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      DiffExtension,
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
