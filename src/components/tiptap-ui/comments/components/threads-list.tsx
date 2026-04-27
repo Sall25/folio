@@ -6,7 +6,7 @@ import { useCommentThreadState } from "../hooks/useCommentThreadState.js";
 interface ThreadsListProps {
   editor: Editor | null;
   positionedThreads: PositionedThread[];
-  pageId: string;
+  pageId: number;
 }
 
 export const ThreadsList = ({

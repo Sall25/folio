@@ -6,6 +6,7 @@ import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-i
 import { useRef, useState } from "react";
 import type { Page } from "src/components/tiptap-templates/simple/types";
 import { createPortal } from "react-dom";
+import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/simple-editor-context";
 
 function flattenPages(pages: Page[]): Page[] {
   return pages.flatMap((p) => [p, ...flattenPages(p.children ?? [])]);
@@ -43,23 +44,12 @@ function getContentExcerpt(page: Page): string {
   return "";
 }
 
-export function PageLinkNodeView({ node, extension, editor }: NodeViewProps) {
+export function PageLinkNodeView({ node, extension }: NodeViewProps) {
   const { pageId } = node.attrs;
-  const [pages] = useState(() => editor.storage.pageLink.pages);
+  const { pages } = useSimpleEditor();
   const [isHovered, setIsHovered] = useState(false);
   const [previewPos, setPreviewPos] = useState({ top: 0, left: 0 });
   const linkRef = useRef<HTMLDivElement>(null);
-
-  // const handleMouseEnter = () => {
-  //   if (linkRef.current) {
-  //     const rect = linkRef.current.getBoundingClientRect();
-  //     setPreviewPos({
-  //       top: rect.top - 8, // above the link, will be adjusted by transform
-  //       left: rect.left,
-  //     });
-  //   }
-  //   setIsHovered(true);
-  // };
 
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -79,14 +69,26 @@ export function PageLinkNodeView({ node, extension, editor }: NodeViewProps) {
     hoverTimer.current = setTimeout(() => setIsHovered(false), 200);
   };
 
+  if (!pages) return null;
+
   const page =
     pages.find((p) => String(p.id) === String(pageId)) ??
     flattenPages(pages).find((p) => String(p.id) === String(pageId));
 
   if (!page)
     return (
-      <NodeViewWrapper data-node-id={node.attrs.nodeId}>
-        <span>No page</span>
+      <NodeViewWrapper data-drag-handle data-node-id={node.attrs.nodeId}>
+        <span
+          style={{
+            textDecoration: "line-through",
+            opacity: 0.4,
+            fontSize: "1.05em",
+            cursor: "not-allowed",
+            color: "var(--tt-color-red-base)",
+          }}
+        >
+          Deleted Page
+        </span>
       </NodeViewWrapper>
     );
 
@@ -99,7 +101,8 @@ export function PageLinkNodeView({ node, extension, editor }: NodeViewProps) {
 
   return (
     <NodeViewWrapper
-      style={{ display: "inline" }}
+      style={{ display: "block" }}
+      data-drag-handle
       data-node-id={node.attrs.nodeId}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

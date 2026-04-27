@@ -28,12 +28,13 @@ import type { Page } from "src/components/tiptap-templates/simple/types";
 export type SlashItemType = "command" | "title" | "separator";
 
 type Options = {
-  activePage?: Page;
+  activePageId: number;
   addPageAsync: (data: {
     title: string;
-    parentId: string | null;
+    parentId: number | null;
   }) => Promise<Page>;
-  setActivePageId: (pageId: string) => void;
+  setActivePageId: (pageId: number | number) => void;
+  isSwitching: boolean;
 };
 
 export interface SlashCommand {
@@ -231,15 +232,14 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     title: "Page",
     icon: File,
     runAsync: async (editor, options) => {
-      const { activePage, addPageAsync, setActivePageId } = options;
-      if (!activePage) return;
+      const { activePageId, addPageAsync } = options;
+
+      const parentId = activePageId;
 
       const newPage = await addPageAsync({
         title: "New Page",
-        parentId: activePage.id ?? null,
+        parentId: parentId,
       });
-
-      if (!newPage?.id) return;
 
       editor.storage.pageLink.pages = [
         ...editor.storage.pageLink.pages,
@@ -249,12 +249,13 @@ export const SLASH_COMMANDS: SlashCommand[] = [
       editor.commands.insertContent({
         type: "pageLink",
         attrs: {
-          pageId: String(newPage.id),
-          parentId: activePage.id ? String(activePage.id) : null,
+          pageId: newPage.id,
+          parentId: parentId,
           title: newPage.title,
         },
       });
-      setActivePageId(newPage.id);
+
+      // setActivePageId(newPage.id as number);
     },
   },
   //  ─── Database ─────────────────────────────────────────────

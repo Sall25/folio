@@ -44,7 +44,7 @@ export function useVersionHistory() {
   }, []);
 
   const saveNameAsync = useCallback(
-    async (versionId: string) => {
+    async (versionId: number) => {
       if (!nameInput.trim()) return;
       await nameVersionAsync({ id: versionId, name: nameInput.trim() });
       setNamingVersionId(null);

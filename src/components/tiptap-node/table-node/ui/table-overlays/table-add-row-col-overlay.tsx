@@ -15,8 +15,6 @@ export function TableAddRowColOverlay({
   const { tableWidth, tableHeight, isLastCol, isLastRow } = useTableOverlays();
 
   if (tableWidth === 0 || tableHeight === 0) {
-    console.log("tableWidth", tableWidth);
-    console.log("tableHeight", tableHeight);
     return null;
   }
 

@@ -50,15 +50,16 @@ declare module "@tiptap/core" {
 }
 
 interface SlashCommandStorage {
-  activePage?: Page;
+  activePageId: number;
   addPageAsync: ({
     title,
     parentId,
   }: {
     title: string;
-    parentId: string | null;
+    parentId: number | null;
   }) => Promise<Page>;
-  setActivePageId: (pageId: string) => void;
+  setActivePageId: (pageId: number) => void;
+  isSwitching: boolean;
 }
 
 declare module "@tiptap/core" {
@@ -81,9 +82,10 @@ export const SlashCommand = Extension.create<
 
   addStorage() {
     return {
-      activePage: undefined,
+      activePageId: 0,
       addPageAsync: async () => ({}) as Page,
       setActivePageId: () => {},
+      isSwitching: false,
     };
   },
 
@@ -267,8 +269,8 @@ export const SlashCommand = Extension.create<
       command: ({ editor: ed, range, props }) => {
         ed.chain().focus().deleteRange(range).run();
         props?.run?.(ed);
-        const { activePage, addPageAsync, setActivePageId } = this.storage;
-        props?.runAsync?.(ed, { activePage, addPageAsync, setActivePageId });
+        const { activePageId, addPageAsync, setActivePageId } = this.storage;
+        props?.runAsync?.(ed, { activePageId, addPageAsync, setActivePageId });
       },
       render: () => ({
         onStart: (props) => {

@@ -16,14 +16,14 @@ export type PageCover = {
 };
 
 export type Page = {
-  id: string;
+  id: number;
   title: string;
   settings: PageSettings;
   cover: PageCover;
   content: JSONContent;
   createdAt: string;
   updatedAt: string | null;
-  parentId: string | null;
+  parentId: number | null;
   children: Page[];
 };
 
@@ -39,8 +39,8 @@ export type SimpleEditorContentProps = {
     title,
     parentId,
   }: {
-    title: string;
-    parentId: string | null;
+    title: number;
+    parentId: number | null;
   }) => Promise<Page>;
 };
 

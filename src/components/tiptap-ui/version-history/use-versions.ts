@@ -4,14 +4,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const url = "http://localhost:3003";
 
-const fetchVersionsAsync = async (pageId: string): Promise<Version[]> => {
+const fetchVersionsAsync = async (pageId: number): Promise<Version[]> => {
   const res = await fetch(`${url}/versions?pageId=${pageId}`);
   if (!res.ok) throw new Error("Failed to fetch versions");
   return res.json();
 };
 
 const createVersionFnAsync = async (data: {
-  pageId: string;
+  pageId: number;
   title: string;
   content: Page["content"];
   isNamed: boolean;
@@ -31,7 +31,7 @@ const createVersionFnAsync = async (data: {
 };
 
 const nameVersionFnAsync = async (
-  id: string,
+  id: number,
   name: string,
 ): Promise<Version> => {
   const res = await fetch(`${url}/versions/${id}`, {
@@ -56,7 +56,7 @@ const restoreVersionFnAsync = async (version: Version): Promise<void> => {
   if (!res.ok) throw new Error("Failed to restore version");
 };
 
-const pruneVersionsAsync = async (pageId: string) => {
+const pruneVersionsAsync = async (pageId: number) => {
   const res = await fetch(`${url}/versions?pageId=${pageId}`);
   const versions: Version[] = await res.json();
 
@@ -75,7 +75,7 @@ const pruneVersionsAsync = async (pageId: string) => {
   );
 };
 
-export function useVersions(pageId: string | null) {
+export function useVersions(pageId: number | undefined) {
   const client = useQueryClient();
 
   const { data: versions = [] } = useQuery({
@@ -94,7 +94,7 @@ export function useVersions(pageId: string | null) {
   });
 
   const { mutateAsync: nameVersionAsync } = useMutation({
-    mutationFn: ({ id, name }: { id: string; name: string }) =>
+    mutationFn: ({ id, name }: { id: number; name: string }) =>
       nameVersionFnAsync(id, name),
     onSuccess: () =>
       client.invalidateQueries({ queryKey: ["versions", pageId] }),

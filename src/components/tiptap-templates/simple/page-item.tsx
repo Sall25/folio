@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { PageItemIcon } from "./page-item-icon";
 import { PageItemOptions } from "./page-item-options";
@@ -26,6 +26,12 @@ export function PageItem({ page, depth = 0 }: PageItemProps) {
   const { activePage, addPageAndActivateAsync, updatePageAsync } =
     useSimpleEditor();
   const { setActivePageId } = useActivePageId();
+
+  const title =
+    activePage?.id === page.id
+      ? activePage.title || "New Page"
+      : page.title || "New Page";
+  const cover = activePage?.id === page.id ? activePage.cover : page.cover;
 
   useEffect(() => {
     if (editing) {
@@ -58,7 +64,7 @@ export function PageItem({ page, depth = 0 }: PageItemProps) {
     }
   };
 
-  const onSelect = (pageId: string | number) => {
+  const onSelect = (pageId: number) => {
     setActivePageId(pageId);
   };
 
@@ -67,7 +73,12 @@ export function PageItem({ page, depth = 0 }: PageItemProps) {
       <CardItemGroup
         orientation="horizontal"
         className={`page-item ${activePage?.id === page.id ? "active" : ""}`}
-        style={{ paddingLeft: `${6 + depth * 14}px` }}
+        style={{
+          paddingLeft: `${6 + depth * 14}px`,
+          paddingTop: 3,
+          paddingBottom: 3,
+          borderRadius: 3,
+        }}
         onClick={() => {
           onSelect(page.id);
         }}
@@ -79,7 +90,6 @@ export function PageItem({ page, depth = 0 }: PageItemProps) {
           variant="ghost"
           className={`page-expand-btn ${hasChildren ? "visible" : ""}`}
           onClick={(e) => {
-            console.log("expand button clicked");
             e.stopPropagation();
             if (hasChildren) setExpanded((v) => !v);
           }}
@@ -100,7 +110,7 @@ export function PageItem({ page, depth = 0 }: PageItemProps) {
         </Button>
 
         <PageItemIcon
-          cover={page.cover}
+          cover={cover}
           styles={{
             opacity: shouldShow && hasChildren ? 0 : 1,
             transition: "opacity 150ms ease",
@@ -118,7 +128,7 @@ export function PageItem({ page, depth = 0 }: PageItemProps) {
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span className="page-title">{page.title || "Untitled"}</span>
+          <span className="page-title">{title || "New Page"}</span>
         )}
 
         <PageItemOptions

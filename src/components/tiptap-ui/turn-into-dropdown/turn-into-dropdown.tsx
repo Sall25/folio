@@ -20,6 +20,7 @@ import { Card } from "src/components/tiptap-ui-primitive/card";
 import { toggleBlockquote } from "../blockquote-button";
 import { toggleList } from "../list-button";
 import { toggleCodeBlock } from "../code-block-button";
+import { TurnIntoPageButton } from "../turn-into-page-button";
 
 interface TurnIntoDropdownProps {
   editor?: Editor | null;
@@ -167,6 +168,15 @@ export function TurnIntoDropdown({
               </DropdownMenuItem>
             );
           })}
+          <DropdownMenuItem asChild>
+            <TurnIntoPageButton
+              editor={editor}
+              text="Turn into paragraph"
+              hideWhenUnavailable={false}
+              onTurnedIntoPage={() => setOpen(false)}
+              style={{ minWidth: "145px" }}
+            />
+          </DropdownMenuItem>
         </Card>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -222,8 +222,6 @@ export function ResizableNodeProvider({
           const isHorizontal =
             activeHandle === "left" || activeHandle === "right";
 
-          console.log("horizontal", isHorizontal);
-
           // if (!isHorizontal) {
           //   nodeRef.current.style.height = `${constrained.height}px`;
           // }
@@ -315,9 +313,6 @@ export function ResizableNodeProvider({
 
       const width = nodeRef.current?.offsetWidth;
       const height = nodeRef.current?.offsetHeight;
-
-      console.log("offsetWidth", width);
-      console.log("offsetHeight", height);
 
       setStartWidth(width ?? 0);
       setStartHeight(height ?? 0);

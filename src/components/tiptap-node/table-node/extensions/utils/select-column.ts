@@ -19,7 +19,5 @@ export function selectColumn(
   const $anchor = tr.doc.resolve(topCellPos + 1);
   const $head = tr.doc.resolve(bottomCellPos + 1);
 
-  console.log("selectColumn");
-
   return tr.setSelection(CellSelection.colSelection($anchor, $head));
 }

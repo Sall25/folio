@@ -59,12 +59,24 @@ export const MainToolbarContent = ({
   onTriggerVersionHistory,
 }: MainToolbarProps) => {
   const { activePage, pages, setActivePageId } = useSimpleEditor();
-  const breadcrumbs = buildBreadcrumb(activePage!, pages ?? []).map((page) => ({
-    label: page.title || "New Page",
-    icon: <PageItemIcon cover={page.cover} styles={{ fontSize: 14 }} />,
-    locked: page.settings.locked,
-    onClick: () => setActivePageId(page.id),
-  }));
+  const breadcrumbs = buildBreadcrumb(activePage!, pages ?? []).map((page) => {
+    if (activePage && activePage.id === page.id) {
+      return {
+        label: activePage.title || "New Page",
+        icon: (
+          <PageItemIcon cover={activePage.cover} styles={{ fontSize: 14 }} />
+        ),
+        locked: activePage.settings.locked,
+        onClick: () => setActivePageId(activePage.id),
+      };
+    }
+    return {
+      label: page.title || "New Page",
+      icon: <PageItemIcon cover={page.cover} styles={{ fontSize: 14 }} />,
+      locked: page.settings.locked,
+      onClick: () => setActivePageId(page.id),
+    };
+  });
 
   return (
     <>

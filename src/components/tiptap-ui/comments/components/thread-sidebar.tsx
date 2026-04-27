@@ -15,7 +15,7 @@ export function ThreadSidebar({
 }: {
   editor: Editor | null;
   setHasThreads: (v: boolean) => void;
-  pageId: string;
+  pageId: number;
 }) {
   const [positionedThreads, setPositionedThreads] = useState<
     PositionedThread[]

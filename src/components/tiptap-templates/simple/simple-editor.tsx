@@ -40,7 +40,7 @@ import { VersionHistorySidebar } from "src/components/tiptap-ui/version-history/
 import { useSimpleEditor } from "./context/simple-editor-context";
 
 const VERSION_SIDEBAR_WIDTH = 260;
-const SIDEBAR_WIDTH = 240;
+const SIDEBAR_WIDTH = 280;
 const SIDEBAR_COLLAPSED_WIDTH = 52;
 
 function SimpleEditorInner() {

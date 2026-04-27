@@ -4,6 +4,17 @@
   gap: 1px;
   width: 100%;
 }
+.page-item{
+  border-radius: var(--tt-radius-md);
+}
+.page-title {
+  flex: 1;
+  min-width: 0;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .page-expand-btn {
   display: flex;

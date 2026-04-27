@@ -1,5 +1,15 @@
 .node-pageLink{
   margin-bottom: 8px !important;
+  &.ProseMirror-selectednode{
+    background-color: var(--tt-selection-color);
+  }
+
+}
+:root{
+  --page-link-node-hover-bg-color: var(--tt-gray-light-a-100); 
+}
+.dark{
+  --page-link-node-hover-bg-color: var(--tt-gray-dark-a-100);  
 }
 .page-link-node {
   display: inline-flex;
@@ -11,6 +21,11 @@
   user-select: none;
   border-bottom: 1px solid var(--tt-border-color);
   padding-bottom: 2px;
+
+ 
+  &:hover{
+    background-color: var(--page-link-node-hover-bg-color);
+  }
 
 }
 

@@ -71,7 +71,6 @@ export const TableContextExtension = Table.extend({
           if (dispatch) {
             /**  lockTableHandle */
             dispatch(tr.setMeta("lockTableHandle", true));
-            console.log("should lock");
           }
           return true;
         };

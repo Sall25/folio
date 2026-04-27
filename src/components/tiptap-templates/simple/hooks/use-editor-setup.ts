@@ -20,15 +20,15 @@ export function useEditorSetup() {
   const { setTocContent } = useToc();
   const { extensions } = useEditorExtensions(setTocContent);
   const isSwitchingPage = useRef(false);
-  const pendingUpdate = useRef<Page | null>(null);
   const { setActivePageId, activePageId } = useActivePageId();
   const {
     activePage,
-    updatePageAsync,
     addPageAsync,
     pages,
     createVersionAsync,
     onVersionHistoryOpenChanged,
+    debounceUpdatePage,
+    setActivePage,
   } = useSimpleEditor();
 
   const activePageRef = useRef<Page | null>(activePage);
@@ -36,28 +36,22 @@ export function useEditorSetup() {
     activePage?.content,
   );
   const isPreviewingVersion = useRef(false);
-  const titleSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastVersionTime = useRef<number>(Date.now());
   const VERSION_INTERVAL = 10 * 60 * 1000; // 10 minutes
-  const versionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!activePage) return;
     activePageRef.current = activePage;
-    lastVersionTime.current = 0; // ← reset so first edit on new page creates a version after interval
-    if (titleSaveTimer.current) {
-      clearTimeout(titleSaveTimer.current);
-      titleSaveTimer.current = null;
-    }
-    if (versionTimer.current) {
-      clearTimeout(versionTimer.current);
-      versionTimer.current = null;
-    }
     originalContentRef.current = activePage?.content;
     onVersionHistoryOpenChanged(false);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePage?.id]);
+  }, [activePageId]);
+
+  useEffect(() => {
+    if (!activePage) return;
+    activePageRef.current = activePage;
+  }, [activePage]);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -65,85 +59,57 @@ export function useEditorSetup() {
     extensions: extensions,
     onUpdate({ editor }) {
       if (
-        isSwitchingPage.current ||
         isPreviewingVersion.current ||
-        !activePageRef.current
+        !activePageRef.current ||
+        isSwitchingPage.current ||
+        editor.storage.slashCommand.isSwitching
       )
         return;
-
       const newTitle = editor.state.doc.firstChild?.textContent;
       const updatedPage = {
         ...activePageRef.current,
         title: newTitle ?? "New Page",
         content: editor.getJSON(),
       };
-      pendingUpdate.current = updatedPage;
       activePageRef.current = updatedPage;
+      setActivePage(activePageRef.current);
 
-      if (titleSaveTimer.current) clearTimeout(titleSaveTimer.current);
-      titleSaveTimer.current = setTimeout(() => {
-        updatePageAsync(updatedPage);
-      }, 500);
+      console.log("onUpdate");
 
-      // const { $from } = editor.state.selection;
+      debounceUpdatePage(updatedPage);
 
-      // // Title save — only when title changes
-      // if ($from.node().type.name === "title" || versionHistoryOpen) {
-      //   if (titleSaveTimer.current) clearTimeout(titleSaveTimer.current);
-      //   titleSaveTimer.current = setTimeout(() => {
-      //     updatePageSilentAsync(updatedPage);
-      //   }, 500);
-      // }
-
-      // Version creation — independent, fires on any edit after interval
-      if (versionTimer.current) clearTimeout(versionTimer.current);
-      versionTimer.current = setTimeout(() => {
-        const now = Date.now();
-        if (now - lastVersionTime.current >= VERSION_INTERVAL) {
-          lastVersionTime.current = now;
-          createVersionAsync({
-            pageId: updatedPage.id,
-            title: updatedPage.title,
-            content: updatedPage.content,
-            isNamed: false,
-          });
-          if (pendingUpdate.current) {
-            updatePageAsync(pendingUpdate.current);
-          }
-        }
-      }, 500);
+      const now = Date.now();
+      if (now - lastVersionTime.current >= VERSION_INTERVAL) {
+        lastVersionTime.current = now;
+        createVersionAsync({
+          pageId: updatedPage.id,
+          title: updatedPage.title,
+          content: updatedPage.content,
+          isNamed: false,
+        });
+      }
     },
     onDestroy() {
-      if (pendingUpdate.current) {
-        updatePageAsync(pendingUpdate.current);
-        pendingUpdate.current = null;
-      }
+      debounceUpdatePage.flush();
     },
     content: activePageRef.current ? activePageRef.current.content : "<p></p>",
   });
 
   useEffect(() => {
-    if (isPreviewingVersion.current) return;
     if (!editor) return;
-    if (!activePage) return;
     if (!activePageRef.current) return;
+    if (activePageId === undefined) return;
+    if (editor.storage.slashCommand.isSwitching) return;
 
-    editor.storage.slashCommand.activePage = activePageRef.current;
+    console.log("useEffect activePageId", activePageId);
+
+    editor.storage.slashCommand.activePageId = activePageId;
     editor.storage.slashCommand.addPageAsync = addPageAsync;
     editor.storage.slashCommand.setActivePageId = setActivePageId;
     editor.storage.pageLink.pages = pages ?? [];
 
-    if (pendingUpdate.current) {
-      updatePageAsync(pendingUpdate.current);
-      pendingUpdate.current = null;
-    }
-
     isSwitchingPage.current = true;
     const raf = requestAnimationFrame(() => {
-      if (pendingUpdate.current) {
-        updatePageAsync(pendingUpdate.current);
-        pendingUpdate.current = null;
-      }
       if (activePageRef.current) {
         editor.commands.setContent(activePageRef.current.content);
       }
@@ -152,15 +118,9 @@ export function useEditorSetup() {
     });
 
     return () => cancelAnimationFrame(raf);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    activePage?.id,
-    editor,
-    addPageAsync,
-    updatePageAsync,
-    setActivePageId,
-    activePageId,
-  ]);
+  }, [activePageId]);
 
   useInitThreads({ editor });
 

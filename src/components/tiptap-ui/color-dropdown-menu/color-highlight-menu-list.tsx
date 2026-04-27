@@ -47,7 +47,6 @@ export function ColorHighlightMenuList({
     items,
     orientation: "vertical",
     onSelect: (item) => {
-      console.log("selected index selected:", item);
       if (!containerRef.current) return false;
 
       const highlightedElement = containerRef.current.querySelector(

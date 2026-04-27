@@ -158,7 +158,6 @@ export function useEditorExtensions(
       SlashCommand,
       MentionExtension,
       EmojiExtension,
-      DragHandleExtension,
 
       // --- Collaboration / comments ---
       CommentThreadExtension.configure({
@@ -188,6 +187,7 @@ export function useEditorExtensions(
         attributeName: "id",
       }),
       DiffExtension,
+      DragHandleExtension,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

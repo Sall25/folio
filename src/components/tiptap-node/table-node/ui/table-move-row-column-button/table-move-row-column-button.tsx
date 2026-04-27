@@ -42,24 +42,19 @@ export function TableMoveRowColButton({
       className={className}
       onPointerDown={(e) => {
         e.preventDefault();
-        console.log("tableMoveRowColButton");
 
         if (rowIndex === undefined || colIndex === undefined) return;
 
         if (target === "row") {
           if (orientation === "up") {
-            console.log("moved up");
             editor?.commands.moveRowUp(rowIndex);
           } else if (orientation === "down") {
-            console.log("moved down");
             editor?.commands.moveRowDown(rowIndex);
           }
         } else if (target === "col") {
           if (orientation === "left") {
-            console.log("moved left");
             editor?.commands.moveColLeft(colIndex);
           } else if (orientation === "right") {
-            console.log("moved right");
             editor?.commands.moveColRight(colIndex);
           }
         }

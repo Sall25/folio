@@ -30,7 +30,7 @@ export function ThreadComposerSubmit({
 }: {
   editor: Editor | null;
   threadId: string;
-  pageId: string;
+  pageId: number;
 }) {
   const [comment, setComment] = useState("");
   //  const [focused, setFocused] = useState(false);

@@ -7,8 +7,8 @@ export function ActivePageProvider({
   setActivePageId,
 }: {
   children: ReactNode;
-  activePageId: string | undefined;
-  setActivePageId: (id: string | number) => void;
+  activePageId: number | undefined;
+  setActivePageId: (id: number) => void;
 }) {
   return (
     <ActivePageContext.Provider value={{ activePageId, setActivePageId }}>

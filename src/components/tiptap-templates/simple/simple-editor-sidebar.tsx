@@ -106,7 +106,7 @@ function User({ name }: { name: string }) {
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
-          maxWidth: 90,
+          maxWidth: 160,
           display: "inline-block",
         }}
       >
@@ -250,7 +250,7 @@ export function SimpleEditorSidebar({
         left: 0,
         borderRadius: 0,
         boxShadow: "none",
-        width: collapsed ? 52 : 240,
+        width: collapsed ? 52 : 280,
         transition: "width 0.2s ease",
       }}
     >

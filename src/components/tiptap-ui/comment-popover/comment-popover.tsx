@@ -4,11 +4,10 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import type { Editor } from "@tiptap/core";
-import { CommentButton } from "../comment-button";
 import { Card } from "src/components/tiptap-ui-primitive/card";
 import { useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { MessageSquare, MessageSquareMore } from "lucide-react";
+import { MessageSquareMore } from "lucide-react";
 import "./comment-popover.scss";
 
 export function CommentPopover({ editor }: { editor: Editor | null }) {

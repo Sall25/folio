@@ -221,7 +221,6 @@ export const CommentThreadExtension = Extension.create<
       onUpdateCommentAsync,
     } = this.options;
 
-    console.log("initial threads", initialThreads);
     return [
       new Plugin<CommentThreadState>({
         key: commentThreadPluginKey,
@@ -246,7 +245,6 @@ export const CommentThreadExtension = Extension.create<
               case "initialThreads":
                 {
                   next.threads = meta.providedThreads;
-                  console.log("initialThreads", meta.providedThreads);
                 }
                 break;
               case "addComment":

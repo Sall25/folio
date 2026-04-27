@@ -3,8 +3,8 @@ import { createContext, useContext } from "react";
 
 export const ActivePageContext = createContext<
   | {
-      activePageId: string | number | undefined;
-      setActivePageId: (id: string | number) => void;
+      activePageId: number | undefined;
+      setActivePageId: (id: number) => void;
     }
   | undefined
 >(undefined);

@@ -3,7 +3,7 @@ declare module "@tiptap/core" {
     commentThreadExtension: {
       draftThread: () => ReturnType;
 
-      submitThread: (content: string, pageId?: string) => ReturnType;
+      submitThread: (content: string, pageId?: number) => ReturnType;
 
       selectThread: (threadId: string, active?: boolean) => ReturnType;
 

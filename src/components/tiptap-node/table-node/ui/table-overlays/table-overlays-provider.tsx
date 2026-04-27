@@ -94,8 +94,6 @@ export function TableOverlaysProvider({
           .reduce((sum: number, w: number) => sum + w, 0),
       );
 
-      console.log("colWidths", colWidths);
-
       setTableWidth(colWidths.reduce((sum: number, w: number) => sum + w, 0));
       setTableHeight(rowHeights.reduce((sum: number, h: number) => sum + h, 0));
       setWidth(currentCol?.width ?? 0);

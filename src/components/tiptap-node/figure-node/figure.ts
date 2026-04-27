@@ -137,7 +137,6 @@ export const Figure = Node.create<FigureNodeViewOptions>({
             if (node.childCount === 0) {
               // Step 1: insert figcaption
               tr = tr.insert(figurePos + 1, figcaptionType.create());
-              console.log("inserted");
 
               // Step 2: setNodeMarkup against the UPDATED doc
               tr = tr.setNodeMarkup(figurePos, undefined, {

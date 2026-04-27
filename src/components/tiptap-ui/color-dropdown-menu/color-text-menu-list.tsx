@@ -79,7 +79,7 @@ export function ColorTextMenuList({
                 label: color.label,
                 type: "text",
               });
-              console.log("applied");
+
               onAction?.();
             }}
             disabled={false}

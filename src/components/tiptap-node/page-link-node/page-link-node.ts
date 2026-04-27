@@ -4,7 +4,7 @@ import { PageLinkNodeView } from "./page-link-node-view.js";
 import type { Page } from "src/components/tiptap-templates/simple/types.js";
 
 interface PageLinkOptions {
-  onNavigate: (pageId: string) => void;
+  onNavigate: (pageId: number) => void;
 }
 
 interface PageLinkStorage {
@@ -26,8 +26,10 @@ declare module "@tiptap/core" {
 export const PageLinkNode = Node.create<PageLinkOptions, PageLinkStorage>({
   name: "pageLink",
   group: "block",
-  atom: true, // treated as a single unit, not editable inside
-
+  atom: false, // treated as a single unit, not editable inside
+  selectable: true,
+  draggable: true,
+  content: "inline*",
   addOptions() {
     return {
       onNavigate() {},

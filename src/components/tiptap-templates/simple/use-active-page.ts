@@ -1,9 +1,9 @@
-import { useCallback, useEffect } from "react";
-import { usePages } from "./use-pages";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePages, type UsePagesReturn } from "./use-pages";
 import type { Page } from "./types";
 import { useActivePageId } from "./context/active-page-context";
 
-function findPage(pages: Page[], id: string | number): Page | undefined {
+function findPage(pages: Page[], id: number): Page | undefined {
   for (const page of pages) {
     if (page.id === id) return page;
     if (page.children?.length) {
@@ -17,18 +17,19 @@ export type UseActivePageReturn = {
   pages: Page[] | undefined;
   activePage: Page | null;
   isLoading: boolean;
-  setActivePageId: (id: string) => void;
+  setActivePageId: (id: number) => void;
   updateSettingsAsync: (patch: Partial<Page["settings"]>) => Promise<void>;
   updateCoverAsync: (cover: Page["cover"]) => Promise<void>;
   addPageAndActivateAsync: (data: {
     title: string;
-    parentId: string | null;
+    parentId: number | null;
   }) => Promise<Page>;
-  deletePageAsync: (id: string) => Promise<void>;
+  deletePageAsync: (id: number) => Promise<void>;
   query: string;
   onSearch: (search: string) => void;
   updatePageAsync: (page: Page) => Promise<Page>;
-  addCoverAsync: (id: string) => Promise<void>;
+  addCoverAsync: (id: number) => Promise<void>;
+  debounceUpdatePage: UsePagesReturn["debounceUpdatePage"];
 };
 
 export function useActivePage(): UseActivePageReturn {
@@ -37,36 +38,38 @@ export function useActivePage(): UseActivePageReturn {
     isLoading,
     addPageAsync,
     updatePageAsync,
-    deletePageAsync,
+    deletePageAsync: providedDeletePageAsync,
     query,
     onSearch,
     addCoverAsync,
+    debounceUpdatePage,
   } = usePages();
   const { activePageId, setActivePageId } = useActivePageId();
+  const [pendingPage, setPendingPage] = useState<Page | null>(null);
 
-  const activePage =
-    (activePageId ? findPage(pages ?? [], activePageId) : null) ??
-    pages?.[0] ??
-    null;
+  const activePage = useMemo(() => {
+    if (!pages?.length) return null;
+    const found =
+      activePageId !== undefined ? findPage(pages, activePageId) : null;
+    return found ?? pendingPage ?? pages[0];
+  }, [activePageId, pendingPage, pages]);
+
+  const addPageAndActivateAsync = useCallback(
+    async (data: Parameters<typeof addPageAsync>[0]) => {
+      const newPage = await addPageAsync(data);
+      if (newPage?.id) {
+        setPendingPage(newPage);
+        setActivePageId(newPage.id);
+      }
+      return newPage;
+    },
+    [addPageAsync, setActivePageId],
+  );
 
   useEffect(() => {
     if (!isLoading && pages?.length === 0)
       addPageAsync({ title: "Untitled", parentId: null });
   }, [isLoading, pages, addPageAsync]);
-
-  useEffect(() => {
-    if (!activePageId && pages?.length)
-      requestAnimationFrame(() => setActivePageId(pages[0].id));
-  }, [pages, activePageId, setActivePageId]);
-
-  const addPageAndActivateAsync = useCallback(
-    async (data: Parameters<typeof addPageAsync>[0]) => {
-      const newPage = await addPageAsync(data);
-      if (newPage?.id) setActivePageId(newPage.id);
-      return newPage;
-    },
-    [addPageAsync, setActivePageId],
-  );
 
   const updateSettingsAsync = useCallback(
     async (patch: Partial<Page["settings"]>) => {
@@ -87,6 +90,26 @@ export function useActivePage(): UseActivePageReturn {
     [activePage, updatePageAsync],
   );
 
+  const deletePageAsync = useCallback(
+    async (id: number) => {
+      await providedDeletePageAsync(id);
+
+      // If the deleted page was active, switch to another page
+      if (activePageId === id) {
+        const flatPages =
+          pages?.flatMap(function flatten(p): Page[] {
+            return [p, ...(p.children ?? []).flatMap(flatten)];
+          }) ?? [];
+
+        const nextPage = flatPages.find((p) => p.id !== id);
+        if (nextPage) {
+          setActivePageId(nextPage.id);
+        }
+      }
+    },
+    [activePageId, pages, providedDeletePageAsync, setActivePageId],
+  );
+
   return {
     pages,
     activePage,
@@ -99,6 +122,7 @@ export function useActivePage(): UseActivePageReturn {
     query,
     onSearch,
     updatePageAsync,
+    debounceUpdatePage,
     addCoverAsync,
   };
 }

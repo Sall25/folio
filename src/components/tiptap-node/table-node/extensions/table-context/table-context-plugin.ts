@@ -370,9 +370,6 @@ export const TableContextPlugin = () => {
 
           return false;
         },
-        blur: () => {
-          console.log("blur");
-        },
       },
     },
   });

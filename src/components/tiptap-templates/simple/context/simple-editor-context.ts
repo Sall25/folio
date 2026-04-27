@@ -12,6 +12,7 @@ type ContextType = UseActivePageReturn &
     updatePageSilentAsync: (page: Page) => Promise<Page>;
     versionHistoryOpen: boolean;
     onVersionHistoryOpenChanged: (v: boolean) => void;
+    setActivePage: (page: Page) => void;
   };
 
 export const SimpleEditorContext = createContext<ContextType | null>(null);

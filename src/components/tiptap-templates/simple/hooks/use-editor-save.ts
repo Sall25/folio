@@ -3,10 +3,10 @@ import type { Editor } from "@tiptap/core";
 import type { SimpleEditorContentProps, SaveState } from "../types";
 
 export function useEditorSave({
-  updatePage,
+  updatePageAsync,
   activePage,
   onDeleteCache,
-}: Pick<SimpleEditorContentProps, "updatePage" | "activePage"> & {
+}: Pick<SimpleEditorContentProps, "updatePageAsync" | "activePage"> & {
   onDeleteCache: () => void;
 }) {
   const isReady = useRef(false);
@@ -16,16 +16,15 @@ export function useEditorSave({
 
   const save = useCallback(
     (editor: Editor) => {
-      if (!editor || !isReady.current || !isDirty.current || !activePage.id)
-        return;
+      if (!editor || !isReady.current || !isDirty.current) return;
       setSaveState("saving");
       onDeleteCache();
-      updatePage({ ...activePage, content: editor.getJSON() });
+      updatePageAsync({ ...activePage, content: editor.getJSON() });
       isDirty.current = false;
       if (savingTimerRef.current) clearTimeout(savingTimerRef.current);
       savingTimerRef.current = setTimeout(() => setSaveState("saved"), 600);
     },
-    [updatePage, activePage, onDeleteCache],
+    [updatePageAsync, activePage, onDeleteCache],
   );
 
   const onDirtyChanged = useCallback((v: boolean) => {

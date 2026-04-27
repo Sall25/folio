@@ -12,7 +12,7 @@ import {
 
 import "./drag-handle.scss";
 import { ColorDropdownProvider } from "../color-dropdown-menu/color-dropdown-provider";
-import { Node, Node as PMNode } from "@tiptap/pm/model";
+import { Node } from "@tiptap/pm/model";
 import type { NormalizedNestedOptions } from "@tiptap/extension-drag-handle";
 import { createPortal } from "react-dom";
 
@@ -61,9 +61,7 @@ const nestedOptions = {
         if (name === "column" || name === "columnBlock") {
           return 1000;
         }
-        // if (parent?.type.name === "column") {
-        //   return -250;
-        // }
+
         if (
           name === "bulletList" ||
           name === "orderedList" ||
@@ -93,25 +91,6 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
     editor?.commands.unlockDragHandle();
   }, [editor]);
 
-  const handleNodeChange = useCallback(
-    ({ node, pos: newPos }: { node: PMNode | null; pos: number }) => {
-      if (newPos === -1 || node === null) return;
-
-      const newTarget = NODE_LABELS[node.type.name] ?? "paragraph";
-
-      if (newPos !== posRef.current) {
-        posRef.current = newPos;
-        setPos(newPos);
-      }
-
-      if (newTarget !== targetRef.current) {
-        targetRef.current = newTarget;
-        setTarget(newTarget);
-      }
-    },
-    [],
-  );
-
   if (!editor) return null;
 
   return (
@@ -121,7 +100,21 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
       computePositionConfig={{
         placement: "left-start",
       }}
-      onNodeChange={handleNodeChange}
+      onNodeChange={({ node, pos: newPos }) => {
+        if (newPos === -1 || node === null) return;
+
+        const newTarget = NODE_LABELS[node.type.name] ?? "paragraph";
+
+        if (newPos !== posRef.current) {
+          posRef.current = newPos;
+          setPos(newPos);
+        }
+
+        if (newTarget !== targetRef.current) {
+          targetRef.current = newTarget;
+          setTarget(newTarget);
+        }
+      }}
       onElementDragStart={() => {
         isDraggingRef.current = true;
 

@@ -22,7 +22,7 @@ export function SimpleEditorProvider({ children }: SimpleEditorProviderProps) {
   const { activePageId } = useActivePageId();
   const { addPageAsync } = usePages();
   const threads = useThreadsOnPage();
-  const versions = useVersions(activePageId as string | null);
+  const versions = useVersions(activePageId);
 
   const [localPage, setLocalPage] = useState<Page | null>(null);
 
@@ -77,6 +77,7 @@ export function SimpleEditorProvider({ children }: SimpleEditorProviderProps) {
       value={{
         ...activePage,
         activePage: localPage,
+        setActivePage: setLocalPage,
         updateCoverAsync,
         updateSettingsAsync,
         updatePageAsync,

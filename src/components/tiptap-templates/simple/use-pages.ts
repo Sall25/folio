@@ -6,16 +6,25 @@ import {
 } from "@tanstack/react-query";
 import type { Page } from "./types";
 import { useState } from "react";
-import { useDebounce } from "use-debounce";
+import {
+  useDebounce,
+  useDebouncedCallback,
+  type DebouncedState,
+} from "use-debounce";
+
+function getDescendantIds(pages: Page[], parentId: number): number[] {
+  const children = pages.filter((p) => p.parentId === parentId);
+  return children.flatMap((c) => [c.id, ...getDescendantIds(pages, c.id)]);
+}
 
 function buildTree(pages: Page[]): Page[] {
-  const map = new Map<string, Page>();
+  const map = new Map<number, Page>();
   const roots: Page[] = [];
 
   pages.forEach((p) => map.set(p.id, { ...p, children: [] }));
 
   map.forEach((page) => {
-    if (page.parentId) {
+    if (page.parentId !== null) {
       const parent = map.get(page.parentId);
       if (parent) {
         parent.children.push(page);
@@ -42,7 +51,7 @@ const addPageFnAsync = async ({
   parentId,
 }: {
   title: string;
-  parentId: string | null;
+  parentId: number | null;
 }) => {
   const res = await fetch("/api/pages", {
     method: "POST",
@@ -84,16 +93,9 @@ const addPageFnAsync = async ({
   return res.json();
 };
 
-const deletePageFnAsync = async (id: string) => {
+const deletePageFnAsync = async (id: number) => {
   const res = await fetch(`/api/pages/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete page");
-};
-
-const searchPageAsync = async (query: string) => {
-  const res = await fetch(`/api/pages?name_like=${query}`);
-  if (!res.ok) throw new Error("Couldn't find page");
-
-  return res.json();
 };
 
 const updatePageFnAsync = async (page: Page) => {
@@ -110,7 +112,6 @@ const updatePageFnAsync = async (page: Page) => {
   });
   if (!res.ok) {
     const errorBody = await res.text();
-    console.error("Server error:", errorBody);
     throw new Error(`Failed to update page: ${errorBody}`);
   }
 
@@ -122,15 +123,16 @@ export interface UsePagesReturn {
   isLoading: boolean;
   addPageAsync: (data: {
     title: string;
-    parentId: string | null;
+    parentId: number | null;
   }) => Promise<Page>;
-  addChildPageAsync: (parentId: string) => Promise<void>;
+  addChildPageAsync: (parentId: number) => Promise<void>;
   addRootPageAsync: () => Promise<void>;
-  deletePageAsync: (id: string) => Promise<void>;
+  deletePageAsync: (id: number) => Promise<void>;
   updatePageAsync: (page: Page) => Promise<Page>;
   query: string;
   onSearch: (search: string) => void;
-  addCoverAsync: (id: string) => Promise<void>;
+  addCoverAsync: (id: number) => Promise<void>;
+  debounceUpdatePage: DebouncedState<(page: Page) => Promise<Page>>;
 }
 
 export function usePages(): UsePagesReturn {
@@ -141,16 +143,14 @@ export function usePages(): UsePagesReturn {
   const onSearch = (search: string) => setQuery(search);
 
   const { data: pages, isLoading } = useQuery({
-    queryKey: ["pages", debounceQuery],
-    queryFn: () =>
-      debounceQuery.length > 0
-        ? searchPageAsync(debounceQuery)
-        : fetchPagesAsync(),
+    queryKey: ["pages"],
+    queryFn: () => fetchPagesAsync(),
     placeholderData: keepPreviousData,
     select: (data) => buildTree(data),
   });
 
   const { mutateAsync: addPageAsync } = useMutation({
+    mutationKey: ["addPage"],
     mutationFn: addPageFnAsync,
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ["pages"] });
@@ -158,11 +158,16 @@ export function usePages(): UsePagesReturn {
   });
 
   const { mutateAsync: deletePageAsync } = useMutation({
+    mutationKey: ["deletePage"],
     mutationFn: deletePageFnAsync,
-    onMutate: (id) => {
-      client.setQueryData<Page[]>(["pages", debounceQuery], (old = []) =>
-        old.filter((p) => p.id !== id),
-      );
+    onMutate: (id: number) => {
+      client.setQueryData<Page[]>(["pages", debounceQuery], (old = []) => {
+        const idsToRemove = new Set([id, ...getDescendantIds(old, id)]);
+        return old.filter((p) => !idsToRemove.has(p.id));
+      });
+    },
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["pages"] });
     },
     onError: () => {
       client.invalidateQueries({ queryKey: ["pages"] });
@@ -170,19 +175,21 @@ export function usePages(): UsePagesReturn {
   });
 
   const { mutateAsync: updatePageAsync } = useMutation({
+    mutationKey: ["updatePage"],
     mutationFn: updatePageFnAsync,
-    onSuccess: (updatedPage) => {
-      client.setQueryData<Page[]>(["pages", debounceQuery], (old = []) =>
-        old.map((p) => (p.id === updatedPage.id ? updatedPage : p)),
-      );
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["pages"] });
     },
-    // onSuccess: () => {
-    //   client.invalidateQueries({ queryKey: ["pages"] });
-    // },
   });
 
+  const debounceUpdatePage = useDebouncedCallback(
+    async (page: Page) => await updatePageAsync(page),
+    1000,
+    { maxWait: 100 }, // ← also add maxWait so it can't loop forever
+  );
+
   // Adds a child page under a given parent
-  const addChildPageAsync = async (parentId: string) => {
+  const addChildPageAsync = async (parentId: number) => {
     await addPageAsync({ title: "New Page", parentId });
   };
 
@@ -191,7 +198,7 @@ export function usePages(): UsePagesReturn {
     addPageAsync({ title: "New Page", parentId: null });
   };
 
-  const addCoverAsync = async (id: string) => {
+  const addCoverAsync = async (id: number) => {
     const page = pages?.flat().find((p) => p.id === id); // or however you look up a page
     if (!page) return;
 
@@ -212,6 +219,7 @@ export function usePages(): UsePagesReturn {
     addRootPageAsync,
     deletePageAsync,
     updatePageAsync,
+    debounceUpdatePage,
     query,
     onSearch,
     addCoverAsync,

@@ -22,7 +22,7 @@ interface ThreadListItemProps {
   active: boolean;
   open: boolean;
   layout: PositionedThread;
-  pageId: string;
+  pageId: number;
 }
 
 export const ThreadsListItem = ({
