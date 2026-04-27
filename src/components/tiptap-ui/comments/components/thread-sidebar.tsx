@@ -7,19 +7,19 @@ import { getCommentThreadState } from "../extensions/utils/getCommentThreadState
 
 import "./styles.scss";
 import "./thread-sidebar.scss";
+import { useActivePageId } from "src/components/tiptap-templates/simple/context/active-page-context";
 
 export function ThreadSidebar({
   editor,
   setHasThreads,
-  pageId,
 }: {
   editor: Editor | null;
   setHasThreads: (v: boolean) => void;
-  pageId: number;
 }) {
   const [positionedThreads, setPositionedThreads] = useState<
     PositionedThread[]
   >([]);
+  const { activePageId: pageId } = useActivePageId();
 
   useEffect(() => {
     if (!editor) return;
@@ -41,7 +41,7 @@ export function ThreadSidebar({
     <ThreadSidebarBase editor={editor} setHasThreads={setHasThreads}>
       <div className="thread-sidebar">
         <ThreadsList
-          pageId={pageId}
+          pageId={pageId ?? 0}
           positionedThreads={positionedThreads}
           editor={editor}
         />

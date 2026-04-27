@@ -1,11 +1,49 @@
 import { useToc } from "src/components/tiptap-node/toc-node/use-toc";
-import type { Page } from "../types";
-import { useEditor } from "@tiptap/react";
-import { useCallback, useEffect, useRef } from "react";
+import { Editor, useEditor, type JSONContent } from "@tiptap/react";
 import { useEditorExtensions } from "./use-editor-extensions";
-import { useInitThreads } from "./use-init-threads";
+import { useActivePage } from "../use-active-page";
+import { useEffect, useRef } from "react";
 import { useActivePageId } from "../context/active-page-context";
-import { useSimpleEditor } from "../context/simple-editor-context";
+import type { Transaction } from "@tiptap/pm/state";
+
+function getTitleChange(
+  editor: Editor,
+  transaction: Transaction,
+): {
+  changed: boolean;
+  text: string | null;
+} {
+  if (!transaction.docChanged) return { changed: false, text: null };
+
+  const { $from } = editor.state.selection;
+
+  const node = $from.node();
+  if (node.type.name === "title") {
+    return {
+      changed: true,
+      text: node.textContent,
+    };
+  }
+  return {
+    changed: false,
+    text: null,
+  };
+}
+function useWhyDidYouRender(name: string, props: Record<string, unknown>) {
+  const prev = useRef(props);
+  useEffect(() => {
+    const changes: Record<string, { from: unknown; to: unknown }> = {};
+    Object.keys(props).forEach((key) => {
+      if (prev.current[key] !== props[key]) {
+        changes[key] = { from: prev.current[key], to: props[key] };
+      }
+    });
+    if (Object.keys(changes).length) {
+      console.log(`[${name}] re-render caused by:`, changes);
+    }
+    prev.current = props;
+  });
+}
 
 const EDITOR_ATTRIBUTES = {
   autocomplete: "off",
@@ -16,121 +54,84 @@ const EDITOR_ATTRIBUTES = {
   class: "simple-editor",
 };
 
-export function useEditorSetup() {
+export interface EditorSetupProps {
+  content: JSONContent | string;
+}
+
+export function useEditorSetup({ content }: EditorSetupProps) {
   const { setTocContent } = useToc();
   const { extensions } = useEditorExtensions(setTocContent);
-  const isSwitchingPage = useRef(false);
-  const { setActivePageId, activePageId } = useActivePageId();
-  const {
-    activePage,
-    addPageAsync,
-    pages,
-    createVersionAsync,
-    onVersionHistoryOpenChanged,
+  const { debounceUpdatePage, activePage, debounceUpdatePageFast } =
+    useActivePage();
+  const { activePageId } = useActivePageId();
+
+  useWhyDidYouRender("useEditorSetup", {
+    content,
+    extensions, // ⚠️ likely culprit — new array ref every render
+    activePage, // ⚠️ likely culprit — new object ref every render
+    setTocContent, // ⚠️ likely culprit — unstable function ref
     debounceUpdatePage,
-    setActivePage,
-  } = useSimpleEditor();
+  });
 
-  const activePageRef = useRef<Page | null>(activePage);
-  const originalContentRef = useRef<Page["content"] | undefined>(
-    activePage?.content,
-  );
-  const isPreviewingVersion = useRef(false);
-  const lastVersionTime = useRef<number>(Date.now());
-  const VERSION_INTERVAL = 10 * 60 * 1000; // 10 minutes
-
+  // Flush on page switch or unmount — no delay
   useEffect(() => {
-    if (!activePage) return;
-    activePageRef.current = activePage;
-    originalContentRef.current = activePage?.content;
-    onVersionHistoryOpenChanged(false);
-
+    return () => {
+      debounceUpdatePage.flush();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePageId]);
 
+  // Keep activePage fresh inside the onUpdate closure
+  const activePageRef = useRef(activePage);
   useEffect(() => {
-    if (!activePage) return;
     activePageRef.current = activePage;
   }, [activePage]);
 
   const editor = useEditor({
-    immediatelyRender: false,
     editorProps: { attributes: EDITOR_ATTRIBUTES },
-    extensions: extensions,
-    onUpdate({ editor }) {
-      if (
-        isPreviewingVersion.current ||
-        !activePageRef.current ||
-        isSwitchingPage.current ||
-        editor.storage.slashCommand.isSwitching
-      )
-        return;
-      const newTitle = editor.state.doc.firstChild?.textContent;
-      const updatedPage = {
-        ...activePageRef.current,
-        title: newTitle ?? "New Page",
-        content: editor.getJSON(),
-      };
-      activePageRef.current = updatedPage;
-      setActivePage(activePageRef.current);
+    extensions,
+    shouldRerenderOnTransaction: false,
+    content: content ?? "<p></p>",
+    onUpdate({ editor, transaction }) {
+      if (!activePageRef.current) return;
 
-      console.log("onUpdate");
+      const { changed, text } = getTitleChange(editor, transaction);
 
-      debounceUpdatePage(updatedPage);
-
-      const now = Date.now();
-      if (now - lastVersionTime.current >= VERSION_INTERVAL) {
-        lastVersionTime.current = now;
-        createVersionAsync({
-          pageId: updatedPage.id,
-          title: updatedPage.title,
-          content: updatedPage.content,
-          isNamed: false,
+      if (changed) {
+        debounceUpdatePageFast({
+          ...activePageRef.current,
+          title: text ?? activePageRef.current.title, // sync title property
+          content: editor.getJSON(),
+        });
+      } else {
+        debounceUpdatePage({
+          ...activePageRef.current,
+          content: editor.getJSON(),
         });
       }
     },
-    onDestroy() {
-      debounceUpdatePage.flush();
-    },
-    content: activePageRef.current ? activePageRef.current.content : "<p></p>",
   });
 
+  // const debouncedSave = useDebouncedCallback((editor) => {
+  //   if (!activePageRef.current) return;
+  //   // getJSON only runs once per debounce window
+  //   const content = editor.getJSON();
+  //   debounceUpdatePage({ ...activePageRef.current, content });
+  // }, 2000);
+
+  //  Sync server content into editor once it arrives
+  const hasSetContent = useRef(false);
   useEffect(() => {
-    if (!editor) return;
-    if (!activePageRef.current) return;
-    if (activePageId === undefined) return;
-    if (editor.storage.slashCommand.isSwitching) return;
+    if (!editor || !content || hasSetContent.current) return;
+    // Only set if editor currently has empty/default content
+    editor.commands.setContent(content, { emitUpdate: false }); // false = don't emit update event
+    hasSetContent.current = true;
+  }, [editor, content]);
 
-    console.log("useEffect activePageId", activePageId);
+  // Reset flag when page changes so new page content loads fresh
+  useEffect(() => {
+    hasSetContent.current = false;
+  }, [content]); // content memo key is activePageId, so this fires on page switch
 
-    editor.storage.slashCommand.activePageId = activePageId;
-    editor.storage.slashCommand.addPageAsync = addPageAsync;
-    editor.storage.slashCommand.setActivePageId = setActivePageId;
-    editor.storage.pageLink.pages = pages ?? [];
-
-    isSwitchingPage.current = true;
-    const raf = requestAnimationFrame(() => {
-      if (activePageRef.current) {
-        editor.commands.setContent(activePageRef.current.content);
-      }
-
-      isSwitchingPage.current = false;
-    });
-
-    return () => cancelAnimationFrame(raf);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePageId]);
-
-  useInitThreads({ editor });
-
-  const startVersionPreview = useCallback(() => {
-    isPreviewingVersion.current = true;
-  }, []);
-
-  const endVersionPreview = useCallback(() => {
-    isPreviewingVersion.current = false;
-  }, []);
-
-  return { editor, startVersionPreview, endVersionPreview, originalContentRef };
+  return { editor };
 }

@@ -1,17 +1,14 @@
 // use-init-threads.ts
 import { useEffect } from "react";
 import { commentThreadPluginKey } from "src/components/tiptap-ui/comments/extensions/comment-thread-extension";
-import type { Editor } from "@tiptap/react";
+import { useCurrentEditor } from "@tiptap/react";
 import { useSimpleEditor } from "../context/simple-editor-context";
 
-type UseInitThreadsProps = {
-  editor: Editor | null;
-};
-
-export function useInitThreads({ editor }: UseInitThreadsProps) {
-  const { isLoading, threads, activePage } = useSimpleEditor();
+export function useInitThreads() {
+  const { threads } = useSimpleEditor();
+  const { editor } = useCurrentEditor();
   useEffect(() => {
-    if (!editor || isLoading || !threads || !activePage?.id) return;
+    if (!editor || !threads) return;
 
     const timer = setTimeout(() => {
       editor.view.dispatch(
@@ -23,5 +20,6 @@ export function useInitThreads({ editor }: UseInitThreadsProps) {
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [editor, isLoading, threads, activePage?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }

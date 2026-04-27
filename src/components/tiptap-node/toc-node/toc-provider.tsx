@@ -96,7 +96,7 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
     const handler = () => {
       computeActiveHeading();
       if (activePageId)
-        saveScrollPosition(activePageId as string, window.scrollY);
+        saveScrollPosition(activePageId.toString(), window.scrollY);
     };
     window.addEventListener("scroll", handler);
     return () => window.removeEventListener("scroll", handler);
@@ -105,7 +105,7 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
   // save activeId when it changes — only after restore is done
   useEffect(() => {
     if (!activePageId) return;
-    if (hasRestoredRef.current !== activePageId) return;
+    if (hasRestoredRef.current !== activePageId.toString()) return;
 
     if (!activeId) {
       const cache = getActiveHeadingCache();
@@ -114,13 +114,13 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    saveActiveHeading(activePageId, activeId);
+    saveActiveHeading(activePageId.toString(), activeId);
   }, [activeId, activePageId]);
 
   // restore scroll on page switch
   useEffect(() => {
-    if (!activePageId) return;
-    if (hasRestoredRef.current === activePageId) return;
+    if (activePageId === undefined) return;
+    if (hasRestoredRef.current === activePageId.toString()) return;
 
     const savedHeadingId = getActiveHeadingCache()[activePageId];
     const savedScroll = getScrollCache()[activePageId];
@@ -130,7 +130,7 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
       // No saved heading means user was at the title — scroll to top
       if (!savedHeadingId) {
         window.scrollTo({ top: 0, behavior: "smooth" });
-        hasRestoredRef.current = activePageId as string;
+        hasRestoredRef.current = activePageId.toString();
         return;
       }
 
@@ -138,7 +138,7 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
       if (el) {
         const y = el.getBoundingClientRect().top + window.scrollY - topOffset;
         window.scrollTo({ top: y, behavior: "smooth" });
-        hasRestoredRef.current = activePageId as string;
+        hasRestoredRef.current = activePageId.toString();
         return;
       }
 
@@ -147,7 +147,7 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
         window.scrollTo({ top: savedScroll, behavior: "smooth" });
       }
 
-      hasRestoredRef.current = activePageId as string;
+      hasRestoredRef.current = activePageId.toString();
     });
   }, [activePageId, tocContent]);
 

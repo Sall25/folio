@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Comment, Thread } from "../types";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
+import { useMemo } from "react";
 
 export interface UseThreadsOnPageReturn {
   threads: Thread[] | undefined;
@@ -22,25 +22,23 @@ export interface UseThreadsOnPageReturn {
   }) => Promise<Thread>;
 }
 
-export function useThreadsOnPage(): UseThreadsOnPageReturn {
+export function useThreadsOnPage(
+  pageId: number | undefined,
+): UseThreadsOnPageReturn {
   const client = useQueryClient();
-  const { activePage } = useActivePage();
 
   const { data: threads, isLoading } = useQuery({
-    queryKey: ["threads", activePage?.id],
+    queryKey: ["threads", pageId],
     queryFn: async () => {
-      if (!activePage?.id) return []; //return empty array instead of undefined
-      const res = await fetch(
-        `http://localhost:3002/threads?pageId=${activePage.id}`,
-      );
+      if (pageId === undefined) return []; //return empty array instead of undefined
+      const res = await fetch(`http://localhost:3002/threads?pageId=${pageId}`);
 
-      if (!res.ok)
-        throw new Error(`couldn't find threads on pageId ${activePage.id}`);
+      if (!res.ok) throw new Error(`couldn't find threads on pageId ${pageId}`);
       const data = await res.json();
       return (data.threads ?? data) as Thread[];
     },
-    enabled: !!activePage?.id,
-    staleTime: 0,
+    enabled: !!pageId,
+    staleTime: 1000 * 60 * 5, // 5 mins
     // enabled: !!activePage?.id,
   });
 
@@ -56,8 +54,12 @@ export function useThreadsOnPage(): UseThreadsOnPageReturn {
 
       return res.json();
     },
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["threads"] });
+    onSuccess: (newThread) => {
+      // Update cache directly — no refetch
+      client.setQueryData<Thread[]>(["threads", pageId], (old = []) => [
+        ...old,
+        newThread,
+      ]);
     },
   });
 
@@ -69,8 +71,10 @@ export function useThreadsOnPage(): UseThreadsOnPageReturn {
 
       if (!res.ok) throw new Error(`Failed to delete thread ${res.status}`);
     },
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["threads"] });
+    onSuccess: (_data, thread) => {
+      client.setQueryData<Thread[]>(["threads", pageId], (old = []) =>
+        old.filter((t) => t.id !== thread.id),
+      );
     },
   });
 
@@ -85,8 +89,10 @@ export function useThreadsOnPage(): UseThreadsOnPageReturn {
 
       return res.json();
     },
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["threads"] });
+    onSuccess: (updatedThread) => {
+      client.setQueryData<Thread[]>(["threads", pageId], (old = []) =>
+        old.map((t) => (t.id === updatedThread.id ? updatedThread : t)),
+      );
     },
   });
 
@@ -199,16 +205,20 @@ export function useThreadsOnPage(): UseThreadsOnPageReturn {
     },
   });
 
-  return {
-    threads,
-    isLoading,
-    saveThreadsAsync,
-    deleteThreadAsync,
-    createThreadAsync,
-    resolveThreadAsync,
-    unresolveThreadAsync,
-    addCommentsAsync,
-    removeCommentsAsync,
-    updateCommentAsync,
-  };
+  return useMemo(
+    () => ({
+      threads,
+      isLoading,
+      saveThreadsAsync,
+      deleteThreadAsync,
+      createThreadAsync,
+      resolveThreadAsync,
+      unresolveThreadAsync,
+      addCommentsAsync,
+      removeCommentsAsync,
+      updateCommentAsync,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [threads, isLoading], // mutation fns are stable within a session
+  );
 }

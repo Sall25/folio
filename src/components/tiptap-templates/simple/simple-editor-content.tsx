@@ -2,42 +2,112 @@
 "use client";
 
 import React, { useState } from "react";
-import { Editor, EditorContent, EditorContext } from "@tiptap/react";
+import { EditorContent, useCurrentEditor } from "@tiptap/react";
 
 import { BubbleMenu } from "src/components/tiptap-ui/bubble-menu/bubble-menu";
 import { DragHandle } from "src/components/tiptap-ui/drag-handle/drag-handle";
 import { ThreadSidebar } from "src/components/tiptap-ui/comments/components/thread-sidebar";
 import { ImageBubble } from "src/components/tiptap-ui/image-bubble";
 import { CoverHeader } from "src/components/tiptap-ui/cover";
-
 import { TocSidebar } from "src/components/tiptap-node/toc-node/toc-sidebar";
-
 import { FloatingMenu } from "@tiptap/react/menus";
 
 import { useCoverActions } from "./hooks/use-cover-actions";
 import { useEditorLayout } from "./hooks/use-editor-layout";
-
 import { FloatingActions } from "./floating-actions";
-import { useSimpleEditor } from "./context/simple-editor-context";
-
-export type SaveState = "unsaved" | "saving" | "saved";
-
+import type { Target } from "src/components/tiptap-ui/cover/types";
 // ============================================================
-// Component
+// Memoized leaves
 // ============================================================
 
-export function SimpleEditorContent({
+const EditorContentMemo = React.memo(function EditorContentMemo({
+  hasThreads,
+}: {
+  hasThreads: boolean;
+}) {
+  const { editor } = useCurrentEditor();
+  return (
+    <EditorContent
+      editor={editor}
+      role="presentation"
+      className={`simple-editor-content ${hasThreads ? "has-threads" : ""}`}
+    />
+  );
+});
+
+const ThreadSidebarMemo = React.memo(function ThreadSidebarMemo({
+  setHasThreads,
+}: {
+  setHasThreads: (v: boolean) => void;
+}) {
+  const { editor } = useCurrentEditor();
+  return <ThreadSidebar editor={editor} setHasThreads={setHasThreads} />;
+});
+
+const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
+  editorLeft,
+  open,
+  setOpen,
+  target,
+  setTarget,
+  onSelectAsync,
+  onAddCoverAsync,
+  floatingRef,
+}: {
+  editorLeft: number;
+  open: boolean;
+  setOpen: (v: boolean) => void;
+  target: Target;
+  setTarget: (v: Target) => void;
+  onSelectAsync: (value: string) => Promise<void>;
+  onAddCoverAsync: () => Promise<void>;
+  floatingRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const { editor } = useCurrentEditor();
+  return (
+    <FloatingMenu
+      editor={editor}
+      shouldShow={() => !!editor?.isActive("title")}
+      options={{
+        placement: "top",
+        onShow() {
+          floatingRef.current?.classList.remove("floating-hide");
+          floatingRef.current?.classList.add("floating-show");
+        },
+        onHide() {
+          floatingRef.current?.classList.remove("floating-show");
+          floatingRef.current?.classList.add("floating-hide");
+        },
+      }}
+    >
+      <div ref={floatingRef}>
+        <FloatingActions
+          editorLeft={editorLeft}
+          open={open}
+          onOpenChange={setOpen}
+          target={target}
+          onTargetChange={setTarget}
+          onSelect={onSelectAsync}
+          onAddCoverAsync={onAddCoverAsync}
+        />
+      </div>
+    </FloatingMenu>
+  );
+});
+
+// ============================================================
+// Stable shell — never re-renders from editor transactions
+// ============================================================
+
+const StableShell = React.memo(function StableShell({
   sidebarWidth,
   collapsed,
-  editor,
 }: {
   sidebarWidth: number;
   collapsed: boolean;
-  editor: Editor | null;
 }) {
-  // const { save, saveState, isReady, isDirty, savingTimerRef, docCache } = useEditorSave({ activePage, updatePage });
-
-  const { activePage } = useSimpleEditor();
+  const { editorWrapperRef, editorLeft, paddingLeft, translateX } =
+    useEditorLayout({ sidebarWidth, collapsed });
 
   const {
     open,
@@ -49,94 +119,71 @@ export function SimpleEditorContent({
     floatingRef,
   } = useCoverActions();
 
-  const { editorWrapperRef, editorLeft, paddingLeft, translateX } =
-    useEditorLayout({ sidebarWidth, collapsed });
-
   const [hasThreads, setHasThreads] = useState(false);
 
-  if (!activePage) return null;
+  return (
+    <section
+      className="simple-editor-center"
+      style={{
+        width: `calc(100vw - ${sidebarWidth}px)`,
+        marginLeft: sidebarWidth,
+        transition: "margin-left 0.2s ease, width 0.2s ease",
+      }}
+    >
+      <CoverHeader
+        collapsed={collapsed}
+        sidebarWidth={sidebarWidth}
+        paddingLeft={paddingLeft}
+        translateX={translateX}
+        hasThreads={hasThreads}
+      />
+      <div
+        ref={editorWrapperRef}
+        style={
+          {
+            paddingLeft,
+            "--x": `${translateX}px`,
+          } as React.CSSProperties
+        }
+      >
+        <EditorContentMemo hasThreads={hasThreads} />
+      </div>
+      <ThreadSidebarMemo setHasThreads={setHasThreads} />
+      <FloatingMenuMemo
+        editorLeft={editorLeft}
+        open={open}
+        setOpen={setOpen}
+        target={target}
+        setTarget={setTarget}
+        onSelectAsync={onSelectAsync}
+        onAddCoverAsync={onAddCoverAsync}
+        floatingRef={floatingRef}
+      />
+    </section>
+  );
+});
+
+// ============================================================
+// Root component
+// ============================================================
+
+export function SimpleEditorContent({
+  sidebarWidth,
+  collapsed,
+}: {
+  sidebarWidth: number;
+  collapsed: boolean;
+}) {
+  const { editor } = useCurrentEditor();
+  console.count("editor render");
 
   return (
-    <EditorContext.Provider value={{ editor }}>
-      <section
-        className="simple-editor-center"
-        style={{
-          width: `calc(100vw - ${sidebarWidth}px)`,
-          marginLeft: sidebarWidth,
-          transition: "margin-left 0.2s ease, width 0.2s ease",
-        }}
-      >
-        <CoverHeader
-          key={activePage.id}
-          activePage={activePage}
-          collapsed={collapsed}
-          sidebarWidth={sidebarWidth}
-          paddingLeft={paddingLeft}
-          translateX={translateX}
-          hasThreads={hasThreads}
-        />
-        <div
-          ref={editorWrapperRef}
-          style={
-            {
-              paddingLeft: paddingLeft,
-              "--x": `${translateX}px`,
-            } as React.CSSProperties
-          } // Todo: Make 250 constant (e.g: const PaddingLeft = 250)
-        >
-          <EditorContent
-            // ref={editorWrapperRef}
-            editor={editor}
-            role="presentation"
-            data-size={activePage.settings.width}
-            data-text={activePage.settings.text}
-            data-locked={activePage.settings.locked}
-            className={`simple-editor-content ${hasThreads ? "has-threads" : ""}`}
-          />
-        </div>
-        <ThreadSidebar
-          pageId={activePage.id}
-          editor={editor}
-          setHasThreads={setHasThreads}
-        />
-
-        <FloatingMenu
-          editor={editor}
-          shouldShow={() => !!editor?.isActive("title")}
-          options={{
-            placement: "top",
-            //offset: 8,
-            //  updateDelay: 0,
-            onShow() {
-              floatingRef.current?.classList.remove("floating-hide");
-              floatingRef.current?.classList.add("floating-show");
-            },
-            onHide: () => {
-              floatingRef.current?.classList.remove("floating-show");
-              floatingRef.current?.classList.add("floating-hide");
-            },
-          }}
-        >
-          <div ref={floatingRef}>
-            <FloatingActions
-              hasIcon={!!activePage.cover.iconName}
-              hasCover={!!activePage.cover.coverImage}
-              editorLeft={editorLeft}
-              open={open}
-              onOpenChange={setOpen}
-              target={target}
-              onTargetChange={setTarget}
-              onSelect={onSelectAsync}
-              onAddCoverAsync={onAddCoverAsync}
-            />
-          </div>
-        </FloatingMenu>
-      </section>
-
+    <>
+      <StableShell sidebarWidth={sidebarWidth} collapsed={collapsed} />
       <TocSidebar topOffset={80} maxShowCount={20} />
       <DragHandle editor={editor} />
       <BubbleMenu editor={editor} />
       <ImageBubble editor={editor} />
-    </EditorContext.Provider>
+    </>
   );
 }

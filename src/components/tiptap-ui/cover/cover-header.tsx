@@ -425,7 +425,6 @@ function IconButton({
 // ============================================================
 
 interface CoverHeaderProps {
-  activePage: Page;
   sidebarWidth: number;
   collapsed: boolean;
   paddingLeft: number;
@@ -434,7 +433,6 @@ interface CoverHeaderProps {
 }
 
 export function CoverHeader({
-  activePage,
   paddingLeft,
   translateX,
   hasThreads,
@@ -443,19 +441,15 @@ export function CoverHeader({
 
   const [target, setTarget] = useState<Target>("Emoji");
 
-  const { updateCoverAsync } = useSimpleEditor();
+  const { updateCoverAsync, activePage } = useSimpleEditor();
 
-  const hasIcon = !!activePage.cover.iconName;
-  const hasCoverImage = !!activePage.cover.coverImage;
+  const hasIcon = !!activePage?.cover.iconName;
+  const hasCoverImage = !!activePage?.cover.coverImage;
   // Gradient stored on cover.gradient (extend your Page type if needed)
-  const hasGradient = !!(activePage.cover as any).gradient;
-
-  useEffect(() => {
-    console.log("hasThreads", hasThreads);
-  }, [hasThreads]);
+  const hasGradient = !!activePage?.cover.gradient;
 
   const handleRemoveCover = useCallback(async () => {
-    const next = { ...activePage.cover, coverImage: null } as any;
+    const next = { ...activePage?.cover, coverImage: null } as any;
     delete next.gradient;
     await updateCoverAsync(next);
   }, [updateCoverAsync, activePage]);
@@ -470,7 +464,7 @@ export function CoverHeader({
 
       {hasGradient && !hasCoverImage && (
         <GradientCover
-          gradient={(activePage.cover as any).gradient}
+          gradient={(activePage?.cover as any).gradient}
           onRemoveCoverAsync={handleRemoveCover}
         />
       )}

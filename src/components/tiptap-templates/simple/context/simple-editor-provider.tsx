@@ -4,92 +4,95 @@ import { useThreadsOnPage } from "src/components/tiptap-ui/comments/hooks/use-th
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
 import { SimpleEditorContext } from "./simple-editor-context";
-import type { Page } from "../types";
 import { useActivePageId } from "./active-page-context";
 import { useVersions } from "src/components/tiptap-ui/version-history/use-versions";
+import { useEditorSetup } from "../hooks/use-editor-setup";
+import { EditorContext } from "@tiptap/react";
 
 interface SimpleEditorProviderProps {
   children: ReactNode;
 }
 
-export function SimpleEditorProvider({ children }: SimpleEditorProviderProps) {
-  const activePage = useActivePage();
-  const { activePageId } = useActivePageId();
-  const { addPageAsync } = usePages();
-  const threads = useThreadsOnPage();
-  const versions = useVersions(activePageId);
-
-  const [localPage, setLocalPage] = useState<Page | null>(null);
-
+function useWhyDidYouRender(name: string, props: Record<string, unknown>) {
+  const prev = useRef(props);
   useEffect(() => {
-    setLocalPage(null); // clear immediately on switch
-  }, [activePageId]);
-
-  useEffect(() => {
-    if (activePage.activePage) {
-      setLocalPage(activePage.activePage);
+    const changes: Record<string, { from: unknown; to: unknown }> = {};
+    Object.keys(props).forEach((key) => {
+      if (prev.current[key] !== props[key]) {
+        changes[key] = { from: prev.current[key], to: props[key] };
+      }
+    });
+    if (Object.keys(changes).length) {
+      console.log(`[${name}] re-render caused by:`, changes);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePageId, activePage.isLoading]);
+    prev.current = props;
+  });
+}
 
-  const activePageCallbacksRef = useRef(activePage);
-  useEffect(() => {
-    activePageCallbacksRef.current = activePage;
-  }, [activePage]);
-
-  const updateCoverAsync = useCallback(async (cover: Page["cover"]) => {
-    setLocalPage((p) => (p ? { ...p, cover } : p));
-    await activePageCallbacksRef.current.updateCoverAsync(cover);
-  }, []); // ← stable
-
-  const updateSettingsAsync = useCallback(
-    async (patch: Partial<Page["settings"]>) => {
-      setLocalPage((p) =>
-        p ? { ...p, settings: { ...p.settings, ...patch } } : p,
-      );
-      await activePageCallbacksRef.current.updateSettingsAsync(patch);
-    },
-    [],
-  ); // ← stable
-
-  const updatePageAsync = useCallback(async (page: Page) => {
-    setLocalPage(page);
-    return await activePageCallbacksRef.current.updatePageAsync(page);
-  }, []); // ← stable
-
-  const updatePageSilentAsync = useCallback(async (page: Page) => {
-    setLocalPage((p) => (p ? { ...p, title: page.title } : p));
-    return await activePageCallbacksRef.current.updatePageAsync(page);
-  }, []); // ← stable
+export function SimpleEditorProvider({ children }: SimpleEditorProviderProps) {
+  const { activePageId } = useActivePageId();
+  const activePage = useActivePage();
+  const { addPageAsync, isLoading } = usePages();
+  const threads = useThreadsOnPage(activePageId);
+  const versions = useVersions(activePageId);
 
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const onVersionHistoryOpenChanged = useCallback((v: boolean) => {
     setVersionHistoryOpen(v);
   }, []);
 
+  const content = useMemo(
+    () => activePage.activePage?.content ?? "<p></p>",
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activePageId],
+  );
+
+  const { editor } = useEditorSetup({ content });
+
+  const providedEditor = useMemo(() => ({ editor }), [editor]);
+
+  const simpleEditorContextValue = useMemo(
+    () => ({
+      ...activePage,
+      addPageAsync,
+      ...threads,
+      ...versions,
+      versionHistoryOpen,
+      onVersionHistoryOpenChanged,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      activePage.activePage,
+      isLoading,
+      addPageAsync,
+      threads,
+      versions,
+      versionHistoryOpen,
+      onVersionHistoryOpenChanged,
+    ],
+  );
+  const { activePage: providedPage } = activePage;
+  useWhyDidYouRender("simpleEditorProvider", {
+    providedPage,
+    isLoading,
+    addPageAsync,
+    threads,
+    versions,
+    versionHistoryOpen,
+    onVersionHistoryOpenChanged,
+  });
+
   return (
-    <SimpleEditorContext.Provider
-      value={{
-        ...activePage,
-        activePage: localPage,
-        setActivePage: setLocalPage,
-        updateCoverAsync,
-        updateSettingsAsync,
-        updatePageAsync,
-        addPageAsync,
-        updatePageSilentAsync,
-        ...threads,
-        ...versions,
-        versionHistoryOpen,
-        onVersionHistoryOpenChanged,
-      }}
-    >
-      {children}
-    </SimpleEditorContext.Provider>
+    <EditorContext.Provider value={providedEditor}>
+      <SimpleEditorContext.Provider value={simpleEditorContextValue}>
+        {children}
+      </SimpleEditorContext.Provider>
+    </EditorContext.Provider>
   );
 }

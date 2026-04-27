@@ -11,10 +11,9 @@ import { IconPickerCard } from "src/components/tiptap-ui/cover/icon-picker-card"
 import { Button } from "src/components/tiptap-ui-primitive/button";
 
 import "./floating-actions.scss";
+import { useSimpleEditor } from "./context/simple-editor-context";
 
 export function FloatingActions({
-  hasIcon,
-  hasCover,
   // editorLeft,
   open,
   onOpenChange,
@@ -23,8 +22,6 @@ export function FloatingActions({
   onSelect,
   onAddCoverAsync,
 }: {
-  hasIcon: boolean;
-  hasCover: boolean;
   editorLeft: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,6 +30,10 @@ export function FloatingActions({
   onSelect: (name: string, color?: string) => void;
   onAddCoverAsync: () => Promise<void>;
 }) {
+  const { activePage } = useSimpleEditor();
+  const hasIcon = !!activePage?.cover.iconName;
+  const hasCover = !!activePage?.cover.coverImage;
+
   return (
     <div
       className="floating-actions"

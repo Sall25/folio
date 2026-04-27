@@ -4,30 +4,24 @@ import "./version-history.scss";
 import { VersionHistoryList } from "./version-history-list";
 import { useVersionHistory } from "./use-version-history";
 import { useDiff } from "./use-diff";
-import type { Editor } from "@tiptap/react";
 import type { Version } from "./types";
 import type { Page } from "src/components/tiptap-templates/simple/types";
 import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/simple-editor-context";
-import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { useCurrentEditor } from "@tiptap/react";
 
 interface VersionHistorySidebarProps {
   open: boolean;
   onClose: () => void;
-  editor: Editor | null;
   userColor?: string;
-  startVersionPreview: () => void;
-  endVersionPreview: () => void;
   currentContent?: Page["content"];
 }
 
 export function VersionHistorySidebar({
   open,
   onClose,
-  editor,
   userColor,
-  startVersionPreview,
-  endVersionPreview,
 }: VersionHistorySidebarProps) {
   const {
     versions,
@@ -41,6 +35,7 @@ export function VersionHistorySidebar({
     saveNameAsync,
     restoreVersionAsync,
   } = useVersionHistory();
+  const { editor } = useCurrentEditor();
   const { activePage } = useSimpleEditor();
   const { applyDiff, clearDiff } = useDiff(editor);
   const [filter, setFilter] = useState<"all" | "named">("all");
@@ -68,7 +63,6 @@ export function VersionHistorySidebar({
     if (!activePage) return;
 
     if (version === null) {
-      endVersionPreview();
       clearDiff();
       // Just read from activePage — it was never touched
       if (activePage.content) {
@@ -77,7 +71,6 @@ export function VersionHistorySidebar({
       return;
     }
 
-    startVersionPreview();
     editor.commands.setContent(version.content);
     if (activePage?.content)
       applyDiff(version.content, activePage?.content, userColor);
@@ -92,7 +85,6 @@ export function VersionHistorySidebar({
   const handleClose = async () => {
     if (selectedVersion && editor && activePage) {
       clearDiff();
-      endVersionPreview();
       if (activePage.content) {
         editor.commands.setContent(activePage.content);
       }

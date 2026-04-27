@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { usePages, type UsePagesReturn } from "./use-pages";
 import type { Page } from "./types";
 import { useActivePageId } from "./context/active-page-context";
@@ -30,6 +30,7 @@ export type UseActivePageReturn = {
   updatePageAsync: (page: Page) => Promise<Page>;
   addCoverAsync: (id: number) => Promise<void>;
   debounceUpdatePage: UsePagesReturn["debounceUpdatePage"];
+  debounceUpdatePageFast: UsePagesReturn["debounceUpdatePageFast"];
 };
 
 export function useActivePage(): UseActivePageReturn {
@@ -43,22 +44,18 @@ export function useActivePage(): UseActivePageReturn {
     onSearch,
     addCoverAsync,
     debounceUpdatePage,
+    debounceUpdatePageFast,
   } = usePages();
   const { activePageId, setActivePageId } = useActivePageId();
-  const [pendingPage, setPendingPage] = useState<Page | null>(null);
-
   const activePage = useMemo(() => {
-    if (!pages?.length) return null;
-    const found =
-      activePageId !== undefined ? findPage(pages, activePageId) : null;
-    return found ?? pendingPage ?? pages[0];
-  }, [activePageId, pendingPage, pages]);
+    if (activePageId === undefined || !pages) return null;
+    return findPage(pages, activePageId) ?? null;
+  }, [pages, activePageId]);
 
   const addPageAndActivateAsync = useCallback(
     async (data: Parameters<typeof addPageAsync>[0]) => {
       const newPage = await addPageAsync(data);
       if (newPage?.id) {
-        setPendingPage(newPage);
         setActivePageId(newPage.id);
       }
       return newPage;
@@ -67,9 +64,11 @@ export function useActivePage(): UseActivePageReturn {
   );
 
   useEffect(() => {
-    if (!isLoading && pages?.length === 0)
+    if (!isLoading && pages?.length === 0) {
       addPageAsync({ title: "Untitled", parentId: null });
-  }, [isLoading, pages, addPageAsync]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateSettingsAsync = useCallback(
     async (patch: Partial<Page["settings"]>) => {
@@ -87,7 +86,7 @@ export function useActivePage(): UseActivePageReturn {
       if (!activePage) return;
       await updatePageAsync({ ...activePage, cover });
     },
-    [activePage, updatePageAsync],
+    [updatePageAsync, activePage],
   );
 
   const deletePageAsync = useCallback(
@@ -112,7 +111,7 @@ export function useActivePage(): UseActivePageReturn {
 
   return {
     pages,
-    activePage,
+    activePage: activePage,
     isLoading,
     setActivePageId,
     updateSettingsAsync,
@@ -124,5 +123,6 @@ export function useActivePage(): UseActivePageReturn {
     updatePageAsync,
     debounceUpdatePage,
     addCoverAsync,
+    debounceUpdatePageFast,
   };
 }

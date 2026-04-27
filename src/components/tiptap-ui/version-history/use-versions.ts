@@ -1,6 +1,7 @@
 import type { Page } from "src/components/tiptap-templates/simple/types";
 import type { Version } from "./types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 const url = "http://localhost:3003";
 
@@ -75,6 +76,8 @@ const pruneVersionsAsync = async (pageId: number) => {
   );
 };
 
+export type UseVersionsReturn = ReturnType<typeof useVersions>;
+
 export function useVersions(pageId: number | undefined) {
   const client = useQueryClient();
 
@@ -82,36 +85,49 @@ export function useVersions(pageId: number | undefined) {
     queryKey: ["versions", pageId],
     queryFn: () => fetchVersionsAsync(pageId!),
     enabled: !!pageId,
+    staleTime: 1000 * 60 * 5, // ✅ don't refetch on every focus
   });
 
   const { mutateAsync: createVersionAsync } = useMutation({
     mutationFn: createVersionFnAsync,
-    onSuccess: async (_, variables) => {
-      // Prune after every create
+    onSuccess: async (newVersion, variables) => {
       await pruneVersionsAsync(variables.pageId);
-      client.invalidateQueries({ queryKey: ["versions", variables.pageId] });
+      // ✅ update cache directly
+      client.setQueryData<Version[]>(
+        ["versions", variables.pageId],
+        (old = []) => [newVersion, ...old],
+      );
     },
   });
 
   const { mutateAsync: nameVersionAsync } = useMutation({
     mutationFn: ({ id, name }: { id: number; name: string }) =>
       nameVersionFnAsync(id, name),
-    onSuccess: () =>
-      client.invalidateQueries({ queryKey: ["versions", pageId] }),
+    onSuccess: (updatedVersion) => {
+      //  update cache directly
+      client.setQueryData<Version[]>(["versions", pageId], (old = []) =>
+        old.map((v) => (v.id === updatedVersion.id ? updatedVersion : v)),
+      );
+    },
   });
 
   const { mutateAsync: restoreVersionAsync } = useMutation({
     mutationFn: (version: Version) => restoreVersionFnAsync(version),
     onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["pages"] });
-      client.invalidateQueries({ queryKey: ["versions", pageId] });
+      client.invalidateQueries({ queryKey: ["pages"] }); // this one needs to invalidate
+      // ✅ no need to invalidate versions — they didn't change
     },
   });
 
-  return {
-    versions,
-    createVersionAsync,
-    nameVersionAsync,
-    restoreVersionAsync,
-  };
+  // ✅ Stabilize the returned object so spreads don't create new refs
+  return useMemo(
+    () => ({
+      versions,
+      createVersionAsync,
+      nameVersionAsync,
+      restoreVersionAsync,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [versions], // mutateAsync fns are stable enough within a session
+  );
 }

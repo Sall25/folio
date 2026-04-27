@@ -133,6 +133,7 @@ export interface UsePagesReturn {
   onSearch: (search: string) => void;
   addCoverAsync: (id: number) => Promise<void>;
   debounceUpdatePage: DebouncedState<(page: Page) => Promise<Page>>;
+  debounceUpdatePageFast: DebouncedState<(page: Page) => Promise<Page>>;
 }
 
 export function usePages(): UsePagesReturn {
@@ -146,7 +147,10 @@ export function usePages(): UsePagesReturn {
     queryKey: ["pages"],
     queryFn: () => fetchPagesAsync(),
     placeholderData: keepPreviousData,
-    select: (data) => buildTree(data),
+    select: (data) => {
+      const tree = buildTree(data);
+      return tree;
+    },
   });
 
   const { mutateAsync: addPageAsync } = useMutation({
@@ -177,15 +181,47 @@ export function usePages(): UsePagesReturn {
   const { mutateAsync: updatePageAsync } = useMutation({
     mutationKey: ["updatePage"],
     mutationFn: updatePageFnAsync,
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["pages"] });
+    onMutate: async (page: Page) => {
+      // Cancel any outgoing refetches
+      await client.cancelQueries({ queryKey: ["pages"] });
+
+      // Snapshot previous value
+      const previous = client.getQueryData<Page[]>(["pages"]);
+
+      // Optimistically update the cache
+      client.setQueryData<Page[]>(["pages"], (old = []) =>
+        old.map((p) => (p.id === page.id ? { ...p, ...page } : p)),
+      );
+
+      return { previous };
+    },
+    onError: (_err, _page, context) => {
+      // Rollback on error
+      if (context?.previous) {
+        client.setQueryData(["pages"], context.previous);
+      }
+    },
+    onSuccess: (updatedPage) => {
+      // Update cache with server response instead of invalidating
+      client.setQueryData<Page[]>(["pages"], (old = []) =>
+        old.map((p) => (p.id === updatedPage.id ? updatedPage : p)),
+      );
+      // Remove this — it's what triggers the refetch loop
+      // client.invalidateQueries({ queryKey: ["pages"] });
     },
   });
 
   const debounceUpdatePage = useDebouncedCallback(
     async (page: Page) => await updatePageAsync(page),
+    30000,
+    { maxWait: 50000 }, // ← also add maxWait so it can't loop forever
+  );
+
+  //  Fast debounce for title changes — syncs sidebar quickly
+  const debounceUpdatePageFast = useDebouncedCallback(
+    async (page: Page) => await updatePageAsync(page),
     1000,
-    { maxWait: 100 }, // ← also add maxWait so it can't loop forever
+    { maxWait: 2000 },
   );
 
   // Adds a child page under a given parent
@@ -220,6 +256,7 @@ export function usePages(): UsePagesReturn {
     deletePageAsync,
     updatePageAsync,
     debounceUpdatePage,
+    debounceUpdatePageFast,
     query,
     onSearch,
     addCoverAsync,
