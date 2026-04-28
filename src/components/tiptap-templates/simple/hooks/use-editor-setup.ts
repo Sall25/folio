@@ -5,6 +5,7 @@ import { useActivePage } from "../use-active-page";
 import { useEffect, useRef } from "react";
 import { useActivePageId } from "../context/active-page-context";
 import type { Transaction } from "@tiptap/pm/state";
+import { useVersions } from "src/components/tiptap-ui/version-history/use-versions";
 
 function getTitleChange(
   editor: Editor,
@@ -63,14 +64,19 @@ export function useEditorSetup({ content }: EditorSetupProps) {
   const { extensions } = useEditorExtensions(setTocContent);
   const { debounceUpdatePage, activePage, debounceUpdatePageFast } =
     useActivePage();
+
   const { activePageId } = useActivePageId();
+  const { createVersionAsync } = useVersions(activePageId);
+  const lastVersionTime = useRef(Date.now());
+  const VERSION_INTERVAL = 10 * 60 * 1000; // 10mins
 
   useWhyDidYouRender("useEditorSetup", {
     content,
-    extensions, // ⚠️ likely culprit — new array ref every render
-    activePage, // ⚠️ likely culprit — new object ref every render
-    setTocContent, // ⚠️ likely culprit — unstable function ref
+    extensions, //  likely culprit — new array ref every render
+    activePage, //  likely culprit — new object ref every render
+    setTocContent, //  likely culprit — unstable function ref
     debounceUpdatePage,
+    createVersionAsync,
   });
 
   // Flush on page switch or unmount — no delay
@@ -109,22 +115,28 @@ export function useEditorSetup({ content }: EditorSetupProps) {
           content: editor.getJSON(),
         });
       }
+
+      const now = Date.now();
+      if (now - lastVersionTime.current >= VERSION_INTERVAL) {
+        createVersionAsync({
+          pageId: activePageRef.current.id,
+          title: activePageRef.current.title,
+          content: activePageRef.current.content,
+          isNamed: false,
+        });
+        lastVersionTime.current = now;
+      }
     },
   });
-
-  // const debouncedSave = useDebouncedCallback((editor) => {
-  //   if (!activePageRef.current) return;
-  //   // getJSON only runs once per debounce window
-  //   const content = editor.getJSON();
-  //   debounceUpdatePage({ ...activePageRef.current, content });
-  // }, 2000);
 
   //  Sync server content into editor once it arrives
   const hasSetContent = useRef(false);
   useEffect(() => {
     if (!editor || !content || hasSetContent.current) return;
     // Only set if editor currently has empty/default content
-    editor.commands.setContent(content, { emitUpdate: false }); // false = don't emit update event
+    queueMicrotask(() =>
+      editor.commands.setContent(content, { emitUpdate: false }),
+    );
     hasSetContent.current = true;
   }, [editor, content]);
 

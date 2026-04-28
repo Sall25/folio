@@ -269,8 +269,6 @@ export const SlashCommand = Extension.create<
       command: ({ editor: ed, range, props }) => {
         ed.chain().focus().deleteRange(range).run();
         props?.run?.(ed);
-        const { activePageId, addPageAsync, setActivePageId } = this.storage;
-        props?.runAsync?.(ed, { activePageId, addPageAsync, setActivePageId });
       },
       render: () => ({
         onStart: (props) => {

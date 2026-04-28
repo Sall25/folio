@@ -171,7 +171,7 @@ export function TurnIntoDropdown({
           <DropdownMenuItem asChild>
             <TurnIntoPageButton
               editor={editor}
-              text="Turn into paragraph"
+              text="Turn into page"
               hideWhenUnavailable={false}
               onTurnedIntoPage={() => setOpen(false)}
               style={{ minWidth: "145px" }}

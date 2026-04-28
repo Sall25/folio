@@ -8,6 +8,8 @@ import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import "./slash-command-list.scss";
 import { useMenuNavigation } from "src/hooks/use-menu-navigation";
 import type { SlashCommand as SlashItem } from "./slash-commands";
+import { useActivePageId } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 
 type Props = SuggestionProps<SlashItem> & {
   selectedIndex?: number;
@@ -16,8 +18,9 @@ type Props = SuggestionProps<SlashItem> & {
 };
 
 export default function SlashList(props: Props) {
-  const { items = [], onClickItem, onClose } = props;
-
+  const { items = [], onClickItem, onClose, editor } = props;
+  const { addPageAsync } = usePages();
+  const { activePageId, setActivePageId } = useActivePageId();
   const isSelectable = (item: SlashItem) => item.type === "command";
 
   const selectableItems = useMemo(() => items.filter(isSelectable), [items]);
@@ -33,6 +36,28 @@ export default function SlashList(props: Props) {
     autoSelectFirstItem: true,
     onSelect: (item) => {
       onClickItem?.(item);
+      if (item.title === "Page") {
+        const parentId = activePageId;
+        if (parentId === undefined) return;
+        addPageAsync({
+          title: "New Page",
+          parentId: parentId,
+        }).then((newPage) => {
+          editor.storage.pageLink.pages = [
+            ...editor.storage.pageLink.pages,
+            newPage,
+          ];
+          editor.commands.insertContent({
+            type: "pageLink",
+            attrs: {
+              pageId: newPage.id,
+              parentId: parentId,
+              title: newPage.title,
+            },
+          });
+          setActivePageId(newPage.id);
+        });
+      }
     },
     onClose() {
       onClose?.();

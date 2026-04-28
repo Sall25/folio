@@ -1,39 +1,28 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Editor } from "@tiptap/core";
-import { NodeSelection } from "@tiptap/pm/state";
+import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { FileIcon } from "lucide-react";
+import { usePages } from "src/components/tiptap-templates/simple/use-pages";
+import { useActivePageId } from "src/components/tiptap-templates/simple/context/active-page-context";
 
 interface Props {
   editor: Editor | null;
-  hideWhenUnavailable: boolean;
+  hideWhenUnavailable?: boolean;
   onTurnedIntoPage?: () => void;
 }
 
 function canTurnIntoPage(editor: Editor | null): boolean {
   if (!editor) return false;
-  const { selection } = editor.state;
-  if (!(selection instanceof NodeSelection)) return false;
-  return selection.node.type.name === "pageLink";
-}
-
-function turnIntoPage(editor: Editor): boolean {
   const { selection, schema } = editor.state;
-  if (!(selection instanceof NodeSelection)) return false;
-  if (selection.node.type.name !== "pageLink") return false;
+  if (!schema.nodes.pageLink) return false;
 
-  const paragraphType = schema.nodes.paragraph;
-  if (!paragraphType) return false;
-
-  return editor
-    .chain()
-    .command(({ tr, dispatch }) => {
-      if (dispatch) {
-        const paragraph = paragraphType.create();
-        tr.replaceWith(selection.from, selection.to, paragraph);
-      }
-      return true;
-    })
-    .run();
+  if (selection instanceof NodeSelection) {
+    return selection.node.type.name === "paragraph";
+  }
+  if (selection instanceof TextSelection) {
+    return selection.$from.parent.type.name === "paragraph";
+  }
+  return false;
 }
 
 export function useTurnIntoPage({
@@ -42,6 +31,8 @@ export function useTurnIntoPage({
   onTurnedIntoPage,
 }: Props) {
   const [canTurn, setCanTurn] = useState(false);
+  const { addPageAsync } = usePages();
+  const { activePageId } = useActivePageId();
 
   useEffect(() => {
     if (!editor) return;
@@ -55,20 +46,64 @@ export function useTurnIntoPage({
     };
   }, [editor]);
 
-  const handleTurnIntoPage = useCallback(() => {
-    if (!editor) return false;
-    const success = turnIntoPage(editor);
-    if (success && onTurnedIntoPage) onTurnedIntoPage();
-    return success;
-  }, [editor, onTurnedIntoPage]);
+  const handleTurnIntoPage = useCallback(async () => {
+    if (!editor || !canTurn || activePageId === undefined) return false;
 
-  const isVisible = hideWhenUnavailable ? canTurn : true;
+    const { selection } = editor.state;
+
+    // Extract text from the paragraph to use as the page title
+    let paragraphText = "";
+    let from: number;
+    let to: number;
+
+    if (
+      selection instanceof NodeSelection &&
+      selection.node.type.name === "paragraph"
+    ) {
+      paragraphText = selection.node.textContent;
+      from = selection.from;
+      to = selection.to;
+    } else if (selection instanceof TextSelection) {
+      const { $from } = selection;
+      from = $from.before($from.depth);
+      to = $from.after($from.depth);
+      paragraphText = $from.parent.textContent;
+    } else {
+      return false;
+    }
+
+    const title = paragraphText.trim() || "New Page";
+
+    const newPage = await addPageAsync({ title, parentId: activePageId });
+
+    // Update pageLink storage so the node view can resolve the page
+    editor.storage.pageLink.pages.push(newPage);
+
+    // Replace the paragraph with a pageLink node
+    editor
+      .chain()
+      .command(({ tr, dispatch }) => {
+        if (!dispatch) return true;
+        const pageLinkType = editor.schema.nodes.pageLink;
+        const node = pageLinkType.create({
+          pageId: newPage.id,
+          parentId: activePageId,
+          title: newPage.title,
+        });
+        tr.replaceWith(from, to, node);
+        return true;
+      })
+      .run();
+
+    onTurnedIntoPage?.();
+    return true;
+  }, [editor, canTurn, activePageId, addPageAsync, onTurnedIntoPage]);
 
   return {
-    isVisible,
+    isVisible: hideWhenUnavailable ? canTurn : true,
     canTurn,
     handleTurnIntoPage,
-    label: "Turn into paragraph",
+    label: "Turn into page",
     Icon: FileIcon,
   };
 }

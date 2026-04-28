@@ -35,8 +35,8 @@ export function TurnIntoPageButton({
 
   if (!isVisible) return null;
 
-  const handleClick = () => {
-    const success = handleTurnIntoPage();
+  const handleClick = async () => {
+    const success = await handleTurnIntoPage();
     if (success) {
       setDone(true);
       setTimeout(() => setDone(false), 1200);

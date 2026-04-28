@@ -324,8 +324,8 @@ blockquote .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-chi
   //content: none !important;
  left: 1rem; 
 }
-li[data-type="taskList"] .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before{
-  left: 1.5rem;
+ul[data-type="taskList"] .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before{
+  left: 1.9rem;
 }
 
 /* =====================
