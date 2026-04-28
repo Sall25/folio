@@ -38,6 +38,8 @@ import { SimpleEditorProvider } from "./context/simple-editor-provider";
 import { VersionHistorySidebar } from "src/components/tiptap-ui/version-history/version-history-sidebar";
 import { useSimpleEditor } from "./context/simple-editor-context";
 import { useInitThreads } from "./hooks/use-init-threads";
+import { useActivePageId } from "./context/active-page-context";
+import { HomePageContent } from "./components";
 
 const VERSION_SIDEBAR_WIDTH = 260;
 const SIDEBAR_WIDTH = 280;
@@ -59,6 +61,7 @@ function SimpleEditorInner() {
   const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH;
 
   const { versionHistoryOpen, onVersionHistoryOpenChanged } = useSimpleEditor();
+  const { activePageId } = useActivePageId();
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
 
   const onToggle = useCallback(() => setCollapsed((c) => !c), []);
@@ -85,27 +88,30 @@ function SimpleEditorInner() {
 
           <SimpleEditorSidebar collapsed={collapsed} onToggle={onToggle} />
 
-          <div
-            className="simple-editor-main"
-            style={{
-              marginRight: versionWidth,
-              transition: "margin-right 0.2s ease",
-            }}
-          >
-            <SimpleEditorContent
-              sidebarWidth={sidebarWidth}
-              collapsed={collapsed}
-            />
-
-            <VersionHistorySidebar
-              open={versionHistoryOpen}
-              onClose={() => {
-                onVersionHistoryOpenChanged(false);
+          {activePageId === undefined ? (
+            <HomePageContent sidebarWidth={sidebarWidth} />
+          ) : (
+            <div
+              className="simple-editor-main"
+              style={{
+                marginRight: versionWidth,
+                transition: "margin-right 0.2s ease",
               }}
-              userColor="#7c3aed"
-            />
-            <aside className="simple-editor-sidebar-right" />
-          </div>
+            >
+              <SimpleEditorContent
+                sidebarWidth={sidebarWidth}
+                collapsed={collapsed}
+              />
+              <VersionHistorySidebar
+                open={versionHistoryOpen}
+                onClose={() => {
+                  onVersionHistoryOpenChanged(false);
+                }}
+                userColor="#7c3aed"
+              />
+              <aside className="simple-editor-sidebar-right" />
+            </div>
+          )}
         </ToastProvider>
       </NotificationProvider>
     </div>

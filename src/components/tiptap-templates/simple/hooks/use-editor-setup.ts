@@ -30,21 +30,6 @@ function getTitleChange(
     text: null,
   };
 }
-function useWhyDidYouRender(name: string, props: Record<string, unknown>) {
-  const prev = useRef(props);
-  useEffect(() => {
-    const changes: Record<string, { from: unknown; to: unknown }> = {};
-    Object.keys(props).forEach((key) => {
-      if (prev.current[key] !== props[key]) {
-        changes[key] = { from: prev.current[key], to: props[key] };
-      }
-    });
-    if (Object.keys(changes).length) {
-      console.log(`[${name}] re-render caused by:`, changes);
-    }
-    prev.current = props;
-  });
-}
 
 const EDITOR_ATTRIBUTES = {
   autocomplete: "off",
@@ -69,15 +54,6 @@ export function useEditorSetup({ content }: EditorSetupProps) {
   const { createVersionAsync } = useVersions(activePageId);
   const lastVersionTime = useRef(Date.now());
   const VERSION_INTERVAL = 10 * 60 * 1000; // 10mins
-
-  useWhyDidYouRender("useEditorSetup", {
-    content,
-    extensions, //  likely culprit — new array ref every render
-    activePage, //  likely culprit — new object ref every render
-    setTocContent, //  likely culprit — unstable function ref
-    debounceUpdatePage,
-    createVersionAsync,
-  });
 
   // Flush on page switch or unmount — no delay
   useEffect(() => {

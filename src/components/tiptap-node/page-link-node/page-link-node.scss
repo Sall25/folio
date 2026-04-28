@@ -1,5 +1,6 @@
 .node-pageLink{
   margin-bottom: 8px !important;
+  padding: 0 !important;
   &.ProseMirror-selectednode{
     background-color: var(--tt-selection-color);
   }
@@ -35,10 +36,10 @@
   flex-direction: column;
   gap: 4px;
   padding: 12px;
-  top: calc(100% + 8px); // ← below the link with 8px gap
   background-color: var(--tt-card-bg-color);
   border: 1px solid var(--tt-border-color);
   border-radius: 5px;
+  
   &__icon {
     margin-bottom: 6px;
     font-size: 32px;

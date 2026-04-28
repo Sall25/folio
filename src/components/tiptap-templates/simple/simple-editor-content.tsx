@@ -175,7 +175,6 @@ export function SimpleEditorContent({
   collapsed: boolean;
 }) {
   const { editor } = useCurrentEditor();
-  console.count("editor render");
 
   return (
     <>

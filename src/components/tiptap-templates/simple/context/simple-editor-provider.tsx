@@ -1,14 +1,7 @@
 import { useActivePage } from "../use-active-page";
 import { usePages } from "../use-pages";
 import { useThreadsOnPage } from "src/components/tiptap-ui/comments/hooks/use-threads-on-page";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { SimpleEditorContext } from "./simple-editor-context";
 import { useActivePageId } from "./active-page-context";
 import { useVersions } from "src/components/tiptap-ui/version-history/use-versions";
@@ -17,22 +10,6 @@ import { EditorContext } from "@tiptap/react";
 
 interface SimpleEditorProviderProps {
   children: ReactNode;
-}
-
-function useWhyDidYouRender(name: string, props: Record<string, unknown>) {
-  const prev = useRef(props);
-  useEffect(() => {
-    const changes: Record<string, { from: unknown; to: unknown }> = {};
-    Object.keys(props).forEach((key) => {
-      if (prev.current[key] !== props[key]) {
-        changes[key] = { from: prev.current[key], to: props[key] };
-      }
-    });
-    if (Object.keys(changes).length) {
-      console.log(`[${name}] re-render caused by:`, changes);
-    }
-    prev.current = props;
-  });
 }
 
 export function SimpleEditorProvider({ children }: SimpleEditorProviderProps) {
@@ -77,16 +54,6 @@ export function SimpleEditorProvider({ children }: SimpleEditorProviderProps) {
       onVersionHistoryOpenChanged,
     ],
   );
-  const { activePage: providedPage } = activePage;
-  useWhyDidYouRender("simpleEditorProvider", {
-    providedPage,
-    isLoading,
-    addPageAsync,
-    threads,
-    versions,
-    versionHistoryOpen,
-    onVersionHistoryOpenChanged,
-  });
 
   return (
     <EditorContext.Provider value={providedEditor}>

@@ -50,23 +50,42 @@ export function PageLinkNodeView({ node, extension }: NodeViewProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [previewPos, setPreviewPos] = useState({ top: 0, left: 0 });
   const linkRef = useRef<HTMLDivElement>(null);
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const enterTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearTimers = () => {
+    if (leaveTimer.current) {
+      clearTimeout(leaveTimer.current);
+      leaveTimer.current = null;
+    }
+    if (enterTimer.current) {
+      clearTimeout(enterTimer.current);
+      enterTimer.current = null;
+    }
+  };
 
   const handleMouseEnter = () => {
+    clearTimers();
     if (linkRef.current) {
       const rect = linkRef.current.getBoundingClientRect();
-      setPreviewPos({ top: rect.top - 8, left: rect.left });
+      setPreviewPos({ top: rect.bottom, left: rect.left }); // bottom of link, not top
     }
-    hoverTimer.current = setTimeout(() => setIsHovered(true), 600);
+    enterTimer.current = setTimeout(() => setIsHovered(true), 600);
   };
 
   const handleMouseLeave = () => {
-    if (hoverTimer.current) {
-      clearTimeout(hoverTimer.current);
-      hoverTimer.current = null;
-    }
-    hoverTimer.current = setTimeout(() => setIsHovered(false), 200);
+    clearTimers();
+    leaveTimer.current = setTimeout(() => setIsHovered(false), 300);
+  };
+
+  // Shared handlers for the preview — cancel the leave timer on enter
+  const handlePreviewEnter = () => {
+    clearTimers();
+  };
+
+  const handlePreviewLeave = () => {
+    clearTimers();
+    leaveTimer.current = setTimeout(() => setIsHovered(false), 300);
   };
 
   if (!pages) return null;
@@ -94,14 +113,11 @@ export function PageLinkNodeView({ node, extension }: NodeViewProps) {
 
   const breadcrumb = buildBreadcrumb(page, pages);
   const excerpt = getContentExcerpt(page);
-
-  const handleClick = () => {
-    extension.options.onNavigate?.(Number(pageId));
-  };
+  const handleClick = () => extension.options.onNavigate?.(Number(pageId));
 
   return (
     <NodeViewWrapper
-      style={{ display: "block" }}
+      style={{ display: "block", padding: 0 }}
       data-drag-handle
       data-node-id={node.attrs.nodeId}
       onMouseEnter={handleMouseEnter}
@@ -118,13 +134,12 @@ export function PageLinkNodeView({ node, extension }: NodeViewProps) {
             className="page-link-preview"
             style={{
               position: "fixed",
-              top: previewPos.top,
+              top: previewPos.top, // flush below the link
               left: previewPos.left,
-              transform: "translateY(33%)",
               zIndex: 9999,
             }}
-            onMouseEnter={handleMouseLeave}
-            // onMouseLeave={handleMouseLeave}
+            onMouseEnter={handlePreviewEnter}
+            onMouseLeave={handlePreviewLeave}
           >
             <div className="page-link-preview__icon">
               <PageItemIcon cover={page.cover} styles={{ fontSize: 32 }} />
@@ -133,7 +148,7 @@ export function PageLinkNodeView({ node, extension }: NodeViewProps) {
               <p className="page-link-preview__breadcrumb">{breadcrumb}</p>
             )}
             <p className="page-link-preview__title">
-              {page.title || "Untitled"}
+              {page.title || "New Page"}
             </p>
             {excerpt && <p className="page-link-preview__excerpt">{excerpt}</p>}
           </div>,
