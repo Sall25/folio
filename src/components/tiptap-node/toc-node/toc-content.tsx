@@ -24,21 +24,28 @@ export function TocContent({ maxShowCount = 20, topOffset = 0 }: Props) {
   const depths = normalizeDepths(items);
 
   useEffect(() => {
+    const container = document.querySelector(
+      ".simple-editor-main",
+    ) as HTMLElement | null;
+    if (!container) return;
+
     const handler = () => {
       if (activeId) return;
+      const containerTop = container.getBoundingClientRect().top;
       let current: string | null = null;
       for (const item of items) {
         const el = document.getElementById(item.id);
         if (!el) continue;
-        if (el.getBoundingClientRect().top <= topOffset + 20) {
+        if (el.getBoundingClientRect().top - containerTop <= topOffset + 20) {
           current = item.id;
         }
       }
       setScrollActiveId(current ?? items[0]?.id ?? null);
     };
-    window.addEventListener("scroll", handler, { passive: true });
+
+    container.addEventListener("scroll", handler, { passive: true });
     handler();
-    return () => window.removeEventListener("scroll", handler);
+    return () => container.removeEventListener("scroll", handler);
   }, [items, topOffset, activeId]);
 
   const resolvedActive = activeId ?? scrollActiveId;
