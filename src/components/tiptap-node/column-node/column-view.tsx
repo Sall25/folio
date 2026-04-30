@@ -1,12 +1,12 @@
 import {
   NodeViewWrapper,
   NodeViewContent,
-  //type ReactNodeViewProps,
+  type ReactNodeViewProps,
 } from "@tiptap/react";
 import { useEffect, useState, type Ref } from "react";
 import { useResizableNode } from "../figure-node";
 
-export default function ColumnView(/*props: ReactNodeViewProps*/) {
+export default function ColumnView(props: ReactNodeViewProps) {
   const [hasBeenResized, setHasBeenResized] = useState(false);
 
   const { nodeRef, handleResizeStart, isResizing } = useResizableNode();
@@ -30,7 +30,7 @@ export default function ColumnView(/*props: ReactNodeViewProps*/) {
       // resizing={isResizing ? "true" : undefined}
       style={{
         position: "relative",
-        flexBasis: `100%`,
+        flexBasis: props.node.attrs.width,
         flexGrow: 0,
         flexShrink: 0,
         minWidth: 0,

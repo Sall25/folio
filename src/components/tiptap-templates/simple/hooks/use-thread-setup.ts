@@ -1,6 +1,7 @@
 import { useCallback } from "react";
-import { useThreadsOnPage } from "src/components/tiptap-ui/comments/hooks/use-threads-on-page";
 import type { Comment, Thread } from "src/components/tiptap-ui/comments/types";
+import { useThreadsOnPage } from "src/components/tiptap-ui/comments/hooks/use-threads-on-page";
+import { useActivePage } from "../use-active-page";
 
 export interface UseThreadSetupReturn {
   threads: Thread[] | undefined;
@@ -23,6 +24,7 @@ export interface UseThreadSetupReturn {
 }
 
 export function useThreadSetup(): UseThreadSetupReturn {
+  const { activePageId } = useActivePage();
   const {
     createThreadAsync,
     deleteThreadAsync,
@@ -33,7 +35,7 @@ export function useThreadSetup(): UseThreadSetupReturn {
     updateCommentAsync,
     threads,
     isLoading,
-  } = useThreadsOnPage();
+  } = useThreadsOnPage(activePageId);
 
   const onCreateThreadAsync = useCallback(
     async (thread: Thread) => {

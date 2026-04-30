@@ -1,6 +1,11 @@
 import type { Page } from "src/components/tiptap-templates/simple/types";
 import type { Version } from "./types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useMemo } from "react";
 
 const url = "http://localhost:3003";
@@ -85,14 +90,15 @@ export function useVersions(pageId: number | undefined) {
     queryKey: ["versions", pageId],
     queryFn: () => fetchVersionsAsync(pageId!),
     enabled: !!pageId,
-    staleTime: 1000 * 60 * 5, // ✅ don't refetch on every focus
+    staleTime: 1000 * 60 * 5, // don't refetch on every focus
+    placeholderData: keepPreviousData,
   });
 
   const { mutateAsync: createVersionAsync } = useMutation({
     mutationFn: createVersionFnAsync,
     onSuccess: async (newVersion, variables) => {
       await pruneVersionsAsync(variables.pageId);
-      // ✅ update cache directly
+      //  update cache directly
       client.setQueryData<Version[]>(
         ["versions", variables.pageId],
         (old = []) => [newVersion, ...old],
@@ -115,11 +121,10 @@ export function useVersions(pageId: number | undefined) {
     mutationFn: (version: Version) => restoreVersionFnAsync(version),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ["pages"] }); // this one needs to invalidate
-      // ✅ no need to invalidate versions — they didn't change
     },
   });
 
-  // ✅ Stabilize the returned object so spreads don't create new refs
+  // Stabilize the returned object so spreads don't create new refs
   return useMemo(
     () => ({
       versions,

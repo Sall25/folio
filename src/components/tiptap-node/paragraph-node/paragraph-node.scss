@@ -42,11 +42,11 @@
   outline: none;
   caret-color: var(--tt-cursor-color);
   font-family: DM Sans, sans-serif;
-  line-height: 1.75;
+  line-height: 1.85;
   letter-spacing: -0.003em;
 
   p:not(:first-child):not(td p):not(th p) {
-    line-height: 1.75;
+    line-height: 1.85;
     font-weight: 400;
     margin: 0;
     margin-top: 4px;
@@ -92,7 +92,7 @@
 
   // ProseMirror's own cursor element (cross-browser thickness)
   .ProseMirror-cursor {
-    border-left: 2px solid var(--tt-cursor-color);
+    border-left: 4px solid var(--tt-cursor-color);
     margin-left: -1px;
     pointer-events: none;
     position: relative;

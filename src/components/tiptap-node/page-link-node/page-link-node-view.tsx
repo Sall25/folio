@@ -125,7 +125,9 @@ export function PageLinkNodeView({ node, extension }: NodeViewProps) {
     >
       <div ref={linkRef} className="page-link-node" onClick={handleClick}>
         <PageItemIcon cover={page.cover} />
-        <span>{page.title || "New Page"}</span>
+        <span style={{ color: page.cover.color }}>
+          {page.title || "New Page"}
+        </span>
       </div>
 
       {isHovered &&

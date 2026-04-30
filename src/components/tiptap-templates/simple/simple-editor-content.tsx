@@ -1,7 +1,7 @@
 // simple-editor-content.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { EditorContent, useCurrentEditor } from "@tiptap/react";
 
 import { BubbleMenu } from "src/components/tiptap-ui/bubble-menu/bubble-menu";
@@ -16,9 +16,26 @@ import { useCoverActions } from "./hooks/use-cover-actions";
 import { useEditorLayout } from "./hooks/use-editor-layout";
 import { FloatingActions } from "./floating-actions";
 import type { Target } from "src/components/tiptap-ui/cover/types";
+import { useSimpleEditor } from "./context/simple-editor-context";
 // ============================================================
 // Memoized leaves
 // ============================================================
+
+function useWhyDidYouRender(name: string, props: Record<string, unknown>) {
+  const prev = useRef(props);
+  useEffect(() => {
+    const changes: Record<string, { from: unknown; to: unknown }> = {};
+    Object.keys(props).forEach((key) => {
+      if (prev.current[key] !== props[key]) {
+        changes[key] = { from: prev.current[key], to: props[key] };
+      }
+    });
+    if (Object.keys(changes).length) {
+      console.log(`[${name}] re-render caused by:`, changes);
+    }
+    prev.current = props;
+  });
+}
 
 const EditorContentMemo = React.memo(function EditorContentMemo({
   hasThreads,
@@ -26,9 +43,15 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
   hasThreads: boolean;
 }) {
   const { editor } = useCurrentEditor();
+  const { activePage } = useSimpleEditor();
+  if (!activePage) return null;
+
   return (
     <EditorContent
       editor={editor}
+      data-size={activePage.settings.width}
+      data-text={activePage.settings.text}
+      data-locked={activePage.settings.locked}
       role="presentation"
       className={`simple-editor-content ${hasThreads ? "has-threads" : ""}`}
     />
@@ -45,7 +68,6 @@ const ThreadSidebarMemo = React.memo(function ThreadSidebarMemo({
 });
 
 const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
-  editorLeft,
   open,
   setOpen,
   target,
@@ -54,7 +76,6 @@ const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
   onAddCoverAsync,
   floatingRef,
 }: {
-  editorLeft: number;
   open: boolean;
   setOpen: (v: boolean) => void;
   target: Target;
@@ -82,7 +103,6 @@ const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
     >
       <div ref={floatingRef}>
         <FloatingActions
-          editorLeft={editorLeft}
           open={open}
           onOpenChange={setOpen}
           target={target}
@@ -106,8 +126,10 @@ const StableShell = React.memo(function StableShell({
   sidebarWidth: number;
   collapsed: boolean;
 }) {
-  const { editorWrapperRef, editorLeft, paddingLeft, translateX } =
-    useEditorLayout({ sidebarWidth, collapsed });
+  const { editorWrapperRef, paddingLeft, translateX } = useEditorLayout({
+    sidebarWidth,
+    collapsed,
+  });
 
   const {
     open,
@@ -120,6 +142,20 @@ const StableShell = React.memo(function StableShell({
   } = useCoverActions();
 
   const [hasThreads, setHasThreads] = useState(false);
+
+  useWhyDidYouRender("stableShell", {
+    hasThreads,
+    editorWrapperRef,
+    paddingLeft,
+    translateX,
+    open,
+    setOpen,
+    target,
+    setTarget,
+    onSelectAsync,
+    onAddCoverAsync,
+    floatingRef,
+  });
 
   return (
     <section
@@ -150,7 +186,6 @@ const StableShell = React.memo(function StableShell({
       </div>
       <ThreadSidebarMemo setHasThreads={setHasThreads} />
       <FloatingMenuMemo
-        editorLeft={editorLeft}
         open={open}
         setOpen={setOpen}
         target={target}

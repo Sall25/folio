@@ -14,7 +14,6 @@ import "./floating-actions.scss";
 import { useSimpleEditor } from "./context/simple-editor-context";
 
 export function FloatingActions({
-  // editorLeft,
   open,
   onOpenChange,
   target,
@@ -22,7 +21,6 @@ export function FloatingActions({
   onSelect,
   onAddCoverAsync,
 }: {
-  editorLeft: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   target: Target;

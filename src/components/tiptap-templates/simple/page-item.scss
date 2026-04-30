@@ -9,8 +9,9 @@
 }
 .page-title {
   flex: 1;
+  font-size: 13.98px;
   min-width: 0;
-  max-width: 200px;
+  max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -43,7 +44,7 @@
 .page-item-children {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 2px;
 }
 
 .page-title-input {

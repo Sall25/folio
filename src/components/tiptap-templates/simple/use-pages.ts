@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import type { Page } from "./types";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useDebounce,
   useDebouncedCallback,
@@ -140,20 +140,17 @@ export function usePages(): UsePagesReturn {
   const client = useQueryClient();
   const [query, setQuery] = useState("");
   const [debounceQuery] = useDebounce(query, 300);
-
-  const onSearch = (search: string) => setQuery(search);
+  const selectPages = useCallback((data: Page[]) => buildTree(data), []);
+  const onSearch = useCallback((search: string) => setQuery(search), []);
 
   const { data: pages, isLoading } = useQuery({
     queryKey: ["pages"],
     queryFn: () => fetchPagesAsync(),
     placeholderData: keepPreviousData,
-    select: (data) => {
-      const tree = buildTree(data);
-      return tree;
-    },
+    select: selectPages,
   });
 
-  const { mutateAsync: addPageAsync } = useMutation({
+  const { mutateAsync: _addPageAsync } = useMutation({
     mutationKey: ["addPage"],
     mutationFn: addPageFnAsync,
     onSuccess: () => {
@@ -161,7 +158,7 @@ export function usePages(): UsePagesReturn {
     },
   });
 
-  const { mutateAsync: deletePageAsync } = useMutation({
+  const { mutateAsync: _deletePageAsync } = useMutation({
     mutationKey: ["deletePage"],
     mutationFn: deletePageFnAsync,
     onMutate: (id: number) => {
@@ -170,82 +167,107 @@ export function usePages(): UsePagesReturn {
         return old.filter((p) => !idsToRemove.has(p.id));
       });
     },
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["pages"] });
-    },
-    onError: () => {
-      client.invalidateQueries({ queryKey: ["pages"] });
-    },
+    onSuccess: () => client.invalidateQueries({ queryKey: ["pages"] }),
+    onError: () => client.invalidateQueries({ queryKey: ["pages"] }),
   });
 
-  const { mutateAsync: updatePageAsync } = useMutation({
+  const { mutateAsync: _updatePageAsync } = useMutation({
     mutationKey: ["updatePage"],
     mutationFn: updatePageFnAsync,
     onMutate: async (page: Page) => {
-      // Cancel any outgoing refetches
       await client.cancelQueries({ queryKey: ["pages"] });
-
-      // Snapshot previous value
       const previous = client.getQueryData<Page[]>(["pages"]);
-
-      // Optimistically update the cache
       client.setQueryData<Page[]>(["pages"], (old = []) =>
         old.map((p) => (p.id === page.id ? { ...p, ...page } : p)),
       );
-
       return { previous };
     },
     onError: (_err, _page, context) => {
-      // Rollback on error
       if (context?.previous) {
         client.setQueryData(["pages"], context.previous);
       }
     },
     onSuccess: (updatedPage) => {
-      // Update cache with server response instead of invalidating
       client.setQueryData<Page[]>(["pages"], (old = []) =>
         old.map((p) => (p.id === updatedPage.id ? updatedPage : p)),
       );
-      // Remove this — it's what triggers the refetch loop
-      // client.invalidateQueries({ queryKey: ["pages"] });
     },
   });
 
-  const debounceUpdatePage = useDebouncedCallback(
-    async (page: Page) => await updatePageAsync(page),
-    30000,
-    { maxWait: 50000 }, // ← also add maxWait so it can't loop forever
+  // Stable refs — mutateAsync changes every render, refs don't
+  const addPageAsyncRef = useRef(_addPageAsync);
+  const deletePageAsyncRef = useRef(_deletePageAsync);
+  const updatePageAsyncRef = useRef(_updatePageAsync);
+
+  useEffect(() => {
+    addPageAsyncRef.current = _addPageAsync;
+  }, [_addPageAsync]);
+  useEffect(() => {
+    deletePageAsyncRef.current = _deletePageAsync;
+  }, [_deletePageAsync]);
+  useEffect(() => {
+    updatePageAsyncRef.current = _updatePageAsync;
+  }, [_updatePageAsync]);
+
+  //Stable function identities — never change after mount
+  const addPageAsync = useCallback(
+    (data: { title: string; parentId: number | null }) =>
+      addPageAsyncRef.current(data),
+    [],
   );
 
-  //  Fast debounce for title changes — syncs sidebar quickly
+  const deletePageAsync = useCallback(
+    (id: number) => deletePageAsyncRef.current(id),
+    [],
+  );
+
+  const updatePageAsync = useCallback(
+    (page: Page) => updatePageAsyncRef.current(page),
+    [],
+  );
+
+  // Debounces are now stable — updatePageAsync never changes
+  const debounceUpdatePage = useDebouncedCallback(
+    (page: Page) => updatePageAsync(page),
+    30000,
+    { maxWait: 50000 },
+  );
+
   const debounceUpdatePageFast = useDebouncedCallback(
-    async (page: Page) => await updatePageAsync(page),
+    (page: Page) => updatePageAsync(page),
     1000,
     { maxWait: 2000 },
   );
 
-  // Adds a child page under a given parent
-  const addChildPageAsync = async (parentId: number) => {
-    await addPageAsync({ title: "New Page", parentId });
-  };
+  const pagesRef = useRef(pages);
+  useEffect(() => {
+    pagesRef.current = pages;
+  }, [pages]);
 
-  // Adds a root-level page
-  const addRootPageAsync = async () => {
-    addPageAsync({ title: "New Page", parentId: null });
-  };
+  const addChildPageAsync = useCallback(
+    async (parentId: number) => {
+      await addPageAsync({ title: "New Page", parentId });
+    },
+    [addPageAsync],
+  );
 
-  const addCoverAsync = async (id: number) => {
-    const page = pages?.flat().find((p) => p.id === id); // or however you look up a page
-    if (!page) return;
+  const addRootPageAsync = useCallback(
+    async () => addPageAsync({ title: "New Page", parentId: null }),
+    [addPageAsync],
+  );
 
-    await updatePageAsync({
-      ...page,
-      cover: {
-        ...page.cover,
-        coverImage: "/covers/default-cover.jpg", // your default cover
-      },
-    });
-  };
+  const addCoverAsync = useCallback(
+    async (id: number) => {
+      // Read pages from ref — no pages in dep array, stable identity
+      const page = pagesRef.current?.flat().find((p) => p.id === id);
+      if (!page) return;
+      await updatePageAsync({
+        ...page,
+        cover: { ...page.cover, coverImage: "/covers/default-cover.jpg" },
+      });
+    },
+    [updatePageAsync],
+  );
 
   return {
     pages,

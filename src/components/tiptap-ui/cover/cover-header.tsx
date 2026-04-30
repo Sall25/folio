@@ -17,7 +17,7 @@ import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/
 import { createPortal } from "react-dom";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import { useActivePageId } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageContext } from "src/components/tiptap-templates/simple/context/active-page-context";
 
 function CoverControlsGroup({
   btnPosition,
@@ -329,7 +329,7 @@ function IconButton({
   hasThreads?: boolean;
 }) {
   const { activePage, updateCoverAsync } = useSimpleEditor();
-  const { activePageId } = useActivePageId();
+  const { activePageId } = useActivePageContext();
   const hasCoverImage = !!activePage?.cover.coverImage;
 
   const hasGradient = !!(activePage?.cover as any).gradient;

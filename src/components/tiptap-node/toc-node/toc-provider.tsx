@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import type { TocItem } from "./toc-context";
 import { TocContext } from "./toc-context";
 import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
-import { useActivePageId } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 
 function normalizeDepths(items: TocItem[]): number[] {
   if (!items.length) return [];
@@ -54,7 +54,7 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
   const [tocContent, setTocContent] = useState<TocItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-  const { activePageId } = useActivePageId();
+  const { activePageId } = useActivePage();
   const { editor } = useTiptapEditor();
   const hasRestoredRef = useRef<string | null>(null);
 

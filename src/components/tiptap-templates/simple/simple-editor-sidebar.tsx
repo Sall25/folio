@@ -37,6 +37,8 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { useSimpleEditor } from "./context/simple-editor-context";
+import { useNavigate } from "@tanstack/react-location";
+import { useActivePage } from "./use-active-page";
 
 // ============================================================
 // Sub-components
@@ -205,13 +207,24 @@ function WorkspaceHeader({
 }
 
 function NavItems({ collapsed }: { collapsed: boolean }) {
+  const { debounceUpdatePage } = useActivePage();
+  const navigate = useNavigate();
+  const handleHomeClick = () => {
+    debounceUpdatePage.flush();
+    navigate({ to: "/" });
+  };
   return (
     <ButtonGroup className="sidebar-nav">
       <Button variant="ghost" className="sidebar-nav-item" title="Home">
         <Search className="tiptap-button-icon" size={20} />
         {!collapsed && <span>Search</span>}
       </Button>
-      <Button variant="ghost" className="sidebar-nav-item" title="Home">
+      <Button
+        variant="ghost"
+        className="sidebar-nav-item"
+        title="Home"
+        onClick={handleHomeClick}
+      >
         <Home className="tiptap-button-icon" size={16} />
         {!collapsed && <span>Home</span>}
       </Button>

@@ -8,7 +8,7 @@ import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import "./slash-command-list.scss";
 import { useMenuNavigation } from "src/hooks/use-menu-navigation";
 import type { SlashCommand as SlashItem } from "./slash-commands";
-import { useActivePageId } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageContext } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 
 type Props = SuggestionProps<SlashItem> & {
@@ -20,7 +20,7 @@ type Props = SuggestionProps<SlashItem> & {
 export default function SlashList(props: Props) {
   const { items = [], onClickItem, onClose, editor } = props;
   const { addPageAsync } = usePages();
-  const { activePageId, setActivePageId } = useActivePageId();
+  const { activePageId, setActivePageId } = useActivePageContext();
   const isSelectable = (item: SlashItem) => item.type === "command";
 
   const selectableItems = useMemo(() => items.filter(isSelectable), [items]);

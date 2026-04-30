@@ -1,16 +1,8 @@
-import type { UseThreadsOnPageReturn } from "src/components/tiptap-ui/comments/hooks/use-threads-on-page";
 import type { UseActivePageReturn } from "../use-active-page";
 import type { UsePagesReturn } from "../use-pages";
 import { createContext, useContext } from "react";
-import type { useVersions } from "src/components/tiptap-ui/version-history/use-versions";
 
-type ContextType = UseActivePageReturn &
-  Pick<UsePagesReturn, "addPageAsync"> &
-  UseThreadsOnPageReturn &
-  ReturnType<typeof useVersions> & {
-    versionHistoryOpen: boolean;
-    onVersionHistoryOpenChanged: (v: boolean) => void;
-  };
+type ContextType = UseActivePageReturn & Pick<UsePagesReturn, "addPageAsync">;
 
 export const SimpleEditorContext = createContext<ContextType | null>(null);
 

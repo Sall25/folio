@@ -17,6 +17,7 @@ interface ResizableNodeProviderProps {
   min?: Partial<ResizableNodeDimensions>;
   max?: Partial<ResizableNodeDimensions>;
   shouldPreserveAspectRatio?: boolean;
+  onResizeEnd?: (dimensions: ResizableNodeDimensions) => void;
 }
 
 export function ResizableNodeProvider({
@@ -24,6 +25,7 @@ export function ResizableNodeProvider({
   min,
   max,
   shouldPreserveAspectRatio = false,
+  onResizeEnd,
 }: ResizableNodeProviderProps) {
   const [isResizing, setIsResizing] = useState(false);
   const [activeHandle, setActiveHandle] =
@@ -219,8 +221,8 @@ export function ResizableNodeProvider({
           shouldPreserveAspectRatio,
         );
         if (nodeRef.current) {
-          const isHorizontal =
-            activeHandle === "left" || activeHandle === "right";
+          // const isHorizontal =
+          //   activeHandle === "left" || activeHandle === "right";
 
           // if (!isHorizontal) {
           //   nodeRef.current.style.height = `${constrained.height}px`;
@@ -288,7 +290,14 @@ export function ResizableNodeProvider({
 
     setIsResizing(false);
     setActiveHandle(null);
-  }, [isResizing]);
+
+    // Write final dimensions back to caller
+    if (nodeRef.current && onResizeEnd) {
+      const width = nodeRef.current.offsetWidth;
+      const height = nodeRef.current.offsetHeight;
+      onResizeEnd({ width, height });
+    }
+  }, [isResizing, onResizeEnd]);
 
   const handleResizeStart = useCallback(
     (

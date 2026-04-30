@@ -18,6 +18,7 @@ import { PageBreadcrumb } from "src/components/tiptap-ui/page-breadcrumb/page-br
 import { useSimpleEditor } from "./context/simple-editor-context";
 import { buildBreadcrumb } from "src/lib/build-breadcrumb";
 import { PageItemIcon } from "./page-item-icon";
+import { useMemo } from "react";
 
 // ============================================================
 // Types
@@ -51,33 +52,40 @@ type SimpleEditorToolbarProps = {
 // Main toolbar
 // ============================================================
 
-/**
- *
- */
 export const MainToolbarContent = ({
   isMobile,
   onTriggerVersionHistory,
 }: MainToolbarProps) => {
   const { activePage, pages, setActivePageId } = useSimpleEditor();
-  const breadcrumbs = buildBreadcrumb(activePage!, pages ?? []).map((page) => {
-    if (activePage && activePage.id === page.id) {
-      return {
-        label: activePage.title || "New Page",
-        icon: (
-          <PageItemIcon cover={activePage.cover} styles={{ fontSize: 14 }} />
-        ),
-        locked: activePage.settings.locked,
-        onClick: () => setActivePageId(activePage.id),
-      };
-    }
-    return {
-      label: page.title || "New Page",
-      icon: <PageItemIcon cover={page.cover} styles={{ fontSize: 14 }} />,
-      locked: page.settings.locked,
-      onClick: () => setActivePageId(page.id),
-    };
-  });
 
+  // Derive only what the breadcrumb needs — no stale content reference
+  const breadcrumbs = useMemo(() => {
+    if (!activePage || !pages) return [];
+
+    return buildBreadcrumb(activePage, pages).map((page) => {
+      const isActive = activePage.id === page.id;
+      const title = isActive ? activePage.title : page.title;
+      const cover = isActive ? activePage.cover : page.cover;
+      const locked = isActive
+        ? activePage.settings.locked
+        : page.settings.locked;
+
+      return {
+        label: title || "New Page",
+        icon: <PageItemIcon cover={cover} styles={{ fontSize: 14 }} />,
+        locked,
+        onClick: () => setActivePageId(page.id),
+      };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    activePage?.id,
+    activePage?.title,
+    activePage?.cover,
+    activePage?.settings.locked,
+    pages,
+    setActivePageId,
+  ]);
   return (
     <>
       <ToolbarGroup>

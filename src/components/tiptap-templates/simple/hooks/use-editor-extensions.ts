@@ -43,30 +43,15 @@ import { TocNode } from "src/components/tiptap-node/toc-node/toc-node-extension"
 import { DatabaseNode } from "src/components/tiptap-node/database-node";
 
 import { handleImageUpload, MAX_FILE_SIZE } from "src/lib/tiptap-utils";
-import type { TocItem } from "src/components/tiptap-node/toc-node/toc-context";
 import { TitleNode } from "src/components/tiptap-node/title-node";
-import { useThreadSetup } from "./use-thread-setup";
 import { useMemo } from "react";
 import { PageLinkNode } from "src/components/tiptap-node/page-link-node";
-import { useActivePageId } from "../context/active-page-context";
 import { DiffExtension } from "src/components/tiptap-ui/version-history";
+import type { EditorExtensionRefs } from "../context/editor-extension-refs";
 
 export function useEditorExtensions(
-  setTocContent: (content: TocItem[]) => void,
+  refsRef: React.RefObject<EditorExtensionRefs>,
 ) {
-  const {
-    threads,
-    onCreateThreadAsync,
-    onDeleteThreadAsync,
-    onResolveThreadAsync,
-    onUnresolveThreadAsync,
-    onAddCommentsAsync,
-    onRemoveCommentsAsync,
-    onUpdateCommentAsync,
-  } = useThreadSetup();
-
-  const { setActivePageId } = useActivePageId();
-
   const extensions = useMemo(
     () => [
       // --- Core ---
@@ -142,7 +127,7 @@ export function useEditorExtensions(
 
       // --- TOC ---
       TableOfContents.configure({
-        onUpdate: setTocContent,
+        onUpdate: (content) => refsRef.current?.setTocContent(content),
         anchorTypes: ["heading", "title"],
       }),
       TocNode.configure({ topOffset: 80, maxShowCount: 20, showTitle: true }),
@@ -161,19 +146,31 @@ export function useEditorExtensions(
 
       // --- Collaboration / comments ---
       CommentThreadExtension.configure({
-        threads,
-        onCreateThreadAsync,
-        onDeleteThreadAsync,
-        onResolveThreadAsync,
-        onUnresolveThreadAsync,
-        onAddCommentsAsync,
-        onRemoveCommentsAsync,
-        onUpdateCommentAsync,
+        threads: [],
+        onCreateThreadAsync: async (...args) => {
+          await refsRef.current?.createThreadAsync?.(...args);
+        },
+        onDeleteThreadAsync: async (...args) => {
+          await refsRef.current?.deleteThreadAsync?.(...args);
+        },
+        onResolveThreadAsync: async (...args) => {
+          await refsRef.current?.resolveThreadAsync?.(...args);
+        },
+        onUnresolveThreadAsync: async (...args) => {
+          await refsRef.current?.unresolveThreadAsync?.(...args);
+        },
+        onAddCommentsAsync: async (thread, newComments) => {
+          await refsRef.current?.addCommentsAsync?.({ thread, newComments });
+        },
+        onRemoveCommentsAsync: async (...args) => {
+          await refsRef.current?.removeCommentsAsync?.(...args);
+        },
+        onUpdateCommentAsync: async (...args) => {
+          await refsRef.current?.updateCommentAsync?.(...args);
+        },
       }),
       PageLinkNode.configure({
-        onNavigate(pageId) {
-          setActivePageId(pageId);
-        },
+        onNavigate: (pageId) => refsRef.current?.setActivePageId(pageId),
       }),
       UniqueID.configure({
         types: [

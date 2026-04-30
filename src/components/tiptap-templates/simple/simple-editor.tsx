@@ -33,17 +33,60 @@ import "src/components/tiptap-node/paragraph-node/paragraph-node.scss";
 import "src/components/tiptap-templates/simple/simple-editor.scss";
 import "src/components/tiptap-templates/simple/toc.scss";
 import { SimpleEditorSidebar } from "./simple-editor-sidebar";
-import { ActivePageProvider } from "./context/active-page-provider";
 import { SimpleEditorProvider } from "./context/simple-editor-provider";
 import { VersionHistorySidebar } from "src/components/tiptap-ui/version-history/version-history-sidebar";
-import { useSimpleEditor } from "./context/simple-editor-context";
 import { useInitThreads } from "./hooks/use-init-threads";
-import { useActivePageId } from "./context/active-page-context";
 import { HomePageContent } from "./components";
+import { useVersionContext } from "./context/version-context";
+import { useActivePage } from "./use-active-page";
+import { EditorProvider } from "./context/editor-provider";
 
 const VERSION_SIDEBAR_WIDTH = 260;
 const SIDEBAR_WIDTH = 280;
 const SIDEBAR_COLLAPSED_WIDTH = 52;
+
+// Separate component that only cares about activePageId for conditional rendering
+function SimpleEditorMain({
+  sidebarWidth,
+  collapsed,
+  versionHistoryOpen,
+  onVersionHistoryOpenChanged,
+}: {
+  sidebarWidth: number;
+  collapsed: boolean;
+  versionHistoryOpen: boolean;
+  onVersionHistoryOpenChanged: (v: boolean) => void;
+}) {
+  const { activePageId } = useActivePage();
+  const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
+
+  return (
+    <>
+      {activePageId === undefined ? (
+        <HomePageContent sidebarWidth={sidebarWidth} />
+      ) : (
+        <div
+          className="simple-editor-main"
+          style={{
+            marginRight: versionWidth,
+            transition: "margin-right 0.2s ease",
+          }}
+        >
+          <SimpleEditorContent
+            sidebarWidth={sidebarWidth}
+            collapsed={collapsed}
+          />
+          <VersionHistorySidebar
+            open={versionHistoryOpen}
+            onClose={() => onVersionHistoryOpenChanged(false)}
+            userColor="#7c3aed"
+          />
+          <aside className="simple-editor-sidebar-right" />
+        </div>
+      )}
+    </>
+  );
+}
 
 function SimpleEditorInner() {
   const [mobileView, setMobileView] = useState<MobileView>("main");
@@ -51,7 +94,6 @@ function SimpleEditorInner() {
   const isMobile = useIsBreakpoint();
   const { height } = useWindowSize();
 
-  // --- Effects ---
   useEffect(() => {
     if (!isMobile && mobileView !== "main")
       requestAnimationFrame(() => setMobileView("main"));
@@ -60,10 +102,9 @@ function SimpleEditorInner() {
   const [collapsed, setCollapsed] = useState(false);
   const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH;
 
-  const { versionHistoryOpen, onVersionHistoryOpenChanged } = useSimpleEditor();
-  const { activePageId } = useActivePageId();
+  const { versionHistoryOpen, onVersionHistoryOpenChanged } =
+    useVersionContext()!;
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
-
   const onToggle = useCallback(() => setCollapsed((c) => !c), []);
 
   useInitThreads();
@@ -81,37 +122,18 @@ function SimpleEditorInner() {
             onMobileViewChange={setMobileView}
             sidebarWidth={sidebarWidth}
             versionSidebarWidth={versionWidth}
-            onTriggerVersionHistory={() => {
-              onVersionHistoryOpenChanged(true);
-            }}
+            onTriggerVersionHistory={() => onVersionHistoryOpenChanged(true)}
           />
 
           <SimpleEditorSidebar collapsed={collapsed} onToggle={onToggle} />
 
-          {activePageId === undefined ? (
-            <HomePageContent sidebarWidth={sidebarWidth} />
-          ) : (
-            <div
-              className="simple-editor-main"
-              style={{
-                marginRight: versionWidth,
-                transition: "margin-right 0.2s ease",
-              }}
-            >
-              <SimpleEditorContent
-                sidebarWidth={sidebarWidth}
-                collapsed={collapsed}
-              />
-              <VersionHistorySidebar
-                open={versionHistoryOpen}
-                onClose={() => {
-                  onVersionHistoryOpenChanged(false);
-                }}
-                userColor="#7c3aed"
-              />
-              <aside className="simple-editor-sidebar-right" />
-            </div>
-          )}
+          {/* Navigation-aware rendering isolated here — doesn't affect EditorProvider */}
+          <SimpleEditorMain
+            sidebarWidth={sidebarWidth}
+            collapsed={collapsed}
+            versionHistoryOpen={versionHistoryOpen}
+            onVersionHistoryOpenChanged={onVersionHistoryOpenChanged}
+          />
         </ToastProvider>
       </NotificationProvider>
     </div>
@@ -119,19 +141,13 @@ function SimpleEditorInner() {
 }
 
 export function SimpleEditor() {
-  const [activePageId, setActivePageId] = useState<number | undefined>(
-    undefined,
-  );
   return (
-    <ActivePageProvider
-      activePageId={activePageId as number | undefined}
-      setActivePageId={setActivePageId}
-    >
-      <TocProvider>
+    <TocProvider>
+      <EditorProvider>
         <SimpleEditorProvider>
           <SimpleEditorInner />
         </SimpleEditorProvider>
-      </TocProvider>
-    </ActivePageProvider>
+      </EditorProvider>
+    </TocProvider>
   );
 }

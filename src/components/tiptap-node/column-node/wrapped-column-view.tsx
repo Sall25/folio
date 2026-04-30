@@ -1,8 +1,17 @@
+import { useCallback } from "react";
 import { ResizableNodeProvider } from "../figure-node";
 import ColumnView from "./column-view";
-import type { ReactNodeViewProps } from "@tiptap/react";
+import type {
+  ReactNodeViewProps,
+  ResizableNodeDimensions,
+} from "@tiptap/react";
 
 export function WrappedColumnView(props: ReactNodeViewProps) {
+  const onResizeEnd = useCallback(
+    ({ width }: ResizableNodeDimensions) =>
+      props.updateAttributes({ width: `${width}px` }),
+    [props],
+  );
   return (
     <ResizableNodeProvider
       min={{
@@ -13,6 +22,7 @@ export function WrappedColumnView(props: ReactNodeViewProps) {
         width: 600,
         height: 600,
       }}
+      onResizeEnd={onResizeEnd}
     >
       <ColumnView {...props} />
     </ResizableNodeProvider>

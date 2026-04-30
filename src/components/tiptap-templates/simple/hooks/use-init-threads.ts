@@ -2,10 +2,10 @@
 import { useEffect } from "react";
 import { commentThreadPluginKey } from "src/components/tiptap-ui/comments/extensions/comment-thread-extension";
 import { useCurrentEditor } from "@tiptap/react";
-import { useSimpleEditor } from "../context/simple-editor-context";
+import { useThreadContext } from "../context/thread-context";
 
 export function useInitThreads() {
-  const { threads } = useSimpleEditor();
+  const { threads } = useThreadContext();
   const { editor } = useCurrentEditor();
   useEffect(() => {
     if (!editor || !threads) return;

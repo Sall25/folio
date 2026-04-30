@@ -210,16 +210,6 @@ export const CommentThreadExtension = Extension.create<
 
   addProseMirrorPlugins() {
     const editor = this.editor;
-    const {
-      threads: initialThreads,
-      onCreateThreadAsync,
-      onDeleteThreadAsync,
-      onResolveThreadAsync,
-      onUnresolveThreadAsync,
-      onAddCommentsAsync,
-      onRemoveCommentsAsync,
-      onUpdateCommentAsync,
-    } = this.options;
 
     return [
       new Plugin<CommentThreadState>({
@@ -228,7 +218,7 @@ export const CommentThreadExtension = Extension.create<
         state: {
           init: () => {
             return {
-              threads: initialThreads ?? [],
+              threads: this.options.threads ?? [],
               measuredThreads: [],
               positionedThreads: [],
               selectedThreads: [],
@@ -237,9 +227,19 @@ export const CommentThreadExtension = Extension.create<
             };
           },
 
-          apply(tr, next) {
+          apply: (tr, next) => {
             const meta = tr.getMeta(commentThreadPluginKey);
             if (!meta) return next;
+
+            const {
+              onCreateThreadAsync,
+              onDeleteThreadAsync,
+              onResolveThreadAsync,
+              onUnresolveThreadAsync,
+              onAddCommentsAsync,
+              onRemoveCommentsAsync,
+              onUpdateCommentAsync,
+            } = this.options;
 
             switch (meta.type) {
               case "initialThreads":

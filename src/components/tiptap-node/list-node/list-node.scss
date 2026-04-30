@@ -38,14 +38,18 @@
     ol,
     ul {
       margin-top: 0;
-      margin-bottom: 0;
+      margin-bottom: 2px;
     }
   }
 
   li {
+     padding-top: 3px;
+      padding-bottom: 3px;
+      padding-inline: 2px;
     p {
       margin: 0;
-      line-height: 1.6;
+     
+      line-height: 1.8;
     }
   }
 

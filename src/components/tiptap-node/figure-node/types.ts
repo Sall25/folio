@@ -28,6 +28,7 @@ export type ResizableNodeContextType = {
     event: React.MouseEvent | React.TouchEvent,
     direction: ResizableNodeDirection,
   ) => void;
+  elementDimensions: ElementDimensions;
 };
 
 export type FigureNodeViewOptions = {

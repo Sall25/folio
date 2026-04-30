@@ -2,15 +2,13 @@ import { useState, useCallback, useEffect } from "react";
 import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/simple-editor-context";
 import type { Version } from "./types";
 import type { PageSettings } from "src/components/tiptap-templates/simple/types";
+import { useVersionContext } from "src/components/tiptap-templates/simple/context/version-context";
 
 export function useVersionHistory() {
-  const {
-    activePage,
-    updatePageAsync,
-    versions,
-    nameVersionAsync,
-    createVersionAsync,
-  } = useSimpleEditor();
+  const { activePage, updatePageAsync } = useSimpleEditor();
+
+  const { versions, nameVersionAsync, createVersionAsync } =
+    useVersionContext();
 
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [namingVersionId, setNamingVersionId] = useState<string | null>(null);

@@ -8,7 +8,7 @@ import type { Page } from "./types";
 import "./page-item.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { useSimpleEditor } from "./context/simple-editor-context";
-import { useActivePageId } from "./context/active-page-context";
+import { useActivePage } from "./use-active-page";
 
 interface PageItemProps {
   page: Page;
@@ -25,7 +25,6 @@ export function PageItem({ page, depth = 0 }: PageItemProps) {
 
   const { activePage, addPageAndActivateAsync, updatePageAsync } =
     useSimpleEditor();
-  const { setActivePageId } = useActivePageId();
 
   const title =
     activePage?.id === page.id
@@ -63,7 +62,7 @@ export function PageItem({ page, depth = 0 }: PageItemProps) {
       setEditing(false);
     }
   };
-
+  const { setActivePageId } = useActivePage();
   const onSelect = (pageId: number) => {
     setActivePageId(pageId);
   };

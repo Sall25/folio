@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { usePages, type UsePagesReturn } from "./use-pages";
 import type { Page } from "./types";
-import { useActivePageId } from "./context/active-page-context";
+import { useMatch, useNavigate } from "@tanstack/react-location";
 
 function findPage(pages: Page[], id: number): Page | undefined {
   for (const page of pages) {
@@ -17,7 +17,6 @@ export type UseActivePageReturn = {
   pages: Page[] | undefined;
   activePage: Page | null;
   isLoading: boolean;
-  setActivePageId: (id: number) => void;
   updateSettingsAsync: (patch: Partial<Page["settings"]>) => Promise<void>;
   updateCoverAsync: (cover: Page["cover"]) => Promise<void>;
   addPageAndActivateAsync: (data: {
@@ -31,6 +30,8 @@ export type UseActivePageReturn = {
   addCoverAsync: (id: number) => Promise<void>;
   debounceUpdatePage: UsePagesReturn["debounceUpdatePage"];
   debounceUpdatePageFast: UsePagesReturn["debounceUpdatePageFast"];
+  activePageId: number | undefined;
+  setActivePageId: (pageId: number | undefined) => void;
 };
 
 export function useActivePage(): UseActivePageReturn {
@@ -46,18 +47,54 @@ export function useActivePage(): UseActivePageReturn {
     debounceUpdatePage,
     debounceUpdatePageFast,
   } = usePages();
-  const { activePageId, setActivePageId } = useActivePageId();
-  const activePage = useMemo(() => {
-    if (activePageId === undefined || !pages) return null;
-    return findPage(pages, activePageId) ?? null;
-  }, [pages, activePageId]);
+
+  const { params } = useMatch();
+  const navigate = useNavigate();
+
+  // Single source of truth: derive directly from URL, no state/effect needed
+  const activePageId = useMemo(
+    () => (params.pageId ? Number(params.pageId) : undefined),
+    [params.pageId],
+  );
+
+  //  Derive activePage directly too — no useState, no effect, no extra render
+  const activePage = useMemo(
+    () =>
+      activePageId === undefined || !pages
+        ? null
+        : (findPage(pages, activePageId) ?? null),
+    [pages, activePageId],
+  );
+  // Refs kept in sync for use inside stable callbacks
+  const activePageIdRef = useRef(activePageId);
+  const activePageRef = useRef(activePage);
+  const pagesRef = useRef(pages);
+
+  useEffect(() => {
+    activePageIdRef.current = activePageId;
+  }, [activePageId]);
+
+  useEffect(() => {
+    activePageRef.current = activePage;
+  }, [activePage]);
+
+  useEffect(() => {
+    pagesRef.current = pages;
+  }, [pages]);
+
+  const setActivePageId = useCallback(
+    (id: number | undefined) => {
+      // Navigation IS the state update — URL is the source of truth
+      if (id === undefined) navigate({ to: "/" });
+      else navigate({ to: `/page/${id}` });
+    },
+    [navigate],
+  );
 
   const addPageAndActivateAsync = useCallback(
     async (data: Parameters<typeof addPageAsync>[0]) => {
       const newPage = await addPageAsync(data);
-      if (newPage?.id) {
-        setActivePageId(newPage.id);
-      }
+      if (newPage?.id) setActivePageId(newPage.id);
       return newPage;
     },
     [addPageAsync, setActivePageId],
@@ -72,46 +109,52 @@ export function useActivePage(): UseActivePageReturn {
 
   const updateSettingsAsync = useCallback(
     async (patch: Partial<Page["settings"]>) => {
-      if (!activePage) return;
+      if (!activePageRef.current) return;
       await updatePageAsync({
-        ...activePage,
-        settings: { ...activePage.settings, ...patch },
+        ...activePageRef.current,
+        settings: { ...activePageRef.current.settings, ...patch },
       });
     },
-    [activePage, updatePageAsync],
+    [updatePageAsync],
   );
 
   const updateCoverAsync = useCallback(
     async (cover: Page["cover"]) => {
-      if (!activePage) return;
-      await updatePageAsync({ ...activePage, cover });
+      if (!activePageRef.current) return;
+      await updatePageAsync({ ...activePageRef.current, cover });
     },
-    [updatePageAsync, activePage],
+    [updatePageAsync],
   );
 
   const deletePageAsync = useCallback(
     async (id: number) => {
       await providedDeletePageAsync(id);
 
-      // If the deleted page was active, switch to another page
-      if (activePageId === id) {
+      if (activePageIdRef.current === id) {
         const flatPages =
-          pages?.flatMap(function flatten(p): Page[] {
+          pagesRef.current?.flatMap(function flatten(p): Page[] {
             return [p, ...(p.children ?? []).flatMap(flatten)];
           }) ?? [];
 
         const nextPage = flatPages.find((p) => p.id !== id);
-        if (nextPage) {
-          setActivePageId(nextPage.id);
-        }
+        if (nextPage) setActivePageId(nextPage.id);
       }
     },
-    [activePageId, pages, providedDeletePageAsync, setActivePageId],
+    [providedDeletePageAsync, setActivePageId],
   );
+
+  useEffect(() => {
+    return () => {
+      // Runs when activePageId changes — flushes before new page loads
+      debounceUpdatePage.flush();
+      debounceUpdatePageFast.flush();
+    };
+  }, [activePageId, debounceUpdatePage, debounceUpdatePageFast]);
 
   return {
     pages,
-    activePage: activePage,
+    activePage, // From state — reactive
+    activePageId, // From state — reactive
     isLoading,
     setActivePageId,
     updateSettingsAsync,
