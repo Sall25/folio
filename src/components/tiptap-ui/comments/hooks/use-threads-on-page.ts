@@ -54,12 +54,8 @@ export function useThreadsOnPage(
 
       return res.json();
     },
-    onSuccess: (newThread) => {
-      // Update cache directly — no refetch
-      client.setQueryData<Thread[]>(["threads", pageId], (old = []) => [
-        ...old,
-        newThread,
-      ]);
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["threads"] });
     },
   });
 

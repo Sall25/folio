@@ -167,6 +167,7 @@ body,
   min-width: 0;
   padding-top: var(--tt-toolbar-height); // clears the fixed toolbar
   height: calc(100vh - var(--tt-toolbar-height));
+  margin-right: -65px;
   overflow-y: scroll;
   overflow-x: hidden;
   &::-webkit-scrollbar { width: 6px; }

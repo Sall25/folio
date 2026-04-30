@@ -7,17 +7,17 @@
     }
   }
 }
-.thread-sidebar{
-  position: absolute;
+
+.thread-sidebar {
+  position: absolute;  // stays in viewport while parent scrolls
   top: 0;
   right: 0;
   min-width: 320px;
-  height: 100%;
-  pointer-events: none; // allows editor interaction through gaps
-  display: flex;
-  flex-direction: column;
+  height: 100%;     // full viewport height so items can position freely
+  pointer-events: none;
   flex-grow: 0;
   flex-shrink: 0;
+  align-self: flex-start; 
 
   > * {
     pointer-events: auto;

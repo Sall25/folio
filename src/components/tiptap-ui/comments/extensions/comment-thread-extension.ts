@@ -387,6 +387,7 @@ export const CommentThreadExtension = Extension.create<
                   editor.storage.commentThreadExtension.draftId = meta.threadId;
                 }
                 break;
+              case "scroll":
               case "selectThread":
               case "forceMeasure":
                 {
@@ -407,8 +408,6 @@ export const CommentThreadExtension = Extension.create<
                   if (selectedThread) {
                     next.selectedThread = null;
                   }
-                  // next.selectedThreads = []
-                  // next.selectedThread = null
                 }
                 break;
 
@@ -455,7 +454,24 @@ export const CommentThreadExtension = Extension.create<
             return next;
           },
         },
-        view() {
+        view(editorView) {
+          const container = document.querySelector(".simple-editor-main");
+          let rafId: number | null = null;
+
+          const onScroll = () => {
+            if (rafId !== null) return;
+            rafId = requestAnimationFrame(() => {
+              editorView.dispatch(
+                editorView.state.tr.setMeta(commentThreadPluginKey, {
+                  type: "scroll",
+                }),
+              );
+              rafId = null;
+            });
+          };
+
+          container?.addEventListener("scroll", onScroll, { passive: true });
+
           return {
             update(view, prevState) {
               const state = view.state;
@@ -498,6 +514,10 @@ export const CommentThreadExtension = Extension.create<
               if (tr.docChanged || tr.getMeta(commentThreadPluginKey)) {
                 view.dispatch(tr);
               }
+            },
+            destroy() {
+              container?.removeEventListener("scroll", onScroll);
+              if (rafId !== null) cancelAnimationFrame(rafId);
             },
           };
         },

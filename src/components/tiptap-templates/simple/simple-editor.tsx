@@ -142,12 +142,12 @@ function SimpleEditorInner() {
 
 export function SimpleEditor() {
   return (
-    <TocProvider>
-      <EditorProvider>
+    <EditorProvider>
+      <TocProvider>
         <SimpleEditorProvider>
           <SimpleEditorInner />
         </SimpleEditorProvider>
-      </EditorProvider>
-    </TocProvider>
+      </TocProvider>
+    </EditorProvider>
   );
 }

@@ -158,43 +158,45 @@ const StableShell = React.memo(function StableShell({
   });
 
   return (
-    <section
-      className="simple-editor-center"
-      style={{
-        width: `calc(100vw - ${sidebarWidth}px)`,
-        marginLeft: sidebarWidth,
-        transition: "margin-left 0.2s ease, width 0.2s ease",
-      }}
-    >
-      <CoverHeader
-        collapsed={collapsed}
-        sidebarWidth={sidebarWidth}
-        paddingLeft={paddingLeft}
-        translateX={translateX}
-        hasThreads={hasThreads}
-      />
-      <div
-        ref={editorWrapperRef}
-        style={
-          {
-            paddingLeft,
-            "--x": `${translateX}px`,
-          } as React.CSSProperties
-        }
+    <>
+      <section
+        className="simple-editor-center"
+        style={{
+          width: `calc(100vw - ${sidebarWidth}px)`,
+          marginLeft: sidebarWidth,
+          transition: "margin-left 0.2s ease, width 0.2s ease",
+        }}
       >
-        <EditorContentMemo hasThreads={hasThreads} />
-      </div>
+        <CoverHeader
+          collapsed={collapsed}
+          sidebarWidth={sidebarWidth}
+          paddingLeft={paddingLeft}
+          translateX={translateX}
+          hasThreads={hasThreads}
+        />
+        <div
+          ref={editorWrapperRef}
+          style={
+            {
+              paddingLeft,
+              "--x": `${translateX}px`,
+            } as React.CSSProperties
+          }
+        >
+          <EditorContentMemo hasThreads={hasThreads} />
+        </div>
+        <FloatingMenuMemo
+          open={open}
+          setOpen={setOpen}
+          target={target}
+          setTarget={setTarget}
+          onSelectAsync={onSelectAsync}
+          onAddCoverAsync={onAddCoverAsync}
+          floatingRef={floatingRef}
+        />
+      </section>
       <ThreadSidebarMemo setHasThreads={setHasThreads} />
-      <FloatingMenuMemo
-        open={open}
-        setOpen={setOpen}
-        target={target}
-        setTarget={setTarget}
-        onSelectAsync={onSelectAsync}
-        onAddCoverAsync={onAddCoverAsync}
-        floatingRef={floatingRef}
-      />
-    </section>
+    </>
   );
 });
 

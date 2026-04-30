@@ -28,9 +28,9 @@ export const ThreadsList = ({
 
   return (
     <div className="threads-group">
-      {positionedThreads.map((t) => (
+      {positionedThreads.map((t, index) => (
         <ThreadsListItem
-          key={t.id}
+          key={index}
           thread={threads.find((thread) => thread.id === t.id)!}
           active={
             selectedThreads.some((thread) => thread.id === t.id) ||

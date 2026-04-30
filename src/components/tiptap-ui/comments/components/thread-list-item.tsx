@@ -72,7 +72,7 @@ export const ThreadsListItem = ({
           style={{
             position: "absolute",
             top: layout.anchorTop,
-            transform: `translateY(${layout.resolvedTop - layout.anchorTop}px)`,
+            // transform: `translateY(${layout.resolvedTop - layout.anchorTop}px)`,
           }}
         >
           <ThreadComposerSubmit
@@ -88,7 +88,8 @@ export const ThreadsListItem = ({
           className="thread-list-item"
           style={{
             top: layout.anchorTop,
-            transform: `translateY(${layout.resolvedTop - layout.anchorTop}px)`,
+            //   transition: "top 0.2s ease",
+            // transform: `translateY(${layout.resolvedTop - layout.anchorTop}px)`,
             width: "280px",
           }}
           tabIndex={0}

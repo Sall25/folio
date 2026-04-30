@@ -6,6 +6,9 @@ import type { Editor } from "@tiptap/react";
 import type { Transaction } from "@tiptap/pm/state";
 import { useActivePage } from "../use-active-page";
 import type { Page } from "../types";
+import { useThreadsOnPage } from "src/components/tiptap-ui/comments/hooks/use-threads-on-page";
+import { commentThreadPluginKey } from "src/components/tiptap-ui/comments/extensions/comment-thread-extension";
+import { useWhyDidYouRender } from "src/lib/useWhyDidYouRender";
 
 function getTitleChange(
   editor: Editor,
@@ -58,8 +61,14 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
   const debounceUpdatePageRef = useRef(debounceUpdatePage);
   const debounceUpdatePageFastRef = useRef(debounceUpdatePageFast);
   const createVersionAsyncRef = useRef(createVersionAsync);
-
+  const threads = useThreadsOnPage(activePageId);
   const { editor } = useCurrentEditor();
+
+  const threadsInitializedRef = useRef(false);
+
+  useEffect(() => {
+    threadsInitializedRef.current = false;
+  }, [activePageId]);
 
   useEffect(() => {
     createVersionAsyncRef.current = createVersionAsync;
@@ -145,18 +154,36 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
     // is done with any in-flight transactions
     requestAnimationFrame(() => {
       //  Guard: if user navigated again while frame was pending, bail
-      if (activePageId !== newPage.id) return;
+      if (activePageId !== newPage.id) {
+        return;
+      }
 
       editor.commands.setContent(content, { emitUpdate: false });
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePageId]);
+  }, [activePageId, isLoading]);
 
   useEffect(() => {
     if (!editor || !pages) return;
     editor.storage.pageLink.pages = pages;
-  }, [editor, pages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, pages?.length]);
+
+  useEffect(() => {
+    if (!editor) return;
+    if (!threads.threads) return;
+
+    editor.view.dispatch(
+      editor.state.tr.setMeta(commentThreadPluginKey, {
+        type: "initialThreads",
+        providedThreads: threads.threads ?? [],
+      }),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePageId, threads.threads, threads.isLoading]);
+
+  useWhyDidYouRender("active-page-provider", { editor, threads });
 
   return (
     <ActivePageContext.Provider

@@ -28,7 +28,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     editorProps: { attributes: EDITOR_ATTRIBUTES },
     extensions,
     shouldRerenderOnTransaction: false,
-    content: "<p></p>",
+    content: "<p>No content</p>",
   });
 
   const providedEditor = useMemo(() => ({ editor }), [editor]);
