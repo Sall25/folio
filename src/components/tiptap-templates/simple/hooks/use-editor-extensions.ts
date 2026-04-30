@@ -48,6 +48,7 @@ import { useMemo } from "react";
 import { PageLinkNode } from "src/components/tiptap-node/page-link-node";
 import { DiffExtension } from "src/components/tiptap-ui/version-history";
 import type { EditorExtensionRefs } from "../context/editor-extension-refs";
+import { CodeBlockNode } from "src/components/tiptap-node/code-block-node";
 
 export function useEditorExtensions(
   refsRef: React.RefObject<EditorExtensionRefs>,
@@ -62,7 +63,9 @@ export function useEditorExtensions(
         bulletList: false,
         orderedList: false,
         link: { openOnClick: false, enableClickSelection: true },
+        codeBlock: false,
       }),
+      CodeBlockNode,
       Typography,
       Selection,
       TextStyle,

@@ -206,7 +206,7 @@ body,
 // Center editor takes all remaining space
 .simple-editor-content {
   font-size: 1.08rem;
-  min-width: 800px;
+  min-width: 750px;
   // margin-top: 20px;
 
   transition: transform 0.2s ease;
@@ -219,15 +219,15 @@ body,
     transform: translateX(var(--x));
   }
   &[data-size="medium"] {
-    max-width: 800px;
+    max-width: 750px;
   }
 
   &[data-size="full"] {
-    max-width: 900px;
+    max-width: 850px;
   }
 
   &[data-text="small"]{
-    font-size: 0.85em;
+    font-size: 0.75em;
   }
 
   &[data-locked="true"]{

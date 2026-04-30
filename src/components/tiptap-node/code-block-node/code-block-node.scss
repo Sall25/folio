@@ -1,3 +1,5 @@
+@import "highlight.js/styles/github-dark.css";
+
 .tiptap.ProseMirror {
   --tt-inline-code-bg-color: var(--tt-gray-light-a-100);
   --tt-inline-code-text-color: var(--tt-gray-light-a-700);
@@ -20,35 +22,170 @@
    CODE FORMATTING
    ===================== */
 .tiptap.ProseMirror {
-  // Inline code
-  code {
-    background-color: var(--tt-inline-code-bg-color);
-    color: var(--tt-inline-code-text-color);
-    border: 1px solid var(--tt-inline-code-border-color);
-    font-family: "JetBrains Mono NL", monospace;
-    font-size: 0.875em;
-    line-height: 1.4;
-    border-radius: 6px/0.375rem;
-    padding: 0.1em 0.2em;
-  }
+  // code-block-node.scss
+  .code-block-wrapper {
+    --cb-bg: #1e1e1e;
+    --cb-header-bg: #2a2a2a;
+    --cb-border: rgba(255, 255, 255, 0.08);
+    --cb-text: #d4d4d4;
+    --cb-muted: rgba(255, 255, 255, 0.4);
+    --cb-tab-bg: #1e1e1e;
+    --cb-tab-text: rgba(255, 255, 255, 0.85);
+    --cb-radius: 8px;
 
-  // Code blocks
-  pre {
-    background-color: var(--tt-codeblock-bg);
-    color: var(--tt-codeblock-text);
-    border: 1px solid var(--tt-codeblock-border);
-    margin-top: 1.5em;
-    margin-bottom: 1.5em;
-    padding: 1em;
-    font-size: 1rem;
-    border-radius: 6px/0.375rem;
+    margin: 1.5em 0;
+    border-radius: var(--cb-radius);
+    border: 1px solid var(--cb-border);
+    overflow: hidden;
+    background: var(--cb-bg);
+    font-size: 0.675rem;
 
-    code {
-      background-color: transparent;
+    // Header
+    .code-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--cb-header-bg);
+      border-bottom: 1px solid var(--cb-border);
+      padding: 0 8px 0 0;
+      min-height: 36px;
+      user-select: none;
+    }
+
+    // Filename tab
+    .code-block-filename-tab {
+      display: flex;
+      align-items: stretch;
+      height: 100%;
+      min-height: 36px;
+    }
+
+    .code-block-filename {
+      display: inline-block;
+      padding: 0 16px;
+      min-width: 60px;
+      font-size: 0.8rem;
+      font-family: "JetBrains Mono NL", monospace;
+      color: var(--cb-tab-text);
+      background: var(--cb-tab-bg);
+      border-right: 1px solid var(--cb-border);
+      line-height: 36px;
+      outline: none;
+      cursor: text;
+
+      &:empty::before {
+        content: attr(data-placeholder);
+        color: var(--cb-muted);
+      }
+    }
+
+    // Right actions
+    .code-block-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    // Language selector
+    .code-block-lang-selector {
+      position: relative;
+    }
+
+    .code-block-lang-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: none;
+      background: transparent;
+      color: var(--cb-muted);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--cb-text);
+      }
+    }
+
+    .code-block-lang-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      background: #2a2a2a;
+      border: 1px solid var(--cb-border);
+      border-radius: 6px;
+      padding: 4px;
+      z-index: 50;
+      max-height: 200px;
+      overflow-y: auto;
+      min-width: 120px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .code-block-lang-option {
+      display: block;
+      width: 100%;
+      padding: 4px 8px;
+      border: none;
+      background: transparent;
+      color: var(--cb-muted);
+      font-size: 0.75rem;
+      text-align: left;
+      border-radius: 4px;
+      cursor: pointer;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--cb-text);
+      }
+
+      &.active {
+        color: var(--cb-text);
+        background: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    // Copy / more buttons
+    .code-block-copy-btn,
+    .code-block-more-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      border: none;
+      background: transparent;
+      color: var(--cb-muted);
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--cb-text);
+      }
+    }
+
+    // Code area
+    pre {
+      margin: 0;
+      padding: 1em 1.25em;
+      background: var(--cb-bg);
       border: none;
       border-radius: 0;
-      -webkit-text-fill-color: inherit;
-      color: inherit;
+      overflow-x: auto;
+
+      code {
+        font-family: "JetBrains Mono NL", monospace;
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: var(--cb-text);
+        background: transparent;
+        border: none;
+      }
     }
   }
 }
