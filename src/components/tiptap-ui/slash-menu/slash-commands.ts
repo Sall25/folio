@@ -1,5 +1,5 @@
 // slash-commands.ts
-import type { Editor } from "@tiptap/core";
+import { Editor } from "@tiptap/core";
 import type { LucideIcon } from "lucide-react";
 import {
   AtSign,
@@ -18,9 +18,11 @@ import {
   ListOrdered,
   Minus,
   Pilcrow,
+  Play,
   Quote,
   Smile,
   Table,
+  TypeOutline,
 } from "lucide-react";
 import { TodoListIcon, CodeBlockIcon } from "src/components/tiptap-icons";
 import type { Page } from "src/components/tiptap-templates/simple/types";
@@ -258,12 +260,73 @@ export const SLASH_COMMANDS: SlashCommand[] = [
       // setActivePageId(newPage.id as number);
     },
   },
+  // ─── Audio ─────────────────────────────────────────────
+  {
+    id: "audio",
+    type: "command",
+    title: "Audio",
+    icon: Play,
+    run: (e) => e.chain().focus().insertAudio().run(),
+  },
+  // ─── Callout ─────────────────────────────────────────────
+  {
+    id: "callout",
+    type: "command",
+    title: "Callout",
+    icon: TypeOutline,
+    run: (e) => e.chain().focus().insertCallout().run(),
+  },
   //  ─── Database ─────────────────────────────────────────────
   {
     id: "database-view",
     type: "command",
     title: "Inline Database",
     run: (e) => e.chain().focus().insertDatabase().run(),
+  },
+  {
+    id: "title-property",
+    type: "command",
+    title: "Title Property",
+    run: (e) => {
+      const { addPageAsync, activePageId } = e.storage.slashCommand;
+      addPageAsync({ title: "New task", parentId: activePageId }).then(
+        (newPage) =>
+          e
+            .chain()
+            .focus()
+            .insertTitleProperty({
+              pageId: newPage.id,
+              title: newPage.title,
+              parentId: activePageId,
+            })
+            .run(),
+      );
+    },
+  },
+  /** id: string;
+  label: string;
+  color: string; */
+  {
+    id: "select-property",
+    type: "command",
+    title: "Select Property",
+    run: (e) =>
+      e
+        .chain()
+        .focus()
+        .insertSelectProperty({
+          options: [
+            { id: "1", label: "Apple", color: "red" },
+            { id: "2", label: "Banana", color: "green" },
+          ],
+        })
+        .run(),
+  },
+  {
+    id: "number-property",
+    type: "command",
+    title: "Number Property",
+    run: (e) => e.chain().focus().insertNumberProperty({ value: 100 }).run(),
   },
   //  ─── Colors ─────────────────────────────────────────────
   // { id: "colorsDivider", type: "separator", title: "separator" },

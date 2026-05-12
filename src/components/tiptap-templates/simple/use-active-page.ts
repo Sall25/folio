@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { usePages, type UsePagesReturn } from "./use-pages";
 import type { Page } from "./types";
+import type { ID } from "src/components/tiptap-node/inline-database/types/types";
 import { useMatch, useNavigate } from "@tanstack/react-location";
 
 function findPage(pages: Page[], id: number): Page | undefined {
@@ -13,9 +14,14 @@ function findPage(pages: Page[], id: number): Page | undefined {
   }
 }
 
+function flattenPages(pages: Page[]): Page[] {
+  return pages.flatMap((p) => [p, ...flattenPages(p.children ?? [])]);
+}
+
 export type UseActivePageReturn = {
   pages: Page[] | undefined;
   activePage: Page | null;
+  templates: Page[];
   isLoading: boolean;
   updateSettingsAsync: (patch: Partial<Page["settings"]>) => Promise<void>;
   updateCoverAsync: (cover: Page["cover"]) => Promise<void>;
@@ -27,11 +33,20 @@ export type UseActivePageReturn = {
   query: string;
   onSearch: (search: string) => void;
   updatePageAsync: (page: Page) => Promise<Page>;
+  updateDatabaseLinkAsync: (
+    id: number,
+    databaseId: ID,
+    recordId: ID,
+  ) => Promise<void>;
   addCoverAsync: (id: number) => Promise<void>;
   debounceUpdatePage: UsePagesReturn["debounceUpdatePage"];
   debounceUpdatePageFast: UsePagesReturn["debounceUpdatePageFast"];
   activePageId: number | undefined;
   setActivePageId: (pageId: number | undefined) => void;
+  addPageTemplateAsync: (data: {
+    title: string;
+    parentId: number | null;
+  }) => Promise<Page>;
 };
 
 export function useActivePage(): UseActivePageReturn {
@@ -46,18 +61,17 @@ export function useActivePage(): UseActivePageReturn {
     addCoverAsync,
     debounceUpdatePage,
     debounceUpdatePageFast,
+    addPageTemplateAsync,
   } = usePages();
 
   const { params } = useMatch();
   const navigate = useNavigate();
 
-  // Single source of truth: derive directly from URL, no state/effect needed
   const activePageId = useMemo(
     () => (params.pageId ? Number(params.pageId) : undefined),
     [params.pageId],
   );
 
-  //  Derive activePage directly too — no useState, no effect, no extra render
   const activePage = useMemo(
     () =>
       activePageId === undefined || !pages
@@ -65,7 +79,13 @@ export function useActivePage(): UseActivePageReturn {
         : (findPage(pages, activePageId) ?? null),
     [pages, activePageId],
   );
-  // Refs kept in sync for use inside stable callbacks
+
+  const templates = useMemo(
+    () =>
+      pages ? flattenPages(pages).filter((p) => p.category === "Template") : [],
+    [pages],
+  );
+
   const activePageIdRef = useRef(activePageId);
   const activePageRef = useRef(activePage);
   const pagesRef = useRef(pages);
@@ -73,18 +93,15 @@ export function useActivePage(): UseActivePageReturn {
   useEffect(() => {
     activePageIdRef.current = activePageId;
   }, [activePageId]);
-
   useEffect(() => {
     activePageRef.current = activePage;
   }, [activePage]);
-
   useEffect(() => {
     pagesRef.current = pages;
   }, [pages]);
 
   const setActivePageId = useCallback(
     (id: number | undefined) => {
-      // Navigation IS the state update — URL is the source of truth
       if (id === undefined) navigate({ to: "/" });
       else navigate({ to: `/page/${id}` });
     },
@@ -126,16 +143,21 @@ export function useActivePage(): UseActivePageReturn {
     [updatePageAsync],
   );
 
+  const updateDatabaseLinkAsync = useCallback(
+    async (id: number, databaseId: ID, recordId: ID) => {
+      const page = findPage(pagesRef.current ?? [], id);
+      if (!page) return;
+      await updatePageAsync({ ...page, databaseId, recordId });
+    },
+    [updatePageAsync],
+  );
+
   const deletePageAsync = useCallback(
     async (id: number) => {
       await providedDeletePageAsync(id);
 
       if (activePageIdRef.current === id) {
-        const flatPages =
-          pagesRef.current?.flatMap(function flatten(p): Page[] {
-            return [p, ...(p.children ?? []).flatMap(flatten)];
-          }) ?? [];
-
+        const flatPages = flattenPages(pagesRef.current ?? []);
         const nextPage = flatPages.find((p) => p.id !== id);
         if (nextPage) setActivePageId(nextPage.id);
       }
@@ -145,7 +167,6 @@ export function useActivePage(): UseActivePageReturn {
 
   useEffect(() => {
     return () => {
-      // Runs when activePageId changes — flushes before new page loads
       debounceUpdatePage.flush();
       debounceUpdatePageFast.flush();
     };
@@ -153,8 +174,9 @@ export function useActivePage(): UseActivePageReturn {
 
   return {
     pages,
-    activePage, // From state — reactive
-    activePageId, // From state — reactive
+    activePage,
+    templates,
+    activePageId,
     isLoading,
     setActivePageId,
     updateSettingsAsync,
@@ -164,8 +186,10 @@ export function useActivePage(): UseActivePageReturn {
     query,
     onSearch,
     updatePageAsync,
-    debounceUpdatePage,
+    updateDatabaseLinkAsync,
     addCoverAsync,
+    debounceUpdatePage,
     debounceUpdatePageFast,
+    addPageTemplateAsync,
   };
 }

@@ -1,20 +1,41 @@
-import { useState, useCallback, useEffect } from "react";
-import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/simple-editor-context";
+// use-version-history.ts
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { Version } from "./types";
-import type { PageSettings } from "src/components/tiptap-templates/simple/types";
-import { useVersionContext } from "src/components/tiptap-templates/simple/context/version-context";
+import type {
+  Page,
+  PageSettings,
+} from "src/components/tiptap-templates/simple/types";
+import { useVersions } from "./use-versions";
 
-export function useVersionHistory() {
-  const { activePage, updatePageAsync } = useSimpleEditor();
-
-  const { versions, nameVersionAsync, createVersionAsync } =
-    useVersionContext();
+export function useVersionHistory(
+  activePage: Page | null,
+  updatePageAsync: (page: Page) => Promise<Page>,
+) {
+  // No longer calls useActivePage — receives values as args
+  const { versions, nameVersionAsync, createVersionAsync } = useVersions(
+    activePage?.id,
+  );
 
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [namingVersionId, setNamingVersionId] = useState<string | null>(null);
   const [nameInput, setNameInput] = useState("");
 
+  // Ref to skip effect on mount and page navigation
+  const isFirstRender = useRef(true);
+
+  // Reset on page change
   useEffect(() => {
+    isFirstRender.current = true;
+    setSelectedVersion(null);
+    setNamingVersionId(null);
+    setNameInput("");
+  }, [activePage?.id]);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     if (!activePage) return;
 
     const settings: PageSettings = {
@@ -88,5 +109,6 @@ export function useVersionHistory() {
     saveNameAsync,
     restoreVersionAsync,
     createNamedVersionAsync,
+    createVersionAsync,
   };
 }

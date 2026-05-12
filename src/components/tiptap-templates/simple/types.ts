@@ -1,4 +1,13 @@
 import type { JSONContent } from "@tiptap/core";
+import type { ID } from "src/components/tiptap-node/inline-database/types/types";
+
+export type PageCategory =
+  | "Recent"
+  | "Favorites"
+  | "Shared"
+  | "Private"
+  | "Template"
+  | "Page";
 
 export type PageSettings = {
   width: "medium" | "full";
@@ -25,6 +34,9 @@ export type Page = {
   updatedAt: string | null;
   parentId: number | null;
   children: Page[];
+  category?: PageCategory;
+  databaseId?: ID;
+  recordId?: ID;
 };
 
 export type SimpleEditorContentProps = {

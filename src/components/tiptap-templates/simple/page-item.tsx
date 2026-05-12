@@ -7,41 +7,45 @@ import type { Page } from "./types";
 
 import "./page-item.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { useSimpleEditor } from "./context/simple-editor-context";
 import { useActivePage } from "./use-active-page";
+import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { useIsActivePage } from "./use-is-active-page";
 
 interface PageItemProps {
   page: Page;
   depth?: number;
+  disableActive?: boolean;
 }
 
-export function PageItem({ page, depth = 0 }: PageItemProps) {
+export function PageItem({
+  page,
+  depth = 0,
+  disableActive = false,
+}: PageItemProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(page.title);
   const [expanded, setExpanded] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasChildren = page.children && page.children.length > 0;
   const [shouldShow, setShouldShow] = useState(false);
 
-  const { activePage, addPageAndActivateAsync, updatePageAsync } =
-    useSimpleEditor();
+  const isActiveRaw = useIsActivePage(page.id);
+  const isActive = isActiveRaw && !disableActive;
 
-  const title =
-    activePage?.id === page.id
-      ? activePage.title || "New Page"
-      : page.title || "New Page";
-  const cover = activePage?.id === page.id ? activePage.cover : page.cover;
+  const { addPageAndActivateAsync, updatePageAsync } = useActivePage();
+
+  const title = page.title || "New Page";
+  const cover = page.cover;
 
   useEffect(() => {
     if (editing) {
       inputRef.current?.focus();
-      inputRef.current?.select();
     }
   }, [editing]);
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setDraft(page.title));
-
     return () => cancelAnimationFrame(raf);
   }, [page.title]);
 
@@ -55,32 +59,33 @@ export function PageItem({ page, depth = 0 }: PageItemProps) {
     setEditing(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter") commit();
     if (e.key === "Escape") {
       setDraft(page.title);
       setEditing(false);
     }
   };
+
   const { setActivePageId } = useActivePage();
   const onSelect = (pageId: number) => {
+    console.time("navigation");
     setActivePageId(pageId);
+    console.timeEnd("navigation");
   };
 
   return (
     <div className="page-item-tree">
       <CardItemGroup
         orientation="horizontal"
-        className={`page-item ${activePage?.id === page.id ? "active" : ""}`}
+        className={`page-item ${isActive ? "active" : ""}`}
         style={{
           paddingLeft: `${6 + depth * 14}px`,
           paddingTop: 3,
           paddingBottom: 3,
           borderRadius: 3,
         }}
-        onClick={() => {
-          onSelect(page.id);
-        }}
+        onClick={() => onSelect(page.id)}
         onMouseOver={() => setShouldShow(true)}
         onMouseLeave={() => setShouldShow(false)}
       >
@@ -95,6 +100,7 @@ export function PageItem({ page, depth = 0 }: PageItemProps) {
           style={{
             zIndex: 10,
             opacity: shouldShow && hasChildren ? 1 : 0,
+            borderRadius: "var(--tt-radius-sm)",
             transition: "opacity 150ms ease",
             position: "absolute",
           }}
@@ -117,8 +123,10 @@ export function PageItem({ page, depth = 0 }: PageItemProps) {
         />
 
         {editing ? (
-          <input
+          <TextareaAutosize
             ref={inputRef}
+            cols={40}
+            maxRows={1}
             className="page-title-input"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -127,28 +135,34 @@ export function PageItem({ page, depth = 0 }: PageItemProps) {
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span className="page-title">{title || "New Page"}</span>
+          <span style={{ fontSize: 13.4, marginLeft: 5, fontFamily: "Inter" }}>
+            {title || "New Page"}
+          </span>
         )}
 
-        <PageItemOptions
-          page={page}
-          onRenameAsync={async () => setEditing(true)}
-        />
-        {shouldShow && (
+        <Spacer orientation="horizontal" />
+
+        <div className="page-item-actions">
+          <PageItemOptions
+            onOpenChange={(v) => setShouldShow(v)}
+            page={page}
+            onRenameAsync={async () => setEditing(true)}
+          />
           <Button
-            style={{ minWidth: 6, width: 6, minHeight: 6, height: 6 }}
+            style={{ minWidth: 20, width: 20, minHeight: 20, height: 20 }}
             variant="ghost"
             tooltip="New page"
-            onClick={async () =>
+            onClick={async (e) => {
+              e.stopPropagation();
               await addPageAndActivateAsync({
                 title: "New Page",
                 parentId: page.id,
-              })
-            }
+              });
+            }}
           >
-            <Plus size={6} className="tiptap-button-icon" />
+            <Plus size={12} className="tiptap-button-icon" />
           </Button>
-        )}
+        </div>
       </CardItemGroup>
 
       {/* Children */}

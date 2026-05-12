@@ -1,3 +1,4 @@
+
 .tiptap.ProseMirror {
   --tt-collaboration-carets-label: var(--tt-gray-light-900);
   --link-text-color: var(--tt-brand-color-500);
@@ -15,7 +16,7 @@
     --thread-text: var(--tt-gray-dark-900);
     --placeholder-color: var(--tt-gray-dark-a-400);
     --thread-bg-color: var(--tt-color-yellow-dec-2);
-     --tt-cursor-color: var(--tt-brand-color-400);
+    --tt-cursor-color: var(--tt-brand-color-400);
 
     --tiptap-ai-insertion-color: var(--tt-brand-color-400);
   }
@@ -33,15 +34,15 @@
 }
 
 /* =====================
-     CORE EDITOR STYLES
-     ===================== */
+   CORE EDITOR STYLES
+   ===================== */
 .tiptap.ProseMirror {
-  font-family: 'Inter', sans-serif;
-  font-size: 1.02rem;
+  font-family: DM Sans, sans-serif;
+  font-size: 0.98rem;
   white-space: pre-wrap;
   outline: none;
-  caret-color: var(--tt-cursor-color);
-  font-family: DM Sans, sans-serif;
+  // Hide native caret — custom cursor plugin takes over
+  caret-color: transparent;
   line-height: 1.85;
   letter-spacing: -0.003em;
 
@@ -68,14 +69,38 @@
     background-color: var(--tt-selection-color);
   }
 
-  .ProseMirror-selectednode:not(img):not(pre):not(.react-renderer) {
-    border-radius: var(--tt-radius-md);
-    background-color: var(--tt-selection-color);
+  &:not(.readonly):not(.ProseMirror-hideselection) {
+
+  ::selection {
+      background-color: var(--tt-selection-color);
   }
+
+  .selection::selection {
+      background: transparent;
+    }
+  }
+
+
 
   .ProseMirror-hideselection {
     caret-color: transparent;
   }
+
+
+  .ProseMirror-selectednode:not(img):not(pre):not(.react-renderer) {
+    border-radius: var(--tt-radius-md);
+    background-color: var(--tt-selection-color);
+     /* Prevent sub-elements from inheriting the selection background */
+    > * {
+      background-color: transparent !important;
+    }
+
+    &::selection,
+    & *::selection {
+      background-color: transparent;
+    }
+  }
+
 
   &.resize-cursor {
     cursor: ew-resize;
@@ -84,26 +109,29 @@
 }
 
 /* =====================
-     CURSOR
-     ===================== */
-.tiptap.ProseMirror {
-  // Makes the native caret thicker and more visible
-  caret-color: var(--tt-cursor-color);
+   TALL CURSOR
+   ===================== */
 
-  // ProseMirror's own cursor element (cross-browser thickness)
-  .ProseMirror-cursor {
-    border-left: 4px solid var(--tt-cursor-color);
-    margin-left: -1px;
-    pointer-events: none;
-    position: relative;
-  }
+// The custom cursor element injected by TallCursor extension
+.custom-cursor {
+  position: absolute;
+  width: 2px;
+  background-color: var(--tt-cursor-color);
+  pointer-events: none;
+  border-radius: 1px;
+  z-index: 1;
+  animation: tt-cursor-blink 1.1s step-start infinite;
+}
+
+@keyframes tt-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
 }
 
 /* =====================
-     TEXT DECORATION
-     ===================== */
+   TEXT DECORATION
+   ===================== */
 .tiptap.ProseMirror {
-  // Text decoration inheritance for spans
   a span {
     text-decoration: underline;
   }
@@ -122,8 +150,8 @@
 }
 
 /* =====================
-     COLLABORATION
-     ===================== */
+   COLLABORATION
+   ===================== */
 .tiptap.ProseMirror {
   .collaboration-carets {
     &__caret {
@@ -154,36 +182,34 @@
 }
 
 /* =====================
-     EMOJI
-     ===================== */
+   EMOJI
+   ===================== */
 .tiptap.ProseMirror {
   .emoji {
-    // Drop the img styles, render the unicode directly
     font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 
                  'Noto Color Emoji', sans-serif;
     font-style: normal;
     line-height: 1;
     display: inline;
-    vertical-align: -0.1em; // subtle baseline alignment with text
+    vertical-align: -0.1em;
     height: 1.2em;
     width: 1.2em;
   }
 
-  // Remove the image rules entirely
   [data-type="emoji"] img {
     display: none;
-      font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 
+    font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 
                  'Noto Color Emoji', sans-serif;
     font-style: normal;
     line-height: 1;
     display: inline;
-    vertical-align: -0.1em; // subtle baseline alignment with text
+    vertical-align: -0.1em;
   }
 }
 
 /* =====================
-     LINKS
-     ===================== */
+   LINKS
+   ===================== */
 .tiptap.ProseMirror {
   a {
     color: var(--link-text-color);
@@ -192,32 +218,29 @@
 }
 
 /* =====================
-     MENTION
-     ===================== */
+   MENTION
+   ===================== */
 .tiptap.ProseMirror {
   [data-type="mention"] {
     display: inline-block;
     color: var(--tt-brand-color-400);
     cursor: pointer;
-   // max-height: 25px;
     margin: 0;
     padding: 0;
     font-size: 15.5px;
     font-weight: 400;
 
-   &:hover{
-   
-    color: var(--tt-brand-color-500);
-    background-color: transparent;
-   }
+    &:hover {
+      color: var(--tt-brand-color-500);
+      background-color: transparent;
+    }
   }
 }
 
 /* =====================
-     THREADS
-     ===================== */
+   THREADS
+   ===================== */
 .tiptap.ProseMirror {
-  // Base styles for inline threads
   .tiptap-thread.tiptap-thread--unresolved.tiptap-thread--inline {
     transition:
       color 0.2s ease-in-out,
@@ -233,7 +256,6 @@
     }
   }
 
-  // Block thread styles with images
   .tiptap-thread.tiptap-thread--unresolved.tiptap-thread--block {
     &:has(img) {
       outline: 0.125rem solid var(--tt-color-yellow-base);
@@ -251,7 +273,6 @@
       }
     }
 
-    // Block thread styles without images
     &:not(:has(img)) {
       border-radius: 0.25rem;
       border-bottom: 0.125rem dashed var(--tt-color-yellow-base);
@@ -266,23 +287,16 @@
     }
   }
 
-  // Resolved thread styles
   .tiptap-thread.tiptap-thread--resolved.tiptap-thread--inline.tiptap-thread--selected {
     background-color: var(--tt-color-yellow-base);
     border-color: transparent;
     opacity: 0.5;
   }
-
-  // // React renderer specific styles
-  // .tiptap-thread.tiptap-thread--block:has(.react-renderer) {
-  //   margin-top: 3rem;
-  //   margin-bottom: 3rem;
-  // }
 }
 
 /* =====================
-     PLACEHOLDER
-     ===================== */
+   PLACEHOLDER
+   ===================== */
 .is-empty:not(.with-slash)[data-placeholder]:has(
     > .ProseMirror-trailingBreak:only-child
   )::before {
@@ -317,20 +331,23 @@ td .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::bef
 th .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before {
   content: none !important;
 }
-/* Suppress placeholder inside list items and task list items */
+
+/* Suppress placeholder inside list items and blockquote */
 li .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before,
-blockquote .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before  
-{
-  //content: none !important;
- left: 1rem; 
+blockquote .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before {
+  left: 1rem;
 }
-ul[data-type="taskList"] .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before{
+
+ul[data-type="taskList"] .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before {
   left: 1.9rem;
+}
+.node-callout .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before{
+  left: 3.19rem;
 }
 
 /* =====================
-     DROPCURSOR
-     ===================== */
+   DROPCURSOR
+   ===================== */
 .prosemirror-dropcursor-block,
 .prosemirror-dropcursor-inline {
   background: var(--tt-brand-color-400) !important;
@@ -343,14 +360,13 @@ ul[data-type="taskList"] .is-empty[data-placeholder]:has(> .ProseMirror-trailing
 }
 
 /* =====================
-     INDENT
-     ===================== */
-
+   INDENT
+   ===================== */
 .tiptap.ProseMirror {
-    --tt-indent-unit: 24px;
+  --tt-indent-unit: 24px;
 }
 
 .tiptap.ProseMirror [data-indent] {
-    margin-left: calc(var(--tt-indent-unit)*var(--tt-indent-level,0));
-    transition: margin-left .2s ease-in-out;
+  margin-left: calc(var(--tt-indent-unit) * var(--tt-indent-level, 0));
+  transition: margin-left 0.2s ease-in-out;
 }

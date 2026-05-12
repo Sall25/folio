@@ -1,0 +1,15 @@
+.db-td--email {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+}
+
+.db-cell-email__link {
+  color: var(--link-text-color);
+  text-decoration: underline;
+  font-size: inherit;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}

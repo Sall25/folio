@@ -30,6 +30,7 @@ import {
   NodeClearContents,
   NodeColor,
   NodeFit,
+  TallCursor,
 } from "src/components/tiptap-extension";
 
 import { ImageUploadNode } from "src/components/tiptap-node/image-upload-node/image-upload-node-extension";
@@ -40,7 +41,7 @@ import { TableContextExtension } from "src/components/tiptap-node/table-node";
 import { TableWrapperNode } from "src/components/tiptap-node/table-node/extensions/table-context";
 import { Column, ColumnBlock } from "src/components/tiptap-node/column-node";
 import { TocNode } from "src/components/tiptap-node/toc-node/toc-node-extension";
-import { DatabaseNode } from "src/components/tiptap-node/database-node";
+import { DatabaseTableNode } from "src/components/tiptap-node/inline-database";
 
 import { handleImageUpload, MAX_FILE_SIZE } from "src/lib/tiptap-utils";
 import { TitleNode } from "src/components/tiptap-node/title-node";
@@ -49,6 +50,27 @@ import { PageLinkNode } from "src/components/tiptap-node/page-link-node";
 import { DiffExtension } from "src/components/tiptap-ui/version-history";
 import type { EditorExtensionRefs } from "../context/editor-extension-refs";
 import { CodeBlockNode } from "src/components/tiptap-node/code-block-node";
+import { SelectPropertyNode } from "src/components/tiptap-node/database-node/select-property-node";
+import { CalloutExtension } from "src/components/tiptap-node/callout-node";
+import { AudioExtension } from "src/components/tiptap-node/audio-node";
+import { DatabaseRecordNode } from "src/components/tiptap-node/inline-database/nodes/database-record-node";
+import { TitleCellNode } from "src/components/tiptap-node/inline-database/nodes/title-cell-node";
+import { SelectCellNode } from "src/components/tiptap-node/inline-database/nodes/select-cell-node";
+import { CheckboxCellNode } from "src/components/tiptap-node/inline-database/nodes/checkbox-cell-node";
+import { FileNode } from "src/components/tiptap-node/file-node";
+import { EmailCellNode } from "src/components/tiptap-node/inline-database/nodes/email-cell-node";
+import { FileCellNode } from "src/components/tiptap-node/inline-database/nodes/file-cell-node";
+import { MultiSelectCellNode } from "src/components/tiptap-node/inline-database/nodes/multiselect-cell-node";
+import { StatusCellNode } from "src/components/tiptap-node/inline-database/nodes/status-cell-node";
+import { NumberCellNode } from "src/components/tiptap-node/inline-database/nodes/number-cell-node";
+import { PhoneCellNode } from "src/components/tiptap-node/inline-database/nodes/phone-cell-node";
+import { RollupCellNode } from "src/components/tiptap-node/inline-database/nodes/rollup-cell-node";
+import { TextCellNode } from "src/components/tiptap-node/inline-database/nodes/text-cell-node";
+import { UrlCellNode } from "src/components/tiptap-node/inline-database/nodes/url-cell-node";
+import { CreatedTimeCellNode } from "src/components/tiptap-node/inline-database/nodes/created-time-cell-node";
+import { EditedTimeCellNode } from "src/components/tiptap-node/inline-database/nodes/edited-time-cell-node";
+import { DueDateCellNode } from "src/components/tiptap-node/inline-database/nodes/due-date-cell-node";
+import { FormulaCellNode } from "src/components/tiptap-node/inline-database/nodes/formula-cell-node";
 
 export function useEditorExtensions(
   refsRef: React.RefObject<EditorExtensionRefs>,
@@ -121,8 +143,6 @@ export function useEditorExtensions(
       }),
       Column,
       ColumnBlock,
-      DatabaseNode,
-
       // --- Table ---
       TableKit.configure({ table: false }),
       TableContextExtension.configure({ resizable: true, handleWidth: 1 }),
@@ -186,8 +206,37 @@ export function useEditorExtensions(
         ],
         attributeName: "id",
       }),
+      FileNode.configure({
+        upload: handleImageUpload,
+        accept: "*/*",
+        maxSize: 10 * 1024 * 1024,
+        limit: 10,
+      }),
       DiffExtension,
       DragHandleExtension,
+
+      FormulaCellNode,
+      EmailCellNode,
+      FileCellNode,
+      MultiSelectCellNode,
+      StatusCellNode,
+      NumberCellNode,
+      PhoneCellNode,
+      RollupCellNode,
+      TextCellNode,
+      UrlCellNode,
+      CreatedTimeCellNode,
+      EditedTimeCellNode,
+      DueDateCellNode,
+      SelectPropertyNode,
+      CheckboxCellNode,
+      TitleCellNode,
+      SelectCellNode,
+      DatabaseRecordNode,
+      DatabaseTableNode,
+      CalloutExtension,
+      AudioExtension,
+      TallCursor,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

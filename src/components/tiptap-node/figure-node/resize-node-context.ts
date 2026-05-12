@@ -8,9 +8,9 @@ export const ResizableNodeContext = createContext<ResizableNodeContextType>({
   startY: 0,
   startWidth: 0,
   startHeight: 0,
-  elementDimensions: { width: 0, height: 0, offsetWidth: 0, offsetHeight: 0 },
+  // elementDimensions: { width: 0, height: 0, offsetWidth: 0, offsetHeight: 0 },
   aspectRatio: 1,
-  nodeRef: null
+  nodeRef: null,
 });
 
 export function useResizableNode() {

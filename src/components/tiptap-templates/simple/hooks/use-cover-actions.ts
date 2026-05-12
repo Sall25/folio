@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Target } from "src/components/tiptap-ui/cover/types";
+import type { Page } from "../types";
 import { useSimpleEditor } from "../context/simple-editor-context";
 
-export function useCoverActions() {
+export function useCoverActions(providedPage?: Page) {
   const { activePage, updateCoverAsync, addCoverAsync } = useSimpleEditor();
 
-  const activePageRef = useRef(activePage);
+  const page = providedPage ?? activePage;
+
+  const activePageRef = useRef(page);
   const floatingRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState<Target>("Emoji");
@@ -15,14 +18,17 @@ export function useCoverActions() {
   const addCoverAsyncRef = useRef(addCoverAsync);
 
   useEffect(() => {
-    activePageRef.current = activePage;
-  }, [activePage]);
+    activePageRef.current = providedPage ?? activePage;
+  }, [providedPage, activePage]);
+
   useEffect(() => {
     targetRef.current = target;
   }, [target]);
+
   useEffect(() => {
     updateCoverAsyncRef.current = updateCoverAsync;
   }, [updateCoverAsync]);
+
   useEffect(() => {
     addCoverAsyncRef.current = addCoverAsync;
   }, [addCoverAsync]);
@@ -36,12 +42,12 @@ export function useCoverActions() {
       target: targetRef.current,
       color,
     });
-  }, []); // stable forever
+  }, []);
 
   const onAddCoverAsync = useCallback(async () => {
     if (!activePageRef.current?.id) return;
     await addCoverAsyncRef.current(activePageRef.current.id);
-  }, []); // stable forever
+  }, []);
 
   return {
     activePageRef,

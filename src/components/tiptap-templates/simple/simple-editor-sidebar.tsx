@@ -4,151 +4,73 @@ import {
   Home,
   FileEdit,
   LayoutTemplate,
-  ChevronsRight,
-  ChevronsLeft,
-  Info,
-  ChevronDown,
-  Settings,
-  UserRoundSearch,
-  FileText,
-  Table,
-  Shapes,
-  SquarePen,
+  Lock,
+  Users,
+  Bell,
+  PanelRight,
+  PanelLeft,
+  Plus,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
-  CardBody,
   CardFooter,
   CardGroupLabel,
   CardHeader,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
 
 import "./simple-editor-sidebar.scss";
 import { PageItem } from "./page-item";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { useState } from "react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "src/components/tiptap-ui-primitive/popover";
+import { useMemo, useState } from "react";
 import { useSimpleEditor } from "./context/simple-editor-context";
 import { useNavigate } from "@tanstack/react-location";
 import { useActivePage } from "./use-active-page";
-
-// ============================================================
-// Sub-components
-// ============================================================
-function UserSpace({ name }: { name: string }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardItemGroup orientation="horizontal">
-          <CardItemGroup orientation="vertical">
-            <CardGroupLabel>
-              <AvatarDemo />
-              <span>{name}</span>
-            </CardGroupLabel>
-            <CardGroupLabel>Free Plan - 1 member</CardGroupLabel>
-            <CardItemGroup orientation="horizontal">
-              <Button>
-                <Settings className="tiptap-button-icon" />
-                <span>Settings</span>
-              </Button>
-              <Button>
-                <UserRoundSearch className="tiptap-button-icon" />
-                <span>Invite members</span>
-              </Button>
-            </CardItemGroup>
-          </CardItemGroup>
-        </CardItemGroup>
-      </CardHeader>
-      <CardBody>
-        <CardItemGroup orientation="vertical">
-          <span>Create work account</span>
-          <span>Add another account</span>
-          <span>Log out</span>
-          <span>Get Windows app</span>
-        </CardItemGroup>
-      </CardBody>
-    </Card>
-  );
-}
-
-function UserSpacePopover({ name }: { name: string }) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" tooltip="Workspace">
-          <ChevronDown className="tiptap-button-icon" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent style={{ zIndex: 999 }}>
-        <UserSpace name={name} />
-      </PopoverContent>
-    </Popover>
-  );
-}
+import type { Page } from "./types";
+import { Logo } from "./components";
 
 function User({ name }: { name: string }) {
-  const [hide, setHide] = useState(true);
-
   return (
-    <ButtonGroup
+    <CardItemGroup
       orientation="horizontal"
-      onMouseOver={() => setHide(false)}
-      onMouseLeave={() => setHide(true)}
+      style={{ width: "100%", justifyContent: "flex-start" }}
     >
-      <span
+      <div
         style={{
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          maxWidth: 160,
-          display: "inline-block",
+          width: 32,
+          height: 32,
+          borderRadius: "var(--tt-radius-md)",
+          background: "var(--tt-brand-color-400)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 11,
+          fontWeight: 600,
+          color: "#fff",
+          flexShrink: 0,
+          letterSpacing: 0.2,
         }}
       >
-        {name}
-      </span>
-      <Spacer orientation="horizontal" />
-      {!hide && <UserSpacePopover name={name} />}
-    </ButtonGroup>
-  );
-}
-
-function WorkSpaceOptions() {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" tooltip="Options">
-          <ChevronDown className="tiptap-button-icon" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent style={{ zIndex: 999 }}>
-        <Card>
-          <CardBody>
-            <Button>
-              <FileText className="tiptap-button-icon" />
-              <span>Page</span>
-            </Button>
-            <Button>
-              <Table className="tiptap-button-icon" />
-              <span>Database</span>
-            </Button>
-          </CardBody>
-          <CardFooter>
-            <Button>
-              <Shapes className="tiptap-button-icon" />
-              <span>Templates</span>
-            </Button>
-          </CardFooter>
-        </Card>
-      </PopoverContent>
-    </Popover>
+        JS
+      </div>
+      <CardItemGroup>
+        <span
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            fontSize: 13,
+            display: "inline-block",
+            fontWeight: "400",
+          }}
+        >
+          {name}
+        </span>
+        <span style={{ fontSize: 10, opacity: 0.8 }}>Pro plan</span>
+      </CardItemGroup>
+    </CardItemGroup>
   );
 }
 
@@ -161,8 +83,16 @@ function CreatePageButton() {
       onClick={async () => {
         await addPageAndActivateAsync({ title: "New Page", parentId: null });
       }}
+      style={{
+        justifyContent: "flex-start",
+        borderRadius: "var(--tt-radius-sm)",
+        // fontFamily: "inherit",
+        fontSize: 13,
+        marginTop: 10,
+      }}
     >
-      <SquarePen className="tiptap-button-icon" />
+      <Plus className="tiptap-button-icon" />
+      <span className="tiptap-button-text">New Page</span>
     </Button>
   );
 }
@@ -182,11 +112,31 @@ function WorkspaceHeader({
         orientation={collapsed ? "vertical" : "horizontal"}
         onMouseLeave={() => setHide(true)}
         onMouseOver={() => setHide(false)}
+        style={{ width: "100%" }}
       >
-        <AvatarDemo />
-        {!collapsed && <User name="Souleymane Sall" />}
+        {/* <div
+          style={{
+            width: 24,
+            height: 24,
+            borderRadius: 4,
+            background: "var(--tt-brand-color-400)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 11,
+            fontWeight: 600,
+            color: "#fff",
+            flexShrink: 0,
+            letterSpacing: 0.2,
+          }}
+        >
+          JS
+        </div> */}
+        {!collapsed && <Logo collapsed={collapsed} />}
 
-        {!collapsed && <CreatePageButton />}
+        {/* {!collapsed && <CreatePageButton />} */}
+
+        <Spacer orientation="horizontal" />
         <Button
           variant="ghost"
           className="sidebar-collapse-btn"
@@ -194,13 +144,21 @@ function WorkspaceHeader({
           tooltip={collapsed ? "Expand" : "Collapse"}
         >
           {collapsed ? (
-            <ChevronsRight size={14} className="tiptap-button-icon" />
+            <PanelRight
+              size={14}
+              className="tiptap-button-icon"
+              style={{ width: 20, height: 18 }}
+            />
           ) : (
-            <ChevronsLeft size={14} className="tiptap-button-icon" />
+            <PanelLeft
+              size={14}
+              className="tiptap-button-icon"
+              style={{ width: 20, height: 18 }}
+            />
           )}
         </Button>
 
-        {!collapsed && <WorkSpaceOptions />}
+        {/* {!collapsed && <WorkSpaceOptions />} */}
       </CardItemGroup>
     </CardHeader>
   );
@@ -214,29 +172,164 @@ function NavItems({ collapsed }: { collapsed: boolean }) {
     navigate({ to: "/" });
   };
   return (
-    <ButtonGroup className="sidebar-nav">
-      <Button variant="ghost" className="sidebar-nav-item" title="Home">
-        <Search className="tiptap-button-icon" size={20} />
-        {!collapsed && <span>Search</span>}
-      </Button>
-      <Button
-        variant="ghost"
-        className="sidebar-nav-item"
-        title="Home"
-        onClick={handleHomeClick}
+    <ButtonGroup
+      style={{ gap: 3, width: "100%", marginTop: 10, marginRight: 5 }}
+    >
+      <ButtonGroup
+        style={{ gap: 3, width: "100%" }}
+        orientation={collapsed ? "vertical" : "horizontal"}
       >
-        <Home className="tiptap-button-icon" size={16} />
-        {!collapsed && <span>Home</span>}
-      </Button>
-      <Button variant="ghost" className="sidebar-nav-item" title="Drafts">
-        <FileEdit className="tiptap-button-icon" size={16} />
-        {!collapsed && <span>Drafts</span>}
-      </Button>
-      <Button variant="ghost" className="sidebar-nav-item" title="Templates">
-        <LayoutTemplate className="tiptap-button-icon" size={16} />
-        {!collapsed && <span>Templates</span>}
-      </Button>
+        <Button
+          variant="ghost"
+          title="Home"
+          onClick={handleHomeClick}
+          style={{
+            padding: "3px 10px",
+            minHeight: 20,
+            height: 28,
+            fontFamily: "inherit",
+          }}
+        >
+          <Home strokeWidth={2.25} className="tiptap-button-icon" />
+          {!collapsed && <span className="tiptap-button-text">Home</span>}
+        </Button>
+
+        <Spacer orientation={collapsed ? "vertical" : "horizontal"} />
+
+        <Button
+          variant="ghost"
+          title="Search"
+          style={{
+            padding: "3px 10px",
+            minHeight: 20,
+            height: 28,
+            fontFamily: "inherit",
+          }}
+        >
+          <Search className="tiptap-button-icon" />
+          {!collapsed && <span className="tiptap-button-text">Search</span>}
+        </Button>
+
+        <Spacer orientation={collapsed ? "vertical" : "horizontal"} />
+        <Button
+          variant="ghost"
+          title="Drafts"
+          style={{
+            padding: "3px 10px",
+            minHeight: 20,
+            height: 28,
+            fontFamily: "inherit",
+          }}
+        >
+          <FileEdit strokeWidth={2.25} className="tiptap-button-icon" />
+          {!collapsed && <span className="tiptap-button-text">Drafts</span>}
+        </Button>
+      </ButtonGroup>
+
+      <Separator orientation="horizontal" style={{ height: 0.5 }} />
+
+      {!collapsed && (
+        <ButtonGroup style={{ gap: 1, width: "100%" }}>
+          <Button
+            variant="ghost"
+            title="Templates"
+            style={{ fontFamily: "inherit" }}
+          >
+            <LayoutTemplate strokeWidth={2.25} className="tiptap-button-icon" />
+            {!collapsed && (
+              <span className="tiptap-button-text">Templates</span>
+            )}
+          </Button>
+
+          <Button variant="ghost" style={{ fontFamily: "inherit" }}>
+            <Lock className="tiptap-button-icon" />
+            <span className="tiptap-button-text">Private</span>
+          </Button>
+          <Button variant="ghost" style={{ fontFamily: "inherit" }}>
+            <Users className="tiptap-button-icon" />
+            <span className="tiptap-button-text">Shared</span>
+          </Button>
+          <Button variant="ghost" style={{ fontFamily: "inherit" }}>
+            <Bell className="tiptap-button-icon" />
+            <span className="tiptap-button-text">Notifications</span>
+          </Button>
+        </ButtonGroup>
+      )}
     </ButtonGroup>
+  );
+}
+
+function flattenPages(pages: Page[]): Page[] {
+  return pages.flatMap((p) => [p, ...flattenPages(p.children ?? [])]);
+}
+
+function PagesList({ pages }: { pages: Page[] }) {
+  const recentPages = useMemo(
+    () =>
+      flattenPages(pages)
+        .filter((p) => p.updatedAt !== null && p.category !== "Template")
+        .sort(
+          (a, b) =>
+            new Date(b.updatedAt!).getTime() - new Date(a.updatedAt!).getTime(),
+        )
+        .slice(0, 5),
+    [pages],
+  );
+
+  const otherPages = useMemo(
+    () => pages.filter((p) => p.category !== "Template"),
+    [pages],
+  );
+
+  const templatePages = useMemo(
+    () => flattenPages(pages).filter((p) => p.category === "Template"),
+    [pages],
+  );
+  return (
+    <CardItemGroup className="sidebar-pages">
+      {recentPages.length > 0 && (
+        <>
+          <CardGroupLabel>Recents</CardGroupLabel>
+          <CardItemGroup style={{ gap: 5 }}>
+            {recentPages.map((page) => (
+              <PageItem key={page.id} page={page} />
+            ))}
+          </CardItemGroup>
+        </>
+      )}
+
+      <CreatePageButton />
+
+      <Separator orientation="horizontal" style={{ height: 0.5 }} />
+
+      <CardGroupLabel>Pages</CardGroupLabel>
+
+      {otherPages.length === 0 && (
+        <p className="sidebar-empty">No pages yet.</p>
+      )}
+
+      <CardItemGroup style={{ gap: 5 }}>
+        {otherPages.map((page) => (
+          <PageItem
+            key={page.id}
+            page={page}
+            disableActive={recentPages.some((r) => r.id === page.id)}
+          />
+        ))}
+      </CardItemGroup>
+
+      {templatePages.length > 0 && (
+        <>
+          <Separator orientation="horizontal" style={{ height: 0.5 }} />
+          <CardGroupLabel>Templates</CardGroupLabel>
+          <CardItemGroup style={{ gap: 5 }}>
+            {templatePages.map((page) => (
+              <PageItem key={page.id} page={page} />
+            ))}
+          </CardItemGroup>
+        </>
+      )}
+    </CardItemGroup>
   );
 }
 
@@ -263,7 +356,7 @@ export function SimpleEditorSidebar({
         left: 0,
         borderRadius: 0,
         boxShadow: "none",
-        width: collapsed ? 52 : 280,
+        width: collapsed ? 52 : 300,
         transition: "width 0.2s ease",
       }}
     >
@@ -275,32 +368,16 @@ export function SimpleEditorSidebar({
       <Separator orientation="horizontal" />
 
       {/* ── Pages ── */}
+      {!collapsed && <PagesList pages={pages} />}
+
       {!collapsed && (
-        <CardBody className="sidebar-pages">
-          <CardGroupLabel>Pages</CardGroupLabel>
-
-          {pages.length === 0 && <p className="sidebar-empty">No pages yet.</p>}
-
-          <CardItemGroup style={{ gap: 5 }}>
-            {pages.map((page) => (
-              <PageItem key={page.id} page={page} />
-            ))}
-          </CardItemGroup>
-        </CardBody>
+        <>
+          <Separator orientation="horizontal" />
+          <CardFooter style={{ width: "100%" }}>
+            <User name="Jule Sall" />
+          </CardFooter>
+        </>
       )}
-
-      <Separator orientation="horizontal" />
-      <CardFooter style={{ width: "100%" }}>
-        <Button
-          variant="ghost"
-          style={{
-            justifyContent: "flex-start",
-            alignItems: "flex-start",
-          }}
-        >
-          <Info className="tiptap-button-icon" />
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

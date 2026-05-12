@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from "react";
 import type { ResizableNodeDimensions, ResizableNodeDirection } from "./types";
 import { ResizableNodeContext } from "./resize-node-context";
@@ -17,7 +18,10 @@ interface ResizableNodeProviderProps {
   min?: Partial<ResizableNodeDimensions>;
   max?: Partial<ResizableNodeDimensions>;
   shouldPreserveAspectRatio?: boolean;
-  onResizeEnd?: (dimensions: ResizableNodeDimensions) => void;
+  onResizeEnd?: (
+    dimensions: ResizableNodeDimensions,
+    ref?: RefObject<HTMLElement | null>,
+  ) => void;
 }
 
 export function ResizableNodeProvider({
@@ -295,7 +299,7 @@ export function ResizableNodeProvider({
     if (nodeRef.current && onResizeEnd) {
       const width = nodeRef.current.offsetWidth;
       const height = nodeRef.current.offsetHeight;
-      onResizeEnd({ width, height });
+      onResizeEnd({ width, height }, nodeRef);
     }
   }, [isResizing, onResizeEnd]);
 

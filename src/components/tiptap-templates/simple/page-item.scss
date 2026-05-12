@@ -4,35 +4,56 @@
   gap: 1px;
   width: 100%;
 }
-.page-item{
-  border-radius: var(--tt-radius-md);
+
+
+.page-item {
+  border-radius: var(--tt-radius-sm) !important;
+
+  span {
+    min-width: 0; 
+    max-width: 160px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    
+  }
+
+  .page-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    width: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.1s;
+    flex-shrink: 0;
+  }
+
+  &:hover .page-item-actions {
+    width: auto;
+    overflow: visible;
+    opacity: 1;
+  }
 }
+
 .page-title {
   flex: 1;
-  font-size: 13.98px;
+  font-size: 13.8px;
+  font-weight: 500;
   min-width: 0;
-  max-width: 160px;
+  max-width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-left: 5px;
+  transition: max-width 0.2s ease;
+
+  &:hover{
+     max-width: 170px;
+  }
 }
 
 .page-expand-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  border: none;
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-  color: var(--tt-text-color);
-  border-radius: 3px;
-  visibility: hidden;
-  display: none;
-
 
   &.visible {
     visibility: visible;

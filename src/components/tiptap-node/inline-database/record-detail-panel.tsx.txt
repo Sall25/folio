@@ -1,0 +1,574 @@
+import { useEffect, useCallback, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { X, Maximize2, ChevronLeft, ChevronRight } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+
+import type {
+  DatabaseRecord,
+  DatabaseProperty,
+  PropertyValue,
+  PropertyConfig,
+} from "../types";
+import type { UseDatabaseReturn } from "../use-database";
+import { getTypeMeta } from "../config";
+import { Button } from "src/components/tiptap-ui-primitive/button";
+
+import "./record-detail-panel.scss";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Property value cell — inline editable per type
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface PropertyValueCellProps {
+  value: PropertyValue;
+  config: PropertyConfig;
+  onSave: (value: PropertyValue) => void;
+}
+
+function PropertyValueCell({ value, config, onSave }: PropertyValueCellProps) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  const commit = useCallback(() => {
+    onSave(draft);
+    setEditing(false);
+  }, [draft, onSave]);
+
+  const handleKey = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      commit();
+    }
+    if (e.key === "Escape") {
+      setDraft(value);
+      setEditing(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <div
+        className="rdp-prop-value"
+        onClick={() => {
+          if (config.type === "checkbox") {
+            onSave(!value);
+            return;
+          }
+          setDraft(value);
+          setEditing(true);
+        }}
+      >
+        <PropertyDisplayValue value={value} config={config} />
+        {(value === null || value === undefined || value === "") && (
+          <span className="rdp-prop-empty">Empty</span>
+        )}
+      </div>
+    );
+  }
+
+  // ── Editors ────────────────────────────────────────────────────────────────
+
+  switch (config.type) {
+    case "select":
+    case "multi_select":
+    case "status": {
+      const allOpts =
+        config.type === "status"
+          ? (config.groups as any[]).flatMap((g) => g.items)
+          : (config as any).options;
+
+      return (
+        <div className="rdp-prop-picker">
+          {allOpts.map((opt: any) => {
+            const isSelected =
+              config.type === "multi_select"
+                ? Array.isArray(draft) &&
+                  (draft as string[]).includes(opt.id ?? opt.name)
+                : draft === opt.id || draft === opt.name;
+
+            return (
+              <button
+                key={opt.id ?? opt.name}
+                className={`rdp-picker-option ${isSelected ? "rdp-picker-option--selected" : ""}`}
+                onClick={() => {
+                  if (config.type === "multi_select") {
+                    const cur = Array.isArray(draft) ? (draft as string[]) : [];
+                    const id = opt.id ?? opt.name;
+                    setDraft(
+                      cur.includes(id)
+                        ? cur.filter((v) => v !== id)
+                        : [...cur, id],
+                    );
+                  } else {
+                    onSave(opt.name);
+                    setEditing(false);
+                  }
+                }}
+              >
+                {opt.name}
+              </button>
+            );
+          })}
+          {config.type === "multi_select" && (
+            <button className="rdp-picker-confirm" onClick={commit}>
+              Done
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    case "date":
+      return (
+        <input
+          className="rdp-prop-input"
+          type="date"
+          autoFocus
+          value={draft ? String(draft).slice(0, 10) : ""}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={handleKey}
+          onBlur={commit}
+        />
+      );
+
+    case "number":
+      return (
+        <input
+          className="rdp-prop-input"
+          type="number"
+          autoFocus
+          value={draft === null ? "" : String(draft)}
+          onChange={(e) =>
+            setDraft(e.target.value === "" ? null : Number(e.target.value))
+          }
+          onKeyDown={handleKey}
+          onBlur={commit}
+        />
+      );
+
+    default:
+      return (
+        <input
+          className="rdp-prop-input"
+          autoFocus
+          value={draft === null ? "" : String(draft ?? "")}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={handleKey}
+          onBlur={commit}
+        />
+      );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Property display value — read-only rendering
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PropertyDisplayValue({
+  value,
+  config,
+}: {
+  value: PropertyValue;
+  config: PropertyConfig;
+}) {
+  if (value === null || value === undefined || value === "") return null;
+
+  switch (config.type) {
+    case "checkbox":
+      return (
+        <span
+          style={{
+            width: 14,
+            height: 14,
+            borderRadius: 3,
+            border: "1.5px solid",
+            borderColor: value
+              ? "var(--tt-brand-color-400)"
+              : "var(--tt-gray-light-a-300)",
+            background: value ? "var(--tt-brand-color-400)" : "transparent",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {value && (
+            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+              <path
+                d="M1.5 4.5l2.5 2.5 4-4"
+                stroke="#fff"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </span>
+      );
+
+    case "select":
+    case "multi_select": {
+      const ids =
+        config.type === "multi_select"
+          ? Array.isArray(value)
+            ? (value as string[])
+            : []
+          : [String(value)];
+      return (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+          {ids.map((id) => {
+            const opt = (config as any).options?.find(
+              (o: any) => o.id === id || o.name === id,
+            );
+            if (!opt) return null;
+            return (
+              <span
+                key={id}
+                className="rdp-pill"
+                style={{
+                  background: pillBg(opt.color),
+                  color: pillColor(opt.color),
+                }}
+              >
+                {opt.name}
+              </span>
+            );
+          })}
+        </div>
+      );
+    }
+
+    case "status": {
+      const allItems = (config.groups as any[]).flatMap((g) => g.items);
+      const item = allItems.find(
+        (i: any) => i.name === value || i.id === value,
+      );
+      if (!item) return <span style={{ fontSize: 13 }}>{String(value)}</span>;
+      return (
+        <span
+          className="rdp-pill"
+          style={{
+            background: pillBg(item.color),
+            color: pillColor(item.color),
+          }}
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: pillColor(item.color),
+              flexShrink: 0,
+              display: "inline-block",
+            }}
+          />
+          {item.name}
+        </span>
+      );
+    }
+
+    case "date":
+    case "created_time":
+    case "edited_time":
+      return (
+        <span style={{ fontSize: 13 }}>
+          {new Date(String(value)).toLocaleDateString()}
+        </span>
+      );
+
+    case "person":
+    case "created_by":
+    case "edited_by": {
+      const people = Array.isArray(value) ? value : [value];
+      return (
+        <div style={{ display: "flex", gap: 4 }}>
+          {(people as any[]).map((p, i) => (
+            <span key={i} className="rdp-avatar">
+              {String(p?.name ?? p ?? "?")
+                .charAt(0)
+                .toUpperCase()}
+            </span>
+          ))}
+        </div>
+      );
+    }
+
+    default:
+      return <span style={{ fontSize: 13 }}>{String(value)}</span>;
+  }
+}
+
+const COLOR_MAP: Record<string, { bg: string; fg: string }> = {
+  gray: { bg: "#f1f1ef", fg: "#9b9b9b" },
+  blue: { bg: "#dbeafe", fg: "#3b82f6" },
+  green: { bg: "#dcfce7", fg: "#22c55e" },
+  orange: { bg: "#ffedd5", fg: "#f97316" },
+  red: { bg: "#fee2e2", fg: "#ef4444" },
+  purple: { bg: "#ede9fe", fg: "#8b5cf6" },
+  yellow: { bg: "#fef9c3", fg: "#eab308" },
+  pink: { bg: "#fce7f3", fg: "#ec4899" },
+  brown: { bg: "#f3e8d0", fg: "#8b6f5e" },
+};
+
+function pillBg(color: string) {
+  return COLOR_MAP[color]?.bg ?? COLOR_MAP.gray.bg;
+}
+function pillColor(color: string) {
+  return COLOR_MAP[color]?.fg ?? COLOR_MAP.gray.fg;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Property row — icon + name + value
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface PropertyRowProps {
+  property: DatabaseProperty;
+  value: PropertyValue;
+  onSave: (value: PropertyValue) => void;
+}
+
+function PropertyRow({ property, value, onSave }: PropertyRowProps) {
+  const meta = getTypeMeta(property.config.type);
+  const Icon = (LucideIcons as any)[meta.icon];
+  const isReadOnly = [
+    "formula",
+    "rollup",
+    "created_time",
+    "created_by",
+    "edited_time",
+    "edited_by",
+  ].includes(property.config.type);
+
+  return (
+    <div className="rdp-prop-row">
+      <div className="rdp-prop-label">
+        {Icon && (
+          <Icon
+            style={{ width: 13, height: 13, flexShrink: 0 }}
+            className="rdp-prop-icon"
+          />
+        )}
+        <span className="rdp-prop-name">{property.name}</span>
+      </div>
+      <div className="rdp-prop-value-wrap">
+        {isReadOnly ? (
+          <div className="rdp-prop-value rdp-prop-value--readonly">
+            <PropertyDisplayValue value={value} config={property.config} />
+          </div>
+        ) : (
+          <PropertyValueCell
+            value={value}
+            config={property.config}
+            onSave={onSave}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Nested Tiptap editor for record body
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface RecordBodyEditorProps {
+  content: any;
+  onChange: (json: any) => void;
+}
+
+function RecordBodyEditor({ content, onChange }: RecordBodyEditorProps) {
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        // No database nodes inside records
+        heading: { levels: [1, 2, 3] },
+      }),
+    ],
+    content: content ?? { type: "doc", content: [] },
+    onUpdate: ({ editor }) => onChange(editor.getJSON()),
+  });
+
+  // Stop all keyboard events from bubbling to the parent Tiptap editor
+  return (
+    <div
+      className="rdp-body-editor"
+      onKeyDown={(e) => e.stopPropagation()}
+      onKeyUp={(e) => e.stopPropagation()}
+      onKeyPress={(e) => e.stopPropagation()}
+    >
+      <EditorContent editor={editor} />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RecordDetailPanel
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface RecordDetailPanelProps {
+  record: DatabaseRecord;
+  properties: DatabaseProperty[];
+  onUpdateValue: (propertyId: string, value: PropertyValue) => void;
+  onUpdateBody: (body: any) => void;
+  onClose: () => void;
+  onPrev?: () => void;
+  onNext?: () => void;
+  hasPrev?: boolean;
+  hasNext?: boolean;
+}
+
+function RecordDetailPanel({
+  record,
+  properties,
+  onUpdateValue,
+  onUpdateBody,
+  onClose,
+  onPrev,
+  onNext,
+  hasPrev,
+  hasNext,
+}: RecordDetailPanelProps) {
+  const titleProp = properties.find((p) => p.config.type === "title");
+  const otherProps = properties.filter((p) => p.config.type !== "title");
+  const title = titleProp ? String(record.values[titleProp.id] ?? "") : "";
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  return createPortal(
+    <>
+      {/* Backdrop */}
+      <div className="rdp-backdrop" onClick={onClose} />
+
+      {/* Panel */}
+      <div className="rdp-panel" role="dialog" aria-modal="true">
+        {/* ── Top bar ── */}
+        <div className="rdp-topbar">
+          <div className="rdp-topbar-left">
+            {/* Prev / Next record navigation */}
+            <Button
+              variant="ghost"
+              onClick={onPrev}
+              disabled={!hasPrev}
+              aria-label="Previous record"
+              style={{ width: 28, height: 28, padding: 0 }}
+            >
+              <ChevronLeft
+                style={{ width: 14, height: 14 }}
+                className="tiptap-button-icon"
+              />
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={onNext}
+              disabled={!hasNext}
+              aria-label="Next record"
+              style={{ width: 28, height: 28, padding: 0 }}
+            >
+              <ChevronRight
+                style={{ width: 14, height: 14 }}
+                className="tiptap-button-icon"
+              />
+            </Button>
+          </div>
+
+          <div className="rdp-topbar-right">
+            <Button
+              variant="ghost"
+              onClick={onClose}
+              aria-label="Close"
+              style={{ width: 28, height: 28, padding: 0 }}
+            >
+              <X
+                style={{ width: 14, height: 14 }}
+                className="tiptap-button-icon"
+              />
+            </Button>
+          </div>
+        </div>
+
+        {/* ── Content ── */}
+        <div className="rdp-content">
+          {/* Title */}
+          <input
+            className="rdp-title-input"
+            value={title}
+            placeholder="Untitled"
+            onChange={(e) =>
+              titleProp && onUpdateValue(titleProp.id, e.target.value)
+            }
+          />
+
+          {/* Properties list */}
+          <div className="rdp-props-list">
+            {otherProps.map((prop) => (
+              <PropertyRow
+                key={prop.id}
+                property={prop}
+                value={record.values[prop.id] ?? null}
+                onSave={(v) => onUpdateValue(prop.id, v)}
+              />
+            ))}
+          </div>
+
+          {/* Body editor */}
+          <div className="rdp-body-wrap">
+            <RecordBodyEditor content={record.body} onChange={onUpdateBody} />
+          </div>
+        </div>
+      </div>
+    </>,
+    document.body,
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wired version — reads from useDatabase
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface RecordDetailPanelContainerProps {
+  db: UseDatabaseReturn;
+}
+
+export function RecordDetailPanelContainer({
+  db,
+}: RecordDetailPanelContainerProps) {
+  if (!db.openRecordId) return null;
+
+  const record = db.getRecord(db.openRecordId);
+  if (!record) return null;
+
+  const allRecords = db.resolvedRecords;
+  const currentIndex = allRecords.findIndex((r) => r.id === db.openRecordId);
+
+  return (
+    <RecordDetailPanel
+      record={record}
+      properties={db.attrs.properties}
+      onUpdateValue={(propertyId, value) =>
+        db.updateRecord(record.id, { [propertyId]: value })
+      }
+      onUpdateBody={(body) =>
+        db.updateRecord(record.id, { __body__: body } as any)
+      }
+      onClose={() => db.setOpenRecordId(null)}
+      hasPrev={currentIndex > 0}
+      hasNext={currentIndex < allRecords.length - 1}
+      onPrev={() => {
+        if (currentIndex > 0)
+          db.setOpenRecordId(allRecords[currentIndex - 1].id);
+      }}
+      onNext={() => {
+        if (currentIndex < allRecords.length - 1)
+          db.setOpenRecordId(allRecords[currentIndex + 1].id);
+      }}
+    />
+  );
+}

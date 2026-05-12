@@ -1,0 +1,113 @@
+.select-prop {
+
+  &__trigger {
+    border-radius: var(--tt-radius-xl);
+    font-size: 12px;
+    font-weight: 500;
+    min-height: 20px;
+    height: 20px;
+    transition:
+      background var(--tt-transition-duration-short) var(--tt-transition-easing-default),
+      color var(--tt-transition-duration-short) var(--tt-transition-easing-default);
+  }
+
+  &__search {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--tt-text-color);
+
+
+    &::placeholder {
+      color: var(--tt-gray-light-a-300);
+      .dark & { color: var(--tt-gray-dark-a-300); }
+    }
+  }
+
+  &__option-row {
+    &:hover .select-prop__dots {
+      opacity: 1;
+    }
+  }
+
+  &__option-btn {
+    flex: 1;
+    justify-content: flex-start;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  &__check {
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--tt-radius-xl);
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  &__dots {
+    opacity: 0;
+    flex-shrink: 0;
+    color: var(--tt-gray-light-a-400);
+    transition: opacity var(--tt-transition-duration-short) var(--tt-transition-easing-default);
+
+    .dark & { color: var(--tt-gray-dark-a-400); }
+  }
+
+  &__label-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--tt-gray-light-a-900);
+    min-width: 0;
+
+    .dark & { color: var(--tt-gray-dark-a-900); }
+
+    &::placeholder {
+      color: var(--tt-gray-light-a-300);
+      .dark & { color: var(--tt-gray-dark-a-300); }
+    }
+  }
+
+  &__color-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--tt-gray-light-a-400);
+    margin-bottom: 6px;
+
+    .dark & { color: var(--tt-gray-dark-a-400); }
+  }
+
+  &__delete-btn {
+    width: 100%;
+    justify-content: flex-start;
+    color: var(--tt-gray-light-a-600);
+
+    .dark & { color: var(--tt-gray-dark-a-600); }
+
+    &:hover {
+      color: var(--tt-color-red-dec-1);
+      background: var(--tt-color-red-inc-5);
+    }
+  }
+}

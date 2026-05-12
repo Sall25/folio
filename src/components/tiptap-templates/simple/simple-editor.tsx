@@ -35,14 +35,18 @@ import "src/components/tiptap-templates/simple/toc.scss";
 import { SimpleEditorSidebar } from "./simple-editor-sidebar";
 import { SimpleEditorProvider } from "./context/simple-editor-provider";
 import { VersionHistorySidebar } from "src/components/tiptap-ui/version-history/version-history-sidebar";
-import { useInitThreads } from "./hooks/use-init-threads";
 import { HomePageContent } from "./components";
-import { useVersionContext } from "./context/version-context";
 import { useActivePage } from "./use-active-page";
 import { EditorProvider } from "./context/editor-provider";
+import { useSimpleEditor } from "./context/simple-editor-context";
+import EditorSkeleton from "./editor-skeleton";
+import { PeekPageProvider } from "./context/peek-page-provider";
+import { PagePeekView } from "./page-peek-view";
+import { usePeekPage } from "./context/peek-page-context";
+import { findPage } from "src/lib/find-page";
 
 const VERSION_SIDEBAR_WIDTH = 260;
-const SIDEBAR_WIDTH = 280;
+const SIDEBAR_WIDTH = 300;
 const SIDEBAR_COLLAPSED_WIDTH = 52;
 
 // Separate component that only cares about activePageId for conditional rendering
@@ -57,8 +61,11 @@ function SimpleEditorMain({
   versionHistoryOpen: boolean;
   onVersionHistoryOpenChanged: (v: boolean) => void;
 }) {
-  const { activePageId } = useActivePage();
+  const { activePageId, pages } = useActivePage();
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
+  const { setPeekPageId, peekPageId } = usePeekPage();
+  const page =
+    peekPageId !== null && pages ? findPage(pages, peekPageId) : null;
 
   return (
     <>
@@ -82,6 +89,9 @@ function SimpleEditorMain({
             userColor="#7c3aed"
           />
           <aside className="simple-editor-sidebar-right" />
+          {page && (
+            <PagePeekView page={page} onClose={() => setPeekPageId(null)} />
+          )}
         </div>
       )}
     </>
@@ -93,6 +103,7 @@ function SimpleEditorInner() {
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const isMobile = useIsBreakpoint();
   const { height } = useWindowSize();
+  const { isLoading } = useSimpleEditor();
 
   useEffect(() => {
     if (!isMobile && mobileView !== "main")
@@ -102,38 +113,43 @@ function SimpleEditorInner() {
   const [collapsed, setCollapsed] = useState(false);
   const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH;
 
-  const { versionHistoryOpen, onVersionHistoryOpenChanged } =
-    useVersionContext()!;
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
+
   const onToggle = useCallback(() => setCollapsed((c) => !c), []);
 
-  useInitThreads();
+  if (isLoading)
+    return (
+      <EditorSkeleton toolbarRef={toolbarRef as RefObject<HTMLDivElement>} />
+    );
 
   return (
     <div className="simple-editor-wrapper">
       <NotificationProvider>
         <ToastProvider>
-          <SimpleEditorToolbar
-            toolbarRef={toolbarRef as RefObject<HTMLDivElement>}
-            isMobile={isMobile}
-            mobileView={mobileView}
-            height={height}
-            rectY={0}
-            onMobileViewChange={setMobileView}
-            sidebarWidth={sidebarWidth}
-            versionSidebarWidth={versionWidth}
-            onTriggerVersionHistory={() => onVersionHistoryOpenChanged(true)}
-          />
+          <PeekPageProvider>
+            <SimpleEditorToolbar
+              toolbarRef={toolbarRef as RefObject<HTMLDivElement>}
+              isMobile={isMobile}
+              mobileView={mobileView}
+              height={height}
+              rectY={0}
+              onMobileViewChange={setMobileView}
+              sidebarWidth={sidebarWidth}
+              versionSidebarWidth={versionWidth}
+              onTriggerVersionHistory={() => setVersionHistoryOpen(true)}
+            />
 
-          <SimpleEditorSidebar collapsed={collapsed} onToggle={onToggle} />
+            <SimpleEditorSidebar collapsed={collapsed} onToggle={onToggle} />
 
-          {/* Navigation-aware rendering isolated here — doesn't affect EditorProvider */}
-          <SimpleEditorMain
-            sidebarWidth={sidebarWidth}
-            collapsed={collapsed}
-            versionHistoryOpen={versionHistoryOpen}
-            onVersionHistoryOpenChanged={onVersionHistoryOpenChanged}
-          />
+            {/* Navigation-aware rendering isolated here — doesn't affect EditorProvider */}
+            <SimpleEditorMain
+              sidebarWidth={sidebarWidth}
+              collapsed={collapsed}
+              versionHistoryOpen={versionHistoryOpen}
+              onVersionHistoryOpenChanged={(v) => setVersionHistoryOpen(v)}
+            />
+          </PeekPageProvider>
         </ToastProvider>
       </NotificationProvider>
     </div>
@@ -143,11 +159,11 @@ function SimpleEditorInner() {
 export function SimpleEditor() {
   return (
     <EditorProvider>
-      <TocProvider>
-        <SimpleEditorProvider>
+      <SimpleEditorProvider>
+        <TocProvider>
           <SimpleEditorInner />
-        </SimpleEditorProvider>
-      </TocProvider>
+        </TocProvider>
+      </SimpleEditorProvider>
     </EditorProvider>
   );
 }

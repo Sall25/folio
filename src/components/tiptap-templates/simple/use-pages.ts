@@ -4,7 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import type { Page } from "./types";
+import type { Page, PageCategory } from "./types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useDebounce,
@@ -49,15 +49,18 @@ const fetchPagesAsync = async () => {
 const addPageFnAsync = async ({
   title,
   parentId,
+  category,
 }: {
   title: string;
   parentId: number | null;
+  category?: PageCategory;
 }) => {
   const res = await fetch("/api/pages", {
     method: "POST",
     body: JSON.stringify({
       title,
       parentId,
+      category,
       children: [],
       settings: {
         width: "medium",
@@ -134,6 +137,10 @@ export interface UsePagesReturn {
   addCoverAsync: (id: number) => Promise<void>;
   debounceUpdatePage: DebouncedState<(page: Page) => Promise<Page>>;
   debounceUpdatePageFast: DebouncedState<(page: Page) => Promise<Page>>;
+  addPageTemplateAsync: (data: {
+    title: string;
+    parentId: number | null;
+  }) => Promise<Page>;
 }
 
 export function usePages(): UsePagesReturn {
@@ -210,9 +217,13 @@ export function usePages(): UsePagesReturn {
   }, [_updatePageAsync]);
 
   //Stable function identities — never change after mount
+
   const addPageAsync = useCallback(
-    (data: { title: string; parentId: number | null }) =>
-      addPageAsyncRef.current(data),
+    (data: {
+      title: string;
+      parentId: number | null;
+      category?: PageCategory;
+    }) => addPageAsyncRef.current(data),
     [],
   );
 
@@ -256,6 +267,12 @@ export function usePages(): UsePagesReturn {
     [addPageAsync],
   );
 
+  const addPageTemplateAsync = useCallback(
+    (data: { title: string; parentId: number | null }) =>
+      addPageAsync({ ...data, category: "Template" }),
+    [addPageAsync],
+  );
+
   const addCoverAsync = useCallback(
     async (id: number) => {
       // Read pages from ref — no pages in dep array, stable identity
@@ -282,5 +299,6 @@ export function usePages(): UsePagesReturn {
     query,
     onSearch,
     addCoverAsync,
+    addPageTemplateAsync,
   };
 }

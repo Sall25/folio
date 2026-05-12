@@ -59,7 +59,14 @@ interface SlashCommandStorage {
     parentId: number | null;
   }) => Promise<Page>;
   setActivePageId: (pageId: number) => void;
-  isSwitching: boolean;
+}
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    slashCommand: {
+      syncSlashCommandCtx: (param: SlashCommandStorage) => ReturnType;
+    };
+  }
 }
 
 declare module "@tiptap/core" {
@@ -85,7 +92,6 @@ export const SlashCommand = Extension.create<
       activePageId: 0,
       addPageAsync: async () => ({}) as Page,
       setActivePageId: () => {},
-      isSwitching: false,
     };
   },
 
@@ -318,5 +324,17 @@ export const SlashCommand = Extension.create<
     });
 
     return [suggestion as unknown as Plugin];
+  },
+  addCommands() {
+    return {
+      syncSlashCommandCtx:
+        ({ activePageId, setActivePageId, addPageAsync }) =>
+        () => {
+          this.storage.activePageId = activePageId;
+          this.storage.setActivePageId = setActivePageId;
+          this.storage.addPageAsync = addPageAsync;
+          return true;
+        },
+    };
   },
 });

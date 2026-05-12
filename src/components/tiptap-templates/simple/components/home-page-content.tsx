@@ -1,9 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Clock, Pin, FileText, ChevronRight } from "lucide-react";
+import { Clock, Pin, FileText, ChevronRight, Lock } from "lucide-react";
 import { useSimpleEditor } from "../context/simple-editor-context";
 import type { Page } from "../types";
 import { PageItemIcon } from "../page-item-icon";
 import "./home-page-content.scss";
+import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
+import { Separator } from "src/components/tiptap-ui-primitive/separator";
+import { Button } from "src/components/tiptap-ui-primitive/button";
+import { Badge } from "src/components/tiptap-ui-primitive/badge";
 
 function formatRelativeTime(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
@@ -72,12 +76,18 @@ function RecentRow({ page, onClick }: { page: Page; onClick: () => void }) {
           {page.title || "Untitled"}
         </span>
         {page.settings?.locked && (
-          <span className="home-recent-row__badge">Locked</span>
+          <Badge data-style="gray">
+            <Lock className="tiptap-badge-icon" />
+            <span className="tiptap-badge-text">Locked</span>
+          </Badge>
         )}
       </div>
-      <span className="home-recent-row__time">
-        {formatRelativeTime(page.updatedAt ?? page.createdAt)}
-      </span>
+      <Badge>
+        <Clock className="tiptap-badge-icon" />
+        <span className="tiptap-badge-text">
+          {formatRelativeTime(page.updatedAt ?? page.createdAt)}
+        </span>
+      </Badge>
       <ChevronRight size={13} className="home-recent-row__arrow" />
     </div>
   );
@@ -115,14 +125,20 @@ export function HomePageContent({ sidebarWidth }: { sidebarWidth: number }) {
             <h1 className="home-page-content__title">Home</h1>
             <p className="home-page-content__sub">Your workspace at a glance</p>
           </div>
-          <button
-            className="home-page-content__new-btn"
+          {/* <Button
+            // className="home-page-content__new-btn"
+            data-state-active="on"
+            style={{
+              background: "var(--tt-brand-color-400)",
+              color: "white",
+              borderRadius: "var(--tt-radius-sm)",
+            }}
             onClick={() =>
               addPageAndActivateAsync({ title: "New Page", parentId: null })
             }
           >
             + New page
-          </button>
+          </Button> */}
         </div>
 
         {pinned.length > 0 && (
@@ -145,17 +161,21 @@ export function HomePageContent({ sidebarWidth }: { sidebarWidth: number }) {
 
         {recent.length > 0 && (
           <section className="home-section">
-            <div className="home-section__label">
-              <Clock size={12} />
-              Recent
-            </div>
+            <Button
+              variant="ghost"
+              data-active-state="on"
+              style={{ maxWidth: 100 }}
+            >
+              <Clock className="tiptap-button-icon" />
+              <span>Recent</span>
+            </Button>
+
             <div className="home-recent-list">
               {recent.map((page) => (
-                <RecentRow
-                  key={page.id}
-                  page={page}
-                  onClick={() => navigate(page.id)}
-                />
+                <CardItemGroup orientation="vertical" key={page.id}>
+                  <Separator orientation="horizontal" />
+                  <RecentRow page={page} onClick={() => navigate(page.id)} />
+                </CardItemGroup>
               ))}
             </div>
           </section>

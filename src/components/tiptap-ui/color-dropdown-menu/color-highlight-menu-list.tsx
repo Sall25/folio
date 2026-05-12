@@ -18,7 +18,7 @@ export interface ColorHighlightMenuListProps extends Pick<
 > {
   colors?: HighlightColor[];
   useColorValue?: boolean;
-  onAction?: () => void;
+  onAction?: (color?: string) => void;
 }
 
 export function ColorHighlightMenuList({
@@ -29,6 +29,10 @@ export function ColorHighlightMenuList({
     "var(--tt-color-highlight-red)",
     "var(--tt-color-highlight-purple)",
     "var(--tt-color-highlight-yellow)",
+    "var(--tt-color-highlight-pink)",
+    "var(--tt-color-highlight-orange)",
+    "var(--tt-color-highlight-brown)",
+    "var(--tt-color-highlight-gray)",
   ]),
   useColorValue = false,
   onAction,
@@ -54,7 +58,7 @@ export function ColorHighlightMenuList({
       ) as HTMLElement;
       if (highlightedElement) highlightedElement.click();
       if (item.value === "none") handleRemoveHighlight();
-      onAction?.();
+      onAction?.(item.value);
       return true;
     },
     autoSelectFirstItem: true,

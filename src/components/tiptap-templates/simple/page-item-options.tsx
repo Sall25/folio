@@ -16,13 +16,18 @@ import { useSimpleEditor } from "./context/simple-editor-context";
 interface PageItemOptionsProps {
   page: Page;
   onRenameAsync: () => Promise<void>;
+  onOpenChange: (v: boolean) => void;
 }
 
-export function PageItemOptions({ page, onRenameAsync }: PageItemOptionsProps) {
+export function PageItemOptions({
+  page,
+  onRenameAsync,
+  onOpenChange,
+}: PageItemOptionsProps) {
   const { addPageAndActivateAsync, deletePageAsync } = useSimpleEditor();
 
   return (
-    <Popover>
+    <Popover onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"

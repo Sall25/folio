@@ -19,7 +19,7 @@ function FigureViewContent({
   editor,
   getPos,
 }: ReactNodeViewProps) {
-  const { src, alt, nodeAlign: align, showCaption } = node.attrs;
+  const { src, alt, nodeAlign: align, showCaption, width } = node.attrs;
 
   const { nodeRef, isResizing } = useResizableNode();
 
@@ -81,7 +81,7 @@ function FigureViewContent({
 
         <img
           style={{
-            width: "100%",
+            width: `${width}px`,
             height: "100%",
             display: "block",
             cursor: isResizing ? "ew-resize" : "default",
@@ -109,11 +109,15 @@ function FigureViewContent({
 export default function FigureView(props: ReactNodeViewProps) {
   const { min, max, preserveAspectRatio } = props.extension
     .options as FigureNodeViewOptions;
+  const { node } = props;
   return (
     <ResizableNodeProvider
       min={min}
       max={max}
       shouldPreserveAspectRatio={preserveAspectRatio}
+      onResizeEnd={({ width }) => {
+        props.updateAttributes({ ...node.attrs, width });
+      }}
     >
       <FigureViewContent {...props} />
     </ResizableNodeProvider>

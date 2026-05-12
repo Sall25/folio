@@ -1,0 +1,572 @@
+// /* eslint-disable @typescript-eslint/no-explicit-any */
+// import { Node, mergeAttributes } from "@tiptap/core";
+// import { ReactNodeViewRenderer } from "@tiptap/react";
+
+// import type {
+//   DatabaseAttrs,
+//   DatabaseProperty,
+//   DatabaseRecord,
+//   PropertyConfig,
+//   PropertyType,
+//   ID,
+//   TableView,
+//   DatabaseView,
+//   PropertyValue,
+// } from "./types";
+// import { DatabaseNodeView } from "./database-node-view";
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Default factory helpers
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// function makeId(): ID {
+//   return crypto.randomUUID();
+// }
+
+// function now(): string {
+//   return new Date().toISOString();
+// }
+
+// function defaultConfig(type: PropertyType): PropertyConfig {
+//   switch (type) {
+//     case "number":
+//       return { type: "number", format: "number" };
+//     case "select":
+//       return { type: "select", options: [] };
+//     case "multi_select":
+//       return { type: "multi_select", options: [] };
+//     case "status":
+//       return {
+//         type: "status",
+//         groups: [
+//           {
+//             id: makeId(),
+//             label: "To-do",
+//             items: [
+//               {
+//                 id: makeId(),
+//                 name: "Not started",
+//                 color: "gray",
+//                 isDefault: true,
+//               },
+//             ],
+//           },
+//           {
+//             id: makeId(),
+//             label: "In progress",
+//             items: [{ id: makeId(), name: "In progress", color: "blue" }],
+//           },
+//           {
+//             id: makeId(),
+//             label: "Complete",
+//             items: [{ id: makeId(), name: "Done", color: "green" }],
+//           },
+//         ],
+//       };
+//     case "date":
+//       return {
+//         type: "date",
+//         format: "full",
+//         timeFormat: "12h",
+//         includeTime: false,
+//       };
+//     case "person":
+//       return {
+//         type: "person",
+//         limit: "no-limit",
+//         default: "no-default",
+//         notifications: "users-only",
+//       };
+//     case "formula":
+//       return { type: "formula", expression: "" };
+//     case "relation":
+//       return { type: "relation", targetDatabaseId: "", showOnTarget: false };
+//     case "rollup":
+//       return {
+//         type: "rollup",
+//         relationPropertyId: "",
+//         targetPropertyId: "",
+//         aggregation: "count",
+//       };
+//     case "checkbox":
+//       return { type: "checkbox" };
+//     case "text":
+//       return { type: "text" };
+//     case "title":
+//       return { type: "title" };
+//     case "created_time":
+//       return { type: "created_time" };
+//     case "created_by":
+//       return { type: "created_by" };
+//     case "edited_time":
+//       return { type: "edited_time" };
+//     case "edited_by":
+//       return { type: "edited_by" };
+//   }
+// }
+
+// function makeDefaultDatabase(): DatabaseAttrs {
+//   const titlePropId = makeId();
+//   const statusPropId = makeId();
+//   const viewId = makeId();
+
+//   const properties: DatabaseProperty[] = [
+//     {
+//       id: titlePropId,
+//       name: "Name",
+//       config: { type: "title" },
+//       width: 280,
+//     },
+//     {
+//       id: statusPropId,
+//       name: "Status",
+//       config: defaultConfig("status"),
+//       width: 140,
+//     },
+//   ];
+
+//   const records: DatabaseRecord[] = [
+//     {
+//       id: makeId(),
+//       values: { [titlePropId]: "Untitled", [statusPropId]: "Not started" },
+//       createdAt: now(),
+//       updatedAt: now(),
+//     },
+//   ];
+
+//   const views: DatabaseView[] = [
+//     {
+//       id: viewId,
+//       type: "table",
+//       name: "Default view",
+//       filters: [],
+//       sorts: [],
+//       hiddenProperties: [],
+//       propertyOrder: properties.map((p) => p.id),
+//     } satisfies TableView,
+//   ];
+
+//   return {
+//     id: makeId(),
+//     title: "Untitled database",
+//     properties,
+//     records,
+//     views,
+//     activeViewId: viewId,
+//   };
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Command type augmentation
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// declare module "@tiptap/core" {
+//   interface Commands<ReturnType> {
+//     database: {
+//       /** Insert a new database node at the current position */
+//       insertDatabase: () => ReturnType;
+
+//       /** Add a new record to a database node */
+//       addDatabaseRecord: (nodeId: ID) => ReturnType;
+
+//       /** Update a record's values */
+//       updateDatabaseRecord: (
+//         nodeId: ID,
+//         recordId: ID,
+//         values: Partial<DatabaseRecord["values"]>,
+//       ) => ReturnType;
+
+//       /** Delete a record */
+//       deleteDatabaseRecord: (nodeId: ID, recordId: ID) => ReturnType;
+
+//       /** Add a new property column */
+//       addDatabaseProperty: (
+//         nodeId: ID,
+//         type: PropertyType,
+//         name?: string,
+//       ) => ReturnType;
+
+//       /** Update a property definition */
+//       updateDatabaseProperty: (
+//         nodeId: ID,
+//         propertyId: ID,
+//         patch: Partial<Omit<DatabaseProperty, "id">>,
+//       ) => ReturnType;
+
+//       /** Delete a property column (and its values from all records) */
+//       deleteDatabaseProperty: (nodeId: ID, propertyId: ID) => ReturnType;
+
+//       /** Reorder properties */
+//       reorderDatabaseProperties: (nodeId: ID, orderedIds: ID[]) => ReturnType;
+
+//       /** Switch the active view */
+//       setDatabaseView: (nodeId: ID, viewId: ID) => ReturnType;
+
+//       /** Add a new view */
+//       addDatabaseView: (
+//         nodeId: ID,
+//         type: DatabaseView["type"],
+//         name: string,
+//       ) => ReturnType;
+
+//       /** Update a view definition (filters, sorts, etc.) */
+//       updateDatabaseView: (
+//         nodeId: ID,
+//         viewId: ID,
+//         patch: Partial<Omit<DatabaseView, "id" | "type">>,
+//       ) => ReturnType;
+
+//       /** Delete a view */
+//       deleteDatabaseView: (nodeId: ID, viewId: ID) => ReturnType;
+
+//       freezeDatabaseProperty: (nodeId: ID, propertyId: ID) => ReturnType;
+
+//       hideDatabaseProperty: (
+//         nodeId: ID,
+//         propertyId: ID,
+//         viewId: ID,
+//       ) => ReturnType;
+
+//       unwrapDatabaseProperty: (
+//         nodeId: ID,
+//         propertyId: ID,
+//         viewId: ID,
+//       ) => ReturnType;
+//     };
+//   }
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Helper — find a database node in the doc and apply a mutation to its attrs
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// function mutateDatabaseNode(
+//   nodeId: ID,
+//   mutate: (attrs: DatabaseAttrs) => DatabaseAttrs,
+// ) {
+//   return ({ state, dispatch }: { state: any; dispatch: any }) => {
+//     const { tr, doc } = state;
+//     let found = false;
+
+//     doc.descendants((node: any, pos: number) => {
+//       if (node.type.name !== "database") return;
+//       if (node.attrs.id !== nodeId) return;
+
+//       const next = mutate({ ...node.attrs } as DatabaseAttrs);
+//       tr.setNodeMarkup(pos, undefined, next);
+//       found = true;
+//       return false; // stop traversal
+//     });
+
+//     if (!found) return false;
+//     if (dispatch) dispatch(tr);
+//     return true;
+//   };
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Extension
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// export const DatabaseExtension = Node.create({
+//   name: "database",
+
+//   group: "block",
+
+//   // The database node has no Tiptap content — all data lives in attrs
+//   atom: true,
+
+//   draggable: true,
+
+//   addAttributes() {
+//     return {
+//       id: { default: null },
+//       title: { default: "Untitled database" },
+//       properties: { default: [] },
+//       records: { default: [] },
+//       views: { default: [] },
+//       activeViewId: { default: null },
+//       icon: { default: null },
+//       cover: { default: null },
+//     };
+//   },
+
+//   parseHTML() {
+//     return [{ tag: 'div[data-type="database"]' }];
+//   },
+
+//   renderHTML({ HTMLAttributes }) {
+//     return [
+//       "div",
+//       mergeAttributes(HTMLAttributes, { "data-type": "database" }),
+//     ];
+//   },
+
+//   addNodeView() {
+//     return ReactNodeViewRenderer(DatabaseNodeView);
+//   },
+
+//   addCommands() {
+//     return {
+//       // ── Insert ──────────────────────────────────────────────────────────────
+
+//       insertDatabase:
+//         () =>
+//         ({ commands }) => {
+//           return commands.insertContent({
+//             type: "database",
+//             attrs: makeDefaultDatabase(),
+//           });
+//         },
+
+//       // ── Records ─────────────────────────────────────────────────────────────
+
+//       addDatabaseRecord: (nodeId) => (helpers) =>
+//         mutateDatabaseNode(nodeId, (attrs) => {
+//           const titleProp = attrs.properties.find(
+//             (p) => p.config.type === "title",
+//           );
+//           const newRecord: DatabaseRecord = {
+//             id: makeId(),
+//             values: titleProp ? { [titleProp.id]: "" } : {},
+//             createdAt: now(),
+//             updatedAt: now(),
+//           };
+//           return { ...attrs, records: [...attrs.records, newRecord] };
+//         })(helpers),
+
+//       updateDatabaseRecord: (nodeId, recordId, values) => (helpers) =>
+//         mutateDatabaseNode(nodeId, (attrs) => ({
+//           ...attrs,
+//           records: attrs.records.map((r) => {
+//             if (r.id !== recordId) return r;
+
+//             // Merge and strip undefined — Partial allows undefined but Record<ID, PropertyValue> doesn't
+//             const merged: Record<string, PropertyValue> = { ...r.values };
+//             for (const [k, v] of Object.entries(values)) {
+//               if (v !== undefined) merged[k] = v;
+//             }
+
+//             return { ...r, values: merged, updatedAt: now() };
+//           }),
+//         }))(helpers),
+
+//       deleteDatabaseRecord: (nodeId, recordId) => (helpers) =>
+//         mutateDatabaseNode(nodeId, (attrs) => ({
+//           ...attrs,
+//           records: attrs.records.filter((r) => r.id !== recordId),
+//         }))(helpers),
+
+//       // ── Properties ──────────────────────────────────────────────────────────
+
+//       addDatabaseProperty: (nodeId, type, name) => (helpers) =>
+//         mutateDatabaseNode(nodeId, (attrs) => {
+//           const newProp: DatabaseProperty = {
+//             id: makeId(),
+//             name:
+//               name ??
+//               type.charAt(0).toUpperCase() + type.slice(1).replace("_", " "),
+//             config: defaultConfig(type),
+//             width: 160,
+//           };
+
+//           // Add to property order in all table views
+//           const views = attrs.views.map((v) => {
+//             if (v.type !== "table") return v;
+//             return { ...v, propertyOrder: [...v.propertyOrder, newProp.id] };
+//           });
+
+//           return {
+//             ...attrs,
+//             properties: [...attrs.properties, newProp],
+//             views,
+//           };
+//         })(helpers),
+
+//       updateDatabaseProperty: (nodeId, propertyId, patch) => (helpers) =>
+//         mutateDatabaseNode(nodeId, (attrs) => ({
+//           ...attrs,
+//           properties: attrs.properties.map((p) =>
+//             p.id !== propertyId ? p : { ...p, ...patch },
+//           ),
+//         }))(helpers),
+
+//       deleteDatabaseProperty: (nodeId, propertyId) => (helpers) =>
+//         mutateDatabaseNode(nodeId, (attrs) => {
+//           // Remove from all records
+//           const records = attrs.records.map((r) => {
+//             // eslint-disable-next-line @typescript-eslint/no-unused-vars
+//             const { [propertyId]: _, ...rest } = r.values;
+//             return { ...r, values: rest };
+//           });
+
+//           // Remove from property order in all table views
+//           const views = attrs.views.map((v) => {
+//             if (v.type !== "table") return v;
+//             return {
+//               ...v,
+//               propertyOrder: v.propertyOrder.filter((id) => id !== propertyId),
+//             };
+//           });
+
+//           return {
+//             ...attrs,
+//             properties: attrs.properties.filter((p) => p.id !== propertyId),
+//             records,
+//             views,
+//           };
+//         })(helpers),
+
+//       reorderDatabaseProperties: (nodeId, orderedIds) => (helpers) =>
+//         mutateDatabaseNode(nodeId, (attrs) => {
+//           const propMap = new Map(attrs.properties.map((p) => [p.id, p]));
+//           const reordered = orderedIds
+//             .map((id) => propMap.get(id))
+//             .filter((p): p is DatabaseProperty => !!p);
+
+//           // Preserve any properties not in orderedIds at the end
+//           const missing = attrs.properties.filter(
+//             (p) => !orderedIds.includes(p.id),
+//           );
+
+//           return { ...attrs, properties: [...reordered, ...missing] };
+//         })(helpers),
+
+//       // ── Views ────────────────────────────────────────────────────────────────
+
+//       setDatabaseView: (nodeId, viewId) => (helpers) =>
+//         mutateDatabaseNode(nodeId, (attrs) => ({
+//           ...attrs,
+//           activeViewId: viewId,
+//         }))(helpers),
+
+//       addDatabaseView: (nodeId, type, name) => (helpers) =>
+//         mutateDatabaseNode(nodeId, (attrs) => {
+//           const id = makeId();
+//           const baseView = {
+//             id,
+//             name,
+//             filters: [],
+//             sorts: [],
+//             hiddenProperties: [],
+//           };
+
+//           let newView: DatabaseView;
+
+//           switch (type) {
+//             case "table":
+//               newView = {
+//                 ...baseView,
+//                 type: "table",
+//                 propertyOrder: attrs.properties.map((p) => p.id),
+//               };
+//               break;
+//             case "board": {
+//               // Default groupBy: first select or status property
+//               const groupProp = attrs.properties.find(
+//                 (p) => p.config.type === "select" || p.config.type === "status",
+//               );
+//               newView = {
+//                 ...baseView,
+//                 type: "board",
+//                 groupByPropertyId: groupProp?.id ?? "",
+//                 showEmptyGroups: true,
+//               };
+//               break;
+//             }
+//             case "list":
+//               newView = {
+//                 ...baseView,
+//                 type: "list",
+//                 visibleProperties: attrs.properties
+//                   .filter((p) => p.config.type !== "title")
+//                   .slice(0, 3)
+//                   .map((p) => p.id),
+//               };
+//               break;
+//             case "gallery":
+//               newView = {
+//                 ...baseView,
+//                 type: "gallery",
+//                 cardSize: "medium",
+//                 coverFit: "cover",
+//               };
+//               break;
+//           }
+
+//           return {
+//             ...attrs,
+//             views: [...attrs.views, newView],
+//             activeViewId: id,
+//           };
+//         })(helpers),
+
+//       updateDatabaseView: (nodeId, viewId, patch) => (helpers) =>
+//         mutateDatabaseNode(nodeId, (attrs) => ({
+//           ...attrs,
+//           views: attrs.views.map((v) =>
+//             v.id !== viewId ? v : ({ ...v, ...patch } as DatabaseView),
+//           ),
+//         }))(helpers),
+
+//       deleteDatabaseView: (nodeId, viewId) => (helpers) =>
+//         mutateDatabaseNode(nodeId, (attrs) => {
+//           const remaining = attrs.views.filter((v) => v.id !== viewId);
+//           return {
+//             ...attrs,
+//             views: remaining,
+//             // Fall back to first remaining view if active was deleted
+//             activeViewId:
+//               attrs.activeViewId === viewId
+//                 ? (remaining[0]?.id ?? null)
+//                 : attrs.activeViewId,
+//           };
+//         })(helpers),
+
+//       freezeDatabaseProperty: (nodeId, propertyId) => (helpers) =>
+//         mutateDatabaseNode(nodeId, (attrs) => ({
+//           ...attrs,
+//           views: attrs.views.map((v) => {
+//             if (v.type !== "table") return v;
+//             // Toggle — freeze if not frozen, unfreeze if already frozen
+//             const isFrozen = (v as TableView).frozenPropertyId === propertyId;
+//             return {
+//               ...v,
+//               frozenPropertyId: isFrozen ? null : propertyId,
+//             };
+//           }),
+//         }))(helpers),
+
+//       hideDatabaseProperty: (nodeId, propertyId, viewId) => (helpers) =>
+//         mutateDatabaseNode(nodeId, (attrs) => ({
+//           ...attrs,
+//           views: attrs.views.map((v) =>
+//             v.id !== viewId
+//               ? v
+//               : {
+//                   ...v,
+//                   hiddenProperties: v.hiddenProperties.includes(propertyId)
+//                     ? v.hiddenProperties.filter((id) => id !== propertyId)
+//                     : [...v.hiddenProperties, propertyId],
+//                 },
+//           ),
+//         }))(helpers),
+
+//       unwrapDatabaseProperty: (nodeId, propertyId, viewId) => (helpers) =>
+//         mutateDatabaseNode(nodeId, (attrs) => ({
+//           ...attrs,
+//           views: attrs.views.map((v) => {
+//             if (v.id !== viewId || v.type !== "table") return v;
+//             const tv = v as TableView;
+//             const unwrapped = tv.unwrappedProperties ?? [];
+//             return {
+//               ...tv,
+//               unwrappedProperties: unwrapped.includes(propertyId)
+//                 ? unwrapped.filter((id) => id !== propertyId)
+//                 : [...unwrapped, propertyId],
+//             };
+//           }),
+//         }))(helpers),
+//     };
+//   },
+// });

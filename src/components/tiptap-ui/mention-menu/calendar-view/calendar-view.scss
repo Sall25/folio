@@ -20,6 +20,7 @@
   border: 1px solid var(--tt-border-color);
   border-radius: var(--tt-radius-lg);
   z-index: 99999;
+  overflow-y: auto;
 
   &-hint {
     font-size: 11px;

@@ -15,10 +15,12 @@ import { ThemeToggle } from "src/components/tiptap-templates/simple/theme-toggle
 import { NotificationBell } from "src/components/tiptap-ui/notification";
 import { MorePopover } from "./more-popover";
 import { PageBreadcrumb } from "src/components/tiptap-ui/page-breadcrumb/page-breadcrumb";
-import { useSimpleEditor } from "./context/simple-editor-context";
 import { buildBreadcrumb } from "src/lib/build-breadcrumb";
 import { PageItemIcon } from "./page-item-icon";
 import { useMemo } from "react";
+import { useActivePage } from "./use-active-page";
+import { useMatch } from "@tanstack/react-location";
+import type { Page } from "./types";
 
 // ============================================================
 // Types
@@ -52,40 +54,44 @@ type SimpleEditorToolbarProps = {
 // Main toolbar
 // ============================================================
 
+function findPage(pages: Page[], id: number): Page | undefined {
+  for (const page of pages) {
+    if (page.id === id) return page;
+    if (page.children?.length) {
+      const found = findPage(page.children, id);
+      if (found) return found;
+    }
+  }
+}
+
 export const MainToolbarContent = ({
   isMobile,
   onTriggerVersionHistory,
 }: MainToolbarProps) => {
-  const { activePage, pages, setActivePageId } = useSimpleEditor();
+  const { pages, setActivePageId } = useActivePage();
 
-  // Derive only what the breadcrumb needs — no stale content reference
+  const { params } = useMatch();
+  const activePageId = params.pageId ? Number(params.pageId) : undefined;
+
   const breadcrumbs = useMemo(() => {
-    if (!activePage || !pages) return [];
+    if (!activePageId || !pages) return [];
+
+    const activePage = findPage(pages, activePageId);
+    if (!activePage) return [];
 
     return buildBreadcrumb(activePage, pages).map((page) => {
-      const isActive = activePage.id === page.id;
-      const title = isActive ? activePage.title : page.title;
-      const cover = isActive ? activePage.cover : page.cover;
-      const locked = isActive
-        ? activePage.settings.locked
-        : page.settings.locked;
+      const isActive = page.id === activePageId;
+      const { title, cover, settings } = isActive ? activePage : page;
 
       return {
         label: title || "New Page",
         icon: <PageItemIcon cover={cover} styles={{ fontSize: 14 }} />,
-        locked,
+        locked: settings.locked,
         onClick: () => setActivePageId(page.id),
       };
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    activePage?.id,
-    activePage?.title,
-    activePage?.cover,
-    activePage?.settings.locked,
-    pages,
-    setActivePageId,
-  ]);
+  }, [activePageId, pages, setActivePageId]);
+
   return (
     <>
       <ToolbarGroup>

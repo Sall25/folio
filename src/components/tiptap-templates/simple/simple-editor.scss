@@ -136,7 +136,8 @@ body,
   overflow: auto;
    overflow-y: auto;
   transition: right 0.2s ease;
-
+   position: fixed;
+  inset: 0;
 }
 
 
@@ -205,8 +206,8 @@ body,
 
 // Center editor takes all remaining space
 .simple-editor-content {
-  font-size: 1.08rem;
-  min-width: 750px;
+  font-size: 0.88rem;
+  min-width: 600px;
   // margin-top: 20px;
 
   transition: transform 0.2s ease;
@@ -219,11 +220,11 @@ body,
     transform: translateX(var(--x));
   }
   &[data-size="medium"] {
-    max-width: 750px;
+    max-width: 700px;
   }
 
   &[data-size="full"] {
-    max-width: 850px;
+    max-width: 900px;
   }
 
   &[data-text="small"]{
@@ -282,3 +283,19 @@ TABLE STYLE
     --tt-table-column-resize-handle-bg: var(--tt-brand-color-400);
 }
 
+.page-peek {
+  position: fixed;
+  width: 50%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  transition: width 0.2s ease;
+  border-left: 1px solid var(--tt-border-color);
+  background: var(--tt-bg-color);
+  z-index: 990;
+
+  &--open {
+    width: 480px;
+  }
+}

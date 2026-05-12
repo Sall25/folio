@@ -1,0 +1,53 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Space+Grotesk:wght@500&display=swap");
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 0;
+  text-decoration: none;
+  user-select: none;
+
+  &__mark {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    background: var(--tt-brand-color-400);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &__wordmark {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    line-height: 1;
+  }
+
+  &__name {
+    font-family: "Fraunces", serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--tt-text-color, #111);
+    letter-spacing: -0.4px;
+    line-height: 1;
+  }
+
+  &__sub {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 8.5px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    color: var(--tt-text-color-secondary, #999);
+    text-transform: uppercase;
+    margin-top: 0px;
+  }
+}

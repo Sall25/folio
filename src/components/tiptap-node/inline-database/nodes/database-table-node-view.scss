@@ -1,0 +1,79 @@
+.node-databaseRecord{
+  margin-bottom: 0;
+
+  &.ProseMirror-selectednode{
+    background-color: var(--tt-selection-color);
+  }
+}
+.db-header-row,
+.db-row {
+  display: grid;
+  grid-template-columns: var(--db-grid-columns);
+  border-bottom: 1px solid var(--tt-border-color);
+}
+
+.db-td {
+  height: 34px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--tt-border-color);
+}
+
+/* The ProseMirror paragraph inside empty cells */
+.db-td p {
+  margin: 0 !important;
+  line-height: 34px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.db-row > div {
+  min-width: 0; /* prevents grid blowout */
+}
+.db-row {
+  padding: 0;
+  height: 34px;        // fixed height, not auto
+//  border-top: 1px solid var(--tt-border-color);
+  // overflow: hidden;    // clip anything that escapes
+}
+
+// Collapse all the Tiptap wrapper divs between .db-row and .db-td
+.db-row > div,
+.db-row > div > div,
+.db-row > div > div > div {
+  display: contents;   // remove them from layout entirely
+}
+
+.title-input{
+  caret-color: var(--tt-cursor-color);
+  min-width: 160px;
+  font-size: 17px;
+  background: transparent;
+  font-weight: 600;
+  border: none;
+  color: var(--tt-paragraph-text-color);
+
+  outline: none;
+}
+
+
+// .db-body > div {
+//   display: grid;
+//   grid-template-columns: 1fr 160px 160px 50px;
+// }
+
+// .db-row {
+//   display: grid;
+//   // gridTemplateColumns comes from inline style
+
+//   &__content {
+//     display: contents; // collapse this wrapper — cells become direct grid children
+//   }
+
+//   // Tiptap also wraps each cell in .react-renderer
+//   .react-renderer {
+//     display: contents; // collapse those too
+//   }
+// }

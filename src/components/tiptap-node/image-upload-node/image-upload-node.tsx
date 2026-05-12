@@ -7,6 +7,7 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { CloseIcon } from "src/components/tiptap-icons/close-icon";
 import "src/components/tiptap-node/image-upload-node/image-upload-node.scss";
 import { focusNextNode, isValidPosition } from "src/lib/tiptap-utils";
+import { useFileUpload } from "./use-file-upload";
 
 export interface FileItem {
   /**
@@ -77,139 +78,6 @@ export interface UploadOptions {
    * @optional
    */
   onError?: (error: Error) => void;
-}
-
-/**
- * Custom hook for managing multiple file uploads with progress tracking and cancellation
- */
-function useFileUpload(options: UploadOptions) {
-  const [fileItems, setFileItems] = useState<FileItem[]>([]);
-
-  const uploadFile = async (file: File): Promise<string | null> => {
-    if (file.size > options.maxSize) {
-      const error = new Error(
-        `File size exceeds maximum allowed (${options.maxSize / 1024 / 1024}MB)`,
-      );
-      options.onError?.(error);
-      return null;
-    }
-
-    const abortController = new AbortController();
-    const fileId = crypto.randomUUID();
-
-    const newFileItem: FileItem = {
-      id: fileId,
-      file,
-      progress: 0,
-      status: "uploading",
-      abortController,
-    };
-
-    setFileItems((prev) => [...prev, newFileItem]);
-
-    try {
-      if (!options.upload) {
-        throw new Error("Upload function is not defined");
-      }
-
-      const url = await options.upload(
-        file,
-        (event: { progress: number }) => {
-          setFileItems((prev) =>
-            prev.map((item) =>
-              item.id === fileId ? { ...item, progress: event.progress } : item,
-            ),
-          );
-        },
-        abortController.signal,
-      );
-
-      if (!url) throw new Error("Upload failed: No URL returned");
-
-      if (!abortController.signal.aborted) {
-        setFileItems((prev) =>
-          prev.map((item) =>
-            item.id === fileId
-              ? { ...item, status: "success", url, progress: 100 }
-              : item,
-          ),
-        );
-        options.onSuccess?.(url);
-        return url;
-      }
-
-      return null;
-    } catch (error) {
-      if (!abortController.signal.aborted) {
-        setFileItems((prev) =>
-          prev.map((item) =>
-            item.id === fileId
-              ? { ...item, status: "error", progress: 0 }
-              : item,
-          ),
-        );
-        options.onError?.(
-          error instanceof Error ? error : new Error("Upload failed"),
-        );
-      }
-      return null;
-    }
-  };
-
-  const uploadFiles = async (files: File[]): Promise<string[]> => {
-    if (!files || files.length === 0) {
-      options.onError?.(new Error("No files to upload"));
-      return [];
-    }
-
-    if (options.limit && files.length > options.limit) {
-      options.onError?.(
-        new Error(
-          `Maximum ${options.limit} file${options.limit === 1 ? "" : "s"} allowed`,
-        ),
-      );
-      return [];
-    }
-
-    // Upload all files concurrently
-    const uploadPromises = files.map((file) => uploadFile(file));
-    const results = await Promise.all(uploadPromises);
-
-    // Filter out null results (failed uploads)
-    return results.filter((url): url is string => url !== null);
-  };
-
-  const removeFileItem = (fileId: string) => {
-    setFileItems((prev) => {
-      const fileToRemove = prev.find((item) => item.id === fileId);
-      if (fileToRemove?.abortController) {
-        fileToRemove.abortController.abort();
-      }
-      if (fileToRemove?.url) {
-        URL.revokeObjectURL(fileToRemove.url);
-      }
-      return prev.filter((item) => item.id !== fileId);
-    });
-  };
-
-  const clearAllFiles = () => {
-    fileItems.forEach((item) => {
-      if (item.abortController) {
-        item.abortController.abort();
-      }
-      if (item.url) {
-        URL.revokeObjectURL(item.url);
-      }
-    });
-    setFileItems([]);
-  };
-
-  return {
-    fileItems,
-    uploadFiles,
-    removeFileItem,
-    clearAllFiles,
-  };
 }
 
 const CloudUploadIcon: React.FC = () => (
@@ -486,38 +354,6 @@ export const ImageUploadNode: React.FC<NodeViewProps> = (props) => {
       }
     }
   };
-  // const handleUpload = async (files: File[]) => {
-  //   const urls = await uploadFiles(files)
-
-  //   if (urls.length > 0) {
-  //     const pos = props.getPos()
-
-  //     if (isValidPosition(pos)) {
-  //       const imageNodes = urls.map((url, index) => {
-  //         const filename =
-  //           files[index]?.name.replace(/\.[^/.]+$/, "") || "unknown"
-  //         return {
-  //           type: extension.options.type,
-  //           attrs: {
-  //             ...extension.options,
-  //             src: url,
-  //             alt: filename,
-  //             title: filename,
-  //           },
-  //         }
-  //       })
-
-  //       props.editor
-  //         .chain()
-  //         .focus()
-  //         .deleteRange({ from: pos, to: pos + props.node.nodeSize })
-  //         .insertContentAt(pos, imageNodes)
-  //         .run()
-
-  //       focusNextNode(props.editor)
-  //     }
-  //   }
-  // }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;

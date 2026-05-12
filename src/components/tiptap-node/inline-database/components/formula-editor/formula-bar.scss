@@ -1,0 +1,60 @@
+.formula-bar {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.formula-bar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+}
+
+.formula-bar__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--tt-muted-color, #999);
+}
+
+.formula-bar__editor {
+  border-top: 1px solid var(--tt-border-color, #e5e5e5);
+
+  .cm-editor {
+    background: transparent;
+  }
+
+  // prop() highlighted as a distinct color
+  .tok-keyword {
+    color: #0070f3;
+    font-weight: 500;
+  }
+
+  // Built-in functions
+  .tok-function {
+    color: #7c3aed;
+  }
+
+  // Strings — property names inside prop("...")
+  .tok-string {
+    color: #c41e6a;
+  }
+
+  // Numbers
+  .tok-number {
+    color: #d97706;
+  }
+
+  // Operators
+  .tok-operator {
+    color: #059669;
+  }
+
+  .tok-punctuation {
+    color: #888;
+  }
+
+  .tok-variableName {
+    color: #111;
+  }
+}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Editor } from "@tiptap/core";
 import { DragHandle as TiptapDragHandle } from "./drag-handle-extension-react";
 import { useCallback, useRef, useState } from "react";
@@ -35,6 +36,7 @@ const NODE_LABELS: Record<string, string> = {
   database: "Database",
   title: "Title",
   pageLink: "Page",
+  databaseRecord: "Record",
 };
 
 const nestedOptions = {
@@ -67,6 +69,7 @@ const nestedOptions = {
           name === "orderedList" ||
           name === "taskList" ||
           name === "blockquote" ||
+          name === "databaseRecord" ||
           name === "table"
           // name === "column"
         ) {
@@ -117,20 +120,126 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
       }}
       onElementDragStart={() => {
         isDraggingRef.current = true;
-
         setOpen(false);
+        editor.view.dom.classList.add("is-dragging");
+
+        // Emit drag start with the node pos
+        document.dispatchEvent(
+          new CustomEvent("draghandle:dragstart", {
+            detail: { pos: posRef.current },
+          }),
+        );
       }}
       onElementDragEnd={() => {
         isDraggingRef.current = false;
 
+        editor.view.dom.classList.remove("is-dragging");
+
+        document.dispatchEvent(
+          new CustomEvent("draghandle:dragend", {
+            detail: { pos: posRef.current },
+          }),
+        );
+
         const pos = posRef.current;
         if (pos === -1 || !editor) return;
 
-        // Give ProseMirror a tick to finish the drop transaction
         requestAnimationFrame(() => {
-          const node = editor.state.doc.nodeAt(pos);
+          const { state } = editor.view;
 
-          // If the wrapper still exists but has no table children, delete it
+          // Check for empty columns and clean them up
+          const emptyColumnPositions: {
+            columnPos: number;
+            columnBlockPos: number;
+            columnBlockNode: any;
+          }[] = [];
+
+          state.doc.forEach((node, offset) => {
+            if (node.type.name === "columnBlock") {
+              node.forEach((col, colOffset) => {
+                const isEmpty =
+                  col.childCount === 0 ||
+                  (col.childCount === 1 && col.child(0).textContent === "");
+
+                if (isEmpty) {
+                  emptyColumnPositions.push({
+                    columnPos: offset + 1 + colOffset,
+                    columnBlockPos: offset,
+                    columnBlockNode: node,
+                  });
+                }
+              });
+            }
+          });
+
+          if (emptyColumnPositions.length === 0) return;
+
+          // Process each affected columnBlock
+          const processedBlocks = new Set<number>();
+
+          for (const { columnBlockPos } of emptyColumnPositions) {
+            if (processedBlocks.has(columnBlockPos)) continue;
+            processedBlocks.add(columnBlockPos);
+
+            const { state: currentState, dispatch } = editor.view;
+            const columnType = currentState.schema.nodes.column;
+            const columnBlockType = currentState.schema.nodes.columnBlock;
+            const paragraphType = currentState.schema.nodes.paragraph;
+
+            // Re-read the current columnBlock from current state
+            const currentBlockNode = currentState.doc.nodeAt(columnBlockPos);
+            if (
+              !currentBlockNode ||
+              currentBlockNode.type.name !== "columnBlock"
+            )
+              continue;
+
+            // Filter out empty columns
+            const remainingColumns: any[] = [];
+            currentBlockNode.forEach((col: any) => {
+              const isEmpty =
+                col.childCount === 0 ||
+                (col.childCount === 1 && col.child(0).textContent === "");
+              if (!isEmpty) remainingColumns.push(col);
+            });
+
+            const tr = currentState.tr;
+
+            if (remainingColumns.length === 0) {
+              // All columns empty — replace the whole columnBlock with a paragraph
+              tr.replaceWith(
+                columnBlockPos,
+                columnBlockPos + currentBlockNode.nodeSize,
+                paragraphType.create(),
+              );
+            } else if (remainingColumns.length === 1) {
+              // One column left — unwrap it, put its content directly in the doc
+              const soleColumn = remainingColumns[0];
+              tr.replaceWith(
+                columnBlockPos,
+                columnBlockPos + currentBlockNode.nodeSize,
+                soleColumn.content.size > 0
+                  ? soleColumn.content
+                  : paragraphType.create(),
+              );
+            } else {
+              // Redistribute widths among remaining columns
+              const newWidth = `${Math.round(100 / remainingColumns.length)}%`;
+              const resized = remainingColumns.map((col: any) =>
+                columnType.create({ width: newWidth }, col.content),
+              );
+              tr.replaceWith(
+                columnBlockPos,
+                columnBlockPos + currentBlockNode.nodeSize,
+                columnBlockType.create({}, resized),
+              );
+            }
+
+            dispatch(tr);
+          }
+
+          // Original tableWrapper cleanup
+          const node = editor.state.doc.nodeAt(pos);
           if (node?.type.name === "tableWrapper") {
             editor.chain().setNodeSelection(pos).deleteSelection().run();
           }
@@ -138,7 +247,26 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
       }}
       // onElementDragEnd={() => {
       //   isDraggingRef.current = false;
+
+      //   editor.view.dom.classList.remove("is-dragging");
+
+      //   document.dispatchEvent(
+      //     new CustomEvent("draghandle:dragend", {
+      //       detail: { pos: posRef.current },
+      //     }),
+      //   );
+
+      //   const pos = posRef.current;
+      //   if (pos === -1 || !editor) return;
+
+      //   requestAnimationFrame(() => {
+      //     const node = editor.state.doc.nodeAt(pos);
+      //     if (node?.type.name === "tableWrapper") {
+      //       editor.chain().setNodeSelection(pos).deleteSelection().run();
+      //     }
+      //   });
       // }}
+
       nestedOptions={nestedOptions as unknown as NormalizedNestedOptions}
     >
       <CardItemGroup orientation="horizontal">

@@ -1,0 +1,304 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useRef, useState } from "react";
+import {
+  Table2,
+  Trello,
+  List,
+  LayoutGrid,
+  Plus,
+  Search,
+  Filter,
+  ArrowUpDown,
+  LayoutList,
+} from "lucide-react";
+
+import type { DatabaseView, ViewType } from "./types";
+import type { UseDatabaseReturn } from "./use-database";
+
+import { Button } from "src/components/tiptap-ui-primitive/button";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import "./database-toolbar-panels.scss";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "src/components/tiptap-ui-primitive/popover";
+import { FilterPanel } from "./components/filter-panel";
+import { Badge } from "src/components/tiptap-ui-primitive/badge";
+import { SortPanel } from "./components/sort-panel";
+import { GroupPanel } from "./components/group-panel";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// View type config
+// ─────────────────────────────────────────────────────────────────────────────
+
+const VIEW_ICONS: Record<ViewType, React.ElementType> = {
+  table: Table2,
+  board: Trello,
+  list: List,
+  gallery: LayoutGrid,
+};
+
+// const VIEW_LABELS: Record<ViewType, string> = {
+//   table: "Table",
+//   board: "Board",
+//   list: "List",
+//   gallery: "Gallery",
+// };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// View tab
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface ViewTabProps {
+  view: DatabaseView;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+function ViewTab({ view, isActive, onClick }: ViewTabProps) {
+  const Icon = VIEW_ICONS[view.type];
+  return (
+    <button
+      className={`db-view-tab ${isActive ? "db-view-tab--active" : ""}`}
+      onClick={onClick}
+    >
+      <Icon style={{ width: 13, height: 13, flexShrink: 0 }} />
+      <span>{view.name}</span>
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Add view dropdown
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ADD_VIEW_OPTIONS: { type: ViewType; label: string }[] = [
+  { type: "table", label: "Table" },
+  { type: "board", label: "Board" },
+  { type: "list", label: "List" },
+  { type: "gallery", label: "Gallery" },
+];
+
+interface AddViewDropdownProps {
+  onAdd: (type: ViewType, name: string) => void;
+  onClose: () => void;
+}
+
+function AddViewDropdown({ onAdd, onClose }: AddViewDropdownProps) {
+  return (
+    <div className="db-dropdown" onMouseLeave={onClose}>
+      {ADD_VIEW_OPTIONS.map((opt) => {
+        const Icon = VIEW_ICONS[opt.type];
+        return (
+          <button
+            key={opt.type}
+            className="db-dropdown-item"
+            onClick={() => {
+              onAdd(opt.type, opt.label);
+              onClose();
+            }}
+          >
+            <Icon style={{ width: 13, height: 13 }} />
+            <span>{opt.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Filter indicator badge
+// ─────────────────────────────────────────────────────────────────────────────
+
+function filterCount(view: DatabaseView): number {
+  return view.filters.reduce((acc, g) => acc + g.rules.length, 0);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Toolbar
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface DatabaseToolbarProps {
+  db: UseDatabaseReturn;
+}
+
+export function DatabaseToolbar({ db }: DatabaseToolbarProps) {
+  const [showSearch, setShowSearch] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const { attrs, activeView } = db;
+  const activeFilters =
+    activeView?.filters.reduce((acc, g) => acc + g.rules.length, 0) ?? 0;
+  const activeSorts = activeView?.sorts.length ?? 0;
+  const activeGroup =
+    activeView?.type === "board" ? (activeView as any).groupByPropertyId : null;
+
+  const handleSearchToggle = () => {
+    setShowSearch((v) => {
+      if (!v) setTimeout(() => searchRef.current?.focus(), 50);
+      else db.setSearchQuery("");
+      return !v;
+    });
+  };
+
+  return (
+    <div className="db-toolbar">
+      {/* ── Title ── */}
+      <input
+        className="db-title-input"
+        value={attrs.title}
+        placeholder="New database"
+        onChange={(e) =>
+          db.updateView(attrs.activeViewId, { name: e.target.value } as any)
+        }
+      />
+
+      <Spacer orientation="horizontal" />
+
+      {/* ── Search ── */}
+      {showSearch && (
+        <input
+          ref={searchRef}
+          className="db-search-input"
+          placeholder="Search…"
+          value={db.searchQuery}
+          onChange={(e) => db.setSearchQuery(e.target.value)}
+          onKeyDown={(e) => e.key === "Escape" && handleSearchToggle()}
+        />
+      )}
+
+      {/* ── Action buttons ── */}
+      {/* <Button variant="ghost" onClick={handleSearchToggle} aria-label="Search">
+        <Search
+          style={{ width: 14, height: 14 }}
+          className="tiptap-button-icon"
+        />
+      </Button>
+
+      <Button
+        variant="ghost"
+        style={{ gap: 5, position: "relative" }}
+        aria-label="Filter"
+      >
+        <Filter
+          style={{ width: 14, height: 14 }}
+          className="tiptap-button-icon"
+        />
+        {activeFilters > 0 && <span className="db-badge">{activeFilters}</span>}
+      </Button>
+
+      <Button variant="ghost" style={{ gap: 5 }} aria-label="Sort">
+        <ArrowUpDown
+          style={{ width: 14, height: 14 }}
+          className="tiptap-button-icon"
+        />
+        {activeSorts > 0 && <span className="db-badge">{activeSorts}</span>}
+      </Button> */}
+
+      {/* Filter */}
+      {activeView && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              tooltip="Filter"
+              variant="ghost"
+              style={{ gap: 5 }}
+              aria-label="Filter"
+            >
+              <Filter
+                style={{ width: 14, height: 14 }}
+                className="tiptap-button-icon"
+              />
+
+              {activeFilters > 0 && <Badge>{activeFilters}</Badge>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent side="bottom" align="end">
+            <FilterPanel
+              view={activeView}
+              properties={attrs.properties}
+              onUpdateView={(patch) => db.updateView(activeView.id, patch)}
+            />
+          </PopoverContent>
+        </Popover>
+      )}
+
+      {/* Sort */}
+      {activeView && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              tooltip="Sort"
+              variant="ghost"
+              style={{ gap: 5 }}
+              aria-label="Sort"
+            >
+              <ArrowUpDown
+                style={{ width: 14, height: 14 }}
+                className="tiptap-button-icon"
+              />
+              {activeSorts > 0 && <Badge>{activeSorts}</Badge>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent side="bottom" align="end">
+            <SortPanel
+              view={activeView}
+              properties={attrs.properties}
+              onUpdateView={(patch) => db.updateView(activeView.id, patch)}
+            />
+          </PopoverContent>
+        </Popover>
+      )}
+
+      {/* Group */}
+      {activeView && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              tooltip="Group"
+              variant="ghost"
+              style={{ gap: 5 }}
+              aria-label="Group"
+            >
+              <LayoutList
+                style={{ width: 14, height: 14 }}
+                className="tiptap-button-icon"
+              />
+              {activeGroup && <Badge>1</Badge>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent side="bottom" align="end">
+            <GroupPanel
+              view={activeView}
+              properties={attrs.properties}
+              onUpdateView={(patch) => db.updateView(activeView.id, patch)}
+            />
+          </PopoverContent>
+        </Popover>
+      )}
+
+      {/* ── New record ── */}
+      <Button
+        variant="ghost"
+        style={{
+          gap: 5,
+          background: "var(--tt-brand-color-400)",
+          color: "white",
+          fontWeight: "500",
+          borderRadius: "var(--tt-radius-sm)",
+          minHeight: 18,
+          height: 22,
+        }}
+        onClick={() => db.addRecord()}
+      >
+        <Plus
+          style={{ width: 14, height: 14, color: "white" }}
+          className="tiptap-button-icon"
+        />
+        <span style={{ fontSize: 13 }}>New</span>
+      </Button>
+    </div>
+  );
+}

@@ -1,45 +1,21 @@
-// code-block-view.tsx
-import {
-  NodeViewContent,
-  NodeViewWrapper,
-  type NodeViewProps,
-} from "@tiptap/react";
+import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { useCallback, useRef, useState } from "react";
 import { Check, ChevronDown, Copy } from "lucide-react";
 import "./code-block-node.scss";
 
 const LANGUAGES = [
-  "plaintext",
-  "javascript",
-  "typescript",
-  "jsx",
-  "tsx",
-  "html",
-  "css",
-  "scss",
-  "json",
-  "markdown",
-  "python",
-  "rust",
-  "go",
-  "java",
-  "c",
-  "cpp",
-  "bash",
-  "sql",
-  "yaml",
-  "xml",
+  "plaintext", "javascript", "typescript", "jsx", "tsx",
+  "html", "css", "scss", "json", "markdown", "python",
+  "rust", "go", "java", "c", "cpp", "bash", "sql", "yaml", "xml",
 ];
 
-export function CodeBlockView({
-  node,
-  updateAttributes,
-  extension,
-}: NodeViewProps) {
+export function CodeBlockView({ node, updateAttributes, extension }: NodeViewProps) {
   const { filename, language } = node.attrs;
   const [copied, setCopied] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const filenameRef = useRef<HTMLSpanElement>(null);
+
+  const currentLang = language ?? extension.options.defaultLanguage ?? "plaintext";
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(node.textContent);
@@ -53,77 +29,54 @@ export function CodeBlockView({
   }, [updateAttributes]);
 
   const handleFilenameKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      filenameRef.current?.blur();
-    }
+    if (e.key === "Enter") { e.preventDefault(); filenameRef.current?.blur(); }
   }, []);
-
-  const currentLang =
-    language ?? extension.options.defaultLanguage ?? "plaintext";
 
   return (
     <NodeViewWrapper className="code-block-wrapper">
-      {/* Header */}
-      <div className="code-block-header" contentEditable={false}>
-        {/* Filename tab */}
-        <div className="code-block-filename-tab">
-          <span
-            ref={filenameRef}
-            className="code-block-filename"
-            contentEditable
-            suppressContentEditableWarning
-            spellCheck={false}
-            onBlur={handleFilenameBlur}
-            onKeyDown={handleFilenameKeyDown}
-            data-placeholder="Untitled"
-          >
-            {filename ?? ""}
-          </span>
+      {filename !== null && (
+        <span
+          ref={filenameRef}
+          className="code-block-filename"
+          contentEditable
+          suppressContentEditableWarning
+          spellCheck={false}
+          onBlur={handleFilenameBlur}
+          onKeyDown={handleFilenameKeyDown}
+          data-placeholder="Untitled"
+        >
+          {filename ?? ""}
+        </span>
+      )}
+
+      {/* Toolbar — shown on hover via CSS */}
+      <div className="code-block-toolbar" contentEditable={false}>
+        <div className="code-block-lang-wrap">
+          <button className="code-block-pill" onClick={() => setLangOpen((o) => !o)}>
+            <span>{currentLang}</span>
+            <ChevronDown size={11} />
+          </button>
+          {langOpen && (
+            <div className="code-block-lang-dropdown">
+              {LANGUAGES.map((lang) => (
+                <button
+                  key={lang}
+                  className={lang === currentLang ? "active" : ""}
+                  onClick={() => { updateAttributes({ language: lang }); setLangOpen(false); }}
+                >
+                  {lang}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Right actions */}
-        <div className="code-block-actions">
-          {/* Language selector */}
-          <div className="code-block-lang-selector">
-            <button
-              className="code-block-lang-btn"
-              onClick={() => setLangOpen((o) => !o)}
-            >
-              <span>{currentLang}</span>
-              <ChevronDown size={12} />
-            </button>
-            {langOpen && (
-              <div className="code-block-lang-dropdown">
-                {LANGUAGES.map((lang) => (
-                  <button
-                    key={lang}
-                    className={`code-block-lang-option ${lang === currentLang ? "active" : ""}`}
-                    onClick={() => {
-                      updateAttributes({ language: lang });
-                      setLangOpen(false);
-                    }}
-                  >
-                    {lang}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Copy button */}
-          <button className="code-block-copy-btn" onClick={handleCopy}>
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-          </button>
-
-          {/* More options */}
-          <button className="code-block-more-btn">
-            <span>···</span>
-          </button>
-        </div>
+        <button className="code-block-pill" onClick={handleCopy}>
+          {copied ? <Check size={13} /> : <Copy size={13} />}
+          <span>{copied ? "Copied!" : "Copy"}</span>
+        </button>
       </div>
 
-      {/* Code content */}
       <pre>
         <NodeViewContent as={"code" as unknown as "div"} />
       </pre>

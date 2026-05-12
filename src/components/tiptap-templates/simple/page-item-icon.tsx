@@ -28,11 +28,11 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
           <DynamicIcon
             stroke={cover.color ?? "var(--tt-text-color)"}
             name={cover.iconName!}
-            size={18}
-            strokeWidth={2}
+            size={16}
+            strokeWidth={2.3}
           />
         ) : (
-          <File size={18} strokeWidth={2} />
+          <File size={16} strokeWidth={2.3} />
         )}
       </span>
     );

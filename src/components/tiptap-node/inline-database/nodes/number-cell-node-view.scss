@@ -1,0 +1,31 @@
+.db-td--number {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  justify-content: flex-end; // numbers right-aligned like Notion
+}
+
+.db-cell-number {
+  &__display {
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__input {
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 0.875rem;
+    color: inherit;
+    width: 120px;
+    text-align: right;
+    caret-color: var(--tt-cursor-color);
+    font-variant-numeric: tabular-nums;
+
+    // Hide browser arrows
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+    }
+    -moz-appearance: textfield;
+  }
+}

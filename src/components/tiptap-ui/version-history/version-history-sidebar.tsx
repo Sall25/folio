@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Timer, X } from "lucide-react";
 import "./version-history.scss";
 import { VersionHistoryList } from "./version-history-list";
 import { useVersionHistory } from "./use-version-history";
 import { useDiff } from "./use-diff";
 import type { Version } from "./types";
-import type { Page } from "src/components/tiptap-templates/simple/types";
 import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/simple-editor-context";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
@@ -15,14 +14,27 @@ interface VersionHistorySidebarProps {
   open: boolean;
   onClose: () => void;
   userColor?: string;
-  currentContent?: Page["content"];
 }
 
+// Shell — no hooks, mounts inner only when open
 export function VersionHistorySidebar({
   open,
   onClose,
   userColor,
 }: VersionHistorySidebarProps) {
+  if (!open) return null;
+  return <VersionHistorySidebarInner onClose={onClose} userColor={userColor} />;
+}
+
+// Inner — all hooks live here, only runs when sidebar is open
+function VersionHistorySidebarInner({
+  onClose,
+  userColor,
+}: {
+  onClose: () => void;
+  userColor?: string;
+}) {
+  const { activePage, updatePageAsync } = useSimpleEditor();
   const {
     versions,
     selectedVersion,
@@ -34,11 +46,23 @@ export function VersionHistorySidebar({
     cancelNaming,
     saveNameAsync,
     restoreVersionAsync,
-  } = useVersionHistory();
+    createVersionAsync,
+  } = useVersionHistory(activePage, updatePageAsync);
+
   const { editor } = useCurrentEditor();
-  const { activePage } = useSimpleEditor();
   const { applyDiff, clearDiff } = useDiff(editor);
   const [filter, setFilter] = useState<"all" | "named">("all");
+
+  const activePageRef = useRef(activePage);
+  const createVersionAsyncRef = useRef(createVersionAsync);
+
+  useEffect(() => {
+    activePageRef.current = activePage;
+  }, [activePage]);
+
+  useEffect(() => {
+    createVersionAsyncRef.current = createVersionAsync;
+  }, [createVersionAsync]);
 
   const filteredVersions =
     filter === "named" ? versions.filter((v) => v.isNamed) : versions;
@@ -55,16 +79,35 @@ export function VersionHistorySidebar({
     };
   }, [editor, clearDiff]);
 
-  if (!open) return null;
+  useEffect(() => {
+    if (!editor) return;
+
+    const update = () => {
+      if (!activePageRef.current) return;
+      const now = Date.now();
+      const VERSION_INTERVAL = 10 * 60 * 1000;
+      if (now - Date.now() >= VERSION_INTERVAL) {
+        createVersionAsyncRef.current({
+          pageId: activePageRef.current.id,
+          title: activePageRef.current.title,
+          content: activePageRef.current.content,
+          isNamed: false,
+        });
+      }
+    };
+
+    editor.on("update", update);
+    return () => {
+      editor.off("update", update);
+    };
+  }, [editor]);
 
   const handleSelect = async (version: Version | null) => {
     selectVersion(version);
-    if (!editor) return;
-    if (!activePage) return;
+    if (!editor || !activePage) return;
 
     if (version === null) {
       clearDiff();
-      // Just read from activePage — it was never touched
       if (activePage.content) {
         editor.commands.setContent(activePage.content);
       }
@@ -72,8 +115,9 @@ export function VersionHistorySidebar({
     }
 
     editor.commands.setContent(version.content);
-    if (activePage?.content)
-      applyDiff(version.content, activePage?.content, userColor);
+    if (activePage.content) {
+      applyDiff(version.content, activePage.content, userColor);
+    }
   };
 
   const handleRestore = async () => {

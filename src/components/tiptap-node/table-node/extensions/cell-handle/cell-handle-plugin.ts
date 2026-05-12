@@ -144,9 +144,7 @@ export const CellHandlePlugin = ({
               rafId = null
 
               const { cell } = ctx
-              if (cell.node.type.name === 'tableCell') {
-                console.log('tableCell')
-              }
+             
               if (cell.pos !== -1) {
                 currentCellPos = cell.pos
                 const dom = view.nodeDOM(currentCellPos) as HTMLElement | null

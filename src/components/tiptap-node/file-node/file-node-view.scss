@@ -1,0 +1,133 @@
+// file-node.scss
+.file-node {
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: var(--tt-radius-sm);
+    position: relative;
+    overflow: hidden;
+    transition: background var(--tt-transition-duration-short);
+
+    &:hover {
+      background: var(--tt-border-color-tint);
+
+      .file-node__actions {
+        opacity: 1;
+      }
+    }
+
+    &--uploading {
+      background: var(--tt-border-color-tint);
+    }
+  }
+
+  &__progress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--tt-brand-color-100);
+    transition: width 0.2s ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  &__icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  &__name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--link-text-color);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__size {
+    font-size: 0.75rem;
+    color: var(--tt-gray-light-a-400);
+
+    .dark & {
+      color: var(--tt-gray-dark-a-400);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity var(--tt-transition-duration-short);
+    position: relative;
+    z-index: 1;
+  }
+
+  &__action-btn {
+    &--danger:hover {
+      color: var(--tt-color-text-red);
+    }
+  }
+
+  &__upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px;
+    border: none;
+    background: none;
+    border-radius: var(--tt-radius-sm);
+    font-size: 0.8125rem;
+    color: var(--tt-gray-light-a-500);
+    cursor: pointer;
+    transition: background var(--tt-transition-duration-short),
+                color var(--tt-transition-duration-short);
+
+    &:hover {
+      background: var(--tt-border-color);
+      color: inherit;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .dark & {
+      color: var(--tt-gray-dark-a-500);
+    }
+  }
+}

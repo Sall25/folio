@@ -1,0 +1,36 @@
+.node-columnBlock{
+  padding: 0 !important;
+}
+
+.column-drop-zone {
+  position: absolute;
+  top: 0;
+  width: 20%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+  // pointer-events: all; // must be all so dragover fires
+
+  &--left { left: 0; }
+  &--right { right: 0; }
+
+  &.column-drop-active {
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 3px;
+      height: 100%;
+      background: var(--tt-brand-color-500);
+      border-radius: 2px;
+    }
+
+    &.column-drop-zone--left::after { left: 0; }
+    &.column-drop-zone--right::after { right: 0; }
+  }
+}
+
+// Only enable pointer events on drop zones while dragging
+.is-dragging .column-drop-zone {
+  pointer-events: all;
+}

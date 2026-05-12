@@ -12,6 +12,7 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 
 import "./floating-actions.scss";
 import { useSimpleEditor } from "./context/simple-editor-context";
+import type { Page } from "./types";
 
 export function FloatingActions({
   open,
@@ -20,6 +21,7 @@ export function FloatingActions({
   onTargetChange,
   onSelect,
   onAddCoverAsync,
+  providedPage,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,10 +29,13 @@ export function FloatingActions({
   onTargetChange: (t: Target) => void;
   onSelect: (name: string, color?: string) => void;
   onAddCoverAsync: () => Promise<void>;
+  providedPage?: Page;
 }) {
   const { activePage } = useSimpleEditor();
-  const hasIcon = !!activePage?.cover.iconName;
-  const hasCover = !!activePage?.cover.coverImage;
+  const page = providedPage ?? activePage;
+
+  const hasIcon = !!page?.cover.iconName;
+  const hasCover = !!page?.cover.coverImage;
 
   return (
     <div

@@ -32,3 +32,4 @@ threads.json
 pages.json
 versions.json
 .env
+src/components/tiptap-ui-primitive/select/Readme.md

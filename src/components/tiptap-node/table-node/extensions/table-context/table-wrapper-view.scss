@@ -78,15 +78,15 @@
     position: relative;
 
 
+
     &.cell-active{
       outline: 2px solid var(--tt-brand-color-400);
       outline-offset: -2px;
     }
 
 
-
-
     p{
+      font-size: 0.93rem;
       margin: 0px !important;
       padding: 0px !important;
     }
@@ -157,17 +157,18 @@
   --tt-table-selected-bg: #c3bdff66;
   --tt-table-selected-stroke: var(--tt-brand-color-400);
   --tt-table-column-resize-handle-bg: var(--tt-brand-color-400);
-  --tt-table-cell-padding: .36rem;
-  --tt-table-margin-block: 1.25rem;
-  --tt-table-pad-block-start: 1rem;
-  --tt-table-pad-block-end: 1.5rem;
-  --tt-table-pad-inline-start: 1rem;
-  --tt-table-pad-inline-end: 1.5rem;
+  --tt-table-cell-padding: 0.2rem 0.5rem;
+  --tt-table-margin-block: 0.75rem;
+  --tt-table-pad-block-start: 0.5rem;
+  --tt-table-pad-block-end: 0.75rem;
+  --tt-table-pad-inline-start: 0.5rem;
+  --tt-table-pad-inline-end: 0.75rem;
   --dot-size-small: 8px;
   --dot-size-large: 16px;
   --dot-offset-small: 3px;
   --dot-offset-large: 0;
   --border-radius-full: 9999px;
+  --tt-th-bg-color: var(--tt-gray-light-a-50);
 }
 
 .dark {
@@ -175,6 +176,7 @@
   --tt-table-selected-bg: #c3bdff33;
   --tt-table-selected-stroke: var(--tt-brand-color-400);
   --tt-table-column-resize-handle-bg: var(--tt-brand-color-400);
+  --tt-th-bg-color: var(--tt-gray-dark-50);
 }
 
 .tiptap {
@@ -221,18 +223,19 @@
 
   table {
     word-break: break-word;
-    width: auto !important;
+    width: auto;
 
     th,
     td {
       border: 1px solid var(--tt-table-border-color);
       padding: var(--tt-table-cell-padding);
+      
     }
 
     th {
-      background-color: var(--tt-gray-light-a-100);
+      background-color: var(--tt-th-bg-color);
       text-align: left;
-      font-weight: 700;
+      font-weight: 500;
     }
   }
 }

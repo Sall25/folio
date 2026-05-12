@@ -1,13 +1,10 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { ActivePageContext } from "./active-page-context";
 import { useCurrentEditor } from "@tiptap/react";
-import { useVersions } from "src/components/tiptap-ui/version-history/use-versions";
 import type { Editor } from "@tiptap/react";
 import type { Transaction } from "@tiptap/pm/state";
 import { useActivePage } from "../use-active-page";
 import type { Page } from "../types";
-import { useThreadsOnPage } from "src/components/tiptap-ui/comments/hooks/use-threads-on-page";
-import { commentThreadPluginKey } from "src/components/tiptap-ui/comments/extensions/comment-thread-extension";
 import { useWhyDidYouRender } from "src/lib/useWhyDidYouRender";
 
 function getTitleChange(
@@ -33,8 +30,6 @@ function getTitleChange(
     text: null,
   };
 }
-const VERSION_INTERVAL = 10 * 60 * 1000; // 10mins
-let lastVersionTime = Date.now();
 
 function findPage(pages: Page[], id: number): Page | undefined {
   for (const page of pages) {
@@ -56,23 +51,10 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
     pages,
     ...props
   } = useActivePage();
-  const { createVersionAsync } = useVersions(activePageId);
   const activePageRef = useRef(activePage);
   const debounceUpdatePageRef = useRef(debounceUpdatePage);
   const debounceUpdatePageFastRef = useRef(debounceUpdatePageFast);
-  const createVersionAsyncRef = useRef(createVersionAsync);
-  const threads = useThreadsOnPage(activePageId);
   const { editor } = useCurrentEditor();
-
-  const threadsInitializedRef = useRef(false);
-
-  useEffect(() => {
-    threadsInitializedRef.current = false;
-  }, [activePageId]);
-
-  useEffect(() => {
-    createVersionAsyncRef.current = createVersionAsync;
-  }, [createVersionAsync]);
 
   useEffect(() => {
     activePageRef.current = activePage;
@@ -109,17 +91,6 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
           content: editor.getJSON(),
         });
       }
-
-      const now = Date.now();
-      if (now - lastVersionTime >= VERSION_INTERVAL) {
-        createVersionAsyncRef.current({
-          pageId: activePageRef.current.id,
-          title: activePageRef.current.title,
-          content: activePageRef.current.content,
-          isNamed: false,
-        });
-        lastVersionTime = now;
-      }
     };
 
     editor.on("update", update);
@@ -127,13 +98,7 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
     return () => {
       editor.off("update", update);
     };
-  }, [
-    editor,
-    debounceUpdatePage,
-    createVersionAsync,
-    debounceUpdatePageFast,
-    activePage,
-  ]);
+  }, [editor, debounceUpdatePage, debounceUpdatePageFast, activePage]);
 
   useEffect(() => {
     if (!editor) return;
@@ -152,14 +117,16 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
 
     // Still need to defer past the current render so the editor
     // is done with any in-flight transactions
-    requestAnimationFrame(() => {
-      //  Guard: if user navigated again while frame was pending, bail
+    queueMicrotask(() => {
       if (activePageId !== newPage.id) {
         return;
       }
-
       editor.commands.setContent(content, { emitUpdate: false });
     });
+    // requestAnimationFrame(() => {
+    //   //  Guard: if user navigated again while frame was pending, bail
+
+    // });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePageId, isLoading]);
@@ -170,20 +137,7 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, pages?.length]);
 
-  useEffect(() => {
-    if (!editor) return;
-    if (!threads.threads) return;
-
-    editor.view.dispatch(
-      editor.state.tr.setMeta(commentThreadPluginKey, {
-        type: "initialThreads",
-        providedThreads: threads.threads ?? [],
-      }),
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePageId, threads.threads, threads.isLoading]);
-
-  useWhyDidYouRender("active-page-provider", { editor, threads });
+  useWhyDidYouRender("active-page-provider", { editor });
 
   return (
     <ActivePageContext.Provider

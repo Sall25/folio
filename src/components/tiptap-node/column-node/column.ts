@@ -1,7 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// column.ts
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { WrappedColumnView } from "./wrapped-column-view";
+
+let globalDragNodePos: number | null = null;
+
+// Listen for our custom event to capture the dragged node pos reliably
+document.addEventListener("draghandle:dragstart", (e: Event) => {
+  globalDragNodePos = (e as CustomEvent).detail.pos;
+});
+document.addEventListener("draghandle:dragend", () => {
+  globalDragNodePos = null;
+});
 
 export const Column = Node.create({
   name: "column",
@@ -37,6 +49,326 @@ export const Column = Node.create({
 
   addNodeView() {
     return ReactNodeViewRenderer(WrappedColumnView);
+  },
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey("columnDropPlugin"),
+
+        props: {
+          handleDrop(view, event, _slice, moved) {
+            if (!moved) return false;
+
+            const target = event.target as HTMLElement | null;
+            if (!target) return false;
+
+            const dropZone = target.closest(
+              "[data-drop-zone]",
+            ) as HTMLElement | null;
+            if (!dropZone) return false;
+
+            const side = dropZone.dataset.dropZone as "left" | "right";
+            const dragNodePos = globalDragNodePos;
+            if (dragNodePos === null) return false;
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            const { state, dispatch } = view;
+
+            const columnEl = dropZone.closest(
+              "[data-node-view-wrapper]",
+            ) as HTMLElement | null;
+            if (!columnEl) return false;
+
+            let colNodePos = -1;
+            try {
+              const domPos = view.posAtDOM(columnEl, 0);
+              const $pos = state.doc.resolve(domPos);
+              for (let d = $pos.depth; d >= 0; d--) {
+                if ($pos.node(d).type.name === "column") {
+                  colNodePos = $pos.before(d);
+                  break;
+                }
+              }
+            } catch {
+              return false;
+            }
+            if (colNodePos === -1) return false;
+
+            const $colNode = state.doc.resolve(colNodePos);
+            let columnBlockDepth = -1;
+            for (let i = $colNode.depth; i >= 0; i--) {
+              if ($colNode.node(i).type.name === "columnBlock") {
+                columnBlockDepth = i;
+                break;
+              }
+            }
+            if (columnBlockDepth === -1) return false;
+
+            const columnBlockNode = $colNode.node(columnBlockDepth);
+            const columnBlockPos = $colNode.before(columnBlockDepth);
+
+            const dragNode = state.doc.nodeAt(dragNodePos);
+            if (!dragNode) return false;
+            if (dragNodePos === colNodePos) return false;
+
+            console.log("dragNode type:", dragNode.type.name);
+            console.log("dragNode content:", dragNode.content);
+            console.log("colNodePos:", colNodePos);
+            console.log("columnBlockPos:", columnBlockPos);
+            console.log(
+              "columnBlockNode childCount:",
+              columnBlockNode.childCount,
+            );
+
+            const columnType = state.schema.nodes.column;
+            const columnBlockType = state.schema.nodes.columnBlock;
+            if (!columnType || !columnBlockType) return false;
+
+            // Wrap dragNode itself in a column — don't use .content
+            // since dragNode might already be a valid block (paragraph, heading etc.)
+            const dragContent =
+              dragNode.type.name === "column"
+                ? dragNode.content // already a column, use its content
+                : state.schema.nodes.paragraph.create(
+                    {},
+                    dragNode.isText ? dragNode : dragNode.content,
+                  );
+
+            let targetColumnIndex = -1;
+            let offset = 0;
+            columnBlockNode.forEach((child: any, _: number, index: number) => {
+              const childPos = columnBlockPos + 1 + offset;
+              if (childPos === colNodePos) targetColumnIndex = index;
+              offset += child.nodeSize;
+            });
+
+            console.log("targetColumnIndex:", targetColumnIndex);
+            console.log(
+              "insertIndex:",
+              side === "left" ? targetColumnIndex : targetColumnIndex + 1,
+            );
+
+            if (targetColumnIndex === -1) return false;
+
+            const insertIndex =
+              side === "left" ? targetColumnIndex : targetColumnIndex + 1;
+            const newCount = columnBlockNode.childCount + 1;
+            const newWidth = `${Math.round(100 / newCount)}%`;
+
+            const newColumns: any[] = [];
+            columnBlockNode.forEach((col: any, _: number, index: number) => {
+              if (index === insertIndex) {
+                newColumns.push(
+                  columnType.create({ width: newWidth }, dragContent),
+                );
+              }
+              newColumns.push(
+                columnType.create({ width: newWidth }, col.content),
+              );
+            });
+            if (insertIndex >= columnBlockNode.childCount) {
+              newColumns.push(
+                columnType.create({ width: newWidth }, dragContent),
+              );
+            }
+
+            const newColumnBlock = columnBlockType.create({}, newColumns);
+
+            const tr = state.tr;
+            tr.replaceWith(
+              columnBlockPos,
+              columnBlockPos + columnBlockNode.nodeSize,
+              newColumnBlock,
+            );
+
+            const adjustedDragPos =
+              dragNodePos < columnBlockPos
+                ? dragNodePos
+                : dragNodePos +
+                  (newColumnBlock.nodeSize - columnBlockNode.nodeSize);
+
+            const adjustedDragNode = tr.doc.nodeAt(adjustedDragPos);
+            if (adjustedDragNode) {
+              tr.delete(
+                adjustedDragPos,
+                adjustedDragPos + adjustedDragNode.nodeSize,
+              );
+            }
+
+            dispatch(tr);
+            globalDragNodePos = null;
+            return true;
+          },
+
+          // handleDrop(view, event, _slice, moved) {
+          //   if (!moved) return false;
+
+          //   const target = event.target as HTMLElement | null;
+          //   if (!target) return false;
+
+          //   const dropZone = target.closest(
+          //     "[data-drop-zone]",
+          //   ) as HTMLElement | null;
+          //   if (!dropZone) return false;
+
+          //   const side = dropZone.dataset.dropZone as "left" | "right";
+
+          //   const dragNodePos = globalDragNodePos;
+          //   if (dragNodePos === null) return false;
+
+          //   event.preventDefault();
+          //   event.stopPropagation();
+
+          //   const { state, dispatch } = view;
+
+          //   // Get column pos — use the wrapper element, not the drop zone
+          //   const columnEl = dropZone.closest(
+          //     "[data-node-view-wrapper]",
+          //   ) as HTMLElement | null;
+          //   if (!columnEl) return false;
+
+          //   let colNodePos = -1;
+          //   try {
+          //     const domPos = view.posAtDOM(columnEl, 0);
+          //     const $pos = state.doc.resolve(domPos);
+          //     for (let d = $pos.depth; d >= 0; d--) {
+          //       if ($pos.node(d).type.name === "column") {
+          //         colNodePos = $pos.before(d);
+          //         break;
+          //       }
+          //     }
+          //   } catch {
+          //     return false;
+          //   }
+          //   if (colNodePos === -1) return false;
+
+          //   // Find parent columnBlock
+          //   const $colNode = state.doc.resolve(colNodePos);
+          //   let columnBlockDepth = -1;
+          //   for (let i = $colNode.depth; i >= 0; i--) {
+          //     if ($colNode.node(i).type.name === "columnBlock") {
+          //       columnBlockDepth = i;
+          //       break;
+          //     }
+          //   }
+          //   if (columnBlockDepth === -1) return false;
+
+          //   const columnBlockNode = $colNode.node(columnBlockDepth);
+          //   const columnBlockPos = $colNode.before(columnBlockDepth);
+
+          //   const dragNode = state.doc.nodeAt(dragNodePos);
+          //   if (!dragNode) return false;
+          //   if (dragNodePos === colNodePos) return false;
+
+          //   const columnType = state.schema.nodes.column;
+          //   const columnBlockType = state.schema.nodes.columnBlock;
+          //   if (!columnType || !columnBlockType) return false;
+
+          //   // Find index of target column
+          //   let targetColumnIndex = -1;
+          //   let offset = 0;
+          //   columnBlockNode.forEach((child: any, _: number, index: number) => {
+          //     const childPos = columnBlockPos + 1 + offset;
+          //     if (childPos === colNodePos) targetColumnIndex = index;
+          //     offset += child.nodeSize;
+          //   });
+          //   if (targetColumnIndex === -1) return false;
+
+          //   const insertIndex =
+          //     side === "left" ? targetColumnIndex : targetColumnIndex + 1;
+          //   const newCount = columnBlockNode.childCount + 1;
+          //   const newWidth = `${Math.round(100 / newCount)}%`;
+
+          //   // Build new columns
+          //   const newColumns: any[] = [];
+          //   columnBlockNode.forEach((col: any, _: number, index: number) => {
+          //     if (index === insertIndex) {
+          //       newColumns.push(
+          //         columnType.create({ width: newWidth }, dragNode.content),
+          //       );
+          //     }
+          //     newColumns.push(
+          //       columnType.create({ width: newWidth }, col.content),
+          //     );
+          //   });
+          //   if (insertIndex >= columnBlockNode.childCount) {
+          //     newColumns.push(
+          //       columnType.create({ width: newWidth }, dragNode.content),
+          //     );
+          //   }
+
+          //   const newColumnBlock = columnBlockType.create({}, newColumns);
+
+          //   const tr = state.tr;
+
+          //   // Replace columnBlock first
+          //   tr.replaceWith(
+          //     columnBlockPos,
+          //     columnBlockPos + columnBlockNode.nodeSize,
+          //     newColumnBlock,
+          //   );
+
+          //   // Delete dragged node, adjusting pos after the replacement
+          //   const adjustedDragPos =
+          //     dragNodePos < columnBlockPos
+          //       ? dragNodePos
+          //       : dragNodePos +
+          //         (newColumnBlock.nodeSize - columnBlockNode.nodeSize);
+
+          //   const adjustedDragNode = tr.doc.nodeAt(adjustedDragPos);
+          //   if (adjustedDragNode) {
+          //     tr.delete(
+          //       adjustedDragPos,
+          //       adjustedDragPos + adjustedDragNode.nodeSize,
+          //     );
+          //   }
+
+          //   dispatch(tr);
+          //   globalDragNodePos = null;
+          //   return true;
+          // },
+          handleDOMEvents: {
+            dragover(_view, event) {
+              const target = event.target as HTMLElement | null;
+              if (!target) return false;
+
+              document
+                .querySelectorAll(".column-drop-active")
+                .forEach((el) => el.classList.remove("column-drop-active"));
+
+              const dropZone = target.closest(
+                "[data-drop-zone]",
+              ) as HTMLElement | null;
+              if (dropZone) {
+                event.preventDefault();
+                dropZone.classList.add("column-drop-active");
+              }
+
+              return false;
+            },
+
+            dragleave(_view, event) {
+              const target = event.target as HTMLElement | null;
+              const dropZone = target?.closest("[data-drop-zone]");
+              if (dropZone) {
+                dropZone.classList.remove("column-drop-active");
+              }
+              return false;
+            },
+
+            drop() {
+              document
+                .querySelectorAll(".column-drop-active")
+                .forEach((el) => el.classList.remove("column-drop-active"));
+              return false;
+            },
+          },
+        },
+      }),
+    ];
   },
 
   addKeyboardShortcuts() {

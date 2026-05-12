@@ -16,6 +16,7 @@ import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import CalendarView from "./calendar-view/calendar-view";
 import { useMentionNotification } from "../notification";
+import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 
 function getRelativeLabel(date: Date): string {
   const today = new Date();
@@ -58,11 +59,7 @@ function isPast(date: Date) {
   return d < today;
 }
 
-export function MentionView({
-  node,
-  editor,
-  updateAttributes,
-}: ReactNodeViewProps) {
+export function MentionView({ node, updateAttributes }: ReactNodeViewProps) {
   const [today] = useState(new Date());
   const [tomorrow] = useState(() => {
     const t = new Date();
@@ -77,7 +74,7 @@ export function MentionView({
     setDate(d);
     updateAttributes({ date: d.toISOString() }); // ← persist to node attrs
   };
-  const activePage = editor.storage.slashCommand.activePage;
+  const { activePage } = useActivePage();
 
   const mentionItem = useMemo(
     () => getMentionItem(node.attrs.id ?? node.attrs.label),

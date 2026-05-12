@@ -1,0 +1,377 @@
+import type {
+  PropertyConfig,
+  SelectOption,
+  NumberFormat,
+  DateFormat,
+  TimeFormat,
+} from "./types";
+import {
+  CardGroupLabel,
+  CardItemGroup,
+} from "src/components/tiptap-ui-primitive/card";
+import { Button } from "src/components/tiptap-ui-primitive/button";
+import { Check, Plus, Trash2, GripVertical } from "lucide-react";
+//import { useState } from "react";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared option row (used by select, multi_select)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const OPTION_COLORS = [
+  "gray",
+  "brown",
+  "orange",
+  "yellow",
+  "green",
+  "blue",
+  "purple",
+  "pink",
+  "red",
+] as const;
+
+type OptionColor = (typeof OPTION_COLORS)[number];
+
+const COLOR_DOTS: Record<OptionColor, string> = {
+  gray: "#9b9b9b",
+  brown: "#8b6f5e",
+  orange: "#f97316",
+  yellow: "#eab308",
+  green: "#22c55e",
+  blue: "#3b82f6",
+  purple: "#8b5cf6",
+  pink: "#ec4899",
+  red: "#ef4444",
+};
+
+interface OptionRowProps {
+  option: SelectOption;
+  onChange: (updated: SelectOption) => void;
+  onDelete: () => void;
+}
+
+function OptionRow({ option, onChange, onDelete }: OptionRowProps) {
+  // const [editing, setEditing] = useState(false);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "3px 0",
+      }}
+    >
+      <GripVertical
+        style={{
+          width: 12,
+          height: 12,
+          color: "var(--tt-gray-light-a-300)",
+          flexShrink: 0,
+          cursor: "grab",
+        }}
+      />
+      <div
+        style={{
+          width: 10,
+          height: 10,
+          borderRadius: "50%",
+          flexShrink: 0,
+          background:
+            COLOR_DOTS[option.color as OptionColor] ?? COLOR_DOTS.gray,
+        }}
+      />
+      <input
+        style={{
+          flex: 1,
+          border: "none",
+          outline: "none",
+          background: "transparent",
+          fontSize: 13,
+          fontFamily: "inherit",
+          color: "var(--tt-gray-light-a-900)",
+        }}
+        value={option.name}
+        onChange={(e) => onChange({ ...option, name: e.target.value })}
+        placeholder="Option name"
+      />
+      <Button
+        variant="ghost"
+        style={{ width: 22, height: 22, padding: 0 }}
+        onClick={onDelete}
+      >
+        <Trash2
+          style={{ width: 12, height: 12 }}
+          className="tiptap-button-icon"
+        />
+      </Button>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Select / Multi-select options section
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface SelectOptionsSectionProps {
+  config: Extract<PropertyConfig, { type: "select" | "multi_select" }>;
+  onChange: (config: PropertyConfig) => void;
+}
+
+export function SelectOptionsSection({
+  config,
+  onChange,
+}: SelectOptionsSectionProps) {
+  const addOption = () => {
+    const newOpt: SelectOption = {
+      id: crypto.randomUUID(),
+      name: "",
+      color: OPTION_COLORS[config.options.length % OPTION_COLORS.length],
+    };
+    onChange({ ...config, options: [...config.options, newOpt] });
+  };
+
+  const updateOption = (id: string, updated: SelectOption) => {
+    onChange({
+      ...config,
+      options: config.options.map((o) => (o.id === id ? updated : o)),
+    });
+  };
+
+  const deleteOption = (id: string) => {
+    onChange({ ...config, options: config.options.filter((o) => o.id !== id) });
+  };
+
+  return (
+    <CardItemGroup style={{ gap: 4 }}>
+      <CardGroupLabel>Options</CardGroupLabel>
+      {config.options.map((opt) => (
+        <OptionRow
+          key={opt.id}
+          option={opt}
+          onChange={(updated) => updateOption(opt.id, updated)}
+          onDelete={() => deleteOption(opt.id)}
+        />
+      ))}
+      <Button
+        variant="ghost"
+        style={{
+          width: "100%",
+          justifyContent: "flex-start",
+          gap: 6,
+          height: 28,
+        }}
+        onClick={addOption}
+      >
+        <Plus
+          style={{ width: 13, height: 13 }}
+          className="tiptap-button-icon"
+        />
+        <span style={{ fontSize: 13 }}>Add an option</span>
+      </Button>
+    </CardItemGroup>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Number format section
+// ─────────────────────────────────────────────────────────────────────────────
+
+const NUMBER_FORMATS: {
+  value: NumberFormat;
+  label: string;
+  example: string;
+}[] = [
+  { value: "number", label: "Number", example: "1,000" },
+  {
+    value: "number_with_commas",
+    label: "Number with commas",
+    example: "1,000",
+  },
+  { value: "percent", label: "Percent", example: "1,000%" },
+  { value: "dollar", label: "Dollar", example: "$1,000" },
+  { value: "euro", label: "Euro", example: "€1,000" },
+  { value: "pound", label: "Pound", example: "£1,000" },
+  { value: "yen", label: "Yen", example: "¥1,000" },
+  { value: "ruble", label: "Ruble", example: "₽1,000" },
+  { value: "rupee", label: "Rupee", example: "₹1,000" },
+  { value: "won", label: "Won", example: "₩1,000" },
+  { value: "yuan", label: "Yuan", example: "CN¥1,000" },
+];
+
+interface NumberFormatSectionProps {
+  config: Extract<PropertyConfig, { type: "number" }>;
+  onChange: (config: PropertyConfig) => void;
+}
+
+export function NumberFormatSection({
+  config,
+  onChange,
+}: NumberFormatSectionProps) {
+  return (
+    <CardItemGroup>
+      <CardGroupLabel>Format</CardGroupLabel>
+      {NUMBER_FORMATS.map((f) => (
+        <Button
+          key={f.value}
+          variant="ghost"
+          style={{
+            width: "100%",
+            height: 30,
+            justifyContent: "flex-start",
+            gap: 8,
+          }}
+          onClick={() => onChange({ ...config, format: f.value })}
+        >
+          <span
+            style={{
+              width: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {config.format === f.value && (
+              <Check
+                style={{ width: 13, height: 13 }}
+                className="tiptap-button-icon"
+              />
+            )}
+          </span>
+          <span style={{ flex: 1, fontSize: 13 }}>{f.label}</span>
+          <span style={{ fontSize: 12, color: "var(--tt-gray-light-a-400)" }}>
+            {f.example}
+          </span>
+        </Button>
+      ))}
+    </CardItemGroup>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Date format section
+// ─────────────────────────────────────────────────────────────────────────────
+
+const DATE_FORMATS: { value: DateFormat; label: string; example: string }[] = [
+  { value: "full", label: "Full", example: "January 4, 2026" },
+  { value: "short", label: "Short", example: "Jan 4, 2026" },
+  { value: "relative", label: "Relative", example: "2 days ago" },
+  { value: "iso", label: "ISO 8601", example: "2026-01-04" },
+];
+
+interface DateFormatSectionProps {
+  config: Extract<PropertyConfig, { type: "date" }>;
+  onChange: (config: PropertyConfig) => void;
+}
+
+export function DateFormatSection({
+  config,
+  onChange,
+}: DateFormatSectionProps) {
+  return (
+    <CardItemGroup>
+      <CardGroupLabel>Date format</CardGroupLabel>
+      {DATE_FORMATS.map((f) => (
+        <Button
+          key={f.value}
+          variant="ghost"
+          style={{
+            width: "100%",
+            height: 30,
+            justifyContent: "flex-start",
+            gap: 8,
+          }}
+          onClick={() => onChange({ ...config, format: f.value })}
+        >
+          <span
+            style={{
+              width: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {config.format === f.value && (
+              <Check
+                style={{ width: 13, height: 13 }}
+                className="tiptap-button-icon"
+              />
+            )}
+          </span>
+          <span style={{ flex: 1, fontSize: 13 }}>{f.label}</span>
+          <span style={{ fontSize: 12, color: "var(--tt-gray-light-a-400)" }}>
+            {f.example}
+          </span>
+        </Button>
+      ))}
+
+      <CardGroupLabel style={{ marginTop: 8 }}>Time</CardGroupLabel>
+      <Button
+        variant="ghost"
+        style={{
+          width: "100%",
+          height: 30,
+          justifyContent: "flex-start",
+          gap: 8,
+        }}
+        onClick={() =>
+          onChange({ ...config, includeTime: !config.includeTime })
+        }
+      >
+        <span
+          style={{
+            width: 16,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {config.includeTime && (
+            <Check
+              style={{ width: 13, height: 13 }}
+              className="tiptap-button-icon"
+            />
+          )}
+        </span>
+        <span style={{ fontSize: 13 }}>Include time</span>
+      </Button>
+
+      {config.includeTime && (
+        <>
+          {(["12h", "24h"] as TimeFormat[]).map((tf) => (
+            <Button
+              key={tf}
+              variant="ghost"
+              style={{
+                width: "100%",
+                height: 30,
+                justifyContent: "flex-start",
+                gap: 8,
+                paddingLeft: 24,
+              }}
+              onClick={() => onChange({ ...config, timeFormat: tf })}
+            >
+              <span
+                style={{
+                  width: 16,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {config.timeFormat === tf && (
+                  <Check
+                    style={{ width: 13, height: 13 }}
+                    className="tiptap-button-icon"
+                  />
+                )}
+              </span>
+              <span style={{ fontSize: 13 }}>
+                {tf === "12h" ? "12-hour" : "24-hour"}
+              </span>
+            </Button>
+          ))}
+        </>
+      )}
+    </CardItemGroup>
+  );
+}

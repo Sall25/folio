@@ -1,0 +1,253 @@
+import type {
+  PropertyType,
+  PropertyTypeMeta,
+  PropertyConfig,
+} from "./types/types";
+import type { FilterOperator } from "./types/filter-types";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Default configs
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const DEFAULT_CONFIGS = {
+  title: { type: "title" },
+  text: { type: "text" },
+  checkbox: { type: "checkbox" },
+  created_time: { type: "created_time" },
+  created_by: { type: "created_by" },
+  edited_time: { type: "edited_time" },
+  edited_by: { type: "edited_by" },
+  number: { type: "number", format: "number" },
+  select: { type: "select", options: [] },
+  multi_select: { type: "multi_select", options: [] },
+  status: {
+    type: "status",
+    groups: [
+      {
+        id: "g1",
+        label: "To-do",
+        items: [
+          { id: "s1", name: "Not started", color: "gray", isDefault: true },
+        ],
+      },
+      {
+        id: "g2",
+        label: "In progress",
+        items: [{ id: "s2", name: "In progress", color: "blue" }],
+      },
+      {
+        id: "g3",
+        label: "Complete",
+        items: [{ id: "s3", name: "Done", color: "green" }],
+      },
+    ],
+  },
+  date: { type: "date", format: "full", timeFormat: "12h", includeTime: false },
+  person: {
+    type: "person",
+    limit: "no-limit",
+    default: "no-default",
+    notifications: "users-only",
+  },
+  formula: { type: "formula", expression: "" },
+  relation: { type: "relation", targetDatabaseId: "", showOnTarget: false },
+  rollup: {
+    type: "rollup",
+    relationPropertyId: "",
+    targetPropertyId: "",
+    aggregation: "count",
+  },
+  url:{
+    
+  }
+} satisfies Record<PropertyType, PropertyConfig>;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Filter operators per type
+// ─────────────────────────────────────────────────────────────────────────────
+
+const TEXT_OPERATORS: FilterOperator[] = [
+  "equals",
+  "contains",
+  "starts_with",
+  "ends_with",
+  "is_empty",
+  "is_not_empty",
+];
+
+const NUMBER_OPERATORS: FilterOperator[] = [
+  "equals",
+  "greater_than",
+  "greater_than_or_equal",
+  "less_than",
+  "less_than_or_equal",
+  "is_empty",
+  "is_not_empty",
+];
+
+const DATE_OPERATORS: FilterOperator[] = [
+  "is_before",
+  "is_after",
+  "is_on_or_before",
+  "is_on_or_after",
+  "is_within",
+  "is_empty",
+  "is_not_empty",
+];
+
+const SELECT_OPERATORS: FilterOperator[] = [
+  "equals",
+  "is_empty",
+  "is_not_empty",
+];
+
+const CHECKBOX_OPERATORS: FilterOperator[] = ["is_checked", "is_unchecked"];
+
+const EMPTY_OPERATORS: FilterOperator[] = ["is_empty", "is_not_empty"];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Registry
+// ─────────────────────────────────────────────────────────────────────────────
+export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
+  {
+    type: "title",
+    label: "Title",
+    icon: "CaseSensitive",
+    defaultConfig: DEFAULT_CONFIGS.title,
+    readOnly: false,
+    filterOperators: TEXT_OPERATORS,
+  },
+  {
+    type: "text",
+    label: "Text",
+    icon: "AlignLeft",
+    defaultConfig: DEFAULT_CONFIGS.text,
+    readOnly: false,
+    filterOperators: TEXT_OPERATORS,
+  },
+  {
+    type: "number",
+    label: "Number",
+    icon: "Hash",
+    defaultConfig: DEFAULT_CONFIGS.number,
+    readOnly: false,
+    filterOperators: NUMBER_OPERATORS,
+  },
+  {
+    type: "select",
+    label: "Select",
+    icon: "CircleChevronDown",
+    defaultConfig: DEFAULT_CONFIGS.select,
+    readOnly: false,
+    filterOperators: SELECT_OPERATORS,
+  },
+  {
+    type: "multi_select",
+    label: "Multi-select",
+    icon: "Tags",
+    defaultConfig: DEFAULT_CONFIGS.multi_select,
+    readOnly: false,
+    filterOperators: SELECT_OPERATORS,
+  },
+  {
+    type: "status",
+    label: "Status",
+    icon: "Loader",
+    defaultConfig: DEFAULT_CONFIGS.status,
+    readOnly: false,
+    filterOperators: SELECT_OPERATORS,
+  },
+  {
+    type: "checkbox",
+    label: "Checkbox",
+    icon: "CheckSquare",
+    defaultConfig: DEFAULT_CONFIGS.checkbox,
+    readOnly: false,
+    filterOperators: CHECKBOX_OPERATORS,
+  },
+  {
+    type: "date",
+    label: "Date",
+    icon: "Calendar",
+    defaultConfig: DEFAULT_CONFIGS.date,
+    readOnly: false,
+    filterOperators: DATE_OPERATORS,
+  },
+  {
+    type: "person",
+    label: "Person",
+    icon: "User",
+    defaultConfig: DEFAULT_CONFIGS.person,
+    readOnly: false,
+    filterOperators: EMPTY_OPERATORS,
+  },
+  {
+    type: "formula",
+    label: "Formula",
+    icon: "Sigma",
+    defaultConfig: DEFAULT_CONFIGS.formula,
+    readOnly: true,
+    filterOperators: TEXT_OPERATORS,
+  },
+  {
+    type: "relation",
+    label: "Relation",
+    icon: "Link",
+    defaultConfig: DEFAULT_CONFIGS.relation,
+    readOnly: false,
+    filterOperators: EMPTY_OPERATORS,
+  },
+  {
+    type: "rollup",
+    label: "Rollup",
+    icon: "BarChart2",
+    defaultConfig: DEFAULT_CONFIGS.rollup,
+    readOnly: true,
+    filterOperators: EMPTY_OPERATORS,
+  },
+  {
+    type: "created_time",
+    label: "Created time",
+    icon: "Clock",
+    defaultConfig: DEFAULT_CONFIGS.created_time,
+    readOnly: true,
+    filterOperators: DATE_OPERATORS,
+  },
+  {
+    type: "created_by",
+    label: "Created by",
+    icon: "UserCheck",
+    defaultConfig: DEFAULT_CONFIGS.created_by,
+    readOnly: true,
+    filterOperators: EMPTY_OPERATORS,
+  },
+  {
+    type: "edited_time",
+    label: "Last edited time",
+    icon: "Clock",
+    defaultConfig: DEFAULT_CONFIGS.edited_time,
+    readOnly: true,
+    filterOperators: DATE_OPERATORS,
+  },
+  {
+    type: "edited_by",
+    label: "Last edited by",
+    icon: "Edit3",
+    defaultConfig: DEFAULT_CONFIGS.edited_by,
+    readOnly: true,
+    filterOperators: EMPTY_OPERATORS,
+  },
+];
+
+export const PROPERTY_TYPE_MAP = new Map(
+  PROPERTY_TYPE_META.map((m) => [m.type, m]),
+);
+
+export function getTypeMeta(type: PropertyType): PropertyTypeMeta {
+  return PROPERTY_TYPE_MAP.get(type) ?? PROPERTY_TYPE_META[0];
+}
+
+// Types that can be changed to — title can never be changed
+export const CHANGEABLE_TYPES = PROPERTY_TYPE_META.filter(
+  (m) => m.type !== "title",
+);

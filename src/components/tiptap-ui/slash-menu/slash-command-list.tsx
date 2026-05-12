@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { SuggestionProps } from "@tiptap/suggestion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardGroupLabel } from "src/components/tiptap-ui-primitive/card";
@@ -8,8 +7,8 @@ import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import "./slash-command-list.scss";
 import { useMenuNavigation } from "src/hooks/use-menu-navigation";
 import type { SlashCommand as SlashItem } from "./slash-commands";
-import { useActivePageContext } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
+import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 
 type Props = SuggestionProps<SlashItem> & {
   selectedIndex?: number;
@@ -20,13 +19,23 @@ type Props = SuggestionProps<SlashItem> & {
 export default function SlashList(props: Props) {
   const { items = [], onClickItem, onClose, editor } = props;
   const { addPageAsync } = usePages();
-  const { activePageId, setActivePageId } = useActivePageContext();
+  const { activePageId, setActivePageId } = useActivePage();
   const isSelectable = (item: SlashItem) => item.type === "command";
 
   const selectableItems = useMemo(() => items.filter(isSelectable), [items]);
 
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (activePageId === undefined) return;
+
+    editor.commands.syncSlashCommandCtx({
+      activePageId,
+      setActivePageId,
+      addPageAsync,
+    });
+  }, [activePageId, setActivePageId, addPageAsync, editor]);
 
   const { selectedIndex } = useMenuNavigation({
     editor: props.editor,
@@ -182,7 +191,7 @@ export default function SlashList(props: Props) {
                 )}
 
                 {/* {Icon && <Icon className="tiptap-button-icon" />} */}
-                <span>{item.title}</span>
+                <span className="tiptap-button-text">{item.title}</span>
               </Button>
             )}
           </ButtonGroup>
