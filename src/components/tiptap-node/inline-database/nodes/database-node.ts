@@ -17,9 +17,11 @@ import {
 } from "../utils";
 import { DEFAULT_CONFIGS } from "../types/config";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { DatabaseNodeView } from "./database-table-node-view";
+import { DatabaseNodeView } from "./database-node-view";
+
 import type { FilterRule } from "../types/filter-types";
 import { formulaSyncPlugin } from "../plugins";
+
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     database: {
@@ -56,7 +58,7 @@ declare module "@tiptap/core" {
       updateDatabaseView: (
         nodeId: ID,
         viewId: ID,
-        patch: Partial<Omit<DatabaseView, "id" | "type">>,
+        patch: Partial<Omit<DatabaseView, "id">>,
       ) => ReturnType;
       deleteDatabaseView: (nodeId: ID, viewId: ID) => ReturnType;
       requestDeleteDatabaseRecord: (recordId: ID) => ReturnType;
@@ -94,7 +96,7 @@ declare module "@tiptap/core" {
   }
 }
 
-export const DatabaseTableNode = Node.create({
+export const DatabaseNode = Node.create({
   name: "database",
   group: "block",
   content: "databaseRecord+", // at least one record always
@@ -557,11 +559,7 @@ export const DatabaseTableNode = Node.create({
         },
 
       updateDatabaseView:
-        (
-          nodeId: ID,
-          viewId: ID,
-          patch: Partial<Omit<DatabaseView, "id" | "type">>,
-        ) =>
+        (nodeId: ID, viewId: ID, patch: Partial<Omit<DatabaseView, "id">>) =>
         ({ state, dispatch }) => {
           const { tr, doc } = state;
 

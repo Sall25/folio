@@ -108,6 +108,46 @@ export function TitleCellNodeView({
     editor.view.dispatch(tr);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [activeViewType, setActiveViewType] = useState<string>(() => {
+    const pos = getPos?.();
+    if (pos == null) return "table";
+    const $pos = editor.state.doc.resolve(pos);
+    for (let d = $pos.depth; d > 0; d--) {
+      const n = $pos.node(d);
+      if (n.type.name === "database") {
+        const view = n.attrs.views?.find(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (v: any) => v.id === n.attrs.activeViewId,
+        );
+        return view?.type ?? "table";
+      }
+    }
+    return "table";
+  });
+
+  useEffect(() => {
+    const handler = () => {
+      const pos = getPos?.();
+      if (pos == null) return;
+      const $pos = editor.state.doc.resolve(pos);
+      for (let d = $pos.depth; d > 0; d--) {
+        const n = $pos.node(d);
+        if (n.type.name === "database") {
+          const view = n.attrs.views?.find(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (v: any) => v.id === n.attrs.activeViewId,
+          );
+          setActiveViewType(view?.type ?? "table");
+          return;
+        }
+      }
+    };
+    editor.on("transaction", handler);
+    return () => {
+      editor.off("transaction", handler);
+    };
+  }, [editor, getPos]);
+
   const getParentDatabase = useCallback(() => {
     const pos = getPos?.();
     if (pos == null) return null;
@@ -143,7 +183,7 @@ export function TitleCellNodeView({
     <NodeViewWrapper
       as="div"
       data-type="title-cell"
-      className={`db-td db-td--title ${editing ? "editing" : ""}`}
+      className={`db-td db-td--title ${editing ? "editing" : ""} ${activeViewType === "list" ? "db-td--list" : ""}`}
     >
       <CardItemGroup
         orientation="horizontal"
@@ -227,8 +267,9 @@ export function TitleCellNodeView({
               style={{
                 minHeight: 18,
                 height: 24,
+                padding: "0px !important",
                 borderRadius: "var(--tt-radius-sm)",
-                border: "1px solid var(--tt-border-color)",
+                // border: `${activeViewType !== "table" ? "none" : "1px solid var(--tt-border-color)"}`,
                 opacity: `${titleAttrs.pageId !== null && shouldShow ? 1 : 0}`,
                 transition: "opacity 0.15s ease",
               }}

@@ -177,7 +177,8 @@ function NavItems({ collapsed }: { collapsed: boolean }) {
     >
       <ButtonGroup
         style={{ gap: 3, width: "100%" }}
-        orientation={collapsed ? "vertical" : "horizontal"}
+        orientation="vertical"
+        // orientation={collapsed ? "vertical" : "horizontal"}
       >
         <Button
           variant="ghost"
@@ -187,7 +188,7 @@ function NavItems({ collapsed }: { collapsed: boolean }) {
             padding: "3px 10px",
             minHeight: 20,
             height: 28,
-            fontFamily: "inherit",
+            // fontFamily: "inherit",
           }}
         >
           <Home strokeWidth={2.25} className="tiptap-button-icon" />
@@ -203,7 +204,7 @@ function NavItems({ collapsed }: { collapsed: boolean }) {
             padding: "3px 10px",
             minHeight: 20,
             height: 28,
-            fontFamily: "inherit",
+            // fontFamily: "inherit",
           }}
         >
           <Search className="tiptap-button-icon" />
@@ -211,50 +212,30 @@ function NavItems({ collapsed }: { collapsed: boolean }) {
         </Button>
 
         <Spacer orientation={collapsed ? "vertical" : "horizontal"} />
+
         <Button
           variant="ghost"
-          title="Drafts"
-          style={{
-            padding: "3px 10px",
-            minHeight: 20,
-            height: 28,
-            fontFamily: "inherit",
-          }}
+          title="Templates"
+          // style={{ fontFamily: "inherit" }}
         >
-          <FileEdit strokeWidth={2.25} className="tiptap-button-icon" />
-          {!collapsed && <span className="tiptap-button-text">Drafts</span>}
+          <LayoutTemplate strokeWidth={2.25} className="tiptap-button-icon" />
+          {!collapsed && <span className="tiptap-button-text">Templates</span>}
+        </Button>
+
+        <Spacer orientation={collapsed ? "vertical" : "horizontal"} />
+
+        <Button variant="ghost">
+          <Lock className="tiptap-button-icon" />
+          {!collapsed && <span className="tiptap-button-text">Private</span>}
+        </Button>
+
+        <Spacer orientation={collapsed ? "vertical" : "horizontal"} />
+
+        <Button variant="ghost">
+          <Users className="tiptap-button-icon" />
+          {!collapsed && <span className="tiptap-button-text">Shared</span>}
         </Button>
       </ButtonGroup>
-
-      <Separator orientation="horizontal" style={{ height: 0.5 }} />
-
-      {!collapsed && (
-        <ButtonGroup style={{ gap: 1, width: "100%" }}>
-          <Button
-            variant="ghost"
-            title="Templates"
-            style={{ fontFamily: "inherit" }}
-          >
-            <LayoutTemplate strokeWidth={2.25} className="tiptap-button-icon" />
-            {!collapsed && (
-              <span className="tiptap-button-text">Templates</span>
-            )}
-          </Button>
-
-          <Button variant="ghost" style={{ fontFamily: "inherit" }}>
-            <Lock className="tiptap-button-icon" />
-            <span className="tiptap-button-text">Private</span>
-          </Button>
-          <Button variant="ghost" style={{ fontFamily: "inherit" }}>
-            <Users className="tiptap-button-icon" />
-            <span className="tiptap-button-text">Shared</span>
-          </Button>
-          <Button variant="ghost" style={{ fontFamily: "inherit" }}>
-            <Bell className="tiptap-button-icon" />
-            <span className="tiptap-button-text">Notifications</span>
-          </Button>
-        </ButtonGroup>
-      )}
     </ButtonGroup>
   );
 }

@@ -48,6 +48,7 @@ export function MultiSelectCellNodeView({
         as="div"
         className="db-td multi-select-cell"
         data-type="multi-select-cell"
+        style={{ margin: 0 }}
       >
         <NodeViewContent />
       </NodeViewWrapper>

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Filter,
   ArrowUpDown,
@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { nanoid } from "nanoid";
 
-import { Button } from "src/components/tiptap-ui-primitive/button";
+import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import {
@@ -56,6 +56,9 @@ import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek-page-context";
+import { ViewIcon } from "./view-icon";
+import { ViewNamePopover } from "./view-name-popover";
+import { ViewOptionsPopover } from "./view-options-popover";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -177,7 +180,6 @@ export function DatabaseToolbar({
   db,
   onUpdateAttributes,
 }: DatabaseToolbarProps) {
-  const [open, setOpen] = useState(false);
   const activeView = getActiveView(attrs);
   const filters = activeView?.filters ?? [];
   const sorts = activeView?.sorts ?? [];
@@ -185,172 +187,193 @@ export function DatabaseToolbar({
   const activeSortCount = sorts.length;
   const { pages, addPageTemplateAsync } = usePages();
   const { setPeekPageId } = usePeekPage();
+  const [viewOptionsOpen, setViewOptionsOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
+
+  const onViewOptionsOpenChange = useCallback(
+    (o: boolean) => setViewOptionsOpen(o),
+    [setViewOptionsOpen],
+  );
+  const onTemplateOpenChange = useCallback(
+    (o: boolean) => setTemplateOpen(o),
+    [setTemplateOpen],
+  );
 
   return (
-    <CardItemGroup orientation="horizontal" style={{ marginBottom: 10 }}>
-      <input
-        className="title-input"
-        placeholder="New Database"
-        style={{
-          fontSize: 18,
-          color: "var(--tt-paragraph-text-color)",
-        }}
-        value={`${db.title}`}
-        onChange={(e) => db.onUpdateTitle?.(e.target.value)}
-      />
-
-      <Spacer orientation="horizontal" />
-
+    <CardItemGroup style={{ marginBottom: 10, position: "relative" }}>
       <CardItemGroup orientation="horizontal">
-        <SearchButton db={db} />
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className={activeFilterCount > 0 ? "db-toolbar__btn--active" : ""}
-            >
-              <Filter size={14} />
-              <span>Filter</span>
-              {activeFilterCount > 0 && (
-                <span className="db-toolbar__badge">{activeFilterCount}</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="start" className="db-panel">
-            <FilterPanel attrs={attrs} db={db} activeView={activeView} />
-          </PopoverContent>
-        </Popover>
+        <ButtonGroup orientation="horizontal" style={{ gap: 0 }}>
+          <ViewIcon view={db.activeView} />
+          <ViewNamePopover
+            view={db.activeView}
+            onRename={() => onViewOptionsOpenChange(true)}
+          />
+        </ButtonGroup>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className={activeSortCount > 0 ? "db-toolbar__btn--active" : ""}
-            >
-              <ArrowUpDown size={14} />
-              <span>Sort</span>
-              {activeSortCount > 0 && (
-                <span className="db-toolbar__badge">{activeSortCount}</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="start" className="db-panel">
-            <SortPanel
-              attrs={attrs}
-              db={db}
-              activeView={activeView}
-              sorts={sorts}
-            />
-          </PopoverContent>
-        </Popover>
+        <Spacer orientation="horizontal" />
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost">
-              <Group size={14} />
-              <span>Group</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="start" className="db-panel">
-            <GroupPanel attrs={attrs} db={db} activeView={activeView} />
-          </PopoverContent>
-        </Popover>
-
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost">
-              <Eye size={14} />
-              <span>Properties</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="start" className="db-panel">
-            <PropertiesPanel attrs={attrs} db={db} activeView={activeView} />
-          </PopoverContent>
-        </Popover>
-
-        <CardItemGroup
-          orientation="horizontal"
-          style={{
-            background: "var(--tt-brand-color-400)",
-            borderRadius: "var(--tt-radius-sm)",
-            color: "white",
-            minHeight: 24,
-            height: 24,
-            padding: "0px 5px",
-          }}
-        >
-          <span style={{ fontSize: 11.5, fontWeight: "bold" }}>New</span>
-          <Separator orientation="vertical" />
-          <Popover open={open} onOpenChange={setOpen}>
+        <CardItemGroup orientation="horizontal">
+          <SearchButton db={db} />
+          <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
-                style={{ background: "transparent", minWidth: 15, width: 15 }}
+                className={
+                  activeFilterCount > 0 ? "db-toolbar__btn--active" : ""
+                }
               >
-                <ChevronDown
-                  className="tiptap-button-icon"
-                  style={{ color: "white" }}
-                />
+                <Filter size={14} />
+                <span>Filter</span>
+                {activeFilterCount > 0 && (
+                  <span className="db-toolbar__badge">{activeFilterCount}</span>
+                )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent>
-              <Card style={{ padding: "5px 10px" }}>
-                <CardBody>
-                  <CardItemGroup>
-                    {pages &&
-                      pages
-                        .filter((p) => p.category === "Template")
-                        .map((p) => (
-                          <Button
-                            key={p.id}
-                            variant="ghost"
-                            style={{
-                              justifyContent: "flex-start",
-                              minHeight: 24,
-                              height: 24,
-                            }}
-                            onClick={() =>
-                              onUpdateAttributes?.({
-                                ...attrs,
-                                templateId: p.id,
-                              })
-                            }
-                          >
-                            <PageItemIcon cover={p.cover} />
-                            <span className="tiptap-button-text">
-                              {p.title}
-                            </span>
-                          </Button>
-                        ))}
-                  </CardItemGroup>
-                </CardBody>
-                <CardFooter>
-                  <Button
-                    variant="ghost"
-                    style={{
-                      background: "var(--tt-brand-color-400)",
-                      justifyContent: "flex-start",
-                    }}
-                    onClick={() => {
-                      setOpen(false);
-                      addPageTemplateAsync({
-                        title: "New template",
-                        parentId: null,
-                      })
-                        .then((newPage) => setPeekPageId(newPage.id))
-                        .catch((err) =>
-                          console.log("Failed to add a new template", err),
-                        );
-                    }}
-                  >
-                    <Plus className="tiptap-button-icon" />
-                    <span>Create a template</span>
-                  </Button>
-                </CardFooter>
-              </Card>
+            <PopoverContent side="bottom" align="start" className="db-panel">
+              <FilterPanel attrs={attrs} db={db} activeView={activeView} />
             </PopoverContent>
           </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                className={activeSortCount > 0 ? "db-toolbar__btn--active" : ""}
+              >
+                <ArrowUpDown size={14} />
+                <span>Sort</span>
+                {activeSortCount > 0 && (
+                  <span className="db-toolbar__badge">{activeSortCount}</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="start" className="db-panel">
+              <SortPanel
+                attrs={attrs}
+                db={db}
+                activeView={activeView}
+                sorts={sorts}
+              />
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost">
+                <Group size={14} />
+                <span>Group</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="start" className="db-panel">
+              <GroupPanel attrs={attrs} db={db} activeView={activeView} />
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost">
+                <Eye size={14} />
+                <span>Properties</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="start" className="db-panel">
+              <PropertiesPanel attrs={attrs} db={db} activeView={activeView} />
+            </PopoverContent>
+          </Popover>
+          {activeView && <ViewOptionsPopover db={db} view={activeView} />}
+
+          <CardItemGroup
+            orientation="horizontal"
+            style={{
+              background: "var(--tt-brand-color-400)",
+              borderRadius: "var(--tt-radius-sm)",
+              color: "white",
+              minHeight: 24,
+              height: 24,
+              padding: "0px 5px",
+            }}
+          >
+            <span style={{ fontSize: 11.5, fontWeight: "bold" }}>New</span>
+            <Separator orientation="vertical" />
+            <Popover open={templateOpen} onOpenChange={onTemplateOpenChange}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  style={{ background: "transparent", minWidth: 15, width: 15 }}
+                >
+                  <ChevronDown
+                    className="tiptap-button-icon"
+                    style={{ color: "white" }}
+                  />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent>
+                <Card style={{ padding: "5px 10px" }}>
+                  <CardBody>
+                    <CardItemGroup>
+                      {pages &&
+                        pages
+                          .filter((p) => p.category === "Template")
+                          .map((p) => (
+                            <Button
+                              key={p.id}
+                              variant="ghost"
+                              style={{
+                                justifyContent: "flex-start",
+                                minHeight: 24,
+                                height: 24,
+                              }}
+                              onClick={() =>
+                                onUpdateAttributes?.({
+                                  ...attrs,
+                                  templateId: p.id,
+                                })
+                              }
+                            >
+                              <PageItemIcon cover={p.cover} />
+                              <span className="tiptap-button-text">
+                                {p.title}
+                              </span>
+                            </Button>
+                          ))}
+                    </CardItemGroup>
+                  </CardBody>
+                  <CardFooter>
+                    <Button
+                      variant="ghost"
+                      style={{
+                        background: "var(--tt-brand-color-400)",
+                        justifyContent: "flex-start",
+                      }}
+                      onClick={() => {
+                        onTemplateOpenChange(false);
+                        addPageTemplateAsync({
+                          title: "New template",
+                          parentId: null,
+                        })
+                          .then((newPage) => setPeekPageId(newPage.id))
+                          .catch((err) =>
+                            console.log("Failed to add a new template", err),
+                          );
+                      }}
+                    >
+                      <Plus className="tiptap-button-icon" />
+                      <span>Create a template</span>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </PopoverContent>
+            </Popover>
+          </CardItemGroup>
         </CardItemGroup>
+        {viewOptionsOpen && activeView && (
+          <ViewOptionsPopover
+            db={db}
+            view={activeView}
+            open={true}
+            onOpenChange={() => setViewOptionsOpen(false)}
+          />
+        )}
       </CardItemGroup>
     </CardItemGroup>
   );

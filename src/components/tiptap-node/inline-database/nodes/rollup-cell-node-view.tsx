@@ -16,6 +16,7 @@ export function RollupCellNodeView({ node }: NodeViewProps) {
       as="div"
       data-type="rollup-cell"
       className="db-td db-td--rollup"
+      style={{ margin: 0 }}
     >
       <span className="db-cell-readonly">{display}</span>
     </NodeViewWrapper>

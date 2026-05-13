@@ -66,8 +66,51 @@ body,
   background: transparent;
 }
 
+// ── Performance optimizations for large documents ─────────────────────────────
+
+.tiptap.ProseMirror.simple-editor {
+  // Isolate layout so the browser doesn't recalculate the entire document
+  // on every keystroke. 'layout style' is safe — 'content' breaks some
+  // Tiptap internals (sticky, overflow).
+  contain: layout style;
+
+  // Apply content-visibility to all direct block children so the browser
+  // skips rendering off-screen blocks entirely.
+  // contain-intrinsic-size gives the browser a height estimate so the
+  // scrollbar doesn't jump around.
+  > p,
+  > h1,
+  > h2,
+  > h3,
+  > h4,
+  > h5,
+  > h6,
+  > ul,
+  > ol,
+  > blockquote,
+  > hr,
+  > .react-renderer {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 28px;
+  }
+
+  // Code blocks are taller — give a better estimate
+  > .react-renderer.node-codeBlock {
+    contain-intrinsic-size: 1px 120px;
+  }
+
+  // Database nodes are much taller
+  > .react-renderer.node-database {
+    contain-intrinsic-size: 1px 300px;
+    // Don't skip databases — they have interactive content
+    content-visibility: visible;
+  }
+}
  
 .tiptap.ProseMirror {
+  content-visibility: auto;
+      contain-intrinsic-size: 1px 30px;
+  contain: layout style;
   font-family: "DM Sans", sans-serif;
 
   $highlight-colors: purple, yellow, blue, red, green, orange;
@@ -164,6 +207,7 @@ body,
 .simple-editor-main {
   display: flex;
   flex-direction: column;
+   content-visibility: auto;
   flex: 1;
   min-width: 0;
   padding-top: var(--tt-toolbar-height); // clears the fixed toolbar
@@ -178,6 +222,10 @@ body,
   }
   &::-webkit-scrollbar-track { background: transparent; }
  
+}
+
+.react-renderer{
+  margin: 0;
 }
 
 

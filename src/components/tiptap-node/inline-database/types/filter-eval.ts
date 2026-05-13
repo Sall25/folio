@@ -118,7 +118,7 @@ function evaluateMultiSelect(
   rule: MultiSelectFilterRule,
   value: CellValue,
 ): boolean {
-  const arr = Array.isArray(value) ? (value as string[]) : [];
+  const arr = Array.isArray(value) ? (value as unknown as string[]) : [];
 
   switch (rule.operator) {
     case "contains":
@@ -213,7 +213,7 @@ function evaluateRule(rule: FilterRule, record: DatabaseRecord): boolean {
     case "created_by":
     case "edited_by": {
       // These are array-based "contains" checks
-      const arr = Array.isArray(value) ? (value as string[]) : [];
+      const arr = Array.isArray(value) ? (value as unknown as string[]) : [];
       const op = rule.operator as string;
       if (op === "is_empty") return arr.length === 0;
       if (op === "is_not_empty") return arr.length > 0;

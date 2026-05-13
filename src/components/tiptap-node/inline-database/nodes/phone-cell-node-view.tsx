@@ -22,6 +22,7 @@ export function PhoneCellNodeView({ node, editor, getPos }: NodeViewProps) {
       as="div"
       data-type="phone-cell"
       className="db-td db-td--phone"
+      style={{ margin: 0 }}
     >
       <Popover
         open={open}

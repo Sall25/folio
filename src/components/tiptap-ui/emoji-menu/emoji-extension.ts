@@ -76,7 +76,9 @@ function setCachedEmojiSupport(value: boolean): void {
 }
 
 // ---------------------------------------------------------------------------
-
+// Emoji list — built once at module level so it's never recomputed on
+// re-renders or page switches. The emoji dataset is static.
+// ---------------------------------------------------------------------------
 const emojiList = Object.values(data.emojis).map((emoji: any) => ({
   emoji: emoji.skins[0].native,
   name: emoji.name,
@@ -89,7 +91,8 @@ const emojiList = Object.values(data.emojis).map((emoji: any) => ({
   src: toAppleEmojiUrl(emoji.skins[0].native),
 }));
 
-// Pre-index shortcodes and tags for O(1) prefix lookup
+// Pre-index shortcodes and tags for O(1) prefix lookup — also module-level
+// so indexing only happens once when the module loads, not per editor mount.
 const shortcodeIndex = new Map<string, typeof emojiList>();
 const tagIndex = new Map<string, typeof emojiList>();
 
@@ -104,6 +107,10 @@ for (const emoji of emojiList) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Search — extracted so it's easy to test and not re-created on each
+// suggestion call.
+// ---------------------------------------------------------------------------
 function searchEmojis(query: string, limit = 20) {
   if (!query) return emojiList.slice(0, limit);
   const q = query.toLowerCase();
@@ -116,6 +123,7 @@ function searchEmojis(query: string, limit = 20) {
         if (!seen.has(e.id)) {
           seen.add(e.id);
           results.push(e);
+          if (results.length >= limit) return results;
         }
       }
     }
@@ -126,14 +134,18 @@ function searchEmojis(query: string, limit = 20) {
         if (!seen.has(e.id)) {
           seen.add(e.id);
           results.push(e);
+          if (results.length >= limit) return results;
         }
       }
     }
   }
 
-  return results.slice(0, limit);
+  return results;
 }
 
+// ---------------------------------------------------------------------------
+// The extension
+// ---------------------------------------------------------------------------
 export const EmojiExtension = Emoji.extend({
   addAttributes() {
     return {
@@ -147,6 +159,9 @@ export const EmojiExtension = Emoji.extend({
   },
 
   addStorage() {
+    // Read from cache synchronously — no canvas work at all on first render
+    // if we've seen this browser before. Defaults to true (optimistic) so
+    // native emoji render immediately; the idle check corrects it if wrong.
     return {
       ...this.parent?.(),
       emojiNativeSupported: getCachedEmojiSupport() ?? true,
@@ -154,8 +169,12 @@ export const EmojiExtension = Emoji.extend({
   },
 
   onCreate() {
+    // If we already have a cached result, skip the canvas check entirely.
     if (getCachedEmojiSupport() !== null) return;
 
+    // Schedule the canvas check in idle time so it never blocks the initial
+    // render or navigation. The 3s timeout is a fallback so it still runs
+    // even on a busy tab.
     const run = () => {
       const supported = checkEmojiSupportedNow();
       setCachedEmojiSupport(supported);
@@ -231,9 +250,12 @@ export const EmojiExtension = Emoji.extend({
     render: () => {
       let component: ReactRenderer<any>;
 
-      const updatePosition = (clientRect: any, element: HTMLElement) => {
+      const updatePosition = (
+        clientRect: () => DOMRect,
+        element: HTMLElement,
+      ) => {
         const virtualEl: VirtualElement = {
-          getBoundingClientRect: () => clientRect,
+          getBoundingClientRect: clientRect,
         };
 
         computePosition(virtualEl, element, {
@@ -241,7 +263,7 @@ export const EmojiExtension = Emoji.extend({
           strategy: "absolute",
           middleware: [shift(), flip()],
         }).then((pos) => {
-          Object.assign(component.element.style, {
+          Object.assign(element.style, {
             width: "max-content",
             position: pos.strategy,
             left: `${pos.x}px`,
@@ -263,17 +285,18 @@ export const EmojiExtension = Emoji.extend({
           });
 
           component.element.style.position = "absolute";
-
           document.body.appendChild(component.element);
+
+          // Position after paint so the element has dimensions
           requestAnimationFrame(() => {
-            updatePosition(props.clientRect(), component.element);
+            updatePosition(props.clientRect, component.element);
           });
         },
 
         onUpdate: (props: any) => {
           component.updateProps(props);
           requestAnimationFrame(() => {
-            updatePosition(props.clientRect(), component.element);
+            updatePosition(props.clientRect, component.element);
           });
         },
 

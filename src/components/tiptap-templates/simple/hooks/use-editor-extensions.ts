@@ -41,7 +41,7 @@ import { TableContextExtension } from "src/components/tiptap-node/table-node";
 import { TableWrapperNode } from "src/components/tiptap-node/table-node/extensions/table-context";
 import { Column, ColumnBlock } from "src/components/tiptap-node/column-node";
 import { TocNode } from "src/components/tiptap-node/toc-node/toc-node-extension";
-import { DatabaseTableNode } from "src/components/tiptap-node/inline-database";
+import { DatabaseNode } from "src/components/tiptap-node/inline-database/nodes/database-node";
 
 import { handleImageUpload, MAX_FILE_SIZE } from "src/lib/tiptap-utils";
 import { TitleNode } from "src/components/tiptap-node/title-node";
@@ -233,10 +233,10 @@ export function useEditorExtensions(
       TitleCellNode,
       SelectCellNode,
       DatabaseRecordNode,
-      DatabaseTableNode,
+      DatabaseNode,
       CalloutExtension,
       AudioExtension,
-      TallCursor,
+      // TallCursor,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

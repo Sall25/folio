@@ -3,7 +3,6 @@ import {
   NodeViewWrapper,
   type NodeViewProps,
 } from "@tiptap/react";
-import { useCallback } from "react";
 import type { DatabaseAttrs, SelectCellAttrs } from "../types/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -12,6 +11,9 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
+import "./select-cell-node-view.scss";
+import { useActiveViewType } from "../hooks/use-active-view-type";
+import { useParentDatabase } from "../hooks/use-parent-database";
 
 export function SelectCellNodeView({
   node,
@@ -21,18 +23,9 @@ export function SelectCellNodeView({
 }: NodeViewProps) {
   const selectAttrs = node.attrs as SelectCellAttrs;
 
-  const getParentDatabase = useCallback(() => {
-    const pos = getPos?.();
-    if (pos == null) return null;
-    const $pos = editor.state.doc.resolve(pos);
-    for (let d = $pos.depth; d > 0; d--) {
-      const node = $pos.node(d);
-      if (node.type.name === "database") return node;
-    }
-    return null;
-  }, [editor, getPos]);
+  const activeViewType = useActiveViewType(editor, getPos);
 
-  const db = getParentDatabase();
+  const db = useParentDatabase(editor, getPos);
 
   if (!db) return null;
 
@@ -48,8 +41,9 @@ export function SelectCellNodeView({
     return (
       <NodeViewWrapper
         as="div"
-        className="db-td select-cell"
+        className={`${activeViewType === "table" ? "db-td" : ""} select-cell`}
         data-type="select-cell"
+        style={{ margin: 0 }}
       >
         <NodeViewContent />
       </NodeViewWrapper>
@@ -58,13 +52,14 @@ export function SelectCellNodeView({
   return (
     <NodeViewWrapper
       as="div"
-      className="db-td select-cell"
+      className={`${activeViewType === "table" ? "db-td" : ""} select-cell`}
       data-type="select-cell"
       style={{
         display: "flex",
         padding: "0 5px",
         alignItem: "center",
         justifyContent: "center",
+        margin: 0,
       }}
     >
       <Popover>

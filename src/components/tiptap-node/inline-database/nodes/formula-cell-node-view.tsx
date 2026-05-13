@@ -1,6 +1,7 @@
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import type { FormulaCellAttrs } from "../types/types";
 import "./formula-cell-node-view.scss";
+import { useActiveViewType } from "../hooks/use-active-view-type";
 
 function formatValue(value: FormulaCellAttrs["value"]): string {
   if (value === null || value === undefined) return "";
@@ -8,11 +9,13 @@ function formatValue(value: FormulaCellAttrs["value"]): string {
   return String(value);
 }
 
-export function FormulaCellNodeView({ node }: NodeViewProps) {
+export function FormulaCellNodeView({ node, editor, getPos }: NodeViewProps) {
   const attrs = node.attrs as FormulaCellAttrs;
   const { value } = attrs;
 
   const isEmpty = value === null || value === undefined || value === "";
+
+  const activeViewType = useActiveViewType(editor, getPos);
 
   return (
     <NodeViewWrapper
@@ -20,7 +23,9 @@ export function FormulaCellNodeView({ node }: NodeViewProps) {
       data-type="formula-cell"
       style={{
         paddingLeft: 10,
-        borderRight: "1px solid var(--tt-border-color)",
+        borderRight:
+          activeViewType === "table" ? "1px solid var(--tt-border-color)" : "",
+        margin: 0,
       }}
     >
       <div className="formula-cell">

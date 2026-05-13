@@ -34,8 +34,7 @@ import { MentionExtension } from "src/components/tiptap-ui/mention-menu";
 import { EmojiExtension } from "src/components/tiptap-ui/emoji-menu";
 import { TallCursor } from "src/components/tiptap-extension";
 import { handleImageUpload, MAX_FILE_SIZE } from "src/lib/tiptap-utils";
-
-import { DatabaseTableNode } from "src/components/tiptap-node/inline-database";
+import { DatabaseNode } from "src/components/tiptap-node/inline-database";
 import { DatabaseRecordNode } from "src/components/tiptap-node/inline-database/nodes/database-record-node";
 import { TitleCellNode } from "src/components/tiptap-node/inline-database/nodes/title-cell-node";
 import { SelectCellNode } from "src/components/tiptap-node/inline-database/nodes/select-cell-node";
@@ -116,7 +115,7 @@ export function usePeekEditorExtensions(onNavigate?: (pageId: number) => void) {
       TitleCellNode,
       SelectCellNode,
       DatabaseRecordNode,
-      DatabaseTableNode,
+      DatabaseNode,
       CalloutExtension,
       AudioExtension,
       TallCursor,

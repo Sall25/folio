@@ -11,7 +11,7 @@ export function TextCellNodeView({ node, editor, getPos }: NodeViewProps) {
     <NodeViewWrapper
       as="div"
       data-type="text-cell"
-      style={{ borderRight: "1px solid var(--tt-border-color)" }}
+      style={{ borderRight: "1px solid var(--tt-border-color)", margin: 0 }}
     >
       {editing ? (
         <input

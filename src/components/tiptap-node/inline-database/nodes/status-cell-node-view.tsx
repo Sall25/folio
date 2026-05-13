@@ -1,5 +1,5 @@
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { DatabaseAttrs, StatusCellAttrs } from "../types/types";
 import type { StatusItem, StatusGroup } from "../types/types";
 import { Check } from "lucide-react";
@@ -9,6 +9,8 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import "./status-cell-node-view.scss";
+import { useActiveViewType } from "../hooks/use-active-view-type";
+import { useParentDatabase } from "../hooks/use-parent-database";
 
 export function StatusCellNodeView({
   node,
@@ -19,19 +21,9 @@ export function StatusCellNodeView({
   const statusAttrs = node.attrs as StatusCellAttrs;
   const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const activeViewType = useActiveViewType(editor, getPos);
 
-  const getParentDatabase = useCallback(() => {
-    const pos = getPos?.();
-    if (pos == null) return null;
-    const $pos = editor.state.doc.resolve(pos);
-    for (let d = $pos.depth; d > 0; d--) {
-      const n = $pos.node(d);
-      if (n.type.name === "database") return n;
-    }
-    return null;
-  }, [editor, getPos]);
-
-  const db = getParentDatabase();
+  const db = useParentDatabase(editor, getPos);
   if (!db) return null;
 
   const attrs = db.attrs as DatabaseAttrs;
@@ -41,7 +33,7 @@ export function StatusCellNodeView({
     return (
       <NodeViewWrapper
         as="div"
-        className="db-td status-cell"
+        className={`${activeViewType === "table" ? "db-td" : ""} status-cell`}
         data-type="status-cell"
       />
     );
@@ -67,8 +59,9 @@ export function StatusCellNodeView({
   return (
     <NodeViewWrapper
       as="div"
-      className="db-td status-cell"
+      className=" status-cell"
       data-type="status-cell"
+      style={{ margin: 0, borderRight: "none !important" }}
     >
       <Popover
         onOpenChange={(open) => {

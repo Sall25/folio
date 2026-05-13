@@ -7,12 +7,10 @@ import { useCallback, useEffect, useReducer } from "react";
 import type { DatabaseAttrs } from "../types/types";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import type { Transaction } from "@tiptap/pm/state";
+import { DatabaseRecordListView } from "./database-record-list-view";
 
-export function DatabaseRecordNodeView({
-  node,
-  getPos,
-  editor,
-}: NodeViewProps) {
+export function DatabaseRecordNodeView(props: NodeViewProps) {
+  const { node, getPos, editor } = props;
   const { deletePageAsync } = usePages();
 
   const getParentDatabase = useCallback(() => {
@@ -20,8 +18,8 @@ export function DatabaseRecordNodeView({
     if (pos == null) return null;
     const $pos = editor.state.doc.resolve(pos);
     for (let d = $pos.depth; d > 0; d--) {
-      const node = $pos.node(d);
-      if (node.type.name === "database") return node;
+      const n = $pos.node(d);
+      if (n.type.name === "database") return n;
     }
     return null;
   }, [editor, getPos]);
@@ -36,13 +34,11 @@ export function DatabaseRecordNodeView({
       if (!meta) return;
       if (meta.recordId !== node.attrs.id) return;
 
-      // Find pageId from title cell
       let pageId: string | null = null;
       node.forEach((cell) => {
         if (cell.type.name === "titleCell") pageId = cell.attrs.pageId;
       });
 
-      // Delete the page first, then the record
       if (pageId) deletePageAsync(pageId);
       const db = getParentDatabase();
       if (!db) return;
@@ -66,18 +62,22 @@ export function DatabaseRecordNodeView({
   }, [editor]);
 
   const db = getParentDatabase();
-
   if (!db) return null;
 
   const attrs = db.attrs as DatabaseAttrs;
+  const activeView =
+    attrs.views.find((v) => v.id === attrs.activeViewId) ?? attrs.views[0];
 
-  // const gridTemplateColumns = attrs.properties
-  //   .map((p, i) => (i === 0 ? "1fr" : `${p.width ?? 160}px`))
-  //   .join(" ");
+  // ── List view ────────────────────────────────────────────────────────────
+  if (activeView?.type === "list") {
+    return <DatabaseRecordListView {...props} />;
+  }
 
+  // ── Table view (default) ─────────────────────────────────────────────────
   const gridTemplateColumns = attrs.properties
     .map((p) => `${p.width ?? 160}px`)
     .join(" ");
+
   return (
     <NodeViewWrapper
       as="div"

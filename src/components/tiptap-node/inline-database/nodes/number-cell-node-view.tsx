@@ -141,6 +141,7 @@ export function NumberCellNodeView({
       as="div"
       data-type="number-cell"
       className="db-td db-td--number"
+      style={{ margin: 0 }}
     >
       <Popover
         open={open}

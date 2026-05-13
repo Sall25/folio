@@ -122,7 +122,7 @@ export function useDatabaseUI(attrs: DatabaseAttrs, editor: Editor) {
   );
 
   const updateView = useCallback(
-    (viewId: ID, patch: Partial<Omit<DatabaseView, "id" | "type">>) => {
+    (viewId: ID, patch: Partial<Omit<DatabaseView, "id">>) => {
       editor.commands.updateDatabaseView(nodeId, viewId, patch);
     },
     [editor, nodeId],

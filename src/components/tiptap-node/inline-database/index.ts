@@ -1,1 +1,1 @@
-export { DatabaseTableNode } from "./nodes/database-table-node";
+export { DatabaseNode } from "./nodes/database-node";

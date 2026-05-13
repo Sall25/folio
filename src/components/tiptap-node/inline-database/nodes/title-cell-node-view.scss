@@ -1,3 +1,6 @@
+.node-titleCell{
+  margin: 0;
+}
 .db-td{
   padding: 0;
   margin: 0;
@@ -81,4 +84,9 @@
   line-height: 1.85;
   background-color: var(--tt-card-bg-color);
 
+}
+
+.db-td--title.db-td--list {
+  border: none;
+  border-right: none;
 }

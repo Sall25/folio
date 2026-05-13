@@ -1,5 +1,5 @@
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, memo } from "react";
 import { Check, ChevronDown, Copy } from "lucide-react";
 import "./code-block-node.scss";
 
@@ -9,7 +9,7 @@ const LANGUAGES = [
   "rust", "go", "java", "c", "cpp", "bash", "sql", "yaml", "xml",
 ];
 
-export function CodeBlockView({ node, updateAttributes, extension }: NodeViewProps) {
+export const CodeBlockView = memo(function CodeBlockView({ node, updateAttributes, extension }: NodeViewProps) {
   const { filename, language } = node.attrs;
   const [copied, setCopied] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
@@ -49,7 +49,6 @@ export function CodeBlockView({ node, updateAttributes, extension }: NodeViewPro
         </span>
       )}
 
-      {/* Toolbar — shown on hover via CSS */}
       <div className="code-block-toolbar" contentEditable={false}>
         <div className="code-block-lang-wrap">
           <button className="code-block-pill" onClick={() => setLangOpen((o) => !o)}>
@@ -82,4 +81,4 @@ export function CodeBlockView({ node, updateAttributes, extension }: NodeViewPro
       </pre>
     </NodeViewWrapper>
   );
-}
+});

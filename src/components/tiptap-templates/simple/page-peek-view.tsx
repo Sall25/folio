@@ -155,7 +155,16 @@ export function PagePeekView({
   });
 
   return (
-    <Card className="page-peek" style={{ padding: "5px 10px" }}>
+    <Card
+      className="page-peek"
+      style={{
+        padding: "5px 20px",
+        marginTop: "var(--tt-toolbar-height)",
+        position: "fixed",
+        borderTopRightRadius: 0,
+        borderBottomRightRadius: 0,
+      }}
+    >
       <CardItemGroup
         orientation="horizontal"
         style={{ width: "100%", justifyContent: "flex-start" }}

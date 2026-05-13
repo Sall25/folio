@@ -26,7 +26,7 @@ export function makeDefaultDatabase() {
     {
       id: viewId,
       type: "table",
-      name: "Default view",
+      name: "Table",
       filters: [],
       sorts: [],
       hiddenProperties: [],

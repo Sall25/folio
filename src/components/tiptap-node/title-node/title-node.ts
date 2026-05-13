@@ -26,18 +26,36 @@ export const TitleNode = Node.create({
 
   addProseMirrorPlugins() {
     return [
-      // Ensure title is always first node
       new Plugin({
         key: new PluginKey("titleEnforce"),
-        appendTransaction(_, __, newState) {
+        appendTransaction(transactions, _, newState) {
+          // Only run if the document actually changed
+          if (!transactions.some((tr) => tr.docChanged)) return;
+
           const { doc, tr } = newState;
-          const firstNode = doc.firstChild;
-          if (firstNode?.type.name !== "title") {
-            const titleNode = newState.schema.nodes.title.create();
-            return tr.insert(0, titleNode);
-          }
+          if (doc.firstChild?.type.name === "title") return; // already fine — exit fast
+
+          const titleNode = newState.schema.nodes.title.create();
+          return tr.insert(0, titleNode);
         },
       }),
     ];
   },
+
+  // addProseMirrorPlugins() {
+  //   return [
+  //     // Ensure title is always first node
+  //     new Plugin({
+  //       key: new PluginKey("titleEnforce"),
+  //       appendTransaction(_, __, newState) {
+  //         const { doc, tr } = newState;
+  //         const firstNode = doc.firstChild;
+  //         if (firstNode?.type.name !== "title") {
+  //           const titleNode = newState.schema.nodes.title.create();
+  //           return tr.insert(0, titleNode);
+  //         }
+  //       },
+  //     }),
+  //   ];
+  // },
 });
