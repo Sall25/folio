@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Target } from "src/components/tiptap-ui/cover/types";
 import type { Page } from "../types";
-import { useSimpleEditor } from "../context/simple-editor-context";
+import { useActivePage } from "../use-active-page";
 
 export function useCoverActions(providedPage?: Page) {
-  const { activePage, updateCoverAsync, addCoverAsync } = useSimpleEditor();
+  const { activePage, updateCoverAsync, addCoverAsync } = useActivePage();
 
   const page = providedPage ?? activePage;
 
@@ -45,7 +45,7 @@ export function useCoverActions(providedPage?: Page) {
   }, []);
 
   const onAddCoverAsync = useCallback(async () => {
-    if (!activePageRef.current?.id) return;
+    if (activePageRef.current?.id === undefined) return;
     await addCoverAsyncRef.current(activePageRef.current.id);
   }, []);
 

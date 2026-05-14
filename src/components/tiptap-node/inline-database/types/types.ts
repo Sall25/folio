@@ -304,6 +304,7 @@ export interface BoardView extends BaseView {
   type: "board";
   groupByPropertyId: ID;
   showEmptyGroups: boolean;
+  cardPreview?: "none" | "cover" | "content";
 }
 
 export interface ListView extends BaseView {

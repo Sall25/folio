@@ -11,7 +11,7 @@ import { TrashIcon } from "src/components/tiptap-icons";
 import { Ellipsis, Plus, PencilIcon } from "lucide-react";
 import type { Page } from "./types";
 import { PageItemIcon } from "./page-item-icon";
-import { useSimpleEditor } from "./context/simple-editor-context";
+import { useActivePage } from "./use-active-page";
 
 interface PageItemOptionsProps {
   page: Page;
@@ -24,7 +24,7 @@ export function PageItemOptions({
   onRenameAsync,
   onOpenChange,
 }: PageItemOptionsProps) {
-  const { addPageAndActivateAsync, deletePageAsync } = useSimpleEditor();
+  const { addPageAndActivateAsync, deletePageAsync } = useActivePage();
 
   return (
     <Popover onOpenChange={onOpenChange}>

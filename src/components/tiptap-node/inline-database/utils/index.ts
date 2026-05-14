@@ -8,6 +8,8 @@ import {
 } from "../types/types";
 import type { DatabaseProperty } from "../types/types";
 
+export * from "./cover-placeholder";
+
 export function makeId(): string {
   return crypto.randomUUID();
 }
@@ -165,6 +167,7 @@ export function makeDefaultView(
         type: "board",
         groupByPropertyId: groupProp?.id ?? "",
         showEmptyGroups: false,
+        cardPreview: "none",
       } satisfies BoardView;
     }
 

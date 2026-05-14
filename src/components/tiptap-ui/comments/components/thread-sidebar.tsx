@@ -5,13 +5,12 @@ import { ThreadsList } from "./threads-list";
 import { useEffect, useState } from "react";
 import type { PositionedThread } from "../types";
 import { getCommentThreadState } from "../extensions/utils/getCommentThreadState";
-
-import "./styles.scss";
-import "./thread-sidebar.scss";
-import { useActivePageContext } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 import { useThreadsOnPage } from "../hooks/use-threads-on-page";
 import { useEditorRefs } from "src/components/tiptap-templates/simple/context/editor-refs-context";
 import { commentThreadPluginKey } from "../extensions/comment-thread-extension";
+import "./styles.scss";
+import "./thread-sidebar.scss";
 
 // Shell — no heavy hooks, always mounted
 export function ThreadSidebar({
@@ -21,7 +20,7 @@ export function ThreadSidebar({
   editor: Editor | null;
   setHasThreads: (v: boolean) => void;
 }) {
-  const { activePageId: pageId } = useActivePageContext();
+  const { activePageId: pageId } = useActivePage();
 
   return (
     <ThreadSidebarBase editor={editor} setHasThreads={setHasThreads}>

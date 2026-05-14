@@ -33,17 +33,16 @@ import "src/components/tiptap-node/paragraph-node/paragraph-node.scss";
 import "src/components/tiptap-templates/simple/simple-editor.scss";
 import "src/components/tiptap-templates/simple/toc.scss";
 import { SimpleEditorSidebar } from "./simple-editor-sidebar";
-import { SimpleEditorProvider } from "./context/simple-editor-provider";
 import { VersionHistorySidebar } from "src/components/tiptap-ui/version-history/version-history-sidebar";
 import { HomePageContent } from "./components";
 import { useActivePage } from "./use-active-page";
 import { EditorProvider } from "./context/editor-provider";
-import { useSimpleEditor } from "./context/simple-editor-context";
 import EditorSkeleton from "./editor-skeleton";
 import { PeekPageProvider } from "./context/peek-page-provider";
 import { PagePeekView } from "./page-peek-view";
 import { usePeekPage } from "./context/peek-page-context";
 import { findPage } from "src/lib/find-page";
+import { ActivePageProvider } from "./context/active-page-provider";
 
 const VERSION_SIDEBAR_WIDTH = 260;
 const SIDEBAR_WIDTH = 300;
@@ -103,7 +102,7 @@ function SimpleEditorInner() {
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const isMobile = useIsBreakpoint();
   const { height } = useWindowSize();
-  const { isLoading } = useSimpleEditor();
+  const { isLoading } = useActivePage();
 
   useEffect(() => {
     if (!isMobile && mobileView !== "main")
@@ -159,11 +158,11 @@ function SimpleEditorInner() {
 export function SimpleEditor() {
   return (
     <EditorProvider>
-      <SimpleEditorProvider>
+      <ActivePageProvider>
         <TocProvider>
           <SimpleEditorInner />
         </TocProvider>
-      </SimpleEditorProvider>
+      </ActivePageProvider>
     </EditorProvider>
   );
 }

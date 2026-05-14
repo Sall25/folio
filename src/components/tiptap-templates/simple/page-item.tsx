@@ -11,6 +11,7 @@ import { useActivePage } from "./use-active-page";
 import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { useIsActivePage } from "./use-is-active-page";
+import { useActivePageContext } from "./context/active-page-context";
 
 interface PageItemProps {
   page: Page;
@@ -67,7 +68,7 @@ export function PageItem({
     }
   };
 
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId } = useActivePageContext();
   const onSelect = (pageId: number) => {
     console.time("navigation");
     setActivePageId(pageId);

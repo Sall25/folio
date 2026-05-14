@@ -11,8 +11,7 @@ import {
 import type { Target } from "./types";
 import type { Page } from "src/components/tiptap-templates/simple/types";
 import { IconPickerCard } from "./icon-picker-card";
-import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/simple-editor-context";
-import { useActivePageContext } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 import CoverImage from "./cover-image";
 import GradientCover from "./gradient-cover";
 
@@ -35,7 +34,7 @@ function IconButton({
   hasThreads?: boolean;
   page: Page;
 }) {
-  const { activePageId } = useActivePageContext();
+  const { activePageId } = useActivePage();
 
   const hasCoverImage = !!page.cover.coverImage;
   const hasGradient = !!(page.cover as any).gradient;
@@ -52,7 +51,7 @@ function IconButton({
   >();
 
   const displayCover = optimisticCover ?? cover;
-  const { updatePageAsync } = useSimpleEditor();
+  const { updatePageAsync } = useActivePage();
 
   const onSelectIconAsync = useCallback(
     async (name: string, color?: string) => {
@@ -142,7 +141,7 @@ export function CoverHeader({
 
   const [target, setTarget] = useState<Target>("Emoji");
 
-  const { updatePageAsync, activePage } = useSimpleEditor();
+  const { updatePageAsync, activePage } = useActivePage();
 
   const page = providedPage ?? activePage;
 

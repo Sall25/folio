@@ -6,7 +6,7 @@ import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-i
 import { useRef, useState } from "react";
 import type { Page } from "src/components/tiptap-templates/simple/types";
 import { createPortal } from "react-dom";
-import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/simple-editor-context";
+import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 
 function flattenPages(pages: Page[]): Page[] {
   return pages.flatMap((p) => [p, ...flattenPages(p.children ?? [])]);
@@ -46,7 +46,7 @@ function getContentExcerpt(page: Page): string {
 
 export function PageLinkNodeView({ node, extension }: NodeViewProps) {
   const { pageId } = node.attrs;
-  const { pages } = useSimpleEditor();
+  const { pages } = useActivePage();
   const [isHovered, setIsHovered] = useState(false);
   const [previewPos, setPreviewPos] = useState({ top: 0, left: 0 });
   const linkRef = useRef<HTMLDivElement>(null);

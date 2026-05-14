@@ -11,6 +11,7 @@ import {
   useDebouncedCallback,
   type DebouncedState,
 } from "use-debounce";
+import { findPage } from "src/lib/find-page";
 
 function getDescendantIds(pages: Page[], parentId: number): number[] {
   const children = pages.filter((p) => p.parentId === parentId);
@@ -275,8 +276,7 @@ export function usePages(): UsePagesReturn {
 
   const addCoverAsync = useCallback(
     async (id: number) => {
-      // Read pages from ref — no pages in dep array, stable identity
-      const page = pagesRef.current?.flat().find((p) => p.id === id);
+      const page = pagesRef.current ? findPage(pagesRef.current, id) : null;
       if (!page) return;
       await updatePageAsync({
         ...page,

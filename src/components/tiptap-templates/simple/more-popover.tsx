@@ -12,8 +12,8 @@ import "./more-popover.scss";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { SettingsToggleButton } from "src/components/tiptap-ui/settings-toggle-button";
 import { ExportButtons } from "src/components/tiptap-ui/export-buttons/export-buttons";
-import { useSimpleEditor } from "./context/simple-editor-context";
 import { useCallback, useState } from "react";
+import { useActivePage } from "./use-active-page";
 export function MorePopover({
   onTriggerVersionHistory,
 }: {
@@ -24,7 +24,7 @@ export function MorePopover({
   const [locked, setLocked] = useState<boolean>(false);
   const [open, setOpen] = useState(false);
 
-  const { activePage, updateSettingsAsync } = useSimpleEditor();
+  const { activePage, updateSettingsAsync } = useActivePage();
 
   const onFullWidthChangeAsync = useCallback(
     async (checked: boolean) => {

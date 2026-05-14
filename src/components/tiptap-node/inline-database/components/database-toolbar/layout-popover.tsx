@@ -3,11 +3,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import type { DatabaseAttrs, DatabaseView } from "../../types/types";
+import type { BoardView, DatabaseAttrs, DatabaseView } from "../../types/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   ChevronRight,
   Columns3,
+  Image,
   LayoutGrid,
   LayoutTemplate,
   List,
@@ -134,6 +135,70 @@ export function LayoutPopover({
             </CardItemGroup>
 
             <Separator orientation="horizontal" />
+            {/* Card preview — board view only */}
+            {view.type === "board" && (
+              <>
+                <CardItemGroup
+                  className="w-full justify-start"
+                  orientation="horizontal"
+                >
+                  <Image size={14} className="tiptap-button-icon" />
+                  <span className="tiptap-button-text">Card preview</span>
+                  <Spacer orientation="horizontal" />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" style={{ fontSize: 11 }}>
+                        <span className="opacity-85">
+                          {(view as BoardView).cardPreview === "none"
+                            ? "None"
+                            : (view as BoardView).cardPreview === "cover"
+                              ? "Page cover"
+                              : "Page content"}
+                        </span>
+                        <ChevronRight className="tiptap-button-icon-sub" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent side="right" align="start">
+                      <Card className="p-2" style={{ minWidth: 140 }}>
+                        <CardItemGroup>
+                          {(
+                            [
+                              { value: "none", label: "None" },
+                              { value: "cover", label: "Page cover" },
+                              { value: "content", label: "Page content" },
+                            ] as const
+                          ).map(({ value, label }) => (
+                            <Button
+                              key={value}
+                              variant="ghost"
+                              style={{
+                                justifyContent: "flex-start",
+                                width: "100%",
+                                fontWeight:
+                                  (view as BoardView).cardPreview === value
+                                    ? 600
+                                    : 400,
+                              }}
+                              onClick={() =>
+                                db.updateView(view.id, {
+                                  cardPreview: value,
+                                } as Partial<BoardView>)
+                              }
+                            >
+                              <span className="tiptap-button-text">
+                                {label}
+                              </span>
+                            </Button>
+                          ))}
+                        </CardItemGroup>
+                      </Card>
+                    </PopoverContent>
+                  </Popover>
+                </CardItemGroup>
+                <Separator orientation="horizontal" />
+              </>
+            )}
+
             <CardItemGroup
               className="w-full justify-start"
               orientation="horizontal"
@@ -167,6 +232,7 @@ export function LayoutPopover({
                 onChangeAsync={async () => onToggleWrapAllCols?.()}
               />
             </CardItemGroup>
+
             <Separator orientation="horizontal" />
             <CardItemGroup>
               <Button variant="ghost">

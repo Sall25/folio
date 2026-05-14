@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Clock, Pin, FileText, ChevronRight, Lock } from "lucide-react";
-import { useSimpleEditor } from "../context/simple-editor-context";
 import type { Page } from "../types";
 import { PageItemIcon } from "../page-item-icon";
 import "./home-page-content.scss";
@@ -8,6 +7,7 @@ import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
+import { useActivePage } from "../use-active-page";
 
 function formatRelativeTime(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
@@ -94,7 +94,7 @@ function RecentRow({ page, onClick }: { page: Page; onClick: () => void }) {
 }
 
 export function HomePageContent({ sidebarWidth }: { sidebarWidth: number }) {
-  const { pages, addPageAndActivateAsync, setActivePageId } = useSimpleEditor();
+  const { pages, addPageAndActivateAsync, setActivePageId } = useActivePage();
 
   if (!pages) return null;
 

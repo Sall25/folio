@@ -2,11 +2,9 @@
 import {
   Search,
   Home,
-  FileEdit,
   LayoutTemplate,
   Lock,
   Users,
-  Bell,
   PanelRight,
   PanelLeft,
   Plus,
@@ -25,7 +23,6 @@ import "./simple-editor-sidebar.scss";
 import { PageItem } from "./page-item";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { useMemo, useState } from "react";
-import { useSimpleEditor } from "./context/simple-editor-context";
 import { useNavigate } from "@tanstack/react-location";
 import { useActivePage } from "./use-active-page";
 import type { Page } from "./types";
@@ -75,7 +72,7 @@ function User({ name }: { name: string }) {
 }
 
 function CreatePageButton() {
-  const { addPageAndActivateAsync } = useSimpleEditor();
+  const { addPageAndActivateAsync } = useActivePage();
   return (
     <Button
       variant="ghost"
@@ -325,7 +322,7 @@ export function SimpleEditorSidebar({
   collapsed: boolean;
   onToggle: () => void;
 }) {
-  const { pages } = useSimpleEditor();
+  const { pages } = useActivePage();
 
   if (!pages) return null;
   return (

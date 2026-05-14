@@ -5,7 +5,7 @@ import { VersionHistoryList } from "./version-history-list";
 import { useVersionHistory } from "./use-version-history";
 import { useDiff } from "./use-diff";
 import type { Version } from "./types";
-import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/simple-editor-context";
+import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { useCurrentEditor } from "@tiptap/react";
@@ -34,7 +34,7 @@ function VersionHistorySidebarInner({
   onClose: () => void;
   userColor?: string;
 }) {
-  const { activePage, updatePageAsync } = useSimpleEditor();
+  const { activePage, updatePageAsync } = useActivePage();
   const {
     versions,
     selectedVersion,

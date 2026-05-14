@@ -11,8 +11,8 @@ import { IconPickerCard } from "src/components/tiptap-ui/cover/icon-picker-card"
 import { Button } from "src/components/tiptap-ui-primitive/button";
 
 import "./floating-actions.scss";
-import { useSimpleEditor } from "./context/simple-editor-context";
 import type { Page } from "./types";
+import { useActivePage } from "./use-active-page";
 
 export function FloatingActions({
   open,
@@ -31,7 +31,7 @@ export function FloatingActions({
   onAddCoverAsync: () => Promise<void>;
   providedPage?: Page;
 }) {
-  const { activePage } = useSimpleEditor();
+  const { activePage } = useActivePage();
   const page = providedPage ?? activePage;
 
   const hasIcon = !!page?.cover.iconName;
@@ -67,7 +67,13 @@ export function FloatingActions({
       )}
 
       {!hasCover && (
-        <Button variant="ghost" onClick={async () => await onAddCoverAsync()}>
+        <Button
+          variant="ghost"
+          onClick={async () => {
+            await onAddCoverAsync();
+            console.log("addCover clicked");
+          }}
+        >
           <Image className="tiptap-button-icon" />
           <span>Add cover</span>
         </Button>

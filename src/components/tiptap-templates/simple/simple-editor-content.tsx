@@ -16,7 +16,7 @@ import { useCoverActions } from "./hooks/use-cover-actions";
 import { useEditorLayout } from "./hooks/use-editor-layout";
 import { FloatingActions } from "./floating-actions";
 import type { Target } from "src/components/tiptap-ui/cover/types";
-import { useSimpleEditor } from "./context/simple-editor-context";
+import { useActivePage } from "./use-active-page";
 // ============================================================
 // Memoized leaves
 // ============================================================
@@ -43,7 +43,7 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
   hasThreads: boolean;
 }) {
   const { editor } = useCurrentEditor();
-  const { activePage } = useSimpleEditor();
+  const { activePage } = useActivePage();
   if (!activePage) return null;
 
   return (

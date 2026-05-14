@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/simple-editor-context";
+import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 import type { Page } from "src/components/tiptap-templates/simple/types";
 import CoverControlsGroup from "./cover-controls";
 
@@ -15,7 +15,7 @@ export default function CoverImage({
   page: Page;
   onRemoveCoverAsync: () => Promise<void>;
 }) {
-  const { updatePageAsync } = useSimpleEditor();
+  const { updatePageAsync } = useActivePage();
   const [btnPosition, setBtnPosition] = useState({ top: 0, right: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const [hovering, setHovering] = useState(false);

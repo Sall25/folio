@@ -11,7 +11,7 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { CoverPickerCard } from "./cover-picker-card";
-import { useSimpleEditor } from "src/components/tiptap-templates/simple/context/simple-editor-context";
+import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 import type { Page } from "src/components/tiptap-templates/simple/types";
 
 // ============================================================
@@ -39,7 +39,7 @@ export default function CoverControlsGroup({
 }) {
   const [positionY, setPositionY] = useState(50);
   const [, setCoverPickerOpen] = useState(false);
-  const { updatePageAsync } = useSimpleEditor();
+  const { updatePageAsync } = useActivePage();
   const [coverImage, setCoverImage] = useState(page.cover.coverImage);
 
   const onChangeCover = () => {

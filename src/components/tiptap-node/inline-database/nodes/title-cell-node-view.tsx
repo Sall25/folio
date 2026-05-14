@@ -5,7 +5,7 @@ import {
   type NodeViewProps,
 } from "@tiptap/react";
 import type { TitleCellAttrs } from "./title-cell-node";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DatabaseAttrs } from "../types/types";
 import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
@@ -18,6 +18,11 @@ import "./title-cell-node-view.scss";
 import { findPage } from "src/lib/find-page";
 import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek-page-context";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
+import {
+  useActiveViewType,
+  useParentDatabase,
+} from "../hooks/use-parent-database";
+import { BoardCardCover } from "../primitives/board-card-cover";
 
 export function TitleCellNodeView({
   node,
@@ -108,22 +113,29 @@ export function TitleCellNodeView({
     editor.view.dispatch(tr);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const [activeViewType, setActiveViewType] = useState<string>(() => {
-    const pos = getPos?.();
-    if (pos == null) return "table";
-    const $pos = editor.state.doc.resolve(pos);
-    for (let d = $pos.depth; d > 0; d--) {
-      const n = $pos.node(d);
-      if (n.type.name === "database") {
-        const view = n.attrs.views?.find(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (v: any) => v.id === n.attrs.activeViewId,
-        );
-        return view?.type ?? "table";
+  const activeViewType = useActiveViewType(editor, getPos);
+
+  // Add inside the component, after activeViewType is determined
+  const isBoardView = activeViewType === "board";
+
+  // Read cardPreview from parent database active view
+  const [cardPreview, setCardPreview] = useState<"none" | "cover" | "content">(
+    () => {
+      const pos = getPos?.();
+      if (pos == null) return "none";
+      const $pos = editor.state.doc.resolve(pos);
+      for (let d = $pos.depth; d > 0; d--) {
+        const n = $pos.node(d);
+        if (n.type.name === "database") {
+          const view = n.attrs.views?.find(
+            (v: { id: string }) => v.id === n.attrs.activeViewId,
+          );
+          return view?.cardPreview ?? "none";
+        }
       }
-    }
-    return "table";
-  });
+      return "none";
+    },
+  );
 
   useEffect(() => {
     const handler = () => {
@@ -134,10 +146,9 @@ export function TitleCellNodeView({
         const n = $pos.node(d);
         if (n.type.name === "database") {
           const view = n.attrs.views?.find(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (v: any) => v.id === n.attrs.activeViewId,
+            (v: { id: string }) => v.id === n.attrs.activeViewId,
           );
-          setActiveViewType(view?.type ?? "table");
+          setCardPreview(view?.cardPreview ?? "none");
           return;
         }
       }
@@ -148,18 +159,13 @@ export function TitleCellNodeView({
     };
   }, [editor, getPos]);
 
-  const getParentDatabase = useCallback(() => {
-    const pos = getPos?.();
-    if (pos == null) return null;
-    const $pos = editor.state.doc.resolve(pos);
-    for (let d = $pos.depth; d > 0; d--) {
-      const node = $pos.node(d);
-      if (node.type.name === "database") return node;
-    }
-    return null;
-  }, [editor, getPos]);
+  // Get the linked page cover
+  const linkedPage = useMemo(() => {
+    if (!titleAttrs.pageId || !pages) return null;
+    return findPage(pages, titleAttrs.pageId) ?? null;
+  }, [pages, titleAttrs.pageId]);
 
-  const db = getParentDatabase();
+  const db = useParentDatabase(editor, getPos);
 
   if (!db)
     return (
@@ -179,12 +185,19 @@ export function TitleCellNodeView({
       </NodeViewWrapper>
     );
 
+  // Cover block — only in board view with cardPreview === "cover"
+  const coverBlock =
+    isBoardView && cardPreview === "cover" ? (
+      <BoardCardCover page={linkedPage} recordId={node.attrs.id ?? ""} />
+    ) : null;
+
   return (
     <NodeViewWrapper
       as="div"
       data-type="title-cell"
-      className={`db-td db-td--title ${editing ? "editing" : ""} ${activeViewType === "list" ? "db-td--list" : ""}`}
+      className={`db-td db-td--title ${editing ? "editing" : ""} ${activeViewType === "list" ? "db-td--list" : ""}  ${isBoardView ? "db-td--board" : ""}`}
     >
+      {coverBlock}
       <CardItemGroup
         orientation="horizontal"
         className="db-cell-title"
