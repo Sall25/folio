@@ -3,6 +3,8 @@ import {
   type DatabaseView,
   type PropertyConfig,
   type TableView,
+  type BoardView,
+  isGroupableProperty,
 } from "../types/types";
 import type { DatabaseProperty } from "../types/types";
 
@@ -62,10 +64,7 @@ export function makeCellNode(prop: DatabaseProperty): JSONContent {
         content: [{ type: "paragraph" }],
       };
     case "text":
-      return {
-        type: "textCell",
-        attrs: { propertyId: prop.id },
-      };
+      return { type: "textCell", attrs: { propertyId: prop.id } };
     case "select":
       return {
         type: "selectCell",
@@ -120,27 +119,21 @@ export function makeCellNode(prop: DatabaseProperty): JSONContent {
         attrs: { propertyId: prop.id, value: null },
       };
     case "url":
-      return {
-        type: "urlCell",
-        attrs: { propertyId: prop.id },
-      };
+      return { type: "urlCell", attrs: { propertyId: prop.id } };
     case "email":
-      return {
-        type: "emailCell",
-        attrs: { propertyId: prop.id },
-      };
+      return { type: "emailCell", attrs: { propertyId: prop.id } };
     case "phone":
-      return {
-        type: "phoneCell",
-        attrs: { propertyId: prop.id },
-      };
+      return { type: "phoneCell", attrs: { propertyId: prop.id } };
   }
   return {};
 }
 
+// properties is optional — only needed for board to auto-pick groupByPropertyId.
+// Status is preferred over select, matching Notion's behavior.
 export function makeDefaultView(
   type: DatabaseView["type"],
   name: string,
+  properties: DatabaseProperty[] = [],
 ): DatabaseView {
   const base = {
     id: makeId(),
@@ -158,15 +151,26 @@ export function makeDefaultView(
         propertyOrder: [],
         frozenPropertyId: null,
       };
-    case "board":
+
+    case "board": {
+      // Prefer status → select → multi_select → checkbox, matching Notion
+      const groupProp =
+        properties.find((p) => p.config.type === "status") ??
+        properties.find((p) => p.config.type === "select") ??
+        properties.find((p) => isGroupableProperty(p.config.type)) ??
+        null;
+
       return {
         ...base,
         type: "board",
-        groupByPropertyId: "",
+        groupByPropertyId: groupProp?.id ?? "",
         showEmptyGroups: false,
-      };
+      } satisfies BoardView;
+    }
+
     case "list":
       return { ...base, type: "list", visibleProperties: [] };
+
     case "gallery":
       return {
         ...base,

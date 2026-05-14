@@ -545,7 +545,13 @@ export const DatabaseNode = Node.create({
             if (node.type.name !== "database" || node.attrs.id !== nodeId)
               return;
 
-            const newView = makeDefaultView(type, name);
+            // Pass properties so board view can auto-pick groupByPropertyId
+            const newView = makeDefaultView(
+              type,
+              name,
+              node.attrs.properties as DatabaseProperty[],
+            );
+
             tr.setNodeMarkup(pos, undefined, {
               ...node.attrs,
               views: [...node.attrs.views, newView],

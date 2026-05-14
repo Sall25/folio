@@ -75,15 +75,14 @@
  display: grid;
   height: 34px;
   border: none !important;
+  align-items: baseline;
 
-  .db-list-record{
-    &__row{
-      display: grid;
-      [data-node-view-content],
-      [data-node-view-content-react]{
-       display: contents;
-     }
-  }
-
+  &__row{
+    display: grid;
+    align-items: baseline;
+    [data-node-view-content],
+    [data-node-view-content-react]{
+      display: contents;
+    }
   }
 }

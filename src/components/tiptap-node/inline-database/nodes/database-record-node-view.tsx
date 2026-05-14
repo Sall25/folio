@@ -8,6 +8,7 @@ import type { DatabaseAttrs } from "../types/types";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import type { Transaction } from "@tiptap/pm/state";
 import { DatabaseRecordListView } from "./database-record-list-view";
+import { DatabaseRecordBoardView } from "./database-record-board-view";
 
 export function DatabaseRecordNodeView(props: NodeViewProps) {
   const { node, getPos, editor } = props;
@@ -67,6 +68,11 @@ export function DatabaseRecordNodeView(props: NodeViewProps) {
   const attrs = db.attrs as DatabaseAttrs;
   const activeView =
     attrs.views.find((v) => v.id === attrs.activeViewId) ?? attrs.views[0];
+
+  // ── Board view ────────────────────────────────────────────────────────────
+  if (activeView?.type === "board") {
+    return <DatabaseRecordBoardView {...props} />;
+  }
 
   // ── List view ────────────────────────────────────────────────────────────
   if (activeView?.type === "list") {

@@ -846,10 +846,9 @@ function SortPanel({
 }
 
 // ── Group panel ────────────────────────────────────────────────────────────
-
 function GroupPanel({
   attrs,
-  /*  db,*/
+  db,
   activeView,
 }: {
   attrs: DatabaseAttrs;
@@ -859,7 +858,7 @@ function GroupPanel({
   if (!activeView) return null;
 
   const groupByPropertyId =
-    activeView?.type === "board"
+    activeView.type === "board"
       ? (activeView as BoardView).groupByPropertyId
       : null;
 
@@ -867,16 +866,23 @@ function GroupPanel({
     isGroupableProperty(p.config.type),
   );
 
-  // function setGroup(propertyId: ID) {
-  //   if (activeView?.type !== "board") return;
-  //   if (!activeView) return;
-  //   // db.updateView(activeView?.id, { groupByPropertyId: propertyId } as any);
-  // }
+  function setGroup(propertyId: ID | null) {
+    if (activeView?.type !== "board") return;
+    if (propertyId === null) {
+      db.updateView(activeView.id, {
+        groupByPropertyId: "",
+      } as Partial<BoardView>);
+    } else {
+      db.updateView(activeView.id, {
+        groupByPropertyId: propertyId,
+      } as Partial<BoardView>);
+    }
+  }
 
   return (
     <Card>
       <CardBody>
-        {activeView?.type !== "board" ? (
+        {activeView.type !== "board" ? (
           <span className="db-panel__empty">
             Switch to board view to enable grouping
           </span>
@@ -885,6 +891,7 @@ function GroupPanel({
             <div className="db-group-option">
               <button
                 className={`db-group-option__btn ${!groupByPropertyId ? "db-group-option__btn--active" : ""}`}
+                onClick={() => setGroup(null)}
               >
                 {!groupByPropertyId && <Check size={13} />}
                 <span>No grouping</span>
@@ -900,6 +907,7 @@ function GroupPanel({
                 <div key={p.id} className="db-group-option">
                   <button
                     className={`db-group-option__btn ${isActive ? "db-group-option__btn--active" : ""}`}
+                    onClick={() => setGroup(p.id)}
                   >
                     {isActive ? <Check size={13} /> : <Icon size={13} />}
                     <span>{p.name}</span>

@@ -24,6 +24,7 @@ import { PROPERTY_TYPE_ICONS } from "../types/property-type-meta";
 import { DatabaseProvider } from "./database-provider";
 import { ResizableNodeProvider } from "../../figure-node";
 import { DatabaseListNodeView } from "./database-list-node-view";
+import { DatabaseBoardNodeView } from "./database-board-node-view";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -76,14 +77,10 @@ export function DatabaseNodeView(props: NodeViewProps) {
     return () => el.removeEventListener("column:resize", handler);
   }, [attrs, updateAttributes]);
 
-  console.log(
-    "activeView type:",
-    db.activeView?.type,
-    "activeViewId:",
-    attrs.activeViewId,
-    "views:",
-    attrs.views.map((v) => ({ id: v.id, type: v.type })),
-  );
+  // ── Board view ───────────────────────────────────────────────────────────
+  if (db.activeView?.type === "board") {
+    return <DatabaseBoardNodeView {...props} />;
+  }
 
   // ── List view ──────────────────────────────────────────────────────────
   if (db.activeView?.type === "list") {

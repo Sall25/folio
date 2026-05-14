@@ -1,9 +1,13 @@
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
-import { Check } from "lucide-react";
-import type { CheckboxCellAttrs } from "../types/types";
-
-import "./checkbox-cell-node-view.scss";
+import type {
+  BoardView,
+  DatabaseAttrs,
+  CheckboxCellAttrs,
+} from "../types/types";
+import { CheckboxCellDisplay } from "../primitives/checkbox-cell-display";
 import { useActiveViewType } from "../hooks/use-active-view-type";
+import { useParentDatabase } from "../hooks/use-parent-database";
+import "./checkbox-cell-node-view.scss";
 
 export function CheckboxCellNodeView({
   node,
@@ -12,12 +16,17 @@ export function CheckboxCellNodeView({
   editor,
 }: NodeViewProps) {
   const attrs = node.attrs as CheckboxCellAttrs;
-
-  const onToggle = () => {
-    updateAttributes({ ...attrs, value: !attrs.value });
-  };
-
   const activeViewType = useActiveViewType(editor, getPos);
+  const db = useParentDatabase(editor, getPos);
+
+  // Hide when this cell is the group-by property in board view
+  if (activeViewType === "board" && db) {
+    const dbAttrs = db.attrs as DatabaseAttrs;
+    const activeView = dbAttrs.views.find(
+      (v) => v.id === dbAttrs.activeViewId,
+    ) as BoardView | undefined;
+    if (activeView?.groupByPropertyId === attrs.propertyId) return null;
+  }
 
   return (
     <NodeViewWrapper
@@ -26,15 +35,10 @@ export function CheckboxCellNodeView({
       className={`${activeViewType === "table" ? "db-td" : ""} db-td--checkbox`}
       style={{ margin: 0 }}
     >
-      <button
-        className={`db-checkbox ${attrs.value ? "db-checkbox--checked" : ""}`}
-        onClick={onToggle}
-        contentEditable={false}
-        aria-checked={attrs.value}
-        role="checkbox"
-      >
-        {attrs.value && <Check size={11} strokeWidth={3} />}
-      </button>
+      <CheckboxCellDisplay
+        value={attrs.value}
+        onChange={() => updateAttributes({ ...attrs, value: !attrs.value })}
+      />
     </NodeViewWrapper>
   );
 }

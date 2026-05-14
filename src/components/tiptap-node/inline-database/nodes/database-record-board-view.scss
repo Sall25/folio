@@ -1,0 +1,32 @@
+
+.db-board-card {
+  background: var(--tt-card-bg-color, #fff);
+  border: 1px solid var(--tt-border-color, #e5e5e5);
+  border-radius: var(--tt-radius-md, 6px);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  transition: box-shadow 0.1s ease;
+  // grid-column is set inline by the component
+  align-self: start; // don't stretch to fill row height
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.db-board-card__cells {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  // Each cell reads --db-board-card-props to decide if it should show.
+  // Cells whose property id is not in the list hide themselves.
+  // The title cell always shows.
+  [data-type="title-cell"] {
+    font-weight: 500;
+    font-size: 13px;
+  }
+}

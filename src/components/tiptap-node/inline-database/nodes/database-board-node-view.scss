@@ -1,0 +1,85 @@
+.node-database{
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.db-board {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-x: auto; /* Use auto for a cleaner look */
+  width: 100%;
+}
+
+.db-board__headers,
+.db-board__body,
+.db-board__footers {
+  display: grid;
+  gap: 12px;
+  min-width: max-content;
+  grid-auto-flow: dense;
+  width: max-content;
+}
+
+.db-board__records {
+  // This div wraps all record node views — it must be display:contents
+  // so the records' grid-column placement works against the parent grid
+  display: contents;
+   // Tiptap injects these wrapper divs between NodeViewContent and the actual
+  // record node views — make them all transparent to the grid
+  [data-node-view-content-react],
+  [data-node-view-wrapper]:not(.db-board-card),
+  .react-renderer {
+    display: contents;
+  }
+
+}
+
+// ── Column header ───────────────────────────────────────────────────────────
+
+.db-board-col-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tt-text-color);
+  border-bottom: 0.5px solid var(--tt-border-color);
+  margin-bottom: 10px;
+}
+
+.db-board-col-header__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.db-board-col-header__label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Column footer ───────────────────────────────────────────────────────────
+
+.db-board-col-footer__add {
+  justify-content: flex-start;
+  width: 100%;
+  border-radius: var(--tt-radius-sm);
+  color: var(--tt-text-tertiary);
+  font-size: 12px;
+}
+
+// ── Empty state ─────────────────────────────────────────────────────────────
+
+.db-board-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--tt-text-tertiary);
+  font-size: 13px;
+  text-align: center;
+}

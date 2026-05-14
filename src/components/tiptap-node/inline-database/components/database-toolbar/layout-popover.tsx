@@ -3,7 +3,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import type { DatabaseView } from "../../types/types";
+import type { DatabaseAttrs, DatabaseView } from "../../types/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   ChevronRight,
@@ -37,7 +37,9 @@ function ViewPallette({
 }) {
   return (
     <CardItemGroup
-      className={`items-center w-24 h-20 border m-1 ${active ? "border-brand" : ""}`}
+      className={`items-center w-24 h-20 border m-1 cursor-pointer ${
+        active ? "border-brand" : ""
+      }`}
       onClick={() => onSelect(type)}
     >
       <CardItemGroup className="items-center w-16 h-16 text-brand">
@@ -55,8 +57,10 @@ function ViewPallette({
     </CardItemGroup>
   );
 }
+
 interface LayoutPopoverProps {
   view: DatabaseView;
+  attrs: DatabaseAttrs;
   db: UseDatabaseReturn;
   showDbTitle?: boolean;
   showVLines?: boolean;
@@ -65,6 +69,7 @@ interface LayoutPopoverProps {
   onToggleShowVLines?: () => void;
   onToggleWrapAllCols?: () => void;
 }
+
 export function LayoutPopover({
   view,
   db,
@@ -78,7 +83,7 @@ export function LayoutPopover({
   const { editor } = useCurrentEditor();
 
   const onSelect = (type: DatabaseView["type"]) => {
-    if (view.type === type) return; // already active
+    if (view.type === type) return;
     db.addView(type, type.charAt(0).toUpperCase() + type.slice(1));
   };
 
@@ -92,7 +97,7 @@ export function LayoutPopover({
           <span className="tiptap-button-text">Layouts</span>
           <Spacer orientation="horizontal" />
           <span className="opacity-85" style={{ fontSize: 11 }}>
-            {view.type.toString().toUpperCase()}
+            {view.type.toUpperCase()}
           </span>
           <ChevronRight className="tiptap-button-icon-sub" />
         </Button>
@@ -104,12 +109,28 @@ export function LayoutPopover({
           </CardHeader>
           <CardBody className="w-full justify-start mt-2">
             <CardItemGroup orientation="horizontal">
-              <ViewPallette onSelect={onSelect} active={true} type="table" />
-              <ViewPallette onSelect={onSelect} type="list" />
+              <ViewPallette
+                onSelect={onSelect}
+                active={view.type === "table"}
+                type="table"
+              />
+              <ViewPallette
+                onSelect={onSelect}
+                active={view.type === "list"}
+                type="list"
+              />
             </CardItemGroup>
             <CardItemGroup orientation="horizontal">
-              <ViewPallette onSelect={onSelect} type="board" />
-              <ViewPallette onSelect={onSelect} type="gallery" />
+              <ViewPallette
+                onSelect={onSelect}
+                active={view.type === "board"}
+                type="board"
+              />
+              <ViewPallette
+                onSelect={onSelect}
+                active={view.type === "gallery"}
+                type="gallery"
+              />
             </CardItemGroup>
 
             <Separator orientation="horizontal" />
