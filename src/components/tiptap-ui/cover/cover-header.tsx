@@ -34,7 +34,7 @@ function IconButton({
   hasThreads?: boolean;
   page: Page;
 }) {
-  const { activePageId } = useActivePage();
+  const { activePageId, isLoading } = useActivePage();
 
   const hasCoverImage = !!page.cover.coverImage;
   const hasGradient = !!(page.cover as any).gradient;
@@ -43,12 +43,16 @@ function IconButton({
   const cover = useMemo(
     () => page.cover,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activePageId, page],
+    [activePageId, page, isLoading],
   );
 
   const [optimisticCover, setOptimisticCover] = useState<
     Page["cover"] | undefined
   >();
+
+  useEffect(() => {
+    setOptimisticCover(undefined);
+  }, [activePageId]);
 
   const displayCover = optimisticCover ?? cover;
   const { updatePageAsync } = useActivePage();
@@ -56,19 +60,13 @@ function IconButton({
   const onSelectIconAsync = useCallback(
     async (name: string, color?: string) => {
       if (!cover) return;
-      setOptimisticCover({ ...cover, iconName: name, color, target });
       await updatePageAsync({
         ...page,
         cover: { ...page.cover, iconName: name, target, color },
       });
-      setOptimisticCover(undefined);
     },
     [updatePageAsync, page, target, cover],
   );
-
-  useEffect(() => {
-    setOptimisticCover(undefined);
-  }, [activePageId]);
 
   return (
     <div

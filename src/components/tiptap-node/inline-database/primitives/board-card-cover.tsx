@@ -5,9 +5,14 @@ import { getPlaceholderColor } from "../utils";
 interface BoardCardCoverProps {
   page: Page | null;
   recordId: string;
+  height?: number;
 }
 
-export function BoardCardCover({ page, recordId }: BoardCardCoverProps) {
+export function BoardCardCover({
+  page,
+  recordId,
+  height = 130,
+}: BoardCardCoverProps) {
   const cover = page?.cover;
   const coverImage = cover?.coverImage;
   const gradient = (cover as any)?.gradient as string | undefined;
@@ -16,16 +21,19 @@ export function BoardCardCover({ page, recordId }: BoardCardCoverProps) {
   // Image cover
   if (coverImage) {
     return (
-      <div className="db-board-card__cover">
+      <div className="db-board-card__cover" style={{ height }}>
         <img
           src={coverImage}
           alt="cover"
           draggable={false}
           className="db-board-card__cover-img"
           style={{
-            // Mirror exactly what CoverImage does:
-            // height: 200%, top offset by positionY
+            position: "absolute",
+            width: "100%",
+            height: "200%",
+            objectFit: "cover",
             top: `${-(positionY / 100) * 50}%`,
+            left: 0,
           }}
         />
       </div>
@@ -35,7 +43,10 @@ export function BoardCardCover({ page, recordId }: BoardCardCoverProps) {
   // Gradient cover
   if (gradient) {
     return (
-      <div className="db-board-card__cover" style={{ background: gradient }} />
+      <div
+        className="db-board-card__cover"
+        style={{ background: gradient, height }}
+      />
     );
   }
 
@@ -43,7 +54,7 @@ export function BoardCardCover({ page, recordId }: BoardCardCoverProps) {
   return (
     <div
       className="db-board-card__cover"
-      style={{ background: getPlaceholderColor(recordId) }}
+      style={{ background: getPlaceholderColor(recordId), height }}
     />
   );
 }

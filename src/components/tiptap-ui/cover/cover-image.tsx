@@ -19,19 +19,35 @@ export default function CoverImage({
   const [btnPosition, setBtnPosition] = useState({ top: 0, right: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const [hovering, setHovering] = useState(false);
-  const [coverImage, setCoverImage] = useState(page.cover.coverImage);
-  const [localPositionY, setLocalPositionY] = useState(
-    (page.cover as any)?.positionY ?? 50,
-  );
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [pendingCoverImage, setPendingCoverImage] = useState<string | null>(
+    null,
+  );
+  const [localPositionY, setLocalPositionY] = useState<number | null>(null);
+
+  // Always derive from props, local state only overrides during active editing
+  const coverImage = pendingCoverImage ?? page.cover.coverImage;
+  const positionY = localPositionY ?? (page.cover as any)?.positionY ?? 50;
+
+  const onCoverImageChange = useCallback((url: string) => {
+    setPendingCoverImage(url);
+  }, []);
+
+  const handlePositionChange = useCallback((y: number) => {
+    setLocalPositionY(y);
+  }, []);
+
+  const handlePositionDragEnd = useCallback(async () => {
+    const y = localPositionY ?? (page.cover as any)?.positionY ?? 50;
+    await updatePageAsync({
+      ...page,
+      cover: { ...page.cover, positionY: y },
+    });
+    setLocalPositionY(null); // clear override after save
+  }, [updatePageAsync, page, localPositionY]);
 
   const onPopoverOpenChange = useCallback(
     (open: boolean) => setPopoverOpen(open),
-    [],
-  );
-
-  const onCoverImageChange = useCallback(
-    (url: string) => setCoverImage(url),
     [],
   );
 
@@ -44,18 +60,6 @@ export default function CoverImage({
       });
     }
   }, []);
-
-  const handlePositionChange = useCallback(
-    (y: number) => setLocalPositionY(y),
-    [],
-  );
-
-  const handlePositionDragEnd = useCallback(async () => {
-    await updatePageAsync({
-      ...page,
-      cover: { ...page.cover, positionY: localPositionY },
-    });
-  }, [updatePageAsync, page, localPositionY]);
 
   const showControls = hovering || popoverOpen;
 
@@ -87,7 +91,7 @@ export default function CoverImage({
         src={coverImage ?? ""}
         alt="cover"
         draggable={false}
-        style={{ top: `${-(localPositionY / 100) * 50}%` }}
+        style={{ top: `${-(positionY / 100) * 50}%` }}
       />
 
       {showControls && (

@@ -23,6 +23,7 @@ import {
   useParentDatabase,
 } from "../hooks/use-parent-database";
 import { BoardCardCover } from "../primitives/board-card-cover";
+import { BoardCardContent } from "../primitives/board-card-content";
 
 export function TitleCellNodeView({
   node,
@@ -191,6 +192,11 @@ export function TitleCellNodeView({
       <BoardCardCover page={linkedPage} recordId={node.attrs.id ?? ""} />
     ) : null;
 
+  const contentBlock =
+    isBoardView && cardPreview === "content" ? (
+      <BoardCardContent page={linkedPage} />
+    ) : null;
+
   return (
     <NodeViewWrapper
       as="div"
@@ -198,6 +204,7 @@ export function TitleCellNodeView({
       className={`db-td db-td--title ${editing ? "editing" : ""} ${activeViewType === "list" ? "db-td--list" : ""}  ${isBoardView ? "db-td--board" : ""}`}
     >
       {coverBlock}
+      {contentBlock}
       <CardItemGroup
         orientation="horizontal"
         className="db-cell-title"

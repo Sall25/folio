@@ -8,6 +8,7 @@ import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import { useActivePage } from "../use-active-page";
+import { BoardCardCover } from "src/components/tiptap-node/inline-database/primitives/board-card-cover";
 
 function formatRelativeTime(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
@@ -50,11 +51,30 @@ function getExcerpt(page: Page): string {
 
 function PinnedCard({ page, onClick }: { page: Page; onClick: () => void }) {
   const excerpt = getExcerpt(page);
+  const hasCover = !!(page.cover?.coverImage || (page.cover as any)?.gradient);
 
   return (
     <div className="home-pinned-card" onClick={onClick}>
       <div className="home-pinned-card__cover">
-        <PageItemIcon cover={page.cover} styles={{ fontSize: 28 }} />
+        {hasCover ? (
+          <>
+            <BoardCardCover
+              page={page}
+              recordId={String(page.id)}
+              height={80}
+            />
+            {page.cover?.iconName && (
+              <div className="home-pinned-card__cover-icon">
+                <PageItemIcon cover={page.cover} styles={{ fontSize: 20 }} />
+              </div>
+            )}
+          </>
+        ) : (
+          <PageItemIcon
+            cover={page.cover}
+            styles={{ fontSize: 40, width: 40 }}
+          />
+        )}
       </div>
       <div className="home-pinned-card__title">{page.title || "Untitled"}</div>
       <div className="home-pinned-card__meta">
@@ -64,7 +84,6 @@ function PinnedCard({ page, onClick }: { page: Page; onClick: () => void }) {
     </div>
   );
 }
-
 function RecentRow({ page, onClick }: { page: Page; onClick: () => void }) {
   return (
     <div className="home-recent-row" onClick={onClick}>
@@ -125,20 +144,6 @@ export function HomePageContent({ sidebarWidth }: { sidebarWidth: number }) {
             <h1 className="home-page-content__title">Home</h1>
             <p className="home-page-content__sub">Your workspace at a glance</p>
           </div>
-          {/* <Button
-            // className="home-page-content__new-btn"
-            data-state-active="on"
-            style={{
-              background: "var(--tt-brand-color-400)",
-              color: "white",
-              borderRadius: "var(--tt-radius-sm)",
-            }}
-            onClick={() =>
-              addPageAndActivateAsync({ title: "New Page", parentId: null })
-            }
-          >
-            + New page
-          </Button> */}
         </div>
 
         {pinned.length > 0 && (
@@ -173,7 +178,7 @@ export function HomePageContent({ sidebarWidth }: { sidebarWidth: number }) {
             <div className="home-recent-list">
               {recent.map((page) => (
                 <CardItemGroup orientation="vertical" key={page.id}>
-                  <Separator orientation="horizontal" />
+                  <Separator orientation="horizontal" style={{ height: 0.2 }} />
                   <RecentRow page={page} onClick={() => navigate(page.id)} />
                 </CardItemGroup>
               ))}

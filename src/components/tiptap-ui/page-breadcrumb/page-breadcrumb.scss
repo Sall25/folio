@@ -14,6 +14,7 @@
   &__separator {
     color: var(--tt-text-color, rgba(255, 255, 255, 0.35));
     flex-shrink: 0;
+    padding: 0 5px;
   }
 
   &__label {
