@@ -81,9 +81,30 @@ export function TitleCellNodeView({
     if (pageCreationAttempted.current) return;
     pageCreationAttempted.current = true;
 
+    // Resolve databaseId and recordId from the ProseMirror tree
+    const pos = getPos?.();
+    let databaseId: string | undefined;
+    let recordId: string | undefined;
+
+    if (pos != null) {
+      const $pos = editor.state.doc.resolve(pos);
+      for (let d = $pos.depth; d > 0; d--) {
+        const n = $pos.node(d);
+        if (n.type.name === "databaseRecord" && !recordId) {
+          recordId = n.attrs.id;
+        }
+        if (n.type.name === "database" && !databaseId) {
+          databaseId = n.attrs.id;
+        }
+        if (recordId && databaseId) break;
+      }
+    }
+
     addPageAsync({
       title: node.textContent,
       parentId: activePageId ?? null,
+      databaseId,
+      recordId,
     })
       .then((newPage) =>
         updateAttributes({
@@ -96,6 +117,27 @@ export function TitleCellNodeView({
         console.log("failed to add page in title cell node view", reason),
       );
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // useEffect(() => {
+  //   if (titleAttrs.pageId !== null) return;
+  //   if (pageCreationAttempted.current) return;
+  //   pageCreationAttempted.current = true;
+
+  //   addPageAsync({
+  //     title: node.textContent,
+  //     parentId: activePageId ?? null,
+  //   })
+  //     .then((newPage) =>
+  //       updateAttributes({
+  //         ...titleAttrs,
+  //         pageId: newPage.id,
+  //         parentId: activePageId ?? null,
+  //       }),
+  //     )
+  //     .catch((reason) =>
+  //       console.log("failed to add page in title cell node view", reason),
+  //     );
+  // }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!titleAttrs.pageId || !pages) return;

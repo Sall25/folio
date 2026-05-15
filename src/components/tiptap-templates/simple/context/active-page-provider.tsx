@@ -82,13 +82,18 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
       if (changed) {
         debounceUpdatePageFastRef.current({
           ...activePageRef.current,
-          title: text ?? activePageRef.current.title, // sync title property
+          title: text ?? activePageRef.current.title,
           content: editor.getJSON(),
+          // preserve record link fields — not part of editor content
+          databaseId: activePageRef.current.databaseId,
+          recordId: activePageRef.current.recordId,
         });
       } else {
         debounceUpdatePageRef.current({
           ...activePageRef.current,
           content: editor.getJSON(),
+          databaseId: activePageRef.current.databaseId,
+          recordId: activePageRef.current.recordId,
         });
       }
     };
@@ -125,33 +130,6 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePageId, isLoading]);
-
-  // useEffect(() => {
-  //   if (!editor) return;
-  //   if (!pages) return;
-
-  //   // Find the new page synchronously right now, not via ref
-  //   const newPage =
-  //     activePageId === undefined
-  //       ? null
-  //       : (findPage(pages, activePageId) ?? null);
-
-  //   if (!newPage) return;
-
-  //   // Capture content now, not in a microtask
-  //   const content = newPage.content;
-
-  //   // Still need to defer past the current render so the editor
-  //   // is done with any in-flight transactions
-  //   queueMicrotask(() => {
-  //     if (activePageId !== newPage.id) {
-  //       return;
-  //     }
-  //     editor.commands.setContent(content, { emitUpdate: false });
-  //   });
-
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [activePageId, isLoading]);
 
   useEffect(() => {
     if (!editor || !pages) return;

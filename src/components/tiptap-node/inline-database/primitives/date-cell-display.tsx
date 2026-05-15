@@ -31,7 +31,11 @@ export function DateCellDisplay({
   const trigger = (
     <Button
       variant="ghost"
-      style={{ background: "transparent", width: "100%" }}
+      style={{
+        background: "transparent",
+        width: "100%",
+        justifyContent: "flex-start",
+      }}
     >
       <span>{date ? formatDate(date) : ""}</span>
     </Button>

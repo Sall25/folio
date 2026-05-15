@@ -51,10 +51,14 @@ const addPageFnAsync = async ({
   title,
   parentId,
   category,
+  databaseId,
+  recordId,
 }: {
   title: string;
   parentId: number | null;
   category?: PageCategory;
+  databaseId?: string;
+  recordId?: string;
 }) => {
   const res = await fetch("/api/pages", {
     method: "POST",
@@ -62,6 +66,8 @@ const addPageFnAsync = async ({
       title,
       parentId,
       category,
+      databaseId,
+      recordId,
       children: [],
       settings: {
         width: "medium",
@@ -128,6 +134,9 @@ export interface UsePagesReturn {
   addPageAsync: (data: {
     title: string;
     parentId: number | null;
+    category?: PageCategory;
+    databaseId?: string;
+    recordId?: string;
   }) => Promise<Page>;
   addChildPageAsync: (parentId: number) => Promise<void>;
   addRootPageAsync: () => Promise<void>;
@@ -224,6 +233,8 @@ export function usePages(): UsePagesReturn {
       title: string;
       parentId: number | null;
       category?: PageCategory;
+      databaseId?: string;
+      recordId?: string;
     }) => addPageAsyncRef.current(data),
     [],
   );

@@ -30,7 +30,7 @@ export function SelectCellDisplay({
         background: displayed.color,
         minHeight: 18,
         height: 20,
-        width: 80,
+        width: "fit-content",
         justifyContent: "center",
         borderRadius: "var(--tt-radius-sm)",
       }}

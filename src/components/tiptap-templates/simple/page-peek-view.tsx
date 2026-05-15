@@ -19,6 +19,7 @@ import type { Target } from "src/components/tiptap-ui/cover/types";
 import { FloatingMenu } from "@tiptap/react/menus";
 import { FloatingActions } from "./floating-actions";
 import { CoverHeader } from "src/components/tiptap-ui/cover";
+import { RecordPropertyPanel } from "./record-property-panel";
 
 const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
   open,
@@ -158,11 +159,12 @@ export function PagePeekView({
     <Card
       className="page-peek"
       style={{
-        padding: "5px 20px",
-        marginTop: "var(--tt-toolbar-height)",
+        //    marginTop: "var(--tt-toolbar-height)",
         position: "fixed",
         borderTopRightRadius: 0,
         borderBottomRightRadius: 0,
+        top: 0,
+        bottom: 0,
       }}
     >
       <CardItemGroup
@@ -190,7 +192,7 @@ export function PagePeekView({
           </Button>
         </CardItemGroup>
       </CardItemGroup>
-      <CardBody className="simple-editor-center">
+      <CardBody style={{ width: "100%" }}>
         <CoverHeader
           collapsed={false}
           sidebarWidth={0}
@@ -199,8 +201,9 @@ export function PagePeekView({
           hasThreads={false}
           providedPage={page}
         />
+        <RecordPropertyPanel page={page} editor={mainEditor} />
         <div>
-          <EditorContent editor={editor} className="simple-editor-content" />
+          <EditorContent editor={editor} className="page-peek-content" />
         </div>
         <FloatingMenuMemo
           editor={editor}

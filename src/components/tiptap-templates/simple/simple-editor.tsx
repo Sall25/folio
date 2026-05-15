@@ -71,27 +71,29 @@ function SimpleEditorMain({
       {activePageId === undefined ? (
         <HomePageContent sidebarWidth={sidebarWidth} />
       ) : (
-        <div
-          className="simple-editor-main"
-          style={{
-            marginRight: versionWidth,
-            transition: "margin-right 0.2s ease",
-          }}
-        >
-          <SimpleEditorContent
-            sidebarWidth={sidebarWidth}
-            collapsed={collapsed}
-          />
-          <VersionHistorySidebar
-            open={versionHistoryOpen}
-            onClose={() => onVersionHistoryOpenChanged(false)}
-            userColor="#7c3aed"
-          />
-          <aside className="simple-editor-sidebar-right" />
+        <>
+          <div
+            className="simple-editor-main"
+            style={{
+              marginRight: versionWidth,
+              transition: "margin-right 0.2s ease",
+            }}
+          >
+            <SimpleEditorContent
+              sidebarWidth={sidebarWidth}
+              collapsed={collapsed}
+            />
+            <VersionHistorySidebar
+              open={versionHistoryOpen}
+              onClose={() => onVersionHistoryOpenChanged(false)}
+              userColor="#7c3aed"
+            />
+            <aside className="simple-editor-sidebar-right" />
+          </div>
           {page && (
             <PagePeekView page={page} onClose={() => setPeekPageId(null)} />
           )}
-        </div>
+        </>
       )}
     </>
   );
