@@ -19,12 +19,17 @@ export function MorePopover({
 }: {
   onTriggerVersionHistory?: () => void;
 }) {
-  const [fullWidth, setFullWidth] = useState<boolean>(false);
-  const [smallText, setSmallText] = useState<boolean>(false);
-  const [locked, setLocked] = useState<boolean>(false);
-  const [open, setOpen] = useState(false);
-
   const { activePage, updateSettingsAsync } = useActivePage();
+  const [fullWidth, setFullWidth] = useState<boolean>(
+    activePage?.settings.width === "full",
+  );
+  const [smallText, setSmallText] = useState<boolean>(
+    activePage?.settings.text === "small",
+  );
+  const [locked, setLocked] = useState<boolean>(
+    activePage?.settings.locked === true,
+  );
+  const [open, setOpen] = useState(false);
 
   const onFullWidthChangeAsync = useCallback(
     async (checked: boolean) => {

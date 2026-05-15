@@ -105,14 +105,16 @@ export function DatabaseRecordBoardView(props: NodeViewProps) {
       })()
     : [];
 
-  const allColumns: ColumnDef[] = [
-    { id: NONE_COLUMN_ID, label: "No group" },
-    ...columnDefs,
-  ];
+  const allColumns: ColumnDef[] = [...columnDefs];
 
   const columnIndex = allColumns.findIndex((c) => c.id === columnId);
-  // 1-based for CSS grid-column, fall back to none column (1) if not found
-  const gridColumn = columnIndex >= 0 ? columnIndex + 1 : 1;
+
+  // If no column found, hide the card entirely
+  if (columnIndex < 0) {
+    return <NodeViewWrapper as="div" style={{ display: "none" }} />;
+  }
+
+  const gridColumn = columnIndex + 1;
 
   // Visible properties for the card — exclude the groupBy property from the
   // card body since it's represented by the column header, exclude hidden ones

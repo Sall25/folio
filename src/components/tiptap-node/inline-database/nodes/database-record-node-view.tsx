@@ -9,6 +9,7 @@ import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import type { Transaction } from "@tiptap/pm/state";
 import { DatabaseRecordListView } from "./database-record-list-view";
 import { DatabaseRecordBoardView } from "./database-record-board-view";
+import { DatabaseRecordGalleryView } from "./database-record-gallery-view";
 
 export function DatabaseRecordNodeView(props: NodeViewProps) {
   const { node, getPos, editor } = props;
@@ -69,6 +70,10 @@ export function DatabaseRecordNodeView(props: NodeViewProps) {
   const activeView =
     attrs.views.find((v) => v.id === attrs.activeViewId) ?? attrs.views[0];
 
+  // ── Gallery view ────────────────────────────────────────────────────────────
+  if (activeView.type === "gallery") {
+    return <DatabaseRecordGalleryView {...props} />;
+  }
   // ── Board view ────────────────────────────────────────────────────────────
   if (activeView?.type === "board") {
     return <DatabaseRecordBoardView {...props} />;

@@ -25,7 +25,7 @@ export function FormulaCellNodeView({ node, editor, getPos }: NodeViewProps) {
         paddingLeft: 10,
         borderRight:
           activeViewType === "table" ? "1px solid var(--tt-border-color)" : "",
-        margin: 0,
+        margin: "0 5px",
       }}
     >
       <div className="formula-cell">

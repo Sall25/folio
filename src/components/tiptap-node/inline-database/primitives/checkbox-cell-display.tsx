@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 
 interface CheckboxCellDisplayProps {
   value: boolean;
@@ -12,14 +13,22 @@ export function CheckboxCellDisplay({
   readonly = false,
 }: CheckboxCellDisplayProps) {
   return (
-    <button
+    <Button
+      variant="ghost"
       className={`db-checkbox ${value ? "db-checkbox--checked" : ""}`}
       onClick={readonly ? undefined : onChange}
       contentEditable={false}
       aria-checked={value}
       role="checkbox"
     >
-      {value && <Check size={11} strokeWidth={3} />}
-    </button>
+      {value && (
+        <Check
+          className="tiptap-button-icon"
+          size={11}
+          strokeWidth={3}
+          style={{ width: 11 }}
+        />
+      )}
+    </Button>
   );
 }

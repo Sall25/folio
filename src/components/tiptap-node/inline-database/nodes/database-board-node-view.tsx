@@ -16,6 +16,8 @@ import "./database-board-node-view.scss";
 import { SelectCellDisplay } from "../primitives/select-cell-display";
 import { StatusCellDisplay } from "../primitives/status-cell-display";
 import { CheckboxCellDisplay } from "../primitives/checkbox-cell-display";
+import { useMemo, useRef } from "react";
+import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 
 // ── Column definition helpers ───────────────────────────────────────────────
 
@@ -79,28 +81,41 @@ export function DatabaseBoardNodeView({
   const activeView = db.activeView as BoardView | undefined;
   const groupByPropertyId = activeView?.groupByPropertyId ?? "";
 
+  const { activePage } = useActivePage();
+
   const columnDefs = groupByPropertyId
     ? getColumnDefs(attrs, groupByPropertyId)
     : [];
 
   // "No [property]" column always first, matching Notion
   const groupProp = attrs.properties.find((p) => p.id === groupByPropertyId);
-  const noneColumn: ColumnDef = {
-    id: NONE_COLUMN_ID,
-    label: groupProp ? `No ${groupProp.name}` : "No group",
-  };
 
   // All columns including the none column — this is what records use
   // to compute their grid-column index (1-based)
-  const allColumns: ColumnDef[] = [noneColumn, ...columnDefs];
+  const allColumns: ColumnDef[] = [...columnDefs];
+
+  const boardRef = useRef<HTMLDivElement>(null);
+
+  const colWidth = useMemo(() => {
+    const width = activePage?.settings.width === "full" ? 900 : 700;
+    const gap = 12;
+    const totalGaps = gap * (allColumns.length - 1);
+    const padding = 80;
+    // Divide evenly across all columns, minimum 200px
+    return Math.max(
+      200,
+      Math.floor((width - padding - totalGaps) / allColumns.length),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allColumns.length, activePage?.settings.width]);
 
   // Serialize column defs and groupByPropertyId to CSS custom properties
   // so DatabaseRecordBoardView can read them without prop drilling
   const boardVars = {
     "--db-board-group-prop": JSON.stringify(groupByPropertyId),
     "--db-board-columns": JSON.stringify(allColumns),
+    "--db-board-col-width": `${colWidth}px`,
   } as React.CSSProperties;
-
   if (!groupByPropertyId || columnDefs.length === 0) {
     return (
       <NodeViewWrapper>
@@ -141,13 +156,16 @@ export function DatabaseBoardNodeView({
         updateAttributes={updateAttributes}
       >
         <CardItemGroup>
-          <DatabaseToolbar
-            attrs={attrs}
-            db={db}
-            onUpdateAttributes={(a) => updateAttributes(a)}
-          />
+          <div className="db-board__toolbar-sticky">
+            <DatabaseToolbar
+              attrs={attrs}
+              db={db}
+              onUpdateAttributes={(a) => updateAttributes(a)}
+            />
+          </div>
 
           <div
+            ref={boardRef}
             className="db-board"
             data-type="database-board"
             style={boardVars}
@@ -161,12 +179,7 @@ export function DatabaseBoardNodeView({
             >
               {allColumns.map((col) => (
                 <div key={col.id} className="db-board-col-header">
-                  {col.id === NONE_COLUMN_ID ? (
-                    // None column — just a muted label
-                    <span className="db-board-col-header__label db-board-col-header__label--none">
-                      {noneColumn.label}
-                    </span>
-                  ) : groupProp?.config.type === "select" ? (
+                  {groupProp?.config.type === "select" ? (
                     <SelectCellDisplay
                       value={
                         (

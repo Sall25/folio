@@ -1,0 +1,56 @@
+.db-gallery-card {
+  background: var(--tt-card-bg-color, #fff);
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md, 8px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: box-shadow 0.1s ease;
+  align-self: start;
+  height: var(--db-gallery-card-height, 280px);
+  overflow: hidden;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  // Cover bleeds to edges — no margin needed since card has overflow:hidden
+  .db-board-card__cover {
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+  }
+}
+
+.db-gallery-card__placeholder {
+  width: 100%;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+.db-gallery-card__body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.db-gallery-card__cells {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  // Tiptap wrappers
+  .react-renderer,
+  [data-node-view-content-react],
+  [data-node-view-wrapper] {
+    display: contents;
+  }
+
+  [data-type="title-cell"] {
+    font-weight: 500;
+    font-size: 13px;
+  }
+}

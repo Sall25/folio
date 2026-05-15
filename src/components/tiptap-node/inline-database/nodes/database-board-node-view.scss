@@ -1,13 +1,31 @@
-.node-database{
-  overflow-x: auto;
-  overflow-y: hidden;
+.node-database > [data-node-view-wrapper] {
+  // Remove overflow from here
 }
+
 .db-board {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  overflow-x: auto; /* Use auto for a cleaner look */
-  width: 100%;
+  overflow-x: auto; // scroll only here
+  // width: max-content; // grow to fit all columns
+  // min-width: 100%;    // at least fill the container
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  // Hide scrollbar when content fits, show when actually needed
+  &:not(:hover) {
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &:hover {
+    scrollbar-width: thin;
+  }
+}
+
+.db-board__toolbar-sticky {
+ width: 100%;
 }
 
 .db-board__headers,

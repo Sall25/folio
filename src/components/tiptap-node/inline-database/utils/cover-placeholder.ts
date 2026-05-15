@@ -1,12 +1,12 @@
 const PLACEHOLDER_COLORS = [
-  "#dbe9f4", // light blue
-  "#fde8d8", // light orange
-  "#e8f5e9", // light green
-  "#f3e5f5", // light purple
-  "#fff8e1", // light yellow
-  "#fce4ec", // light pink
-  "#e0f7fa", // light cyan
-  "#f1f8e9", // light lime
+  "var(--tt-color-highlight-yellow-contrast)",
+  "var(--tt-color-highlight-blue-contrast)",
+  "var(--tt-color-highlight-green-contrast)",
+  "var(--tt-color-highlight-purple-contrast)",
+  "var(--tt-color-highlight-pink-contrast)",
+  "var(--tt-color-highlight-brown-contrast)",
+  "var(--tt-color-highlight-orange-contrast)",
+  "var(--tt-color-highlight-red-contrast)",
 ];
 
 export function getPlaceholderColor(id: string): string {

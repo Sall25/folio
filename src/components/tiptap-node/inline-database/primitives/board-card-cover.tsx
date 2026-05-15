@@ -50,10 +50,12 @@ export function BoardCardCover({
     );
   }
 
+  console.log("recordId:", recordId, "color:", getPlaceholderColor(recordId));
+
   // Placeholder — deterministic color from record id, matching Notion
   return (
     <div
-      className="db-board-card__cover"
+      className="db-board-card__placeholder"
       style={{ background: getPlaceholderColor(recordId), height }}
     />
   );

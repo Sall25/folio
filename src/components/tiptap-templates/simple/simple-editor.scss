@@ -269,10 +269,12 @@ body,
   }
   &[data-size="medium"] {
     max-width: 700px;
+    --db-editor-width: 700px;
   }
 
   &[data-size="full"] {
     max-width: 900px;
+    --db-editor-width: 900px;
   }
 
   &[data-text="small"]{

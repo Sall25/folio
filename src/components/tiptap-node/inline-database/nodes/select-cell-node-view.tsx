@@ -56,7 +56,7 @@ export function SelectCellNodeView({
       style={{
         display: "flex",
         padding: "0 5px",
-        justifyContent: "center",
+
         margin: 0,
       }}
     >

@@ -11,9 +11,11 @@
 .db-checkbox {
   width: 16px;
   height: 16px;
+  min-width: 16px;
+  min-height: 16px;
   border-radius: var(--tt-radius-xs);
   border: 1.5px solid var(--tt-border-color);
-  background: transparent;
+  background: transparent !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,19 +23,25 @@
   transition: background var(--tt-transition-duration-short),
               border-color var(--tt-transition-duration-short);
   flex-shrink: 0;
+  margin: 0 5px !important;
+ 
 
   &:hover {
     border-color: var(--tt-brand-color-400);
   }
 
   &--checked {
-    background: var(--tt-brand-color-500);
-    border-color: var(--tt-brand-color-500);
-    color: white;
+  background: var(--tt-brand-color-500) !important;
+  border-color: var(--tt-brand-color-500);
 
-    .dark & {
-      background: var(--tt-brand-color-400);
-      border-color: var(--tt-brand-color-400);
-    }
+  svg {
+    stroke: white;
+    color: white;
   }
+
+  .dark & {
+    background: var(--tt-brand-color-400);
+    border-color: var(--tt-brand-color-400);
+  }
+}
 }

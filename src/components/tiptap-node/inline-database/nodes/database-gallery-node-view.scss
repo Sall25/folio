@@ -1,0 +1,20 @@
+.db-gallery {
+  width: 100%;
+}
+
+.db-gallery__body {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--db-gallery-card-width, 220px), 1fr)
+  );
+  gap: 12px;
+  align-items: start;
+
+  // Tiptap wrappers — transparent to the grid
+  .react-renderer,
+  [data-node-view-content-react],
+  [data-node-view-wrapper]:not(.db-gallery-card) {
+    display: contents;
+  }
+}

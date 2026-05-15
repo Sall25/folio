@@ -25,6 +25,7 @@ import { DatabaseProvider } from "./database-provider";
 import { ResizableNodeProvider } from "../../figure-node";
 import { DatabaseListNodeView } from "./database-list-node-view";
 import { DatabaseBoardNodeView } from "./database-board-node-view";
+import { DatabaseGalleryNodeView } from "./database-gallery-node-view";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -78,24 +79,18 @@ export function DatabaseNodeView(props: NodeViewProps) {
   }, [attrs, updateAttributes]);
 
   // ── Board view ───────────────────────────────────────────────────────────
+  if (db.activeView.type === "gallery") {
+    return <DatabaseGalleryNodeView {...props} />;
+  }
+
+  // ── Board view ───────────────────────────────────────────────────────────
   if (db.activeView?.type === "board") {
     return <DatabaseBoardNodeView {...props} />;
   }
 
   // ── List view ──────────────────────────────────────────────────────────
   if (db.activeView?.type === "list") {
-    return (
-      <NodeViewWrapper>
-        <DatabaseProvider
-          attrs={attrs}
-          db={db}
-          editor={editor}
-          updateAttributes={updateAttributes}
-        >
-          <DatabaseListNodeView {...props} />
-        </DatabaseProvider>
-      </NodeViewWrapper>
-    );
+    return <DatabaseListNodeView {...props} />;
   }
 
   // ── Table view (default) ───────────────────────────────────────────────

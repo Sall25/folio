@@ -33,7 +33,6 @@ export function CheckboxCellNodeView({
       as="div"
       data-type="checkbox-cell"
       className={`${activeViewType === "table" ? "db-td" : ""} db-td--checkbox`}
-      style={{ margin: 0 }}
     >
       <CheckboxCellDisplay
         value={attrs.value}
