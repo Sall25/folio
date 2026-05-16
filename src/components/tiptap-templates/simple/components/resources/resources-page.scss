@@ -1,0 +1,44 @@
+.resources-page {
+  padding: 2rem 2.5rem;
+  max-width: 960px;
+
+  @media (max-width: 640px) {
+    padding: 1.25rem 1rem;
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+
+  &__title {
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--tt-text-color);
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  &__sub {
+    font-size: 13px;
+    color: var(--tt-text-color-muted, #999);
+  }
+
+  &__add-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  &__separator {
+    margin-bottom: 1.5rem;
+  }
+
+  &__panel {
+    outline: none;
+  }
+}

@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { useDebounce } from "use-debounce";
 
 const PEXELS_API_KEY = import.meta.env.VITE_PEXELS_API_KEY ?? "";
@@ -34,12 +35,12 @@ export function UnsplashTab({ onSelect }: PexelsTabProps) {
   }, []);
 
   return (
-    <div
+    <CardItemGroup
+      orientation="vertical"
       style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 10,
         width: "100%",
+        maxHeight: 500,
+        overflowY: "auto",
       }}
     >
       <input
@@ -140,6 +141,6 @@ export function UnsplashTab({ onSelect }: PexelsTabProps) {
           </p>
         </>
       )}
-    </div>
+    </CardItemGroup>
   );
 }

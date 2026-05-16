@@ -1,11 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Page } from "src/components/tiptap-templates/simple/types";
-import { getPlaceholderColor } from "../utils";
+import { GRADIENT_PRESETS } from "src/components/tiptap-ui/cover/gradient-presets";
 
 interface BoardCardCoverProps {
   page: Page | null;
   recordId: string;
   height?: number;
+}
+
+function getPlaceholderGradient(recordId: string): string {
+  let hash = 0;
+  for (let i = 0; i < recordId.length; i++) {
+    hash = recordId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % GRADIENT_PRESETS.length;
+  return GRADIENT_PRESETS[index].value;
 }
 
 export function BoardCardCover({
@@ -50,13 +59,11 @@ export function BoardCardCover({
     );
   }
 
-  console.log("recordId:", recordId, "color:", getPlaceholderColor(recordId));
-
-  // Placeholder — deterministic color from record id, matching Notion
+  // Placeholder — deterministic gradient from record id
   return (
     <div
       className="db-board-card__placeholder"
-      style={{ background: getPlaceholderColor(recordId), height }}
+      style={{ background: getPlaceholderGradient(recordId), height }}
     />
   );
 }

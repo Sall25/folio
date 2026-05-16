@@ -1,10 +1,12 @@
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Space+Grotesk:wght@500&display=swap");
 
-:root{
-  --logo-name-color: var(--black);
+:root {
+  --logo-name-color: #6b7280;
+  --logo-mark-bg: #6b7280;
 }
-.dark{
-  --logo-name-color: var(--white);
+.dark {
+  --logo-name-color: #9ca3af;
+  --logo-mark-bg: #4b5563;
 }
 
 .logo {
@@ -19,7 +21,7 @@
     width: 32px;
     height: 32px;
     flex-shrink: 0;
-    background: var(--tt-brand-color-400);
+    background: var(--logo-mark-bg);
     border-radius: 7px;
     display: flex;
     align-items: center;

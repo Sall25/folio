@@ -1,0 +1,47 @@
+import type { Citation } from "../types";
+
+export const MOCK_CITATIONS: Citation[] = [
+  {
+    id: "1",
+    authors: ["Vaswani, A.", "Shazeer, N.", "Parmar, N.", "Uszkoreit, J."],
+    title: "Attention is all you need",
+    year: 2017,
+    source: "Advances in Neural Information Processing Systems",
+    volume: "30",
+    format: "apa",
+  },
+  {
+    id: "2",
+    authors: ["Turing, A. M."],
+    title: "Computing machinery and intelligence",
+    year: 1950,
+    source: "Mind",
+    volume: "59",
+    issue: "236",
+    pages: "433–460",
+    format: "apa",
+  },
+  {
+    id: "3",
+    authors: ["Krizhevsky, A.", "Sutskever, I.", "Hinton, G. E."],
+    title: "ImageNet classification with deep convolutional neural networks",
+    year: 2012,
+    source: "Communications of the ACM",
+    volume: "60",
+    issue: "6",
+    pages: "84–90",
+    doi: "10.1145/3065386",
+    format: "mla",
+  },
+  {
+    id: "4",
+    authors: ["Kahneman, D.", "Tversky, A."],
+    title: "Prospect theory: An analysis of decision under risk",
+    year: 1979,
+    source: "Econometrica",
+    volume: "47",
+    issue: "2",
+    pages: "263–291",
+    format: "chicago",
+  },
+];

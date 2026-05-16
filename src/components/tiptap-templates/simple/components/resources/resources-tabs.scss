@@ -1,0 +1,62 @@
+.resource-tabs {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  margin-bottom: 1.5rem;
+
+  &__separator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+  }
+
+  &__tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--tt-text-color-muted, #999);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    transition: color 0.15s ease;
+    margin-bottom: -0.5px;
+    border-radius: 0;
+
+    &:hover {
+      color: var(--tt-text-color);
+    }
+
+    &--active {
+      color: var(--tt-text-color);
+      font-weight: 500;
+      border-bottom-color: var(--tt-text-color);
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  &__label {
+    line-height: 1;
+  }
+
+  &__count {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: var(--tiptap-card-bg-color, #f5f5f5);
+    color: var(--tt-text-color-muted, #999);
+    line-height: 1.4;
+  }
+}

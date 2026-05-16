@@ -30,14 +30,18 @@ function User({ name }: { name: string }) {
   return (
     <CardItemGroup
       orientation="horizontal"
-      style={{ width: "100%", justifyContent: "flex-start" }}
+      style={{
+        width: "100%",
+        justifyContent: "flex-start",
+        alignItems: "center",
+      }}
     >
       <div
         style={{
-          width: 32,
-          height: 32,
-          borderRadius: "var(--tt-radius-md)",
-          background: "var(--tt-brand-color-400)",
+          width: 36,
+          height: 36,
+          borderRadius: "50%",
+          background: "var(--logo-mark-bg)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -56,9 +60,10 @@ function User({ name }: { name: string }) {
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
-            fontSize: 13,
+            fontSize: 12,
             display: "inline-block",
-            fontWeight: "400",
+            fontWeight: "600",
+            fontFamily: "inherit",
           }}
         >
           {name}
