@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  width: 100%;
 }
 
 
@@ -11,7 +10,7 @@
 
   span {
     min-width: 0; 
-    max-width: 160px;
+    max-width: 155px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;

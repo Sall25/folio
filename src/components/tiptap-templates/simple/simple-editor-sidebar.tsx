@@ -3,8 +3,6 @@ import {
   Search,
   Home,
   LayoutTemplate,
-  Lock,
-  Users,
   PanelRight,
   PanelLeft,
   Plus,
@@ -218,20 +216,6 @@ function NavItems({ collapsed }: { collapsed: boolean }) {
           <LayoutTemplate strokeWidth={2.25} className="tiptap-button-icon" />
           {!collapsed && <span className="tiptap-button-text">Templates</span>}
         </Button>
-
-        <Spacer orientation={collapsed ? "vertical" : "horizontal"} />
-
-        <Button variant="ghost">
-          <Lock className="tiptap-button-icon" />
-          {!collapsed && <span className="tiptap-button-text">Private</span>}
-        </Button>
-
-        <Spacer orientation={collapsed ? "vertical" : "horizontal"} />
-
-        <Button variant="ghost">
-          <Users className="tiptap-button-icon" />
-          {!collapsed && <span className="tiptap-button-text">Shared</span>}
-        </Button>
       </ButtonGroup>
     </ButtonGroup>
   );
@@ -267,8 +251,10 @@ function PagesList({ pages }: { pages: Page[] }) {
     <CardItemGroup className="sidebar-pages">
       {recentPages.length > 0 && (
         <>
-          <CardGroupLabel>Recents</CardGroupLabel>
-          <CardItemGroup style={{ gap: 5 }}>
+          <CardGroupLabel style={{ color: "var(--tt-paragraph-text-color)" }}>
+            Recents
+          </CardGroupLabel>
+          <CardItemGroup style={{ gap: 2 }}>
             {recentPages.map((page) => (
               <PageItem key={page.id} page={page} />
             ))}
@@ -286,7 +272,7 @@ function PagesList({ pages }: { pages: Page[] }) {
         <p className="sidebar-empty">No pages yet.</p>
       )}
 
-      <CardItemGroup style={{ gap: 5 }}>
+      <CardItemGroup style={{ gap: 2 }}>
         {otherPages.map((page) => (
           <PageItem
             key={page.id}
@@ -300,7 +286,7 @@ function PagesList({ pages }: { pages: Page[] }) {
         <>
           <Separator orientation="horizontal" style={{ height: 0.5 }} />
           <CardGroupLabel>Templates</CardGroupLabel>
-          <CardItemGroup style={{ gap: 5 }}>
+          <CardItemGroup style={{ gap: 2 }}>
             {templatePages.map((page) => (
               <PageItem key={page.id} page={page} />
             ))}
@@ -334,7 +320,7 @@ export function SimpleEditorSidebar({
         left: 0,
         borderRadius: 0,
         boxShadow: "none",
-        width: collapsed ? 52 : 300,
+        width: collapsed ? 52 : 270,
         transition: "width 0.2s ease",
       }}
     >

@@ -43,7 +43,8 @@ export default function GradientCover({
       style={{
         position: "relative",
         width: "100%",
-        height: 200,
+        height: "30vh",
+        maxHeight: 280,
         background: gradient,
       }}
       onMouseEnter={() => setHovering(true)}

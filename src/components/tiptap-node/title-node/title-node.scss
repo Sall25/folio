@@ -11,6 +11,18 @@ h1[data-type='title']:has(br:only-child)::before {
   color: var(--placeholder-color);
   pointer-events: none;
   position: absolute;
+  max-width: 100%;
+  width: 100%;
+  white-space: break-spaces;
+  word-break: break-word;
+  caret-color: var(--tt-theme-text);
+  padding-top: 3px;
+  padding-bottom: 0px;
+  padding-inline: 2px;
+  font-size: 1em !important;
+  font-weight: inherit;
+  margin: 0px;
+  cursor: text;
 }
 
 h1[data-type='title'] {

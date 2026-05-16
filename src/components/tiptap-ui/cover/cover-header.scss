@@ -35,7 +35,7 @@
   border-radius: 6px;
   border: none;
   background: transparent;
-  color: var(--tt-gray-light-a-400);
+  // color: var(--tt-gray-light-a-400);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -76,6 +76,6 @@
   background: transparent;
   cursor: pointer;
   transition: background 0.15s;
-
+  color: var(--tt-theme-text) !important;
   &:hover { background: var(--tt-gray-light-a-100); }
 }

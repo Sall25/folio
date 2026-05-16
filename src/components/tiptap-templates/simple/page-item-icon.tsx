@@ -26,13 +26,25 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
       <span className="page-icon" style={{ ...styles }} aria-hidden="true">
         {hasIcon ? (
           <DynamicIcon
-            stroke={cover.color ?? "var(--tt-text-color)"}
+            stroke={
+              !cover.color || cover.color === "var(--tt-text-color)"
+                ? "var(--tt-theme-text)"
+                : cover.color
+            }
             name={cover.iconName!}
             size={16}
-            strokeWidth={2.3}
+            strokeWidth={1.8}
           />
         ) : (
-          <File size={16} strokeWidth={2.3} />
+          <File
+            size={16}
+            strokeWidth={1.8}
+            stroke={
+              !cover.color || cover.color === "var(--tt-text-color)"
+                ? "var(--tt-theme-text)"
+                : cover.color
+            }
+          />
         )}
       </span>
     );
@@ -40,7 +52,7 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
 
   return (
     <span className="page-icon" style={{ ...styles }} aria-hidden="true">
-      <File size={18} strokeWidth={2} />
+      <File size={18} strokeWidth={1.5} />
     </span>
   );
 }

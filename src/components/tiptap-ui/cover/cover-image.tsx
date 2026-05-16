@@ -74,7 +74,8 @@ export default function CoverImage({
         .cover-image-root {
           position: relative;
           width: 100%;
-          height: 200px;
+          height: 30vh;
+          max-height: 280px;
           overflow: hidden;
         }
         .cover-image-root img {

@@ -85,7 +85,12 @@ export const MainToolbarContent = ({
 
       return {
         label: title || "New Page",
-        icon: <PageItemIcon cover={cover} styles={{ fontSize: 14 }} />,
+        icon: (
+          <PageItemIcon
+            cover={cover}
+            styles={{ fontSize: 14, color: page.cover.color }}
+          />
+        ),
         locked: settings.locked,
         onClick: () => setActivePageId(page.id),
       };

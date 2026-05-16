@@ -1,8 +1,10 @@
 :root{
-  --sidebar-bg-color: var(--tt-gray-light-a-50);
+  --sidebar-bg-color: rgb(249, 248, 247);
+  --sidebar-shadow-color: rgb(240, 239, 237);
 }
 .dark{
-  --sidebar-bg-color: #21212171;
+  --sidebar-bg-color: rgb(32, 32, 32);
+  --sidebar-shadow-color: #2c2c2b;
 }
 .sidebar {
   position: relative;
@@ -10,16 +12,17 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  font-family: "Fraunces", serif;
+  font-family: 'Inter', sans-serif;
+  // font-family: "Fraunces", serif;
   height: 100vh;
   overflow: hidden;
-  border-right: 0.5px solid var(--tt-border-color-tint, rgba(13, 12, 12, 0.08));
+  // border-right: 0.5px solid var(--tt-border-color-tint, rgba(13, 12, 12, 0.08));
   font-size: 16px;
   font-weight: 600;
   background-color: var(--sidebar-bg-color) !important;
   padding: 5px 10px;
   padding-right: 0px;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06) !important;
+  box-shadow: var(--sidebar-shadow-color)  -1px 0px 0px 0px inset !important;
 }
 
 // ── Workspace header ──
@@ -92,7 +95,7 @@
   flex-direction: column;
   gap: 1px;
   overflow-x: visible;
-  max-height: 400px;
+  max-height: 600px;
   min-height: 0 !important;
   justify-content: flex-start !important;
 
@@ -114,17 +117,23 @@
 }
 
 .page-item {
-  width: 100%;
+  width: 98%;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   font-family: inherit;
-  padding: 3px 6px;
   border-radius: var(--tt-radius-md) !important;
   cursor: pointer;
   color: var(--tt-text-color);
   background-color: transparent;
-  min-height: 30px;
+  display: flex;
+  font-size: 14px;
+  min-height: 27px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-inline: 8px;
+  border-radius: 6px;
+  transition: none;
 
   &:hover {
     background: var(--page-item-active-bg-color);
@@ -137,7 +146,7 @@
 
   &.active {
     background: var(--page-item-active-bg-color);
-    color: var(--tt-brand-color-400);
+    color: var(--tt-paragraph-text-color);
     font-weight: 600;
   }
 }
@@ -176,8 +185,8 @@
   border-radius: 4px;
   border: none;
   background: transparent;
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 400;
   cursor: pointer;
   text-align: left;
   color: var(--tt-text-color);
@@ -307,23 +316,6 @@
   width: 100%;
 }
 
-// .page-title {
-//   flex: 1;
-//   font-size: 13.6px;
-//   font-weight: 400;
-//   min-width: 260px;
-//   max-width: 260px;
-//   overflow: hidden;
-//   text-overflow: ellipsis;
-//   white-space: nowrap;
-//   font-weight: 600;
-//   transition: max-width 0.1s ease;
-
-//   &:hover{
-//     max-width: 160px;
-//   }
-// }
-
 .page-expand-btn {
   display: none;
   align-items: center;
@@ -357,7 +349,7 @@
   outline: none;
   background: transparent;
   font-family: inherit;
-  font-size: 13.5px;
+  font-size: 16px;
   color: var(--tt-text-color);
   padding: 0;
   caret-color: var(--tt-text-color);

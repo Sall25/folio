@@ -45,7 +45,7 @@ import { findPage } from "src/lib/find-page";
 import { ActivePageProvider } from "./context/active-page-provider";
 
 const VERSION_SIDEBAR_WIDTH = 260;
-const SIDEBAR_WIDTH = 300;
+const SIDEBAR_WIDTH = 270;
 const SIDEBAR_COLLAPSED_WIDTH = 52;
 
 // Separate component that only cares about activePageId for conditional rendering

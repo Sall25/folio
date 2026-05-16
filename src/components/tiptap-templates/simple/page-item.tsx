@@ -82,9 +82,6 @@ export function PageItem({
         className={`page-item ${isActive ? "active" : ""}`}
         style={{
           paddingLeft: `${6 + depth * 14}px`,
-          paddingTop: 3,
-          paddingBottom: 3,
-          borderRadius: 3,
         }}
         onClick={() => onSelect(page.id)}
         onMouseOver={() => setShouldShow(true)}

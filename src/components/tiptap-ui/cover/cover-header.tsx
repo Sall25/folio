@@ -14,6 +14,7 @@ import { IconPickerCard } from "./icon-picker-card";
 import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 import CoverImage from "./cover-image";
 import GradientCover from "./gradient-cover";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 
 function IconButton({
   open,
@@ -79,24 +80,34 @@ function IconButton({
     >
       <Popover open={open} onOpenChange={onOpenChange}>
         <PopoverTrigger asChild>
-          <button
+          <Button
+            variant="ghost"
             className="cover-icon-btn"
             style={{
               fontSize: 60,
               marginTop: hasCover ? -60 : 0,
-              color: displayCover?.color ?? "var(--tt-text-color)",
+              color:
+                displayCover?.color === undefined ||
+                displayCover.color === "var(--tt-text-color)"
+                  ? "var(--tt-theme-text)"
+                  : displayCover.color,
             }}
           >
             {displayCover?.target === "Emoji" && displayCover?.iconName}
             {displayCover?.target === "Icons" && (
               <DynamicIcon
                 name={displayCover.iconName!}
-                stroke={displayCover.color ?? "var(--tt-text-color)"}
+                stroke={
+                  displayCover?.color === undefined ||
+                  displayCover.color === "var(--tt-text-color)"
+                    ? "var(--tt-theme-text)"
+                    : displayCover.color
+                }
                 size={85}
                 strokeWidth={2}
               />
             )}
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverPortal container={document.getElementById("root")}>
           <PopoverContent
@@ -157,7 +168,11 @@ export function CoverHeader({
   return (
     <div
       className="cover-header-wrapper"
-      style={{ width: "100%", position: "relative", minHeight: 60 }}
+      style={{
+        width: "100%",
+        position: "relative",
+        maxHeight: 280,
+      }}
     >
       {/* ── Cover display ── */}
       {hasCoverImage && (
