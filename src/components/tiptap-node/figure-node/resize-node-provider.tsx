@@ -218,29 +218,27 @@ export function ResizableNodeProvider({
           deltaX,
           deltaY,
         );
+        // Clamp to parent container width
+        const parentWidth =
+          nodeRef.current?.parentElement?.getBoundingClientRect().width ??
+          Infinity;
+        const clampedWidth = Math.min(width, parentWidth);
 
         const constrained = applyConstraints(
-          width,
+          clampedWidth,
           height,
           shouldPreserveAspectRatio,
         );
-        if (nodeRef.current) {
-          // const isHorizontal =
-          //   activeHandle === "left" || activeHandle === "right";
 
-          // if (!isHorizontal) {
-          //   nodeRef.current.style.height = `${constrained.height}px`;
-          // }
+        //   const constrained = applyConstraints(
+        //     width,
+        //     height,
+        //     shouldPreserveAspectRatio,
+        //   );
+        if (nodeRef.current) {
           nodeRef.current.style.width = `${constrained.width}px`;
           nodeRef.current.style.flexBasis = `${constrained.width}px`;
         }
-
-        // if (nodeRef.current) {
-        //   nodeRef.current.style.width = `${constrained.width}px`;
-        //   nodeRef.current.style.height = `${constrained.height}px`;
-        //   nodeRef.current.style.flexBasis = `${constrained.width}px`;
-        //   //  nodeRef.current.style.flexBasis = `${constrained.width}px`;
-        // }
       });
     },
     [activeHandle, calculateNewDimensions, applyConstraints],

@@ -15,9 +15,10 @@
 
   &__header {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
+    align-items: center;
+    justify-content: center;
     gap: 16px;
+    margin-top: 10vh;
   }
 
   &__title {
@@ -85,7 +86,7 @@
 
 .home-pinned-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 15px;
 }
 .home-pinned-card {

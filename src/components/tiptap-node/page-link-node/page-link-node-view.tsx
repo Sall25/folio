@@ -44,9 +44,9 @@ function getContentExcerpt(page: Page): string {
   return "";
 }
 
-export function PageLinkNodeView({ node, extension }: NodeViewProps) {
+export function PageLinkNodeView({ node }: NodeViewProps) {
   const { pageId } = node.attrs;
-  const { pages } = useActivePage();
+  const { pages, setActivePageId } = useActivePage();
   const [isHovered, setIsHovered] = useState(false);
   const [previewPos, setPreviewPos] = useState({ top: 0, left: 0 });
   const linkRef = useRef<HTMLDivElement>(null);
@@ -91,8 +91,8 @@ export function PageLinkNodeView({ node, extension }: NodeViewProps) {
   if (!pages) return null;
 
   const page =
-    pages.find((p) => String(p.id) === String(pageId)) ??
-    flattenPages(pages).find((p) => String(p.id) === String(pageId));
+    pages.find((p) => p.id === pageId) ??
+    flattenPages(pages).find((p) => p.id === pageId);
 
   if (!page)
     return (
@@ -113,7 +113,7 @@ export function PageLinkNodeView({ node, extension }: NodeViewProps) {
 
   const breadcrumb = buildBreadcrumb(page, pages);
   const excerpt = getContentExcerpt(page);
-  const handleClick = () => extension.options.onNavigate?.(Number(pageId));
+  const handleClick = () => setActivePageId(pageId);
 
   return (
     <NodeViewWrapper

@@ -133,21 +133,25 @@ export function PageItem({
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span style={{ fontSize: 13.4, marginLeft: 5, fontFamily: "Inter" }}>
-            {title || "New Page"}
-          </span>
+          <span className="page-item-title">{title || "New Page"}</span>
         )}
 
         <Spacer orientation="horizontal" />
 
-        <div className="page-item-actions">
+        <CardItemGroup orientation="horizontal">
           <PageItemOptions
             onOpenChange={(v) => setShouldShow(v)}
             page={page}
             onRenameAsync={async () => setEditing(true)}
           />
           <Button
-            style={{ minWidth: 20, width: 20, minHeight: 20, height: 20 }}
+            style={{
+              minWidth: 20,
+              width: 20,
+              minHeight: 20,
+              height: 20,
+              opacity: shouldShow ? 1 : 0,
+            }}
             variant="ghost"
             tooltip="New page"
             onClick={async (e) => {
@@ -160,7 +164,7 @@ export function PageItem({
           >
             <Plus size={12} className="tiptap-button-icon" />
           </Button>
-        </div>
+        </CardItemGroup>
       </CardItemGroup>
 
       {/* Children */}

@@ -34,6 +34,7 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
+    align-items: center;
   }
 
   &__title {
@@ -48,7 +49,7 @@
 
   &__author {
     font-size: 11px;
-    color: var(--tt-text-color-muted, #999);
+    color: var(--tt-text-color, #999);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -71,24 +72,26 @@
     border-radius: 10px;
 
     &--reading {
-      background: #e6f1fb;
-      color: #185fa5;
+      background: var(--tt-color-highlight-blue-contrast);
+      // --tt-color-highlight-blue-contrast
+      color: var(--tt-theme-text);
     }
 
     &--done {
-      background: #eaf3de;
-      color: #3b6d11;
+      background: var(--tt-color-highlight-green-contrast);
+      color: var(--tt-theme-text);
     }
 
     &--queue {
-      background: #f1efe8;
-      color: #5f5e5a;
+      background: var(--tt-color-highlight-gray-contrast);
+      color: var(--tt-theme-text);
+    
     }
   }
 
   &__course {
     font-size: 11px;
-    color: var(--tt-text-color-muted, #999);
+    color: var(--tt-text-color, #999);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

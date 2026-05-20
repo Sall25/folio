@@ -49,7 +49,7 @@ function findParentDatabase(
   getPos: (() => number | undefined) | undefined,
 ): Node | null {
   const pos = getPos?.();
-  if (pos == null) return null;
+  if (pos == null || pos === undefined) return null;
   const $pos = editor.state.doc.resolve(pos);
   for (let d = $pos.depth; d > 0; d--) {
     const node = $pos.node(d);

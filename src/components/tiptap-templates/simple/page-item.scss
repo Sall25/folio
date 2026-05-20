@@ -7,25 +7,20 @@
 
 .page-item {
   border-radius: var(--tt-radius-sm) !important;
-
-  span {
-    min-width: 0; 
-    max-width: 155px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    
-  }
-
+  gap: 0;
   .page-item-actions {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 1px;
     width: 0;
     overflow: hidden;
     opacity: 0;
     transition: opacity 0.1s;
     flex-shrink: 0;
+  }
+
+  &.active{
+    background-color: var(--tt-gray-dark-a-200);
   }
 
   &:hover .page-item-actions {
@@ -35,21 +30,45 @@
   }
 }
 
-.page-title {
-  flex: 1;
-  font-size: 13.8px;
-  font-weight: 500;
-  min-width: 0;
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-left: 5px;
-  transition: max-width 0.2s ease;
+.page-item-title {
+   /* Font Family: Standard System Stack */
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+    
+    /* Sizing and Weight */
+    font-size: 14px;
+    font-weight: 500;    /* Medium weight for clarity at small sizes */
+    line-height: 1.5;    /* Computed as 21px */
+    
+    /* Appearance */
+    color: rgb(188, 186, 182); /* Muted gray/tan color */
+    letter-spacing: normal;
+    text-transform: none;
+    
+    /* Layout */
+    display: block;
+    margin: 0;
+    padding: 0;
 
-  &:hover{
-     max-width: 170px;
-  }
+    min-width: 0;
+    max-width: 170px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-left: 5px;
+  // flex: 1;
+  // font-size: 13.8px;
+  // font-weight: 500;
+  // min-width: 0;
+  // max-width: 180px;
+  // overflow: hidden;
+  // text-overflow: ellipsis;
+  // white-space: nowrap;
+  // margin-left: 5px;
+  // transition: max-width 0.2s ease;
+
+  // &:hover{
+  //    max-width: 170px;
+  // }
 }
 
 .page-expand-btn {

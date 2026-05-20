@@ -57,6 +57,18 @@ export const Column = Node.create({
         key: new PluginKey("columnDropPlugin"),
 
         props: {
+          /**
+           * Handles drops onto column drop zones (the left/right indicators on column edges).
+           * When a block is dragged and dropped onto a drop zone, this:
+           * 1. Resolves the target column and its parent columnBlock positions
+           * 2. Wraps the dragged node in a new column and inserts it at the correct index (left or right of the target)
+           * 3. Redistributes column widths evenly across all columns including the new one
+           * 4. Deletes the original dragged node from its old position
+           * 5. Dispatches the transaction and returns true to prevent ProseMirror's default drop handling
+           *
+           * Returns false for any drop that doesn't target a column drop zone,
+           * letting ProseMirror handle it normally.
+           */
           handleDrop(view, event, _slice, moved) {
             if (!moved) return false;
 
@@ -202,134 +214,6 @@ export const Column = Node.create({
             globalDragNodePos = null;
             return true;
           },
-
-          // handleDrop(view, event, _slice, moved) {
-          //   if (!moved) return false;
-
-          //   const target = event.target as HTMLElement | null;
-          //   if (!target) return false;
-
-          //   const dropZone = target.closest(
-          //     "[data-drop-zone]",
-          //   ) as HTMLElement | null;
-          //   if (!dropZone) return false;
-
-          //   const side = dropZone.dataset.dropZone as "left" | "right";
-
-          //   const dragNodePos = globalDragNodePos;
-          //   if (dragNodePos === null) return false;
-
-          //   event.preventDefault();
-          //   event.stopPropagation();
-
-          //   const { state, dispatch } = view;
-
-          //   // Get column pos — use the wrapper element, not the drop zone
-          //   const columnEl = dropZone.closest(
-          //     "[data-node-view-wrapper]",
-          //   ) as HTMLElement | null;
-          //   if (!columnEl) return false;
-
-          //   let colNodePos = -1;
-          //   try {
-          //     const domPos = view.posAtDOM(columnEl, 0);
-          //     const $pos = state.doc.resolve(domPos);
-          //     for (let d = $pos.depth; d >= 0; d--) {
-          //       if ($pos.node(d).type.name === "column") {
-          //         colNodePos = $pos.before(d);
-          //         break;
-          //       }
-          //     }
-          //   } catch {
-          //     return false;
-          //   }
-          //   if (colNodePos === -1) return false;
-
-          //   // Find parent columnBlock
-          //   const $colNode = state.doc.resolve(colNodePos);
-          //   let columnBlockDepth = -1;
-          //   for (let i = $colNode.depth; i >= 0; i--) {
-          //     if ($colNode.node(i).type.name === "columnBlock") {
-          //       columnBlockDepth = i;
-          //       break;
-          //     }
-          //   }
-          //   if (columnBlockDepth === -1) return false;
-
-          //   const columnBlockNode = $colNode.node(columnBlockDepth);
-          //   const columnBlockPos = $colNode.before(columnBlockDepth);
-
-          //   const dragNode = state.doc.nodeAt(dragNodePos);
-          //   if (!dragNode) return false;
-          //   if (dragNodePos === colNodePos) return false;
-
-          //   const columnType = state.schema.nodes.column;
-          //   const columnBlockType = state.schema.nodes.columnBlock;
-          //   if (!columnType || !columnBlockType) return false;
-
-          //   // Find index of target column
-          //   let targetColumnIndex = -1;
-          //   let offset = 0;
-          //   columnBlockNode.forEach((child: any, _: number, index: number) => {
-          //     const childPos = columnBlockPos + 1 + offset;
-          //     if (childPos === colNodePos) targetColumnIndex = index;
-          //     offset += child.nodeSize;
-          //   });
-          //   if (targetColumnIndex === -1) return false;
-
-          //   const insertIndex =
-          //     side === "left" ? targetColumnIndex : targetColumnIndex + 1;
-          //   const newCount = columnBlockNode.childCount + 1;
-          //   const newWidth = `${Math.round(100 / newCount)}%`;
-
-          //   // Build new columns
-          //   const newColumns: any[] = [];
-          //   columnBlockNode.forEach((col: any, _: number, index: number) => {
-          //     if (index === insertIndex) {
-          //       newColumns.push(
-          //         columnType.create({ width: newWidth }, dragNode.content),
-          //       );
-          //     }
-          //     newColumns.push(
-          //       columnType.create({ width: newWidth }, col.content),
-          //     );
-          //   });
-          //   if (insertIndex >= columnBlockNode.childCount) {
-          //     newColumns.push(
-          //       columnType.create({ width: newWidth }, dragNode.content),
-          //     );
-          //   }
-
-          //   const newColumnBlock = columnBlockType.create({}, newColumns);
-
-          //   const tr = state.tr;
-
-          //   // Replace columnBlock first
-          //   tr.replaceWith(
-          //     columnBlockPos,
-          //     columnBlockPos + columnBlockNode.nodeSize,
-          //     newColumnBlock,
-          //   );
-
-          //   // Delete dragged node, adjusting pos after the replacement
-          //   const adjustedDragPos =
-          //     dragNodePos < columnBlockPos
-          //       ? dragNodePos
-          //       : dragNodePos +
-          //         (newColumnBlock.nodeSize - columnBlockNode.nodeSize);
-
-          //   const adjustedDragNode = tr.doc.nodeAt(adjustedDragPos);
-          //   if (adjustedDragNode) {
-          //     tr.delete(
-          //       adjustedDragPos,
-          //       adjustedDragPos + adjustedDragNode.nodeSize,
-          //     );
-          //   }
-
-          //   dispatch(tr);
-          //   globalDragNodePos = null;
-          //   return true;
-          // },
           handleDOMEvents: {
             dragover(_view, event) {
               const target = event.target as HTMLElement | null;

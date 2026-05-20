@@ -46,16 +46,28 @@
 }
 
 .tiptap.ProseMirror {
-  // Inline code
-  code {
-    background-color: var(--tt-inline-code-bg-color);
-    color: var(--tt-inline-code-text-color);
-    border: none;
-    font-family: "JetBrains Mono NL", monospace;
-    font-size: 0.835em;
-    line-height: 1.4;
-    border-radius: 6px;
+  code{
+    font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace;
+    background: rgba(135, 131, 120, 0.15);
+    color: #EB5757;
+    border-radius: 4px;
+    font-size: 85%;
+    padding: 0.2em 0.4em;
+    position: relative;
+    bottom: 0.065em;
+    line-height: normal;
   }
+  // Inline code
+  // code {
+  //   background-color: var(--tt-inline-code-bg-color);
+  // //  color: var(--tt-inline-code-text-color);
+  //   border: none;
+  //   font-family: "JetBrains Mono NL", monospace;
+  //   font-size: 0.835em;
+  //   line-height: 1.4;
+  //   border-radius: 6px;
+  //   // padding: 2px 3px;
+  // }
 
   // .code-block-wrapper {
   //   --cb-radius: 8px;

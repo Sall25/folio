@@ -79,81 +79,62 @@ export function TitleCellNodeView({
   useEffect(() => {
     if (titleAttrs.pageId !== null) return;
     if (pageCreationAttempted.current) return;
-    pageCreationAttempted.current = true;
+    queueMicrotask(() => {
+      pageCreationAttempted.current = true;
 
-    // Resolve databaseId and recordId from the ProseMirror tree
-    const pos = getPos?.();
-    let databaseId: string | undefined;
-    let recordId: string | undefined;
+      // Resolve databaseId and recordId from the ProseMirror tree
+      const pos = getPos?.();
+      let databaseId: string | undefined;
+      let recordId: string | undefined;
 
-    if (pos != null) {
-      const $pos = editor.state.doc.resolve(pos);
-      for (let d = $pos.depth; d > 0; d--) {
-        const n = $pos.node(d);
-        if (n.type.name === "databaseRecord" && !recordId) {
-          recordId = n.attrs.id;
+      if (pos != null) {
+        const $pos = editor.state.doc.resolve(pos);
+        for (let d = $pos.depth; d > 0; d--) {
+          const n = $pos.node(d);
+          if (n.type.name === "databaseRecord" && !recordId) {
+            recordId = n.attrs.id;
+          }
+          if (n.type.name === "database" && !databaseId) {
+            databaseId = n.attrs.id;
+          }
+          if (recordId && databaseId) break;
         }
-        if (n.type.name === "database" && !databaseId) {
-          databaseId = n.attrs.id;
-        }
-        if (recordId && databaseId) break;
       }
-    }
 
-    addPageAsync({
-      title: node.textContent,
-      parentId: activePageId ?? null,
-      databaseId,
-      recordId,
-    })
-      .then((newPage) =>
-        updateAttributes({
-          ...titleAttrs,
-          pageId: newPage.id,
-          parentId: activePageId ?? null,
-        }),
-      )
-      .catch((reason) =>
-        console.log("failed to add page in title cell node view", reason),
-      );
+      addPageAsync({
+        title: node.textContent,
+        parentId: activePageId ?? null,
+        databaseId,
+        recordId,
+      })
+        .then((newPage) =>
+          updateAttributes({
+            ...titleAttrs,
+            pageId: newPage.id,
+            parentId: activePageId ?? null,
+          }),
+        )
+        .catch((reason) =>
+          console.log("failed to add page in title cell node view", reason),
+        );
+    });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // useEffect(() => {
-  //   if (titleAttrs.pageId !== null) return;
-  //   if (pageCreationAttempted.current) return;
-  //   pageCreationAttempted.current = true;
-
-  //   addPageAsync({
-  //     title: node.textContent,
-  //     parentId: activePageId ?? null,
-  //   })
-  //     .then((newPage) =>
-  //       updateAttributes({
-  //         ...titleAttrs,
-  //         pageId: newPage.id,
-  //         parentId: activePageId ?? null,
-  //       }),
-  //     )
-  //     .catch((reason) =>
-  //       console.log("failed to add page in title cell node view", reason),
-  //     );
-  // }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!titleAttrs.pageId || !pages) return;
     const page = findPage(pages, titleAttrs.pageId);
     if (!page || page.title === node.textContent) return;
 
-    // Get fresh position — don't use a stale closure
-    const pos = getPos?.();
-    if (pos == null) return;
+    queueMicrotask(() => {
+      // Re-validate everything inside, state may have changed
+      const pos = getPos?.();
+      if (pos == null) return;
+      if (pos + 1 + node.content.size > editor.state.doc.content.size) return;
 
-    // Validate position is still in range before using it
-    if (pos + 1 + node.content.size > editor.state.doc.content.size) return;
-
-    const { tr } = editor.state;
-    tr.insertText(page.title, pos + 1, pos + 1 + node.content.size);
-    editor.view.dispatch(tr);
+      const { tr } = editor.state; // ← fresh transaction
+      tr.insertText(page.title, pos + 1, pos + 1 + node.content.size);
+      editor.view.dispatch(tr);
+    });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const activeViewType = useActiveViewType(editor, getPos);

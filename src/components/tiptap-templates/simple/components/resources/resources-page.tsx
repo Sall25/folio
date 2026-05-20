@@ -1,26 +1,15 @@
-import { useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { ResourceStats } from "./resources-stats";
 import { ResourceTabs } from "./resources-tabs";
 import { BookGrid } from "./book-grid";
 import { PaperList } from "./paper-list";
 import { LinkGrid } from "./link-grid";
 import { CitationList } from "./citation-list";
-import { MOCK_BOOKS } from "./data/mock-books";
-import { MOCK_PAPERS } from "./data/mock-papers";
-import { MOCK_LINKS } from "./data/mock-links";
-import { MOCK_CITATIONS } from "./data/mock-citations";
+import { useResources } from "./hooks/use-resources";
 import type { ResourceType } from "./types";
 import "./resources-page.scss";
-
-const MOCK_STATS = {
-  books: MOCK_BOOKS.length,
-  papers: MOCK_PAPERS.length,
-  links: MOCK_LINKS.length,
-  citations: MOCK_CITATIONS.length,
-};
+import { useEditorLayout } from "../../context/editor-layout-context";
 
 const SECTION_LABELS: Record<ResourceType, string> = {
   books: "Books",
@@ -30,10 +19,20 @@ const SECTION_LABELS: Record<ResourceType, string> = {
 };
 
 export function ResourcesPage() {
-  const [activeTab, setActiveTab] = useState<ResourceType>("books");
+  const {
+    books,
+    papers,
+    links,
+    citations,
+    stats,
+    isLoading,
+    activeType,
+    setActiveType,
+  } = useResources();
+  const { sidebarWidth } = useEditorLayout();
 
   return (
-    <div className="resources-page">
+    <div className="resources-page" style={{ marginLeft: sidebarWidth + 100 }}>
       <div className="resources-page__header">
         <div className="resources-page__heading">
           <h1 className="resources-page__title">Resources</h1>
@@ -44,7 +43,7 @@ export function ResourcesPage() {
 
         <Button
           data-style="ghost"
-          aria-label="Add resource"
+          aria-label={`Add ${SECTION_LABELS[activeType].toLowerCase()}`}
           className="resources-page__add-btn"
         >
           <svg
@@ -61,30 +60,43 @@ export function ResourcesPage() {
               strokeLinecap="round"
             />
           </svg>
-          <span>Add {SECTION_LABELS[activeTab].toLowerCase()}</span>
+          <span>Add {SECTION_LABELS[activeType].toLowerCase()}</span>
         </Button>
       </div>
 
-      <Separator className="resources-page__separator" />
-
-      <ResourceStats stats={MOCK_STATS} />
+      <ResourceStats stats={stats} />
 
       <ResourceTabs
-        active={activeTab}
-        stats={MOCK_STATS}
-        onChange={setActiveTab}
+        active={activeType}
+        stats={stats}
+        onChange={setActiveType}
       />
 
       <div
         role="tabpanel"
-        id={`resource-panel-${activeTab}`}
-        aria-label={SECTION_LABELS[activeTab]}
+        id={`resource-panel-${activeType}`}
+        aria-label={SECTION_LABELS[activeType]}
         className="resources-page__panel"
       >
-        {activeTab === "books" && <BookGrid />}
-        {activeTab === "papers" && <PaperList />}
-        {activeTab === "links" && <LinkGrid />}
-        {activeTab === "citations" && <CitationList />}
+        {isLoading ? (
+          <div
+            className="resources-page__loading"
+            aria-label="Loading resources"
+          >
+            <span className="resources-page__loading-dot" />
+            <span className="resources-page__loading-dot" />
+            <span className="resources-page__loading-dot" />
+          </div>
+        ) : (
+          <>
+            {activeType === "books" && <BookGrid books={books} />}
+            {activeType === "papers" && <PaperList papers={papers} />}
+            {activeType === "links" && <LinkGrid links={links} />}
+            {activeType === "citations" && (
+              <CitationList citations={citations} />
+            )}
+          </>
+        )}
       </div>
     </div>
   );

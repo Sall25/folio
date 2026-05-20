@@ -1,3 +1,4 @@
+import { Origami } from "lucide-react";
 import "./logo.scss";
 
 interface LogoProps {
@@ -8,7 +9,8 @@ export function Logo({ collapsed }: LogoProps) {
   return (
     <div className="logo">
       <div className="logo__mark">
-        <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <Origami />
+        {/* <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect
             x="3"
             y="3"
@@ -45,7 +47,7 @@ export function Logo({ collapsed }: LogoProps) {
             fill="white"
             opacity="0.3"
           />
-        </svg>
+        </svg> */}
       </div>
 
       {!collapsed && (

@@ -1,4 +1,4 @@
-import { useMemo, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { useEditor } from "@tiptap/react";
 import { useEditorExtensions } from "../hooks/use-editor-extensions";
 import { EditorContext } from "@tiptap/react";
@@ -31,18 +31,18 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     content: "<p>No content</p>",
   });
 
-  const providedEditor = useMemo(() => ({ editor }), [editor]);
+  //  const providedEditor = useMemo(() => ({ editor }), [editor]);
 
   useWhyDidYouRender("editor-provider", {
     extensions,
     editor,
-    providedEditor,
+    //providedEditor,
     refsRef,
   });
 
   return (
     <EditorRefsContext.Provider value={refsRef}>
-      <EditorContext.Provider value={providedEditor}>
+      <EditorContext.Provider value={{ editor }}>
         {children}
       </EditorContext.Provider>
     </EditorRefsContext.Provider>

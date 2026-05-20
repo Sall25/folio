@@ -27,16 +27,6 @@ export default function SlashList(props: Props) {
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (activePageId === undefined) return;
-
-    editor.commands.syncSlashCommandCtx({
-      activePageId,
-      setActivePageId,
-      addPageAsync,
-    });
-  }, [activePageId, setActivePageId, addPageAsync, editor]);
-
   const { selectedIndex } = useMenuNavigation({
     editor: props.editor,
     items: selectableItems,

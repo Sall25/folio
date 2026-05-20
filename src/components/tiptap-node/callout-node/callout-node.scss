@@ -41,6 +41,7 @@
   cursor: pointer;
   transition: background var(--tt-transition-duration-short);
   user-select: none;
+  color: var(--tt-theme-text);
 
   &:hover {
     background: rgba(0, 0, 0, 0.06);
@@ -53,6 +54,7 @@
 .callout-content {
   flex: 1;
   min-width: 0;
+  color: inherit;
 
   // Tiptap renders a div wrapper — make it transparent
   > div {
@@ -206,9 +208,9 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--tt-gray-light-a-400);
+  color: var(--tt-theme-text);
   padding: 6px 2px 3px;
-  .dark & { color: var(--tt-gray-dark-a-400); }
+  // .dark & { color: var(--tt-gray-dark-a-400); }
 }
 
 .ep-grid {

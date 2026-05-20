@@ -1,14 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Clock, Pin, FileText, ChevronRight, Lock } from "lucide-react";
+import {
+  Pin,
+  FileText,
+  ChevronRight,
+  Lock,
+  File,
+  CircleUser,
+  Clock,
+  Clock1,
+  Star,
+  Users,
+} from "lucide-react";
 import type { Page } from "../types";
 import { PageItemIcon } from "../page-item-icon";
 import "./home-page-content.scss";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import { useActivePage } from "../use-active-page";
-import { BoardCardCover } from "src/components/tiptap-node/inline-database/primitives/board-card-cover";
+import { useEditorLayout } from "../context/editor-layout-context";
+import { Greeting } from "src/components/tiptap-ui-primitive/greeting/greeting";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import {
+  Board,
+  BoardContent,
+  BoardCover,
+} from "src/components/tiptap-ui-primitive/board/board";
+import { ListItem } from "src/components/tiptap-ui-primitive/list/list";
+import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
+import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
 
 function formatRelativeTime(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
@@ -52,46 +71,72 @@ function getExcerpt(page: Page): string {
 function PinnedCard({ page, onClick }: { page: Page; onClick: () => void }) {
   const excerpt = getExcerpt(page);
   const hasCover = !!(page.cover?.coverImage || (page.cover as any)?.gradient);
-
+  const { coverImage, gradient, iconName } = page.cover;
   return (
-    <div className="home-pinned-card" onClick={onClick}>
-      <div className="home-pinned-card__cover">
-        {hasCover ? (
-          <>
-            <BoardCardCover
-              page={page}
-              recordId={String(page.id)}
-              height={80}
-            />
-            {page.cover?.iconName && (
-              <div className="home-pinned-card__cover-icon">
-                <PageItemIcon cover={page.cover} styles={{ fontSize: 20 }} />
-              </div>
-            )}
-          </>
-        ) : (
-          <PageItemIcon
-            cover={page.cover}
-            styles={{ fontSize: 40, width: 40 }}
-          />
-        )}
+    <Board
+      onClick={onClick}
+      style={{ width: 190, height: 175, position: "relative" }}
+    >
+      <BoardCover
+        height={75}
+        style={{
+          background: coverImage
+            ? `url(${coverImage})`
+            : gradient
+              ? gradient
+              : "transparent",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+
+      {/* Icon sits on the cover/content boundary */}
+      <div
+        style={{
+          position: "absolute",
+          top: 75, // 80 (cover height) - half of icon
+          left: 12,
+        }}
+      >
+        <PageItemIcon cover={page.cover} styles={{ fontSize: 42, width: 42 }} />
       </div>
-      <div className="home-pinned-card__title">{page.title || "Untitled"}</div>
-      <div className="home-pinned-card__meta">
-        {formatRelativeTime(page.updatedAt ?? page.createdAt)}
-      </div>
-      {excerpt && <div className="home-pinned-card__excerpt">{excerpt}</div>}
-    </div>
+
+      <BoardContent style={{ paddingTop: 20 }}>
+        {" "}
+        {/* leave room for the icon */}
+        <div className="home-pinned-card__title">
+          {page.title || "Untitled"}
+        </div>
+        <div className="home-pinned-card__meta">
+          {formatRelativeTime(page.updatedAt ?? page.createdAt)}
+        </div>
+        {excerpt && <div className="home-pinned-card__excerpt">{excerpt}</div>}
+      </BoardContent>
+    </Board>
   );
 }
+
 function RecentRow({ page, onClick }: { page: Page; onClick: () => void }) {
   return (
-    <div className="home-recent-row" onClick={onClick}>
-      <div className="home-recent-row__icon">
+    <ListItem style={{ cursor: "pointer" }} onClick={onClick}>
+      <div
+        style={{
+          flex: 2,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          minWidth: 0,
+        }}
+      >
         <PageItemIcon cover={page.cover} styles={{ fontSize: 15 }} />
-      </div>
-      <div className="home-recent-row__body">
-        <span className="home-recent-row__title">
+        <span
+          style={{
+            fontSize: 13,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
           {page.title || "Untitled"}
         </span>
         {page.settings?.locked && (
@@ -101,18 +146,146 @@ function RecentRow({ page, onClick }: { page: Page; onClick: () => void }) {
           </Badge>
         )}
       </div>
-      <Badge>
-        <Clock className="tiptap-badge-icon" />
-        <span className="tiptap-badge-text">
-          {formatRelativeTime(page.updatedAt ?? page.createdAt)}
-        </span>
-      </Badge>
-      <ChevronRight size={13} className="home-recent-row__arrow" />
+      <span style={{ flex: 1, fontSize: 13 }}>Jule Sall</span>
+      <span
+        style={{
+          width: 100,
+          fontSize: 12,
+          color: "var(--tt-theme-text)",
+          textAlign: "right",
+        }}
+      >
+        {formatRelativeTime(page.updatedAt ?? page.createdAt)}
+      </span>
+      <ChevronRight
+        size={13}
+        style={{ color: "var(--tt-text-color)", flexShrink: 0 }}
+      />
+    </ListItem>
+  );
+}
+
+function Tabs() {
+  return (
+    <ButtonGroup orientation="horizontal">
+      <Button data-active-state={"on"}>
+        <Clock1 className="tiptap-button-icon" />
+        <span className="tiptap-button-text">Recents</span>
+      </Button>
+      <Spacer orientation="horizontal" size={10} />
+      <Button variant="ghost">
+        <Star className="tiptap-button-icon" />
+        <span className="tiptap-button-text">Favorites</span>
+      </Button>
+      <Spacer orientation="horizontal" size={10} />
+      <Button variant="ghost">
+        <Users className="tiptap-button-icon" />
+        <span className="tiptap-button-text">Shared</span>
+      </Button>
+      <Spacer orientation="horizontal" size={10} />
+      <Button variant="ghost">
+        <Lock className="tiptap-button-icon" />
+        <span className="tiptap-button-text">Private</span>
+      </Button>
+    </ButtonGroup>
+  );
+}
+
+const headerStyle: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 500,
+  color: "var(--tt-theme-text)",
+  textTransform: "uppercase",
+  letterSpacing: "0.06em",
+  padding: "0 0 8px",
+  borderBottom: "0.5px solid var(--tt-border-color, rgba(0,0,0,0.08))",
+};
+
+const cellStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "8px 0",
+  minWidth: 0,
+  borderBottom: "0.5px solid var(--tt-border-color, rgba(0,0,0,0.08))",
+};
+
+function RecentGrid({ recent }: { recent: Page[] }) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "2fr 1fr 1fr",
+        width: "100%",
+      }}
+    >
+      {/* Headers */}
+      <div style={headerStyle}>
+        <Button variant="ghost">
+          <File className="tiptap-button-icon" />
+          <span className="tiptap-button-text">Page</span>
+        </Button>
+      </div>
+      <div style={headerStyle}>
+        <Button variant="ghost">
+          <CircleUser className="tiptap-button-icon" />
+          <span className="tiptap-button-text">Created by</span>
+        </Button>
+      </div>
+      <div style={headerStyle}>
+        <Button variant="ghost">
+          <Clock className="tiptap-button-icon" />
+          <span className="tiptap-button-text">Last edited time</span>
+        </Button>
+      </div>
+
+      {/* Rows */}
+      {recent.map((page) => (
+        <>
+          <div key={`${page.id}-title`} style={cellStyle}>
+            <PageItemIcon cover={page.cover} styles={{ fontSize: 15 }} />
+            <span
+              style={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontSize: 14,
+                fontWeight: 500,
+              }}
+            >
+              {page.title || "Untitled"}
+            </span>
+            {page.settings?.locked && (
+              <Badge data-style="gray">
+                <Lock className="tiptap-badge-icon" />
+                <span className="tiptap-badge-text">Locked</span>
+              </Badge>
+            )}
+          </div>
+          <div key={`${page.id}-author`} style={cellStyle}>
+            <AvatarDemo />
+            <span style={{ fontSize: 14 }}>Jule Sall</span>
+          </div>
+          <div
+            key={`${page.id}-date`}
+            style={{
+              ...cellStyle,
+              borderBottom:
+                "0.5px solid var(--tt-border-color, rgba(0,0,0,0.08))",
+            }}
+          >
+            <span style={{ fontSize: 14, fontWeight: 500 }}>
+              {formatRelativeTime(page.updatedAt ?? page.createdAt)}
+            </span>
+          </div>
+        </>
+      ))}
     </div>
   );
 }
 
-export function HomePageContent({ sidebarWidth }: { sidebarWidth: number }) {
+export function HomePageContent() {
+  const { sidebarWidth } = useEditorLayout();
   const { pages, addPageAndActivateAsync, setActivePageId } = useActivePage();
 
   if (!pages) return null;
@@ -140,66 +313,54 @@ export function HomePageContent({ sidebarWidth }: { sidebarWidth: number }) {
     >
       <div className="home-page-content__inner">
         <div className="home-page-content__header">
-          <div>
-            <h1 className="home-page-content__title">Home</h1>
-            <p className="home-page-content__sub">Your workspace at a glance</p>
-          </div>
+          <Greeting name="Jule" className="home-greeting" />
         </div>
+        <CardItemGroup
+          orientation="vertical"
+          style={{ alignItems: "flex-start" }}
+        >
+          {pinned.length > 0 && (
+            <section className="home-section">
+              <div className="home-section__label">
+                <Pin size={12} />
+                Pinned
+              </div>
+              <CardItemGroup
+                orientation="horizontal"
+                style={{ width: "100%", gap: 15 }}
+              >
+                {pinned.map((page) => (
+                  <PinnedCard
+                    key={page.id}
+                    page={page}
+                    onClick={() => navigate(page.id)}
+                  />
+                ))}
+              </CardItemGroup>
+            </section>
+          )}
 
-        {pinned.length > 0 && (
-          <section className="home-section">
-            <div className="home-section__label">
-              <Pin size={12} />
-              Pinned
+          <Spacer orientation="vertical" size={20} />
+          <Tabs />
+          <Spacer orientation="vertical" size={10} />
+
+          {recent.length > 0 && <RecentGrid recent={recent} />}
+
+          {pages.length === 0 && (
+            <div className="home-empty">
+              <FileText size={32} className="home-empty__icon" />
+              <p className="home-empty__text">No pages yet</p>
+              <button
+                className="home-page-content__new-btn"
+                onClick={() =>
+                  addPageAndActivateAsync({ title: "New Page", parentId: null })
+                }
+              >
+                Create your first page
+              </button>
             </div>
-            <div className="home-pinned-grid">
-              {pinned.map((page) => (
-                <PinnedCard
-                  key={page.id}
-                  page={page}
-                  onClick={() => navigate(page.id)}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {recent.length > 0 && (
-          <section className="home-section">
-            <Button
-              variant="ghost"
-              data-active-state="on"
-              style={{ maxWidth: 100 }}
-            >
-              <Clock className="tiptap-button-icon" />
-              <span>Recent</span>
-            </Button>
-
-            <div className="home-recent-list">
-              {recent.map((page) => (
-                <CardItemGroup orientation="vertical" key={page.id}>
-                  <Separator orientation="horizontal" style={{ height: 0.2 }} />
-                  <RecentRow page={page} onClick={() => navigate(page.id)} />
-                </CardItemGroup>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {pages.length === 0 && (
-          <div className="home-empty">
-            <FileText size={32} className="home-empty__icon" />
-            <p className="home-empty__text">No pages yet</p>
-            <button
-              className="home-page-content__new-btn"
-              onClick={() =>
-                addPageAndActivateAsync({ title: "New Page", parentId: null })
-              }
-            >
-              Create your first page
-            </button>
-          </div>
-        )}
+          )}
+        </CardItemGroup>
       </div>
     </div>
   );

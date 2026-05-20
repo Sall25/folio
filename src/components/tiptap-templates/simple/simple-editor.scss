@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
 
 $font-inter: 'Inter', sans-serif;
 
@@ -41,6 +42,19 @@ body,
 #app {
   //height: 100%;
   background-color: var(--tt-bg-color);
+  /* Font Family: A comprehensive system font stack */
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  
+  /* Sizing and Spacing */
+  font-size: 16px;
+  line-height: 1.5; /* Equivalent to 24px */
+  font-weight: 400;
+  letter-spacing: normal;
+
+  /* Text Appearance */
+  color: rgb(240, 239, 237);
+  text-transform: none;
+  font-style: normal;
 }
 
 #root,
@@ -111,7 +125,7 @@ body,
   content-visibility: auto;
       contain-intrinsic-size: 1px 30px;
   contain: layout style;
-  font-family: "DM Sans", sans-serif;
+  font-family:  'Inter', sans-serif;
 
   $highlight-colors: purple, yellow, blue, red, green, orange;
   $block-elements: p, h1, h2, h3, h4, h5, h6, blockquote, li, ul, ol, th, td;
@@ -213,7 +227,7 @@ body,
   padding-top: var(--tt-toolbar-height); // clears the fixed toolbar
   height: calc(100vh - var(--tt-toolbar-height));
   margin-right: -65px;
-  overflow-y: scroll;
+  overflow-y: visible;
   overflow-x: hidden;
   &::-webkit-scrollbar { width: 6px; }
   &::-webkit-scrollbar-thumb {
@@ -254,7 +268,7 @@ body,
 
 // Center editor takes all remaining space
 .simple-editor-content {
-  font-size: 0.88rem;
+  font-size: 1rem;
   min-width: 600px;
   // margin-top: 20px;
 

@@ -4,8 +4,9 @@
   --logo-name-color: #6b7280;
   --logo-mark-bg: #6b7280;
 }
+// --logo-name-color: rgb(240, 239, 237);
 .dark {
-  --logo-name-color: #9ca3af;
+  --logo-name-color: rgb(240, 239, 237);
   --logo-mark-bg: #4b5563;
 }
 
@@ -21,7 +22,7 @@
     width: 32px;
     height: 32px;
     flex-shrink: 0;
-    background: var(--logo-mark-bg);
+    background: var(--tt-bg-color);
     border-radius: 7px;
     display: flex;
     align-items: center;
@@ -48,6 +49,9 @@
     color: var(--logo-name-color, #111);
     letter-spacing: -0.4px;
     line-height: 1;
+   // font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  // font-size: 14px;
+  font-weight: 500;
   }
 
   &__sub {

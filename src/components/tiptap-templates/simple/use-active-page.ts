@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { usePages, type UsePagesReturn } from "./use-pages";
 import type { Page } from "./types";
 import type { ID } from "src/components/tiptap-node/inline-database/types/types";
-import { useMatch, useNavigate } from "@tanstack/react-location";
+import { useLocation, useNavigate } from "@tanstack/react-location";
 
 function findPage(pages: Page[], id: number): Page | undefined {
   for (const page of pages) {
@@ -64,13 +64,14 @@ export function useActivePage(): UseActivePageReturn {
     addPageTemplateAsync,
   } = usePages();
 
-  const { params } = useMatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const activePageId = useMemo(
-    () => (params.pageId ? Number(params.pageId) : undefined),
-    [params.pageId],
-  );
+  const activePageId = useMemo(() => {
+    const match = location.current.pathname.match(/\/page\/(\d+)/);
+    return match ? Number(match[1]) : undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.current.pathname]);
 
   const activePage = useMemo(
     () =>

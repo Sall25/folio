@@ -3,10 +3,17 @@
   pointer-events: auto;
   transform: translateX(-15px);
   gap: 0px;
-  transition: top 0.25s ease-out, left 0.25s ease-out;
+  transition: top 0.25s ease-out, left 0.25s ease-out, visibility 0.25s ease;
   // transition-property: top;
   //   transition-duration: .25s;
   //   transition-timing-function: ease-out;
+
+  &.hide{
+    visibility: hidden;
+  }
+  &.show{
+    visibility: visible;
+  }
 
   .plus-button,
   .grip-button{

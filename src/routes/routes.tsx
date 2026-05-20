@@ -6,10 +6,11 @@ export const location = new ReactLocation();
 export const routes = [
   {
     path: "/",
-    element: <SimpleEditor />,
+    element: <SimpleEditor view="home" />,
   },
   {
-    path: "/page/:pageId",
-    element: <SimpleEditor />,
+    path: "page/:pageId",
+    element: <SimpleEditor view="page" />,
   },
+  { path: "resources", element: <SimpleEditor view="resources" /> },
 ];

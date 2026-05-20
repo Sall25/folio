@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Editor } from "@tiptap/core";
 import { DragHandle as TiptapDragHandle } from "./drag-handle-extension-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DragHandleMenu } from "./drag-handle-menu/drag-handle-menu";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -89,6 +89,18 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
   const targetRef = useRef(target);
   const posRef = useRef(pos);
 
+  // Hide the drag handle while a column is being resized to avoid
+  // it flickering or repositioning during the resize interaction
+  const [isColumnResizing, setIsColumnResizing] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      setIsColumnResizing((e as CustomEvent).detail.isResizing);
+    };
+    document.addEventListener("column:resize", handler);
+    return () => document.removeEventListener("column:resize", handler);
+  }, []);
+
   const onAction = useCallback(() => {
     setOpen(false);
     editor?.commands.unlockDragHandle();
@@ -98,7 +110,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
 
   return (
     <TiptapDragHandle
-      className={`drag-handle`}
+      className={`drag-handle ${isColumnResizing ? "hide" : "show"}`}
       editor={editor}
       computePositionConfig={{
         placement: "left-start",
@@ -108,6 +120,8 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
 
         const newTarget = NODE_LABELS[node.type.name] ?? "paragraph";
 
+        // Only update refs/state when values actually change to avoid
+        // unnecessary re-renders on every cursor move
         if (newPos !== posRef.current) {
           posRef.current = newPos;
           setPos(newPos);
@@ -123,7 +137,8 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
         setOpen(false);
         editor.view.dom.classList.add("is-dragging");
 
-        // Emit drag start with the node pos
+        // Broadcast the dragged node's position so other parts of the app
+        // (e.g. the column drop plugin) can reference it during the drag
         document.dispatchEvent(
           new CustomEvent("draghandle:dragstart", {
             detail: { pos: posRef.current },
@@ -132,9 +147,9 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
       }}
       onElementDragEnd={() => {
         isDraggingRef.current = false;
-
         editor.view.dom.classList.remove("is-dragging");
 
+        // Broadcast drag end so the column drop plugin can clear globalDragNodePos
         document.dispatchEvent(
           new CustomEvent("draghandle:dragend", {
             detail: { pos: posRef.current },
@@ -144,10 +159,25 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
         const pos = posRef.current;
         if (pos === -1 || !editor) return;
 
+        // Defer cleanup to the next frame so ProseMirror has fully settled
+        // the drop and updated the document state
         requestAnimationFrame(() => {
           const { state } = editor.view;
 
-          // Check for empty columns and clean them up
+          // Use the selection position after the drop rather than the stale
+          // posRef, since ProseMirror moves the selection to the dropped node
+          const $pos = state.doc.resolve(state.selection.from);
+
+          // If the node was dropped inside a columnBlock, the column drop
+          // plugin already handled the transaction — skip cleanup here
+          const insideColumnBlock = Array.from({ length: $pos.depth }, (_, i) =>
+            $pos.node(i + 1),
+          ).some((n) => n.type.name === "columnBlock");
+
+          if (insideColumnBlock) return;
+
+          // Scan the document for columnBlocks that now have empty columns
+          // as a result of the drag (the dragged content left a hole)
           const emptyColumnPositions: {
             columnPos: number;
             columnBlockPos: number;
@@ -174,7 +204,8 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
 
           if (emptyColumnPositions.length === 0) return;
 
-          // Process each affected columnBlock
+          // Track which columnBlocks have already been processed to avoid
+          // dispatching multiple transactions for the same block
           const processedBlocks = new Set<number>();
 
           for (const { columnBlockPos } of emptyColumnPositions) {
@@ -186,7 +217,8 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
             const columnBlockType = currentState.schema.nodes.columnBlock;
             const paragraphType = currentState.schema.nodes.paragraph;
 
-            // Re-read the current columnBlock from current state
+            // Re-read the columnBlock from the current state since a previous
+            // iteration may have mutated the document
             const currentBlockNode = currentState.doc.nodeAt(columnBlockPos);
             if (
               !currentBlockNode ||
@@ -194,7 +226,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
             )
               continue;
 
-            // Filter out empty columns
+            // Collect non-empty columns — these are the ones we keep
             const remainingColumns: any[] = [];
             currentBlockNode.forEach((col: any) => {
               const isEmpty =
@@ -206,14 +238,16 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
             const tr = currentState.tr;
 
             if (remainingColumns.length === 0) {
-              // All columns empty — replace the whole columnBlock with a paragraph
+              // All columns are empty — replace the entire columnBlock with
+              // a plain paragraph so the document stays valid
               tr.replaceWith(
                 columnBlockPos,
                 columnBlockPos + currentBlockNode.nodeSize,
                 paragraphType.create(),
               );
             } else if (remainingColumns.length === 1) {
-              // One column left — unwrap it, put its content directly in the doc
+              // Only one column remains — unwrap it and lift its content
+              // directly into the document, removing the columnBlock wrapper
               const soleColumn = remainingColumns[0];
               tr.replaceWith(
                 columnBlockPos,
@@ -223,7 +257,8 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
                   : paragraphType.create(),
               );
             } else {
-              // Redistribute widths among remaining columns
+              // Multiple columns remain — redistribute widths evenly and
+              // rebuild the columnBlock without the empty column
               const newWidth = `${Math.round(100 / remainingColumns.length)}%`;
               const resized = remainingColumns.map((col: any) =>
                 columnType.create({ width: newWidth }, col.content),
@@ -233,40 +268,31 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
                 columnBlockPos + currentBlockNode.nodeSize,
                 columnBlockType.create({}, resized),
               );
+
+              // Clear any stale px-based inline styles left over from a
+              // previous resize so the new % widths can take effect via flex
+              requestAnimationFrame(() => {
+                editor.view.dom
+                  .querySelectorAll('[data-type="column"]')
+                  .forEach((el) => {
+                    const htmlEl = el as HTMLElement;
+                    htmlEl.style.width = "";
+                    htmlEl.style.flexBasis = "";
+                  });
+              });
             }
 
             dispatch(tr);
           }
 
-          // Original tableWrapper cleanup
+          // If the original drag position now holds a tableWrapper (e.g. a
+          // table was dragged out of a column), remove it as it's now orphaned
           const node = editor.state.doc.nodeAt(pos);
           if (node?.type.name === "tableWrapper") {
             editor.chain().setNodeSelection(pos).deleteSelection().run();
           }
         });
       }}
-      // onElementDragEnd={() => {
-      //   isDraggingRef.current = false;
-
-      //   editor.view.dom.classList.remove("is-dragging");
-
-      //   document.dispatchEvent(
-      //     new CustomEvent("draghandle:dragend", {
-      //       detail: { pos: posRef.current },
-      //     }),
-      //   );
-
-      //   const pos = posRef.current;
-      //   if (pos === -1 || !editor) return;
-
-      //   requestAnimationFrame(() => {
-      //     const node = editor.state.doc.nodeAt(pos);
-      //     if (node?.type.name === "tableWrapper") {
-      //       editor.chain().setNodeSelection(pos).deleteSelection().run();
-      //     }
-      //   });
-      // }}
-
       nestedOptions={nestedOptions as unknown as NormalizedNestedOptions}
     >
       <CardItemGroup orientation="horizontal">
@@ -284,6 +310,8 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
         <DropdownMenu
           open={open}
           onOpenChange={(next) => {
+            // Ignore open/close events that fire during a drag — the menu
+            // should never open while the user is dragging a node
             if (isDraggingRef.current) return;
             if (next) {
               editor.commands.lockDragHandle();
@@ -294,7 +322,8 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
           }}
         >
           <ColorDropdownProvider>
-            {/* Hidden anchor — only used for menu positioning */}
+            {/* Hidden anchor — only used to anchor the dropdown menu position,
+                the actual trigger is the grip button below */}
             <DropdownMenuTrigger asChild>
               <span
                 style={{
@@ -306,7 +335,9 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
               />
             </DropdownMenuTrigger>
 
-            {/* Grip is a plain button — nothing intercepts its pointer events */}
+            {/* Grip button — selecting the node on pointer down ensures it's
+                selected before the drag starts, giving ProseMirror the right
+                context for the drag operation */}
             <Button
               type="button"
               variant="ghost"
@@ -323,6 +354,8 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
               }}
               style={{
                 cursor: "grab",
+                // Disable pointer events while the menu is open so the grip
+                // button doesn't interfere with menu item clicks
                 pointerEvents: open ? "none" : "auto",
               }}
             >

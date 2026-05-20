@@ -15,7 +15,11 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
 
   if (cover.target === "Emoji" && hasIcon) {
     return (
-      <span className="page-icon" style={{ ...styles }} aria-hidden="true">
+      <span
+        className="page-icon"
+        style={{ ...styles, fontSize: 16 }}
+        aria-hidden="true"
+      >
         {cover.iconName}
       </span>
     );
@@ -32,18 +36,18 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
                 : cover.color
             }
             name={cover.iconName!}
-            size={16}
-            strokeWidth={1.8}
+            size={20}
+            strokeWidth={2}
           />
         ) : (
           <File
-            size={16}
-            strokeWidth={1.8}
             stroke={
               !cover.color || cover.color === "var(--tt-text-color)"
                 ? "var(--tt-theme-text)"
                 : cover.color
             }
+            size={20}
+            strokeWidth={2}
           />
         )}
       </span>

@@ -30,7 +30,6 @@ import {
   NodeClearContents,
   NodeColor,
   NodeFit,
-  TallCursor,
 } from "src/components/tiptap-extension";
 
 import { ImageUploadNode } from "src/components/tiptap-node/image-upload-node/image-upload-node-extension";

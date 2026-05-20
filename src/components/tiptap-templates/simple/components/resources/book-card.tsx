@@ -1,6 +1,7 @@
 import { Card, CardBody } from "src/components/tiptap-ui-primitive/card";
 import { COVER_COLORS } from "./data/cover-colors";
 import "./book-card.scss";
+import { Badge } from "src/components/tiptap-ui-primitive/badge";
 
 export type ReadingStatus = "reading" | "done" | "queue";
 
@@ -28,7 +29,7 @@ export function BookCard({ book }: BookCardProps) {
   const coverBg = book.coverColor ?? COVER_COLORS.blue;
 
   return (
-    <Card className="book-card">
+    <Card className="book-card" style={{ boxShadow: "none" }}>
       <div className="book-card__cover" style={{ background: coverBg }}>
         {book.coverImage ? (
           <img
@@ -53,11 +54,11 @@ export function BookCard({ book }: BookCardProps) {
         </p>
 
         <div className="book-card__footer">
-          <span
+          <Badge
             className={`book-card__status book-card__status--${book.status}`}
           >
             {STATUS_LABELS[book.status]}
-          </span>
+          </Badge>
 
           {book.course && (
             <span className="book-card__course" title={book.course}>

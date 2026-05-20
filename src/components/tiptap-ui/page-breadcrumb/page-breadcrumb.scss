@@ -1,9 +1,11 @@
 .page-breadcrumb {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  padding: 4px 8px;
-  border-radius: 6px;
+  height: 24px;
+  padding-left: 6px;
+  padding-right: 6px;
+  /* Visual styling if needed */
+  border-radius: 4px; 
 
   &__item {
     display: inline-flex;
@@ -18,17 +20,11 @@
   }
 
   &__label {
-    font-family: "Inter", sans-serif;
-    display: inline-flex;
+    margin-right: 6px;
+    display: flex;
     align-items: center;
-    gap: 5px;
-    padding: 2px 4px;
-    border-radius: 4px;
-    border: none;
-    background: none;
-     font-size: 14px;
-    font-weight: 400;
-    color: var(--logo-name-color, rgba(255, 255, 255, 0.5));
+    justify-content: center;
+    flex-shrink: 0;
     cursor: pointer;
     transition: background 100ms ease, color 100ms ease;
 
@@ -44,9 +40,12 @@
   }
 
   &__icon {
-    display: inline-flex;
+    width: 20px;
+    height: 20px;
+    margin-right: 6px;
+    display: flex;
     align-items: center;
+    justify-content: center;
     flex-shrink: 0;
-    font-size: 14px;
   }
 }

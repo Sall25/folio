@@ -85,7 +85,7 @@ function VersionHistorySidebarInner({
     const update = () => {
       if (!activePageRef.current) return;
       const now = Date.now();
-      const VERSION_INTERVAL = 10 * 60 * 1000;
+      const VERSION_INTERVAL = 30 * 60 * 1000;
       if (now - Date.now() >= VERSION_INTERVAL) {
         createVersionAsyncRef.current({
           pageId: activePageRef.current.id,

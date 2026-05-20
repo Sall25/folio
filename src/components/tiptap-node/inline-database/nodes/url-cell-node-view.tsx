@@ -24,7 +24,7 @@ export function UrlCellNodeView({ node, editor, getPos }: NodeViewProps) {
   }
 
   return (
-    <NodeViewWrapper as="div" data-type="url-cell" className="db-td db-td--url">
+    <NodeViewWrapper as="div" data-type="url-cell" className="db-td db-td--url" style={{margin: 0}}>
       <Popover
         open={open}
         onOpenChange={(v) => {

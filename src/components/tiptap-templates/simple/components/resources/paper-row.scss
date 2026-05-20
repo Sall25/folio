@@ -1,6 +1,9 @@
 .paper-row {
   cursor: pointer;
   transition: border-color 0.15s ease;
+  box-shadow: none;
+  justify-content: flex-start;
+  width: 100%;
 
   &:hover {
     border-color: var(--tt-gray-light-a-200);

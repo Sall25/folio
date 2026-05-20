@@ -1,6 +1,13 @@
 .resources-page {
-  padding: 2rem 2.5rem;
+  width: 100%;
+  margin-top: var(--tt-toolbar-height);
+  padding: 1rem 3rem;
+  width: 900px;
   max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
 
   @media (max-width: 640px) {
     padding: 1.25rem 1rem;
@@ -11,19 +18,20 @@
     align-items: flex-start;
     gap: 12px;
     margin-bottom: 1.5rem;
+    width: 100%;
   }
 
   &__title {
     font-size: 26px;
     font-weight: 500;
-    color: var(--tt-text-color);
+    color: var(--tt-theme-text);
     line-height: 1.2;
     margin-bottom: 4px;
   }
 
   &__sub {
     font-size: 13px;
-    color: var(--tt-text-color-muted, #999);
+    color: var(--tt-text-color, #999);
   }
 
   &__add-btn {
@@ -35,10 +43,37 @@
   }
 
   &__separator {
+    height: 0.5px;
     margin-bottom: 1.5rem;
   }
 
   &__panel {
     outline: none;
+    width: 100%;
+     margin-bottom: 30px;
   }
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 4rem 0;
+  }
+
+  &__loading-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--tt-text-color-muted, #ccc);
+    animation: resources-pulse 1.2s ease-in-out infinite;
+
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.4s; }
+  }
+}
+
+@keyframes resources-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50%       { opacity: 1;   transform: scale(1);   }
 }

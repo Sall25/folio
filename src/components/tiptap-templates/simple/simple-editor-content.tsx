@@ -9,14 +9,59 @@ import { DragHandle } from "src/components/tiptap-ui/drag-handle/drag-handle";
 import { ThreadSidebar } from "src/components/tiptap-ui/comments/components/thread-sidebar";
 import { ImageBubble } from "src/components/tiptap-ui/image-bubble";
 import { CoverHeader } from "src/components/tiptap-ui/cover";
-import { TocSidebar } from "src/components/tiptap-node/toc-node/toc-sidebar";
 import { FloatingMenu } from "@tiptap/react/menus";
 
 import { useCoverActions } from "./hooks/use-cover-actions";
-import { useEditorLayout } from "./hooks/use-editor-layout";
 import { FloatingActions } from "./floating-actions";
 import type { Target } from "src/components/tiptap-ui/cover/types";
 import { useActivePage } from "./use-active-page";
+import { useEditorLayout } from "./context/editor-layout-context";
+
+function usePageSwitching() {
+  const { activePageId } = useActivePage();
+  const [switching, setSwitching] = useState(false);
+  const prevPageId = useRef(activePageId);
+
+  useEffect(() => {
+    if (prevPageId.current === activePageId) return;
+    prevPageId.current = activePageId;
+
+    const show = setTimeout(() => setSwitching(true), 0);
+    const hide = setTimeout(() => setSwitching(false), 300);
+
+    return () => {
+      clearTimeout(show);
+      clearTimeout(hide);
+    };
+  }, [activePageId]);
+
+  return switching;
+}
+
+function PageSwitchIndicator({ switching }: { switching: boolean }) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 2,
+        zIndex: 9999,
+        width: 300,
+
+        background: "var(--tt-brand-color-400)",
+        transformOrigin: "left",
+        transform: switching ? "scaleX(0.7)" : "scaleX(1)",
+        opacity: switching ? 1 : 0,
+        transition: switching
+          ? "transform 0.3s ease"
+          : "opacity 0.2s ease 0.1s, transform 0.1s ease",
+      }}
+    />
+  );
+}
+
 // ============================================================
 // Memoized leaves
 // ============================================================
@@ -44,14 +89,13 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
 }) {
   const { editor } = useCurrentEditor();
   const { activePage } = useActivePage();
-  if (!activePage) return null;
 
   return (
     <EditorContent
       editor={editor}
-      data-size={activePage.settings.width}
-      data-text={activePage.settings.text}
-      data-locked={activePage.settings.locked}
+      data-size={activePage?.settings.width}
+      data-text={activePage?.settings.text}
+      data-locked={activePage?.settings.locked}
       role="presentation"
       className={`simple-editor-content ${hasThreads ? "has-threads" : ""}`}
     />
@@ -119,17 +163,9 @@ const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
 // Stable shell — never re-renders from editor transactions
 // ============================================================
 
-const StableShell = React.memo(function StableShell({
-  sidebarWidth,
-  collapsed,
-}: {
-  sidebarWidth: number;
-  collapsed: boolean;
-}) {
-  const { editorWrapperRef, paddingLeft, translateX } = useEditorLayout({
-    sidebarWidth,
-    collapsed,
-  });
+const StableShell = React.memo(function StableShell() {
+  const { editorWrapperRef, paddingLeft, translateX, sidebarWidth, collapsed } =
+    useEditorLayout();
 
   const {
     open,
@@ -204,19 +240,14 @@ const StableShell = React.memo(function StableShell({
 // Root component
 // ============================================================
 
-export function SimpleEditorContent({
-  sidebarWidth,
-  collapsed,
-}: {
-  sidebarWidth: number;
-  collapsed: boolean;
-}) {
+export function SimpleEditorContent() {
   const { editor } = useCurrentEditor();
+  const switching = usePageSwitching();
 
   return (
     <>
-      <StableShell sidebarWidth={sidebarWidth} collapsed={collapsed} />
-      <TocSidebar topOffset={80} maxShowCount={20} />
+      <PageSwitchIndicator switching={switching} />
+      <StableShell />
       <DragHandle editor={editor} />
       <BubbleMenu editor={editor} />
       <ImageBubble editor={editor} />

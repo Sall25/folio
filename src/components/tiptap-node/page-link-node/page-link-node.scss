@@ -13,16 +13,22 @@
   --page-link-node-hover-bg-color: var(--tt-gray-dark-a-100);  
 }
 .page-link-node {
+  /*
+  Typography: Color: rgb(240, 239, 237), Font Size: 16px, Font Family: ui-sans-serif, -apple-system, ...
+Box Model: box-sizing: border-box
+  */
+  font-family: inherit;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 17px !important;
+  font-size: 16px !important;
   cursor: pointer;
   transition: background 100ms ease;
   user-select: none;
   border-bottom: 1px solid var(--tt-border-color);
   padding-bottom: 2px;
-
+  color: rgb(240, 239, 237);
+  box-sizing: border-box;
  
   &:hover{
     background-color: var(--page-link-node-hover-bg-color);

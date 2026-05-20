@@ -45,7 +45,7 @@ export const tableContextPluginKey = new PluginKey<{
 }>("tablePlugin");
 
 export const TableContextPlugin = () => {
-  let locked: boolean;
+  let locked: boolean = false;
 
   return new Plugin({
     key: tableContextPluginKey,
@@ -164,54 +164,6 @@ export const TableContextPlugin = () => {
             );
           });
         },
-        // update(view, prevState) {
-        //   if (locked) return;
-        //   if (view.state.selection.eq(prevState.selection)) return;
-
-        //   const { selection } = view.state;
-
-        //   const meta = tableContextPluginKey.getState(view.state);
-
-        //   // Resolve the target cell — head cell for CellSelection, anchor for regular
-        //   const $cell =
-        //     selection instanceof CellSelection
-        //       ? selection.$headCell
-        //       : selection.$anchor;
-
-        //   // Guard: make sure we're deep enough to have a cell parent
-        //   if ($cell.depth < 2) return;
-
-        //   // Guard: make sure the parent is actually a table cell
-        //   const cellNode = $cell.node(-1);
-        //   if (
-        //     !cellNode ||
-        //     !["tableCell", "tableHeader"].includes(cellNode.type.name)
-        //   )
-        //     return;
-
-        //   const cellPos = $cell.before(-1);
-        //   const cellDOM = view.nodeDOM(cellPos) as HTMLElement | null;
-
-        //   if (!cellDOM || !meta?.parentTableDOM) return;
-
-        //   const cellBox = cellDOM.getBoundingClientRect();
-        //   const tableBox = meta.parentTableDOM.getBoundingClientRect();
-
-        //   const cellRect = {
-        //     top: cellBox.top - tableBox.top,
-        //     left: cellBox.left - tableBox.left,
-        //     width: cellBox.width,
-        //     height: cellBox.height,
-        //   };
-
-        //   view.dispatch(
-        //     view.state.tr.setMeta(tableContextPluginKey, {
-        //       ...meta,
-        //       cellPos,
-        //       cellRect,
-        //     }),
-        //   );
-        // },
       };
     },
     props: {
@@ -219,156 +171,163 @@ export const TableContextPlugin = () => {
         // inside props.handleDOMEvents
         mousemove(view, event) {
           if (locked) return false;
+          queueMicrotask(() => {
+            const meta = tableContextPluginKey.getState(view.state);
 
-          const meta = tableContextPluginKey.getState(view.state);
+            // During cell selection drag — update cellRect to follow the head cell
+            if (view.state.selection instanceof CellSelection) {
+              const pos = view.posAtCoords({
+                left: event.clientX,
+                top: event.clientY,
+              });
+              if (!pos) return false;
 
-          // During cell selection drag — update cellRect to follow the head cell
-          if (view.state.selection instanceof CellSelection) {
-            const pos = view.posAtCoords({
-              left: event.clientX,
-              top: event.clientY,
-            });
-            if (!pos) return false;
+              const $pos = view.state.doc.resolve(pos.pos);
+              if ($pos.depth < 2) return false;
 
-            const $pos = view.state.doc.resolve(pos.pos);
-            if ($pos.depth < 2) return false;
+              const cellNode = $pos.node(-1);
+              if (
+                !cellNode ||
+                !["tableCell", "tableHeader"].includes(cellNode.type.name)
+              )
+                return false;
 
-            const cellNode = $pos.node(-1);
+              const cellPos = $pos.before(-1);
+              if (cellPos === meta?.cellPos) return false; // no change
+
+              const cellDOM = view.nodeDOM(cellPos) as HTMLElement | null;
+              if (cellDOM && meta?.parentTableDOM) {
+                const cellBox = cellDOM.getBoundingClientRect();
+                const tableBox = meta.parentTableDOM.getBoundingClientRect();
+
+                view.dispatch(
+                  view.state.tr.setMeta(tableContextPluginKey, {
+                    ...meta,
+                    cellPos,
+                    cellRect: {
+                      top: cellBox.top - tableBox.top,
+                      left: cellBox.left - tableBox.left,
+                      width: cellBox.width,
+                      height: cellBox.height,
+                    },
+                  }),
+                );
+              }
+              return false;
+            }
+
+            const ctx = getTableContext(view, event);
+            if (!ctx) {
+              return false;
+            }
+
+            const { cell, table } = ctx;
+            const tableContainer = view.nodeDOM(
+              table.pos,
+            ) as HTMLElement | null;
+            if (!tableContainer) return false;
+
+            const actualTable = tableContainer.querySelector("table");
+
+            if (!actualTable) return false;
+
+            const parentTableDOM = actualTable;
+
+            const { map, columnIndex, rowIndex } = getCellIndices(
+              table.node,
+              cell.pos,
+              table.pos,
+            );
+
+            // Perf guard
+
             if (
-              !cellNode ||
-              !["tableCell", "tableHeader"].includes(cellNode.type.name)
-            )
+              meta?.columnIndex === columnIndex &&
+              meta.rowIndex === rowIndex
+            ) {
+              return false;
+            }
+
+            // Guard against stale indices after structural changes
+            if (columnIndex >= map.width || rowIndex >= map.height)
               return false;
 
-            const cellPos = $pos.before(-1);
-            if (cellPos === meta?.cellPos) return false; // no change
-
-            const cellDOM = view.nodeDOM(cellPos) as HTMLElement | null;
-            if (cellDOM && meta?.parentTableDOM) {
-              const cellBox = cellDOM.getBoundingClientRect();
-              const tableBox = meta.parentTableDOM.getBoundingClientRect();
-
-              view.dispatch(
-                view.state.tr.setMeta(tableContextPluginKey, {
-                  ...meta,
-                  cellPos,
-                  cellRect: {
-                    top: cellBox.top - tableBox.top,
-                    left: cellBox.left - tableBox.left,
-                    width: cellBox.width,
-                    height: cellBox.height,
-                  },
-                }),
-              );
-            }
-            return false;
-          }
-
-          const ctx = getTableContext(view, event);
-          if (!ctx) {
-            return false;
-          }
-
-          const { cell, table } = ctx;
-          const tableContainer = view.nodeDOM(table.pos) as HTMLElement | null;
-          if (!tableContainer) return false;
-
-          const actualTable = tableContainer.querySelector("table");
-
-          if (!actualTable) return false;
-
-          const parentTableDOM = actualTable;
-
-          const { map, columnIndex, rowIndex } = getCellIndices(
-            table.node,
-            cell.pos,
-            table.pos,
-          );
-
-          // Perf guard
-
-          if (meta?.columnIndex === columnIndex && meta.rowIndex === rowIndex) {
-            return false;
-          }
-
-          // Guard against stale indices after structural changes
-          if (columnIndex >= map.width || rowIndex >= map.height) return false;
-
-          const { isLastColumn, isLastRow } = getEdgeFlags(
-            map,
-            columnIndex,
-            rowIndex,
-          );
-
-          const rowStart = getRowStart(table.node, table.pos, rowIndex);
-
-          const headerCellRect = getHeaderCellRect(
-            view,
-            table.node,
-            table.pos,
-            columnIndex,
-          );
-
-          const rowRect = getRowRect(view, rowStart);
-
-          const { rowEnd } = getRowRange(table.pos, table.node, rowIndex);
-
-          const tablePos = table.pos;
-
-          const cols = [];
-          const rows = [];
-
-          for (let col = 0; col < map.width; col++) {
-            const rect = getHeaderCellRect(view, table.node, table.pos, col);
-            if (!rect) continue;
-
-            cols.push(rect.width);
-          }
-          for (let row = 0; row < map.height; row++) {
-            const start = getRowStart(table.node, table.pos, row);
-            const rect = getRowRect(view, start);
-            if (!rect) continue;
-
-            rows.push(rect.height);
-          }
-
-          const currentCol = {
-            index: columnIndex,
-            width: headerCellRect?.width ?? 0,
-          };
-          const currentRow = {
-            index: rowIndex,
-            height: rowRect?.height ?? 0,
-          };
-
-          const colCount = map.width;
-          const rowCount = map.height;
-
-          view.dispatch(
-            view.state.tr.setMeta(tableContextPluginKey, {
-              ...meta,
-              currentCol,
-              currentRow,
-              colCount,
-              rowCount,
-              cols,
-              rows,
-              parentTableDOM,
+            const { isLastColumn, isLastRow } = getEdgeFlags(
+              map,
               columnIndex,
               rowIndex,
-              lastColumnIndex: columnIndex,
-              lastRowIndex: rowIndex,
-              isLastColumn,
-              isLastRow,
-              rowStart,
-              rowEnd,
-              headerCellRect,
-              rowRect,
-              tablePos,
-            }),
-          );
+            );
 
-          return false;
+            const rowStart = getRowStart(table.node, table.pos, rowIndex);
+
+            const headerCellRect = getHeaderCellRect(
+              view,
+              table.node,
+              table.pos,
+              columnIndex,
+            );
+
+            const rowRect = getRowRect(view, rowStart);
+
+            const { rowEnd } = getRowRange(table.pos, table.node, rowIndex);
+
+            const tablePos = table.pos;
+
+            const cols = [];
+            const rows = [];
+
+            for (let col = 0; col < map.width; col++) {
+              const rect = getHeaderCellRect(view, table.node, table.pos, col);
+              if (!rect) continue;
+
+              cols.push(rect.width);
+            }
+            for (let row = 0; row < map.height; row++) {
+              const start = getRowStart(table.node, table.pos, row);
+              const rect = getRowRect(view, start);
+              if (!rect) continue;
+
+              rows.push(rect.height);
+            }
+
+            const currentCol = {
+              index: columnIndex,
+              width: headerCellRect?.width ?? 0,
+            };
+            const currentRow = {
+              index: rowIndex,
+              height: rowRect?.height ?? 0,
+            };
+
+            const colCount = map.width;
+            const rowCount = map.height;
+
+            view.dispatch(
+              view.state.tr.setMeta(tableContextPluginKey, {
+                ...meta,
+                currentCol,
+                currentRow,
+                colCount,
+                rowCount,
+                cols,
+                rows,
+                parentTableDOM,
+                columnIndex,
+                rowIndex,
+                lastColumnIndex: columnIndex,
+                lastRowIndex: rowIndex,
+                isLastColumn,
+                isLastRow,
+                rowStart,
+                rowEnd,
+                headerCellRect,
+                rowRect,
+                tablePos,
+              }),
+            );
+
+            return false;
+          });
         },
       },
     },

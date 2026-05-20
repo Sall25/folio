@@ -20,7 +20,8 @@ import { PageItemIcon } from "./page-item-icon";
 import { useMemo } from "react";
 import { useActivePage } from "./use-active-page";
 import { useMatch } from "@tanstack/react-location";
-import type { Page } from "./types";
+import type { Page, View } from "./types";
+import { Home } from "lucide-react";
 
 // ============================================================
 // Types
@@ -31,6 +32,7 @@ export type MobileView = "main" | "highlighter" | "link";
 type MainToolbarProps = {
   isMobile: boolean;
   onTriggerVersionHistory?: () => void;
+  view: View;
 };
 
 type MobileToolbarProps = {
@@ -48,6 +50,7 @@ type SimpleEditorToolbarProps = {
   sidebarWidth?: number;
   versionSidebarWidth?: number;
   onTriggerVersionHistory?: () => void;
+  view: View;
 };
 
 // ============================================================
@@ -67,6 +70,7 @@ function findPage(pages: Page[], id: number): Page | undefined {
 export const MainToolbarContent = ({
   isMobile,
   onTriggerVersionHistory,
+  view,
 }: MainToolbarProps) => {
   const { pages, setActivePageId } = useActivePage();
 
@@ -100,6 +104,14 @@ export const MainToolbarContent = ({
   return (
     <>
       <ToolbarGroup>
+        {view === "home" && (
+          <Button variant="ghost">
+            <Home className="tiptap-button-icon" strokeWidth={2} />
+            <span className="tiptap-button-text" style={{ fontWeight: "bold" }}>
+              Home
+            </span>
+          </Button>
+        )}
         <PageBreadcrumb items={breadcrumbs} />
       </ToolbarGroup>
       <Spacer />
@@ -152,6 +164,7 @@ export const SimpleEditorToolbar = ({
   sidebarWidth,
   versionSidebarWidth,
   onTriggerVersionHistory,
+  view,
 }: SimpleEditorToolbarProps) => (
   <Toolbar
     ref={toolbarRef}
@@ -165,6 +178,7 @@ export const SimpleEditorToolbar = ({
   >
     {mobileView === "main" ? (
       <MainToolbarContent
+        view={view}
         isMobile={isMobile}
         onTriggerVersionHistory={onTriggerVersionHistory}
       />

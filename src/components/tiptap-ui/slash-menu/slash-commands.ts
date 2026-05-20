@@ -233,12 +233,10 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     type: "command",
     title: "Page",
     icon: File,
-    runAsync: async (editor, options) => {
-      const { activePageId, addPageAsync } = options;
+    runAsync: async (editor) => {
+      const parentId = editor.storage.slashCommand.activePageId;
 
-      const parentId = activePageId;
-
-      const newPage = await addPageAsync({
+      const newPage = await editor.storage.slashCommand.addPageAsync({
         title: "New Page",
         parentId: parentId,
       });

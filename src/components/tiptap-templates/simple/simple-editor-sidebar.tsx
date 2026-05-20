@@ -1,4 +1,3 @@
-// simple-editor-sidebar.tsx
 import {
   Search,
   Home,
@@ -6,6 +5,12 @@ import {
   PanelRight,
   PanelLeft,
   Plus,
+  MessageCircle,
+  Inbox,
+  Mic,
+  Library,
+  Store,
+  LibraryBig,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -20,9 +25,10 @@ import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import "./simple-editor-sidebar.scss";
 import { PageItem } from "./page-item";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-location";
 import { useActivePage } from "./use-active-page";
+import { useEditorLayout } from "./context/editor-layout-context";
 import type { Page } from "./types";
 import { Logo } from "./components";
 
@@ -86,7 +92,6 @@ function CreatePageButton() {
       style={{
         justifyContent: "flex-start",
         borderRadius: "var(--tt-radius-sm)",
-        // fontFamily: "inherit",
         fontSize: 13,
         marginTop: 10,
       }}
@@ -97,14 +102,14 @@ function CreatePageButton() {
   );
 }
 
-function WorkspaceHeader({
-  collapsed,
-  onToggle,
-}: {
-  collapsed: boolean;
-  onToggle: () => void;
-}) {
+function WorkspaceHeader() {
+  const { collapsed, onCollapsedChange } = useEditorLayout();
   const [, setHide] = useState(true);
+
+  const onToggle = useCallback(
+    () => onCollapsedChange(!collapsed),
+    [onCollapsedChange, collapsed],
+  );
 
   return (
     <CardHeader>
@@ -114,27 +119,7 @@ function WorkspaceHeader({
         onMouseOver={() => setHide(false)}
         style={{ width: "100%" }}
       >
-        {/* <div
-          style={{
-            width: 24,
-            height: 24,
-            borderRadius: 4,
-            background: "var(--tt-brand-color-400)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 11,
-            fontWeight: 600,
-            color: "#fff",
-            flexShrink: 0,
-            letterSpacing: 0.2,
-          }}
-        >
-          JS
-        </div> */}
         {!collapsed && <Logo collapsed={collapsed} />}
-
-        {/* {!collapsed && <CreatePageButton />} */}
 
         <Spacer orientation="horizontal" />
         <Button
@@ -157,71 +142,98 @@ function WorkspaceHeader({
             />
           )}
         </Button>
-
-        {/* {!collapsed && <WorkSpaceOptions />} */}
       </CardItemGroup>
     </CardHeader>
   );
 }
 
-function NavItems({ collapsed }: { collapsed: boolean }) {
+function SidebarTabs() {
+  const { collapsed } = useEditorLayout();
+  return (
+    <ButtonGroup
+      orientation={collapsed ? "vertical" : "horizontal"}
+      style={{
+        gap: 3,
+        width: "100%",
+        marginTop: 10,
+        marginRight: 5,
+        padding: "5px 10px",
+      }}
+    >
+      <Button className="sidebar-tab">
+        <Home className="sidebar-tab-icon" />
+        {!collapsed && <span className="sidebar-tab-label">Home</span>}
+      </Button>
+
+      <Spacer orientation="horizontal" />
+
+      <ButtonGroup orientation="horizontal">
+        <Button
+          className="sidebar-tab"
+          variant="ghost"
+          tooltip="Comments"
+          style={{ background: "transparent" }}
+        >
+          <MessageCircle className="sidebar-tab-icon" />
+        </Button>
+
+        <Button
+          className="sidebar-tab"
+          variant="ghost"
+          tooltip="Meetings"
+          style={{ background: "transparent" }}
+        >
+          <Mic className="sidebar-tab-icon" />
+        </Button>
+        <Button
+          className="sidebar-tab"
+          variant="ghost"
+          tooltip="Notifications"
+          style={{ background: "transparent" }}
+        >
+          <Inbox className="sidebar-tab-icon" />
+        </Button>
+      </ButtonGroup>
+
+      <Spacer orientation="horizontal" />
+
+      <Button
+        className="sidebar-tab"
+        variant="ghost"
+        tooltip="Search"
+        style={{ background: "transparent" }}
+      >
+        <Search className="sidebar-tab-icon" />
+      </Button>
+    </ButtonGroup>
+  );
+}
+
+function NavItems() {
+  const { collapsed } = useEditorLayout();
   const { debounceUpdatePage } = useActivePage();
   const navigate = useNavigate();
+
   const handleHomeClick = () => {
     debounceUpdatePage.flush();
     navigate({ to: "/" });
   };
+
   return (
-    <ButtonGroup
-      style={{ gap: 3, width: "100%", marginTop: 10, marginRight: 5 }}
-    >
-      <ButtonGroup
-        style={{ gap: 3, width: "100%" }}
-        orientation="vertical"
-        // orientation={collapsed ? "vertical" : "horizontal"}
-      >
-        <Button
-          variant="ghost"
-          title="Home"
-          onClick={handleHomeClick}
-          style={{
-            padding: "3px 10px",
-            minHeight: 20,
-            height: 28,
-            // fontFamily: "inherit",
-          }}
-        >
-          <Home strokeWidth={2.25} className="tiptap-button-icon" />
-          {!collapsed && <span className="tiptap-button-text">Home</span>}
-        </Button>
-
-        <Spacer orientation={collapsed ? "vertical" : "horizontal"} />
-
-        <Button
-          variant="ghost"
-          title="Search"
-          style={{
-            padding: "3px 10px",
-            minHeight: 20,
-            height: 28,
-            // fontFamily: "inherit",
-          }}
-        >
-          <Search className="tiptap-button-icon" />
-          {!collapsed && <span className="tiptap-button-text">Search</span>}
-        </Button>
-
-        <Spacer orientation={collapsed ? "vertical" : "horizontal"} />
-
-        <Button
-          variant="ghost"
-          title="Templates"
-          // style={{ fontFamily: "inherit" }}
-        >
-          <LayoutTemplate strokeWidth={2.25} className="tiptap-button-icon" />
-          {!collapsed && <span className="tiptap-button-text">Templates</span>}
-        </Button>
-      </ButtonGroup>
+    <ButtonGroup className="sidebar-nav-item" orientation="vertical">
+      <Button variant="ghost" onClick={handleHomeClick}>
+        <LibraryBig
+          size={32}
+          strokeWidth={1.8}
+          className="tiptap-button-icon"
+        />
+        {/* <Library strokeWidth={2.5} className="tiptap-button-icon" /> */}
+        {!collapsed && <span className="tiptap-button-text">Library</span>}
+      </Button>
+      <Button variant="ghost" style={{ fontWeight: 500 }}>
+        <Store size={32} strokeWidth={1.8} className="tiptap-button-icon" />
+        {!collapsed && <span className="tiptap-button-text">Marketplace</span>}
+      </Button>
     </ButtonGroup>
   );
 }
@@ -252,70 +264,65 @@ function PagesList({ pages }: { pages: Page[] }) {
     () => flattenPages(pages).filter((p) => p.category === "Template"),
     [pages],
   );
+
   return (
     <CardItemGroup className="sidebar-pages">
-      {recentPages.length > 0 && (
-        <>
-          <CardGroupLabel style={{ color: "var(--tt-paragraph-text-color)" }}>
-            Recents
-          </CardGroupLabel>
-          <CardItemGroup style={{ gap: 2 }}>
-            {recentPages.map((page) => (
-              <PageItem key={page.id} page={page} />
-            ))}
-          </CardItemGroup>
-        </>
-      )}
+      <CardItemGroup orientation="vertical">
+        {recentPages.length > 0 && (
+          <>
+            <CardGroupLabel style={{ color: "var(--tt-paragraph-text-color)" }}>
+              Recents
+            </CardGroupLabel>
+            <CardItemGroup style={{ gap: 2 }}>
+              {recentPages.map((page) => (
+                <PageItem key={page.id} page={page} />
+              ))}
+            </CardItemGroup>
+          </>
+        )}
 
-      <CreatePageButton />
+        <CreatePageButton />
 
-      <Separator orientation="horizontal" style={{ height: 0.5 }} />
+        <Separator orientation="horizontal" style={{ height: 0.5 }} />
 
-      <CardGroupLabel>Pages</CardGroupLabel>
+        <CardGroupLabel>Pages</CardGroupLabel>
 
-      {otherPages.length === 0 && (
-        <p className="sidebar-empty">No pages yet.</p>
-      )}
+        {otherPages.length === 0 && (
+          <p className="sidebar-empty">No pages yet.</p>
+        )}
 
-      <CardItemGroup style={{ gap: 2 }}>
-        {otherPages.map((page) => (
-          <PageItem
-            key={page.id}
-            page={page}
-            disableActive={recentPages.some((r) => r.id === page.id)}
-          />
-        ))}
+        <CardItemGroup style={{ gap: 2 }}>
+          {otherPages.map((page) => (
+            <PageItem
+              key={page.id}
+              page={page}
+              disableActive={recentPages.some((r) => r.id === page.id)}
+            />
+          ))}
+        </CardItemGroup>
+
+        {templatePages.length > 0 && (
+          <>
+            <Separator orientation="horizontal" style={{ height: 0.5 }} />
+            <CardGroupLabel>Templates</CardGroupLabel>
+            <CardItemGroup style={{ gap: 2 }}>
+              {templatePages.map((page) => (
+                <PageItem key={page.id} page={page} />
+              ))}
+            </CardItemGroup>
+          </>
+        )}
       </CardItemGroup>
-
-      {templatePages.length > 0 && (
-        <>
-          <Separator orientation="horizontal" style={{ height: 0.5 }} />
-          <CardGroupLabel>Templates</CardGroupLabel>
-          <CardItemGroup style={{ gap: 2 }}>
-            {templatePages.map((page) => (
-              <PageItem key={page.id} page={page} />
-            ))}
-          </CardItemGroup>
-        </>
-      )}
     </CardItemGroup>
   );
 }
 
-// ============================================================
-// Main component
-// ============================================================
-
-export function SimpleEditorSidebar({
-  collapsed,
-  onToggle,
-}: {
-  collapsed: boolean;
-  onToggle: () => void;
-}) {
+export function SimpleEditorSidebar() {
+  const { collapsed } = useEditorLayout();
   const { pages } = useActivePage();
 
   if (!pages) return null;
+
   return (
     <Card
       className={`sidebar ${collapsed ? "sidebar--collapsed" : ""}`}
@@ -325,20 +332,15 @@ export function SimpleEditorSidebar({
         left: 0,
         borderRadius: 0,
         boxShadow: "none",
-        width: collapsed ? 52 : 270,
+        width: collapsed ? 52 : 290,
         transition: "width 0.2s ease",
       }}
     >
-      {/* ── Workspace ── */}
-      <WorkspaceHeader collapsed={collapsed} onToggle={onToggle} />
-
-      <NavItems collapsed={collapsed} />
-
+      <WorkspaceHeader />
+      <SidebarTabs />
+      <NavItems />
       <Separator orientation="horizontal" />
-
-      {/* ── Pages ── */}
       {!collapsed && <PagesList pages={pages} />}
-
       {!collapsed && (
         <>
           <Separator orientation="horizontal" />

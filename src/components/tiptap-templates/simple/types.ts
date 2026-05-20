@@ -57,3 +57,5 @@ export type SimpleEditorContentProps = {
 };
 
 export type SaveState = "saved" | "unsaved" | "saving";
+
+export type View = "home" | "page" | "resources";

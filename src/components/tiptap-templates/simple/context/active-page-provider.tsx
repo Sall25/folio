@@ -6,6 +6,7 @@ import type { Transaction } from "@tiptap/pm/state";
 import { useActivePage } from "../use-active-page";
 import type { Page } from "../types";
 import { useWhyDidYouRender } from "src/lib/useWhyDidYouRender";
+import { usePages } from "../use-pages";
 
 function getTitleChange(
   editor: Editor,
@@ -42,8 +43,10 @@ function findPage(pages: Page[], id: number): Page | undefined {
 }
 
 export function ActivePageProvider({ children }: { children: ReactNode }) {
+  const { addPageAsync } = usePages();
   const {
     activePageId,
+    setActivePageId,
     activePage,
     debounceUpdatePage,
     debounceUpdatePageFast,
@@ -107,26 +110,36 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!editor) return;
+    if (activePageId === undefined) return;
+    queueMicrotask(() => {
+      editor.commands.syncSlashCommandCtx({
+        activePageId,
+        setActivePageId,
+        addPageAsync,
+      });
+    });
+  }, [activePageId, setActivePageId, addPageAsync, editor]);
+
+  useEffect(() => {
+    if (!editor) return;
     if (!pages) return;
 
-    const newPage =
-      activePageId === undefined
-        ? null
-        : (findPage(pages, activePageId) ?? null);
+    requestAnimationFrame(() => {
+      queueMicrotask(() => {
+        const newPage =
+          activePageId === undefined
+            ? null
+            : (findPage(pages, activePageId) ?? null);
 
-    if (!newPage) return;
+        if (!newPage) return;
 
-    const content = newPage.content;
-    const id = newPage.id;
+        const content = newPage.content;
+        const id = newPage.id;
 
-    const raf = requestAnimationFrame(() => {
-      if (activePageId !== id) return;
-      queueMicrotask(() =>
-        editor.commands.setContent(content, { emitUpdate: false }),
-      );
+        if (activePageId !== id) return;
+        editor.commands.setContent(content, { emitUpdate: false });
+      });
     });
-
-    return () => cancelAnimationFrame(raf);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePageId, isLoading]);
@@ -149,6 +162,7 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
         debounceUpdatePageFast,
         pages,
         isLoading,
+        setActivePageId,
       }}
     >
       {children}

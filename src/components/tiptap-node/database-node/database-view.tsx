@@ -9,7 +9,6 @@ import "./database-view.scss";
 type Panel = "filter" | "sort" | "group" | "props" | null;
 
 // ─── cell renderers ────────────────────────────────────────────────────────
-
 function CellValue({
   prop,
   value,
