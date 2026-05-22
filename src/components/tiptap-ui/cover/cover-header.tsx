@@ -69,6 +69,15 @@ function IconButton({
     [updatePageAsync, page, target, cover],
   );
 
+  const onRemoveIconAsync = useCallback(async () => {
+    if (!page) return;
+    await updatePageAsync({
+      ...page,
+      cover: { ...page.cover, iconName: null, target: null, color: undefined },
+    });
+    onOpenChange(false);
+  }, [updatePageAsync, page, onOpenChange]);
+
   return (
     <div
       style={{
@@ -107,6 +116,19 @@ function IconButton({
                 strokeWidth={2}
               />
             )}
+            {displayCover?.target === "Upload" && displayCover?.iconName && (
+              <img
+                src={displayCover.iconName}
+                alt="icon"
+                style={{
+                  width: 85,
+                  height: 85,
+                  objectFit: "contain",
+                  borderRadius: 4,
+                  display: "block",
+                }}
+              />
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverPortal container={document.getElementById("root")}>
@@ -119,6 +141,7 @@ function IconButton({
               target={target}
               onTargetChange={onTargetChange}
               onSelect={onSelectIconAsync}
+              onRemove={onRemoveIconAsync}
             />
           </PopoverContent>
         </PopoverPortal>
@@ -172,6 +195,7 @@ export function CoverHeader({
         width: "100%",
         position: "relative",
         maxHeight: 280,
+        minHeight: 50,
       }}
     >
       {/* ── Cover display ── */}

@@ -1,4 +1,4 @@
-export type Target = "Emoji" | "Icons";
+export type Target = "Emoji" | "Icons" | "Upload";
 
 export type CoverTab = "reposition" | "unsplash" | "gradient" | "url";
 

@@ -24,6 +24,8 @@ declare module "@tiptap/core" {
       moveRowDown: (rowIndex: number) => ReturnType;
       moveColLeft: (colIndex: number) => ReturnType;
       moveColRight: (colIndex: number) => ReturnType;
+      selectColumn: (colIndex: number, tablePos: number) => ReturnType;
+      selectRow: (rowIndex: number, tablePos: number) => ReturnType;
       sortColumn: (
         colIndex: number,
         tablePos: number,

@@ -21,7 +21,7 @@ export function CaptionButton({
   editor: providedEditor,
   text,
   hideWhenUnavailable = false,
-  allowedBlockTypes = ["figure"],
+  allowedBlockTypes = ["image"],
   tooltip = "Caption",
   showTooltip,
 }: CaptionButtonProps) {
@@ -39,7 +39,7 @@ export function CaptionButton({
     <Button
       variant="ghost"
       onClick={() => {
-        editor?.commands.focusFigureCaption();
+        editor?.commands.focusImageCaption();
       }}
       tooltip={tooltip}
       showTooltip={showTooltip}

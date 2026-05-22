@@ -4,8 +4,11 @@ import {
   mergeAttributes,
   Node,
   nodeInputRule,
-  ResizableNodeView,
+  //  ResizableNodeView,
 } from "@tiptap/core";
+import { ReactNodeViewRenderer } from "@tiptap/react";
+import { ImageView } from "./image-view";
+import { NodeSelection } from "@tiptap/pm/state";
 
 export interface ImageOptions {
   /**
@@ -56,7 +59,7 @@ export interface SetImageOptions {
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
-    image: {
+    imageNode: {
       /**
        * Add an image
        * @param options The image attributes
@@ -66,6 +69,9 @@ declare module "@tiptap/core" {
        *   .setImage({ src: 'https://tiptap.dev/logo.png', alt: 'tiptap', title: 'tiptap logo' })
        */
       setImage: (options: SetImageOptions) => ReturnType;
+      toggleImageCaption: () => ReturnType;
+      focusImageCaption: () => ReturnType;
+      replaceImage: () => ReturnType;
     };
   }
 }
@@ -92,7 +98,7 @@ export const Image = Node.create<ImageOptions>({
     };
   },
 
-  content: 'block*',
+  content: "block*",
 
   inline() {
     return this.options.inline;
@@ -120,6 +126,18 @@ export const Image = Node.create<ImageOptions>({
       },
       height: {
         default: null,
+      },
+      align: {
+        default: "left",
+      },
+      widthPreset: {
+        default: null,
+      },
+      showCaption: {
+        default: false,
+      },
+      caption: {
+        default: "",
       },
     };
   },
@@ -158,115 +176,7 @@ export const Image = Node.create<ImageOptions>({
   },
 
   addNodeView() {
-    if (
-      !this.options.resize ||
-      !this.options.resize.enabled ||
-      typeof document === "undefined"
-    ) {
-      return null;
-    }
-
-    const { directions, minWidth, minHeight, alwaysPreserveAspectRatio } =
-      this.options.resize;
-
-    return ({ node, getPos, HTMLAttributes, editor }) => {
-      const el = document.createElement("img");
-      el.classList.add("tiptap-image-img");
-      el.src = HTMLAttributes.src;
-
-      const caption = document.createElement("div");
-      caption.classList.add("tiptap-image-caption");
-
-      const nodeView = new ResizableNodeView({
-        element: el,
-        contentElement: caption,
-        editor,
-        node,
-        getPos,
-        onResize: (width, height) => {
-          el.style.width = `${width}px`;
-          el.style.height = `${height}px`;
-        },
-        onCommit: (width, height) => {
-          const pos = getPos();
-          if (pos === undefined) {
-            return;
-          }
-
-          this.editor
-            .chain()
-            .setNodeSelection(pos)
-            .updateAttributes(this.name, {
-              width,
-              height,
-            })
-            .run();
-        },
-        onUpdate: (updatedNode) => {
-          if (updatedNode.type !== node.type) {
-            return false;
-          }
-          const align = updatedNode.attrs.nodeAlign;
-          if (align) {
-            nodeView.dom.setAttribute("data-align", align);
-            el.setAttribute("data-align", align);
-          } else {
-            nodeView.dom.removeAttribute("data-align");
-            el.removeAttribute("data-align");
-          }
-
-          return true;
-        },
-        options: {
-          directions,
-          min: {
-            width: minWidth,
-            height: minHeight,
-          },
-          className: {
-            container: "tiptap-image-container",
-            wrapper: "tiptap-image-content",
-            handle: "tiptap-image-handle",
-          },
-          preserveAspectRatio: alwaysPreserveAspectRatio === true,
-        },
-      });
-
-      const dom = nodeView.dom as HTMLElement;
-
-      const wrapper = dom.querySelector(".tiptap-image-content");
-      const handles = dom.querySelectorAll(".tiptap-image-handle");
-      const showHandles = () => {
-        for (const handle of handles) {
-          handle.classList.toggle("visible");
-        }
-      };
-      const hideHandles = () => {
-        for (const handle of handles) {
-          handle.classList.toggle("visible");
-        }
-      };
-      wrapper?.addEventListener("mouseenter", showHandles);
-      wrapper?.addEventListener("mouseleave", hideHandles);
-
-      // when image is loaded, show the node view to get the correct dimensions
-      dom.style.visibility = "hidden";
-      dom.style.pointerEvents = "none";
-      el.onload = () => {
-        dom.style.visibility = "";
-        dom.style.pointerEvents = "";
-      };
-
-      const prevDestroy = nodeView.destroy.bind(nodeView);
-      nodeView.destroy = () => {
-        wrapper?.removeEventListener("mouseenter", showHandles);
-        wrapper?.removeEventListener("mouseleave", hideHandles);
-
-        prevDestroy();
-      };
-
-      return nodeView;
-    };
+    return ReactNodeViewRenderer(ImageView);
   },
 
   addCommands() {
@@ -278,6 +188,76 @@ export const Image = Node.create<ImageOptions>({
             type: this.name,
             attrs: options,
           });
+        },
+      replaceImage:
+        () =>
+        ({ state, commands }) => {
+          const { selection } = state;
+          if (!(selection instanceof NodeSelection)) return false;
+          const node = selection.node;
+          if (node.type.name !== "image") return false;
+
+          const pos = selection.from;
+
+          return commands.insertContentAt(
+            { from: pos, to: pos + node.nodeSize },
+            {
+              type: "imageUpload",
+              attrs: {
+                accept: "image/*",
+                limit: 1,
+                maxSize: 0,
+                _replaceAttrs: node.attrs,
+              },
+            },
+          );
+        },
+      toggleImageCaption:
+        () =>
+        ({ commands, state }) => {
+          const { selection } = state;
+          const node = selection.$anchor.nodeAfter ?? selection.$anchor.parent;
+          if (node?.type.name !== this.name) return false;
+          const showCaption = node.attrs.showCaption ?? false;
+          return commands.updateAttributes(this.name, {
+            showCaption: !showCaption,
+          });
+        },
+      focusImageCaption:
+        () =>
+        ({ state, view, dispatch }) => {
+          const { selection } = state;
+
+          // NodeSelection gives us the node directly
+          const isNodeSelection = "node" in selection;
+          const node = isNodeSelection
+            ? (selection as NodeSelection).node
+            : null;
+
+          if (!node || node.type.name !== "image") return false;
+
+          const pos = selection.$anchor.pos;
+
+          if (!node.attrs.showCaption) {
+            if (dispatch) {
+              dispatch(
+                state.tr.setNodeMarkup(pos, undefined, {
+                  ...node.attrs,
+                  showCaption: true,
+                }),
+              );
+            }
+          }
+
+          requestAnimationFrame(() => {
+            const nodeDOM = view.nodeDOM(pos) as HTMLElement | null;
+            const caption = nodeDOM?.querySelector<HTMLElement>(
+              "[data-image-caption]",
+            );
+            caption?.focus();
+          });
+
+          return true;
         },
     };
   },

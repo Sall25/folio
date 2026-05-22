@@ -5,31 +5,28 @@ import {
 } from "src/components/tiptap-ui-primitive/button";
 import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
 import type { Editor } from "@tiptap/core";
-import { useReplaceFigure } from "./use-replace-figure";
+import { useReplaceImage } from "./use-replace-image";
 
-interface ReplaceFigureProps extends Pick<
+interface ReplaceImageProps extends Pick<
   ButtonProps,
   "tooltip" | "showTooltip"
 > {
   editor?: Editor | null;
   text?: string;
   hideWhenUnavailable?: boolean;
-  allowedBlockTypes?: string[];
 }
 
-export function ReplaceFigureButton({
+export function ReplaceImageButton({
   editor: providedEditor,
   text,
   hideWhenUnavailable = false,
-  allowedBlockTypes = ["figure"],
   tooltip = "Replace",
   showTooltip,
-}: ReplaceFigureProps) {
+}: ReplaceImageProps) {
   const { editor } = useTiptapEditor(providedEditor);
 
-  const { isVisible } = useReplaceFigure({
+  const { isVisible } = useReplaceImage({
     editor,
-    allowedBlockTypes,
     hideWhenUnavailable,
   });
 
@@ -41,7 +38,7 @@ export function ReplaceFigureButton({
       tooltip={tooltip}
       showTooltip={showTooltip}
       onClick={() => {
-        editor?.commands.replaceFigure();
+        editor?.commands.replaceImage();
       }}
     >
       <ReplaceIcon className="tiptap-button-icon" />

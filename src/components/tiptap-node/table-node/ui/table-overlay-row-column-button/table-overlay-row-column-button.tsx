@@ -5,6 +5,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuPortal,
   DropdownMenuTrigger,
 } from "src/components/tiptap-ui-primitive/dropdown-menu";
 import { TableMoveRowColButton } from "../table-move-row-column-button";
@@ -80,153 +81,152 @@ export function ColumnDropdown({ tablePos }: { tablePos: number }) {
             if (colIndex === undefined || !tablePos) return;
             editor?.commands.selectColumn(colIndex, tablePos);
             editor?.commands.lockTableHandle();
+            setOpen(true);
           }}
           data-active-state={open ? "on" : "off"}
         >
           <EllipsisIcon className="tiptap-button-icon" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="dropdown-menu-content"
-        onPointerDown={(e) => e.preventDefault()}
-        asChild
-      >
-        <Card className="dropdown-menu-container">
-          {/* Table Headers Button */}
-          <ButtonGroup className="dropdown-menu-group">
-            <DropdownMenuItem asChild>
-              <TableToggleHeaderRowColButton
-                hideWhenUnavailable={true}
-                target="col"
-                text="Header column"
-                onAction={onAction}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-          </ButtonGroup>
-          {showHeaderGroup && <Separator orientation="horizontal" />}
-          {/* Table Move Buttons */}
-          <ButtonGroup className="dropdown-menu-group">
-            <DropdownMenuItem asChild>
-              <TableMoveRowColButton
-                hideWhenUnavailable={true}
-                target="col"
-                orientation="left"
-                text="Move column left"
-                onAction={() => setOpen(false)}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <TableMoveRowColButton
-                hideWhenUnavailable={true}
-                target="col"
-                orientation="right"
-                text="Move column right"
-                onAction={() => setOpen(false)}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-          </ButtonGroup>
-          <Separator orientation="horizontal" />
-          {/* Table Insert Buttons */}
-          <ButtonGroup className="dropdown-menu-group">
-            <DropdownMenuItem asChild>
-              <TableInsertRowColumnButton
-                target="col"
-                orientation="before"
-                text="Insert column left"
-                onAction={onAction}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <TableInsertRowColumnButton
-                target="col"
-                orientation="after"
-                text="Insert column right"
-                onAction={onAction}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-          </ButtonGroup>
-          <Separator orientation="horizontal" />
-          {/* Table Sort Buttons */}
-          <ButtonGroup className="dropdown-menu-group">
-            <DropdownMenuItem asChild>
-              <TableSortRowColButton
-                tablePos={tablePos}
-                target="col"
-                ord="asc"
-                text="Sort column A-Z"
-                hideWhenUnavailable={true}
-                onAction={onAction}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <TableSortRowColButton
-                tablePos={tablePos}
-                target="col"
-                ord="desc"
-                text="Sort column Z-A"
-                hideWhenUnavailable={true}
-                onAction={onAction}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-          </ButtonGroup>
-          {showSortGroup && <Separator orientation="horizontal" />}
-          {/* Table Color Dropdown */}
-          <ButtonGroup className="dropdown-menu-group">
-            <DropdownMenuItem asChild>
-              <ColorDropdownMenu
-                className="dropdown-menu-button"
-                editor={editor}
-                onAction={onAction}
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <AlignmentDropdownMenu
-                className="dropdown-menu-button"
-                editor={editor}
-                onAction={onAction}
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <TableClearRowColButton
-                target="col"
-                hideWhenUnavailable={true}
-                text="Clear all contents"
-                onAction={onAction}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-          </ButtonGroup>
-          <Separator orientation="horizontal" />
-          {/* Table Delete/Duplicate Buttons */}
-          <ButtonGroup className="dropdown-menu-group">
-            <DropdownMenuItem asChild>
-              <TableDuplicateRowColButton
-                target="col"
-                text="Duplicate column"
-                hideWhenUnavailable={true}
-                onAction={onAction}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <TableDeleteRowColButton
-                target="col"
-                text="Delete column"
-                onAction={onAction}
-                hideWhenUnavailable={true}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-          </ButtonGroup>
-        </Card>
-      </DropdownMenuContent>
+      <DropdownMenuPortal container={document.body}>
+        <DropdownMenuContent className="dropdown-menu-content">
+          <Card className="dropdown-menu-container">
+            {/* Table Headers Button */}
+            <ButtonGroup className="dropdown-menu-group">
+              <DropdownMenuItem asChild>
+                <TableToggleHeaderRowColButton
+                  hideWhenUnavailable={true}
+                  target="col"
+                  text="Header column"
+                  onAction={onAction}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+            </ButtonGroup>
+            {showHeaderGroup && <Separator orientation="horizontal" />}
+            {/* Table Move Buttons */}
+            <ButtonGroup className="dropdown-menu-group">
+              <DropdownMenuItem asChild>
+                <TableMoveRowColButton
+                  hideWhenUnavailable={true}
+                  target="col"
+                  orientation="left"
+                  text="Move column left"
+                  onAction={() => setOpen(false)}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <TableMoveRowColButton
+                  hideWhenUnavailable={true}
+                  target="col"
+                  orientation="right"
+                  text="Move column right"
+                  onAction={() => setOpen(false)}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+            </ButtonGroup>
+            <Separator orientation="horizontal" />
+            {/* Table Insert Buttons */}
+            <ButtonGroup className="dropdown-menu-group">
+              <DropdownMenuItem asChild>
+                <TableInsertRowColumnButton
+                  target="col"
+                  orientation="before"
+                  text="Insert column left"
+                  onAction={onAction}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <TableInsertRowColumnButton
+                  target="col"
+                  orientation="after"
+                  text="Insert column right"
+                  onAction={onAction}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+            </ButtonGroup>
+            <Separator orientation="horizontal" />
+            {/* Table Sort Buttons */}
+            <ButtonGroup className="dropdown-menu-group">
+              <DropdownMenuItem asChild>
+                <TableSortRowColButton
+                  tablePos={tablePos}
+                  target="col"
+                  ord="asc"
+                  text="Sort column A-Z"
+                  hideWhenUnavailable={true}
+                  onAction={onAction}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <TableSortRowColButton
+                  tablePos={tablePos}
+                  target="col"
+                  ord="desc"
+                  text="Sort column Z-A"
+                  hideWhenUnavailable={true}
+                  onAction={onAction}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+            </ButtonGroup>
+            {showSortGroup && <Separator orientation="horizontal" />}
+            {/* Table Color Dropdown */}
+            <ButtonGroup className="dropdown-menu-group">
+              <DropdownMenuItem asChild>
+                <ColorDropdownMenu
+                  className="dropdown-menu-button"
+                  editor={editor}
+                  onAction={onAction}
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <AlignmentDropdownMenu
+                  className="dropdown-menu-button"
+                  editor={editor}
+                  onAction={onAction}
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <TableClearRowColButton
+                  target="col"
+                  hideWhenUnavailable={true}
+                  text="Clear all contents"
+                  onAction={onAction}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+            </ButtonGroup>
+            <Separator orientation="horizontal" />
+            {/* Table Delete/Duplicate Buttons */}
+            <ButtonGroup className="dropdown-menu-group">
+              <DropdownMenuItem asChild>
+                <TableDuplicateRowColButton
+                  target="col"
+                  text="Duplicate column"
+                  hideWhenUnavailable={true}
+                  onAction={onAction}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <TableDeleteRowColButton
+                  target="col"
+                  text="Delete column"
+                  onAction={onAction}
+                  hideWhenUnavailable={true}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+            </ButtonGroup>
+          </Card>
+        </DropdownMenuContent>
+      </DropdownMenuPortal>
     </DropdownMenu>
   );
 }
@@ -289,154 +289,153 @@ export function RowDropdown({ tablePos }: { tablePos: number }) {
             if (rowIndex === undefined || !tablePos) return;
             editor?.commands.selectRow(rowIndex, tablePos);
             editor?.commands.lockTableHandle();
+            setOpen(true);
           }}
           data-state-active={open ? "on" : "off"}
         >
           <EllipsisVerticalIcon className="tiptap-button-icon" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="dropdown-menu-content"
-        onPointerDown={(e) => e.preventDefault()}
-        asChild
-      >
-        <Card className="dropdown-menu-container">
-          {/* Table Headers Buttons */}
-          <ButtonGroup className="dropdown-menu-group">
-            <DropdownMenuItem asChild>
-              <TableToggleHeaderRowColButton
-                hideWhenUnavailable={true}
-                target="row"
-                text="Header row"
-                onAction={onAction}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-          </ButtonGroup>
-          {showHeaderGroup && <Separator orientation="horizontal" />}
-          {/*Table Move Buttons */}
-          <ButtonGroup className="dropdown-menu-group">
-            <DropdownMenuItem asChild>
-              <TableMoveRowColButton
-                hideWhenUnavailable={true}
-                target="row"
-                orientation="up"
-                text="Move row up"
-                onAction={() => setOpen(false)}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <TableMoveRowColButton
-                hideWhenUnavailable={true}
-                target="row"
-                orientation="down"
-                text="Move row down"
-                onAction={() => setOpen(false)}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-          </ButtonGroup>
-          {/* Table Insert Buttons */}
-          <ButtonGroup className="dropdown-menu-group">
-            <DropdownMenuItem asChild>
-              <TableInsertRowColumnButton
-                orientation="before"
-                target="row"
-                text="Insert row above"
-                onAction={onAction}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <TableInsertRowColumnButton
-                orientation="after"
-                target="row"
-                text="Insert row below"
-                onAction={onAction}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-          </ButtonGroup>
-          <Separator orientation="horizontal" />
-          {/* Table Sort Buttons */}
-          <ButtonGroup className="dropdown-menu-group">
-            <DropdownMenuItem asChild>
-              <TableSortRowColButton
-                tablePos={tablePos}
-                target="row"
-                ord="asc"
-                text="Sort row A-Z"
-                hideWhenUnavailable={true}
-                onAction={onAction}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <TableSortRowColButton
-                tablePos={tablePos}
-                target="row"
-                ord="desc"
-                text="Sort row Z-A"
-                hideWhenUnavailable={true}
-                onAction={onAction}
-                className="dropdown-menu-button"
-              />
-            </DropdownMenuItem>
-          </ButtonGroup>
-          {showSortGroup && <Separator orientation="horizontal" />}
-          {/* Table Color Dropdown */}
-          <ButtonGroup className="dropdown-menu-group">
-            <DropdownMenuItem asChild>
-              <ColorDropdownMenu
-                className="dropdown-menu-button"
-                editor={editor}
-                onAction={onAction}
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <AlignmentDropdownMenu
-                className="dropdown-menu-button"
-                editor={editor}
-                onAction={onAction}
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <TableClearRowColButton
-                className="dropdown-menu-button"
-                target="row"
-                hideWhenUnavailable={true}
-                text="Clear all contents"
-                onAction={onAction}
-              />
-            </DropdownMenuItem>
-          </ButtonGroup>
+      <DropdownMenuPortal container={document.body}>
+        <DropdownMenuContent className="dropdown-menu-content">
+          <Card className="dropdown-menu-container">
+            {/* Table Headers Buttons */}
+            <ButtonGroup className="dropdown-menu-group">
+              <DropdownMenuItem asChild>
+                <TableToggleHeaderRowColButton
+                  hideWhenUnavailable={true}
+                  target="row"
+                  text="Header row"
+                  onAction={onAction}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+            </ButtonGroup>
+            {showHeaderGroup && <Separator orientation="horizontal" />}
+            {/*Table Move Buttons */}
+            <ButtonGroup className="dropdown-menu-group">
+              <DropdownMenuItem asChild>
+                <TableMoveRowColButton
+                  hideWhenUnavailable={true}
+                  target="row"
+                  orientation="up"
+                  text="Move row up"
+                  onAction={() => setOpen(false)}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <TableMoveRowColButton
+                  hideWhenUnavailable={true}
+                  target="row"
+                  orientation="down"
+                  text="Move row down"
+                  onAction={() => setOpen(false)}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+            </ButtonGroup>
+            {/* Table Insert Buttons */}
+            <ButtonGroup className="dropdown-menu-group">
+              <DropdownMenuItem asChild>
+                <TableInsertRowColumnButton
+                  orientation="before"
+                  target="row"
+                  text="Insert row above"
+                  onAction={onAction}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <TableInsertRowColumnButton
+                  orientation="after"
+                  target="row"
+                  text="Insert row below"
+                  onAction={onAction}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+            </ButtonGroup>
+            <Separator orientation="horizontal" />
+            {/* Table Sort Buttons */}
+            <ButtonGroup className="dropdown-menu-group">
+              <DropdownMenuItem asChild>
+                <TableSortRowColButton
+                  tablePos={tablePos}
+                  target="row"
+                  ord="asc"
+                  text="Sort row A-Z"
+                  hideWhenUnavailable={true}
+                  onAction={onAction}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <TableSortRowColButton
+                  tablePos={tablePos}
+                  target="row"
+                  ord="desc"
+                  text="Sort row Z-A"
+                  hideWhenUnavailable={true}
+                  onAction={onAction}
+                  className="dropdown-menu-button"
+                />
+              </DropdownMenuItem>
+            </ButtonGroup>
+            {showSortGroup && <Separator orientation="horizontal" />}
+            {/* Table Color Dropdown */}
+            <ButtonGroup className="dropdown-menu-group">
+              <DropdownMenuItem asChild>
+                <ColorDropdownMenu
+                  className="dropdown-menu-button"
+                  editor={editor}
+                  onAction={onAction}
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <AlignmentDropdownMenu
+                  className="dropdown-menu-button"
+                  editor={editor}
+                  onAction={onAction}
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <TableClearRowColButton
+                  className="dropdown-menu-button"
+                  target="row"
+                  hideWhenUnavailable={true}
+                  text="Clear all contents"
+                  onAction={onAction}
+                />
+              </DropdownMenuItem>
+            </ButtonGroup>
 
-          <Separator orientation="horizontal" />
+            <Separator orientation="horizontal" />
 
-          {/* Table Delete/Duplicate Buttons */}
-          <ButtonGroup className="dropdown-menu-group">
-            <DropdownMenuItem asChild>
-              <TableDeleteRowColButton
-                className="dropdown-menu-button"
-                target="row"
-                text="Delete row"
-                onAction={onAction}
-                hideWhenUnavailable={false}
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <TableDuplicateRowColButton
-                className="dropdown-menu-button"
-                target="row"
-                text="Duplicate row"
-                hideWhenUnavailable={true}
-                onAction={onAction}
-              />
-            </DropdownMenuItem>
-          </ButtonGroup>
-        </Card>
-      </DropdownMenuContent>
+            {/* Table Delete/Duplicate Buttons */}
+            <ButtonGroup className="dropdown-menu-group">
+              <DropdownMenuItem asChild>
+                <TableDeleteRowColButton
+                  className="dropdown-menu-button"
+                  target="row"
+                  text="Delete row"
+                  onAction={onAction}
+                  hideWhenUnavailable={false}
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <TableDuplicateRowColButton
+                  className="dropdown-menu-button"
+                  target="row"
+                  text="Duplicate row"
+                  hideWhenUnavailable={true}
+                  onAction={onAction}
+                />
+              </DropdownMenuItem>
+            </ButtonGroup>
+          </Card>
+        </DropdownMenuContent>
+      </DropdownMenuPortal>
     </DropdownMenu>
   );
 }

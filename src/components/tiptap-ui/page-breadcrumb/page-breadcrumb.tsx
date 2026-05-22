@@ -16,13 +16,19 @@ export function PageBreadcrumb({ items }: PageBreadcrumbProps) {
             onClick={item.onClick}
           >
             {item.icon && (
-              <span className="tiptap-button-icon">{item.icon}</span>
+              <span className="tiptap-button-icon" style={{ marginRight: 5 }}>
+                {item.icon}
+              </span>
             )}
             {item.label}{" "}
             {i === items.length - 1 && item.locked && (
               <span
                 className="tiptap-button-text"
-                style={{ display: "flex", gap: 5 }}
+                style={{
+                  display: "flex",
+                  gap: 5,
+                  fontFamily: "'Inter', sans-serif",
+                }}
               >
                 <Lock size={14} className="page-breadcrumb__lock" />
                 <span>locked</span>

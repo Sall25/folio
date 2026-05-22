@@ -14,45 +14,6 @@
   width: 100%;
 }
 
-// .column-block-columns {
-//   //position: absolute;
-//   display: flex; // lets column children participate directly in the flex layout
-//   width: 100%;
-
-//   [data-node-view-wrapper]{
-//     display: inherit;
-//     width: inherit;
-
-//    .react-renderer{
-//       display: flex;
-//       width: 100%;
-//       height: 100%;
-//       position: relative;
-
-//       padding: 0 12px;
-
-//       &:first-child { padding-left: 0; }
-//       &:last-child  { padding-right: 0; }
-
-//     .resize-handle{
-//       position: absolute;
-//       right: 0;
-//       height: 100%;
-//       margin: 0;
-//       background: var(--tt-gray-dark-a-50);
-//       cursor: col-resize;
-//       opacity: 0;
-//       transition: opacity 0.2s ease;
-
-//       &.is-visible{
-//         opacity: 1;
-//       }
-
-//     }
-//    }
-//   }
-// }
-
 .column-block-columns {
   display: flex;
   width: 100%;
@@ -141,7 +102,8 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  right: -20px;
+  right: 0;
+  //right: -20px;
   // right: -30px;
   width: 16px;
   transform: translateX(-10%);

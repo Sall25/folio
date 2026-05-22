@@ -1,11 +1,15 @@
-.resize-handle{
+[data-resize-handle]{
   position: absolute;
   width: 8px;
-  height:15%;
+  min-height: 50px;
+  height: 20%;
   margin: 0 15px;
   border-radius: 5px;
-  background: var(--tt-brand-color-400);
+  border: 2px solid var(--tt-border-color);
+  background: transparent;
   cursor: ew-resize;
+  top: 50% !important;
+  transform: translateY(-50%);
 
   &[data-top = "true"]{
     top: 0;

@@ -48,6 +48,12 @@ export function Tabs({
           target="Icons"
           label="Icons"
         />
+        <Tab
+          active={target === "Upload"}
+          onActive={onActive}
+          target="Upload"
+          label="Upload"
+        />
       </ButtonGroup>
     </CardItemGroup>
   );

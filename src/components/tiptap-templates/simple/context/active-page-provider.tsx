@@ -90,6 +90,7 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
           // preserve record link fields — not part of editor content
           databaseId: activePageRef.current.databaseId,
           recordId: activePageRef.current.recordId,
+          updatedAt: Date.now().toString(),
         });
       } else {
         debounceUpdatePageRef.current({
@@ -97,6 +98,7 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
           content: editor.getJSON(),
           databaseId: activePageRef.current.databaseId,
           recordId: activePageRef.current.recordId,
+          updatedAt: Date.now().toString(),
         });
       }
     };

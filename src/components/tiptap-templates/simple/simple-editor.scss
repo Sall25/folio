@@ -5,11 +5,11 @@ $font-inter: 'Inter', sans-serif;
 
 body {
   --tt-toolbar-height: 44px;
-  --tt-theme-text: var(--tt-gray-light-900);
-  --tt-text-color: var(--tt-gray-dark-400);
+  --tt-theme-text: rgb(44, 44, 43);
+  --tt-text-color: rgb(95, 94, 89);
 
   .dark & {
-    --tt-theme-text: var(--tt-gray-dark-900);
+    --tt-theme-text: rgb(240, 239, 237);
     --tt-text-color: var(--tt-gray-light-400);
   }
 }
@@ -52,7 +52,7 @@ body,
   letter-spacing: normal;
 
   /* Text Appearance */
-  color: rgb(240, 239, 237);
+  color: var(--tt-theme-text);
   text-transform: none;
   font-style: normal;
 }
@@ -123,10 +123,10 @@ body,
  
 .tiptap.ProseMirror {
   content-visibility: auto;
-      contain-intrinsic-size: 1px 30px;
+  contain-intrinsic-size: 1px 30px;
   contain: layout style;
   font-family:  'Inter', sans-serif;
-
+  
   $highlight-colors: purple, yellow, blue, red, green, orange;
   $block-elements: p, h1, h2, h3, h4, h5, h6, blockquote, li, ul, ol, th, td;
 
@@ -190,8 +190,8 @@ body,
 .simple-editor-wrapper {
   width: 100%;
   display: flex;
-  overflow: auto;
-   overflow-y: auto;
+  overflow: hidden;
+   overflow-y: hidden;
   transition: right 0.2s ease;
    position: fixed;
   inset: 0;
@@ -270,10 +270,10 @@ body,
 .simple-editor-content {
   font-size: 1rem;
   min-width: 600px;
+ // margin-top: 100px;
   // margin-top: 20px;
 
   transition: transform 0.2s ease;
- 
   // &.has-threads{
   //    margin-left: -140px;
   // }
@@ -282,13 +282,13 @@ body,
     transform: translateX(var(--x));
   }
   &[data-size="medium"] {
-    max-width: 700px;
-    --db-editor-width: 700px;
+    max-width: 800px;
+    --db-editor-width: 800.8px;
   }
 
   &[data-size="full"] {
-    max-width: 900px;
-    --db-editor-width: 900px;
+    max-width: 1070.8px;
+    --db-editor-width: 1070.8px;
   }
 
   &[data-text="small"]{

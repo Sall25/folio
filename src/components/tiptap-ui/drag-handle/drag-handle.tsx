@@ -30,7 +30,7 @@ const NODE_LABELS: Record<string, string> = {
   table: "Table",
   tableWrapper: "TableWrapper",
   tocNode: "Table of Contents",
-  figure: "Image",
+  image: "Image",
   columnBlock: "Columns",
   column: "Column",
   database: "Database",

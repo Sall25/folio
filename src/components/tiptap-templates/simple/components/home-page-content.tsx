@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  Pin,
   FileText,
   ChevronRight,
   Lock,
@@ -10,6 +9,7 @@ import {
   Clock1,
   Star,
   Users,
+  PanelRight,
 } from "lucide-react";
 import type { Page } from "../types";
 import { PageItemIcon } from "../page-item-icon";
@@ -18,16 +18,10 @@ import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import { useActivePage } from "../use-active-page";
 import { useEditorLayout } from "../context/editor-layout-context";
-import { Greeting } from "src/components/tiptap-ui-primitive/greeting/greeting";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import {
-  Board,
-  BoardContent,
-  BoardCover,
-} from "src/components/tiptap-ui-primitive/board/board";
-import { ListItem } from "src/components/tiptap-ui-primitive/list/list";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
+import { useState } from "react";
 
 function formatRelativeTime(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
@@ -50,139 +44,27 @@ function flattenPages(pages: Page[]): Page[] {
   return pages.flatMap((p) => [p, ...flattenPages(p.children ?? [])]);
 }
 
-function getExcerpt(page: Page): string {
-  try {
-    const nodes = (page.content?.content as any[]) ?? [];
-    for (const node of nodes) {
-      if (node.type === "paragraph" && node.content?.length) {
-        const text = node.content
-          .filter((n: any) => n.type === "text")
-          .map((n: any) => n.text as string)
-          .join("");
-        if (text.trim()) return text;
-      }
-    }
-  } catch {
-    // ignore
-  }
-  return "";
-}
-
-function PinnedCard({ page, onClick }: { page: Page; onClick: () => void }) {
-  const excerpt = getExcerpt(page);
-  const hasCover = !!(page.cover?.coverImage || (page.cover as any)?.gradient);
-  const { coverImage, gradient, iconName } = page.cover;
-  return (
-    <Board
-      onClick={onClick}
-      style={{ width: 190, height: 175, position: "relative" }}
-    >
-      <BoardCover
-        height={75}
-        style={{
-          background: coverImage
-            ? `url(${coverImage})`
-            : gradient
-              ? gradient
-              : "transparent",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
-
-      {/* Icon sits on the cover/content boundary */}
-      <div
-        style={{
-          position: "absolute",
-          top: 75, // 80 (cover height) - half of icon
-          left: 12,
-        }}
-      >
-        <PageItemIcon cover={page.cover} styles={{ fontSize: 42, width: 42 }} />
-      </div>
-
-      <BoardContent style={{ paddingTop: 20 }}>
-        {" "}
-        {/* leave room for the icon */}
-        <div className="home-pinned-card__title">
-          {page.title || "Untitled"}
-        </div>
-        <div className="home-pinned-card__meta">
-          {formatRelativeTime(page.updatedAt ?? page.createdAt)}
-        </div>
-        {excerpt && <div className="home-pinned-card__excerpt">{excerpt}</div>}
-      </BoardContent>
-    </Board>
-  );
-}
-
-function RecentRow({ page, onClick }: { page: Page; onClick: () => void }) {
-  return (
-    <ListItem style={{ cursor: "pointer" }} onClick={onClick}>
-      <div
-        style={{
-          flex: 2,
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          minWidth: 0,
-        }}
-      >
-        <PageItemIcon cover={page.cover} styles={{ fontSize: 15 }} />
-        <span
-          style={{
-            fontSize: 13,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {page.title || "Untitled"}
-        </span>
-        {page.settings?.locked && (
-          <Badge data-style="gray">
-            <Lock className="tiptap-badge-icon" />
-            <span className="tiptap-badge-text">Locked</span>
-          </Badge>
-        )}
-      </div>
-      <span style={{ flex: 1, fontSize: 13 }}>Jule Sall</span>
-      <span
-        style={{
-          width: 100,
-          fontSize: 12,
-          color: "var(--tt-theme-text)",
-          textAlign: "right",
-        }}
-      >
-        {formatRelativeTime(page.updatedAt ?? page.createdAt)}
-      </span>
-      <ChevronRight
-        size={13}
-        style={{ color: "var(--tt-text-color)", flexShrink: 0 }}
-      />
-    </ListItem>
-  );
-}
-
 function Tabs() {
   return (
     <ButtonGroup orientation="horizontal">
-      <Button data-active-state={"on"}>
+      <Button
+        data-highlighted={true}
+        style={{ borderRadius: "var(--tt-radius-xl)" }}
+      >
         <Clock1 className="tiptap-button-icon" />
         <span className="tiptap-button-text">Recents</span>
       </Button>
-      <Spacer orientation="horizontal" size={10} />
+      <Spacer orientation="horizontal" size={15} />
       <Button variant="ghost">
         <Star className="tiptap-button-icon" />
         <span className="tiptap-button-text">Favorites</span>
       </Button>
-      <Spacer orientation="horizontal" size={10} />
+      <Spacer orientation="horizontal" size={15} />
       <Button variant="ghost">
         <Users className="tiptap-button-icon" />
         <span className="tiptap-button-text">Shared</span>
       </Button>
-      <Spacer orientation="horizontal" size={10} />
+      <Spacer orientation="horizontal" size={15} />
       <Button variant="ghost">
         <Lock className="tiptap-button-icon" />
         <span className="tiptap-button-text">Private</span>
@@ -207,9 +89,138 @@ const cellStyle: React.CSSProperties = {
   gap: 8,
   padding: "8px 0",
   minWidth: 0,
+  color: "var(--tt-text-color)",
   borderBottom: "0.5px solid var(--tt-border-color, rgba(0,0,0,0.08))",
 };
 
+const dataStyle: React.CSSProperties = {
+  fontSize: 14,
+  fontWeight: 400,
+  color: "var(--tt-text-color)",
+};
+
+function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
+  const [show, setShow] = useState(false);
+  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const { setActivePageId } = useActivePage();
+  const toggle = (id: number) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+
+  const navigate = (id: number) => setActivePageId(id);
+
+  const hasChildren = (page.children?.length ?? 0) > 0;
+  const isOpen = expanded.has(page.id);
+
+  return (
+    <>
+      <div
+        key={`${page.id}-title`}
+        style={{ ...cellStyle, paddingLeft: depth * 20 }}
+      >
+        {/* Chevron toggle or spacer */}
+        <span
+          style={{
+            width: 16,
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            cursor: hasChildren ? "pointer" : "default",
+            color: "var(--tt-text-color)",
+            transition: "transform 0.18s ease",
+            transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
+          }}
+          onClick={hasChildren ? () => toggle(page.id) : undefined}
+        >
+          {hasChildren && (
+            <svg
+              width="8"
+              height="8"
+              viewBox="0 0 8 8"
+              style={{ display: "block" }}
+            >
+              <polygon
+                points={isOpen ? "0,0 8,0 4,8" : "0,0 8,4 0,8"}
+                fill="currentColor"
+              />
+            </svg>
+          )}
+        </span>
+
+        <CardItemGroup orientation="horizontal" style={{ width: "100%" }}>
+          <CardItemGroup
+            orientation="horizontal"
+            onMouseEnter={() => setShow(true)}
+            onMouseLeave={() => setShow(false)}
+            style={{ width: "100%" }}
+          >
+            <PageItemIcon cover={page.cover} styles={{ fontSize: 15 }} />
+            <span
+              style={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontSize: 14,
+                fontWeight: depth === 0 ? 500 : 400,
+                color: "var(--tt-text-color)",
+              }}
+            >
+              {page.title || "Untitled"}
+            </span>
+
+            <Spacer orientation="horizontal" />
+            {show && (
+              <Button
+                style={{
+                  background: "transparent",
+                  border: "1px solid var(--tt-border-color)",
+                  borderRadius: "var(--tt-radius-sm)",
+                  minHeight: 22,
+                  height: 22,
+                }}
+                onClick={() => navigate(page.id)}
+              >
+                <PanelRight className="tiptap-button-icon" />
+                <span className="tiptap-button-text">Open</span>
+              </Button>
+            )}
+          </CardItemGroup>
+          {page.settings?.locked && (
+            <Badge data-style="gray">
+              <Lock className="tiptap-badge-icon" />
+              <span className="tiptap-badge-text">Locked</span>
+            </Badge>
+          )}
+        </CardItemGroup>
+      </div>
+
+      <div key={`${page.id}-author`} style={cellStyle}>
+        <AvatarDemo />
+        <span style={dataStyle}>Jule Sall</span>
+      </div>
+
+      <div key={`${page.id}-date`} style={cellStyle}>
+        <span style={dataStyle}>
+          {formatRelativeTime(page.updatedAt ?? page.createdAt)}
+        </span>
+      </div>
+      {/* Render children if expanded */}
+      {isOpen &&
+        page.children?.map((child) => (
+          <RecentRow key={child.id} page={child} depth={depth + 1} />
+        ))}
+    </>
+  );
+}
+
+// Add this to your state or component-level state
 function RecentGrid({ recent }: { recent: Page[] }) {
   return (
     <div
@@ -239,46 +250,10 @@ function RecentGrid({ recent }: { recent: Page[] }) {
         </Button>
       </div>
 
-      {/* Rows */}
       {recent.map((page) => (
-        <>
-          <div key={`${page.id}-title`} style={cellStyle}>
-            <PageItemIcon cover={page.cover} styles={{ fontSize: 15 }} />
-            <span
-              style={{
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                fontSize: 14,
-                fontWeight: 500,
-              }}
-            >
-              {page.title || "Untitled"}
-            </span>
-            {page.settings?.locked && (
-              <Badge data-style="gray">
-                <Lock className="tiptap-badge-icon" />
-                <span className="tiptap-badge-text">Locked</span>
-              </Badge>
-            )}
-          </div>
-          <div key={`${page.id}-author`} style={cellStyle}>
-            <AvatarDemo />
-            <span style={{ fontSize: 14 }}>Jule Sall</span>
-          </div>
-          <div
-            key={`${page.id}-date`}
-            style={{
-              ...cellStyle,
-              borderBottom:
-                "0.5px solid var(--tt-border-color, rgba(0,0,0,0.08))",
-            }}
-          >
-            <span style={{ fontSize: 14, fontWeight: 500 }}>
-              {formatRelativeTime(page.updatedAt ?? page.createdAt)}
-            </span>
-          </div>
-        </>
+        <div key={page.id} style={{ display: "contents" }}>
+          <RecentRow page={page} />
+        </div>
       ))}
     </div>
   );
@@ -286,7 +261,7 @@ function RecentGrid({ recent }: { recent: Page[] }) {
 
 export function HomePageContent() {
   const { sidebarWidth } = useEditorLayout();
-  const { pages, addPageAndActivateAsync, setActivePageId } = useActivePage();
+  const { pages, addPageAndActivateAsync } = useActivePage();
 
   if (!pages) return null;
 
@@ -297,11 +272,7 @@ export function HomePageContent() {
     const bDate = new Date(b.updatedAt ?? b.createdAt).getTime();
     return bDate - aDate;
   });
-
-  const pinned = pages.slice(0, 4);
   const recent = sorted.slice(0, 8);
-
-  const navigate = (id: number) => setActivePageId(id);
 
   return (
     <div
@@ -312,35 +283,37 @@ export function HomePageContent() {
       }}
     >
       <div className="home-page-content__inner">
-        <div className="home-page-content__header">
+        {/* <div className="home-page-content__header">
           <Greeting name="Jule" className="home-greeting" />
-        </div>
+        </div> */}
         <CardItemGroup
           orientation="vertical"
           style={{ alignItems: "flex-start" }}
         >
-          {pinned.length > 0 && (
-            <section className="home-section">
-              <div className="home-section__label">
-                <Pin size={12} />
-                Pinned
-              </div>
-              <CardItemGroup
-                orientation="horizontal"
-                style={{ width: "100%", gap: 15 }}
+          <CardItemGroup
+            style={{ width: "100%", alignItems: "center" }}
+            orientation="horizontal"
+          >
+            <span className="library">Library</span>
+            <Spacer orientation="horizontal" />
+            <Button
+              style={{
+                background: "var(--tt-brand-color-400)",
+                color: "white",
+                borderRadius: "var(--tt-radius-sm)",
+              }}
+            >
+              <span
+                className="tiptap-button-text"
+                style={{ whiteSpace: "nowrap" }}
               >
-                {pinned.map((page) => (
-                  <PinnedCard
-                    key={page.id}
-                    page={page}
-                    onClick={() => navigate(page.id)}
-                  />
-                ))}
-              </CardItemGroup>
-            </section>
-          )}
+                New Page
+              </span>
+            </Button>
+          </CardItemGroup>
 
-          <Spacer orientation="vertical" size={20} />
+          <Spacer orientation="vertical" size={10} />
+
           <Tabs />
           <Spacer orientation="vertical" size={10} />
 

@@ -17,7 +17,7 @@ export const ThreadsList = ({
   const state = useCommentThreadState(editor);
 
   if (positionedThreads.length === 0) {
-    return <label className="label">No threads.</label>;
+    return <label className="label"></label>;
   }
 
   if (!editor) return null;

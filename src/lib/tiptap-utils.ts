@@ -505,31 +505,25 @@ export function useFileUpload(options: UploadOptions) {
   };
 }
 
-/**
- * Handles image upload with progress tracking and abort capability
- * @param file The file to upload
- * @param onProgress Optional callback for tracking upload progress
- * @param abortSignal Optional AbortSignal for cancelling the upload
- * @returns Promise resolving to the URL of the uploaded image
- */
-export const handleImageUpload = async (
+export async function handleImageUpload(
   file: File,
   onProgress?: (event: { progress: number }) => void,
-  abortSignal?: AbortSignal,
-): Promise<string> => {
-  // Validate file type/size here or inside the hook
-  // For demo: simulate upload
-  const totalSteps = 10;
-  for (let i = 1; i <= totalSteps; i++) {
-    if (abortSignal?.aborted) throw new Error("Upload cancelled");
-    await new Promise((resolve) => setTimeout(resolve, 100)); // simulate network delay
-    onProgress?.({ progress: Math.round((i / totalSteps) * 100) });
-  }
+  signal?: AbortSignal,
+): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
 
-  // Use a unique temporary URL for demonstration
-  return URL.createObjectURL(file);
-};
+  const response = await fetch("http://localhost:3000/api/upload", {
+    method: "POST",
+    body: formData,
+    signal,
+  });
 
+  if (!response.ok) throw new Error("Upload failed");
+
+  const { url } = await response.json();
+  return url;
+}
 
 type ProtocolOptions = {
   /**
@@ -629,7 +623,7 @@ export function updateNodesAttr<A extends string = string, V = unknown>(
 ): Transaction {
   if (!targets.length) return tr;
 
-  let changed = false;
+  //let changed = false;
 
   for (const { pos } of targets) {
     // Always re-read from the transaction's current doc
@@ -656,7 +650,7 @@ export function updateNodesAttr<A extends string = string, V = unknown>(
     }
 
     tr.setNodeMarkup(pos, undefined, nextAttrs);
-    changed = true;
+    //changed = true;
   }
 
   return tr;

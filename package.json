@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"vite\" \"json-server --watch pages.json --port 3001\" \"json-server --watch threads.json --port 3002\" \"json-server --watch versions.json --port 3003\" \"node server/upload-server.js\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -61,11 +61,14 @@
     "@tiptap/starter-kit": "^3.20.0",
     "@tiptap/suggestion": "^3.17.0",
     "clsx": "^2.1.1",
+    "cors": "^2.8.6",
     "docx": "^9.6.1",
+    "express": "^5.2.1",
     "lodash.throttle": "^4.1.1",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.562.0",
     "mathjs": "^15.2.0",
+    "multer": "^2.1.1",
     "nanoid": "^5.1.6",
     "prosemirror-tables": "^1.8.5",
     "react": "^19.2.0",

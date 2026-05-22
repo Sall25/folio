@@ -10,8 +10,6 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { useActivePage } from "./use-active-page";
 import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { useIsActivePage } from "./use-is-active-page";
-import { useActivePageContext } from "./context/active-page-context";
 
 interface PageItemProps {
   page: Page;
@@ -31,11 +29,9 @@ export function PageItem({
   const hasChildren = page.children && page.children.length > 0;
   const [shouldShow, setShouldShow] = useState(false);
 
-  const isActiveRaw = useIsActivePage(page.id);
-  const isActive = isActiveRaw && !disableActive;
-
-  const { addPageAndActivateAsync, updatePageAsync } = useActivePage();
-
+  const { addPageAndActivateAsync, updatePageAsync, activePageId } =
+    useActivePage();
+  const isActive = activePageId === page.id && !disableActive;
   const title = page.title || "New Page";
   const cover = page.cover;
 
@@ -68,7 +64,7 @@ export function PageItem({
     }
   };
 
-  const { setActivePageId } = useActivePageContext();
+  const { setActivePageId } = useActivePage();
   const onSelect = (pageId: number) => {
     console.time("navigation");
     setActivePageId(pageId);
@@ -119,6 +115,7 @@ export function PageItem({
             transition: "opacity 150ms ease",
           }}
         />
+        <Spacer orientation="horizontal" size={0.2} />
 
         {editing ? (
           <TextareaAutosize

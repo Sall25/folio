@@ -1,5 +1,6 @@
 import type { JSONContent } from "@tiptap/core";
 import type { ID } from "src/components/tiptap-node/inline-database/types/types";
+import type { Target } from "src/components/tiptap-ui/cover/types";
 
 export type PageCategory =
   | "Recent"
@@ -18,7 +19,7 @@ export type PageSettings = {
 export type PageCover = {
   iconName: string | null;
   coverImage: string | null;
-  target: "Emoji" | "Icons" | null;
+  target: Target | null;
   color?: string;
   gradient?: string;
   positionY?: number;

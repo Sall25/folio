@@ -1,6 +1,6 @@
 import { TableOfContents } from "@tiptap/extension-table-of-contents";
 import { StarterKit } from "@tiptap/starter-kit";
-import { Image } from "@tiptap/extension-image";
+import { Image } from "src/components/tiptap-node/image-node/image";
 import {
   BulletList,
   ListItem,
@@ -35,7 +35,7 @@ import {
 import { ImageUploadNode } from "src/components/tiptap-node/image-upload-node/image-upload-node-extension";
 import { HorizontalRule } from "src/components/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension";
 import { ParagraphNode } from "src/components/tiptap-node/paragraph-node";
-import { Figure, FigureCaption } from "src/components/tiptap-node/figure-node";
+//import { Figure, FigureCaption } from "src/components/tiptap-node/figure-node";
 import { TableContextExtension } from "src/components/tiptap-node/table-node";
 import { TableWrapperNode } from "src/components/tiptap-node/table-node/extensions/table-context";
 import { Column, ColumnBlock } from "src/components/tiptap-node/column-node";
@@ -119,13 +119,13 @@ export function useEditorExtensions(
       ParagraphNode,
       TitleNode,
       HorizontalRule,
-      FigureCaption,
-      Figure.configure({
-        directions: ["left", "right"],
-        preserveAspectRatio: true,
-        min: { width: 10, height: 10 },
-        max: { width: 2000, height: 2000 },
-      }),
+      // FigureCaption,
+      // Figure.configure({
+      //   directions: ["left", "right"],
+      //   preserveAspectRatio: true,
+      //   min: { width: 10, height: 10 },
+      //   max: { width: 2000, height: 2000 },
+      // }),
       Image.configure({
         resize: {
           enabled: true,

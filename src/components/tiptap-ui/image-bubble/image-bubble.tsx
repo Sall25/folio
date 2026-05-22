@@ -6,7 +6,8 @@ import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { DeleteNodeButton } from "src/components/tiptap-ui/delete-node-button";
 import CaptionButton from "src/components/tiptap-ui/caption-button";
 import { NodeSelection } from "@tiptap/pm/state";
-import ReplaceFigureButton from "src/components/tiptap-ui/replace-figure-button";
+import ReplaceImageButton from "src/components/tiptap-ui/replace-image-button";
+import { ImageDownloadButton } from "../image-download-button";
 
 export function ImageBubble({ editor }: { editor: Editor | null }) {
   if (!editor) return null;
@@ -49,12 +50,18 @@ export function ImageBubble({ editor }: { editor: Editor | null }) {
             showTooltip={true}
           />
           <Separator orientation="vertical" />
-          <ReplaceFigureButton
+          <ReplaceImageButton
             hideWhenUnavailable={true}
             editor={editor}
             showTooltip={true}
           />
           <CaptionButton
+            hideWhenUnavailable={true}
+            editor={editor}
+            showTooltip={true}
+          />
+          <Separator orientation="vertical" />
+          <ImageDownloadButton
             hideWhenUnavailable={true}
             editor={editor}
             showTooltip={true}

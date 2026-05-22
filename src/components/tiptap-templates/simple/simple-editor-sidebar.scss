@@ -1,11 +1,17 @@
 :root{
-  --sidebar-bg-color: rgb(249, 248, 247);
+ --sidebar-bg-color: #fafaf9;
+  // --sidebar-bg-color: rgb(249, 248, 247);
   --sidebar-shadow-color: rgb(240, 239, 237);
+   --sidebar-text-color: #2f2f2f;
+  --sidebar-text-secondary: #6b6b6b;
 }
 .dark{
-  --sidebar-bg-color: rgb(32, 32, 32);
+  --sidebar-bg-color: #1f1f1f;
   --sidebar-shadow-color: #2c2c2b;
+  --sidebar-text-secondary: #9a9a9a;
+  --sidebar-text-color: #e4e4e4;
 }
+
 .sidebar {
   position: relative;
   z-index: 0;
@@ -16,13 +22,19 @@
   // font-family: "Fraunces", serif;
   height: 100vh;
   overflow: hidden;
+  color: var(--sidebar-text-color);
   // border-right: 0.5px solid var(--tt-border-color-tint, rgba(13, 12, 12, 0.08));
   font-size: 16px;
   font-weight: 600;
   background-color: var(--sidebar-bg-color) !important;
   padding-right: 0px;
   padding: 0;
-  box-shadow: var(--sidebar-shadow-color)  -1px 0px 0px 0px inset !important;
+  //box-shadow: var(--tt-shadow-elevated-md);
+  //box-shadow: /*var(--sidebar-shadow-color) */ var(--tt-border-color) -1px 0px 0px 0px inset !important;
+   border-right: 1px solid var(--tt-border-color);
+
+  box-shadow:
+    4px 0 24px rgba(18, 18, 18, 0.04);
 }
 
 // ── Workspace header ──
@@ -55,7 +67,7 @@
 }
 
 .sidebar-workspace-name {
-  color: var(--tt-text-color);
+  color: inherit;
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -64,7 +76,7 @@
 }
 
 .sidebar-workspace-chevron {
-  color: var(--tt-text-color);
+  color: inherit;
   flex-shrink: 0;
 }
 
@@ -73,7 +85,7 @@
   display: block;
   font-size: 11px;
   font-weight: 500;
-  color: var(--tt-gray-light-a-400);
+  color: inherit;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 0 8px 2px;
@@ -82,7 +94,7 @@
 
 .sidebar-empty {
   font-size: 12px;
-  color: var(--tt-gray-light-a-400);
+  color: inherit;
   padding: 4px 8px;
 }
 
@@ -96,18 +108,22 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  overflow-x: visible;
+  overflow-x: hidden;
   max-height: 600px;
   min-height: 0 !important;
   justify-content: flex-start !important;
 
   scrollbar-width: thin;
-  scrollbar-color: var(--tt-gray-light-a-200) transparent;
+  scrollbar-color: var(--scrollbar-color) transparent;
 
+ 
   .title{
-    font-size: 13px;
-    margin-bottom: 15px;
-    color: var(--tt-text-color);
+    font-family: inherit;
+    text-transform: uppercase;
+    font-size: 12.5px;
+    margin-bottom: 10px;
+    margin-left: 8px;
+    color: var(--sidebar-text-secondary);
   }
 }
 
@@ -126,7 +142,7 @@
   font-family: inherit;
   border-radius: var(--tt-radius-md) !important;
   cursor: pointer;
-  color: var(--tt-text-color);
+  color: inherit;
   background-color: transparent;
   display: flex;
   font-size: 14px;
@@ -343,17 +359,17 @@
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
   font-size: 14px;
   font-weight: 500;
-  color: rgb(240, 239, 237);
+  color: var(--tt-text-color);
   line-height: 1.2;
 }
 
 .sidebar-nav-item{
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
   font-size: 14px;
-  color: rgb(188, 186, 182);
+  color: var(--tt-text-color);
   width: 100%;
   justify-content: flex-start;
-  margin-top: 10px;
+  margin-top: 5px;
   padding: 5px 10px;
   .tiptap-button{
     width: 100%;

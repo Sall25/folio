@@ -66,7 +66,7 @@ export function useParentDatabase(
 
   useEffect(() => {
     const handler = () => {
-      setDb(findParentDatabase(editor, getPos));
+      queueMicrotask(() => setDb(findParentDatabase(editor, getPos)));
     };
     editor.on("transaction", handler);
     return () => {

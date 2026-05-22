@@ -19,16 +19,18 @@
     flex-shrink: 0;
   }
 
-  &.active{
-    background-color: var(--tt-gray-dark-a-200);
-  }
+  .active{
+      background-color: var(--tt-button-active-bg-color);
+      color: var(--tt-button-active-text-color) !important;
 
+  }
   &:hover .page-item-actions {
     width: auto;
     overflow: visible;
     opacity: 1;
   }
 }
+
 
 .page-item-title {
    /* Font Family: Standard System Stack */
@@ -40,7 +42,8 @@
     line-height: 1.5;    /* Computed as 21px */
     
     /* Appearance */
-    color: rgb(188, 186, 182); /* Muted gray/tan color */
+  
+    color: var(--tt-text-color);
     letter-spacing: normal;
     text-transform: none;
     
@@ -54,7 +57,9 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    margin-left: 5px;
+
+   
+
   // flex: 1;
   // font-size: 13.8px;
   // font-weight: 500;
