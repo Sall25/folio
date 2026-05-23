@@ -131,15 +131,15 @@ function WorkspaceHeader() {
         >
           {collapsed ? (
             <PanelRight
-              size={14}
+              // size={14}
               className="tiptap-button-icon"
-              style={{ width: 20, height: 18 }}
+              // style={{ width: 20, height: 18 }}
             />
           ) : (
             <PanelLeft
-              size={14}
+              // size={14}
               className="tiptap-button-icon"
-              style={{ width: 20, height: 18 }}
+              // style={{ width: 20, height: 18 }}
             />
           )}
         </Button>
@@ -276,9 +276,9 @@ function PagesList({ pages }: { pages: Page[] }) {
         {recentPages.length > 0 && (
           <>
             <span className="title">Recents</span>
-            <CardItemGroup style={{ gap: 2 }}>
+            <CardItemGroup style={{ gap: 4 }}>
               {recentPages.map((page) => (
-                <PageItem key={page.id} page={page} />
+                <PageItem key={page.id} page={page} disableExpand={true} />
               ))}
             </CardItemGroup>
           </>
@@ -336,6 +336,10 @@ export function SimpleEditorSidebar() {
         // boxShadow: "none",
         width: collapsed ? 52 : 290,
         transition: "width 0.2s ease",
+        height: "100vh",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       <WorkspaceHeader />

@@ -15,18 +15,21 @@ interface PageItemProps {
   page: Page;
   depth?: number;
   disableActive?: boolean;
+  disableExpand?: boolean;
 }
 
 export function PageItem({
   page,
   depth = 0,
   disableActive = false,
+  disableExpand = false,
 }: PageItemProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(page.title);
   const [expanded, setExpanded] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const hasChildren = page.children && page.children.length > 0;
+  const hasChildren =
+    page.children && page.children.length > 0 && !disableExpand;
   const [shouldShow, setShouldShow] = useState(false);
 
   const { addPageAndActivateAsync, updatePageAsync, activePageId } =
@@ -73,6 +76,7 @@ export function PageItem({
 
   return (
     <div className="page-item-tree">
+      <Spacer orientation="vertical" size={5} />
       <CardItemGroup
         orientation="horizontal"
         className={`page-item ${isActive ? "active" : ""}`}
@@ -133,9 +137,9 @@ export function PageItem({
           <span className="page-item-title">{title || "New Page"}</span>
         )}
 
-        <Spacer orientation="horizontal" />
+        {/* <Spacer orientation="horizontal" /> */}
 
-        <CardItemGroup orientation="horizontal">
+        <CardItemGroup orientation="horizontal" className="page-item-actions">
           <PageItemOptions
             onOpenChange={(v) => setShouldShow(v)}
             page={page}

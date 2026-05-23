@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6229FF"/>
+      <stop offset="100%" stop-color="#4400E5"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="round">
+      <rect width="512" height="512" rx="112" ry="112"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" ry="112" fill="url(#bg)"/>
+
+  <!-- Subtle shine overlay -->
+  <rect width="512" height="256" rx="0" fill="url(#shine)" clip-path="url(#round)"/>
+
+  <!-- Pages stack — back page -->
+  <rect x="148" y="156" width="220" height="268" rx="16" ry="16"
+        fill="#ffffff" fill-opacity="0.18"/>
+
+  <!-- Pages stack — mid page -->
+  <rect x="136" y="144" width="220" height="268" rx="16" ry="16"
+        fill="#ffffff" fill-opacity="0.28"/>
+
+  <!-- Front page -->
+  <rect x="124" y="132" width="220" height="268" rx="16" ry="16"
+        fill="#ffffff"/>
+
+  <!-- F lettermark -->
+  <!-- Vertical stem -->
+  <rect x="172" y="190" width="28" height="152" rx="6" ry="6" fill="#6229FF"/>
+  <!-- Top horizontal bar -->
+  <rect x="172" y="190" width="108" height="28" rx="6" ry="6" fill="#6229FF"/>
+  <!-- Mid horizontal bar -->
+  <rect x="172" y="248" width="80" height="24" rx="6" ry="6" fill="#6229FF"/>
+</svg>

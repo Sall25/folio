@@ -4,77 +4,158 @@
   gap: 1px;
 }
 
+.page-options-btn{
+  color: var(--tt-text-color);
+}
+// .page-item {
+//   width: 100%;
+//   display: flex;
+//   align-items: center;
+//   justify-content: flex-start;
+//   font-family: inherit;
+//   border-radius: var(--tt-radius-md);
+//   cursor: pointer;
+//   color: var(--sidebar-text-secondary);
+//   background-color: transparent;
+//   font-size: 13.5px;
+//   min-height: 28px;
+//   padding: 3px 6px;
+//   font-weight: 500;
+//   transition: background 0.1s, color 0.1s;
+//   gap: 4px;
+
+//   &:hover {
+//     background: var(--page-item-active-bg-color);
+//     color: var(--sidebar-text-color);
+
+//     .page-options-btn {
+//       opacity: 1;
+//     }
+//   }
+
+//   &.active {
+//     background: var(--page-item-active-bg-color);
+//     color: var(--sidebar-text-color);
+//     font-weight: 600;
+
+//     .page-icon {
+//       opacity: 1;
+//     }
+//   }
+// }
 
 .page-item {
   border-radius: var(--tt-radius-sm) !important;
   gap: 0;
+  display: flex;
+  align-items: center;
+  width: 96%;
+ // min-width: 200px;
+  &:hover {
+    background: var(--page-item-active-bg-color);
+    color: var(--sidebar-text-color);
+
+    .page-options-btn {
+      opacity: 1;
+    }
+  }
+
+  &.active {
+    background: var(--page-item-active-bg-color);
+    color: var(--sidebar-text-color);
+    font-weight: 600;
+
+    .page-icon {
+      opacity: 1;
+    }
+  }
+
   .page-item-actions {
     display: flex;
     align-items: center;
     gap: 1px;
-    width: 0;
-    overflow: hidden;
-    opacity: 0;
-    transition: opacity 0.1s;
+    width: 55px;
     flex-shrink: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s;
+   
+    // no width:0 or overflow:hidden — space is always reserved
   }
 
-  .active{
-      background-color: var(--tt-button-active-bg-color);
-      color: var(--tt-button-active-text-color) !important;
-
-  }
-  &:hover .page-item-actions {
-    width: auto;
-    overflow: visible;
+  &:hover .page-item-actions,
+  &.active .page-item-actions {
     opacity: 1;
+    pointer-events: auto;
   }
 }
-
 
 .page-item-title {
-   /* Font Family: Standard System Stack */
-    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 14.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--tt-text-color);
+  max-width: 190px;
+  flex: 1;           
+  min-width: 0;     
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  cursor: pointer;
+}
+
+// .page-item-title {
+//    /* Font Family: Standard System Stack */
+//     font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
     
-    /* Sizing and Weight */
-    font-size: 14px;
-    font-weight: 500;    /* Medium weight for clarity at small sizes */
-    line-height: 1.5;    /* Computed as 21px */
+//     /* Sizing and Weight */
+//     font-size: 14px;
+//     font-weight: 500;    /* Medium weight for clarity at small sizes */
+//     line-height: 1.5;    /* Computed as 21px */
     
-    /* Appearance */
+//     /* Appearance */
   
-    color: var(--tt-text-color);
-    letter-spacing: normal;
-    text-transform: none;
+//     color: var(--tt-text-color);
+//     letter-spacing: normal;
+//     text-transform: none;
     
-    /* Layout */
-    display: block;
-    margin: 0;
-    padding: 0;
+//     /* Layout */
+//     display: block;
+//     margin: 0;
+//     padding: 0;
 
-    min-width: 0;
-    max-width: 170px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+//     min-width: 0;
+//     max-width: 190px;
+//     overflow: hidden;
+//     text-overflow: ellipsis;
+//     white-space: nowrap;
 
+//     transition: max-width 0.15s ease;
+
+//     &:hover{
+//       max-width: 170px;
+//     }
    
 
-  // flex: 1;
-  // font-size: 13.8px;
-  // font-weight: 500;
-  // min-width: 0;
-  // max-width: 180px;
-  // overflow: hidden;
-  // text-overflow: ellipsis;
-  // white-space: nowrap;
-  // margin-left: 5px;
-  // transition: max-width 0.2s ease;
+//   // flex: 1;
+//   // font-size: 13.8px;
+//   // font-weight: 500;
+//   // min-width: 0;
+//   // max-width: 180px;
+//   // overflow: hidden;
+//   // text-overflow: ellipsis;
+//   // white-space: nowrap;
+//   // margin-left: 5px;
+//   // transition: max-width 0.2s ease;
 
-  // &:hover{
-  //    max-width: 170px;
-  // }
-}
+//   // &:hover{
+//   //    max-width: 170px;
+//   // }
+// }
 
 .page-expand-btn {
 

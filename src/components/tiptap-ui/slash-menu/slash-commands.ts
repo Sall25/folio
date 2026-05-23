@@ -3,6 +3,7 @@ import { Editor } from "@tiptap/core";
 import type { LucideIcon } from "lucide-react";
 import {
   AtSign,
+  Bookmark,
   Columns2,
   Columns3,
   Columns4,
@@ -24,6 +25,7 @@ import {
   Smile,
   Table,
   TypeOutline,
+  Video,
 } from "lucide-react";
 import { TodoListIcon, CodeBlockIcon } from "src/components/tiptap-icons";
 import type { Page } from "src/components/tiptap-templates/simple/types";
@@ -234,7 +236,25 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     icon: Paperclip,
     run: (e) => e.chain().focus().insertContent({ type: "file" }).run(),
   },
-
+  {
+    id: "Youtube",
+    type: "command",
+    title: "Youtube",
+    icon: Video,
+    run: (e) =>
+      e
+        .chain()
+        .focus()
+        .insertContent({ type: "youtube", attrs: { src: null } })
+        .run(),
+  },
+  {
+    id: "bookmark",
+    type: "command",
+    title: "Web bookmark",
+    icon: Bookmark,
+    run: (e) => e.chain().focus().insertBookmark().run(),
+  },
   //  ─── Pages ─────────────────────────────────────────────
   {
     id: "page-1",
