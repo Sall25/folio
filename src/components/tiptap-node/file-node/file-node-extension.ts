@@ -26,9 +26,10 @@ export interface FileNodeOptions {
 export const FileNode = Node.create<FileNodeOptions>({
   name: "file",
   group: "block",
-  atom: true,
+  // atom: true,
   selectable: true,
   draggable: true,
+  content: "block*",
 
   addOptions() {
     return {

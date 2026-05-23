@@ -122,7 +122,7 @@ export const ImageUploadNodeView: React.FC<NodeViewProps> = (props) => {
 
         {tab === "upload" && (
           <UploadTab
-            // onSelect={(url) => insertImages([url])}
+            onSelect={(url) => insertImages([url])}
             onFiles={handleFiles}
             inputRef={inputRef}
           />

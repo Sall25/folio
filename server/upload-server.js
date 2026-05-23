@@ -29,8 +29,11 @@ const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    cb(null, file.mimetype.startsWith("image/"));
+    cb(null, true);
   },
+  // fileFilter: (_req, file, cb) => {
+  //   cb(null, file.mimetype.startsWith("image/"));
+  // },
 });
 
 app.post("/api/upload", upload.single("file"), (req, res) => {

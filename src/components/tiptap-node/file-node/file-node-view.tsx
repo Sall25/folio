@@ -1,31 +1,80 @@
 // file-node-view.tsx
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { NodeViewProps } from "@tiptap/react";
 import { NodeViewWrapper } from "@tiptap/react";
-import { Download, Paperclip, Trash2, X } from "lucide-react";
+import { Paperclip, X } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { type UploadOptions } from "src/components/tiptap-node/image-upload-node/image-upload-node";
 import { useFileUpload } from "../image-upload-node/use-file-upload";
 import type { FileAttachment } from "./file-node-extension";
 import { isValidPosition } from "src/lib/tiptap-utils";
 import "./file-node-view.scss";
+import { FileItem } from "./file-item";
+import { formatFileSize } from "./utils";
 
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-}
+function FileUploadEmptyState({
+  onFiles,
+  inputRef,
+  accept,
+  maxSize,
+  isUploading,
+}: {
+  onFiles: (files: File[]) => void;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  accept: string;
+  maxSize: number;
+  isUploading: boolean;
+}) {
+  const [dragging, setDragging] = useState(false);
 
-function fileIcon(mimeType: string): string {
-  if (mimeType.startsWith("image/")) return "🖼";
-  if (mimeType === "application/pdf") return "📄";
-  if (mimeType.includes("spreadsheet") || mimeType.includes("excel"))
-    return "📊";
-  if (mimeType.includes("word") || mimeType.includes("document")) return "📝";
-  if (mimeType.includes("zip") || mimeType.includes("compressed")) return "🗜";
-  return "📎";
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length) onFiles(files);
+  };
+
+  return (
+    <div
+      onClick={() => !isUploading && inputRef.current?.click()}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={handleDrop}
+      style={{
+        border: `1.5px dashed ${dragging ? "var(--tt-brand-color-500)" : "var(--tt-border-color)"}`,
+        borderRadius: "var(--tt-radius-lg)",
+        background: dragging
+          ? "var(--tt-brand-color-50, rgba(99,102,241,0.05))"
+          : "var(--tt-card-bg-color)",
+        padding: "24px 16px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        cursor: isUploading ? "wait" : "pointer",
+        transition: "border-color 0.15s, background 0.15s",
+      }}
+    >
+      <Paperclip size={22} style={{ color: "var(--tt-theme-muted)" }} />
+      <span
+        style={{ fontSize: 13, color: "var(--tt-text-color)", fontWeight: 500 }}
+      >
+        {isUploading
+          ? "Uploading…"
+          : dragging
+            ? "Drop to attach"
+            : "Click or drag files here"}
+      </span>
+      <span style={{ fontSize: 11, color: "var(--tt-theme-muted)" }}>
+        Max {formatFileSize(maxSize)} ·{" "}
+        {accept === "*/*" ? "Any file type" : accept}
+      </span>
+    </div>
+  );
 }
 
 export function FileNodeView(props: NodeViewProps) {
@@ -43,7 +92,7 @@ export function FileNodeView(props: NodeViewProps) {
     onSuccess: extension.options.onSuccess,
   };
 
-  const { fileItems, uploadFiles, removeFileItem } =
+  const { fileItems, uploadFiles, removeFileItem, clearAllFiles } =
     useFileUpload(uploadOptions);
 
   async function handleUpload(selectedFiles: File[]) {
@@ -68,12 +117,13 @@ export function FileNodeView(props: NodeViewProps) {
       });
       return true;
     });
+
+    clearAllFiles();
   }
 
   function handleRemoveAttachment(id: string) {
     const pos = getPos();
     if (!isValidPosition(pos)) return;
-
     editor.commands.command(({ tr }) => {
       tr.setNodeMarkup(pos, undefined, {
         ...node.attrs,
@@ -91,90 +141,74 @@ export function FileNodeView(props: NodeViewProps) {
   }
 
   const isUploading = fileItems.some((f) => f.status === "uploading");
+  const isEmpty = files.length === 0 && fileItems.length === 0;
 
   return (
     <NodeViewWrapper as="div" className="file-node" data-type="file">
-      {/* Existing attachments */}
-      {files.length > 0 && (
-        <div className="file-node__list">
-          {files.map((attachment) => (
-            <div key={attachment.id} className="file-node__item">
-              <span className="file-node__icon">
-                {fileIcon(attachment.mimeType)}
-              </span>
+      {isEmpty ? (
+        <FileUploadEmptyState
+          onFiles={handleUpload}
+          inputRef={inputRef}
+          accept={accept}
+          maxSize={maxSize}
+          isUploading={isUploading}
+        />
+      ) : (
+        <>
+          {/* Existing attachments */}
+          {files.length > 0 && (
+            <div className="file-node__list">
+              {files.map((attachment) => (
+                <FileItem
+                  key={attachment.id}
+                  attachment={attachment}
+                  onRemove={() => handleRemoveAttachment(attachment.id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Uploading items */}
+          {fileItems.map((item) => (
+            <div
+              key={item.id}
+              className="file-node__item file-node__item--uploading"
+            >
+              <div
+                className="file-node__progress"
+                style={{ width: `${item.progress}%` }}
+              />
+              <Paperclip size={13} className="file-node__icon" />
               <div className="file-node__info">
-                <a
-                  href={attachment.url}
-                  download={attachment.name}
-                  className="file-node__name"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  contentEditable={false}
-                >
-                  {attachment.name}
-                </a>
+                <span className="file-node__name">{item.file.name}</span>
                 <span className="file-node__size">
-                  {formatFileSize(attachment.size)}
+                  {item.status === "uploading"
+                    ? `${item.progress}%`
+                    : formatFileSize(item.file.size)}
                 </span>
               </div>
-              <div className="file-node__actions" contentEditable={false}>
-                <a href={attachment.url} download={attachment.name}>
-                  <Button variant="ghost" className="file-node__action-btn">
-                    <Download size={13} />
-                  </Button>
-                </a>
-                <Button
-                  variant="ghost"
-                  className="file-node__action-btn file-node__action-btn--danger"
-                  onClick={() => handleRemoveAttachment(attachment.id)}
-                >
-                  <Trash2 size={13} />
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                className="file-node__action-btn"
+                onClick={() => removeFileItem(item.id)}
+              >
+                <X size={13} />
+              </Button>
             </div>
           ))}
-        </div>
-      )}
 
-      {/* Uploading items */}
-      {fileItems.map((item) => (
-        <div
-          key={item.id}
-          className="file-node__item file-node__item--uploading"
-        >
-          <div
-            className="file-node__progress"
-            style={{ width: `${item.progress}%` }}
-          />
-          <span className="file-node__icon">📎</span>
-          <div className="file-node__info">
-            <span className="file-node__name">{item.file.name}</span>
-            <span className="file-node__size">
-              {item.status === "uploading"
-                ? `${item.progress}%`
-                : formatFileSize(item.file.size)}
-            </span>
-          </div>
-          <Button
-            variant="ghost"
-            className="file-node__action-btn"
-            onClick={() => removeFileItem(item.id)}
+          {/* Add more button */}
+          <button
+            className="file-node__upload-btn"
+            onClick={() => inputRef.current?.click()}
+            disabled={isUploading}
+            contentEditable={false}
           >
-            <X size={13} />
-          </Button>
-        </div>
-      ))}
-
-      {/* Upload button */}
-      <button
-        className="file-node__upload-btn"
-        onClick={() => inputRef.current?.click()}
-        disabled={isUploading}
-        contentEditable={false}
-      >
-        <Paperclip size={13} />
-        <span>Add a file</span>
-      </button>
+            <Paperclip size={13} />
+            <span>Add a file</span>
+          </button>
+        </>
+      )}
 
       <input
         ref={inputRef}

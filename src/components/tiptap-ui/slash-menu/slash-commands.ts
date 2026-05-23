@@ -17,6 +17,7 @@ import {
   List,
   ListOrdered,
   Minus,
+  Paperclip,
   Pilcrow,
   Play,
   Quote,
@@ -225,6 +226,13 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     title: "Image",
     icon: Image,
     run: (e) => e.chain().focus().insertContent({ type: "imageUpload" }).run(),
+  },
+  {
+    id: "file",
+    type: "command",
+    title: "File",
+    icon: Paperclip,
+    run: (e) => e.chain().focus().insertContent({ type: "file" }).run(),
   },
 
   //  ─── Pages ─────────────────────────────────────────────
