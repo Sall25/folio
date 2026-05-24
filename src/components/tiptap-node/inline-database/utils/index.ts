@@ -6,7 +6,11 @@ import {
   type BoardView,
   isGroupableProperty,
 } from "../types/types";
-import type { DatabaseProperty } from "../types/types";
+import type {
+  CalendarView,
+  DatabaseProperty,
+  TimelineView,
+} from "../types/types";
 
 export * from "./cover-placeholder";
 
@@ -181,5 +185,24 @@ export function makeDefaultView(
         cardSize: "medium",
         coverFit: "cover",
       };
+    case "calendar": {
+      const dateProp = properties.find((p) => p.config.type === "date") ?? null;
+      return {
+        ...base,
+        type: "calendar",
+        datePropertyId: dateProp?.id ?? "",
+      } satisfies CalendarView;
+    }
+    case "timeline": {
+      const dateProp = properties.find((p) => p.config.type === "date") ?? null;
+      return {
+        ...base,
+        type: "timeline",
+        startDatePropertyId: dateProp?.id ?? "",
+        endDatePropertyId: "",
+        timeframe: "month",
+        showTable: true,
+      } satisfies TimelineView;
+    }
   }
 }

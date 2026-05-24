@@ -200,7 +200,7 @@ body,
 
 // Left sidebar slot — drag handle, nav, etc.
 .simple-editor-sidebar-left {
-  width: 340px;
+  width: 400px;
   flex-shrink: 0;
   position: sticky;
   top: 0;
@@ -287,8 +287,8 @@ body,
   }
 
   &[data-size="full"] {
-    max-width: 1070.8px;
-    --db-editor-width: 1070.8px;
+    max-width: 980.8px;
+    --db-editor-width:980.8px;
   }
 
   &[data-text="small"]{

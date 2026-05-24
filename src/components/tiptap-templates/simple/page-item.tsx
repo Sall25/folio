@@ -76,7 +76,7 @@ export function PageItem({
 
   return (
     <div className="page-item-tree">
-      <Spacer orientation="vertical" size={5} />
+      <Spacer orientation="vertical" size={1.4} />
       <CardItemGroup
         orientation="horizontal"
         className={`page-item ${isActive ? "active" : ""}`}

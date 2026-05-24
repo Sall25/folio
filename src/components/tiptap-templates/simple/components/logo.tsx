@@ -22,7 +22,6 @@ export function Logo({ collapsed }: LogoProps) {
       {!collapsed && (
         <div className="logo__wordmark">
           <span className="logo__name">Folio</span>
-          <span className="logo__sub">Workspace</span>
         </div>
       )}
     </div>

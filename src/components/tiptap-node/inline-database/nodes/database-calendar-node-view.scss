@@ -1,0 +1,174 @@
+// ── Sticky toolbar ────────────────────────────────────────────────────────────
+.db-calendar__toolbar-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--tt-bg-color, #fff);
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+.db-calendar-empty {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--tt-muted-fg-color, #888);
+  font-size: 0.875rem;
+}
+
+// ── Calendar wrapper ──────────────────────────────────────────────────────────
+.db-calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  overflow-x: auto;
+  min-width: 560px;
+}
+
+// ── Month navigation ──────────────────────────────────────────────────────────
+.db-calendar__nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+}
+
+.db-calendar__nav-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.db-calendar__month-label {
+  flex: 1;
+  text-align: center;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--tt-text-color, #111);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--tt-radius-sm, 4px);
+
+  &:hover {
+    background: var(--tt-hover-bg-color, rgba(0, 0, 0, 0.05));
+  }
+}
+
+// ── Weekday header row ────────────────────────────────────────────────────────
+.db-calendar__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--tt-border-color, #e5e7eb);
+}
+
+.db-calendar__weekday {
+  padding: 6px 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--tt-muted-fg-color, #9ca3af);
+  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+// ── Day grid ──────────────────────────────────────────────────────────────────
+.db-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-left: 1px solid var(--tt-border-color, #e5e7eb);
+  border-bottom: 1px solid var(--tt-border-color, #e5e7eb);
+}
+
+// ── Individual day cell ───────────────────────────────────────────────────────
+.db-calendar__cell {
+  min-height: 96px;
+  border-right: 1px solid var(--tt-border-color, #e5e7eb);
+  border-top: 1px solid var(--tt-border-color, #e5e7eb);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: relative;
+
+  &--outside {
+    background: var(--tt-subtle-bg-color, rgba(0, 0, 0, 0.02));
+  }
+
+  &--today .db-calendar__day-num {
+    background: var(--tt-accent-color, #2563eb);
+    color: #fff;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // Show add button only on hover
+  &:hover .db-calendar__cell-add {
+    opacity: 1;
+  }
+}
+
+// ── Cell header (day number + add button) ─────────────────────────────────────
+.db-calendar__cell-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+}
+
+.db-calendar__day-num {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--tt-text-color, #374151);
+  line-height: 1;
+  padding: 2px 3px;
+}
+
+.db-calendar__cell-add {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.1s;
+  flex-shrink: 0;
+
+  .tiptap-button-icon {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+// ── Record chips ──────────────────────────────────────────────────────────────
+.db-calendar__cell-records {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.db-calendar__record-chip {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 2px 6px;
+  border-radius: var(--tt-radius-sm, 3px);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--tt-accent-fg-color, #1d4ed8);
+  background: var(--tt-accent-subtle-bg, rgba(37, 99, 235, 0.1));
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.1s;
+
+  &:hover {
+    background: var(--tt-accent-subtle-bg-hover, rgba(37, 99, 235, 0.18));
+  }
+}

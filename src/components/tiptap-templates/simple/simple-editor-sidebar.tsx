@@ -4,9 +4,7 @@ import {
   PanelRight,
   PanelLeft,
   Plus,
-  MessageCircle,
   Inbox,
-  Mic,
   Store,
   LibraryBig,
 } from "lucide-react";
@@ -14,7 +12,6 @@ import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
   CardGroupLabel,
-  CardHeader,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
@@ -29,80 +26,6 @@ import { useEditorLayout } from "./context/editor-layout-context";
 import type { Page } from "./types";
 import { Logo } from "./components";
 
-function User({ name }: { name: string }) {
-  return (
-    <CardItemGroup
-      orientation="horizontal"
-      style={{
-        width: "100%",
-        justifyContent: "flex-start",
-        alignItems: "center",
-      }}
-    >
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: "50%",
-          background: "var(--logo-mark-bg)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 11,
-          fontWeight: 600,
-
-          flexShrink: 0,
-          letterSpacing: 0.2,
-        }}
-      >
-        JS
-      </div>
-      <CardItemGroup>
-        <span
-          style={{
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            fontSize: 12,
-            display: "inline-block",
-            fontWeight: "600",
-            fontFamily: "inherit",
-          }}
-        >
-          {name}
-        </span>
-        <span style={{ fontSize: 10, opacity: 0.8 }}>Pro plan</span>
-      </CardItemGroup>
-    </CardItemGroup>
-  );
-}
-
-function CreatePageButton() {
-  const { addPageAndActivateAsync } = useActivePage();
-  return (
-    <Button
-      variant="ghost"
-      onClick={async () => {
-        await addPageAndActivateAsync({ title: "New Page", parentId: null });
-      }}
-      style={{
-        justifyContent: "flex-start",
-        borderRadius: "var(--tt-radius-sm)",
-        fontSize: 13,
-        marginTop: 10,
-        color: "var(--tt-brand-color-400)",
-        fontWeight: 500,
-      }}
-    >
-      <Plus
-        className="tiptap-button-icon"
-        style={{ color: "var(--tt-brand-color-400)" }}
-      />
-      <span className="tiptap-button-text">New Page</span>
-    </Button>
-  );
-}
-
 function WorkspaceHeader() {
   const { collapsed, onCollapsedChange } = useEditorLayout();
   const [, setHide] = useState(true);
@@ -113,7 +36,9 @@ function WorkspaceHeader() {
   );
 
   return (
-    <CardHeader style={{ padding: !collapsed ? "5px 15px" : 0 }}>
+    <CardItemGroup
+      style={{ padding: !collapsed ? "5px 15px" : 0, width: "100%" }}
+    >
       <CardItemGroup
         orientation={collapsed ? "vertical" : "horizontal"}
         onMouseLeave={() => setHide(true)}
@@ -131,45 +56,20 @@ function WorkspaceHeader() {
         >
           {collapsed ? (
             <PanelRight
-              // size={14}
+              size={14}
               className="tiptap-button-icon"
-              // style={{ width: 20, height: 18 }}
+              style={{ width: 20, height: 18 }}
             />
           ) : (
             <PanelLeft
-              // size={14}
+              size={14}
               className="tiptap-button-icon"
-              // style={{ width: 20, height: 18 }}
+              style={{ width: 20, height: 18 }}
             />
           )}
         </Button>
       </CardItemGroup>
-    </CardHeader>
-  );
-}
-
-function SidebarTabs() {
-  const { collapsed } = useEditorLayout();
-  return (
-    <ButtonGroup
-      orientation={collapsed ? "vertical" : "horizontal"}
-      style={{
-        gap: 3,
-        width: "100%",
-        marginTop: 10,
-        marginRight: 5,
-        padding: "5px 10px",
-      }}
-    >
-      <Button
-        className="sidebar-tab"
-        variant="ghost"
-        tooltip="Search"
-        style={{ background: "transparent" }}
-      >
-        <Search className="sidebar-tab-icon" />
-      </Button>
-    </ButtonGroup>
+    </CardItemGroup>
   );
 }
 
@@ -182,16 +82,39 @@ function NavItems() {
     debounceUpdatePage.flush();
     navigate({ to: "/" });
   };
+  const { addPageAndActivateAsync } = useActivePage();
 
   return (
     <ButtonGroup className="sidebar-nav-item" orientation="vertical">
       <Button
         variant="ghost"
+        onClick={async () => {
+          await addPageAndActivateAsync({ title: "New Page", parentId: null });
+        }}
+        style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
+      >
+        <Plus
+          size={32}
+          strokeWidth={1.8}
+          className="tiptap-button-icon"
+          style={{
+            borderRadius: "var(--tt-radius-xl)",
+            background: "var(--tt-button-hover-bg-color)",
+            padding: 2,
+          }}
+        />
+        <Spacer orientation="horizontal" size={4} />
+        {/* <Library strokeWidth={2.5} className="tiptap-button-icon" /> */}
+        {!collapsed && <span className="tiptap-button-text">New Page</span>}
+      </Button>
+
+      <Button
+        variant="ghost"
         onClick={handleHomeClick}
-        style={{ fontWeight: 500, color: "var(--tt-theme-text)" }}
+        style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
       >
         <Search size={32} strokeWidth={1.8} className="tiptap-button-icon" />
-        <Spacer orientation="horizontal" size={6} />
+        <Spacer orientation="horizontal" size={4} />
         {/* <Library strokeWidth={2.5} className="tiptap-button-icon" /> */}
         {!collapsed && <span className="tiptap-button-text">Search</span>}
       </Button>
@@ -199,20 +122,20 @@ function NavItems() {
       <Button
         variant="ghost"
         onClick={handleHomeClick}
-        style={{ fontWeight: 500, color: "var(--tt-theme-text)" }}
+        style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
       >
         <Home size={32} strokeWidth={1.8} className="tiptap-button-icon" />
-        <Spacer orientation="horizontal" size={6} />
+        <Spacer orientation="horizontal" size={2} />
         {/* <Library strokeWidth={2.5} className="tiptap-button-icon" /> */}
         {!collapsed && <span className="tiptap-button-text">Home</span>}
       </Button>
       <Button
         variant="ghost"
         onClick={handleHomeClick}
-        style={{ fontWeight: 500, color: "var(--tt-theme-text)" }}
+        style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
       >
         <Inbox size={32} strokeWidth={1.8} className="tiptap-button-icon" />
-        <Spacer orientation="horizontal" size={6} />
+        <Spacer orientation="horizontal" size={2} />
         {/* <Library strokeWidth={2.5} className="tiptap-button-icon" /> */}
         {!collapsed && <span className="tiptap-button-text">Inbox</span>}
       </Button>
@@ -220,23 +143,23 @@ function NavItems() {
       <Button
         variant="ghost"
         onClick={handleHomeClick}
-        style={{ fontWeight: 500, color: "var(--tt-theme-text)" }}
+        style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
       >
         <LibraryBig
           size={32}
           strokeWidth={1.8}
           className="tiptap-button-icon"
         />
-        <Spacer orientation="horizontal" size={6} />
+        <Spacer orientation="horizontal" size={2} />
         {/* <Library strokeWidth={2.5} className="tiptap-button-icon" /> */}
         {!collapsed && <span className="tiptap-button-text">Library</span>}
       </Button>
       <Button
         variant="ghost"
-        style={{ fontWeight: 500, color: "var(--tt-theme-text)" }}
+        style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
       >
         <Store size={32} strokeWidth={1.8} className="tiptap-button-icon" />
-        <Spacer orientation="horizontal" size={6} />
+        <Spacer orientation="horizontal" size={2} />
         {!collapsed && <span className="tiptap-button-text">Marketplace</span>}
       </Button>
     </ButtonGroup>
@@ -283,7 +206,6 @@ function PagesList({ pages }: { pages: Page[] }) {
             </CardItemGroup>
           </>
         )}
-        <CreatePageButton />
 
         <Separator orientation="horizontal" style={{ height: 0.5 }} />
 
@@ -343,7 +265,7 @@ export function SimpleEditorSidebar() {
       }}
     >
       <WorkspaceHeader />
-      <Spacer size={5} />
+      <Spacer size={8} />
       <NavItems />
       <Separator orientation="horizontal" style={{ height: 0.5 }} />
       {!collapsed && <PagesList pages={pages} />}

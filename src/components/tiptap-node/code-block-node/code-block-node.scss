@@ -255,7 +255,9 @@
   position: relative;
   background: var(--tt-code-bg, rgba(135, 131, 120, 0.08));
   border-radius: 4px;
-
+ code{
+  display: contents;
+ }
   
   &:hover .code-block-toolbar {
     opacity: 1;

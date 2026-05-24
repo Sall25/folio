@@ -3,9 +3,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import type { BoardView, DatabaseAttrs, DatabaseView } from "../../types/types";
+import type { BoardView, DatabaseView } from "../../types/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
+  Calendar,
   ChevronRight,
   Columns3,
   Image,
@@ -13,6 +14,7 @@ import {
   LayoutTemplate,
   List,
   Table,
+  ChartGantt,
 } from "lucide-react";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import {
@@ -48,11 +50,15 @@ function ViewPallette({
         {type === "list" && <List />}
         {type === "board" && <Columns3 />}
         {type === "gallery" && <LayoutGrid />}
+        {type === "calendar" && <Calendar />}
+        {type === "timeline" && <ChartGantt />}
         <span className={`text-xs ${active ? "text-brand" : ""}`}>
           {type === "table" && "Table"}
           {type === "list" && "List"}
           {type === "board" && "Board"}
           {type === "gallery" && "Gallery"}
+          {type === "calendar" && "Calendar"}
+          {type === "timeline" && "Timeline"}
         </span>
       </CardItemGroup>
     </CardItemGroup>
@@ -61,7 +67,6 @@ function ViewPallette({
 
 interface LayoutPopoverProps {
   view: DatabaseView;
-  attrs: DatabaseAttrs;
   db: UseDatabaseReturn;
   showDbTitle?: boolean;
   showVLines?: boolean;
@@ -131,6 +136,18 @@ export function LayoutPopover({
                 onSelect={onSelect}
                 active={view.type === "gallery"}
                 type="gallery"
+              />
+            </CardItemGroup>
+            <CardItemGroup orientation="horizontal">
+              <ViewPallette
+                onSelect={onSelect}
+                active={view.type === "calendar"}
+                type="calendar"
+              />
+              <ViewPallette
+                onSelect={onSelect}
+                active={view.type === "timeline"}
+                type="timeline"
               />
             </CardItemGroup>
 

@@ -26,6 +26,8 @@ import { ResizableNodeProvider } from "../../figure-node";
 import { DatabaseListNodeView } from "./database-list-node-view";
 import { DatabaseBoardNodeView } from "./database-board-node-view";
 import { DatabaseGalleryNodeView } from "./database-gallery-node-view";
+import { DatabaseCalendarNodeView } from "./database-calendar-node-view";
+import { DatabaseTimelineNodeView } from "./database-timeline-node-view";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -91,6 +93,16 @@ export function DatabaseNodeView(props: NodeViewProps) {
   // ── List view ──────────────────────────────────────────────────────────
   if (db.activeView?.type === "list") {
     return <DatabaseListNodeView {...props} />;
+  }
+
+  // ── Calendar view ──────────────────────────────────────────────────────────
+  if (db.activeView?.type === "calendar") {
+    return <DatabaseCalendarNodeView {...props} />;
+  }
+
+  // ── Timeline view ──────────────────────────────────────────────────────────
+  if (db.activeView?.type === "timeline") {
+    return <DatabaseTimelineNodeView {...props} />;
   }
 
   // ── Table view (default) ───────────────────────────────────────────────

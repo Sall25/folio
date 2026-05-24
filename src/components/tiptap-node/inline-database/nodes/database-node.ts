@@ -297,66 +297,6 @@ export const DatabaseNode = Node.create({
           if (dispatch) dispatch(tr);
           return true;
         },
-      // addDatabaseProperty:
-      //   (nodeId: ID, type: PropertyType, name?: string) =>
-      //   ({ state, dispatch }) => {
-      //     const { tr, doc } = state;
-
-      //     let dbPos: number | null = null;
-      //     let dbNode: any = null;
-
-      //     doc.descendants((node, pos) => {
-      //       if (node.type.name === "database" && node.attrs.id === nodeId) {
-      //         dbPos = pos;
-      //         dbNode = node;
-      //         return false;
-      //       }
-      //     });
-
-      //     if (dbPos === null || dbNode === null) return false;
-
-      //     const newProp: DatabaseProperty = {
-      //       id: makeId(),
-      //       name:
-      //         name ??
-      //         type.charAt(0).toUpperCase() + type.slice(1).replace("_", " "),
-      //       config: DEFAULT_CONFIGS[type],
-      //       width: 160,
-      //     };
-
-      //     // Update database attrs
-      //     const updatedViews = (dbNode.attrs.views as DatabaseView[]).map(
-      //       (v) => {
-      //         if (v.type !== "table") return v;
-      //         return {
-      //           ...v,
-      //           propertyOrder: [...(v as TableView).propertyOrder, newProp.id],
-      //         };
-      //       },
-      //     );
-
-      //     tr.setNodeMarkup(dbPos, undefined, {
-      //       ...dbNode.attrs,
-      //       properties: [...dbNode.attrs.properties, newProp],
-      //       views: updatedViews,
-      //     });
-
-      //     // Insert new cell into every existing record
-      //     const newCellNode = state.schema.nodeFromJSON(makeCellNode(newProp));
-
-      //     doc.descendants((node, pos) => {
-      //       if (node.type.name !== "databaseRecord") return;
-
-      //       const $pos = doc.resolve(pos);
-      //       if ($pos.parent.attrs.id !== nodeId) return;
-
-      //       const insertPos = pos + 1 + node.content.size;
-      //       tr.insert(insertPos, newCellNode.copy(newCellNode.content));
-      //     });
-
-      //     if (dispatch) dispatch(tr);
-      //     return true;
-      //   },
 
       deleteDatabaseProperty:
         (nodeId: ID, propertyId: ID) =>

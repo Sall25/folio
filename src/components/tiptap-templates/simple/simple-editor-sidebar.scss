@@ -1,17 +1,19 @@
 :root {
-//  --sidebar-bg-color: rgba(249, 248, 247, 0.533);
- --sidebar-bg-color: var(--white); // muted sage — wet concrete after rain, light mode
-  --sidebar-shadow-color: rgb(240, 239, 237);
-  --sidebar-text-color: #2f2f2f;
-  --sidebar-text-secondary: var(--tt-gray-light-a-900);
+//  --sidebar-bg-color: var(--tt-gray-light-a-50);
+--sidebar-bg-color:  rgba(252, 249, 249, 1);
+//--sidebar-bg-color:  rgba(250, 185, 6, 0.037); // muted sage — wet concrete after rain, light mode
+  --sidebar-shadow-color: rgba(240, 239, 237, 0.737);
+  --sidebar-text-color: var(--tt-theme-text);
+  --sidebar-text-secondary:rgb(95, 99, 104);
   --sidebar-accent: #7c3aed;
 }
 
 .dark {
   --sidebar-bg-color: #1f1f1f;
-  --sidebar-shadow-color: #2c2c2b;
+  --sidebar-shadow-color: #0f0f0e0c;
   --sidebar-text-secondary: var(--tt-gray-dark-a-900);
-  --sidebar-text-color: #e4e4e4;
+  // --sidebar-text-color: #e4e4e4;
+  --sidebar-text-color: #e4e4e4b7;
   --sidebar-accent: #a78bfa;
 }
 
@@ -21,7 +23,8 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  font-family: 'Inter', sans-serif;
+   font-family: Inter, -apple-system, system-ui, sans-serif;
+        border-right: 1px solid var(--tt-border-color);
   height: 100vh;
   overflow: hidden;
   color: var(--sidebar-text-color);
@@ -29,9 +32,22 @@
   font-weight: 500;
   background-color: var(--sidebar-bg-color);
   border-right: 1px solid var(--tt-border-color);
-  box-shadow: none;
-  //box-shadow: var(--tt-shadow-elevated-sm);
-  padding: 0;
+  //box-shadow: none;
+  // box-shadow: var(--tt-shadow-elevated-xs);
+  box-shadow: 2px 2px 16px var(--sidebar-shadow-color);
+ padding: 0;
+  z-index: 10;
+  // background-image: linear-gradient(
+  //   to bottom,
+  //   var(--sidebar-bg-color) 60%,
+  //   rgba(235, 233, 255, 0.14) 100%
+  // );
+  /*
+  
+        z-index: 10;
+        
+       
+  */
 }
 
 // ── Workspace header ──
@@ -93,8 +109,8 @@
 // ── Nav items (Search, Home, Inbox etc.) ──
 .sidebar-nav-item {
   font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
+  font-size: 13.8px;
+  font-weight: 400;
   color: var(--sidebar-text-secondary);
   width: 100%;
   justify-content: flex-start;
@@ -117,12 +133,12 @@
       width: 17px;
       height: 17px;
       flex-shrink: 0;
-      stroke-width: 2.5px;
+      stroke-width: 2px;
     }
 
     .tiptap-button-text {
-      font-size: 13.8px;
-      font-weight: 500;
+      font-size: 14px;
+      font-weight: 400;
       line-height: 1.4;
     }
   }
@@ -131,7 +147,7 @@
 // ── Section label ──
 .sidebar-section-label {
   display: block;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--sidebar-text-secondary);
   letter-spacing: 0.06em;
@@ -149,6 +165,10 @@
 
 // ── Pages ──
 .sidebar-pages {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
   min-width: 0;
   width: 100%;
   flex: 1;
@@ -157,10 +177,9 @@
   padding: 4px 8px 16px 10px; // ← extra bottom padding so last item isn't clipped
   display: flex;
   flex-direction: column;
-   justify-content: flex-start !important;
-  gap: 3px;
-  padding-top: 0;  
-  margin-right: 10px;
+  justify-content: flex-start !important;
+  gap: 0;
+  // margin-right: 10px;
 
   // the direct CardItemGroup child
   > div {

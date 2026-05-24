@@ -27,7 +27,7 @@ Box Model: box-sizing: border-box
   user-select: none;
   border-bottom: 1px solid var(--tt-border-color);
   padding-bottom: 2px;
-  color: rgb(240, 239, 237);
+  color: inherit;
   box-sizing: border-box;
  
   &:hover{

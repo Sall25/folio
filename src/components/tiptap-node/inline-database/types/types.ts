@@ -36,7 +36,13 @@ export type PropertyType =
   | "phone"
   | "edited_by";
 
-export type ViewType = "table" | "board" | "list" | "gallery";
+export type ViewType =
+  | "table"
+  | "board"
+  | "list"
+  | "gallery"
+  | "calendar"
+  | "timeline";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Property config primitives
@@ -319,7 +325,25 @@ export interface GalleryView extends BaseView {
   coverFit: "cover" | "contain";
 }
 
-export type DatabaseView = TableView | BoardView | ListView | GalleryView;
+export interface CalendarView extends BaseView {
+  type: "calendar";
+  datePropertyId: string;
+}
+
+export interface TimelineView extends BaseView {
+  type: "timeline";
+  startDatePropertyId: ID;
+  endDatePropertyId: ID;
+  timeframe: "day" | "week" | "month" | "quarter" | "year";
+  showTable: boolean;
+}
+export type DatabaseView =
+  | TableView
+  | BoardView
+  | ListView
+  | GalleryView
+  | CalendarView
+  | TimelineView;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UI state — ephemeral, never stored in the doc
