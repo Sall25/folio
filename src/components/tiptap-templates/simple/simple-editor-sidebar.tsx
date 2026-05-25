@@ -25,6 +25,8 @@ import { useActivePage } from "./use-active-page";
 import { useEditorLayout } from "./context/editor-layout-context";
 import type { Page } from "./types";
 import { Logo } from "./components";
+import { useCreatePage } from "./context/create-page-context";
+import { usePages } from "./use-pages";
 
 function WorkspaceHeader() {
   const { collapsed, onCollapsedChange } = useEditorLayout();
@@ -72,42 +74,30 @@ function WorkspaceHeader() {
     </CardItemGroup>
   );
 }
-
 function NavItems() {
   const { collapsed } = useEditorLayout();
   const { debounceUpdatePage } = useActivePage();
+  const { addPageAsync } = usePages();
+  const { setCreatePageId } = useCreatePage();
   const navigate = useNavigate();
 
   const handleHomeClick = () => {
     debounceUpdatePage.flush();
     navigate({ to: "/" });
   };
-  const { addPageAndActivateAsync } = useActivePage();
+
+  const handleNewPage = async () => {
+    const newPage = await addPageAsync({
+      title: "New Page",
+      parentId: null,
+    });
+    if (newPage?.id != null) {
+      setCreatePageId(newPage.id);
+    }
+  };
 
   return (
     <ButtonGroup className="sidebar-nav-item" orientation="vertical">
-      <Button
-        variant="ghost"
-        onClick={async () => {
-          await addPageAndActivateAsync({ title: "New Page", parentId: null });
-        }}
-        style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
-      >
-        <Plus
-          size={32}
-          strokeWidth={1.8}
-          className="tiptap-button-icon"
-          style={{
-            borderRadius: "var(--tt-radius-xl)",
-            background: "var(--tt-button-hover-bg-color)",
-            padding: 2,
-          }}
-        />
-        <Spacer orientation="horizontal" size={4} />
-        {/* <Library strokeWidth={2.5} className="tiptap-button-icon" /> */}
-        {!collapsed && <span className="tiptap-button-text">New Page</span>}
-      </Button>
-
       <Button
         variant="ghost"
         onClick={handleHomeClick}
@@ -115,7 +105,6 @@ function NavItems() {
       >
         <Search size={32} strokeWidth={1.8} className="tiptap-button-icon" />
         <Spacer orientation="horizontal" size={4} />
-        {/* <Library strokeWidth={2.5} className="tiptap-button-icon" /> */}
         {!collapsed && <span className="tiptap-button-text">Search</span>}
       </Button>
 
@@ -126,9 +115,9 @@ function NavItems() {
       >
         <Home size={32} strokeWidth={1.8} className="tiptap-button-icon" />
         <Spacer orientation="horizontal" size={2} />
-        {/* <Library strokeWidth={2.5} className="tiptap-button-icon" /> */}
         {!collapsed && <span className="tiptap-button-text">Home</span>}
       </Button>
+
       <Button
         variant="ghost"
         onClick={handleHomeClick}
@@ -136,7 +125,6 @@ function NavItems() {
       >
         <Inbox size={32} strokeWidth={1.8} className="tiptap-button-icon" />
         <Spacer orientation="horizontal" size={2} />
-        {/* <Library strokeWidth={2.5} className="tiptap-button-icon" /> */}
         {!collapsed && <span className="tiptap-button-text">Inbox</span>}
       </Button>
 
@@ -151,9 +139,9 @@ function NavItems() {
           className="tiptap-button-icon"
         />
         <Spacer orientation="horizontal" size={2} />
-        {/* <Library strokeWidth={2.5} className="tiptap-button-icon" /> */}
         {!collapsed && <span className="tiptap-button-text">Library</span>}
       </Button>
+
       <Button
         variant="ghost"
         style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
@@ -162,10 +150,28 @@ function NavItems() {
         <Spacer orientation="horizontal" size={2} />
         {!collapsed && <span className="tiptap-button-text">Marketplace</span>}
       </Button>
+
+      <Button
+        variant="ghost"
+        onClick={handleNewPage}
+        style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
+      >
+        <Plus
+          size={32}
+          strokeWidth={1.8}
+          className="tiptap-button-icon"
+          style={{
+            borderRadius: "var(--tt-radius-xl)",
+            background: "var(--tt-button-hover-bg-color)",
+            padding: 2,
+          }}
+        />
+        <Spacer orientation="horizontal" size={4} />
+        {!collapsed && <span className="tiptap-button-text">New Page</span>}
+      </Button>
     </ButtonGroup>
   );
 }
-
 function flattenPages(pages: Page[]): Page[] {
   return pages.flatMap((p) => [p, ...flattenPages(p.children ?? [])]);
 }
@@ -242,7 +248,7 @@ function PagesList({ pages }: { pages: Page[] }) {
 }
 
 export function SimpleEditorSidebar() {
-  const { collapsed } = useEditorLayout();
+  const { collapsed, sidebarWidth } = useEditorLayout();
   const { pages } = useActivePage();
 
   if (!pages) return null;
@@ -255,8 +261,9 @@ export function SimpleEditorSidebar() {
         position: "fixed",
         left: 0,
         borderRadius: 0,
+        width: sidebarWidth,
         // boxShadow: "none",
-        width: collapsed ? 52 : 290,
+        //width: collapsed ? 52 : 290,
         transition: "width 0.2s ease",
         height: "100vh",
         overflow: "hidden",
@@ -265,7 +272,7 @@ export function SimpleEditorSidebar() {
       }}
     >
       <WorkspaceHeader />
-      <Spacer size={8} />
+      <Spacer orientation="vertical" size={6} />
       <NavItems />
       <Separator orientation="horizontal" style={{ height: 0.5 }} />
       {!collapsed && <PagesList pages={pages} />}

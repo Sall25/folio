@@ -1,0 +1,101 @@
+// PageCreateModal.scss
+// Centered modal for creating a new page — matches the dark app theme
+
+:root{
+  --background-drop: rgba(216, 211, 211, 0.3);
+}
+.dark{
+  --background-drop: rgba(15, 15, 15, 0.258);
+}
+
+.page-create-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--background-drop);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: backdrop-in 120ms ease;
+}
+
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.page-create-modal {
+  position: fixed;
+  z-index: 101;
+
+  // Center it
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  // Sizing
+  width: min(860px, 92vw);
+  max-height: min(90vh, 960px);
+  min-height: 600px;
+  height: auto;
+
+  // Allow the body to scroll if content grows
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  // Rounded on all corners (unlike the side-panel peek which has flat right edges)
+  border-radius: 10px;
+
+  // Entry animation
+  animation: modal-in 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+// Scrollable body
+.page-create-modal .tiptap-card-body {
+  overflow-y: auto;
+  flex: 1;
+
+  // Custom scrollbar to match dark theme
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+  }
+}
+
+.page-create-content {
+  padding: 0 48px 48px;
+  min-height: 200px;
+
+  // Ensure the title node (first child) is always visible
+  .tiptap {
+    padding-top: 24px;
+
+    > p:first-child,
+    > h1:first-child,
+    [data-type="title"] {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+  }
+}

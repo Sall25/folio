@@ -10,7 +10,7 @@ interface EditorLayoutProviderProps {
   children: ReactNode;
 }
 
-const SIDEBAR_WIDTH = 280;
+const SIDEBAR_WIDTH = 270;
 const SIDEBAR_COLLAPSED_WIDTH = 52;
 
 export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {

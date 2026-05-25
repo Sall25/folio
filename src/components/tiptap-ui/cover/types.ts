@@ -1,6 +1,11 @@
 export type Target = "Emoji" | "Icons" | "Upload";
 
-export type CoverTab = "reposition" | "unsplash" | "gradient" | "url";
+export type CoverTab =
+  | "reposition"
+  | "unsplash"
+  | "gradient"
+  | "url"
+  | "upload";
 
 export type GradientPreset = {
   label: string;

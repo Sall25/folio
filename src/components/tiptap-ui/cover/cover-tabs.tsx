@@ -9,6 +9,7 @@ const COVER_TABS: CoverTabConfig[] = [
   { id: "unsplash", label: "Unsplash" },
   { id: "gradient", label: "Gradient" },
   { id: "url", label: "URL" },
+  { id: "upload", label: "Upload" },
 ];
 
 export function CoverTabs({

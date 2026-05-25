@@ -32,7 +32,6 @@ import { PageLinkNode } from "src/components/tiptap-node/page-link-node";
 import { SlashCommand } from "src/components/tiptap-ui/slash-menu";
 import { MentionExtension } from "src/components/tiptap-ui/mention-menu";
 import { EmojiExtension } from "src/components/tiptap-ui/emoji-menu";
-import { TallCursor } from "src/components/tiptap-extension";
 import { handleImageUpload, MAX_FILE_SIZE } from "src/lib/tiptap-utils";
 import { DatabaseNode } from "src/components/tiptap-node/inline-database";
 import { DatabaseRecordNode } from "src/components/tiptap-node/inline-database/nodes/database-record-node";
@@ -118,7 +117,6 @@ export function usePeekEditorExtensions(onNavigate?: (pageId: number) => void) {
       DatabaseNode,
       CalloutExtension,
       AudioExtension,
-      TallCursor,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

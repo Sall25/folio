@@ -20,7 +20,8 @@ import { useActivePage } from "./use-active-page";
 import EditorSkeleton from "./editor-skeleton";
 import { PeekPageProvider } from "./context/peek-page-provider";
 import { PagePeekView } from "./page-peek-view";
-import { usePeekPage } from "./context/peek-page-context";
+import { PageCreateModal } from "./page-create-modal";
+import { useCreatePage } from "./context/create-page-context";
 import { findPage } from "src/lib/find-page";
 import { useEditorLayout } from "./context/editor-layout-context";
 
@@ -34,18 +35,23 @@ import "src/components/tiptap-node/heading-node/heading-node.scss";
 import "src/components/tiptap-node/paragraph-node/paragraph-node.scss";
 import "src/components/tiptap-templates/simple/simple-editor.scss";
 import "src/components/tiptap-templates/simple/toc.scss";
+import "src/components/tiptap-templates/simple/page-create-modal.scss";
 import { TocSidebar } from "src/components/tiptap-node/toc-node/toc-sidebar";
 import type { View } from "./types";
 import { ResourcesPage } from "./components/resources/resources-page";
+import { usePeekPage } from "./context/peek-page-context";
 
 const VERSION_SIDEBAR_WIDTH = 260;
 
 function SimpleEditorMain({ view }: { view: View }) {
   const { pages } = useActivePage();
-  const { versionHistoryOpen, onVersionHistoryOpenChanged } = useEditorLayout();
+  const { versionHistoryOpen, onVersionHistoryOpenChanged, collapsed } =
+    useEditorLayout();
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
   const { setPeekPageId, peekPageId } = usePeekPage();
-  const page =
+  const { createPageId, setCreatePageId } = useCreatePage();
+
+  const peekPage =
     peekPageId !== null && pages ? findPage(pages, peekPageId) : null;
 
   return (
@@ -58,6 +64,7 @@ function SimpleEditorMain({ view }: { view: View }) {
             className="simple-editor-main"
             style={{
               marginRight: versionWidth,
+              paddingLeft: collapsed ? 80 : 0,
               transition: "margin-right 0.2s ease",
             }}
           >
@@ -73,7 +80,13 @@ function SimpleEditorMain({ view }: { view: View }) {
         </>
       )}
 
-      {page && <PagePeekView page={page} onClose={() => setPeekPageId(null)} />}
+      {peekPage && (
+        <PagePeekView page={peekPage} onClose={() => setPeekPageId(null)} />
+      )}
+
+      {createPageId !== null && (
+        <PageCreateModal onClose={() => setCreatePageId(null)} />
+      )}
     </>
   );
 }

@@ -4,10 +4,6 @@ import { useActivePage } from "src/components/tiptap-templates/simple/use-active
 import type { Page } from "src/components/tiptap-templates/simple/types";
 import CoverControlsGroup from "./cover-controls";
 
-// ============================================================
-// CoverImage
-// ============================================================
-
 export default function CoverImage({
   page,
   onRemoveCoverAsync,
@@ -15,7 +11,7 @@ export default function CoverImage({
   page: Page;
   onRemoveCoverAsync: () => Promise<void>;
 }) {
-  const { updatePageAsync } = useActivePage();
+  const { updatePageAsync, activePage } = useActivePage();
   const [btnPosition, setBtnPosition] = useState({ top: 0, right: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const [hovering, setHovering] = useState(false);
@@ -25,8 +21,7 @@ export default function CoverImage({
   );
   const [localPositionY, setLocalPositionY] = useState<number | null>(null);
 
-  // Always derive from props, local state only overrides during active editing
-  const coverImage = pendingCoverImage ?? page.cover.coverImage;
+  const coverImage = pendingCoverImage ?? activePage?.cover.coverImage;
   const positionY = localPositionY ?? (page.cover as any)?.positionY ?? 50;
 
   const onCoverImageChange = useCallback((url: string) => {
@@ -43,7 +38,7 @@ export default function CoverImage({
       ...page,
       cover: { ...page.cover, positionY: y },
     });
-    setLocalPositionY(null); // clear override after save
+    setLocalPositionY(null);
   }, [updatePageAsync, page, localPositionY]);
 
   const onPopoverOpenChange = useCallback(
@@ -69,30 +64,29 @@ export default function CoverImage({
       ref={containerRef}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
+      style={{
+        position: "relative",
+        width: "100%",
+        height: 260,
+        overflow: "hidden",
+        flexShrink: 0,
+      }}
     >
-      <style>{`
-        .cover-image-root {
-          position: relative;
-          width: 100%;
-          height: 30vh;
-          max-height: 280px;
-          overflow: hidden;
-        }
-        .cover-image-root img {
-          width: 100%;
-          height: 200%;
-          object-fit: cover;
-          display: block;
-          position: absolute;
-          left: 0;
-        }
-      `}</style>
-
       <img
         src={coverImage ?? ""}
         alt="cover"
         draggable={false}
-        style={{ top: `${-(positionY / 100) * 50}%` }}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: `center ${positionY}%`,
+          display: "block",
+          userSelect: "none",
+        }}
       />
 
       {showControls && (

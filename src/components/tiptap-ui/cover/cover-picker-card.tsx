@@ -5,6 +5,7 @@ import { GradientTab } from "./gradient-tab";
 import { RepositionTab } from "./reposition-tab";
 import { UnsplashTab } from "./unsplash-tab";
 import { UrlTab } from "./url-tab";
+import { UploadCoverTab } from "./upload-cover-tab";
 import type { CoverTab } from "./types";
 
 export interface CoverPickerCardProps {
@@ -44,6 +45,11 @@ export function CoverPickerCard({
     onGradientChange(gradient);
   };
 
+  const handleImageSelected = (url: string) => {
+    onCoverImageChange(url);
+    setActiveTab("reposition");
+  };
+
   return (
     <Card style={{ padding: "5px 15px", width: 460, overflow: "hidden" }}>
       <CoverTabs active={activeTab} onActive={setActiveTab} />
@@ -74,12 +80,7 @@ export function CoverPickerCard({
         )}
 
         {activeTab === "unsplash" && (
-          <UnsplashTab
-            onSelect={(url) => {
-              onCoverImageChange(url);
-              setActiveTab("reposition");
-            }}
-          />
+          <UnsplashTab onSelect={handleImageSelected} />
         )}
 
         {activeTab === "gradient" && (
@@ -89,13 +90,10 @@ export function CoverPickerCard({
           />
         )}
 
-        {activeTab === "url" && (
-          <UrlTab
-            onSelect={(url) => {
-              onCoverImageChange(url);
-              setActiveTab("reposition");
-            }}
-          />
+        {activeTab === "url" && <UrlTab onSelect={handleImageSelected} />}
+
+        {activeTab === "upload" && (
+          <UploadCoverTab onSelect={handleImageSelected} />
         )}
       </div>
     </Card>

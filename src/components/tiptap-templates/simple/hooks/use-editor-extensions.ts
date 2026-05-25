@@ -72,6 +72,7 @@ import { DueDateCellNode } from "src/components/tiptap-node/inline-database/node
 import { FormulaCellNode } from "src/components/tiptap-node/inline-database/nodes/formula-cell-node";
 import { YoutubeExtension } from "src/components/tiptap-node/video-node";
 import { BookmarkNode } from "src/components/tiptap-node/bookmark-node/bookmark-node-extension";
+import { PageBreadcrumb } from "src/components/tiptap-ui/page-breadcrumb/page-breadcrumb";
 
 export function useEditorExtensions(
   refsRef: React.RefObject<EditorExtensionRefs>,
@@ -239,6 +240,7 @@ export function useEditorExtensions(
       AudioExtension,
       YoutubeExtension,
       BookmarkNode,
+      PageBreadcrumb,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
