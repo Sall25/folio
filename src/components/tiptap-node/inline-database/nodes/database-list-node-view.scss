@@ -13,7 +13,6 @@
   border-bottom: 0.5px solid var(--tt-border-color-tint, rgba(0, 0, 0, 0.06));
   cursor: pointer;
   transition: background 80ms;
-
   &:hover {
     background: var(--tt-bg-color-hover, rgba(0, 0, 0, 0.03));
   }

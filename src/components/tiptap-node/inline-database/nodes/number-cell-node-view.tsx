@@ -15,6 +15,8 @@ import type { NumberFormat } from "../types/types";
 import { useCallback } from "react";
 import type { DatabaseAttrs } from "../types/types";
 import "./number-cell-node-view.scss";
+import { useCellPageSync } from "../hooks/use-cell-page-sync";
+import { useIsPropertyHidden } from "../hooks/use-is-property-hidden";
 
 function formatNumber(
   value: number | null,
@@ -121,6 +123,8 @@ export function NumberCellNodeView({
   const dbAttrs = db?.attrs as DatabaseAttrs | undefined;
   const prop = dbAttrs?.properties.find((p) => p.id === attrs.propertyId);
   const config = prop?.config.type === "number" ? prop.config : null;
+  const syncPage = useCellPageSync(getPos, updateAttributes);
+  const isHidden = useIsPropertyHidden(editor, getPos, node.attrs.propertyId);
 
   const displayValue = formatNumber(
     attrs.value,
@@ -135,6 +139,9 @@ export function NumberCellNodeView({
     updateAttributes({ value: parsed });
     setOpen(false);
   }
+
+  if (isHidden)
+    return <NodeViewWrapper as={"div"} style={{ display: "none" }} />;
 
   return (
     <NodeViewWrapper
@@ -177,7 +184,7 @@ export function NumberCellNodeView({
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSave();
+                  if (e.key === "Enter") syncPage(() => handleSave(), node);
                   if (e.key === "Escape") setOpen(false);
                 }}
                 autoFocus

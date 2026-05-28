@@ -12,10 +12,22 @@ import {
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 import "./email-cell-node-view.scss";
+import { useCellPageSync } from "../hooks/use-cell-page-sync";
+import { useIsPropertyHidden } from "../hooks/use-is-property-hidden";
 
-export function EmailCellNodeView({ node, editor, getPos }: NodeViewProps) {
+export function EmailCellNodeView({
+  node,
+  editor,
+  getPos,
+  updateAttributes,
+}: NodeViewProps) {
   const [open, setOpen] = useState(false);
   const [textContent, setTextContent] = useState(node.textContent);
+  const syncPage = useCellPageSync(getPos, updateAttributes);
+  const isHidden = useIsPropertyHidden(editor, getPos, node.attrs.propertyId);
+
+  if (isHidden)
+    return <NodeViewWrapper as={"div"} style={{ display: "none" }} />;
 
   return (
     <NodeViewWrapper
@@ -64,19 +76,21 @@ export function EmailCellNodeView({ node, editor, getPos }: NodeViewProps) {
                   borderRadius: "var(--tt-radius-xl)",
                 }}
                 disabled={!textContent.trim()}
-                onClick={() => {
-                  if (!textContent.trim()) return;
-                  const pos = getPos?.();
-                  if (pos == null) return;
-                  const { tr } = editor.state;
-                  tr.insertText(
-                    textContent,
-                    pos + 1,
-                    pos + 1 + node.content.size,
-                  );
-                  editor.view.dispatch(tr);
-                  setOpen(false);
-                }}
+                onClick={() =>
+                  syncPage(() => {
+                    if (!textContent.trim()) return;
+                    const pos = getPos?.();
+                    if (pos == null) return;
+                    const { tr } = editor.state;
+                    tr.insertText(
+                      textContent,
+                      pos + 1,
+                      pos + 1 + node.content.size,
+                    );
+                    editor.view.dispatch(tr);
+                    setOpen(false);
+                  }, node)
+                }
               >
                 <ArrowUp
                   className="tiptap-button-icon"

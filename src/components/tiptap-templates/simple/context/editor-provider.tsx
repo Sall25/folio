@@ -1,5 +1,5 @@
 import { useRef, type ReactNode } from "react";
-import { useEditor } from "@tiptap/react";
+import { useEditor, type Extensions } from "@tiptap/react";
 import { useEditorExtensions } from "../hooks/use-editor-extensions";
 import { EditorContext } from "@tiptap/react";
 import { EditorRefsContext } from "./editor-refs-context";
@@ -26,7 +26,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
 
   const editor = useEditor({
     editorProps: { attributes: EDITOR_ATTRIBUTES },
-    extensions,
+    extensions: extensions as Extensions,
     shouldRerenderOnTransaction: false,
     content: "<p>No content</p>",
   });

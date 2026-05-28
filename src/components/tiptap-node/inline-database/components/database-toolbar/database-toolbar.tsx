@@ -12,6 +12,8 @@ import {
   Check,
   X,
   ChevronDown,
+  ListFilter,
+  EyeOff,
 } from "lucide-react";
 import { nanoid } from "nanoid";
 
@@ -56,10 +58,14 @@ import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek-page-context";
-import { ViewIcon } from "./view-icon";
-import { ViewNamePopover } from "./view-name-popover";
 import { ViewOptionsPopover } from "./view-options-popover";
-
+import { useCreatePage } from "src/components/tiptap-templates/simple/context/create-page-context";
+import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
+import { useCurrentEditor } from "@tiptap/react";
+import { DatabaseViewTabs } from "../database-view-tabs/database-view-tabs";
+import { FilterPanel } from "../filter-panel";
+import { SortPanel } from "../sort-panel";
+import { PropertiesPanel } from "../properties-panel";
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface DatabaseToolbarProps {
@@ -183,33 +189,45 @@ export function DatabaseToolbar({
   const activeView = getActiveView(attrs);
   const filters = activeView?.filters ?? [];
   const sorts = activeView?.sorts ?? [];
+  const props = activeView?.hiddenProperties ?? [];
   const activeFilterCount = totalFilterRules(filters);
   const activeSortCount = sorts.length;
-  const { pages, addPageTemplateAsync } = usePages();
+  const activePropsCount = props.length;
+  const { pages, addPageTemplateAsync, addPageAsync } = usePages();
+  const { activePageId } = useActivePage();
   const { setPeekPageId } = usePeekPage();
   const [viewOptionsOpen, setViewOptionsOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
-
+  const { setCreatePageId } = useCreatePage();
+  const { editor } = useCurrentEditor();
   const onViewOptionsOpenChange = useCallback(
     (o: boolean) => setViewOptionsOpen(o),
     [setViewOptionsOpen],
   );
+
   const onTemplateOpenChange = useCallback(
     (o: boolean) => setTemplateOpen(o),
     [setTemplateOpen],
   );
+  const handleNewPage = async () => {
+    const newPage = await addPageAsync({
+      title: "New Page",
+      parentId: activePageId ?? null,
+    });
+    if (newPage?.id != null) {
+      editor?.commands.addDatabaseRecord(attrs.id, newPage.id);
+      setCreatePageId(newPage.id);
+    }
+  };
 
   return (
     <CardItemGroup style={{ marginBottom: 10, position: "relative" }}>
       <CardItemGroup orientation="horizontal">
-        <ButtonGroup orientation="horizontal" style={{ gap: 0 }}>
-          <ViewIcon view={db.activeView} />
-          <ViewNamePopover
-            view={db.activeView}
-            onRename={() => onViewOptionsOpenChange(true)}
-          />
-        </ButtonGroup>
-
+        <DatabaseViewTabs
+          attrs={attrs}
+          db={db}
+          onRename={() => onViewOptionsOpenChange(true)}
+        />
         <Spacer orientation="horizontal" />
 
         <CardItemGroup orientation="horizontal">
@@ -218,14 +236,28 @@ export function DatabaseToolbar({
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
-                className={
-                  activeFilterCount > 0 ? "db-toolbar__btn--active" : ""
-                }
+                tooltip="Filter"
+                data-active-state={activeFilterCount > 0 ? "on" : "off"}
+                style={{
+                  minHeight: 22,
+                  height: 22,
+                  borderRadius: "var(--tt-radius-sm)",
+                }}
               >
-                <Filter size={14} />
-                <span>Filter</span>
+                <ListFilter className="tiptap-button-icon" size={14} />
+                {/* <span>Filter</span> */}
                 {activeFilterCount > 0 && (
-                  <span className="db-toolbar__badge">{activeFilterCount}</span>
+                  <span
+                    className="db-toolbar__badge"
+                    style={{
+                      border: "1px solid var(--tt-border-color)",
+                      borderRadius: "var(--tt-radius-xl)",
+                      padding: "3px 6px",
+                      fontSize: 10,
+                    }}
+                  >
+                    {activeFilterCount}
+                  </span>
                 )}
               </Button>
             </PopoverTrigger>
@@ -237,13 +269,29 @@ export function DatabaseToolbar({
           <Popover>
             <PopoverTrigger asChild>
               <Button
+                tooltip="Sort"
                 variant="ghost"
-                className={activeSortCount > 0 ? "db-toolbar__btn--active" : ""}
+                data-active-state={activeSortCount > 0 ? "on" : "off"}
+                style={{
+                  minHeight: 22,
+                  height: 22,
+                  borderRadius: "var(--tt-radius-sm)",
+                }}
               >
-                <ArrowUpDown size={14} />
-                <span>Sort</span>
+                <ArrowUpDown className="tiptap-button-icon" size={14} />
+                {/* <span>Sort</span> */}
                 {activeSortCount > 0 && (
-                  <span className="db-toolbar__badge">{activeSortCount}</span>
+                  <span
+                    className="db-toolbar__badge"
+                    style={{
+                      border: "1px solid var(--tt-border-color)",
+                      borderRadius: "var(--tt-radius-xl)",
+                      padding: "3px 6px",
+                      fontSize: 10,
+                    }}
+                  >
+                    {activeSortCount}
+                  </span>
                 )}
               </Button>
             </PopoverTrigger>
@@ -260,8 +308,8 @@ export function DatabaseToolbar({
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost">
-                <Group size={14} />
-                <span>Group</span>
+                <Group className="tiptap-button-icon" size={14} />
+                {/* <span>Group</span> */}
               </Button>
             </PopoverTrigger>
             <PopoverContent side="bottom" align="start" className="db-panel">
@@ -271,9 +319,35 @@ export function DatabaseToolbar({
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost">
-                <Eye size={14} />
-                <span>Properties</span>
+              <Button
+                tooltip="Hide Properties"
+                variant="ghost"
+                data-active-state={activePropsCount > 0 ? "on" : "off"}
+                style={{
+                  minHeight: 22,
+                  height: 22,
+                  borderRadius: "var(--tt-radius-sm)",
+                }}
+              >
+                {activePropsCount > 0 ? (
+                  <EyeOff className="tiptap-button-icon" size={14} />
+                ) : (
+                  <Eye className="tiptap-button-icon" size={14} />
+                )}
+                {activePropsCount > 0 && (
+                  <span
+                    className="db-toolbar__badge"
+                    style={{
+                      border: "1px solid var(--tt-border-color)",
+                      borderRadius: "var(--tt-radius-xl)",
+                      padding: "3px 6px",
+                      fontSize: 10,
+                    }}
+                  >
+                    {activePropsCount}
+                  </span>
+                )}
+                {/* <span>Properties</span> */}
               </Button>
             </PopoverTrigger>
             <PopoverContent side="bottom" align="start" className="db-panel">
@@ -291,9 +365,15 @@ export function DatabaseToolbar({
               minHeight: 24,
               height: 24,
               padding: "0px 5px",
+              cursor: "pointer",
             }}
           >
-            <span style={{ fontSize: 11.5, fontWeight: "bold" }}>New</span>
+            <span
+              style={{ fontSize: 11.5, fontWeight: "bold" }}
+              onClick={handleNewPage}
+            >
+              New
+            </span>
             <Separator orientation="vertical" />
             <Popover open={templateOpen} onOpenChange={onTemplateOpenChange}>
               <PopoverTrigger asChild>
@@ -421,115 +501,6 @@ function SearchButton({ db }: { db: UseDatabaseReturn }) {
     </Popover>
   );
 }
-
-// ── Filter panel ───────────────────────────────────────────────────────────
-
-function FilterPanel({
-  attrs,
-  db,
-  activeView,
-}: {
-  attrs: DatabaseAttrs;
-  db: UseDatabaseReturn;
-  activeView: DatabaseView | undefined;
-}) {
-  if (!activeView) return null;
-
-  const group: FilterGroup = activeView?.filters[0] ?? {
-    id: nanoid(),
-    operator: "and" as FilterGroupOperator,
-    rules: [],
-  };
-  const rules = group.rules as FilterRule[];
-
-  function saveGroup(updated: FilterGroup) {
-    const rest = activeView?.filters.slice(1);
-    if (!activeView || !rest) return;
-    // db.updateView(activeView?.id, { filters: [updated, ...rest] });
-  }
-
-  function addRule() {
-    const firstProp = attrs.properties[0];
-    if (!firstProp) return;
-    saveGroup({ ...group, rules: [...rules, makeFilterRule(firstProp)] });
-  }
-
-  function updateOperator(operator: FilterGroupOperator) {
-    saveGroup({ ...group, operator });
-  }
-
-  function updateRule(id: ID, patch: Partial<FilterRule>) {
-    // saveGroup({
-    //   ...group,
-    //   rules: rules.map((r) => (r.id === id ? { ...r, ...patch } : r)),
-    // });
-  }
-
-  function deleteRule(id: ID) {
-    saveGroup({ ...group, rules: rules.filter((r) => r.id !== id) });
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        {rules.length === 0 && (
-          <span className="db-panel__empty">
-            No filters applied to this view
-          </span>
-        )}
-        {rules.length > 1 && (
-          <div className="db-panel__conjunction-row">
-            <span className="db-panel__label">
-              In this view, show records where
-            </span>
-            <div className="db-panel__conjunction-group">
-              {(["and", "or"] as const).map((op) => (
-                <button
-                  key={op}
-                  className={`db-panel__conjunction-btn ${group.operator === op ? "db-panel__conjunction-btn--active" : ""}`}
-                  onClick={() => updateOperator(op)}
-                >
-                  {op}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </CardHeader>
-
-      {rules.length > 0 && (
-        <CardBody>
-          {rules.map((rule, i) => (
-            <FilterRuleRow
-              key={rule.id}
-              rule={rule}
-              index={i}
-              groupOperator={group.operator}
-              properties={attrs.properties}
-              onChange={(patch) => updateRule(rule.id, patch)}
-              onDelete={() => deleteRule(rule.id)}
-              onPropertyChange={(propertyId) => {
-                const newProp = attrs.properties.find(
-                  (p) => p.id === propertyId,
-                );
-                if (!newProp) return;
-                updateRule(rule.id, makeFilterRule(newProp));
-              }}
-            />
-          ))}
-        </CardBody>
-      )}
-
-      <CardFooter>
-        <Button variant="ghost" onClick={addRule}>
-          <Plus size={13} />
-          Add filter rule
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-}
-
 function FilterRuleRow({
   rule,
   index,
@@ -729,122 +700,6 @@ function FilterValueInput({
   );
 }
 
-// ── Sort panel ─────────────────────────────────────────────────────────────
-
-function SortPanel({
-  attrs,
-  db,
-  activeView,
-  sorts,
-}: {
-  attrs: DatabaseAttrs;
-  db: UseDatabaseReturn;
-  activeView: DatabaseView | undefined;
-  sorts: SortRule[];
-}) {
-  if (!activeView) return null;
-
-  function addSort() {
-    const unusedProp = attrs.properties.find(
-      (p) => !sorts.some((s) => s.propertyId === p.id),
-    );
-    if (!unusedProp) return;
-    const newSort: SortRule = {
-      id: nanoid(),
-      propertyId: unusedProp.id,
-      direction: "asc",
-    };
-    if (!activeView) return;
-    db.updateView(activeView.id, { sorts: [...sorts, newSort] });
-  }
-
-  function updateSort(id: ID, patch: Partial<SortRule>) {
-    if (!activeView) return;
-    db.updateView(activeView?.id, {
-      sorts: sorts.map((s) => (s.id === id ? { ...s, ...patch } : s)),
-    });
-  }
-
-  function deleteSort(id: ID) {
-    if (!activeView) return;
-    db.updateView(activeView?.id, { sorts: sorts.filter((s) => s.id !== id) });
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        {sorts.length === 0 && (
-          <span className="db-panel__empty">No sorts applied to this view</span>
-        )}
-      </CardHeader>
-
-      {sorts.length > 0 && (
-        <CardBody>
-          {sorts.map((sort) => {
-            const property = attrs.properties.find(
-              (p) => p.id === sort.propertyId,
-            );
-            const Icon = property
-              ? PROPERTY_TYPE_ICONS[property.config.type]
-              : null;
-            return (
-              <div key={sort.id} className="db-sort-rule">
-                <GripVertical size={13} className="db-sort-rule__drag" />
-                {Icon && <Icon size={13} className="db-sort-rule__icon" />}
-
-                <select
-                  className="db-select"
-                  value={sort.propertyId}
-                  onChange={(e) =>
-                    updateSort(sort.id, { propertyId: e.target.value })
-                  }
-                >
-                  {attrs.properties.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  className="db-select db-select--direction"
-                  value={sort.direction}
-                  onChange={(e) =>
-                    updateSort(sort.id, {
-                      direction: e.target.value as "asc" | "desc",
-                    })
-                  }
-                >
-                  <option value="asc">Ascending</option>
-                  <option value="desc">Descending</option>
-                </select>
-
-                <button
-                  className="db-sort-rule__delete"
-                  onClick={() => deleteSort(sort.id)}
-                >
-                  <Trash2 size={13} />
-                </button>
-              </div>
-            );
-          })}
-        </CardBody>
-      )}
-
-      <CardFooter>
-        <Button
-          variant="ghost"
-          onClick={addSort}
-          disabled={sorts.length >= attrs.properties.length}
-        >
-          <Plus size={13} />
-          Add sort
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-}
-
 // ── Group panel ────────────────────────────────────────────────────────────
 function GroupPanel({
   attrs,
@@ -930,75 +785,75 @@ function GroupPanel({
 
 // ── Properties panel ───────────────────────────────────────────────────────
 
-function PropertiesPanel({
-  attrs,
-  db,
-  activeView,
-}: {
-  attrs: DatabaseAttrs;
-  db: UseDatabaseReturn;
-  activeView: DatabaseView | undefined;
-}) {
-  if (!activeView) return null;
+// function PropertiesPanel({
+//   attrs,
+//   db,
+//   activeView,
+// }: {
+//   attrs: DatabaseAttrs;
+//   db: UseDatabaseReturn;
+//   activeView: DatabaseView | undefined;
+// }) {
+//   if (!activeView) return null;
 
-  const hidden = new Set(activeView?.hiddenProperties);
+//   const hidden = new Set(activeView?.hiddenProperties);
 
-  function toggleProperty(propertyId: ID) {
-    const hiddenProperties = hidden.has(propertyId)
-      ? [...hidden].filter((id) => id !== propertyId)
-      : [...hidden, propertyId];
-    if (!activeView) return;
-    db.updateView(activeView?.id, { hiddenProperties });
-  }
+//   function toggleProperty(propertyId: ID) {
+//     const hiddenProperties = hidden.has(propertyId)
+//       ? [...hidden].filter((id) => id !== propertyId)
+//       : [...hidden, propertyId];
+//     if (!activeView) return;
+//     db.updateView(activeView?.id, { hiddenProperties });
+//   }
 
-  function showAll() {
-    if (!activeView) return;
-    db.updateView(activeView?.id, { hiddenProperties: [] });
-  }
+//   function showAll() {
+//     if (!activeView) return;
+//     db.updateView(activeView?.id, { hiddenProperties: [] });
+//   }
 
-  function hideAll() {
-    const titleProp = attrs.properties.find((p) => p.config.type === "title");
-    const hiddenProperties = attrs.properties
-      .filter((p) => p.id !== titleProp?.id)
-      .map((p) => p.id);
-    if (!activeView) return;
-    db.updateView(activeView?.id, { hiddenProperties });
-  }
+//   function hideAll() {
+//     const titleProp = attrs.properties.find((p) => p.config.type === "title");
+//     const hiddenProperties = attrs.properties
+//       .filter((p) => p.id !== titleProp?.id)
+//       .map((p) => p.id);
+//     if (!activeView) return;
+//     db.updateView(activeView?.id, { hiddenProperties });
+//   }
 
-  return (
-    <Card>
-      <CardBody>
-        {attrs.properties.map((p) => {
-          const Icon = PROPERTY_TYPE_ICONS[p.config.type];
-          const isTitle = p.config.type === "title";
-          const isVisible = !hidden.has(p.id);
+//   return (
+//     <Card>
+//       <CardBody>
+//         {attrs.properties.map((p) => {
+//           const Icon = PROPERTY_TYPE_ICONS[p.config.type];
+//           const isTitle = p.config.type === "title";
+//           const isVisible = !hidden.has(p.id);
 
-          return (
-            <div key={p.id} className="db-property-row">
-              <GripVertical size={13} className="db-property-row__drag" />
-              <Icon size={13} className="db-property-row__icon" />
-              <span className="db-property-row__name">{p.name}</span>
-              <button
-                className={`db-property-row__toggle ${isVisible ? "db-property-row__toggle--on" : ""}`}
-                onClick={() => !isTitle && toggleProperty(p.id)}
-                disabled={isTitle}
-                aria-label={isVisible ? "Hide property" : "Show property"}
-              >
-                <div className="db-property-row__toggle-thumb" />
-              </button>
-            </div>
-          );
-        })}
-      </CardBody>
+//           return (
+//             <div key={p.id} className="db-property-row">
+//               <GripVertical size={13} className="db-property-row__drag" />
+//               <Icon size={13} className="db-property-row__icon" />
+//               <span className="db-property-row__name">{p.name}</span>
+//               <button
+//                 className={`db-property-row__toggle ${isVisible ? "db-property-row__toggle--on" : ""}`}
+//                 onClick={() => !isTitle && toggleProperty(p.id)}
+//                 disabled={isTitle}
+//                 aria-label={isVisible ? "Hide property" : "Show property"}
+//               >
+//                 <div className="db-property-row__toggle-thumb" />
+//               </button>
+//             </div>
+//           );
+//         })}
+//       </CardBody>
 
-      <CardFooter>
-        <Button variant="ghost" onClick={showAll}>
-          Show all
-        </Button>
-        <Button variant="ghost" onClick={hideAll}>
-          Hide all
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-}
+//       <CardFooter>
+//         <Button variant="ghost" onClick={showAll}>
+//           Show all
+//         </Button>
+//         <Button variant="ghost" onClick={hideAll}>
+//           Hide all
+//         </Button>
+//       </CardFooter>
+//     </Card>
+//   );
+// }

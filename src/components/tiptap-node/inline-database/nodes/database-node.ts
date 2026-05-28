@@ -6,6 +6,7 @@ import type {
   DatabaseView,
   TableView,
   DatabaseAttrs,
+  SortRule,
 } from "../types/types";
 import { mergeAttributes, Node } from "@tiptap/core";
 import {
@@ -26,7 +27,7 @@ declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     database: {
       insertDatabase: () => ReturnType;
-      addDatabaseRecord: (nodeId: ID) => ReturnType;
+      addDatabaseRecord: (nodeId: ID, pageId?: number) => ReturnType;
       deleteDatabaseRecord: (nodeId: ID, recordId: ID) => ReturnType;
       updateDatabaseCell: (
         nodeId: ID,
@@ -92,6 +93,7 @@ declare module "@tiptap/core" {
         rule: FilterRule,
       ) => ReturnType;
       groupByProperty: (nodeId: ID, viewId: ID, propertyId: ID) => ReturnType;
+      sortDatabaseRecords: (nodeId: ID) => ReturnType;
     };
   }
 }
@@ -115,6 +117,7 @@ export const DatabaseNode = Node.create({
       icon: { default: null },
       cover: { default: null },
       templateId: { default: null },
+      hideTitle: { default: null },
     };
   },
 
@@ -147,7 +150,7 @@ export const DatabaseNode = Node.create({
         },
 
       addDatabaseRecord:
-        (nodeId: ID) =>
+        (nodeId: ID, pageId?: number) =>
         ({ state, dispatch }) => {
           const { tr, doc } = state;
 
@@ -168,7 +171,17 @@ export const DatabaseNode = Node.create({
             type: "databaseRecord",
             attrs: { id: makeId(), createdAt: now(), updatedAt: now() },
             content: (dbNode.attrs.properties as DatabaseProperty[]).map(
-              makeCellNode,
+              (prop) => {
+                const cell = makeCellNode(prop);
+                // Stamp pageId onto every cell so all node views know their linked page
+                if (pageId != null) {
+                  return {
+                    ...cell,
+                    attrs: { ...cell.attrs, pageId },
+                  };
+                }
+                return cell;
+              },
             ),
           });
 
@@ -179,25 +192,50 @@ export const DatabaseNode = Node.create({
           if (dispatch) dispatch(tr);
           return true;
         },
-
       updateDatabaseCell:
         (nodeId: ID, recordId: ID, propertyId: ID, value: unknown) =>
         ({ state, dispatch }) => {
           const { tr, doc } = state;
 
           doc.descendants((node, pos) => {
-            if (node.type.name !== "databaseRecord") return;
-            if (node.attrs.id !== recordId) return;
+            if (node.type.name !== "database" || node.attrs.id !== nodeId)
+              return;
 
-            // Verify it belongs to this database
-            const $pos = doc.resolve(pos);
-            if ($pos.parent.attrs.id !== nodeId) return;
+            console.log("found database", nodeId);
 
-            node.forEach((cell, offset) => {
-              if (cell.attrs.propertyId !== propertyId) return;
-              tr.setNodeMarkup(pos + 1 + offset, undefined, {
-                ...cell.attrs,
-                value,
+            node.forEach((child, offset) => {
+              console.log(
+                "child type:",
+                child.type.name,
+                "id:",
+                child.attrs.id,
+                "looking for:",
+                recordId,
+              );
+              if (child.type.name !== "databaseRecord") return;
+              if (child.attrs.id !== recordId) return;
+
+              const recordPos = pos + 1 + offset;
+              console.log("found record, iterating cells");
+
+              child.forEach((cell, cellOffset) => {
+                console.log(
+                  "cell:",
+                  cell.type.name,
+                  "propertyId:",
+                  cell.attrs.propertyId,
+                  "looking for:",
+                  propertyId,
+                );
+                if (cell.attrs.propertyId !== propertyId) return;
+                const cellPos = recordPos + 1 + cellOffset;
+                console.log(
+                  "updating cell at pos",
+                  cellPos,
+                  "with value",
+                  value,
+                );
+                tr.setNodeMarkup(cellPos, undefined, { ...cell.attrs, value });
               });
             });
 
@@ -207,7 +245,6 @@ export const DatabaseNode = Node.create({
           if (dispatch) dispatch(tr);
           return true;
         },
-
       deleteDatabaseRecord:
         (nodeId: ID, recordId: ID) =>
         ({ state, dispatch }) => {
@@ -795,6 +832,93 @@ export const DatabaseNode = Node.create({
             });
             return false;
           });
+          if (dispatch) dispatch(tr);
+          return true;
+        },
+      sortDatabaseRecords:
+        (nodeId: ID) =>
+        ({ state, dispatch }) => {
+          const { tr, doc } = state;
+
+          let dbPos: number | null = null;
+          let dbNode: any = null;
+
+          doc.descendants((node, pos) => {
+            if (node.type.name !== "database" || node.attrs.id !== nodeId)
+              return;
+            dbPos = pos;
+            dbNode = node;
+            return false;
+          });
+
+          if (dbPos === null || !dbNode) return false;
+
+          const attrs = dbNode.attrs as DatabaseAttrs;
+          const activeView =
+            attrs.views.find((v: any) => v.id === attrs.activeViewId) ??
+            attrs.views[0];
+          const sorts: SortRule[] = activeView?.sorts ?? [];
+
+          if (!sorts.length) return false;
+
+          // Collect records in doc order
+          const records: any[] = [];
+          dbNode.forEach((child: any) => {
+            if (child.type.name === "databaseRecord") records.push(child);
+          });
+
+          if (records.length < 2) return false;
+
+          const getCellValue = (record: any, propertyId: string) => {
+            let value: unknown = null;
+            record.forEach((cell: any) => {
+              if (cell.attrs.propertyId === propertyId)
+                value = cell.attrs.value ?? cell.textContent ?? null;
+            });
+            return value;
+          };
+
+          const sorted = [...records].sort((a, b) => {
+            for (const sort of sorts) {
+              const av = getCellValue(a, sort.propertyId);
+              const bv = getCellValue(b, sort.propertyId);
+              const mult = sort.direction === "asc" ? 1 : -1;
+
+              if (av == null && bv == null) continue;
+              if (av == null) return mult;
+              if (bv == null) return -mult;
+
+              // Date
+              const da = new Date(String(av));
+              const db = new Date(String(bv));
+              if (!isNaN(da.getTime()) && !isNaN(db.getTime())) {
+                const cmp = da.getTime() - db.getTime();
+                if (cmp !== 0) return mult * cmp;
+                continue;
+              }
+
+              // Number
+              if (typeof av === "number" && typeof bv === "number") {
+                const cmp = av - bv;
+                if (cmp !== 0) return mult * cmp;
+                continue;
+              }
+
+              // String
+              const cmp = String(av).localeCompare(String(bv));
+              if (cmp !== 0) return mult * cmp;
+            }
+            return 0;
+          });
+
+          // No change
+          if (records.every((r, i) => r === sorted[i])) return false;
+
+          // Replace records in the doc with sorted order
+          const start = dbPos + 1;
+          const end = dbPos + 1 + dbNode.content.size;
+          tr.replaceWith(start, end, sorted);
+
           if (dispatch) dispatch(tr);
           return true;
         },

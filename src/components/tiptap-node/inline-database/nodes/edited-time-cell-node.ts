@@ -11,6 +11,7 @@ export const EditedTimeCellNode = Node.create({
   addAttributes() {
     return {
       propertyId: { default: null },
+      pageId: { default: null },
     };
   },
 

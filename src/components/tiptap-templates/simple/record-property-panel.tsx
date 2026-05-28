@@ -72,6 +72,9 @@ function PropertyRow({
 
   function updateCell(newValue: unknown) {
     editor.commands.updateDatabaseCell(databaseId, recordId, prop.id, newValue);
+    editor.view.dispatch(
+      editor.state.tr.setMeta("RecordPropertyPanelChanged", true),
+    );
   }
 
   const renderValue = () => {

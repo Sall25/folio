@@ -71,6 +71,10 @@ export function useDatabaseProperties(nodeId: ID, editor: Editor) {
   const sortByProperty = useCallback(
     (viewId: ID, propertyId: ID, direction: "asc" | "desc") => {
       editor.commands.sortByProperty(nodeId, viewId, propertyId, direction);
+      // Re-sort records in doc after sort rules change
+      queueMicrotask(() => {
+        editor.commands.sortDatabaseRecords(nodeId);
+      });
     },
     [editor, nodeId],
   );
@@ -78,6 +82,9 @@ export function useDatabaseProperties(nodeId: ID, editor: Editor) {
   const removeSortByProperty = useCallback(
     (viewId: ID, propertyId: ID) => {
       editor.commands.removeSortByProperty(nodeId, viewId, propertyId);
+      queueMicrotask(() => {
+        editor.commands.sortDatabaseRecords(nodeId);
+      });
     },
     [editor, nodeId],
   );
@@ -95,6 +102,10 @@ export function useDatabaseProperties(nodeId: ID, editor: Editor) {
     },
     [editor, nodeId],
   );
+
+  const sortDatabaseRecords = useCallback(() => {
+    editor.commands.sortDatabaseRecords(nodeId);
+  }, [editor, nodeId]);
 
   const isFrozen = useCallback(
     (viewId: ID, propertyId: ID): boolean => {
@@ -138,6 +149,7 @@ export function useDatabaseProperties(nodeId: ID, editor: Editor) {
     removeSortByProperty,
     filterByProperty,
     groupByProperty,
+    sortDatabaseRecords,
     isFrozen,
     isUnwrapped,
   };

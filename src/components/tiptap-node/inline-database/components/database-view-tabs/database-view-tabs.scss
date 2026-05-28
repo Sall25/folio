@@ -1,0 +1,54 @@
+.db-view-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  max-width: 400px;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.db-view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--tt-radius-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--tt-text-color);
+  white-space: nowrap;
+  transition: background 100ms ease, color 100ms ease;
+  line-height: 1.5;
+
+  &:hover {
+    background: var(--tt-button-hover-bg-color);
+    color: var(--tt-theme-text);
+  }
+
+  &--active {
+    background: var(--tt-button-hover-bg-color);
+    color: var(--tt-theme-text);
+    font-weight: 500;
+  }
+
+  &--add {
+    color: var(--tt-theme-text);
+    padding: 3px 6px;
+    min-width: unset;
+
+    &:hover {
+      color: var(--tt-text-color);
+    }
+  }
+
+  // override button defaults when used as a <button> element
+  &__name {
+    font-size: 13px;
+    font-weight: inherit;
+    color: inherit;
+  }
+}

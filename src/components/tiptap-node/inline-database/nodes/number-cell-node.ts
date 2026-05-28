@@ -12,6 +12,7 @@ export const NumberCellNode = Node.create({
     return {
       propertyId: { default: null },
       value: { default: null },
+      pageId: { default: null },
     };
   },
 

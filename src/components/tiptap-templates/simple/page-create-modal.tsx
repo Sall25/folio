@@ -3,7 +3,12 @@ import { usePeekEditorExtensions } from "./hooks/use-peek-editor-extensions";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import { useActivePage } from "./use-active-page";
 import type { Page } from "./types";
-import { Editor, useCurrentEditor, useEditor } from "@tiptap/react";
+import {
+  Editor,
+  useCurrentEditor,
+  useEditor,
+  type JSONContent,
+} from "@tiptap/react";
 import {
   Card,
   CardBody,
@@ -19,9 +24,13 @@ import type { Target } from "src/components/tiptap-ui/cover/types";
 import { FloatingMenu } from "@tiptap/react/menus";
 import { FloatingActions } from "./floating-actions";
 import { CoverHeader } from "src/components/tiptap-ui/cover";
-import { RecordPropertyPanel } from "./record-property-panel";
 import { findPage } from "src/lib/find-page";
 import { useCreatePage } from "./context/create-page-context";
+import {
+  stripPropertyPanels,
+  useRecordPropertyPanel,
+} from "./hooks/use-record-property-panel";
+import type { Transaction } from "@tiptap/pm/state";
 
 // Backdrop overlay for the centered modal
 function ModalBackdrop({ onClose }: { onClose?: () => void }) {
@@ -86,16 +95,55 @@ const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
   );
 });
 
+function getRecordPropertyPanelChange(
+  editor: Editor,
+  transaction: Transaction,
+): boolean {
+  if (!transaction.docChanged) return false;
+
+  const { $from } = editor.state.selection;
+
+  const node = $from.node();
+  if (node.type.name === "databaseRecord") {
+    return true;
+  }
+  return false;
+}
+
+function getTitleChange(
+  editor: Editor,
+  transaction: Transaction,
+): {
+  changed: boolean;
+  text: string | null;
+} {
+  if (!transaction.docChanged) return { changed: false, text: null };
+
+  const { $from } = editor.state.selection;
+
+  const node = $from.node();
+  if (node.type.name === "title") {
+    return {
+      changed: true,
+      text: node.textContent,
+    };
+  }
+  return {
+    changed: false,
+    text: null,
+  };
+}
+
 export function PageCreateModal({
   onClose,
-  onCreated,
+  // onCreated,
 }: {
   onClose?: () => void;
   /** Called with the new page after it's been saved for the first time */
   onCreated?: (page: Page) => void;
 }) {
   const { createPageId } = useCreatePage();
-  const { pages } = useActivePage();
+  const { pages, debounceUpdatePage, debounceUpdatePageFast } = useActivePage();
   const page =
     createPageId !== null && pages ? findPage(pages, createPageId) : null;
 
@@ -113,6 +161,9 @@ export function PageCreateModal({
   useEffect(() => {
     pageRef.current = page;
   }, [page]);
+
+  const debounceUpdatePageRef = useRef(debounceUpdatePage);
+  const debounceUpdatePageFastRef = useRef(debounceUpdatePageFast);
 
   // Close on Escape key
   useEffect(() => {
@@ -186,6 +237,52 @@ export function PageCreateModal({
     },
   });
 
+  useRecordPropertyPanel(editor, mainEditor, page?.id ?? null);
+
+  useEffect(() => {
+    if (!editor) return;
+    const update = ({
+      editor,
+      transaction,
+    }: {
+      editor: Editor;
+      transaction: Transaction;
+    }) => {
+      if (!pageRef.current) return;
+
+      const { changed, text } = getTitleChange(editor, transaction);
+      const recordChanged = getRecordPropertyPanelChange(editor, transaction);
+
+      if (changed || recordChanged) {
+        debounceUpdatePageFastRef.current({
+          ...pageRef.current,
+          title: text ?? pageRef.current.title,
+          content: stripPropertyPanels(editor.getJSON()) as JSONContent,
+          // // content: editor.getJSON(),
+          // // preserve record link fields — not part of editor content
+          // databaseId: pageRef.current.databaseId,
+          // recordId: pageRef.current.recordId,
+          updatedAt: Date.now().toString(),
+        });
+      } else {
+        debounceUpdatePageRef.current({
+          ...pageRef.current,
+          content: stripPropertyPanels(editor.getJSON()) as JSONContent,
+          // content: editor.getJSON(),
+          // databaseId: pageRef.current.databaseId,
+          // recordId: pageRef.current.recordId,
+          updatedAt: Date.now().toString(),
+        });
+      }
+    };
+
+    editor.on("update", update);
+
+    return () => {
+      editor.off("update", update);
+    };
+  }, [editor, debounceUpdatePage, debounceUpdatePageFast]);
+
   if (!page) return null;
 
   return (
@@ -232,7 +329,6 @@ export function PageCreateModal({
             hasThreads={false}
             providedPage={page}
           />
-          <RecordPropertyPanel page={page} editor={mainEditor} />
           <div>
             <EditorContent editor={editor} className="page-create-content" />
           </div>

@@ -90,7 +90,7 @@ export function LayoutPopover({
 
   const onSelect = (type: DatabaseView["type"]) => {
     if (view.type === type) return;
-    db.addView(type, type.charAt(0).toUpperCase() + type.slice(1));
+    db.updateView(view.id, { ...view, type });
   };
 
   if (!editor) return null;

@@ -16,6 +16,7 @@ import { FloatingActions } from "./floating-actions";
 import type { Target } from "src/components/tiptap-ui/cover/types";
 import { useActivePage } from "./use-active-page";
 import { useEditorLayout } from "./context/editor-layout-context";
+import { useRecordPropertyPanel } from "./hooks/use-record-property-panel";
 
 function usePageSwitching() {
   const { activePageId } = useActivePage();
@@ -89,6 +90,8 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
 }) {
   const { editor } = useCurrentEditor();
   const { activePage } = useActivePage();
+
+  useRecordPropertyPanel(editor, editor, activePage?.id ?? null);
 
   return (
     <EditorContent

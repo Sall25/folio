@@ -11,6 +11,8 @@ import type {
 import { MultiSelectCellDisplay } from "../primitives/multi-select-cell-display";
 import { useActiveViewType } from "../hooks/use-active-view-type";
 import { useParentDatabase } from "../hooks/use-parent-database";
+import { useCellPageSync } from "../hooks/use-cell-page-sync";
+import { useIsPropertyHidden } from "../hooks/use-is-property-hidden";
 
 export function MultiSelectCellNodeView({
   node,
@@ -21,14 +23,16 @@ export function MultiSelectCellNodeView({
   const multiSelectAttrs = node.attrs as MultiSelectCellAttrs;
   const activeViewType = useActiveViewType(editor, getPos);
   const db = useParentDatabase(editor, getPos);
+  const syncPage = useCellPageSync(getPos, updateAttributes);
+  const isHidden = useIsPropertyHidden(editor, getPos, node.attrs.propertyId);
 
-  if (!db) return null;
+  if (!db || isHidden)
+    return <NodeViewWrapper as={"div"} style={{ display: "none" }} />;
 
   const attrs = db.attrs as DatabaseAttrs;
   const prop = attrs.properties.find(
     (p) => p.id === multiSelectAttrs.propertyId,
   );
-
   if (!prop || prop.config.type !== "multi_select")
     return (
       <NodeViewWrapper
@@ -65,7 +69,11 @@ export function MultiSelectCellNodeView({
       <MultiSelectCellDisplay
         value={multiSelectAttrs.value ?? []}
         options={prop.config.options}
-        onChange={(value) => updateAttributes({ ...multiSelectAttrs, value })}
+        onChange={(value) =>
+          syncPage(() => {
+            updateAttributes({ ...multiSelectAttrs, value });
+          }, node)
+        }
       />
     </NodeViewWrapper>
   );

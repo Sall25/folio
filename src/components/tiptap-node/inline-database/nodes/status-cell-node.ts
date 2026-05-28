@@ -12,6 +12,7 @@ export const StatusCellNode = Node.create({
     return {
       propertyId: { default: null },
       value: { default: null }, // StatusItem id | null
+      pageId: { default: null },
     };
   },
 

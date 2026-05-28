@@ -15,7 +15,7 @@ export function DatabaseRecordListView(props: NodeViewProps) {
   const attrs = db.attrs as DatabaseAttrs;
 
   const gridTemplateColumns = attrs.properties
-    .map((p, i) => (i === 0 ? "1fr" : `${p.width ?? 160}px`))
+    .map((p, i) => (i === 0 ? "3fr" : `${p.width ?? 160}px`))
     .join(" ");
 
   return (

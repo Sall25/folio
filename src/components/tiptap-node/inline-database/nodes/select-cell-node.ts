@@ -13,6 +13,7 @@ export const SelectCellNode = Node.create({
     return {
       propertyId: { default: null },
       value: { default: null }, // SelectOption id | null
+      pageId: { default: null },
     };
   },
 

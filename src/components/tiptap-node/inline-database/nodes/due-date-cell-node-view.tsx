@@ -1,7 +1,8 @@
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
-import type { DateCellAttrs } from "../types/types";
 import { DateCellDisplay } from "../primitives/date-cell-display";
 import { useActiveViewType } from "../hooks/use-active-view-type";
+import { useCellPageSync } from "../hooks/use-cell-page-sync";
+import { useIsPropertyHidden } from "../hooks/use-is-property-hidden";
 
 export function DueDateCellNodeView({
   node,
@@ -9,8 +10,11 @@ export function DueDateCellNodeView({
   editor,
   getPos,
 }: NodeViewProps) {
-  const dueDateAttrs = node.attrs as DateCellAttrs;
   const activeViewType = useActiveViewType(editor, getPos);
+  const syncPage = useCellPageSync(getPos, updateAttributes);
+  const isHidden = useIsPropertyHidden(editor, getPos, node.attrs.propertyId);
+
+  if (isHidden) return <NodeViewWrapper as="div" style={{ display: "none" }} />;
 
   return (
     <NodeViewWrapper
@@ -26,8 +30,12 @@ export function DueDateCellNodeView({
       }}
     >
       <DateCellDisplay
-        value={dueDateAttrs.value}
-        onChange={(iso) => updateAttributes({ value: iso })}
+        value={node.attrs.value}
+        onChange={(iso) =>
+          syncPage(() => {
+            updateAttributes({ ...node.attrs, value: iso });
+          }, node)
+        }
       />
     </NodeViewWrapper>
   );

@@ -8,6 +8,8 @@ import { CheckboxCellDisplay } from "../primitives/checkbox-cell-display";
 import { useActiveViewType } from "../hooks/use-active-view-type";
 import { useParentDatabase } from "../hooks/use-parent-database";
 import "./checkbox-cell-node-view.scss";
+import { useCellPageSync } from "../hooks/use-cell-page-sync";
+import { useIsPropertyHidden } from "../hooks/use-is-property-hidden";
 
 export function CheckboxCellNodeView({
   node,
@@ -18,6 +20,8 @@ export function CheckboxCellNodeView({
   const attrs = node.attrs as CheckboxCellAttrs;
   const activeViewType = useActiveViewType(editor, getPos);
   const db = useParentDatabase(editor, getPos);
+  const syncPage = useCellPageSync(getPos, updateAttributes);
+  const isHidden = useIsPropertyHidden(editor, getPos, node.attrs.propertyId);
 
   // Hide when this cell is the group-by property in board view
   if (activeViewType === "board" && db) {
@@ -25,8 +29,11 @@ export function CheckboxCellNodeView({
     const activeView = dbAttrs.views.find(
       (v) => v.id === dbAttrs.activeViewId,
     ) as BoardView | undefined;
-    if (activeView?.groupByPropertyId === attrs.propertyId) return null;
+    if (activeView?.groupByPropertyId === attrs.propertyId)
+      return <NodeViewWrapper as={"div"} style={{ display: "none" }} />;
   }
+  if (isHidden)
+    return <NodeViewWrapper as={"div"} style={{ display: "none" }} />;
 
   return (
     <NodeViewWrapper
@@ -36,7 +43,11 @@ export function CheckboxCellNodeView({
     >
       <CheckboxCellDisplay
         value={attrs.value}
-        onChange={() => updateAttributes({ ...attrs, value: !attrs.value })}
+        onChange={() =>
+          syncPage(() => {
+            updateAttributes({ ...attrs, value: !attrs.value });
+          }, node)
+        }
       />
     </NodeViewWrapper>
   );

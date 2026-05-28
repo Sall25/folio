@@ -1,12 +1,13 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { ActivePageContext } from "./active-page-context";
 import { useCurrentEditor } from "@tiptap/react";
-import type { Editor } from "@tiptap/react";
+import type { Editor, JSONContent } from "@tiptap/react";
 import type { Transaction } from "@tiptap/pm/state";
 import { useActivePage } from "../use-active-page";
 import type { Page } from "../types";
 import { useWhyDidYouRender } from "src/lib/useWhyDidYouRender";
 import { usePages } from "../use-pages";
+import { stripPropertyPanels } from "../hooks/use-record-property-panel";
 
 function getTitleChange(
   editor: Editor,
@@ -86,7 +87,8 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
         debounceUpdatePageFastRef.current({
           ...activePageRef.current,
           title: text ?? activePageRef.current.title,
-          content: editor.getJSON(),
+          content: stripPropertyPanels(editor.getJSON()) as JSONContent,
+          // content: editor.getJSON(),
           // preserve record link fields — not part of editor content
           databaseId: activePageRef.current.databaseId,
           recordId: activePageRef.current.recordId,
@@ -95,7 +97,8 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
       } else {
         debounceUpdatePageRef.current({
           ...activePageRef.current,
-          content: editor.getJSON(),
+          content: stripPropertyPanels(editor.getJSON()) as JSONContent,
+          // content: editor.getJSON(),
           databaseId: activePageRef.current.databaseId,
           recordId: activePageRef.current.recordId,
           updatedAt: Date.now().toString(),

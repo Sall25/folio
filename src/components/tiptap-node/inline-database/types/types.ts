@@ -217,13 +217,12 @@ export type CellValue<T extends PropertyType = PropertyType> = CellValueMap[T];
 // ─────────────────────────────────────────────────────────────────────────────
 // Cell node attrs — typed per cell node, used in NodeViewRendererProps
 // ─────────────────────────────────────────────────────────────────────────────
-
 export interface BaseCellAttrs {
   propertyId: ID;
+  pageId: number | null;
 }
 
 export interface TitleCellAttrs extends BaseCellAttrs {
-  pageId: ID | null;
   parentId: ID | null;
 }
 
@@ -242,7 +241,7 @@ export type PersonCellAttrs = ValueCellAttrs<"person">;
 export type FormulaCellAttrs = ValueCellAttrs<"formula">;
 export type RelationCellAttrs = ValueCellAttrs<"relation">;
 export type RollupCellAttrs = ValueCellAttrs<"rollup">;
-export type TextCellAttrs = BaseCellAttrs; // content-based, no value attr
+export type TextCellAttrs = ValueCellAttrs<"text">; // content-based, no value attr
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Record node attrs — the ProseMirror node, no values (those live in cells)
@@ -275,6 +274,8 @@ export interface DatabaseAttrs {
   cover?: string;
 
   templateId?: number;
+
+  hideTitle?: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

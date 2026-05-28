@@ -13,6 +13,7 @@ export const RollupCellNode = Node.create({
     return {
       propertyId: { default: null },
       value: { default: null }, // string | number | null — computed, read-only
+      pageId: { default: null },
     };
   },
 

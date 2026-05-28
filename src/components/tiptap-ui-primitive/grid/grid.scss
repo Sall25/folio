@@ -1,0 +1,52 @@
+// ─── Grid ─────────────────────────────────────────────────────────────────────
+
+.tt-grid {
+  width: 100%;
+  overflow-x: auto;
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+
+.tt-grid__header {
+  display: grid;
+  grid-template-columns: var(--tt-grid-columns);
+  gap: var(--tt-grid-gap, 0);
+}
+
+.tt-grid__header-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+// ─── Body ─────────────────────────────────────────────────────────────────────
+
+.tt-grid__body {
+  width: 100%;
+}
+
+// ─── Row ──────────────────────────────────────────────────────────────────────
+
+.tt-grid__row {
+  display: grid;
+  grid-template-columns: var(--tt-grid-columns);
+  gap: var(--tt-grid-gap, 0);
+}
+
+// ─── Cell ─────────────────────────────────────────────────────────────────────
+
+.tt-grid__cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+
+.tt-grid__footer {
+  display: grid;
+  grid-template-columns: var(--tt-grid-columns);
+  gap: var(--tt-grid-gap, 0);
+}

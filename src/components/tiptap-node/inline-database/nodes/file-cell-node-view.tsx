@@ -11,6 +11,8 @@ import { useFileUpload } from "../../image-upload-node/use-file-upload";
 import type { FileAttachment } from "../../file-node";
 import { handleImageUpload, MAX_FILE_SIZE } from "src/lib/tiptap-utils";
 import "./file-cell-node-view.scss";
+import { useCellPageSync } from "../hooks/use-cell-page-sync";
+import { useIsPropertyHidden } from "../hooks/use-is-property-hidden";
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -20,7 +22,12 @@ function formatFileSize(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
-export function FileCellNodeView({ node, updateAttributes }: NodeViewProps) {
+export function FileCellNodeView({
+  node,
+  updateAttributes,
+  getPos,
+  editor,
+}: NodeViewProps) {
   const files: FileAttachment[] = node.attrs.files ?? [];
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -58,6 +65,11 @@ export function FileCellNodeView({ node, updateAttributes }: NodeViewProps) {
   }
 
   const isUploading = fileItems.some((f) => f.status === "uploading");
+
+  useCellPageSync(getPos, updateAttributes);
+  const isHidden = useIsPropertyHidden(editor, getPos, node.attrs.propertyId);
+  if (isHidden)
+    return <NodeViewWrapper as={"div"} style={{ display: "none" }} />;
 
   return (
     <NodeViewWrapper

@@ -12,6 +12,7 @@ export const FormulaCellNode = Node.create({
     return {
       propertyId: { default: null },
       value: { default: null },
+      pageId: { default: null },
     };
   },
 

@@ -9,7 +9,7 @@ import { formatDate } from "src/components/tiptap-ui/mention-menu/calendar-view/
 import CalendarView from "src/components/tiptap-ui/mention-menu/calendar-view/calendar-view";
 
 interface DateCellDisplayProps {
-  value: string | null; // ISO string
+  value: string | null;
   onChange?: (iso: string) => void;
   readonly?: boolean;
 }
@@ -19,12 +19,16 @@ export function DateCellDisplay({
   onChange,
   readonly = false,
 }: DateCellDisplayProps) {
-  const [date, setDate] = useState<Date | undefined>(
+  // Local draft only used while the popover is open
+  const [draft, setDraft] = useState<Date | undefined>(
     value ? new Date(value) : undefined,
   );
 
+  // Always derive the displayed date from the prop — stays in sync
+  const date = value ? new Date(value) : undefined;
+
   function handleDateChange(d: Date) {
-    setDate(d);
+    setDraft(d);
     onChange?.(d.toISOString());
   }
 
@@ -35,6 +39,12 @@ export function DateCellDisplay({
         background: "transparent",
         width: "100%",
         justifyContent: "flex-start",
+        fontFamily:
+          'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif',
+        fontSize: 15,
+        fontWeight: 400,
+        lineHeight: 1.6,
+        color: "var(--tt-text-color)",
       }}
     >
       <span>{date ? formatDate(date) : ""}</span>
@@ -47,7 +57,7 @@ export function DateCellDisplay({
     <Popover>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent>
-        <CalendarView value={date} onChange={handleDateChange} />
+        <CalendarView value={draft ?? date} onChange={handleDateChange} />
       </PopoverContent>
     </Popover>
   );

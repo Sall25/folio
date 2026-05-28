@@ -40,8 +40,15 @@ import { TocSidebar } from "src/components/tiptap-node/toc-node/toc-sidebar";
 import type { View } from "./types";
 import { ResourcesPage } from "./components/resources/resources-page";
 import { usePeekPage } from "./context/peek-page-context";
+import { Editor, useCurrentEditor } from "@tiptap/react";
 
 const VERSION_SIDEBAR_WIDTH = 260;
+
+function triggerMainEditorSync(mainEditor: Editor | null) {
+  if (!mainEditor) return;
+  console.log("peekPageClosed dispatched");
+  mainEditor.view.dispatch(mainEditor.state.tr.setMeta("peekPageClosed", true));
+}
 
 function SimpleEditorMain({ view }: { view: View }) {
   const { pages } = useActivePage();
@@ -50,6 +57,7 @@ function SimpleEditorMain({ view }: { view: View }) {
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
   const { setPeekPageId, peekPageId } = usePeekPage();
   const { createPageId, setCreatePageId } = useCreatePage();
+  const { editor } = useCurrentEditor();
 
   const peekPage =
     peekPageId !== null && pages ? findPage(pages, peekPageId) : null;
@@ -81,7 +89,13 @@ function SimpleEditorMain({ view }: { view: View }) {
       )}
 
       {peekPage && (
-        <PagePeekView page={peekPage} onClose={() => setPeekPageId(null)} />
+        <PagePeekView
+          page={peekPage}
+          onClose={() => {
+            triggerMainEditorSync(editor);
+            setPeekPageId(null);
+          }}
+        />
       )}
 
       {createPageId !== null && (

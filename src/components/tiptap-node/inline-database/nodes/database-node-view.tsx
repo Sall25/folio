@@ -1,5 +1,9 @@
 import type { NodeViewProps } from "@tiptap/core";
-import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
+import {
+  NodeViewContent,
+  NodeViewWrapper,
+  useCurrentEditor,
+} from "@tiptap/react";
 import type { DatabaseAttrs, PropertyConfig } from "../types/types";
 import {
   Card,
@@ -12,7 +16,7 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Ellipsis, Plus } from "lucide-react";
 import { DatabaseToolbar } from "../components/database-toolbar";
 import { useDatabase } from "../hooks/use-database";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import "./database-table-node-view.scss";
 
 import {
@@ -28,7 +32,10 @@ import { DatabaseBoardNodeView } from "./database-board-node-view";
 import { DatabaseGalleryNodeView } from "./database-gallery-node-view";
 import { DatabaseCalendarNodeView } from "./database-calendar-node-view";
 import { DatabaseTimelineNodeView } from "./database-timeline-node-view";
-
+import { FilterRuleChips } from "../components/filter-rule-chips";
+import { DatabaseTitleBar } from "../components/database-title-bar";
+import { DatabaseCalculations } from "../components/database-calculations";
+import type { Node } from "@tiptap/pm/model";
 type PropertyType = PropertyConfig["type"];
 
 const allPropertyTypes = [
@@ -60,12 +67,28 @@ export function DatabaseNodeView(props: NodeViewProps) {
     updateAttributes({ ...attrs, title });
   const db = useDatabase(attrs, editor, onUpdateTitle);
 
+  const { editor: mainEditor } = useCurrentEditor();
+
+  const [, setRenderKey] = useState(0);
+  useEffect(() => {
+    if (!mainEditor) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handler = ({ transaction }: { transaction: any }) => {
+      if (transaction.getMeta("peekPageClosed")) {
+        setRenderKey((k) => k + 1);
+      }
+    };
+    mainEditor.on("transaction", handler);
+    return () => {
+      mainEditor.off("transaction", handler);
+    };
+  }, [mainEditor]);
+
   const tableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = tableRef.current;
     if (!el) return;
-
     const handler = (e: Event) => {
       const { propId, width } = (e as CustomEvent).detail;
       updateAttributes({
@@ -75,40 +98,35 @@ export function DatabaseNodeView(props: NodeViewProps) {
         ),
       });
     };
-
     el.addEventListener("column:resize", handler);
     return () => el.removeEventListener("column:resize", handler);
   }, [attrs, updateAttributes]);
 
-  // ── Board view ───────────────────────────────────────────────────────────
-  if (db.activeView.type === "gallery") {
+  if (db.activeView.type === "gallery")
     return <DatabaseGalleryNodeView {...props} />;
-  }
-
-  // ── Board view ───────────────────────────────────────────────────────────
-  if (db.activeView?.type === "board") {
+  if (db.activeView?.type === "board")
     return <DatabaseBoardNodeView {...props} />;
-  }
-
-  // ── List view ──────────────────────────────────────────────────────────
-  if (db.activeView?.type === "list") {
+  if (db.activeView?.type === "list")
     return <DatabaseListNodeView {...props} />;
-  }
-
-  // ── Calendar view ──────────────────────────────────────────────────────────
-  if (db.activeView?.type === "calendar") {
+  if (db.activeView?.type === "calendar")
     return <DatabaseCalendarNodeView {...props} />;
-  }
-
-  // ── Timeline view ──────────────────────────────────────────────────────────
-  if (db.activeView?.type === "timeline") {
+  if (db.activeView?.type === "timeline")
     return <DatabaseTimelineNodeView {...props} />;
-  }
 
-  // ── Table view (default) ───────────────────────────────────────────────
-  const gridTemplateColumns = attrs.properties
-    .map((p) => `${p.width ?? 160}px`)
-    .join(" ");
+  // Visible properties (excluding hidden ones from active view)
+  const hiddenProperties = new Set(db.activeView?.hiddenProperties ?? []);
+  const visibleProperties = attrs.properties.filter(
+    (p) => !hiddenProperties.has(p.id),
+  );
+
+  // Grid: visible property columns + trailing 1fr for the actions column
+  const gridTemplateColumns =
+    visibleProperties.map((p) => `${p.width ?? 160}px`).join(" ") + " 1fr";
+
+  const records: Node[] = [];
+  node.forEach((child) => {
+    if (child.type.name === "databaseRecord") records.push(child);
+  });
 
   return (
     <NodeViewWrapper>
@@ -119,17 +137,24 @@ export function DatabaseNodeView(props: NodeViewProps) {
         updateAttributes={updateAttributes}
       >
         <CardItemGroup>
-          <DatabaseToolbar
-            attrs={attrs}
-            db={db}
-            onUpdateAttributes={(attrs) => updateAttributes(attrs)}
+          <div style={{ maxWidth: "var(--db-editor-width)", paddingRight: 20 }}>
+            <DatabaseToolbar
+              attrs={attrs}
+              db={db}
+              onUpdateAttributes={(attrs) => updateAttributes(attrs)}
+            />
+          </div>
+          <DatabaseTitleBar
+            title={attrs.title}
+            onTitleChange={(title) => updateAttributes({ ...attrs, title })}
+            onHideTitleChange={(hide) =>
+              updateAttributes({ ...attrs, hideTitle: hide })
+            }
           />
+          <FilterRuleChips attrs={attrs} db={db} activeView={db.activeView} />
           <div ref={tableRef} className="db-table" data-type="database-table">
-            <div
-              className="db-header-row"
-              style={{ gridTemplateColumns: `${gridTemplateColumns} 1fr` }}
-            >
-              {attrs.properties.map((prop) => (
+            <div className="db-header-row" style={{ gridTemplateColumns }}>
+              {visibleProperties.map((prop) => (
                 <ResizableNodeProvider
                   key={prop.id}
                   onResizeEnd={({ width }, ref) => {
@@ -209,19 +234,26 @@ export function DatabaseNodeView(props: NodeViewProps) {
                 } as React.CSSProperties
               }
             />
+            <Button
+              variant="ghost"
+              style={{
+                justifyContent: "flex-start",
+                borderRadius: "var(--tt-radius-sm)",
+                marginTop: "10px !important",
+                fontSize: 12,
+              }}
+              onClick={() => editor.commands.addDatabaseRecord(node.attrs.id)}
+            >
+              <Plus className="tiptap-button-icon" />
+              <span className="tiptap-button-text">New</span>
+            </Button>
+            <DatabaseCalculations
+              attrs={attrs}
+              records={records}
+              visibleProperties={visibleProperties}
+              gridTemplateColumns={gridTemplateColumns}
+            />
           </div>
-
-          <Button
-            variant="ghost"
-            style={{
-              justifyContent: "flex-start",
-              borderRadius: "var(--tt-radius-sm)",
-            }}
-            onClick={() => editor.commands.addDatabaseRecord(node.attrs.id)}
-          >
-            <Plus className="tiptap-button-icon" />
-            <span className="tiptap-button-text">New</span>
-          </Button>
         </CardItemGroup>
       </DatabaseProvider>
     </NodeViewWrapper>

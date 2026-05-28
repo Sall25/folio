@@ -7,11 +7,13 @@ export const DueDateCellNode = Node.create({
   group: "databaseCellContent",
   atom: true,
   selectable: false,
+  content: "inline*",
 
   addAttributes() {
     return {
       value: { default: null },
       propertyId: { default: null },
+      pageId: { default: null },
     };
   },
 

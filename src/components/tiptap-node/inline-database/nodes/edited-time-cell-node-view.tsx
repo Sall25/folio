@@ -2,9 +2,15 @@ import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { useCallback, useMemo } from "react";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import { findPage } from "src/lib/find-page";
+import { useIsPropertyHidden } from "../hooks/use-is-property-hidden";
 
-export function EditedTimeCellNodeView({ getPos, editor }: NodeViewProps) {
+export function EditedTimeCellNodeView({
+  getPos,
+  editor,
+  node,
+}: NodeViewProps) {
   const { pages } = usePages();
+  const isHidden = useIsPropertyHidden(editor, getPos, node.attrs.propertyId);
 
   const getParentRecord = useCallback(() => {
     const pos = getPos?.();
@@ -31,6 +37,9 @@ export function EditedTimeCellNodeView({ getPos, editor }: NodeViewProps) {
     if (!pageId || !pages) return null;
     return findPage(pages, pageId);
   }, [pages, pageId]);
+
+  if (isHidden)
+    return <NodeViewWrapper as={"div"} style={{ display: "none" }} />;
 
   return (
     <NodeViewWrapper

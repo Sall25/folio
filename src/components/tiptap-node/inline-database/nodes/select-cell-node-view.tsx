@@ -8,6 +8,8 @@ import { SelectCellDisplay } from "../primitives/select-cell-display";
 import { useActiveViewType } from "../hooks/use-active-view-type";
 import { useParentDatabase } from "../hooks/use-parent-database";
 import "./select-cell-node-view.scss";
+import { useCellPageSync } from "../hooks/use-cell-page-sync";
+import { useIsPropertyHidden } from "../hooks/use-is-property-hidden";
 
 export function SelectCellNodeView({
   node,
@@ -18,8 +20,11 @@ export function SelectCellNodeView({
   const selectAttrs = node.attrs as SelectCellAttrs;
   const activeViewType = useActiveViewType(editor, getPos);
   const db = useParentDatabase(editor, getPos);
+  const syncPage = useCellPageSync(getPos, updateAttributes);
+  const isHidden = useIsPropertyHidden(editor, getPos, node.attrs.propertyId);
 
-  if (!db) return null;
+  if (isHidden || !db)
+    return <NodeViewWrapper as="div" style={{ display: "none" }} />;
 
   const attrs = db.attrs as DatabaseAttrs;
   const prop = attrs.properties.find((p) => p.id === selectAttrs.propertyId);
@@ -64,7 +69,9 @@ export function SelectCellNodeView({
         value={selectAttrs.value}
         options={prop.config.options}
         onChange={(option) =>
-          updateAttributes({ ...selectAttrs, value: option })
+          syncPage(() => {
+            updateAttributes({ ...selectAttrs, value: option });
+          }, node)
         }
       />
     </NodeViewWrapper>

@@ -13,6 +13,7 @@ export const MultiSelectCellNode = Node.create({
     return {
       propertyId: { default: null },
       value: { default: [] }, // SelectOption id[]
+      pageId: { default: null },
     };
   },
 

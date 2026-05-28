@@ -73,6 +73,7 @@ import { FormulaCellNode } from "src/components/tiptap-node/inline-database/node
 import { YoutubeExtension } from "src/components/tiptap-node/video-node";
 import { BookmarkNode } from "src/components/tiptap-node/bookmark-node/bookmark-node-extension";
 import { PageBreadcrumb } from "src/components/tiptap-ui/page-breadcrumb/page-breadcrumb";
+import { RecordPropertyPanelNode } from "src/components/tiptap-node/record-property-panel-node";
 
 export function useEditorExtensions(
   refsRef: React.RefObject<EditorExtensionRefs>,
@@ -241,6 +242,7 @@ export function useEditorExtensions(
       YoutubeExtension,
       BookmarkNode,
       PageBreadcrumb,
+      RecordPropertyPanelNode,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

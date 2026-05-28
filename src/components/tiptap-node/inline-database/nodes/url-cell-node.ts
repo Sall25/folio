@@ -10,6 +10,7 @@ export const UrlCellNode = Node.create({
   addAttributes() {
     return {
       propertyId: { default: null },
+      pageId: { default: null },
     };
   },
 

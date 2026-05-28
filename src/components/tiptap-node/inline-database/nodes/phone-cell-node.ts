@@ -11,6 +11,7 @@ export const PhoneCellNode = Node.create({
   addAttributes() {
     return {
       propertyId: { default: null },
+      pageId: { default: null },
     };
   },
 

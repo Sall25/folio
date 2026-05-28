@@ -3,7 +3,12 @@ import { usePeekEditorExtensions } from "./hooks/use-peek-editor-extensions";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import { useActivePage } from "./use-active-page";
 import type { Page } from "./types";
-import { Editor, useCurrentEditor, useEditor } from "@tiptap/react";
+import {
+  Editor,
+  useCurrentEditor,
+  useEditor,
+  type JSONContent,
+} from "@tiptap/react";
 import {
   Card,
   CardBody,
@@ -19,7 +24,13 @@ import type { Target } from "src/components/tiptap-ui/cover/types";
 import { FloatingMenu } from "@tiptap/react/menus";
 import { FloatingActions } from "./floating-actions";
 import { CoverHeader } from "src/components/tiptap-ui/cover";
-import { RecordPropertyPanel } from "./record-property-panel";
+import {
+  stripPropertyPanels,
+  useRecordPropertyPanel,
+} from "./hooks/use-record-property-panel";
+import { type Transaction } from "@tiptap/pm/state";
+import { PeekEditorProvider } from "./context/peek-editor-provider";
+//import { RecordPropertyPanel } from "./record-property-panel";
 
 const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
   open,
@@ -73,6 +84,38 @@ const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
   );
 });
 
+function getRecordPropertyPanelChange(
+  editor: Editor,
+  transaction: Transaction,
+): boolean {
+  const changed = transaction.getMeta("RecordPropertyPanelChanged");
+  return changed;
+}
+
+function getTitleChange(
+  editor: Editor,
+  transaction: Transaction,
+): {
+  changed: boolean;
+  text: string | null;
+} {
+  if (!transaction.docChanged) return { changed: false, text: null };
+
+  const { $from } = editor.state.selection;
+
+  const node = $from.node();
+  if (node.type.name === "title") {
+    return {
+      changed: true,
+      text: node.textContent,
+    };
+  }
+  return {
+    changed: false,
+    text: null,
+  };
+}
+
 export function PagePeekView({
   page,
   onClose,
@@ -81,7 +124,8 @@ export function PagePeekView({
   onClose?: () => void;
 }) {
   const { updatePageAsync, addCoverAsync } = usePages();
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId, debounceUpdatePage, debounceUpdatePageFast } =
+    useActivePage();
   const { setPeekPageId } = usePeekPage();
   const { extensions } = usePeekEditorExtensions(setActivePageId);
   const { editor: mainEditor } = useCurrentEditor();
@@ -112,6 +156,9 @@ export function PagePeekView({
   const onAddCoverAsync = useCallback(async () => {
     await addCoverAsync(pageRef.current.id);
   }, [addCoverAsync]);
+
+  const debounceUpdatePageRef = useRef(debounceUpdatePage);
+  const debounceUpdatePageFastRef = useRef(debounceUpdatePageFast);
 
   const editor = useEditor({
     extensions,
@@ -154,6 +201,53 @@ export function PagePeekView({
       mainEditor.view.dispatch(tr);
     },
   });
+
+  useRecordPropertyPanel(editor, mainEditor, page?.id ?? null);
+
+  useEffect(() => {
+    if (!editor) return;
+    const update = ({
+      editor,
+      transaction,
+    }: {
+      editor: Editor;
+      transaction: Transaction;
+    }) => {
+      if (!pageRef.current) return;
+
+      const { changed, text } = getTitleChange(editor, transaction);
+      const recordChanged = getRecordPropertyPanelChange(editor, transaction);
+
+      if (changed || recordChanged) {
+        console.log("recordChanged");
+        debounceUpdatePageFastRef.current({
+          ...pageRef.current,
+          title: text ?? pageRef.current.title,
+          //content: stripPropertyPanels(editor.getJSON()) as JSONContent,
+          content: editor.getJSON(),
+          // // preserve record link fields — not part of editor content
+          // databaseId: pageRef.current.databaseId,
+          // recordId: pageRef.current.recordId,
+          updatedAt: Date.now().toString(),
+        });
+      } else {
+        debounceUpdatePageRef.current({
+          ...pageRef.current,
+          content: stripPropertyPanels(editor.getJSON()) as JSONContent,
+          // content: editor.getJSON(),
+          // databaseId: pageRef.current.databaseId,
+          // recordId: pageRef.current.recordId,
+          updatedAt: Date.now().toString(),
+        });
+      }
+    };
+
+    editor.on("update", update);
+
+    return () => {
+      editor.off("update", update);
+    };
+  }, [editor, debounceUpdatePage, debounceUpdatePageFast]);
 
   return (
     <Card
@@ -201,9 +295,11 @@ export function PagePeekView({
           hasThreads={false}
           providedPage={page}
         />
-        <RecordPropertyPanel page={page} editor={mainEditor} />
+        {/* <RecordPropertyPanel page={page} editor={mainEditor} /> */}
         <div>
-          <EditorContent editor={editor} className="page-peek-content" />
+          <PeekEditorProvider value={editor}>
+            <EditorContent editor={editor} className="page-peek-content" />
+          </PeekEditorProvider>
         </div>
         <FloatingMenuMemo
           editor={editor}

@@ -12,6 +12,8 @@ export const TextCellNode = Node.create({
   addAttributes() {
     return {
       propertyId: { default: null },
+      pageId: { default: null },
+      value: { default: "" },
     };
   },
 

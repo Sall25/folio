@@ -6,12 +6,20 @@ import {
 import type { DatabaseView } from "../../types/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card } from "src/components/tiptap-ui-primitive/card";
-import { Edit, Eye, Link, Maximize2, SlidersHorizontal } from "lucide-react";
+import {
+  Edit,
+  Eye,
+  Link,
+  Maximize2,
+  SlidersHorizontal,
+  Trash2,
+} from "lucide-react";
 
-import "./view-name-popover.scss";
+// import "./view-name-popover.scss";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { DuplicateIcon } from "src/components/tiptap-icons/duplicate-icon";
 import { useState } from "react";
+import { ViewIcon } from "./view-icon";
 
 interface ViewNamePopoverProps {
   view: DatabaseView;
@@ -21,9 +29,12 @@ interface ViewNamePopoverProps {
   onOpenAsFullPage?: () => void;
   onShowDatabaseTitle?: () => void;
   onDuplicate?: () => void;
+  onDelete?: () => void;
+  canDelete?: boolean;
+  active?: boolean;
 }
 
-export function ViewNamePopover({
+export function ViewPopover({
   view,
   onRename,
   onEdit,
@@ -31,27 +42,42 @@ export function ViewNamePopover({
   onOpenAsFullPage,
   onShowDatabaseTitle,
   onDuplicate,
+  onDelete,
+  canDelete = true,
+  active = false,
 }: ViewNamePopoverProps) {
   const [open, setOpen] = useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          data-active-state={active ? "on" : "off"}
           variant="ghost"
-          style={{ borderRadius: "var(--tt-radius-sm)", padding: "5px 1px" }}
+          style={{
+            borderRadius: "var(--tt-radius-sm)",
+            minHeight: 22,
+            height: 22,
+          }}
         >
+          <ViewIcon view={view} />
           <span className="tiptap-button-text">{view.name}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent>
-        <Card style={{ padding: "5px 10px" }}>
+        <Card
+          style={{
+            padding: "5px 15px",
+            boxShadow: "var(--tt-shadow-elevated-sm)",
+          }}
+        >
           <Button
             variant="ghost"
             className="action-button"
             onClick={() => {
               onRename?.();
-              setOpen(!open);
+              setOpen(false);
             }}
+            style={{ width: "100%", justifyContent: "flex-start" }}
           >
             <Edit className="tiptap-button-icon" />
             <span className="tiptap-button-text">Rename</span>
@@ -61,8 +87,9 @@ export function ViewNamePopover({
             className="action-button"
             onClick={() => {
               onEdit?.();
-              setOpen(!open);
+              setOpen(false);
             }}
+            style={{ width: "100%", justifyContent: "flex-start" }}
           >
             <SlidersHorizontal className="tiptap-button-icon" />
             <span className="tiptap-button-text">Edit view</span>
@@ -73,8 +100,9 @@ export function ViewNamePopover({
             className="action-button"
             onClick={() => {
               onCopyLink?.();
-              setOpen(!open);
+              setOpen(false);
             }}
+            style={{ width: "100%", justifyContent: "flex-start" }}
           >
             <Link className="tiptap-button-icon" />
             <span className="tiptap-button-text">Copy link to view</span>
@@ -84,8 +112,9 @@ export function ViewNamePopover({
             className="action-button"
             onClick={() => {
               onOpenAsFullPage?.();
-              setOpen(!open);
+              setOpen(false);
             }}
+            style={{ width: "100%", justifyContent: "flex-start" }}
           >
             <Maximize2 className="tiptap-button-icon" />
             <span className="tiptap-button-text">Open as full page</span>
@@ -95,8 +124,9 @@ export function ViewNamePopover({
             className="action-button"
             onClick={() => {
               onShowDatabaseTitle?.();
-              setOpen(!open);
+              setOpen(false);
             }}
+            style={{ width: "100%", justifyContent: "flex-start" }}
           >
             <Eye className="tiptap-button-icon" />
             <span className="tiptap-button-text">Show database title</span>
@@ -107,12 +137,27 @@ export function ViewNamePopover({
             className="action-button"
             onClick={() => {
               onDuplicate?.();
-              setOpen(!open);
+              setOpen(false);
             }}
+            style={{ width: "100%", justifyContent: "flex-start" }}
           >
             <DuplicateIcon className="tiptap-button-icon" />
             <span className="tiptap-button-text">Duplicate</span>
           </Button>
+          {canDelete && (
+            <Button
+              variant="ghost"
+              className="action-button action-button--danger"
+              onClick={() => {
+                onDelete?.();
+                setOpen(false);
+              }}
+              style={{ width: "100%", justifyContent: "flex-start" }}
+            >
+              <Trash2 className="tiptap-button-icon" />
+              <span className="tiptap-button-text">Delete view</span>
+            </Button>
+          )}
         </Card>
       </PopoverContent>
     </Popover>

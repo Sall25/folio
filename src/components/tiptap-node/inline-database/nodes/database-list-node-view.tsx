@@ -39,11 +39,13 @@ export function DatabaseListNodeView({
         updateAttributes={updateAttributes}
       >
         <CardItemGroup>
-          <DatabaseToolbar
-            attrs={attrs}
-            db={db}
-            onUpdateAttributes={(attrs) => updateAttributes(attrs)}
-          />
+          <div style={{ maxWidth: "var(--db-editor-width)", paddingRight: 20 }}>
+            <DatabaseToolbar
+              attrs={attrs}
+              db={db}
+              onUpdateAttributes={(attrs) => updateAttributes(attrs)}
+            />
+          </div>
 
           {/* Pass visible property ids down via CSS custom property so
               each record node view can read it without prop drilling */}

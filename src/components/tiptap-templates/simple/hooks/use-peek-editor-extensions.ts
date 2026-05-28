@@ -40,6 +40,7 @@ import { SelectCellNode } from "src/components/tiptap-node/inline-database/nodes
 import { CheckboxCellNode } from "src/components/tiptap-node/inline-database/nodes/checkbox-cell-node";
 import { SelectPropertyNode } from "src/components/tiptap-node/database-node/select-property-node";
 import { AudioExtension } from "src/components/tiptap-node/audio-node";
+import { RecordPropertyPanelNode } from "src/components/tiptap-node/record-property-panel-node";
 
 export function usePeekEditorExtensions(onNavigate?: (pageId: number) => void) {
   const extensions = useMemo(
@@ -117,6 +118,7 @@ export function usePeekEditorExtensions(onNavigate?: (pageId: number) => void) {
       DatabaseNode,
       CalloutExtension,
       AudioExtension,
+      RecordPropertyPanelNode,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

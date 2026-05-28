@@ -12,10 +12,19 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
+import { useCellPageSync } from "../hooks/use-cell-page-sync";
+import { useIsPropertyHidden } from "../hooks/use-is-property-hidden";
 
-export function UrlCellNodeView({ node, editor, getPos }: NodeViewProps) {
+export function UrlCellNodeView({
+  node,
+  editor,
+  getPos,
+  updateAttributes,
+}: NodeViewProps) {
   const [open, setOpen] = useState(false);
   const [textContent, setTextContent] = useState(node.textContent);
+  const syncPage = useCellPageSync(getPos, updateAttributes);
+  const isHidden = useIsPropertyHidden(editor, getPos, node.attrs.propertyId);
 
   // Ensure url has a protocol for the href
   function toHref(url: string): string {
@@ -23,8 +32,16 @@ export function UrlCellNodeView({ node, editor, getPos }: NodeViewProps) {
     return /^https?:\/\//i.test(url) ? url : `https://${url}`;
   }
 
+  if (isHidden)
+    return <NodeViewWrapper as={"div"} style={{ display: "none" }} />;
+
   return (
-    <NodeViewWrapper as="div" data-type="url-cell" className="db-td db-td--url" style={{margin: 0}}>
+    <NodeViewWrapper
+      as="div"
+      data-type="url-cell"
+      className="db-td db-td--url"
+      style={{ margin: 0 }}
+    >
       <Popover
         open={open}
         onOpenChange={(v) => {
@@ -66,7 +83,11 @@ export function UrlCellNodeView({ node, editor, getPos }: NodeViewProps) {
                 maxRows={1}
                 placeholder="https://example.com"
                 value={textContent}
-                onChange={(e) => setTextContent(e.target.value)}
+                onChange={(e) =>
+                  syncPage(() => {
+                    setTextContent(e.target.value);
+                  }, node)
+                }
               />
               <Spacer />
               <Button

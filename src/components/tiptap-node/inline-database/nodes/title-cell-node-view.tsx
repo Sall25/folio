@@ -225,6 +225,7 @@ export function TitleCellNodeView({
       as="div"
       data-type="title-cell"
       className={`db-td db-td--title ${editing ? "editing" : ""} ${activeViewType === "list" ? "db-td--list" : ""}  ${isBoardView ? "db-td--board" : ""}`}
+      contentEditable={false}
     >
       {coverBlock}
       {contentBlock}
@@ -303,7 +304,7 @@ export function TitleCellNodeView({
             <span>{node.textContent || "New Page"}</span>
           </Button>
         )}
-        {!editing && (
+        {shouldShow && !editing && (
           <>
             <Spacer orientation="horizontal" />
             <Button
@@ -312,11 +313,13 @@ export function TitleCellNodeView({
                 height: 24,
                 padding: "0px !important",
                 borderRadius: "var(--tt-radius-sm)",
-                // border: `${activeViewType !== "table" ? "none" : "1px solid var(--tt-border-color)"}`,
                 opacity: `${titleAttrs.pageId !== null && shouldShow ? 1 : 0}`,
                 transition: "opacity 0.15s ease",
               }}
-              onClick={() => setPeekPageId(titleAttrs.pageId)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setPeekPageId(titleAttrs.pageId);
+              }}
             >
               <PanelRightOpen className="tiptap-button-icon" size={12} />
               <span className="tiptap-button-text">Open</span>

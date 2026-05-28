@@ -12,6 +12,7 @@ export const CheckboxCellNode = Node.create({
     return {
       propertyId: { default: null },
       value: { default: false },
+      pageId: { default: null },
     };
   },
 

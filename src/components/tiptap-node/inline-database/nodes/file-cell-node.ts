@@ -13,6 +13,7 @@ export const FileCellNode = Node.create({
     return {
       propertyId: { default: null },
       files: { default: [] }, // FileAttachment[]
+      pageId: { default: null },
     };
   },
 

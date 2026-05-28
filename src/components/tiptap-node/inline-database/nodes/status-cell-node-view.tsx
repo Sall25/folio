@@ -4,6 +4,8 @@ import { StatusCellDisplay } from "../primitives/status-cell-display";
 import { useActiveViewType } from "../hooks/use-active-view-type";
 import { useParentDatabase } from "../hooks/use-parent-database";
 import "./status-cell-node-view.scss";
+import { useCellPageSync } from "../hooks/use-cell-page-sync";
+import { useIsPropertyHidden } from "../hooks/use-is-property-hidden";
 
 export function StatusCellNodeView({
   node,
@@ -14,8 +16,11 @@ export function StatusCellNodeView({
   const statusAttrs = node.attrs as StatusCellAttrs;
   const activeViewType = useActiveViewType(editor, getPos);
   const db = useParentDatabase(editor, getPos);
+  const syncPage = useCellPageSync(getPos, updateAttributes);
+  const isHidden = useIsPropertyHidden(editor, getPos, node.attrs.propertyId);
 
-  if (!db) return null;
+  if (!db || isHidden)
+    return <NodeViewWrapper as={"div"} style={{ display: "none" }} />;
 
   const attrs = db.attrs as DatabaseAttrs;
   const prop = attrs.properties.find((p) => p.id === statusAttrs.propertyId);
@@ -47,7 +52,11 @@ export function StatusCellNodeView({
       <StatusCellDisplay
         value={statusAttrs.value}
         groups={prop.config.groups}
-        onChange={(item) => updateAttributes({ value: item.id })}
+        onChange={(item) =>
+          syncPage(() => {
+            updateAttributes({ value: item.id });
+          }, node)
+        }
       />
     </NodeViewWrapper>
   );
