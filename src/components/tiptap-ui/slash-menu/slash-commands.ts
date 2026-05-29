@@ -22,6 +22,7 @@ import {
   Pilcrow,
   Play,
   Quote,
+  Sigma,
   Smile,
   Table,
   TypeOutline,
@@ -218,6 +219,20 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     title: "Emoji",
     icon: Smile,
     run: (e) => e.chain().focus().insertContent(":").run(),
+  },
+  {
+    id: "mathBlock",
+    type: "command",
+    title: "Block equation",
+    icon: Sigma,
+    run: (e) => e.chain().focus().insertMathBlock().run(),
+  },
+  {
+    id: "mathInline",
+    type: "command",
+    title: "Inline equation",
+    icon: Sigma,
+    run: (e) => e.chain().focus().insertInlineMath().run(),
   },
 
   // ─── Upload ─────────────────────────────────────────────

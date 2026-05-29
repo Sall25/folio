@@ -75,6 +75,8 @@ import { BookmarkNode } from "src/components/tiptap-node/bookmark-node/bookmark-
 import { PageBreadcrumb } from "src/components/tiptap-ui/page-breadcrumb/page-breadcrumb";
 import { RecordPropertyPanelNode } from "src/components/tiptap-node/record-property-panel-node";
 import { PersonCellNode } from "src/components/tiptap-node/inline-database/nodes/person-cell-node";
+import { MathInlineNode } from "src/components/tiptap-node/math-inline-node";
+import { MathBlockNode } from "src/components/tiptap-node/math-block-node";
 
 export function useEditorExtensions(
   refsRef: React.RefObject<EditorExtensionRefs>,
@@ -245,6 +247,8 @@ export function useEditorExtensions(
       BookmarkNode,
       PageBreadcrumb,
       RecordPropertyPanelNode,
+      MathInlineNode,
+      MathBlockNode,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

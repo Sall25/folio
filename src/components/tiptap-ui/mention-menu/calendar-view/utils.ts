@@ -1,3 +1,5 @@
+import type { TimeFormat } from "src/components/tiptap-node/inline-database/types/types";
+
 export const DAYS_SHORT = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 export const MONTHS = [
@@ -61,11 +63,11 @@ export function formatDate(date: Date) {
   return `${MONTHS[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
 }
 
-export const formatTime = (date: Date) =>
+export const formatTime = (date: Date, timeFormat: TimeFormat = "12h") =>
   date.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
-    hour12: true,
+    hour12: timeFormat === "12h",
   });
 
 export const parseTime = (

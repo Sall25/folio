@@ -24,33 +24,48 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-   font-family: Inter, -apple-system, system-ui, sans-serif;
-        border-right: 1px solid var(--tt-border-color);
+  font-family: Inter, -apple-system, system-ui, sans-serif;
   height: 100vh;
   overflow: hidden;
   color: var(--sidebar-text-color);
   font-size: 14px;
   font-weight: 500;
   background: var(--sidebar-bg-color);
-  
   border-right: 1px solid var(--sidebar-border-color);
   box-shadow: none;
-  // box-shadow: 10px 0px 5px 3px rgba(247, 240, 227, 0.293);
-  // box-shadow: var(--tt-shadow-elevated-xs);
- // box-shadow: 2px 2px 16px var(--sidebar-shadow-color);
- padding: 0;
+  padding: 0;
   z-index: 10;
-  // background-image: linear-gradient(
-  //   to bottom,
-  //   var(--sidebar-bg-color) 60%,
-  //   rgba(235, 233, 255, 0.14) 100%
-  // );
-  /*
-  
-        z-index: 10;
-        
-       
-  */
+
+  // top-down light wash — fades out before the lower nav items
+ &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(40px);
+    background:
+      radial-gradient(
+        120% 80% at 0% 100%,
+        color-mix(in srgb, var(--sidebar-accent) 14%, transparent) 5%,
+        color-mix(in srgb, var(--sidebar-accent) 5%, transparent) 5%,
+        transparent 40%
+      );
+  }
+  // keep real content above the wash
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+.dark .sidebar::before {
+  background:
+    radial-gradient(
+      120% 80% at 0% 100%,
+      color-mix(in srgb, var(--sidebar-accent) 20%, transparent) 5%,
+      color-mix(in srgb, var(--sidebar-accent) 7%, transparent) 5%,
+      transparent 40%
+    );
 }
 
 // ── Workspace header ──
@@ -111,40 +126,49 @@
 
 // ── Nav items (Search, Home, Inbox etc.) ──
 .sidebar-nav-item {
-  color: var(--sidebar-text-secondary);
   width: 100%;
   justify-content: flex-start;
-  padding: 2px 6px;
+  padding: 1px 8px;
   gap: 0;
 
   .tiptap-button {
     width: 100%;
     justify-content: flex-start;
-    color: inherit;
-    padding: 5px 6px;
+    height: 32px;                    // even vertical rhythm
+    padding: 0 8px;
     border-radius: var(--tt-radius-md);
+    // resting state is MUTED — this is the fix that reads as "designed"
+    color: var(--sidebar-text-secondary);
     transition: background 0.1s, color 0.1s;
 
     &:hover {
-      background: var(--tt-gray-light-a-100, rgba(0,0,0,0.04));
+      background: var(--tt-gray-light-a-100, rgba(0, 0, 0, 0.04));
       color: var(--sidebar-text-color);
     }
 
     .tiptap-button-icon {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 17px;
       flex-shrink: 0;
-      stroke-width: 1.8px;
-      color: var(--sidebar-text-color); 
+      stroke-width: 2.3px;           // lighter, closer to the text weight
+      color: inherit;                // follows muted→full on hover, not pinned
     }
 
-   .tiptap-button-text {
-      font-family: 'Inter', -apple-system, sans-serif;
-      font-size: 14.5px;
-      font-weight: 400;
-      letter-spacing: -0.01em;
-      color: var(--sidebar-text-color);
+    .tiptap-button-text {
+      font-family: "Inter", -apple-system, sans-serif;
+      font-size: 14.2px;
+      font-weight: 450;
+      letter-spacing: 0.01em;
+      color: inherit;                // follows the button, not pinned to full
     }
+  }
+
+  // Active/current route — the one row that gets full contrast + weight
+  &[data-active="true"] .tiptap-button,
+  &.is-active .tiptap-button {
+    background: var(--tt-gray-light-a-100, rgba(0, 0, 0, 0.04));
+    color: var(--sidebar-text-color);
+    .tiptap-button-text { font-weight: 500; }
   }
 }
 
@@ -153,12 +177,11 @@
   display: block;
   font-size: 10px;
   font-weight: 600;
-  color: var(--sidebar-text-secondary);
+  color: var(--tt-text-secondary);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 0 8px 4px;
+  padding: 0 10px 4px;
   margin-top: 8px;
-  opacity: 0.6;
 }
 
 .sidebar-empty {

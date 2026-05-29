@@ -30,6 +30,9 @@ import { HidePropertyButton } from "../hide-property-button";
 import { useResizableNode } from "src/components/tiptap-node/figure-node";
 import FormulaEditor from "../formula-editor/formula-editor";
 import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
+import { NumberEditDisplay } from "../number-edit-display";
+import { DateEditDisplay } from "../date-edit-display/date-edit-display";
+import { PersonEditDisplay } from "../person-edit-display";
 export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
   const [open, setOpen] = useState(false);
 
@@ -163,6 +166,34 @@ export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
                       propertyId={prop.id}
                       properties={attrs.properties}
                       onDone={() => setOpen(false)}
+                    />
+                  )}
+                  {prop.config.type === "number" && (
+                    <NumberEditDisplay
+                      prop={prop}
+                      onChange={(patch) => {
+                        if (prop.config.type !== "number") return;
+                        db.updateProperty(prop.id, {
+                          ...prop,
+                          config: { ...prop.config, ...patch },
+                        });
+                      }}
+                    />
+                  )}
+                  {prop.config.type === "date" && (
+                    <DateEditDisplay
+                      prop={prop}
+                      onChange={(config) =>
+                        db.updateProperty(prop.id, { ...prop, config })
+                      }
+                    />
+                  )}
+                  {prop.config.type === "person" && (
+                    <PersonEditDisplay
+                      prop={prop}
+                      onChange={(config) =>
+                        db.updateProperty(prop.id, { ...prop, config })
+                      }
                     />
                   )}
                 </PropertyEditPopover>

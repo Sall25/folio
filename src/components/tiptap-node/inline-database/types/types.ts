@@ -1,15 +1,35 @@
 import type { FilterOperator, FilterGroup } from "./filter-types";
-import type { StatusGroup } from "../ui/status/status-edit-display";
-import type {
-  PersonLimit,
-  PersonDefault,
-  PersonNotifications,
-} from "../ui/person/person-edit-display";
 import type { SelectOption } from "../../database-node/select-property-node/select-property-node";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Primitives
 // ─────────────────────────────────────────────────────────────────────────────
+export type StatusColor =
+  | "gray"
+  | "blue"
+  | "green"
+  | "orange"
+  | "red"
+  | "purple"
+  | "yellow";
+
+export interface StatusItem {
+  id: string;
+  name: string;
+  color: StatusColor;
+  isDefault?: boolean;
+}
+
+export interface StatusGroup {
+  id: string;
+  label: string;
+  items: StatusItem[];
+}
+
+export interface StatusPropertyProps {
+  groups?: StatusGroup[];
+  onChange?: (groups: StatusGroup[]) => void;
+}
 
 export type ID = string;
 
@@ -47,6 +67,24 @@ export type ViewType =
 // ─────────────────────────────────────────────────────────────────────────────
 // Property config primitives
 // ─────────────────────────────────────────────────────────────────────────────
+export type PersonLimit = "no-limit" | "single";
+
+export type PersonDefault = "no-default" | "me";
+
+export type PersonNotifications = "users-only" | "everyone";
+
+export interface PersonPropertyValue {
+  limit: PersonLimit;
+  default: PersonDefault;
+  notifications: PersonNotifications;
+}
+
+export type PersonPropertyPanel = "limit" | "default" | "notifications";
+
+export interface PersonPropertyProps {
+  value?: PersonPropertyValue;
+  onNavigate?: (panel: PersonPropertyPanel) => void;
+}
 
 export type NumberFormat =
   | "number"
@@ -92,21 +130,16 @@ export type AggregationFunction =
   | "percent_unchecked"
   | "show_original";
 
-export type {
-  StatusGroup,
-  StatusItem,
-  StatusColor,
-} from "../ui/status/status-edit-display";
-
-export type {
-  PersonLimit,
-  PersonDefault,
-  PersonNotifications,
-} from "../ui/person/person-edit-display";
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Property configs — discriminated union, one per type
 // ─────────────────────────────────────────────────────────────────────────────
+export type DecimalPlaces = "default" | 0 | 1 | 2 | 3 | 4 | 5;
+export type NumberShowAs = "number" | "bar" | "ring";
+export type DateNotifications =
+  | "none"
+  | "same_day"
+  | "1_day_before"
+  | "2_days_before";
 
 export type PropertyConfig =
   | { type: "title" }
@@ -116,7 +149,14 @@ export type PropertyConfig =
   | { type: "created_by" }
   | { type: "edited_time" }
   | { type: "edited_by" }
-  | { type: "number"; format: NumberFormat; prefix?: string; suffix?: string }
+  | {
+      type: "number";
+      format: NumberFormat;
+      prefix?: string;
+      suffix?: string;
+      decimalPlaces?: DecimalPlaces;
+      showAs?: NumberShowAs;
+    }
   | { type: "select"; options: SelectOption[] }
   | { type: "multi_select"; options: SelectOption[] }
   | { type: "status"; groups: StatusGroup[] }
@@ -125,6 +165,7 @@ export type PropertyConfig =
       format: DateFormat;
       timeFormat: TimeFormat;
       includeTime: boolean;
+      notifications?: DateNotifications;
     }
   | {
       type: "person";

@@ -124,7 +124,7 @@ export function DatabaseRecordNodeView(props: NodeViewProps) {
           orientation="horizontal"
           style={{
             gap: 5,
-            paddingTop: 10,
+            paddingTop: 20,
             borderBottom: "1px solid var(--tt-border-color)",
           }}
         >

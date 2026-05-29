@@ -299,13 +299,13 @@ body,
     transform: translateX(var(--x));
   }
   &[data-size="medium"] {
-    max-width: 800px;
-    --db-editor-width: 800.8px;
+    max-width: 920px;
+    --db-editor-width: 920px;
   }
 
   &[data-size="full"] {
-    max-width: 980.8px;
-    --db-editor-width:980.8px;
+    max-width: 1020px;
+    --db-editor-width:1020px;
   }
 
   &[data-text="small"]{

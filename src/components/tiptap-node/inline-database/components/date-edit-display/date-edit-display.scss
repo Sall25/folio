@@ -1,0 +1,23 @@
+.date-edit__switch {
+  display: inline-flex;
+  align-items: center;
+  width: 28px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--tt-gray-light-300);
+  padding: 2px;
+  transition: background 0.15s ease;
+
+  &--on {
+    background: var(--tt-brand-color-400);
+    justify-content: flex-end;
+  }
+
+  &-knob {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.15s ease;
+  }
+}

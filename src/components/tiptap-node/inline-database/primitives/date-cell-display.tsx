@@ -5,26 +5,63 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { formatDate } from "src/components/tiptap-ui/mention-menu/calendar-view/utils";
+import {
+  formatDate,
+  formatTime,
+} from "src/components/tiptap-ui/mention-menu/calendar-view/utils";
 import CalendarView from "src/components/tiptap-ui/mention-menu/calendar-view/calendar-view";
+import type { DateFormat, TimeFormat } from "../types/types";
 
 interface DateCellDisplayProps {
   value: string | null;
+  format?: DateFormat;
+  timeFormat?: TimeFormat;
+  includeTime?: boolean;
   onChange?: (iso: string) => void;
   readonly?: boolean;
 }
 
+function formatForCell(
+  date: Date,
+  format: DateFormat,
+  timeFormat: TimeFormat,
+  includeTime: boolean,
+): string {
+  let base: string;
+  switch (format) {
+    case "iso":
+      base = date.toISOString().slice(0, 10);
+      break;
+    case "short":
+      base = date.toLocaleDateString(undefined, {
+        month: "numeric",
+        day: "numeric",
+        year: "numeric",
+      });
+      break;
+    case "relative":
+    case "full":
+    default:
+      base = formatDate(date);
+  }
+  if (includeTime) {
+    base += " " + formatTime(date, timeFormat);
+  }
+  return base;
+}
+
 export function DateCellDisplay({
   value,
+  format = "full",
+  timeFormat = "12h",
+  includeTime = false,
   onChange,
   readonly = false,
 }: DateCellDisplayProps) {
-  // Local draft only used while the popover is open
   const [draft, setDraft] = useState<Date | undefined>(
     value ? new Date(value) : undefined,
   );
 
-  // Always derive the displayed date from the prop — stays in sync
   const date = value ? new Date(value) : new Date();
 
   function handleDateChange(d: Date) {
@@ -39,15 +76,15 @@ export function DateCellDisplay({
         background: "transparent",
         width: "100%",
         justifyContent: "flex-start",
-        fontFamily:
-          'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif',
         fontSize: 15,
         fontWeight: 400,
         lineHeight: 1.6,
         color: "var(--tt-theme-text)",
       }}
     >
-      <span>{formatDate(date)}</span>
+      <span>
+        {value ? formatForCell(date, format, timeFormat, includeTime) : ""}
+      </span>
     </Button>
   );
 
@@ -57,7 +94,11 @@ export function DateCellDisplay({
     <Popover>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent>
-        <CalendarView value={draft ?? date} onChange={handleDateChange} />
+        <CalendarView
+          value={draft ?? date}
+          onChange={handleDateChange}
+          includeTime={includeTime}
+        />
       </PopoverContent>
     </Popover>
   );

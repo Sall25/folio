@@ -156,18 +156,7 @@ function NavItems() {
         onClick={handleNewPage}
         style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
       >
-        <Plus
-          size={32}
-          strokeWidth={1.8}
-          className="tiptap-button-icon"
-          style={{
-            borderRadius: "var(--tt-radius-xl)",
-            background: "var(--tt-button-hover-bg-color)",
-            padding: 2,
-            width: 19,
-            height: 19,
-          }}
-        />
+        <Plus size={32} strokeWidth={1.8} className="tiptap-button-icon" />
         <Spacer orientation="horizontal" size={4} />
         {!collapsed && <span className="tiptap-button-text">New Page</span>}
       </Button>
@@ -274,7 +263,8 @@ export function SimpleEditorSidebar() {
       }}
     >
       <WorkspaceHeader />
-      <Spacer orientation="vertical" size={6} />
+      <Separator orientation="horizontal" style={{ height: 0.5 }} />
+      <Spacer orientation="vertical" size={3} />
       <NavItems />
       <Separator orientation="horizontal" style={{ height: 0.5 }} />
       {!collapsed && <PagesList pages={pages} />}

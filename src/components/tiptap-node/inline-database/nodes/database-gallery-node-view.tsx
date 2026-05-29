@@ -10,9 +10,9 @@ import type { DatabaseAttrs, GalleryView } from "../types/types";
 import "./database-gallery-node-view.scss";
 
 const CARD_SIZES = {
-  small: 160,
-  medium: 220,
-  large: 280,
+  small: 200,
+  medium: 260,
+  large: 300,
 } as const;
 
 export function DatabaseGalleryNodeView({

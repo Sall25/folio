@@ -1,0 +1,81 @@
+.math-inline {
+  display: inline;
+
+  &__display {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 2px;
+    border-radius: var(--tt-radius-xs);
+    cursor: pointer;
+    transition: background 0.1s;
+
+    &:hover {
+      background: var(--tt-gray-light-a-100);
+    }
+  }
+
+  &--selected &__display {
+    background: var(--tt-selection-color);
+  }
+
+  &__display--empty {
+    padding: 0 4px;
+  }
+
+  &__placeholder {
+    color: var(--tt-gray-light-500);
+    font-size: 0.9em;
+  }
+
+  &__error {
+    color: var(--tt-color-red-base);
+  }
+
+  &__error-text {
+    color: var(--tt-color-red-base);
+    font-size: 0.85rem;
+    font-family: monospace;
+  }
+
+  &__pop {
+    width: 360px;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  &__preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--tt-border-color);
+    overflow-x: auto;
+  }
+
+  &__preview-empty {
+    color: var(--tt-gray-light-500);
+    font-size: 0.85rem;
+  }
+
+  &__input {
+    width: 100%;
+    border: none;
+    outline: none;
+    padding: 9px 12px;
+    background: var(--tt-gray-light-50);
+    color: var(--tt-paragraph-text-color);
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    caret-color: var(--tt-cursor-color);
+  }
+}
+
+.dark .math-inline {
+  &__display:hover {
+    background: var(--tt-gray-dark-a-100);
+  }
+  &__input {
+    background: var(--tt-gray-dark-100);
+  }
+}

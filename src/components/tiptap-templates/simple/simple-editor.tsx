@@ -51,7 +51,7 @@ function triggerMainEditorSync(mainEditor: Editor | null) {
 
 function SimpleEditorMain({ view }: { view: View }) {
   const { pages } = useActivePage();
-  const { versionHistoryOpen, onVersionHistoryOpenChanged, collapsed } =
+  const { versionHistoryOpen, onVersionHistoryOpenChanged/*, collapsed*/ } =
     useEditorLayout();
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
   const { setPeekPageId, peekPageId } = usePeekPage();
@@ -71,7 +71,7 @@ function SimpleEditorMain({ view }: { view: View }) {
             className="simple-editor-main"
             style={{
               marginRight: versionWidth,
-              paddingLeft: collapsed ? 80 : 0,
+              // paddingLeft: collapsed ? 80 : 0,
               transition: "margin-right 0.2s ease",
             }}
           >

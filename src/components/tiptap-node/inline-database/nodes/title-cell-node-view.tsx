@@ -216,7 +216,11 @@ export function TitleCellNodeView({
   // Cover block — only in board view with cardPreview === "cover"
   const coverBlock =
     isBoardView && cardPreview === "cover" ? (
-      <BoardCardCover page={linkedPage} recordId={node.attrs.id ?? ""} />
+      <BoardCardCover
+        page={linkedPage}
+        recordId={node.attrs.id ?? ""}
+        height={240}
+      />
     ) : null;
 
   const contentBlock =

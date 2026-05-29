@@ -1,7 +1,7 @@
 import type { NodeViewProps } from "@tiptap/core";
 import { NodeViewWrapper } from "@tiptap/react";
 import { ArrowUp } from "lucide-react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import {
@@ -10,10 +10,11 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import type { NumberCellAttrs } from "../types/types";
-import type { NumberFormat } from "../types/types";
-import { useCallback } from "react";
-import type { DatabaseAttrs } from "../types/types";
+import type {
+  NumberCellAttrs,
+  NumberFormat,
+  DatabaseAttrs,
+} from "../types/types";
 import "./number-cell-node-view.scss";
 import { useCellPageSync } from "../hooks/use-cell-page-sync";
 import { useIsPropertyHidden } from "../hooks/use-is-property-hidden";
@@ -24,74 +25,77 @@ function formatNumber(
   format: NumberFormat,
   prefix?: string,
   suffix?: string,
+  decimalPlaces?: "default" | number,
 ): string {
   if (value === null || value === undefined) return "";
 
-  let formatted: string;
+  const v =
+    decimalPlaces !== undefined && decimalPlaces !== "default"
+      ? Number(value.toFixed(decimalPlaces))
+      : value;
 
+  let formatted: string;
   switch (format) {
     case "number_with_commas":
-      formatted = value.toLocaleString();
+      formatted = v.toLocaleString();
       break;
     case "percent":
-      formatted = `${value}%`;
+      formatted = `${v}%`;
       break;
     case "dollar":
       formatted = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
-      }).format(value);
+      }).format(v);
       break;
     case "euro":
       formatted = new Intl.NumberFormat("en-EU", {
         style: "currency",
         currency: "EUR",
-      }).format(value);
+      }).format(v);
       break;
     case "pound":
       formatted = new Intl.NumberFormat("en-GB", {
         style: "currency",
         currency: "GBP",
-      }).format(value);
+      }).format(v);
       break;
     case "yen":
       formatted = new Intl.NumberFormat("ja-JP", {
         style: "currency",
         currency: "JPY",
-      }).format(value);
+      }).format(v);
       break;
     case "ruble":
       formatted = new Intl.NumberFormat("ru-RU", {
         style: "currency",
         currency: "RUB",
-      }).format(value);
+      }).format(v);
       break;
     case "rupee":
       formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
-      }).format(value);
+      }).format(v);
       break;
     case "won":
       formatted = new Intl.NumberFormat("ko-KR", {
         style: "currency",
         currency: "KRW",
-      }).format(value);
+      }).format(v);
       break;
     case "yuan":
       formatted = new Intl.NumberFormat("zh-CN", {
         style: "currency",
         currency: "CNY",
-      }).format(value);
+      }).format(v);
       break;
     default:
-      formatted = String(value);
-      break;
+      formatted = String(v);
   }
 
   if (prefix) formatted = `${prefix}${formatted}`;
   if (suffix) formatted = `${formatted}${suffix}`;
-
   return formatted;
 }
 
@@ -128,11 +132,31 @@ export function NumberCellNodeView({
   const syncPage = useCellPageSync(getPos, updateAttributes);
   const isHidden = useIsPropertyHidden(editor, getPos, node.attrs.propertyId);
 
+  const showAs = config?.showAs ?? "number";
+
+  // Max across the column — needed for bar/ring fill. Computed from siblings.
+  let columnMax = 0;
+  if (db && (showAs === "bar" || showAs === "ring")) {
+    db.forEach((record) => {
+      if (record.type.name !== "databaseRecord") return;
+      record.forEach((cell) => {
+        if (cell.attrs.propertyId !== attrs.propertyId) return;
+        const v = cell.attrs.value;
+        if (typeof v === "number" && v > columnMax) columnMax = v;
+      });
+    });
+  }
+
+  const value = attrs.value ?? 0;
+  const fraction =
+    columnMax > 0 ? Math.min(Math.max(value / columnMax, 0), 1) : 0;
+
   const displayValue = formatNumber(
     attrs.value,
     config?.format ?? "number",
     config?.prefix,
     config?.suffix,
+    config?.decimalPlaces,
   );
 
   function handleSave() {
@@ -145,12 +169,40 @@ export function NumberCellNodeView({
   if (isHidden)
     return <NodeViewWrapper as={"div"} style={{ display: "none" }} />;
 
+  const hasValue = attrs.value !== null && attrs.value !== undefined;
+
+  const triggerContent =
+    showAs === "bar" && hasValue ? (
+      <span className="db-cell-number__bar-wrap">
+        <span className="db-cell-number__bar-track">
+          <span
+            className="db-cell-number__bar-fill"
+            style={{ width: `${fraction * 100}%` }}
+          />
+        </span>
+        <span className="db-cell-number__bar-num">{displayValue}</span>
+      </span>
+    ) : showAs === "ring" && hasValue ? (
+      <span className="db-cell-number__ring-wrap">
+        <span
+          className="db-cell-number__ring"
+          style={
+            {
+              "--ring-deg": `${fraction * 360}deg`,
+            } as React.CSSProperties
+          }
+        />
+        <span className="db-cell-number__ring-num">{displayValue}</span>
+      </span>
+    ) : (
+      <span className="db-cell-number__display">{displayValue}</span>
+    );
+
   return (
     <NodeViewWrapper
       as="div"
       data-type="number-cell"
-      // className="db-td db-td--number"
-      className={`${activeViewType === "table" ? "db-td" : ""} multi-select-cell`}
+      className={`${activeViewType === "table" ? "db-td" : ""} db-td--number`}
       style={{ margin: 0 }}
     >
       <Popover
@@ -171,10 +223,10 @@ export function NumberCellNodeView({
             style={{
               background: "transparent",
               width: "100%",
-              justifyContent: "flex-start",
+              justifyContent: showAs === "number" ? "flex-start" : "flex-end",
             }}
           >
-            <span className="db-cell-number__display">{displayValue}</span>
+            {triggerContent}
           </Button>
         </PopoverTrigger>
         <PopoverContent side="bottom" align="start">

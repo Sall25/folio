@@ -19,9 +19,11 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  width: 100%;
+  width: 95%;
+  max-width: var(--db-editor-width);
   overflow-x: auto;
   min-width: 560px;
+  padding: 0 10px;
 }
 
 // ── Month navigation ──────────────────────────────────────────────────────────
