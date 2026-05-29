@@ -38,6 +38,62 @@ function matchesRule(record: Node, rule: FilterRule): boolean {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ruleValue = (rule as any).value;
 
+  // Array-valued cells (multi_select, relation, person): membership, not text
+  // if (Array.isArray(value)) {
+  //   const arr = value as unknown[];
+  //   if (op === "contains") return arr.includes(ruleValue);
+  //   if (op === "does_not_contain") return !arr.includes(ruleValue);
+  //   return false;
+  // }
+  if (Array.isArray(value)) {
+    const arr = value as unknown[];
+    const has = arr.some(
+      (x) => x === ruleValue || (x as { id?: unknown })?.id === ruleValue,
+    );
+    if (op === "contains") return has;
+    if (op === "does_not_contain") return !has;
+    return false;
+  }
+
+  // Date operators: normalize both sides to midnight so day-level
+  // comparisons don't fail on time-of-day or ISO-vs-yyyy-mm-dd mismatches
+  const DATE_OPS = new Set<FilterOperator>([
+    "is",
+    "is_before",
+    "is_after",
+    "is_on_or_before",
+    "is_on_or_after",
+  ]);
+  if (
+    (rule.propertyType === "date" ||
+      rule.propertyType === "created_time" ||
+      rule.propertyType === "edited_time") &&
+    DATE_OPS.has(op)
+  ) {
+    const toDay = (v: unknown): number | null => {
+      if (v == null || v === "") return null;
+      const d = new Date(String(v));
+      return isNaN(d.getTime())
+        ? null
+        : new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    };
+    const a = toDay(value);
+    const b = toDay(ruleValue);
+    if (a == null || b == null) return false;
+    switch (op) {
+      case "is":
+        return a === b;
+      case "is_before":
+        return a < b;
+      case "is_after":
+        return a > b;
+      case "is_on_or_before":
+        return a <= b;
+      case "is_on_or_after":
+        return a >= b;
+    }
+  }
+
   switch (op) {
     // Text operators
     case "contains":
@@ -75,15 +131,7 @@ function matchesRule(record: Node, rule: FilterRule): boolean {
     case "less_than_or_equal":
       return Number(value) <= Number(ruleValue);
 
-    // Date operators
-    case "is_before":
-      return new Date(String(value)) < new Date(String(ruleValue));
-    case "is_after":
-      return new Date(String(value)) > new Date(String(ruleValue));
-    case "is_on_or_before":
-      return new Date(String(value)) <= new Date(String(ruleValue));
-    case "is_on_or_after":
-      return new Date(String(value)) >= new Date(String(ruleValue));
+    // Date — is_within still handled here (operates on raw value)
     case "is_within": {
       const now = new Date();
       const d = new Date(String(value));

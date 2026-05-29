@@ -1,198 +1,138 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Check } from "lucide-react";
-import type {
-  DatabaseProperty,
-  DatabaseView,
-  BoardView,
-} from "../../types/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
   CardBody,
-  CardGroupLabel,
-  CardItemGroup,
+  CardFooter,
 } from "src/components/tiptap-ui-primitive/card";
-
-import { getTypeMeta } from "../../types/config";
+import { Separator } from "src/components/tiptap-ui-primitive/separator";
+import type {
+  DatabaseAttrs,
+  DatabaseView,
+  BoardView,
+  TableView,
+  ListView,
+  ID,
+} from "../../types/types";
 import { isGroupableProperty } from "../../types/types";
-import * as LucideIcons from "lucide-react";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// GroupPanel
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface GroupPanelProps {
-  view: DatabaseView;
-  properties: DatabaseProperty[];
-  onUpdateView: (patch: Partial<Omit<DatabaseView, "id" | "type">>) => void;
-}
+import type { UseDatabaseReturn } from "../../hooks/use-database";
+import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
+import "./group-panel.scss";
 
 export function GroupPanel({
-  view,
-  properties,
-  onUpdateView,
-}: GroupPanelProps) {
-  const groupableProps = properties.filter((p) =>
+  attrs,
+  db,
+  activeView,
+}: {
+  attrs: DatabaseAttrs;
+  db: UseDatabaseReturn;
+  activeView: DatabaseView | undefined;
+}) {
+  if (!activeView) return null;
+
+  const groupableProperties = attrs.properties.filter((p) =>
     isGroupableProperty(p.config.type),
   );
 
-  const currentGroupId =
-    view.type === "board" ? (view as BoardView).groupByPropertyId : null;
+  const groupByPropertyId =
+    activeView.type === "board"
+      ? (activeView as BoardView).groupByPropertyId
+      : activeView.type === "table"
+        ? ((activeView as TableView).groupByPropertyId ?? null)
+        : activeView.type === "list"
+          ? ((activeView as ListView).groupByPropertyId ?? null)
+          : null;
 
-  // For non-board views, grouping switches the view type to board
-  // For board views, it changes the groupBy property
-  const handleSelect = (propertyId: string) => {
-    if (view.type === "board") {
-      onUpdateView({ groupByPropertyId: propertyId } as any);
+  const showEmptyGroups =
+    activeView.type === "board"
+      ? (activeView as BoardView).showEmptyGroups
+      : ((activeView as TableView).showEmptyGroups ?? false);
+
+  function setGroup(propertyId: ID | null) {
+    if (activeView!.type === "board") {
+      db.updateView(activeView!.id, {
+        groupByPropertyId: propertyId ?? "",
+      } as Partial<BoardView>);
     } else {
-      // Signal to parent to switch view type to board with this groupBy
-      onUpdateView({ groupByPropertyId: propertyId } as any);
+      db.updateView(activeView!.id, {
+        groupByPropertyId: propertyId,
+        collapsedGroups: [],
+      } as Partial<TableView>);
     }
-  };
+  }
 
-  const handleClear = () => {
-    if (view.type === "board") {
-      onUpdateView({ groupByPropertyId: "" } as any);
-    }
-  };
+  function toggleShowEmpty() {
+    db.updateView(activeView!.id, {
+      showEmptyGroups: !showEmptyGroups,
+    } as Partial<TableView>);
+  }
 
   return (
-    <Card>
-      <CardBody style={{ minWidth: 260 }}>
-        <CardItemGroup>
-          <CardGroupLabel>Group by</CardGroupLabel>
-
-          {groupableProps.length === 0 ? (
-            <p
-              style={{
-                fontSize: 13,
-                color: "var(--tt-gray-light-a-400)",
-                padding: "4px 0",
-              }}
+    <Card className="db-group-panel">
+      <CardBody>
+        {groupableProperties.length === 0 ? (
+          <span className="db-panel__empty">
+            Add a select, status, or checkbox property to enable grouping
+          </span>
+        ) : (
+          <>
+            {/* No grouping option */}
+            <Button
+              variant="ghost"
+              style={{ justifyContent: "flex-start", width: "100%" }}
+              data-active-state={!groupByPropertyId ? "on" : "off"}
+              onClick={() => setGroup(null)}
             >
-              No groupable properties. Add a Select, Status, or Checkbox
-              property first.
-            </p>
-          ) : (
-            groupableProps.map((prop) => {
-              const meta = getTypeMeta(prop.config.type);
-              const Icon = (LucideIcons as any)[meta.icon];
-              const isSelected = currentGroupId === prop.id;
+              {!groupByPropertyId && (
+                <Check size={13} className="tiptap-button-icon" />
+              )}
+              <span className="tiptap-button-text">No grouping</span>
+            </Button>
 
+            <Separator orientation="horizontal" style={{ margin: "4px 0" }} />
+
+            {/* Groupable properties */}
+            {groupableProperties.map((p) => {
+              const Icon = PROPERTY_TYPE_ICONS[p.config.type];
+              const isActive = groupByPropertyId === p.id;
               return (
                 <Button
-                  key={prop.id}
+                  key={p.id}
                   variant="ghost"
-                  style={{
-                    width: "100%",
-                    height: 30,
-                    justifyContent: "flex-start",
-                    gap: 8,
-                  }}
-                  onClick={() => handleSelect(prop.id)}
+                  style={{ justifyContent: "flex-start", width: "100%" }}
+                  data-active-state={isActive ? "on" : "off"}
+                  onClick={() => setGroup(p.id)}
                 >
-                  <span
-                    style={{
-                      width: 16,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {isSelected && (
-                      <Check
-                        style={{ width: 13, height: 13 }}
-                        className="tiptap-button-icon"
-                      />
-                    )}
-                  </span>
-                  {Icon && (
-                    <Icon
-                      style={{ width: 13, height: 13 }}
-                      className="tiptap-button-icon"
-                    />
+                  {isActive ? (
+                    <Check size={13} className="tiptap-button-icon" />
+                  ) : (
+                    <Icon size={13} className="tiptap-button-icon" />
                   )}
-                  <span style={{ fontSize: 13, flex: 1, textAlign: "left" }}>
-                    {prop.name}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: "var(--tt-gray-light-a-400)",
-                    }}
-                  >
-                    {meta.label}
-                  </span>
+                  <span className="tiptap-button-text">{p.name}</span>
                 </Button>
               );
-            })
-          )}
-
-          {currentGroupId && (
-            <>
-              <div
-                style={{
-                  height: "0.5px",
-                  background: "var(--tt-border-color)",
-                  margin: "4px 0",
-                }}
-              />
-
-              {/* Show empty groups toggle — only relevant for board view */}
-              {view.type === "board" && (
-                <Button
-                  variant="ghost"
-                  style={{
-                    width: "100%",
-                    height: 30,
-                    justifyContent: "flex-start",
-                    gap: 8,
-                  }}
-                  onClick={() =>
-                    onUpdateView({
-                      showEmptyGroups: !(view as BoardView).showEmptyGroups,
-                    } as any)
-                  }
-                >
-                  <span
-                    style={{
-                      width: 16,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {(view as BoardView).showEmptyGroups && (
-                      <Check
-                        style={{ width: 13, height: 13 }}
-                        className="tiptap-button-icon"
-                      />
-                    )}
-                  </span>
-                  <span style={{ fontSize: 13 }}>Show empty groups</span>
-                </Button>
-              )}
-
-              <Button
-                variant="ghost"
-                style={{
-                  width: "100%",
-                  height: 30,
-                  justifyContent: "flex-start",
-                  gap: 8,
-                  color: "var(--tt-color-text-red)",
-                }}
-                onClick={handleClear}
-              >
-                <span style={{ width: 16 }} />
-                <span style={{ fontSize: 13 }}>Remove grouping</span>
-              </Button>
-            </>
-          )}
-        </CardItemGroup>
+            })}
+          </>
+        )}
       </CardBody>
+
+      {groupByPropertyId && (
+        <CardFooter>
+          <Button
+            variant="ghost"
+            style={{
+              justifyContent: "flex-start",
+              width: "100%",
+              fontSize: 12,
+            }}
+            onClick={toggleShowEmpty}
+          >
+            <span className="tiptap-button-text">
+              {showEmptyGroups ? "Hide empty groups" : "Show empty groups"}
+            </span>
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

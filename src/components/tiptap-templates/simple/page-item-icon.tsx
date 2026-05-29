@@ -1,7 +1,7 @@
 // page-item-icon.tsx
 
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
-import { File } from "lucide-react";
+import { FileText } from "lucide-react";
 import type { Page } from "./types";
 import type { CSSProperties } from "react";
 
@@ -40,7 +40,7 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
             strokeWidth={2}
           />
         ) : (
-          <File
+          <FileText
             stroke={
               !cover.color || cover.color === "var(--tt-text-color)"
                 ? "var(--tt-theme-text)"
@@ -56,7 +56,7 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
 
   return (
     <span className="page-icon" style={{ ...styles }} aria-hidden="true">
-      <File size={18} strokeWidth={1.5} />
+      <FileText size={18} strokeWidth={1.5} />
     </span>
   );
 }

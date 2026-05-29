@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Space+Grotesk:wght@500&display=swap");
-
 .logo {
   display: flex;
   align-items: center;
@@ -12,7 +10,8 @@
     width: 24px;
     height: 24px;
     flex-shrink: 0;
-    background: linear-gradient(135deg, #7B5EA7, #4B6FD4);
+    background: linear-gradient(90deg, #656464 0%, #414141 100%);
+    // background: linear-gradient(135deg, #7B5EA7, #4B6FD4);
     border-radius: 7px;
     display: flex;
     align-items: center;
@@ -34,11 +33,12 @@
 
   &__name {
     font-family: "Fraunces", serif;
-    font-size: 20px;
-    font-weight: 600;
+    font-size: 24px;
+    font-weight: 300;
     letter-spacing: -0.4px;
     line-height: 1;
-    background: linear-gradient(135deg, #7B5EA7, #4B6FD4);
+    background-color: var(--tt-theme-text);
+    // background: linear-gradient(90deg, #656464 0%, #414141 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

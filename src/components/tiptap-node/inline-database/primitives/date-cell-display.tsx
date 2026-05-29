@@ -25,7 +25,7 @@ export function DateCellDisplay({
   );
 
   // Always derive the displayed date from the prop — stays in sync
-  const date = value ? new Date(value) : undefined;
+  const date = value ? new Date(value) : new Date();
 
   function handleDateChange(d: Date) {
     setDraft(d);
@@ -44,10 +44,10 @@ export function DateCellDisplay({
         fontSize: 15,
         fontWeight: 400,
         lineHeight: 1.6,
-        color: "var(--tt-text-color)",
+        color: "var(--tt-theme-text)",
       }}
     >
-      <span>{date ? formatDate(date) : ""}</span>
+      <span>{formatDate(date)}</span>
     </Button>
   );
 

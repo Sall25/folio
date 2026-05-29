@@ -29,12 +29,14 @@ import { UnwrapPropertyButton } from "../unwrap-property-button";
 import { HidePropertyButton } from "../hide-property-button";
 import { useResizableNode } from "src/components/tiptap-node/figure-node";
 import FormulaEditor from "../formula-editor/formula-editor";
+import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
   const [open, setOpen] = useState(false);
 
   const { db, attrs } = useDatabaseContext();
   const Icon = PROPERTY_TYPE_ICONS[prop.config.type];
   const { nodeRef, handleResizeStart, isResizing } = useResizableNode();
+  const [name, setName] = useState(prop.name);
 
   useEffect(() => {
     if (!isResizing || !nodeRef) return;
@@ -73,25 +75,57 @@ export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
               justifyContent: "flex-start",
               overflow: "hidden",
               background: "transparent",
+              fontSize: 15,
+              color: "var(--tt-text-color)",
             }}
           >
             <Icon
               className="tiptap-button-icon"
-              style={{ width: 18, height: 16 }}
+              // fill="var(--tt-text-secondary)"
+              style={{ width: 20, height: 18 }}
             />
             <span className="tiptap-button-text">{prop.name}</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent side="bottom" align="start">
-          <Card style={{ padding: "5px 10px" }}>
+          <Card
+            style={{
+              padding: "5px 10px",
+              boxShadow: "var(--tt-shadow-elevated-sm)",
+              minWidth: 260,
+            }}
+          >
             <CardHeader>
               <CardGroupLabel>Edit Property</CardGroupLabel>
             </CardHeader>
             <CardBody>
-              {prop.config.type !== "title" && (
-                <CardItemGroup>
-                  <PropertyEditPopover>
-                    {prop.config.type === "select" && (
+              <CardItemGroup>
+                <CardItemGroup orientation="horizontal">
+                  <Button variant="ghost">
+                    <Icon className="tiptap-button-icon" />
+                  </Button>
+                  <TextareaAutosize
+                    cols={30}
+                    maxRows={1}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onBlur={() =>
+                      db.updateProperty(prop.id, {
+                        ...prop,
+                        name: name,
+                      })
+                    }
+                    onSubmit={() =>
+                      db.updateProperty(prop.id, {
+                        ...prop,
+                        name: name,
+                      })
+                    }
+                  />
+                </CardItemGroup>
+                <PropertyEditPopover>
+                  {prop.config.type === "select" ||
+                    (prop.config.type === "multi_select" && (
                       <SelectOptionsEditor
                         options={prop.config.options}
                         onEditOption={(option) =>
@@ -101,7 +135,7 @@ export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
                               ...prop.config,
                               options: (
                                 prop.config as {
-                                  type: "select";
+                                  type: typeof prop.config.type;
                                   options: SelectOption[];
                                 }
                               ).options.map((o) =>
@@ -123,41 +157,35 @@ export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
                           })
                         }
                       />
-                    )}
-                    {prop.config.type === "formula" && (
-                      <FormulaEditor
-                        propertyId={prop.id}
-                        properties={attrs.properties}
-                        onDone={() => setOpen(false)}
-                      />
-                    )}
-                  </PropertyEditPopover>
-                </CardItemGroup>
-              )}
-              {prop.config.type !== "title" && (
-                <>
-                  <CardItemGroup>
-                    <FreezePropertyButton
-                      isFrozen={db.isFrozen(db.activeView.id, prop.id)}
-                      onFreeze={() =>
-                        db.freezeProperty(db.activeView.id, prop.id)
-                      }
+                    ))}
+                  {prop.config.type === "formula" && (
+                    <FormulaEditor
+                      propertyId={prop.id}
+                      properties={attrs.properties}
+                      onDone={() => setOpen(false)}
                     />
-                    <HidePropertyButton
-                      onHide={() => db.hideProperty(db.activeView.id, prop.id)}
-                    />
-                    <UnwrapPropertyButton
-                      isUnwrapped={db.isUnwrapped(db.activeView.id, prop.id)}
-                      onUnwrap={() =>
-                        db.toggleUnwrapProperty(db.activeView.id, prop.id)
-                      }
-                    />
-                  </CardItemGroup>
-                  <Separator orientation="horizontal" />
-                </>
-              )}
+                  )}
+                </PropertyEditPopover>
+              </CardItemGroup>
+              <CardItemGroup>
+                <FreezePropertyButton
+                  isFrozen={db.isFrozen(db.activeView.id, prop.id)}
+                  onFreeze={() => db.freezeProperty(db.activeView.id, prop.id)}
+                />
+                <HidePropertyButton
+                  onHide={() => db.hideProperty(db.activeView.id, prop.id)}
+                />
+                <UnwrapPropertyButton
+                  isUnwrapped={db.isUnwrapped(db.activeView.id, prop.id)}
+                  onUnwrap={() =>
+                    db.toggleUnwrapProperty(db.activeView.id, prop.id)
+                  }
+                />
+              </CardItemGroup>
+
               {prop.config.type !== "title" && (
                 <CardItemGroup>
+                  <Separator orientation="horizontal" />
                   <DuplicatePropertyButton onDuplicate={() => {}} />
                   <DeletePropertyButton
                     onDelete={() => db.deleteProperty(prop.id)}

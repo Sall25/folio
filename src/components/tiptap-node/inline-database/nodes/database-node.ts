@@ -101,7 +101,7 @@ declare module "@tiptap/core" {
 export const DatabaseNode = Node.create({
   name: "database",
   group: "block",
-  content: "databaseRecord+", // at least one record always
+  content: "databaseRecord*",
   atom: false,
   selectable: true,
   draggable: true,

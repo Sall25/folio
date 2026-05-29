@@ -33,6 +33,7 @@ export function SelectCellDisplay({
         width: "fit-content",
         justifyContent: "center",
         borderRadius: "var(--tt-radius-sm)",
+        color: "var(--tt-theme-text)",
       }}
     >
       <span className="tiptap-button-text">{displayed.label}</span>

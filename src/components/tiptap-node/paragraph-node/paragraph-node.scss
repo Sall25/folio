@@ -47,11 +47,7 @@
   font-size: 1rem;
   line-height: 1.5;
   letter-spacing: 0em;
-  color: rgb(55, 53, 47);
-
-  .dark & {
-  color: rgba(255, 255, 255, 0.81);
-}
+  color: var(--tt-text-primary);
 
   &:not(.readonly):not(.ProseMirror-hideselection) {
     ::selection {

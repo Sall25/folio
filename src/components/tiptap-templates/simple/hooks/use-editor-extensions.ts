@@ -74,6 +74,7 @@ import { YoutubeExtension } from "src/components/tiptap-node/video-node";
 import { BookmarkNode } from "src/components/tiptap-node/bookmark-node/bookmark-node-extension";
 import { PageBreadcrumb } from "src/components/tiptap-ui/page-breadcrumb/page-breadcrumb";
 import { RecordPropertyPanelNode } from "src/components/tiptap-node/record-property-panel-node";
+import { PersonCellNode } from "src/components/tiptap-node/inline-database/nodes/person-cell-node";
 
 export function useEditorExtensions(
   refsRef: React.RefObject<EditorExtensionRefs>,
@@ -225,6 +226,7 @@ export function useEditorExtensions(
       StatusCellNode,
       NumberCellNode,
       PhoneCellNode,
+      PersonCellNode,
       RollupCellNode,
       TextCellNode,
       UrlCellNode,

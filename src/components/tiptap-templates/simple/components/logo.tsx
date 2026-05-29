@@ -7,7 +7,7 @@ interface LogoProps {
 export function Logo({ collapsed }: LogoProps) {
   return (
     <div className="logo">
-      <div className="logo__mark">
+      {/* <div className="logo__mark">
         <svg
           width="18"
           height="18"
@@ -17,7 +17,7 @@ export function Logo({ collapsed }: LogoProps) {
         >
           <path d="M4 2h10v2.5H6.5v3H13v2.5H6.5V16H4V2z" fill="white" />
         </svg>
-      </div>
+      </div> */}
 
       {!collapsed && (
         <div className="logo__wordmark">

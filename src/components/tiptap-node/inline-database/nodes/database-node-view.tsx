@@ -145,6 +145,7 @@ export function DatabaseNodeView(props: NodeViewProps) {
             />
           </div>
           <DatabaseTitleBar
+            hideTitle={attrs.hideTitle}
             title={attrs.title}
             onTitleChange={(title) => updateAttributes({ ...attrs, title })}
             onHideTitleChange={(hide) =>

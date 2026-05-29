@@ -1,23 +1,17 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
-  Filter,
   ArrowUpDown,
   Group,
   Eye,
   Search,
   Plus,
-  GripVertical,
-  Trash2,
-  Check,
   X,
   ChevronDown,
   ListFilter,
   EyeOff,
 } from "lucide-react";
-import { nanoid } from "nanoid";
 
-import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import {
@@ -27,34 +21,14 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import {
   Card,
-  CardHeader,
   CardBody,
   CardFooter,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 
-import type {
-  DatabaseAttrs,
-  DatabaseProperty,
-  DatabaseView,
-  BoardView,
-  ID,
-  SortRule,
-  PropertyConfig,
-  SelectOption,
-} from "../../types/types";
-import { isGroupableProperty } from "../../types/types";
+import type { DatabaseAttrs, DatabaseView } from "../../types/types";
 import type { UseDatabaseReturn } from "../../hooks/use-database";
-import {
-  OPERATORS_FOR_TYPE,
-  OPERATOR_LABEL,
-  NO_VALUE_OPERATORS,
-  type FilterOperator,
-  type FilterRule,
-  type FilterGroup,
-  type FilterGroupOperator,
-} from "../../types/filter-types";
-import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
+import { type FilterGroup } from "../../types/filter-types";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek-page-context";
@@ -66,6 +40,7 @@ import { DatabaseViewTabs } from "../database-view-tabs/database-view-tabs";
 import { FilterPanel } from "../filter-panel";
 import { SortPanel } from "../sort-panel";
 import { PropertiesPanel } from "../properties-panel";
+import { GroupPanel } from "../group-panel";
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface DatabaseToolbarProps {
@@ -84,103 +59,7 @@ function totalFilterRules(filters: FilterGroup[]): number {
   return filters.reduce((sum, g) => sum + g.rules.length, 0);
 }
 
-/** Build a new FilterRule with correct propertyType from a DatabaseProperty */
-function makeFilterRule(property: DatabaseProperty): FilterRule {
-  const type = property.config.type;
-  const operator = OPERATORS_FOR_TYPE[type]?.[0];
-
-  // Each branch satisfies the discriminated union
-  switch (type) {
-    case "number":
-      // case "rollup":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: type,
-        operator: operator as never,
-        value: 0,
-      };
-    case "checkbox":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: "checkbox",
-        operator: "is_checked",
-      };
-    case "date":
-    case "created_time":
-    case "edited_time":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: type,
-        operator: operator as never,
-        value: null,
-      };
-    case "select":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: "select",
-        operator: "is",
-        value: "",
-      };
-    case "multi_select":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: "multi_select",
-        operator: "contains",
-        value: "",
-      };
-    case "status":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: "status",
-        operator: "is",
-        value: "",
-      };
-    case "relation":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: "relation",
-        operator: "contains",
-        value: "",
-      };
-    case "formula":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: "formula",
-        operator: "contains",
-        value: "",
-      };
-    case "person":
-    case "created_by":
-    case "edited_by":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: type,
-        operator: "contains",
-        value: "",
-      };
-    default:
-      // title, text, url, email, phone
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: type as "title",
-        operator: "contains",
-        value: "",
-      };
-  }
-}
-
 // ── Toolbar root ───────────────────────────────────────────────────────────
-
 export function DatabaseToolbar({
   attrs,
   db,
@@ -227,6 +106,7 @@ export function DatabaseToolbar({
           attrs={attrs}
           db={db}
           onRename={() => onViewOptionsOpenChange(true)}
+          onUpdateAttributes={onUpdateAttributes}
         />
         <Spacer orientation="horizontal" />
 
@@ -447,12 +327,14 @@ export function DatabaseToolbar({
           </CardItemGroup>
         </CardItemGroup>
         {viewOptionsOpen && activeView && (
-          <ViewOptionsPopover
-            db={db}
-            view={activeView}
-            open={true}
-            onOpenChange={() => setViewOptionsOpen(false)}
-          />
+          <div style={{ position: "absolute", top: 25, right: 0, zIndex: 999 }}>
+            <ViewOptionsPopover
+              db={db}
+              view={activeView}
+              open={true}
+              onOpenChange={() => setViewOptionsOpen(false)}
+            />
+          </div>
         )}
       </CardItemGroup>
     </CardItemGroup>
@@ -501,359 +383,3 @@ function SearchButton({ db }: { db: UseDatabaseReturn }) {
     </Popover>
   );
 }
-function FilterRuleRow({
-  rule,
-  index,
-  groupOperator,
-  properties,
-  onChange,
-  onDelete,
-  onPropertyChange,
-}: {
-  rule: FilterRule;
-  index: number;
-  groupOperator: FilterGroupOperator;
-  properties: DatabaseProperty[];
-  onChange: (patch: Partial<FilterRule>) => void;
-  onDelete: () => void;
-  onPropertyChange: (propertyId: ID) => void;
-}) {
-  const operators = OPERATORS_FOR_TYPE[rule.propertyType] as FilterOperator[];
-  const needsValue = !NO_VALUE_OPERATORS.has(rule.operator);
-  const property = properties.find((p) => p.id === rule.propertyId);
-
-  return (
-    <div className="db-filter-rule">
-      <GripVertical size={13} className="db-filter-rule__drag" />
-
-      <span className="db-filter-rule__conjunction">
-        {index === 0 ? "Where" : groupOperator}
-      </span>
-
-      {/* Property picker */}
-      <select
-        className="db-select"
-        value={rule.propertyId}
-        onChange={(e) => onPropertyChange(e.target.value)}
-      >
-        {properties.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.name}
-          </option>
-        ))}
-      </select>
-
-      {/* Operator picker */}
-      <select
-        className="db-select"
-        value={rule.operator}
-        onChange={(e) =>
-          onChange({ operator: e.target.value as FilterOperator })
-        }
-      >
-        {operators.map((op) => (
-          <option key={op} value={op}>
-            {OPERATOR_LABEL[op]}
-          </option>
-        ))}
-      </select>
-
-      {/* Value input */}
-      {needsValue && property && (
-        <FilterValueInput rule={rule} property={property} onChange={onChange} />
-      )}
-
-      <button className="db-filter-rule__delete" onClick={onDelete}>
-        <Trash2 size={13} />
-      </button>
-    </div>
-  );
-}
-
-function FilterValueInput({
-  rule,
-  property,
-  onChange,
-}: {
-  rule: FilterRule;
-  property: DatabaseProperty;
-  onChange: (patch: Partial<FilterRule>) => void;
-}) {
-  const config = property.config;
-  const type = rule.propertyType;
-
-  if (type === "select" || type === "multi_select") {
-    const options =
-      "options" in config
-        ? (config as Extract<PropertyConfig, { options: SelectOption[] }>)
-            .options
-        : [];
-    return (
-      <select
-        className="db-select"
-        value={(rule.value as string) ?? ""}
-        onChange={(e) =>
-          onChange({ value: e.target.value } as Partial<FilterRule>)
-        }
-      >
-        <option value="">Select an option</option>
-        {options.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    );
-  }
-
-  if (type === "status") {
-    const groups =
-      "groups" in config
-        ? (config as { groups: { items: { id: ID; name: string }[] }[] }).groups
-        : [];
-    const options = groups.flatMap((g) => g.items);
-    return (
-      <select
-        className="db-select"
-        value={(rule.value as string) ?? ""}
-        onChange={(e) =>
-          onChange({ value: e.target.value } as Partial<FilterRule>)
-        }
-      >
-        <option value="">Select a status</option>
-        {options.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.name}
-          </option>
-        ))}
-      </select>
-    );
-  }
-
-  if (type === "number") {
-    return (
-      <input
-        className="db-input"
-        type="number"
-        value={(rule.value as number) ?? ""}
-        onChange={(e) =>
-          onChange({
-            value: e.target.value === "" ? 0 : Number(e.target.value),
-          } as Partial<FilterRule>)
-        }
-        placeholder="Value"
-      />
-    );
-  }
-
-  if (type === "date" || type === "created_time" || type === "edited_time") {
-    if (rule.operator === "is_within") {
-      const withinOptions = [
-        { value: "past_week", label: "Past week" },
-        { value: "past_month", label: "Past month" },
-        { value: "past_year", label: "Past year" },
-        { value: "next_week", label: "Next week" },
-        { value: "next_month", label: "Next month" },
-        { value: "next_year", label: "Next year" },
-        { value: "the_past_7_days", label: "The past 7 days" },
-        { value: "the_past_30_days", label: "The past 30 days" },
-      ];
-      return (
-        <select
-          className="db-select"
-          value={(rule.value as string) ?? ""}
-          onChange={(e) =>
-            onChange({ value: e.target.value } as Partial<FilterRule>)
-          }
-        >
-          {withinOptions.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      );
-    }
-    return (
-      <input
-        className="db-input"
-        type="date"
-        value={(rule.value as string) ?? ""}
-        onChange={(e) =>
-          onChange({ value: e.target.value } as Partial<FilterRule>)
-        }
-      />
-    );
-  }
-
-  // Default: text (title, text, url, email, phone, formula, relation, person)
-  return (
-    <input
-      className="db-input"
-      type="text"
-      value={(rule.value as string) ?? ""}
-      onChange={(e) =>
-        onChange({ value: e.target.value } as Partial<FilterRule>)
-      }
-      placeholder="Value"
-    />
-  );
-}
-
-// ── Group panel ────────────────────────────────────────────────────────────
-function GroupPanel({
-  attrs,
-  db,
-  activeView,
-}: {
-  attrs: DatabaseAttrs;
-  db: UseDatabaseReturn;
-  activeView: DatabaseView | undefined;
-}) {
-  if (!activeView) return null;
-
-  const groupByPropertyId =
-    activeView.type === "board"
-      ? (activeView as BoardView).groupByPropertyId
-      : null;
-
-  const groupableProperties = attrs.properties.filter((p) =>
-    isGroupableProperty(p.config.type),
-  );
-
-  function setGroup(propertyId: ID | null) {
-    if (activeView?.type !== "board") return;
-    if (propertyId === null) {
-      db.updateView(activeView.id, {
-        groupByPropertyId: "",
-      } as Partial<BoardView>);
-    } else {
-      db.updateView(activeView.id, {
-        groupByPropertyId: propertyId,
-      } as Partial<BoardView>);
-    }
-  }
-
-  return (
-    <Card>
-      <CardBody>
-        {activeView.type !== "board" ? (
-          <span className="db-panel__empty">
-            Switch to board view to enable grouping
-          </span>
-        ) : (
-          <>
-            <div className="db-group-option">
-              <button
-                className={`db-group-option__btn ${!groupByPropertyId ? "db-group-option__btn--active" : ""}`}
-                onClick={() => setGroup(null)}
-              >
-                {!groupByPropertyId && <Check size={13} />}
-                <span>No grouping</span>
-              </button>
-            </div>
-
-            <Separator />
-
-            {groupableProperties.map((p) => {
-              const Icon = PROPERTY_TYPE_ICONS[p.config.type];
-              const isActive = groupByPropertyId === p.id;
-              return (
-                <div key={p.id} className="db-group-option">
-                  <button
-                    className={`db-group-option__btn ${isActive ? "db-group-option__btn--active" : ""}`}
-                    onClick={() => setGroup(p.id)}
-                  >
-                    {isActive ? <Check size={13} /> : <Icon size={13} />}
-                    <span>{p.name}</span>
-                  </button>
-                </div>
-              );
-            })}
-
-            {groupableProperties.length === 0 && (
-              <span className="db-panel__empty">
-                Add a select, status, or checkbox property to enable grouping
-              </span>
-            )}
-          </>
-        )}
-      </CardBody>
-    </Card>
-  );
-}
-
-// ── Properties panel ───────────────────────────────────────────────────────
-
-// function PropertiesPanel({
-//   attrs,
-//   db,
-//   activeView,
-// }: {
-//   attrs: DatabaseAttrs;
-//   db: UseDatabaseReturn;
-//   activeView: DatabaseView | undefined;
-// }) {
-//   if (!activeView) return null;
-
-//   const hidden = new Set(activeView?.hiddenProperties);
-
-//   function toggleProperty(propertyId: ID) {
-//     const hiddenProperties = hidden.has(propertyId)
-//       ? [...hidden].filter((id) => id !== propertyId)
-//       : [...hidden, propertyId];
-//     if (!activeView) return;
-//     db.updateView(activeView?.id, { hiddenProperties });
-//   }
-
-//   function showAll() {
-//     if (!activeView) return;
-//     db.updateView(activeView?.id, { hiddenProperties: [] });
-//   }
-
-//   function hideAll() {
-//     const titleProp = attrs.properties.find((p) => p.config.type === "title");
-//     const hiddenProperties = attrs.properties
-//       .filter((p) => p.id !== titleProp?.id)
-//       .map((p) => p.id);
-//     if (!activeView) return;
-//     db.updateView(activeView?.id, { hiddenProperties });
-//   }
-
-//   return (
-//     <Card>
-//       <CardBody>
-//         {attrs.properties.map((p) => {
-//           const Icon = PROPERTY_TYPE_ICONS[p.config.type];
-//           const isTitle = p.config.type === "title";
-//           const isVisible = !hidden.has(p.id);
-
-//           return (
-//             <div key={p.id} className="db-property-row">
-//               <GripVertical size={13} className="db-property-row__drag" />
-//               <Icon size={13} className="db-property-row__icon" />
-//               <span className="db-property-row__name">{p.name}</span>
-//               <button
-//                 className={`db-property-row__toggle ${isVisible ? "db-property-row__toggle--on" : ""}`}
-//                 onClick={() => !isTitle && toggleProperty(p.id)}
-//                 disabled={isTitle}
-//                 aria-label={isVisible ? "Hide property" : "Show property"}
-//               >
-//                 <div className="db-property-row__toggle-thumb" />
-//               </button>
-//             </div>
-//           );
-//         })}
-//       </CardBody>
-
-//       <CardFooter>
-//         <Button variant="ghost" onClick={showAll}>
-//           Show all
-//         </Button>
-//         <Button variant="ghost" onClick={hideAll}>
-//           Hide all
-//         </Button>
-//       </CardFooter>
-//     </Card>
-//   );
-// }

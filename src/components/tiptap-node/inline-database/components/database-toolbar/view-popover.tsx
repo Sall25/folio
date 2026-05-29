@@ -3,7 +3,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import type { DatabaseView } from "../../types/types";
+import type { DatabaseAttrs, DatabaseView } from "../../types/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card } from "src/components/tiptap-ui-primitive/card";
 import {
@@ -32,6 +32,7 @@ interface ViewNamePopoverProps {
   onDelete?: () => void;
   canDelete?: boolean;
   active?: boolean;
+  attrs: DatabaseAttrs;
 }
 
 export function ViewPopover({
@@ -45,6 +46,7 @@ export function ViewPopover({
   onDelete,
   canDelete = true,
   active = false,
+  attrs,
 }: ViewNamePopoverProps) {
   const [open, setOpen] = useState(false);
   return (
@@ -54,9 +56,8 @@ export function ViewPopover({
           data-active-state={active ? "on" : "off"}
           variant="ghost"
           style={{
-            borderRadius: "var(--tt-radius-sm)",
-            minHeight: 22,
-            height: 22,
+            borderRadius: "var(--tt-radius-xl)",
+            padding: "5px 15px",
           }}
         >
           <ViewIcon view={view} />
@@ -119,18 +120,20 @@ export function ViewPopover({
             <Maximize2 className="tiptap-button-icon" />
             <span className="tiptap-button-text">Open as full page</span>
           </Button>
-          <Button
-            variant="ghost"
-            className="action-button"
-            onClick={() => {
-              onShowDatabaseTitle?.();
-              setOpen(false);
-            }}
-            style={{ width: "100%", justifyContent: "flex-start" }}
-          >
-            <Eye className="tiptap-button-icon" />
-            <span className="tiptap-button-text">Show database title</span>
-          </Button>
+          {attrs.hideTitle && (
+            <Button
+              variant="ghost"
+              className="action-button"
+              onClick={() => {
+                onShowDatabaseTitle?.();
+                setOpen(false);
+              }}
+              style={{ width: "100%", justifyContent: "flex-start" }}
+            >
+              <Eye className="tiptap-button-icon" />
+              <span className="tiptap-button-text">Show database title</span>
+            </Button>
+          )}
           <Separator orientation="horizontal" className="sep" />
           <Button
             variant="ghost"

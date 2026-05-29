@@ -17,6 +17,7 @@ interface DatabaseViewTabsProps {
   attrs: DatabaseAttrs;
   db: UseDatabaseReturn;
   onRename: () => void;
+  onUpdateAttributes?: (attrs: DatabaseAttrs) => void;
 }
 
 const VIEW_TYPES: { type: DatabaseView["type"]; label: string }[] = [
@@ -32,6 +33,7 @@ export function DatabaseViewTabs({
   attrs,
   db,
   onRename,
+  onUpdateAttributes,
 }: DatabaseViewTabsProps) {
   const [open, setOpen] = useState(false);
 
@@ -42,11 +44,15 @@ export function DatabaseViewTabs({
         return isActive ? (
           <ViewPopover
             key={view.id}
+            attrs={attrs}
             view={view}
             onRename={onRename}
             onDelete={() => db.deleteView(view.id)}
             canDelete={attrs.views.length > 1}
             active={isActive}
+            onShowDatabaseTitle={() =>
+              onUpdateAttributes?.({ ...attrs, hideTitle: false })
+            }
           />
         ) : (
           <Button
@@ -54,9 +60,9 @@ export function DatabaseViewTabs({
             key={view.id}
             onClick={() => db.setActiveView(view.id)}
             style={{
-              borderRadius: "var(--tt-radius-sm)",
-              minHeight: 22,
-              height: 22,
+              borderRadius: "var(--tt-radius-xl)",
+              minWidth: 32,
+              minHeight: 26,
             }}
           >
             <ViewIcon view={view} />

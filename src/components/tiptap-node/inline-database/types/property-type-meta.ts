@@ -16,6 +16,7 @@ import {
   Phone,
   Mail,
   Sigma,
+  List,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { PropertyType, PropertyTypeMeta, PropertyConfig } from "./types";
@@ -31,7 +32,7 @@ export const PROPERTY_TYPE_ICONS: Record<PropertyType, LucideIcon> = {
   number: Hash,
   checkbox: CheckSquare,
   select: CircleChevronDown,
-  multi_select: CircleChevronDown,
+  multi_select: List,
   status: Loader,
   date: Calendar,
   person: User,

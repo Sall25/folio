@@ -7,6 +7,7 @@ import { EditorLayoutProvider } from "./components/tiptap-templates/simple/conte
 import { SimpleEditorSidebar } from "./components/tiptap-templates/simple/simple-editor-sidebar";
 import { ActivePageProvider } from "./components/tiptap-templates/simple/context/active-page-provider";
 import { CreatePageProvider } from "./components/tiptap-templates/simple/context/create-page-provider";
+import { PeekPageProvider } from "./components/tiptap-templates/simple/context/peek-page-provider";
 
 const client = new QueryClient();
 
@@ -14,16 +15,18 @@ function App() {
   return (
     <QueryClientProvider client={client}>
       <EditorLayoutProvider>
-        <EditorProvider>
-          <CreatePageProvider>
-            <Router location={location} routes={routes}>
-              <ActivePageProvider>
-                <SimpleEditorSidebar />
-                <Outlet />
-              </ActivePageProvider>
-            </Router>
-          </CreatePageProvider>
-        </EditorProvider>
+        <PeekPageProvider>
+          <EditorProvider>
+            <CreatePageProvider>
+              <Router location={location} routes={routes}>
+                <ActivePageProvider>
+                  <SimpleEditorSidebar />
+                  <Outlet />
+                </ActivePageProvider>
+              </Router>
+            </CreatePageProvider>
+          </EditorProvider>
+        </PeekPageProvider>
       </EditorLayoutProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

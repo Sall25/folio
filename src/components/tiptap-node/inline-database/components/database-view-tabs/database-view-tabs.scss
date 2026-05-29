@@ -1,7 +1,7 @@
 .db-view-tabs {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   overflow-x: auto;
   max-width: 400px;
   scrollbar-width: none;
@@ -12,8 +12,8 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 8px;
-  border-radius: var(--tt-radius-sm);
+  padding: 10px 8px;
+  border-radius: var(--tt-radius-lg);
   border: none;
   background: transparent;
   cursor: pointer;

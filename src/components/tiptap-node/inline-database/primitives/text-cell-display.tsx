@@ -62,7 +62,7 @@ export function TextCellDisplay({
       <span
         className="tiptap-button-text"
         style={{
-          color: value ? "var(--tt-text-color)" : "var(--tt-text-color)",
+          color: value ? "var(--tt-theme-text)" : "var(--tt-text-color)",
         }}
       >
         {value || placeholder}

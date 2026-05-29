@@ -50,6 +50,10 @@ export function TitleCellNodeView({
     }
     return null;
   });
+  const page =
+    titleAttrs.pageId !== null && pages
+      ? findPage(pages, titleAttrs.pageId)
+      : null;
 
   useEffect(() => {
     const handler = () => {
@@ -231,100 +235,118 @@ export function TitleCellNodeView({
       {contentBlock}
       <CardItemGroup
         orientation="horizontal"
-        className="db-cell-title"
-        onClick={() => setEditing(true)}
         onMouseOver={() => setShouldShow(true)}
         onMouseLeave={() => setShouldShow(false)}
+        style={{ width: "100%" }}
       >
-        {editing ? (
-          <input
-            style={{ width: "100%" }}
-            autoFocus={true}
-            placeholder="New Page"
-            value={textContent}
-            onChange={(e) => {
-              setTextContent(e.target.value);
-            }}
-            onBlur={() => setEditing(false)}
-            className="title-cell-input"
-            onKeyDown={(e) => {
-              if (e.key !== "Enter") return;
-              if (!textContent.trim()) return;
-              const pos = getPos?.();
-              if (pos == null) return;
-              const { tr } = editor.state;
-              tr.insertText(textContent, pos + 1, pos + 1 + node.content.size);
-              editor.view.dispatch(tr);
-              if (!pages || !titleAttrs.pageId) return;
-              const page = findPage(pages, titleAttrs.pageId);
-              if (!page) return;
-              // Update the title node inside the page content
-              const content = page.content as JSONContent;
-              const updatedContent: JSONContent = {
-                ...content,
-                content: content.content?.map((node, i) => {
-                  if (i !== 0) return node; // only touch the first node (the title)
-                  return {
-                    ...node,
-                    content: [{ type: "text", text: textContent }],
-                  };
-                }),
-              };
-              if (!content.content?.length) {
-                updatePageAsync({ ...page, title: textContent });
-                return;
-              }
+        <CardItemGroup
+          orientation="horizontal"
+          className="db-cell-title"
+          onClick={() => setEditing(true)}
+        >
+          {editing ? (
+            <input
+              style={{ width: "100%" }}
+              autoFocus={true}
+              placeholder="New Page"
+              value={textContent}
+              onChange={(e) => {
+                setTextContent(e.target.value);
+              }}
+              onBlur={() => setEditing(false)}
+              className="title-cell-input"
+              onKeyDown={(e) => {
+                if (e.key !== "Enter") return;
+                if (!textContent.trim()) return;
+                const pos = getPos?.();
+                if (pos == null) return;
+                const { tr } = editor.state;
+                tr.insertText(
+                  textContent,
+                  pos + 1,
+                  pos + 1 + node.content.size,
+                );
+                editor.view.dispatch(tr);
+                if (!pages || !titleAttrs.pageId) return;
+                const page = findPage(pages, titleAttrs.pageId);
+                if (!page) return;
+                // Update the title node inside the page content
+                const content = page.content as JSONContent;
+                const updatedContent: JSONContent = {
+                  ...content,
+                  content: content.content?.map((node, i) => {
+                    if (i !== 0) return node; // only touch the first node (the title)
+                    return {
+                      ...node,
+                      content: [{ type: "text", text: textContent }],
+                    };
+                  }),
+                };
+                if (!content.content?.length) {
+                  updatePageAsync({ ...page, title: textContent });
+                  return;
+                }
 
-              setEditing(false);
+                setEditing(false);
 
-              updatePageAsync({
-                ...page,
-                title: textContent,
-                content: updatedContent,
-              });
-            }}
-          />
-        ) : (
-          <Button
-            variant="ghost"
-            style={{
-              background: "transparent",
-              width: "100%",
-              justifyContent: "flex-start",
-              color: "var(--tt-paragraph-text-color)",
-            }}
-            onClick={() => setEditing(true)}
-          >
-            {templatePage && (
-              <PageItemIcon
-                cover={templatePage.cover}
-                styles={{ width: 16, height: 16 }}
-              />
-            )}
-            <span>{node.textContent || "New Page"}</span>
-          </Button>
-        )}
-        {shouldShow && !editing && (
-          <>
-            <Spacer orientation="horizontal" />
+                updatePageAsync({
+                  ...page,
+                  title: textContent,
+                  content: updatedContent,
+                });
+              }}
+            />
+          ) : (
             <Button
+              variant="ghost"
               style={{
-                minHeight: 18,
-                height: 24,
-                padding: "0px !important",
-                borderRadius: "var(--tt-radius-sm)",
-                opacity: `${titleAttrs.pageId !== null && shouldShow ? 1 : 0}`,
-                transition: "opacity 0.15s ease",
+                background: "transparent",
+                width: "100%",
+                justifyContent: "flex-start",
+                color: "var(--tt-theme-text)",
+                fontWeight: 500,
               }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setPeekPageId(titleAttrs.pageId);
-              }}
+              onClick={() => setEditing(true)}
             >
-              <PanelRightOpen className="tiptap-button-icon" size={12} />
-              <span className="tiptap-button-text">Open</span>
+              {templatePage ? (
+                <PageItemIcon
+                  cover={templatePage.cover}
+                  styles={{ width: 16, height: 16 }}
+                />
+              ) : (
+                <>
+                  {page && (
+                    <PageItemIcon
+                      cover={page.cover}
+                      styles={{ width: 16, height: 16 }}
+                    />
+                  )}
+                </>
+              )}
+              <span>{node.textContent || "New Page"}</span>
             </Button>
-          </>
+          )}
+        </CardItemGroup>
+        <Spacer orientation="horizontal" />
+        {shouldShow && !editing && (
+          <Button
+            style={{
+              minHeight: 18,
+              height: 24,
+              padding: "0px !important",
+              borderRadius: "var(--tt-radius-sm)",
+              opacity: `${titleAttrs.pageId !== null && shouldShow ? 1 : 0}`,
+              transition: "opacity 0.15s ease",
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log("should open");
+              setPeekPageId(titleAttrs.pageId);
+            }}
+          >
+            <PanelRightOpen className="tiptap-button-icon" size={12} />
+            <span className="tiptap-button-text">Open</span>
+          </Button>
         )}
       </CardItemGroup>
     </NodeViewWrapper>

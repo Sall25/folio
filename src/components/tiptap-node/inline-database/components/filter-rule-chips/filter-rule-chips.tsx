@@ -80,7 +80,7 @@ function makeFilterRule(property: DatabaseProperty): FilterRule {
         id: nanoid(),
         propertyId: property.id,
         propertyType: "multi_select",
-        operator: "contains",
+        operator: OPERATORS_FOR_TYPE["multi_select"][0] as never,
         value: "",
       };
     case "status":
@@ -264,10 +264,14 @@ function FilterChip({
             height: 24,
             minHeight: 24,
             color: "var(--tt-brand-color-400)",
+            fontSize: 12,
           }}
         >
           {Icon && (
-            <Icon className="tiptap-button-icon" style={{ color: "inherit" }} />
+            <Icon
+              className="tiptap-button-icon"
+              style={{ color: "inherit", width: 12.5 }}
+            />
           )}
           <span className="tiptap-button-text db-filter-chip__prop">
             {propLabel}

@@ -164,6 +164,8 @@ function NavItems() {
             borderRadius: "var(--tt-radius-xl)",
             background: "var(--tt-button-hover-bg-color)",
             padding: 2,
+            width: 19,
+            height: 19,
           }}
         />
         <Spacer orientation="horizontal" size={4} />

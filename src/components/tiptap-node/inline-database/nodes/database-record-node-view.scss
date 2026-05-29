@@ -1,0 +1,77 @@
+.db-group-record-wrapper {
+  display: block;
+}
+
+.db-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px 4px;
+  border-bottom: 1px solid var(--tt-border-color);
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--tt-theme-muted);
+    border-radius: var(--tt-radius-sm);
+    flex-shrink: 0;
+    transition: background 100ms;
+
+    &:hover {
+      background: var(--tt-button-hover-bg-color);
+      color: var(--tt-text-color);
+    }
+  }
+
+  &__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--tt-text-color);
+  }
+
+  &__count {
+    font-size: 11px;
+    color: var(--tt-theme-muted);
+    background: var(--tt-button-hover-bg-color);
+    border-radius: 99px;
+    padding: 1px 6px;
+    font-weight: 500;
+  }
+
+  &__add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--tt-theme-muted);
+    border-radius: var(--tt-radius-sm);
+    opacity: 0;
+    transition: opacity 100ms, background 100ms;
+
+    &:hover {
+      background: var(--tt-button-hover-bg-color);
+      color: var(--tt-text-color);
+    }
+  }
+
+  &:hover &__add {
+    opacity: 1;
+  }
+}

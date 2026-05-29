@@ -40,6 +40,7 @@ export function MultiSelectCellDisplay({
         minHeight: 34,
         flexWrap: "nowrap",
         overflow: "hidden",
+        borderRadius: "var(--tt-radius-sm)",
       }}
     >
       {value.length > 0 ? (
@@ -47,7 +48,12 @@ export function MultiSelectCellDisplay({
           <Button
             key={v.id}
             variant="ghost"
-            style={{ background: v.color, minHeight: 18, height: 20 }}
+            style={{
+              background: v.color,
+              minHeight: 18,
+              height: 20,
+              borderRadius: "var(--tt-radius-sm)",
+            }}
           >
             <span className="tiptap-button-text">{v.label}</span>
           </Button>

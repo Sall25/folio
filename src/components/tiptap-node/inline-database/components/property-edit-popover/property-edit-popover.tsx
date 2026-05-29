@@ -17,11 +17,13 @@ export function PropertyEditPopover({ children }: { children: ReactNode }) {
           <Settings2 className="tiptap-button-icon" />
           <span className="tiptap-button-text">Edit property</span>
           <Spacer />
-          <ChevronRight className="tiptap-button-sub" />
+          <ChevronRight className="tiptap-button-icon-sub" />
         </Button>
       </PopoverTrigger>
       <PopoverContent side="right" align="center">
-        <Card>{children}</Card>
+        <Card style={{ boxShadow: "var(--tt-shadow-elevated-sm)" }}>
+          {children}
+        </Card>
       </PopoverContent>
     </Popover>
   );

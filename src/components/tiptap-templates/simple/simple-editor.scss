@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Space+Grotesk:wght@500&display=swap");
 
 $font-inter: ui-sans-serif, -apple-system, BlinkMacSystemFont,
     "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif;
@@ -8,11 +9,25 @@ body {
   --tt-theme-text: rgb(44, 44, 43);
   --tt-text-color: rgb(95, 94, 89);
   --tt-theme-muted: rgba(0, 0, 0, 0.45);
+  --tt-text-primary: #2c2c2b;
+  --tt-text-secondary: #7d7a75;
+  --tt-text-tertiary: #7d7a75;
+  --tt-icon-primary: #e6e5e3;
+  --tt-icon-secondary:#ada9a3;
+  --tt-icon-tertiary:#7d7a75;
+  
+
 
   .dark & {
-    --tt-theme-text: rgb(240, 239, 237);
-    --tt-text-color: var(--tt-gray-light-400);
-     --tt-theme-muted: rgba(255, 255, 255, 0.4);
+    --tt-text-primary:#f0efed;
+    --tt-text-secondary:#ada9a3;
+    --tt-text-tertiary: #7d7a75;
+    --tt-icon-primary: #383836;
+    --tt-icon-secondary:#8e8b86;
+    --tt-icon-tertiary:#ada9a3; 
+    --tt-theme-text:  #f0efed;
+    --tt-text-color: #ada9a3;
+    --tt-theme-muted: #7d7a75;
   }
 }
 

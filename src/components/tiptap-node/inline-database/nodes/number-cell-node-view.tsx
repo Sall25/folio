@@ -17,6 +17,7 @@ import type { DatabaseAttrs } from "../types/types";
 import "./number-cell-node-view.scss";
 import { useCellPageSync } from "../hooks/use-cell-page-sync";
 import { useIsPropertyHidden } from "../hooks/use-is-property-hidden";
+import { useActiveViewType } from "../hooks/use-active-view-type";
 
 function formatNumber(
   value: number | null,
@@ -107,6 +108,7 @@ export function NumberCellNodeView({
       ? String(attrs.value)
       : "",
   );
+  const activeViewType = useActiveViewType(editor, getPos);
 
   const getParentDatabase = useCallback(() => {
     const pos = getPos?.();
@@ -147,7 +149,8 @@ export function NumberCellNodeView({
     <NodeViewWrapper
       as="div"
       data-type="number-cell"
-      className="db-td db-td--number"
+      // className="db-td db-td--number"
+      className={`${activeViewType === "table" ? "db-td" : ""} multi-select-cell`}
       style={{ margin: 0 }}
     >
       <Popover

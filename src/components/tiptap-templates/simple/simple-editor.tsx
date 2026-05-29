@@ -18,7 +18,6 @@ import { VersionHistorySidebar } from "src/components/tiptap-ui/version-history/
 import { HomePageContent } from "./components";
 import { useActivePage } from "./use-active-page";
 import EditorSkeleton from "./editor-skeleton";
-import { PeekPageProvider } from "./context/peek-page-provider";
 import { PagePeekView } from "./page-peek-view";
 import { PageCreateModal } from "./page-create-modal";
 import { useCreatePage } from "./context/create-page-context";
@@ -129,21 +128,19 @@ function SimpleEditorInner({ view }: { view: View }) {
     <div className="simple-editor-wrapper">
       <NotificationProvider>
         <ToastProvider>
-          <PeekPageProvider>
-            <SimpleEditorToolbar
-              view={view}
-              toolbarRef={toolbarRef as RefObject<HTMLDivElement>}
-              isMobile={isMobile}
-              mobileView={mobileView}
-              height={height}
-              rectY={0}
-              onMobileViewChange={setMobileView}
-              sidebarWidth={sidebarWidth}
-              versionSidebarWidth={versionWidth}
-              onTriggerVersionHistory={() => onVersionHistoryOpenChanged(true)}
-            />
-            <SimpleEditorMain view={view} />
-          </PeekPageProvider>
+          <SimpleEditorToolbar
+            view={view}
+            toolbarRef={toolbarRef as RefObject<HTMLDivElement>}
+            isMobile={isMobile}
+            mobileView={mobileView}
+            height={height}
+            rectY={0}
+            onMobileViewChange={setMobileView}
+            sidebarWidth={sidebarWidth}
+            versionSidebarWidth={versionWidth}
+            onTriggerVersionHistory={() => onVersionHistoryOpenChanged(true)}
+          />
+          <SimpleEditorMain view={view} />
         </ToastProvider>
       </NotificationProvider>
     </div>

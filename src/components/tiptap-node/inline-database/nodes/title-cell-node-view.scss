@@ -13,14 +13,19 @@
   padding: 0;
   gap: 6px;
   cursor: text;
-
+  
   &__text {
     flex: 1;
     min-width: 0;
+    font-size: 15.5px;
+    line-height: 1.5;
+    overflow: clip;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
     font-size: inherit;
+    font-weight: 500;
   }
 
   &__placeholder {

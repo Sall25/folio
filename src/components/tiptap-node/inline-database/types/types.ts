@@ -305,6 +305,17 @@ export interface TableView extends BaseView {
   propertyOrder: ID[];
   frozenPropertyId?: ID | null;
   unwrappedProperties?: ID[];
+  groupByPropertyId?: ID | null;
+  collapsedGroups?: string[]; // group value keys that are collapsed
+  showEmptyGroups?: boolean;
+}
+
+export interface ListView extends BaseView {
+  type: "list";
+  visibleProperties: ID[];
+  groupByPropertyId?: ID | null;
+  collapsedGroups?: string[];
+  showEmptyGroups?: boolean;
 }
 
 export interface BoardView extends BaseView {
@@ -312,11 +323,6 @@ export interface BoardView extends BaseView {
   groupByPropertyId: ID;
   showEmptyGroups: boolean;
   cardPreview?: "none" | "cover" | "content";
-}
-
-export interface ListView extends BaseView {
-  type: "list";
-  visibleProperties: ID[];
 }
 
 export interface GalleryView extends BaseView {
@@ -431,7 +437,8 @@ export function isGroupableProperty(type: PropertyType): boolean {
     type === "select" ||
     type === "status" ||
     type === "multi_select" ||
-    type === "checkbox"
+    type === "checkbox" ||
+    type === "person"
   );
 }
 
