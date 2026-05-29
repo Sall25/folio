@@ -36,6 +36,9 @@ import { FilterRuleChips } from "../components/filter-rule-chips";
 import { DatabaseTitleBar } from "../components/database-title-bar";
 import { DatabaseCalculations } from "../components/database-calculations";
 import type { Node } from "@tiptap/pm/model";
+import { Separator } from "src/components/tiptap-ui-primitive/separator";
+import { SortRuleChips } from "../components/sort-rule-chips/sort-rule-chips";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 type PropertyType = PropertyConfig["type"];
 
 const allPropertyTypes = [
@@ -152,7 +155,22 @@ export function DatabaseNodeView(props: NodeViewProps) {
               updateAttributes({ ...attrs, hideTitle: hide })
             }
           />
-          <FilterRuleChips attrs={attrs} db={db} activeView={db.activeView} />
+          <CardItemGroup orientation="horizontal">
+            <FilterRuleChips attrs={attrs} db={db} activeView={db.activeView} />
+            {db.activeView.sorts.length > 0 && (
+              <>
+                <Spacer orientation="horizontal" size={5} />
+                <Separator orientation="vertical" />
+                <Spacer orientation="horizontal" size={5} />
+              </>
+            )}
+            <SortRuleChips
+              attrs={attrs}
+              db={db}
+              activeView={db.activeView}
+              sorts={db.activeView.sorts}
+            />
+          </CardItemGroup>
           <div ref={tableRef} className="db-table" data-type="database-table">
             <div className="db-header-row" style={{ gridTemplateColumns }}>
               {visibleProperties.map((prop) => (

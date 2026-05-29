@@ -125,20 +125,6 @@ export function DatabaseToolbar({
                 }}
               >
                 <ListFilter className="tiptap-button-icon" size={14} />
-                {/* <span>Filter</span> */}
-                {activeFilterCount > 0 && (
-                  <span
-                    className="db-toolbar__badge"
-                    style={{
-                      border: "1px solid var(--tt-border-color)",
-                      borderRadius: "var(--tt-radius-xl)",
-                      padding: "3px 6px",
-                      fontSize: 10,
-                    }}
-                  >
-                    {activeFilterCount}
-                  </span>
-                )}
               </Button>
             </PopoverTrigger>
             <PopoverContent side="bottom" align="start" className="db-panel">
@@ -159,20 +145,6 @@ export function DatabaseToolbar({
                 }}
               >
                 <ArrowUpDown className="tiptap-button-icon" size={14} />
-                {/* <span>Sort</span> */}
-                {activeSortCount > 0 && (
-                  <span
-                    className="db-toolbar__badge"
-                    style={{
-                      border: "1px solid var(--tt-border-color)",
-                      borderRadius: "var(--tt-radius-xl)",
-                      padding: "3px 6px",
-                      fontSize: 10,
-                    }}
-                  >
-                    {activeSortCount}
-                  </span>
-                )}
               </Button>
             </PopoverTrigger>
             <PopoverContent side="bottom" align="start" className="db-panel">
@@ -213,19 +185,6 @@ export function DatabaseToolbar({
                   <EyeOff className="tiptap-button-icon" size={14} />
                 ) : (
                   <Eye className="tiptap-button-icon" size={14} />
-                )}
-                {activePropsCount > 0 && (
-                  <span
-                    className="db-toolbar__badge"
-                    style={{
-                      border: "1px solid var(--tt-border-color)",
-                      borderRadius: "var(--tt-radius-xl)",
-                      padding: "3px 6px",
-                      fontSize: 10,
-                    }}
-                  >
-                    {activePropsCount}
-                  </span>
                 )}
                 {/* <span>Properties</span> */}
               </Button>

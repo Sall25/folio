@@ -1,223 +1,105 @@
+import { useState } from "react";
 import { nanoid } from "nanoid";
-import { Plus, X, GripVertical } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
-  CardFooter,
-  CardHeader,
   CardBody,
   CardItemGroup,
-  CardGroupLabel,
 } from "src/components/tiptap-ui-primitive/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "src/components/tiptap-ui-primitive/popover";
 import type {
   DatabaseAttrs,
+  DatabaseProperty,
   DatabaseView,
-  ID,
   SortRule,
 } from "../../types/types";
 import type { UseDatabaseReturn } from "../../hooks/use-database";
 import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
 import "./sort-panel.scss";
-import {
-  Grid,
-  GridCell,
-  GridRow,
-} from "src/components/tiptap-ui-primitive/grid";
-
-function SortRuleRow({
-  sort,
-  attrs,
-  onUpdate,
-  onDelete,
-}: {
-  sort: SortRule;
-  attrs: DatabaseAttrs;
-  onUpdate: (patch: Partial<SortRule>) => void;
-  onDelete: () => void;
-}) {
-  const property = attrs.properties.find((p) => p.id === sort.propertyId);
-  const Icon = property ? PROPERTY_TYPE_ICONS[property.config.type] : null;
-
-  return (
-    <GridRow>
-      <GridCell>
-        <Button variant="ghost" style={{ background: "transparent" }}>
-          <GripVertical size={13} className="tiptap-button-icon" />
-        </Button>
-      </GridCell>
-      <GridCell>
-        {/* Property selector */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className="db-sort-rule__btn db-sort-rule__btn--property"
-            >
-              {Icon && <Icon className="tiptap-button-icon" size={12} />}
-              <span className="tiptap-button-text">
-                {property?.name ?? "Property"}
-              </span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="start" className="db-panel">
-            <Card style={{ padding: "5px 10px", minWidth: 180 }}>
-              <CardItemGroup>
-                {attrs.properties.map((p) => {
-                  const PIcon = PROPERTY_TYPE_ICONS[p.config.type];
-                  return (
-                    <Button
-                      key={p.id}
-                      variant="ghost"
-                      style={{
-                        justifyContent: "flex-start",
-                        width: "100%",
-                        fontWeight: p.id === sort.propertyId ? 600 : 400,
-                      }}
-                      onClick={() => onUpdate({ propertyId: p.id })}
-                    >
-                      <PIcon size={13} className="tiptap-button-icon" />
-                      <span className="tiptap-button-text">{p.name}</span>
-                    </Button>
-                  );
-                })}
-              </CardItemGroup>
-            </Card>
-          </PopoverContent>
-        </Popover>
-      </GridCell>
-      <GridCell>
-        {/* Direction selector */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className="db-sort-rule__btn db-sort-rule__btn--direction"
-            >
-              {sort.direction === "asc" ? "Ascending" : "Descending"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="start" className="db-panel">
-            <Card style={{ padding: "5px 10px", minWidth: 140 }}>
-              <CardItemGroup>
-                {(["asc", "desc"] as const).map((dir) => (
-                  <Button
-                    key={dir}
-                    variant="ghost"
-                    style={{
-                      justifyContent: "flex-start",
-                      width: "100%",
-                      fontWeight: sort.direction === dir ? 600 : 400,
-                    }}
-                    onClick={() => onUpdate({ direction: dir })}
-                  >
-                    <span className="tiptap-button-text">
-                      {dir === "asc" ? "Ascending" : "Descending"}
-                    </span>
-                  </Button>
-                ))}
-              </CardItemGroup>
-            </Card>
-          </PopoverContent>
-        </Popover>
-      </GridCell>
-      <GridCell>
-        <Button
-          variant="ghost"
-          // className="db-sort-rule__delete"
-          onClick={onDelete}
-        >
-          <X
-            style={{ color: "var(--tt-color-red-base)" }}
-            className="tiptap-button-icon"
-            size={12}
-          />
-        </Button>
-      </GridCell>
-    </GridRow>
-  );
-}
 
 export function SortPanel({
   attrs,
   db,
   activeView,
   sorts,
+  onClose,
 }: {
   attrs: DatabaseAttrs;
   db: UseDatabaseReturn;
   activeView: DatabaseView | undefined;
   sorts: SortRule[];
+  onClose?: () => void;
 }) {
+  const [query, setQuery] = useState("");
+
   if (!activeView) return null;
 
-  function addSort() {
-    const unusedProp = attrs.properties.find(
-      (p) => !sorts.some((s) => s.propertyId === p.id),
-    );
-    if (!unusedProp) return;
+  function addSortFor(property: DatabaseProperty) {
+    // Don't duplicate a sort that already exists for this property
+    if (sorts.some((s) => s.propertyId === property.id)) {
+      onClose?.();
+      return;
+    }
     const newSort: SortRule = {
       id: nanoid(),
-      propertyId: unusedProp.id,
+      propertyId: property.id,
       direction: "asc",
     };
     db.updateView(activeView!.id, { sorts: [...sorts, newSort] });
     db.sortDatabaseRecords();
+    onClose?.();
   }
 
-  function updateSort(id: ID, patch: Partial<SortRule>) {
-    db.updateView(activeView!.id, {
-      sorts: sorts.map((s) => (s.id === id ? { ...s, ...patch } : s)),
-    });
-    db.sortDatabaseRecords();
-  }
-
-  function deleteSort(id: ID) {
-    db.updateView(activeView!.id, { sorts: sorts.filter((s) => s.id !== id) });
-    db.sortDatabaseRecords();
-  }
+  const q = query.trim().toLowerCase();
+  // Only offer properties not already sorted by
+  const available = attrs.properties.filter(
+    (p) => !sorts.some((s) => s.propertyId === p.id),
+  );
+  const filtered = q
+    ? available.filter((p) => p.name.toLowerCase().includes(q))
+    : available;
 
   return (
     <Card className="db-sort-panel">
-      <CardHeader>
-        {sorts.length === 0 ? (
-          <span className="db-panel__empty">No sorts applied to this view</span>
-        ) : (
-          <CardGroupLabel>Sort</CardGroupLabel>
-        )}
-      </CardHeader>
+      <div className="db-sort-panel__search">
+        <input
+          autoFocus
+          className="db-sort-panel__search-input"
+          placeholder="Sort by..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
 
-      {sorts.length > 0 && (
-        <CardBody style={{ width: "100%" }}>
-          <Grid columns="20px 1fr 1fr 25px" gap={10} style={{ width: "100%" }}>
-            {sorts.map((sort) => (
-              <SortRuleRow
-                key={sort.id}
-                sort={sort}
-                attrs={attrs}
-                onUpdate={(patch) => updateSort(sort.id, patch)}
-                onDelete={() => deleteSort(sort.id)}
-              />
-            ))}
-          </Grid>
-        </CardBody>
-      )}
-
-      <CardFooter style={{ width: "100%" }}>
-        <Button
-          variant="ghost"
-          onClick={addSort}
-          disabled={sorts.length >= attrs.properties.length}
-          style={{ justifyContent: "flex-start", width: "100%" }}
-        >
-          <Plus size={13} className="tiptap-button-icon" />
-          <span className="tiptap-button-text">Add sort</span>
-        </Button>
-      </CardFooter>
+      <CardBody>
+        <CardItemGroup>
+          {filtered.length === 0 ? (
+            <span className="db-panel__empty">
+              {available.length === 0
+                ? "Every property is already sorted"
+                : "No properties found"}
+            </span>
+          ) : (
+            filtered.map((p) => {
+              const Icon = PROPERTY_TYPE_ICONS[p.config.type];
+              return (
+                <Button
+                  key={p.id}
+                  variant="ghost"
+                  style={{
+                    justifyContent: "flex-start",
+                    width: "100%",
+                    borderRadius: "var(--tt-radius-sm)",
+                  }}
+                  onClick={() => addSortFor(p)}
+                >
+                  {Icon && <Icon className="tiptap-button-icon" />}
+                  <span className="tiptap-button-text">{p.name}</span>
+                </Button>
+              );
+            })
+          )}
+        </CardItemGroup>
+      </CardBody>
     </Card>
   );
 }

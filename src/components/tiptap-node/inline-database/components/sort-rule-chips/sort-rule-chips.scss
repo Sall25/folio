@@ -1,0 +1,10 @@
+.db-sort-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+
+  &__add .tiptap-button-text {
+    font-size: 12px;
+  }
+}

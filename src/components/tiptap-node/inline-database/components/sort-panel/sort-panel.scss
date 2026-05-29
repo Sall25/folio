@@ -1,83 +1,30 @@
 .db-sort-panel {
-  min-width: 320px;
-  padding: 6px 5px;
-  box-shadow: var(--tt-shadow-elevated-sm);
-}
+  min-width: 260px;
+  padding: 6px;
 
-.db-sort-rule {
-  display: grid;
-  grid-template-columns: 16px 1fr auto 22px;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
-  border-radius: var(--tt-radius-sm);
-
-  &:hover {
-    background: var(--tt-button-hover-bg-color);
-
-    .db-sort-rule__drag {
-      opacity: 1;
-    }
-
-    .db-sort-rule__delete {
-      opacity: 1;
-    }
+  &__search {
+    padding: 4px;
   }
 
-  &__drag {
-    color: var(--tt-theme-muted);
-    cursor: grab;
-    opacity: 0;
-    transition: opacity 100ms;
-  }
-
-  &__btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 8px;
-    height: 26px;
-    border-radius: var(--tt-radius-sm);
-    border: 1px solid var(--tt-brand-color-400);
-    background: color-mix(in srgb, var(--tt-brand-color-400) 10%, transparent);
-    font-size: 12px;
-    color: var(--tt-brand-color-400);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 100ms;
+  &__search-input {
     width: 100%;
-    justify-content: flex-start;
-
-    &:hover {
-      background: color-mix(in srgb, var(--tt-brand-color-400) 20%, transparent);
-    }
-
-    &--property {
-      font-weight: 500;
-    }
-
-    &--direction {
-      font-weight: 400;
-    }
-  }
-
-  &__delete {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    border-radius: var(--tt-radius-sm);
-    border: none;
+    box-sizing: border-box;
+    padding: 6px 10px;
+    font-size: 14px;
+    color: var(--tt-paragraph-text-color);
     background: transparent;
-    color: var(--tt-theme-muted);
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 100ms, background 100ms, color 100ms;
+    border: 1px solid var(--tt-border-color, rgba(255, 255, 255, 0.12));
+    border-radius: var(--tt-radius-md, 8px);
+    outline: none;
 
-    &:hover {
-      background: var(--tt-button-hover-bg-color);
-      color: var(--tt-color-red, #e53e3e);
+    &::placeholder {
+      color: var(--tt-muted-foreground, #8b8b8b);
+    }
+
+    &:focus {
+      border-color: var(--tt-brand-color-400);
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--tt-brand-color-400) 30%, transparent);
     }
   }
 }
