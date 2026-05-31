@@ -3,10 +3,12 @@ import type { CellProps } from "../types";
 
 export function TextCell({ value, onChange }: CellProps<"text">) {
   return (
-    <TextCellDisplay
-      value={value || "Add text..."}
-      onChange={onChange}
-      placeholder="Add text..."
-    />
+    <div className="db-cell">
+      <TextCellDisplay
+        value={value || "Add text..."}
+        onChange={onChange}
+        placeholder="Add text..."
+      />
+    </div>
   );
 }

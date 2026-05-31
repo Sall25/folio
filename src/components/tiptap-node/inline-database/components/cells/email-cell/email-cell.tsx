@@ -3,10 +3,12 @@ import type { CellProps } from "../types";
 
 export function EmailCell({ value, onChange, readonly }: CellProps<"email">) {
   return (
-    <EmailCellDisplay
-      value={value ?? ""}
-      onChange={onChange}
-      readonly={readonly}
-    />
+    <div className="db-cell">
+      <EmailCellDisplay
+        value={value ?? ""}
+        onChange={onChange}
+        readonly={readonly}
+      />
+    </div>
   );
 }

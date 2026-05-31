@@ -24,20 +24,25 @@ export function SelectCellDisplay({
   if (!displayed) return null;
 
   const trigger = (
-    <Button
-      variant="ghost"
-      style={{
-        background: displayed.color,
-        minHeight: 18,
-        height: 20,
-        width: "fit-content",
-        justifyContent: "center",
-        borderRadius: "var(--tt-radius-sm)",
-        color: "var(--tt-theme-text)",
-      }}
-    >
-      <span className="tiptap-button-text">{displayed.label}</span>
-    </Button>
+    <div className="db-cell">
+      <Button
+        variant="ghost"
+        style={{
+          background: displayed.color,
+          minHeight: 18,
+          height: 20,
+          padding: "0 10px",
+          width: "fit-content",
+          justifyContent: "center",
+          borderRadius: "var(--tt-radius-sm)",
+          color: "var(--tt-theme-text)",
+          // margin: "5px 3px",
+        }}
+        className="db-cell"
+      >
+        <span className="tiptap-button-text">{displayed.label}</span>
+      </Button>
+    </div>
   );
 
   if (readonly || !onChange) return trigger;

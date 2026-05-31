@@ -101,7 +101,12 @@ function NavItems() {
       <Button
         variant="ghost"
         onClick={handleHomeClick}
-        style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
+        style={{
+          fontWeight: 400,
+          color: "var(--tt-text-color)",
+          minHeight: 32,
+          height: 32,
+        }}
       >
         <Search size={32} strokeWidth={1.8} className="tiptap-button-icon" />
         <Spacer orientation="horizontal" size={4} />
@@ -111,7 +116,12 @@ function NavItems() {
       <Button
         variant="ghost"
         onClick={handleHomeClick}
-        style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
+        style={{
+          fontWeight: 400,
+          color: "var(--tt-text-color)",
+          minHeight: 32,
+          height: 32,
+        }}
       >
         <Home size={32} strokeWidth={1.8} className="tiptap-button-icon" />
         <Spacer orientation="horizontal" size={2} />
@@ -176,7 +186,7 @@ function PagesList({ pages }: { pages: Page[] }) {
           (a, b) =>
             new Date(b.updatedAt!).getTime() - new Date(a.updatedAt!).getTime(),
         )
-        .slice(0, 5),
+        .slice(0, 8),
     [pages],
   );
 

@@ -139,6 +139,9 @@
     // resting state is MUTED — this is the fix that reads as "designed"
     color: var(--sidebar-text-secondary);
     transition: background 0.1s, color 0.1s;
+     min-height: 32px;
+    height: 28px;
+    line-height: 1.5;
 
     &:hover {
       background: var(--tt-gray-light-a-100, rgba(0, 0, 0, 0.04));
@@ -279,7 +282,7 @@
 // ── Collapsed state ──
 .sidebar--collapsed {
   .sidebar-nav {
-    padding: 4px 6px;
+     padding: 1.5px 6px;
     display: flex;
     flex-direction: column;
     align-items: center;

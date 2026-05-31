@@ -13,16 +13,18 @@ export function NumberCell({
     0;
 
   return (
-    <NumberCellDisplay
-      value={value}
-      onChange={onChange}
-      format={config.format}
-      prefix={config.prefix}
-      suffix={config.suffix}
-      decimalPlaces={config.decimalPlaces}
-      showAs={config.showAs}
-      max={max}
-      readonly={readonly}
-    />
+    <div className="db-cell">
+      <NumberCellDisplay
+        value={value}
+        onChange={onChange}
+        format={config.format}
+        prefix={config.prefix}
+        suffix={config.suffix}
+        decimalPlaces={config.decimalPlaces}
+        showAs={config.showAs}
+        max={max}
+        readonly={readonly}
+      />
+    </div>
   );
 }

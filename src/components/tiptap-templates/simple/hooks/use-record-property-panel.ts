@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 import type { Editor } from "@tiptap/react";
+import type { Page } from "src/components/tiptap-templates/simple/types";
+import { findPage } from "src/lib/find-page";
 
 export function stripPropertyPanels(content: unknown): unknown {
   if (!content || typeof content !== "object") return content;
@@ -14,50 +16,21 @@ export function stripPropertyPanels(content: unknown): unknown {
   return node;
 }
 
-const mainEditorMap = new WeakMap<Editor, Editor>();
-
-export function getMainEditor(peekEditor: Editor): Editor | null {
-  return mainEditorMap.get(peekEditor) ?? null;
-}
-
 export function useRecordPropertyPanel(
   editor: Editor | null,
-  mainEditor: Editor | null,
+  pages: Page[] | undefined,
   pageId: number | null | undefined,
 ) {
   useEffect(() => {
-    if (!editor || !mainEditor || pageId == null) return;
+    if (!editor || pageId == null || !pages) return;
+    if (!Array.isArray(pages) || pages.length === 0) return;
+    // The record's page carries its source + record ids (stamped at creation)
+    const page = findPage(pages, pageId);
+    const sourceId = page?.databaseId ?? null;
+    const recordId = page?.recordId ?? null;
+    if (!sourceId || !recordId) return;
 
-    // Resolve databaseId, recordId, parentId from mainEditor doc
-    let databaseId: string | null = null;
-    let recordId: string | null = null;
-    let parentId: number | null = null;
-
-    mainEditor.state.doc.descendants((node, pos) => {
-      if (databaseId && recordId) return false;
-      if (node.type.name !== "titleCell") return;
-      if (node.attrs.pageId !== pageId) return;
-
-      parentId = node.attrs.parentId ?? null;
-
-      const $pos = mainEditor.state.doc.resolve(pos);
-      for (let d = $pos.depth; d > 0; d--) {
-        const ancestor = $pos.node(d);
-        if (ancestor.type.name === "databaseRecord" && !recordId)
-          recordId = ancestor.attrs.id;
-        if (ancestor.type.name === "database" && !databaseId)
-          databaseId = ancestor.attrs.id;
-        if (recordId && databaseId) break;
-      }
-      return false;
-    });
-
-    if (!databaseId || !recordId) return;
-
-    // Store mainEditor in WeakMap BEFORE inserting the node
-    mainEditorMap.set(editor, mainEditor);
-
-    // Check if panel already exists
+    // Already inserted?
     const secondNode =
       editor.state.doc.childCount > 1 ? editor.state.doc.child(1) : null;
     if (secondNode?.type.name === "recordPropertyPanel") return;
@@ -71,8 +44,8 @@ export function useRecordPropertyPanel(
     editor.view.dispatch(
       editor.state.tr.insert(
         titleNode.nodeSize,
-        panelType.create({ pageId, databaseId, recordId, parentId }),
+        panelType.create({ pageId, sourceId, recordId }),
       ),
     );
-  }, [editor, mainEditor, pageId]);
+  }, [editor, pages, pageId]);
 }

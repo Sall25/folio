@@ -7,7 +7,6 @@ import {
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 import type {
-  DatabaseAttrs,
   DatabaseProperty,
   DatabaseView,
   SortRule,
@@ -17,13 +16,13 @@ import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
 import "./sort-panel.scss";
 
 export function SortPanel({
-  attrs,
+  properties,
   db,
   activeView,
   sorts,
   onClose,
 }: {
-  attrs: DatabaseAttrs;
+  properties: DatabaseProperty[];
   db: UseDatabaseReturn;
   activeView: DatabaseView | undefined;
   sorts: SortRule[];
@@ -45,13 +44,12 @@ export function SortPanel({
       direction: "asc",
     };
     db.updateView(activeView!.id, { sorts: [...sorts, newSort] });
-    db.sortDatabaseRecords();
     onClose?.();
   }
 
   const q = query.trim().toLowerCase();
   // Only offer properties not already sorted by
-  const available = attrs.properties.filter(
+  const available = properties.filter(
     (p) => !sorts.some((s) => s.propertyId === p.id),
   );
   const filtered = q

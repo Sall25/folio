@@ -11,8 +11,10 @@ export function FormulaCell({ value }: CellProps<"formula">) {
   const isEmpty = value === null || value === undefined || value === "";
 
   return (
-    <span className="formula-cell__value" data-empty={isEmpty}>
-      {isEmpty ? "" : formatValue(value)}
-    </span>
+    <div className="db-cell">
+      <span className="formula-cell__value" data-empty={isEmpty}>
+        {isEmpty ? "" : formatValue(value)}
+      </span>
+    </div>
   );
 }

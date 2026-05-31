@@ -88,8 +88,7 @@ export function DatabaseToolbar({
     [setTemplateOpen],
   );
 
-  const { addRecordWithPageAsync } = useDataSource(attrs.sourceId);
-
+  const { addRecordWithPageAsync, source } = useDataSource(attrs.sourceId);
   const handleNewPage = async () => {
     const rec = await addRecordWithPageAsync({
       title: "New Page",
@@ -129,7 +128,11 @@ export function DatabaseToolbar({
               </Button>
             </PopoverTrigger>
             <PopoverContent side="bottom" align="start" className="db-panel">
-              <FilterPanel attrs={attrs} db={db} activeView={activeView} />
+              <FilterPanel
+                properties={source?.properties ?? []}
+                db={db}
+                activeView={activeView}
+              />
             </PopoverContent>
           </Popover>
 
@@ -150,7 +153,7 @@ export function DatabaseToolbar({
             </PopoverTrigger>
             <PopoverContent side="bottom" align="start" className="db-panel">
               <SortPanel
-                attrs={attrs}
+                properties={source?.properties ?? []}
                 db={db}
                 activeView={activeView}
                 sorts={sorts}
@@ -166,7 +169,11 @@ export function DatabaseToolbar({
               </Button>
             </PopoverTrigger>
             <PopoverContent side="bottom" align="start" className="db-panel">
-              <GroupPanel attrs={attrs} db={db} activeView={activeView} />
+              <GroupPanel
+                properties={source?.properties ?? []}
+                db={db}
+                activeView={activeView}
+              />
             </PopoverContent>
           </Popover>
 
@@ -191,7 +198,11 @@ export function DatabaseToolbar({
               </Button>
             </PopoverTrigger>
             <PopoverContent side="bottom" align="start" className="db-panel">
-              <PropertiesPanel attrs={attrs} db={db} activeView={activeView} />
+              <PropertiesPanel
+                properties={source?.properties ?? []}
+                db={db}
+                activeView={activeView}
+              />
             </PopoverContent>
           </Popover>
           {activeView && <ViewOptionsPopover db={db} view={activeView} />}

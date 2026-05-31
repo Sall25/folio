@@ -237,7 +237,7 @@ export function PageCreateModal({
     },
   });
 
-  useRecordPropertyPanel(editor, mainEditor, page?.id ?? null);
+  useRecordPropertyPanel(editor, pages, page?.id ?? null);
 
   useEffect(() => {
     if (!editor) return;

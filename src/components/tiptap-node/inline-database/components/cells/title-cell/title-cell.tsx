@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek-page-context";
 import { findPage } from "src/lib/find-page";
@@ -53,14 +53,26 @@ export function TitleCell({
     }
   }
 
+  // inside TitleCell, after linkedPage is computed:
+  useEffect(() => {
+    if (!linkedPage) return;
+    // page→cell: if the page title diverged from the cell value, sync it back
+    if (linkedPage.title !== value) {
+      onChange(linkedPage.title);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linkedPage?.title]);
+
   return (
-    <TitleCellDisplay
-      value={value}
-      onChange={handleChange}
-      icon={icon}
-      hasPage={pageId != null}
-      onOpen={() => pageId != null && setPeekPageId(pageId)}
-      readonly={readonly}
-    />
+    <div className="db-cell">
+      <TitleCellDisplay
+        value={value}
+        onChange={handleChange}
+        icon={icon}
+        hasPage={pageId != null}
+        onOpen={() => pageId != null && setPeekPageId(pageId)}
+        readonly={readonly}
+      />
+    </div>
   );
 }

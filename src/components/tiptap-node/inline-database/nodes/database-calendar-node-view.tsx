@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek-page-context";
@@ -8,6 +8,7 @@ import type {
   CalendarView,
   DatabaseAttrs,
   DataSource,
+  DatabaseView,
   ID,
 } from "../types/types";
 import "./database-calendar-node-view.scss";
@@ -29,9 +30,11 @@ function isoToMonthDay(iso: string) {
 export function DatabaseCalendarNodeView({
   attrs,
   source,
+  onUpdateView,
 }: {
   attrs: DatabaseAttrs & { sourceId?: string | null };
   source: DataSource;
+  onUpdateView?: (patch: Partial<DatabaseView>) => void;
 }) {
   const { addPageAsync } = usePages();
   const { setPeekPageId } = usePeekPage();
@@ -42,16 +45,31 @@ export function DatabaseCalendarNodeView({
 
   const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
     attrs.views[0]) as CalendarView | undefined;
-  const datePropertyId = activeView?.datePropertyId ?? "";
 
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
 
-  const dateProp = source.properties.find(
-    (p) => p.id === datePropertyId && p.config.type === "date",
-  );
+  // Date property: explicit selection wins, else fall back to the first date prop
+  const dateProp = useMemo(() => {
+    if (activeView?.datePropertyId) {
+      const explicit = source.properties.find(
+        (p) => p.id === activeView.datePropertyId && p.config.type === "date",
+      );
+      if (explicit) return explicit;
+    }
+    return source.properties.find((p) => p.config.type === "date");
+  }, [source.properties, activeView?.datePropertyId]);
+
   const titleProp = source.properties.find((p) => p.config.type === "title");
+
+  // Persist the auto-pick so calendar settings reflect it (only if not set)
+  useEffect(() => {
+    if (!activeView || !onUpdateView) return;
+    if (activeView.datePropertyId) return;
+    if (dateProp) onUpdateView({ datePropertyId: dateProp.id });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeView?.id, dateProp?.id]);
 
   function prevMonth() {
     if (month === 0) {
@@ -95,10 +113,7 @@ export function DatabaseCalendarNodeView({
   if (!dateProp) {
     return (
       <div className="db-calendar-empty">
-        <p>
-          Add a Date property and select it in the calendar settings to use this
-          view.
-        </p>
+        <p>Add a Date property to use the calendar view.</p>
       </div>
     );
   }

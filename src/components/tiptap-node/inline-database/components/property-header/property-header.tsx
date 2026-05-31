@@ -64,7 +64,7 @@ export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
     <div
       className="db-th"
       ref={nodeRef as unknown as Ref<HTMLDivElement>}
-      style={{ position: "relative" }}
+      style={{ position: "relative", paddingLeft: 5 }}
       data-prop-id={prop.id}
     >
       <Popover open={open} onOpenChange={setOpen}>
@@ -78,14 +78,14 @@ export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
               justifyContent: "flex-start",
               overflow: "hidden",
               background: "transparent",
-              fontSize: 15,
+              fontSize: 14,
               color: "var(--tt-text-color)",
             }}
           >
             <Icon
               className="tiptap-button-icon"
               // fill="var(--tt-text-secondary)"
-              style={{ width: 20, height: 18 }}
+              style={{ width: 16, height: 16 }}
             />
             <span className="tiptap-button-text">{prop.name}</span>
           </Button>
@@ -127,40 +127,72 @@ export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
                   />
                 </CardItemGroup>
                 <PropertyEditPopover>
-                  {prop.config.type === "select" ||
-                    (prop.config.type === "multi_select" && (
-                      <SelectOptionsEditor
-                        options={prop.config.options}
-                        onEditOption={(option) =>
-                          db.updateProperty(prop.id, {
-                            ...prop,
-                            config: {
-                              ...prop.config,
-                              options: (
-                                prop.config as {
-                                  type: typeof prop.config.type;
-                                  options: SelectOption[];
-                                }
-                              ).options.map((o) =>
-                                o.id !== option.id ? o : option,
-                              ),
-                            } as PropertyConfig,
-                          })
-                        }
-                        onChange={(options) =>
-                          db.updateProperty(prop.id, {
-                            ...prop,
-                            config: {
-                              ...(prop.config as {
-                                type: "select";
+                  {prop.config.type === "select" && (
+                    <SelectOptionsEditor
+                      options={prop.config.options}
+                      onEditOption={(option) =>
+                        db.updateProperty(prop.id, {
+                          ...prop,
+                          config: {
+                            ...prop.config,
+                            options: (
+                              prop.config as {
+                                type: typeof prop.config.type;
                                 options: SelectOption[];
-                              }),
-                              options,
-                            },
-                          })
-                        }
-                      />
-                    ))}
+                              }
+                            ).options.map((o) =>
+                              o.id !== option.id ? o : option,
+                            ),
+                          } as PropertyConfig,
+                        })
+                      }
+                      onChange={(options) =>
+                        db.updateProperty(prop.id, {
+                          ...prop,
+                          config: {
+                            ...(prop.config as {
+                              type: "select";
+                              options: SelectOption[];
+                            }),
+                            options,
+                          },
+                        })
+                      }
+                    />
+                  )}
+                  {prop.config.type === "multi_select" && (
+                    <SelectOptionsEditor
+                      options={prop.config.options}
+                      onEditOption={(option) =>
+                        db.updateProperty(prop.id, {
+                          ...prop,
+                          config: {
+                            ...prop.config,
+                            options: (
+                              prop.config as {
+                                type: typeof prop.config.type;
+                                options: SelectOption[];
+                              }
+                            ).options.map((o) =>
+                              o.id !== option.id ? o : option,
+                            ),
+                          } as PropertyConfig,
+                        })
+                      }
+                      onChange={(options) =>
+                        db.updateProperty(prop.id, {
+                          ...prop,
+                          config: {
+                            ...(prop.config as {
+                              type: "select";
+                              options: SelectOption[];
+                            }),
+                            options,
+                          },
+                        })
+                      }
+                    />
+                  )}
                   {prop.config.type === "formula" && (
                     <FormulaEditor
                       propertyId={prop.id}

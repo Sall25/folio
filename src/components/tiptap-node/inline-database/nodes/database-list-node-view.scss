@@ -92,24 +92,27 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 38px;
-  border-bottom: 1px solid var(--tt-border-color);
+  height: 34px;
+  padding: 0;
+  margin: 0;
+  max-width: var(--db-editor-width);
+  // border-bottom: 1px solid var(--tt-border-color);
 
-  &__title { flex: 1; min-width: 0; }
+  &__title { flex: 1; min-width: 0; margin: 0; }
 
   &__props {
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-shrink: 0;
+    flex-shrink: 1;
   }
 
-  &__open {
-    opacity: 0;
-    min-height: 22px;
-    height: 22px;
-    flex-shrink: 0;
-  }
+  // &__open {
+  //   opacity: 0;
+  //   min-height: 22px;
+  //   height: 22px;
+  //   flex-shrink: 0;
+  // }
 
   &:hover &__open { opacity: 1; }
 }

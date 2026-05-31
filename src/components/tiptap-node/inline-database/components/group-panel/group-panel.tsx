@@ -7,12 +7,12 @@ import {
 } from "src/components/tiptap-ui-primitive/card";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import type {
-  DatabaseAttrs,
   DatabaseView,
   BoardView,
   TableView,
   ListView,
   ID,
+  DatabaseProperty,
 } from "../../types/types";
 import { isGroupableProperty } from "../../types/types";
 import type { UseDatabaseReturn } from "../../hooks/use-database";
@@ -20,17 +20,17 @@ import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
 import "./group-panel.scss";
 
 export function GroupPanel({
-  attrs,
+  properties,
   db,
   activeView,
 }: {
-  attrs: DatabaseAttrs;
+  properties: DatabaseProperty[];
   db: UseDatabaseReturn;
   activeView: DatabaseView | undefined;
 }) {
   if (!activeView) return null;
 
-  const groupableProperties = attrs.properties.filter((p) =>
+  const groupableProperties = properties.filter((p) =>
     isGroupableProperty(p.config.type),
   );
 

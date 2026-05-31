@@ -89,9 +89,9 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
   hasThreads: boolean;
 }) {
   const { editor } = useCurrentEditor();
-  const { activePage } = useActivePage();
+  const { activePage, pages } = useActivePage();
 
-  useRecordPropertyPanel(editor, editor, activePage?.id ?? null);
+  useRecordPropertyPanel(editor, pages, activePage?.id ?? null);
 
   return (
     <EditorContent

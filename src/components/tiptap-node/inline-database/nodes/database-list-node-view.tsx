@@ -1,9 +1,8 @@
-import { Plus, ChevronDown, ChevronRight, PanelRightOpen } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { useMemo } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
-import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek-page-context";
 import { useDataSource } from "../hooks/use-data-source";
 import { Cell } from "../components/cells/cell";
 import type {
@@ -60,16 +59,8 @@ function ListRow({
   titleProp: DatabaseProperty | undefined;
   onChange: (propertyId: string, value: CellValue | null) => void;
 }) {
-  const { setPeekPageId } = usePeekPage();
-  const [hover, setHover] = useState(false);
-  const hasPage = record.pageId != null;
-
   return (
-    <div
-      className="db-list-row"
-      onMouseOver={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-    >
+    <div className="db-list-row">
       <div className="db-list-row__title">
         {titleProp && (
           <Cell
@@ -92,17 +83,6 @@ function ListRow({
           />
         ))}
       </div>
-
-      {hasPage && hover && (
-        <Button
-          variant="ghost"
-          className="db-list-row__open"
-          onClick={() => record.pageId != null && setPeekPageId(record.pageId)}
-        >
-          <PanelRightOpen className="tiptap-button-icon" size={12} />
-          <span className="tiptap-button-text">Open</span>
-        </Button>
-      )}
     </div>
   );
 }
@@ -125,12 +105,10 @@ export function DatabaseListNodeView({
   const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
     attrs.views[0]) as ListView | undefined;
 
-  const visibleIds = new Set(activeView?.visibleProperties ?? []);
+  const hidden = new Set(activeView?.hiddenProperties ?? []);
   const titleProp = source.properties.find((p) => p.config.type === "title");
   const inlineProperties = source.properties.filter(
-    (p) =>
-      p.config.type !== "title" &&
-      (visibleIds.size === 0 || visibleIds.has(p.id)),
+    (p) => p.config.type !== "title" && !hidden.has(p.id),
   );
 
   const groupProp = activeView?.groupByPropertyId

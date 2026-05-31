@@ -7,6 +7,9 @@ import { useActivePage } from "src/components/tiptap-templates/simple/use-active
 import { useDataSources } from "../hooks/use-data-sources";
 import type { DatabaseProperty, ID } from "../types/types";
 import "./data-source-picker.scss";
+import { databasePageContent } from "../hooks/use-create-database";
+import { findPage } from "src/lib/find-page";
+import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 
 function defaultProperties(): DatabaseProperty[] {
   return [
@@ -31,7 +34,7 @@ export function DataSourcePicker({
   onSelect: (sourceId: ID, pageId?: number) => void;
 }) {
   const { sources, isLoading, createSourceAsync } = useDataSources();
-  const { addPageAsync } = usePages();
+  const { addPageAsync, pages } = usePages();
   const { activePageId } = useActivePage();
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
@@ -39,21 +42,19 @@ export function DataSourcePicker({
   const filtered = (sources ?? []).filter((s) =>
     s.name?.toLowerCase().includes(query.trim().toLowerCase()),
   );
-
   async function handleNew() {
     setCreating(true);
     try {
       const sourceId = crypto.randomUUID();
       const name = query.trim() || "Untitled";
 
-      // 1. the database's own page — child of the active page
       const dbPage = await addPageAsync({
         title: name,
         parentId: activePageId ?? null,
         databaseId: sourceId,
+        content: databasePageContent(sourceId, name),
       });
 
-      // 2. the source, carrying its page link
       const source = await createSourceAsync({
         id: sourceId,
         name,
@@ -67,12 +68,11 @@ export function DataSourcePicker({
       setCreating(false);
     }
   }
-
   return (
     <div className="db-source-picker">
       <div className="db-source-picker__empty">
         <div className="db-source-picker__empty-icon">
-          <FolderClosed size={28} />
+          <FolderClosed size={46} />
         </div>
         <span className="db-source-picker__empty-title">No data source</span>
         <span className="db-source-picker__empty-sub">
@@ -81,7 +81,13 @@ export function DataSourcePicker({
       </div>
 
       <div className="db-source-picker__panel">
-        <Card style={{ padding: 8, minWidth: 260 }}>
+        <Card
+          style={{
+            padding: 8,
+            minWidth: 260,
+            boxShadow: "var(--tt-shadow-sm)",
+          }}
+        >
           <input
             className="db-source-picker__search"
             placeholder="Link or create a database…"
@@ -94,36 +100,68 @@ export function DataSourcePicker({
           />
 
           <CardItemGroup
-            style={{ marginTop: 6, maxHeight: 240, overflowY: "auto" }}
+            style={{
+              marginTop: 6,
+              maxHeight: 240,
+              overflowY: "auto",
+              justifyContent: "flex-start",
+              width: "100%",
+            }}
           >
             {isLoading ? (
               <span className="db-source-picker__hint">Loading…</span>
             ) : filtered.length === 0 ? (
               <span className="db-source-picker__hint">No data sources</span>
             ) : (
-              filtered.map((s) => (
-                <Button
-                  key={s.id}
-                  variant="ghost"
-                  style={{
-                    justifyContent: "flex-start",
-                    width: "100%",
-                    gap: 8,
-                  }}
-                  onClick={() => onSelect(s.id, s.pageId)}
-                >
-                  <Database className="tiptap-button-icon" size={14} />
-                  <span className="tiptap-button-text">{s.name}</span>
-                </Button>
-              ))
+              filtered.map((s) => {
+                const sourcePage =
+                  s.pageId != null && pages
+                    ? (findPage(pages, s.pageId) ?? null)
+                    : null;
+                return (
+                  <Button
+                    key={s.id}
+                    variant="ghost"
+                    style={{
+                      justifyContent: "flex-start",
+                      width: "100%",
+                      gap: 8,
+                      borderRadius: "var(--tt-radius-sm)",
+                    }}
+                    onClick={() => onSelect(s.id, s.pageId)}
+                  >
+                    {sourcePage ? (
+                      <PageItemIcon
+                        cover={sourcePage.cover}
+                        styles={{ width: 16, height: 16 }}
+                      />
+                    ) : (
+                      <Database className="tiptap-button-icon" size={14} />
+                    )}
+                    <span className="tiptap-button-text">{s.name}</span>
+                  </Button>
+                );
+              })
             )}
           </CardItemGroup>
 
-          <div className="db-source-picker__footer">
+          <div
+            className="db-source-picker__footer"
+            style={{
+              display: "flex",
+              justifyContent: "flex-start",
+              width: "100%",
+            }}
+          >
             <Button
               variant="ghost"
               disabled={creating}
-              style={{ justifyContent: "flex-start", width: "100%", gap: 8 }}
+              style={{
+                justifyContent: "flex-start",
+                width: "100%",
+                gap: 8,
+                borderRadius: "var(--tt-radius-sm)",
+              }}
               onClick={handleNew}
             >
               <Plus className="tiptap-button-icon" size={14} />

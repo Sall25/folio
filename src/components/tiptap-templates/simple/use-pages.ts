@@ -12,6 +12,7 @@ import {
   type DebouncedState,
 } from "use-debounce";
 import { findPage } from "src/lib/find-page";
+import type { JSONContent } from "@tiptap/core";
 
 function getDescendantIds(pages: Page[], parentId: number): number[] {
   const children = pages.filter((p) => p.parentId === parentId);
@@ -53,12 +54,14 @@ const addPageFnAsync = async ({
   category,
   databaseId,
   recordId,
+  content,
 }: {
   title: string;
   parentId: number | null;
   category?: PageCategory;
   databaseId?: string;
   recordId?: string;
+  content?: JSONContent;
 }) => {
   const res = await fetch("/api/pages", {
     method: "POST",
@@ -69,37 +72,24 @@ const addPageFnAsync = async ({
       databaseId,
       recordId,
       children: [],
-      settings: {
-        width: "medium",
-        text: "normal",
-        locked: false,
-      },
-      cover: {
-        iconName: null,
-        coverImage: null,
-        target: null,
-      },
-      content: {
+      settings: { width: "medium", text: "normal", locked: false },
+      cover: { iconName: null, coverImage: null, target: null },
+      content: content ?? {
         type: "doc",
         content: [
           {
             type: "title",
             content: title ? [{ type: "text", text: title }] : [],
           },
-          {
-            type: "paragraph",
-          },
+          { type: "paragraph" },
         ],
       },
-      // content: { type: "doc", content: [{ type: "paragraph" }] },
       createdAt: Date.now().toString(),
       updatedAt: null,
     }),
     headers: { "Content-Type": "application/json" },
   });
-
   if (!res.ok) throw new Error("Failed to add page");
-
   return res.json();
 };
 
@@ -137,6 +127,7 @@ export interface UsePagesReturn {
     category?: PageCategory;
     databaseId?: string;
     recordId?: string;
+    content?: JSONContent;
   }) => Promise<Page>;
   addChildPageAsync: (parentId: number) => Promise<void>;
   addRootPageAsync: () => Promise<void>;
@@ -235,6 +226,7 @@ export function usePages(): UsePagesReturn {
       category?: PageCategory;
       databaseId?: string;
       recordId?: string;
+      content?: JSONContent;
     }) => addPageAsyncRef.current(data),
     [],
   );

@@ -123,7 +123,7 @@ export function PagePeekView({
   page: Page;
   onClose?: () => void;
 }) {
-  const { updatePageAsync, addCoverAsync } = usePages();
+  const { updatePageAsync, addCoverAsync, pages } = usePages();
   const { setActivePageId, debounceUpdatePage, debounceUpdatePageFast } =
     useActivePage();
   const { setPeekPageId } = usePeekPage();
@@ -202,7 +202,7 @@ export function PagePeekView({
     },
   });
 
-  useRecordPropertyPanel(editor, mainEditor, page?.id ?? null);
+  useRecordPropertyPanel(editor, pages, page?.id ?? null);
 
   useEffect(() => {
     if (!editor) return;
@@ -219,7 +219,6 @@ export function PagePeekView({
       const recordChanged = getRecordPropertyPanelChange(editor, transaction);
 
       if (changed || recordChanged) {
-        console.log("recordChanged");
         debounceUpdatePageFastRef.current({
           ...pageRef.current,
           title: text ?? pageRef.current.title,
@@ -259,6 +258,7 @@ export function PagePeekView({
         borderBottomRightRadius: 0,
         top: 0,
         bottom: 0,
+        boxShadow: "var(--tt-shadow-elevated-sm)",
       }}
     >
       <CardItemGroup

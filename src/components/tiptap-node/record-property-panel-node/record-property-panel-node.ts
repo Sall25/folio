@@ -20,30 +20,17 @@ export const RecordPropertyPanelNode = Node.create({
         renderHTML: (attrs) =>
           attrs.pageId != null ? { "data-page-id": String(attrs.pageId) } : {},
       },
-      databaseId: {
+      sourceId: {
         default: null,
-        parseHTML: (el) => el.getAttribute("data-database-id"),
+        parseHTML: (el) => el.getAttribute("data-source-id"),
         renderHTML: (attrs) =>
-          attrs.databaseId != null
-            ? { "data-database-id": attrs.databaseId }
-            : {},
+          attrs.sourceId != null ? { "data-source-id": attrs.sourceId } : {},
       },
       recordId: {
         default: null,
         parseHTML: (el) => el.getAttribute("data-record-id"),
         renderHTML: (attrs) =>
           attrs.recordId != null ? { "data-record-id": attrs.recordId } : {},
-      },
-      parentId: {
-        default: null,
-        parseHTML: (el) => {
-          const v = el.getAttribute("data-parent-id");
-          return v != null ? Number(v) : null;
-        },
-        renderHTML: (attrs) =>
-          attrs.parentId != null
-            ? { "data-parent-id": String(attrs.parentId) }
-            : {},
       },
     };
   },

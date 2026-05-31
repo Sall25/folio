@@ -22,6 +22,40 @@ function defaultProperties(): DatabaseProperty[] {
   ];
 }
 
+function defaultView() {
+  return {
+    id: crypto.randomUUID(),
+    name: "Table",
+    type: "table" as const,
+    filters: [],
+    sorts: [],
+    hiddenProperties: [],
+    propertyOrder: [],
+  };
+}
+
+// builds the database page's content: title node + database node owning its sourceId/title
+export function databasePageContent(sourceId: string, name: string) {
+  const view = defaultView();
+  return {
+    type: "doc",
+    content: [
+      { type: "title", content: name ? [{ type: "text", text: name }] : [] },
+      {
+        type: "database",
+        attrs: {
+          id: crypto.randomUUID(),
+          sourceId,
+          pageId: null, // cover resolves via source.pageId
+          title: name,
+          views: [view],
+          activeViewId: view.id,
+        },
+      },
+    ],
+  };
+}
+
 export function useCreateDatabase(editor: Editor) {
   const { createSourceAsync } = useDataSources();
   const { addPageAsync } = usePages();
@@ -29,18 +63,26 @@ export function useCreateDatabase(editor: Editor) {
 
   return useCallback(async () => {
     const sourceId = crypto.randomUUID();
-    // the database's own page (its cover/icon live here)
-    const page = await addPageAsync({
-      title: "Untitled",
+    const name = "Untitled";
+
+    // 1. dedicated page, content seeded with the database node (node owns its identity)
+    const dbPage = await addPageAsync({
+      title: name,
       parentId: activePageId ?? null,
-      databaseId: sourceId, // mark this page as belonging to the database
+      databaseId: sourceId,
+      content: databasePageContent(sourceId, name),
     });
+
+    // 2. the source, carrying its page link
     const source = await createSourceAsync({
       id: sourceId,
-      name: "Untitled",
+      name,
+      pageId: dbPage.id,
       properties: defaultProperties(),
       records: [],
     });
-    editor.chain().focus().insertDatabaseWithSource(source.id, page.id).run();
+
+    // 3. inline embed on the host page (a second database node → same source)
+    editor.chain().focus().insertDatabaseWithSource(source.id, dbPage.id).run();
   }, [editor, createSourceAsync, addPageAsync, activePageId]);
 }

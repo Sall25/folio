@@ -42,7 +42,7 @@ export function TitleCellDisplay({
 
   return (
     <div
-      className={`db-td--title${editing ? " editing" : ""}`}
+      className={`${editing ? " editing" : ""}`}
       onMouseOver={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{ display: "flex" }}
@@ -78,24 +78,31 @@ export function TitleCellDisplay({
               justifyContent: "flex-start",
               color: "var(--tt-theme-text)",
               fontWeight: 500,
+              fontFamily: "inherit",
+              fontSize: 14,
+              flex: "1",
+              padding: "0",
             }}
             onClick={() => !readonly && setEditing(true)}
           >
             {icon && (
-              <PageItemIcon cover={icon} styles={{ width: 16, height: 16 }} />
+              <PageItemIcon cover={icon} styles={{ width: 17, height: 17 }} />
             )}
-            <span>{value || "Untitled"}</span>
+            <span className="tiptap-button-text">{value || "Untitled"}</span>
           </Button>
         )}
       </div>
 
       {hasPage && !editing && onOpen && (
         <Button
-          className="db-cell-title__open"
+          // className="db-cell-title__open"
           style={{
             minHeight: 18,
             height: 24,
+            fontSize: 14,
             borderRadius: "var(--tt-radius-sm)",
+            background: "transparent",
+            border: "1px solid var(--tt-border-color)",
             opacity: hover ? 1 : 0,
             transition: "opacity 0.15s ease",
           }}

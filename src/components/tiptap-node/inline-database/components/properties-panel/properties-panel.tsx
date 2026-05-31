@@ -6,7 +6,7 @@ import {
   //CardFooter,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
-import type { DatabaseAttrs, DatabaseView, ID } from "../../types/types";
+import type { DatabaseProperty, DatabaseView, ID } from "../../types/types";
 import type { UseDatabaseReturn } from "../../hooks/use-database";
 import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
 import {
@@ -18,11 +18,11 @@ import "./properties-panel.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
 export function PropertiesPanel({
-  attrs,
+  properties,
   db,
   activeView,
 }: {
-  attrs: DatabaseAttrs;
+  properties: DatabaseProperty[];
   db: UseDatabaseReturn;
   activeView: DatabaseView | undefined;
 }) {
@@ -42,17 +42,17 @@ export function PropertiesPanel({
   }
 
   function hideAll() {
-    const titleProp = attrs.properties.find((p) => p.config.type === "title");
-    const hiddenProperties = attrs.properties
+    const titleProp = properties.find((p) => p.config.type === "title");
+    const hiddenProperties = properties
       .filter((p) => p.id !== titleProp?.id)
       .map((p) => p.id);
     db.updateView(activeView!.id, { hiddenProperties });
   }
 
-  const visibleProperties = attrs.properties.filter((p) => !hidden.has(p.id));
-  const hiddenProperties = attrs.properties.filter((p) => hidden.has(p.id));
+  const visibleProperties = properties.filter((p) => !hidden.has(p.id));
+  const hiddenProperties = properties.filter((p) => hidden.has(p.id));
 
-  const renderRow = (p: (typeof attrs.properties)[0]) => {
+  const renderRow = (p: (typeof properties)[0]) => {
     const Icon = PROPERTY_TYPE_ICONS[p.config.type];
     const isTitle = p.config.type === "title";
     const isVisible = !hidden.has(p.id);

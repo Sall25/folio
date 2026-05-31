@@ -117,6 +117,8 @@ export function PageItem({
           styles={{
             opacity: shouldShow && hasChildren ? 0 : 1,
             transition: "opacity 150ms ease",
+            width: 16,
+            height: 16,
           }}
         />
         <Spacer orientation="horizontal" size={0.2} />

@@ -27,11 +27,12 @@
       auto-fill,
       minmax(var(--db-gallery-card-width, 260px), 1fr)
     );
-    gap: 12px;
+    gap: 6px;
     padding: 4px 0;
   }
 
   &__card {
+    border-radius: var(--tt-radius-sm);
     // BoardCard provides the inner styling; this just sizes the slot
   }
 }

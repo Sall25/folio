@@ -34,6 +34,7 @@ export const DatabaseNode = Node.create({
       templateId: { default: null },
       hideTitle: { default: null },
       pageId: { default: null },
+      properties: { default: [] },
     };
   },
 

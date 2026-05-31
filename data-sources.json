@@ -1,65 +1,105 @@
 {
   "data-sources": [
     {
-      "id": "a877fc31-2f51-424f-aac3-5b49a7f0c550",
-      "name": "Untitled",
-      "pageId": 72,
+      "id": "77fa3a02-c07c-4036-946a-74f5078a0ef1",
+      "name": "My new database",
+      "pageId": 75,
       "properties": [
         {
-          "id": "42e3f913-75ea-4717-9228-18a1310d9681",
-          "name": "Name",
+          "id": "dcb333ba-6ffe-41d3-b20a-b904f1401a93",
+          "name": "Coffee Name",
           "config": {
             "type": "title"
           },
-          "width": 240
+          "width": 286
         },
         {
-          "id": "a11c0a20-6a7b-456a-bf42-298e16c0921a",
-          "name": "Tags",
+          "id": "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8",
+          "name": "Wifi",
           "config": {
-            "type": "select",
-            "options": []
+            "type": "checkbox"
           },
-          "width": 160
-        }
-      ],
-      "records": [],
-      "createdAt": "1780182585196",
-      "updatedAt": null
-    },
-    {
-      "id": "3fd90c40-962c-452c-99e8-dd80bc0d39e0",
-      "name": "Database",
-      "pageId": 72,
-      "properties": [
-        {
-          "id": "f051724c-5b93-493a-9dcf-b4d8f635e5f8",
-          "name": "Name",
-          "config": {
-            "type": "title"
-          },
-          "width": 240
+          "width": 81
         },
         {
-          "id": "827c5119-acbb-4f1a-9c30-e5aa0d9797ba",
-          "name": "Text",
+          "id": "e5f09289-9d25-4ce1-9871-e2b8a6567686",
+          "name": "Time",
           "config": {
             "type": "text"
+          },
+          "width": 160
+        },
+        {
+          "id": "e34bf4d3-4fa7-407d-9b96-4876d5274089",
+          "name": "Bonus Point",
+          "config": {
+            "type": "text"
+          },
+          "width": 163
+        },
+        {
+          "id": "019df765-cc54-4621-9a04-c709fdf90c81",
+          "name": "District",
+          "config": {
+            "type": "select",
+            "options": [
+              {
+                "id": "1134d06d-2115-426a-bb49-00ab29b0b588",
+                "label": "mission",
+                "color": "var(--tt-color-highlight-pink)"
+              },
+              {
+                "id": "27d58b07-8ca9-4366-a10d-8ab896f345e9",
+                "label": "salvador",
+                "color": "var(--tt-color-highlight-gray)"
+              }
+            ]
+          },
+          "width": 160
+        },
+        {
+          "id": "5d2c13f1-d96a-431c-aa51-cb665710029a",
+          "name": "Date",
+          "config": {
+            "type": "date"
           },
           "width": 160
         }
       ],
       "records": [
         {
-          "id": "3dad4186-182a-4643-9fe6-5c70c10ef27b",
-          "values": {},
-          "pageId": 73,
-          "createdAt": "1780184818558",
+          "id": "54387630-2c6a-46b8-a441-f90f7265cf95",
+          "values": {
+            "dcb333ba-6ffe-41d3-b20a-b904f1401a93": "Borderlands Coffee",
+            "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8": false,
+            "e5f09289-9d25-4ce1-9871-e2b8a6567686": "8AM-7PM",
+            "e34bf4d3-4fa7-407d-9b96-4876d5274089": "Also a bookstore",
+            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-01T00:00:00.000Z"
+          },
+          "pageId": 76,
+          "createdAt": "1780236232217",
+          "updatedAt": null
+        },
+        {
+          "id": "ceb19390-2aef-4b27-8e28-f4677fe2f20d",
+          "values": {
+            "dcb333ba-6ffe-41d3-b20a-b904f1401a93": "Vive Le Tarte",
+            "e5f09289-9d25-4ce1-9871-e2b8a6567686": "8AM-5PM",
+            "e34bf4d3-4fa7-407d-9b96-4876d5274089": "Good salvory",
+            "019df765-cc54-4621-9a04-c709fdf90c81": {
+              "id": "27d58b07-8ca9-4366-a10d-8ab896f345e9",
+              "label": "salvador",
+              "color": "var(--tt-color-highlight-gray)"
+            },
+            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-02T00:00:00.000Z"
+          },
+          "pageId": 77,
+          "createdAt": "1780249720122",
           "updatedAt": null
         }
       ],
-      "createdAt": "1780183166548",
-      "updatedAt": "1780187353422"
+      "createdAt": "1780236168406",
+      "updatedAt": "1780267059663"
     }
   ]
 }

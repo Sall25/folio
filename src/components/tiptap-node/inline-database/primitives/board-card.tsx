@@ -10,7 +10,7 @@ import type {
   DatabaseProperty,
   CellValue,
 } from "../types/types";
-//import "./board-card.scss";
+import "./board-card.scss";
 import { useDraggable } from "@dnd-kit/core";
 
 export function BoardCard({
@@ -52,6 +52,8 @@ export function BoardCard({
         opacity: isDragging ? 0.4 : 1,
         cursor: isDragging ? "grabbing" : "grab",
         zIndex: isDragging ? 10 : undefined,
+        padding: 0,
+        borderRadius: "var(--tt-radius-sm)",
       }}
       {...attributes}
       {...listeners}

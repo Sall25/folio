@@ -48,11 +48,10 @@ export function RecordPropertyPanelView({ node }: NodeViewProps) {
   };
 
   const { source, isLoading, setCellValue } = useDataSource(sourceId);
-
   if (!sourceId || !recordId) return <NodeViewWrapper />;
   if (isLoading || !source) return <NodeViewWrapper />;
-
   const record = source.records.find((r) => r.id === recordId);
+
   if (!record) return <NodeViewWrapper />;
 
   const properties = source.properties.filter((p) => p.config.type !== "title");

@@ -72,6 +72,7 @@ export function SelectOptionsEditor({
   const handleBlur = () => setShouldShow(false);
 
   const sortedOptions = useMemo(() => {
+    if (!options) return [];
     if (sort === "Alphabetical") {
       return [...options].sort((a, b) => a.label.localeCompare(b.label));
     }
@@ -84,10 +85,12 @@ export function SelectOptionsEditor({
   const addOption = useCallback(() => {
     const label = draft.trim();
     if (!label) return;
-    const color =
-      HIGHLIGHT_COLORS[options.length % HIGHLIGHT_COLORS.length].value;
+    const color = options
+      ? HIGHLIGHT_COLORS[options.length % HIGHLIGHT_COLORS.length].value
+      : "yellow";
     const newOption: SelectOption = { id: uuid(), label, color };
-    onChange([...options, newOption]);
+    const newOptions = options ? [...options] : [];
+    onChange([...newOptions, newOption]);
     setDraft("");
     requestAnimationFrame(() => inputRef.current?.focus());
   }, [draft, options, onChange]);
@@ -116,7 +119,7 @@ export function SelectOptionsEditor({
     (e: React.DragEvent, index: number) => {
       e.preventDefault();
       if (dragIndex.current === null || dragIndex.current === index) return;
-      const reordered = [...options];
+      const reordered = options ? [...options] : [];
       const [moved] = reordered.splice(dragIndex.current, 1);
       reordered.splice(index, 0, moved);
       dragIndex.current = index;
@@ -194,7 +197,7 @@ export function SelectOptionsEditor({
       </CardItemGroup>
 
       {/* options list */}
-      {sortedOptions.length > 0 && (
+      {sortedOptions && sortedOptions.length > 0 && (
         <CardItemGroup
           orientation="vertical"
           style={{

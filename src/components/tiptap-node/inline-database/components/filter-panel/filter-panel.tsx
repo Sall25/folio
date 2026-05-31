@@ -8,11 +8,7 @@ import {
   CardFooter,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
-import type {
-  DatabaseAttrs,
-  DatabaseProperty,
-  DatabaseView,
-} from "../../types/types";
+import type { DatabaseProperty, DatabaseView } from "../../types/types";
 import type { UseDatabaseReturn } from "../../hooks/use-database";
 import {
   OPERATORS_FOR_TYPE,
@@ -118,12 +114,12 @@ function makeFilterRule(property: DatabaseProperty): FilterRule {
 // ── FilterPanel ────────────────────────────────────────────────────────────
 
 export function FilterPanel({
-  attrs,
+  properties,
   db,
   activeView,
   onClose,
 }: {
-  attrs: DatabaseAttrs;
+  properties: DatabaseProperty[];
   db: UseDatabaseReturn;
   activeView: DatabaseView | undefined;
   onClose?: () => void;
@@ -154,8 +150,8 @@ export function FilterPanel({
 
   const q = query.trim().toLowerCase();
   const filtered = q
-    ? attrs.properties.filter((p) => p.name.toLowerCase().includes(q))
-    : attrs.properties;
+    ? properties.filter((p) => p.name.toLowerCase().includes(q))
+    : properties;
 
   return (
     <Card className="db-filter-panel">
@@ -200,7 +196,7 @@ export function FilterPanel({
         <Button
           variant="ghost"
           onClick={() => {
-            const first = attrs.properties[0];
+            const first = properties[0];
             if (first) addRuleFor(first);
           }}
           style={{

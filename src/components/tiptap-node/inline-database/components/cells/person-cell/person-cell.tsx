@@ -11,12 +11,14 @@ export function PersonCell({
   const people = useWorkspacePeople();
 
   return (
-    <PersonCellDisplay
-      value={value ?? []}
-      people={people}
-      onChange={onChange}
-      single={config.limit === "single"}
-      readonly={readonly}
-    />
+    <div className="db-cell">
+      <PersonCellDisplay
+        value={value ?? []}
+        people={people}
+        onChange={onChange}
+        single={config.limit === "single"}
+        readonly={readonly}
+      />
+    </div>
   );
 }

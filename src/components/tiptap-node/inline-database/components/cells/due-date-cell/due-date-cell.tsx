@@ -8,13 +8,15 @@ export function DueDateCell({
   readonly,
 }: CellProps<"date">) {
   return (
-    <DateCellDisplay
-      value={value}
-      onChange={onChange}
-      format={config.format ?? "full"}
-      timeFormat={config.timeFormat ?? "12h"}
-      includeTime={config.includeTime ?? false}
-      readonly={readonly}
-    />
+    <div className="db-cell">
+      <DateCellDisplay
+        value={value}
+        onChange={onChange}
+        format={config.format ?? "full"}
+        timeFormat={config.timeFormat ?? "12h"}
+        includeTime={config.includeTime ?? false}
+        readonly={readonly}
+      />
+    </div>
   );
 }

@@ -4,6 +4,7 @@ import { useRef, useEffect } from "react";
 import { Ellipsis, Plus } from "lucide-react";
 import {
   Card,
+  CardBody,
   CardGroupLabel,
   CardHeader,
   CardItemGroup,
@@ -44,6 +45,12 @@ import type {
 } from "../types/types";
 import "./database-table-node-view.scss";
 import { useDebouncedCallback } from "use-debounce";
+import {
+  Grid,
+  GridCell,
+  GridRow,
+} from "src/components/tiptap-ui-primitive/grid";
+import { chunk } from "lodash";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -136,6 +143,21 @@ export function DatabaseNodeView({
     onUpdateTitle,
   );
 
+  // resolve the database page early — works whether or not source is loaded yet
+  const dbPageId = source?.pageId ?? attrs.pageId ?? null;
+  const dbPage =
+    dbPageId != null && pages ? (findPage(pages, dbPageId) ?? null) : null;
+
+  // in DatabaseNodeView, after dbPage is resolved
+  // useEffect(() => {
+  //   if (!dbPage) return;
+  //   if (dbPage.title !== attrs.title) {
+  //     updateAttributes({ ...attrs, title: dbPage.title });
+  //     updateSourceMetaAsync({ name: dbPage.title });
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [dbPage?.title]);
+
   const tableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -175,11 +197,6 @@ export function DatabaseNodeView({
       </NodeViewWrapper>
     );
   }
-
-  // The database's own page (cover/icon). Prefer source.pageId; fall back to node.
-  const dbPageId = source.pageId ?? attrs.pageId ?? null;
-  const dbPage =
-    dbPageId != null && pages ? (findPage(pages, dbPageId) ?? null) : null;
 
   // Records parent under the database page
   const recordParentId = dbPageId;
@@ -327,7 +344,14 @@ export function DatabaseNodeView({
         >
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost">
+              <Button
+                variant="ghost"
+                style={{ background: "transparent" }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
                 <Plus className="tiptap-button-icon" />
               </Button>
             </PopoverTrigger>
@@ -338,26 +362,38 @@ export function DatabaseNodeView({
                 <CardHeader>
                   <CardGroupLabel>Properties</CardGroupLabel>
                 </CardHeader>
-                <CardItemGroup style={{ width: "100%", padding: "0 5px" }}>
-                  {allPropertyTypes.map((t) => {
-                    const Icon = PROPERTY_TYPE_ICONS[t];
-                    return (
-                      <Button
-                        key={t}
-                        variant="ghost"
-                        style={{
-                          borderRadius: "var(--tt-radius-sm)",
-                          width: "100%",
-                          justifyContent: "flex-start",
-                        }}
-                        onClick={() => addProperty(t)}
-                      >
-                        <Icon className="tiptap-button-icon" />
-                        <span className="tiptap-button-text">{t}</span>
-                      </Button>
-                    );
-                  })}
-                </CardItemGroup>
+                <CardBody style={{ width: "100%", padding: "0 5px" }}>
+                  <Grid columns="1fr 1fr 1fr 1fr" gap={10}>
+                    {chunk(allPropertyTypes, 4).map((row, i) => (
+                      <GridRow key={i}>
+                        {row.map((t) => {
+                          const Icon = PROPERTY_TYPE_ICONS[t];
+                          return (
+                            <GridCell
+                              key={t}
+                              style={{
+                                padding: "5px 10px",
+                              }}
+                            >
+                              <Button
+                                variant="ghost"
+                                style={{
+                                  borderRadius: "var(--tt-radius-sm)",
+                                  width: "100%",
+                                  justifyContent: "flex-start",
+                                }}
+                                onClick={() => addProperty(t)}
+                              >
+                                <Icon className="tiptap-button-icon" />
+                                <span className="tiptap-button-text">{t}</span>
+                              </Button>
+                            </GridCell>
+                          );
+                        })}
+                      </GridRow>
+                    ))}
+                  </Grid>
+                </CardBody>
               </Card>
             </PopoverContent>
           </Popover>
@@ -375,17 +411,24 @@ export function DatabaseNodeView({
             style={{ display: "grid", gridTemplateColumns }}
           >
             {visibleProperties.map((prop) => (
-              <Cell
+              <div
                 key={prop.id}
-                property={prop}
-                value={(record.values[prop.id] ?? null) as CellValue | null}
-                record={record}
-                templateId={attrs.templateId}
-                columnValues={source.records.map(
-                  (r) => (r.values[prop.id] ?? null) as CellValue,
-                )}
-                onChange={(v) => setCellValue(record.id, prop.id, v)}
-              />
+                style={{
+                  borderRight: "1px solid var(--tt-border-color)",
+                  display: "block",
+                }}
+              >
+                <Cell
+                  property={prop}
+                  value={(record.values[prop.id] ?? null) as CellValue | null}
+                  record={record}
+                  templateId={attrs.templateId}
+                  columnValues={source.records.map(
+                    (r) => (r.values[prop.id] ?? null) as CellValue,
+                  )}
+                  onChange={(v) => setCellValue(record.id, prop.id, v)}
+                />
+              </div>
             ))}
             <div className="db-cell db-cell--actions" />
           </div>

@@ -10,7 +10,7 @@ export function SelectCell({
   return (
     <SelectCellDisplay
       value={value}
-      options={config.options}
+      options={config.options ?? []}
       onChange={onChange}
       readonly={readonly}
     />

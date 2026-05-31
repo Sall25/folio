@@ -8,11 +8,13 @@ export function MultiSelectCell({
   readonly,
 }: CellProps<"multi_select">) {
   return (
-    <MultiSelectCellDisplay
-      value={value ?? []}
-      onChange={onChange}
-      options={config.options}
-      readonly={readonly}
-    />
+    <div className="db-cell">
+      <MultiSelectCellDisplay
+        value={value ?? []}
+        onChange={onChange}
+        options={config.options ?? []}
+        readonly={readonly}
+      />
+    </div>
   );
 }
