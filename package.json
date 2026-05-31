@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite\" \"json-server --watch pages.json --port 3001\" \"json-server --watch threads.json --port 3002\" \"json-server --watch versions.json --port 3003\" \"node server/upload-server.js\"",
+    "dev": "concurrently \"vite\" \"json-server --watch pages.json --port 3001\" \"json-server --watch threads.json --port 3002\" \"json-server --watch versions.json --port 3003\" \"node server/upload-server.js\"  \"json-server --watch data-sources.json --port 3005\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

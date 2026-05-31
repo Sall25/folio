@@ -1,0 +1,65 @@
+{
+  "data-sources": [
+    {
+      "id": "a877fc31-2f51-424f-aac3-5b49a7f0c550",
+      "name": "Untitled",
+      "pageId": 72,
+      "properties": [
+        {
+          "id": "42e3f913-75ea-4717-9228-18a1310d9681",
+          "name": "Name",
+          "config": {
+            "type": "title"
+          },
+          "width": 240
+        },
+        {
+          "id": "a11c0a20-6a7b-456a-bf42-298e16c0921a",
+          "name": "Tags",
+          "config": {
+            "type": "select",
+            "options": []
+          },
+          "width": 160
+        }
+      ],
+      "records": [],
+      "createdAt": "1780182585196",
+      "updatedAt": null
+    },
+    {
+      "id": "3fd90c40-962c-452c-99e8-dd80bc0d39e0",
+      "name": "Database",
+      "pageId": 72,
+      "properties": [
+        {
+          "id": "f051724c-5b93-493a-9dcf-b4d8f635e5f8",
+          "name": "Name",
+          "config": {
+            "type": "title"
+          },
+          "width": 240
+        },
+        {
+          "id": "827c5119-acbb-4f1a-9c30-e5aa0d9797ba",
+          "name": "Text",
+          "config": {
+            "type": "text"
+          },
+          "width": 160
+        }
+      ],
+      "records": [
+        {
+          "id": "3dad4186-182a-4643-9fe6-5c70c10ef27b",
+          "values": {},
+          "pageId": 73,
+          "createdAt": "1780184818558",
+          "updatedAt": null
+        }
+      ],
+      "createdAt": "1780183166548",
+      "updatedAt": "1780187353422"
+    }
+  ]
+}

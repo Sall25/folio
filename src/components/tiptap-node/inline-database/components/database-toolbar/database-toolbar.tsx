@@ -35,12 +35,12 @@ import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek
 import { ViewOptionsPopover } from "./view-options-popover";
 import { useCreatePage } from "src/components/tiptap-templates/simple/context/create-page-context";
 import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
-import { useCurrentEditor } from "@tiptap/react";
 import { DatabaseViewTabs } from "../database-view-tabs/database-view-tabs";
 import { FilterPanel } from "../filter-panel";
 import { SortPanel } from "../sort-panel";
 import { PropertiesPanel } from "../properties-panel";
 import { GroupPanel } from "../group-panel";
+import { useDataSource } from "../../hooks/use-data-source";
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface DatabaseToolbarProps {
@@ -78,7 +78,6 @@ export function DatabaseToolbar({
   const [viewOptionsOpen, setViewOptionsOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
   const { setCreatePageId } = useCreatePage();
-  const { editor } = useCurrentEditor();
   const onViewOptionsOpenChange = useCallback(
     (o: boolean) => setViewOptionsOpen(o),
     [setViewOptionsOpen],
@@ -88,15 +87,17 @@ export function DatabaseToolbar({
     (o: boolean) => setTemplateOpen(o),
     [setTemplateOpen],
   );
+
+  const { addRecordWithPageAsync } = useDataSource(attrs.sourceId);
+
   const handleNewPage = async () => {
-    const newPage = await addPageAsync({
+    const rec = await addRecordWithPageAsync({
       title: "New Page",
-      parentId: activePageId ?? null,
+      parentPageId: activePageId ?? null,
+      createPage: addPageAsync,
     });
-    if (newPage?.id != null) {
-      editor?.commands.addDatabaseRecord(attrs.id, newPage.id);
-      setCreatePageId(newPage.id);
-    }
+    // open the freshly created record's page in the create/peek panel
+    if (rec.pageId != null) setCreatePageId(rec.pageId);
   };
 
   return (

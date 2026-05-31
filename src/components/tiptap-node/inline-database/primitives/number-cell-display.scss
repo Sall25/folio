@@ -1,0 +1,20 @@
+.num-cell {
+  &__display, &__num { font-variant-numeric: tabular-nums; font-size: 0.875rem; }
+  &__input {
+    background: none; border: none; outline: none;
+    font-size: 0.875rem; color: inherit; width: 120px; text-align: right;
+    caret-color: var(--tt-cursor-color); font-variant-numeric: tabular-nums;
+    &::-webkit-outer-spin-button, &::-webkit-inner-spin-button { -webkit-appearance: none; }
+    -moz-appearance: textfield;
+  }
+  &__bar-wrap, &__ring-wrap { display: flex; align-items: center; gap: 8px; width: 100%; justify-content: flex-end; }
+  &__bar-track { flex: 1; height: 6px; border-radius: 999px; background: var(--tt-border-color); overflow: hidden; }
+  &__bar-fill { display: block; height: 100%; border-radius: 999px; background: var(--tt-brand-color-400); transition: width 0.2s ease; }
+  &__ring {
+    width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+    background: conic-gradient(var(--tt-brand-color-400) var(--ring-deg, 0deg), var(--tt-border-color) 0);
+    mask: radial-gradient(circle 5px at center, transparent 99%, #000 100%);
+    -webkit-mask: radial-gradient(circle 5px at center, transparent 99%, #000 100%);
+  }
+}
+.cell__stub { font-size: 0.875rem; color: var(--tt-paragraph-text-color); }

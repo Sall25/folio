@@ -1,6 +1,11 @@
 import { type ReactNode } from "react";
 import type { Editor } from "@tiptap/core";
-import type { DatabaseAttrs, DatabaseProperty, ID } from "../types/types";
+import type {
+  DatabaseAttrs,
+  DatabaseProperty,
+  DataSource,
+  ID,
+} from "../types/types";
 import type { UseDatabaseReturn } from "../hooks/use-database";
 import { DatabaseContext } from "./database-context";
 
@@ -11,6 +16,7 @@ interface DatabaseProviderProps {
   db: UseDatabaseReturn;
   editor: Editor;
   children: ReactNode;
+  source: DataSource | null;
   updateAttributes: (attributes: Record<string, DatabaseAttrs>) => void;
 }
 
@@ -20,13 +26,16 @@ export function DatabaseProvider({
   editor,
   children,
   updateAttributes,
+  source,
 }: DatabaseProviderProps) {
   const gridTemplateColumns = attrs.properties
-    .map((p) => `${p.width ?? 160}px`)
-    .join(" ");
+    ? attrs.properties.map((p) => `${p.width ?? 160}px`).join(" ")
+    : "1fr 1fr";
 
   function getProperty(propertyId: ID): DatabaseProperty | undefined {
-    return attrs.properties.find((p) => p.id === propertyId);
+    return attrs.properties
+      ? attrs.properties.find((p) => p.id === propertyId)
+      : undefined;
   }
 
   return (
@@ -38,6 +47,7 @@ export function DatabaseProvider({
         getProperty,
         gridTemplateColumns,
         updateAttributes,
+        source,
       }}
     >
       {children}

@@ -1,25 +1,33 @@
-import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
-import type { NodeViewProps } from "@tiptap/core";
 import { Plus } from "lucide-react";
+import { useMemo, useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { DatabaseToolbar } from "../components/database-toolbar";
-import { useDatabase } from "../hooks/use-database";
-import { DatabaseProvider } from "./database-provider";
-import type {
-  BoardView,
-  DatabaseAttrs,
-  SelectOption,
-  StatusGroup,
-} from "../types/types";
-import "./database-board-node-view.scss";
+import { usePages } from "src/components/tiptap-templates/simple/use-pages";
+import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
+import { useDataSource } from "../hooks/use-data-source";
 import { SelectCellDisplay } from "../primitives/select-cell-display";
 import { StatusCellDisplay } from "../primitives/status-cell-display";
 import { CheckboxCellDisplay } from "../primitives/checkbox-cell-display";
-import { useMemo, useRef } from "react";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
-
-// ── Column definition helpers ───────────────────────────────────────────────
+import { BoardCard } from "../primitives/board-card";
+import type {
+  BoardView,
+  DataSource,
+  DataSourceRecord,
+  DatabaseProperty,
+  StatusGroup,
+  CellValue,
+  DatabaseAttrs,
+} from "../types/types";
+import "./database-board-node-view.scss";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import { BoardColumn } from "../primitives/board-column";
 
 const NONE_COLUMN_ID = "__none__";
 
@@ -29,258 +37,309 @@ interface ColumnDef {
   color?: string;
 }
 
-function getColumnDefs(
-  attrs: DatabaseAttrs,
-  groupByPropertyId: string,
-): ColumnDef[] {
-  const prop = attrs.properties.find((p) => p.id === groupByPropertyId);
+function getColumnDefs(prop: DatabaseProperty | undefined): ColumnDef[] {
   if (!prop) return [];
-
   const config = prop.config;
-
   if (config.type === "select" || config.type === "multi_select") {
-    return config.options.map((o: SelectOption) => ({
+    return config.options.map((o) => ({
       id: o.id,
       label: o.label,
       color: o.color,
     }));
   }
-
   if (config.type === "status") {
     return config.groups.flatMap((g) =>
-      g.items.map((item) => ({
-        id: item.id,
-        label: item.name,
-        color: item.color,
-      })),
+      g.items.map((i) => ({ id: i.id, label: i.name, color: i.color })),
     );
   }
-
   if (config.type === "checkbox") {
     return [
       { id: "true", label: "Checked" },
       { id: "false", label: "Unchecked" },
     ];
   }
-
   return [];
 }
 
-// ── Main component ──────────────────────────────────────────────────────────
+/** Which column does a record belong to, given the group property's value? */
+function columnKeyFor(value: unknown, prop: DatabaseProperty): string {
+  if (value == null) return NONE_COLUMN_ID;
+  const t = prop.config.type;
+  if (t === "checkbox") return value ? "true" : "false";
+  if (t === "select" || t === "status") {
+    // select stores SelectOption (or id); status stores id
+    return typeof value === "object" && value !== null && "id" in value
+      ? String((value as { id: string }).id)
+      : String(value);
+  }
+  if (t === "multi_select") {
+    const arr = Array.isArray(value) ? value : [];
+    const first = arr[0];
+    if (first == null) return NONE_COLUMN_ID;
+    return typeof first === "object" && "id" in first
+      ? String((first as { id: string }).id)
+      : String(first);
+  }
+  return NONE_COLUMN_ID;
+}
 
 export function DatabaseBoardNodeView({
-  node,
-  editor,
-  updateAttributes,
-}: NodeViewProps) {
-  const attrs = node.attrs as DatabaseAttrs;
-  const onUpdateTitle = (title: string) =>
-    updateAttributes({ ...attrs, title });
-  const db = useDatabase(attrs, editor, onUpdateTitle);
-
-  const activeView = db.activeView as BoardView | undefined;
-  const groupByPropertyId = activeView?.groupByPropertyId ?? "";
-
+  attrs,
+  source,
+}: {
+  attrs: DatabaseAttrs;
+  source: DataSource;
+}) {
+  const { addPageAsync } = usePages();
   const { activePage } = useActivePage();
+  const { addRecordWithPageAsync, setCellValue } = useDataSource(
+    attrs.sourceId,
+  );
 
-  const columnDefs = groupByPropertyId
-    ? getColumnDefs(attrs, groupByPropertyId)
-    : [];
+  const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
+    attrs.views[0]) as BoardView | undefined;
+  const groupByPropertyId = activeView?.groupByPropertyId ?? "";
+  const groupProp = source.properties.find((p) => p.id === groupByPropertyId);
+  const recordParentId = source.pageId ?? null;
+  const columnDefs = useMemo(() => getColumnDefs(groupProp), [groupProp]);
+  const showNone = true;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const allColumns: ColumnDef[] = showNone
+    ? [
+        { id: NONE_COLUMN_ID, label: `No ${groupProp?.name ?? ""}` },
+        ...columnDefs,
+      ]
+    : columnDefs;
 
-  // "No [property]" column always first, matching Notion
-  const groupProp = attrs.properties.find((p) => p.id === groupByPropertyId);
-
-  // All columns including the none column — this is what records use
-  // to compute their grid-column index (1-based)
-  const allColumns: ColumnDef[] = [...columnDefs];
-
-  const boardRef = useRef<HTMLDivElement>(null);
+  // Bucket records into columns
+  const buckets = useMemo(() => {
+    const map = new Map<string, DataSourceRecord[]>();
+    allColumns.forEach((c) => map.set(c.id, []));
+    if (!groupProp) return map;
+    for (const rec of source.records) {
+      const key = columnKeyFor(rec.values[groupProp.id], groupProp);
+      (map.get(key) ?? map.get(NONE_COLUMN_ID)!).push(rec);
+    }
+    return map;
+  }, [source.records, groupProp, allColumns]);
 
   const colWidth = useMemo(() => {
     const width = activePage?.settings.width === "full" ? 900 : 700;
     const gap = 12;
-    const totalGaps = gap * (allColumns.length - 1);
-    const padding = 80;
-    // Divide evenly across all columns, minimum 200px
+    const totalGaps = gap * Math.max(allColumns.length - 1, 0);
     return Math.max(
       200,
-      Math.floor((width - padding - totalGaps) / allColumns.length),
+      Math.floor((width - 80 - totalGaps) / Math.max(allColumns.length, 1)),
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allColumns.length, activePage?.settings.width]);
 
-  // Serialize column defs and groupByPropertyId to CSS custom properties
-  // so DatabaseRecordBoardView can read them without prop drilling
-  const boardVars = {
-    "--db-board-group-prop": JSON.stringify(groupByPropertyId),
-    "--db-board-columns": JSON.stringify(allColumns),
-    "--db-board-col-width": `${colWidth}px`,
-  } as React.CSSProperties;
+  function setGroupValue(recordId: string, columnId: string) {
+    if (!groupProp) return;
+    if (columnId === NONE_COLUMN_ID) {
+      // dropping into "No <prop>" clears the grouping value
+      setCellValue(recordId, groupProp.id, null);
+      return;
+    }
+    const cfg = groupProp.config;
+    let value: CellValue | null = null;
+    if (cfg.type === "select")
+      value = cfg.options.find((o) => o.id === columnId) ?? null;
+    else if (cfg.type === "multi_select") {
+      const o = cfg.options.find((x) => x.id === columnId);
+      value = o ? [o] : [];
+    } else if (cfg.type === "status") value = columnId;
+    else if (cfg.type === "checkbox") value = columnId === "true";
+    setCellValue(recordId, groupProp.id, value);
+  }
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  function onDragStart(e: DragStartEvent) {
+    setActiveId(String(e.active.id));
+  }
+
+  function onDragEnd(e: DragEndEvent) {
+    setActiveId(null);
+    if (!e.over) return;
+    const recordId = String(e.active.id);
+    const targetColumn = String(e.over.id);
+    // setGroupValue already maps a columnId → the right cell value
+    setGroupValue(recordId, targetColumn);
+  }
+
+  const activeRecord = activeId
+    ? (source.records.find((r) => r.id === activeId) ?? null)
+    : null;
+
   if (!groupByPropertyId || columnDefs.length === 0) {
     return (
-      <NodeViewWrapper>
-        <DatabaseProvider
-          attrs={attrs}
-          db={db}
-          editor={editor}
-          updateAttributes={updateAttributes}
-        >
-          <CardItemGroup>
-            <DatabaseToolbar
-              attrs={attrs}
-              db={db}
-              onUpdateAttributes={(a) => updateAttributes(a)}
-            />
-            <div className="db-board-empty">
-              <p>
-                Add a Status or Select property, then set it as the group
-                property to use board view.
-              </p>
-            </div>
-            {/* NodeViewContent must always be rendered */}
-            <div style={{ display: "none" }}>
-              <NodeViewContent as="div" />
-            </div>
-          </CardItemGroup>
-        </DatabaseProvider>
-      </NodeViewWrapper>
+      <div className="db-board-empty">
+        <p>
+          Set a Status or Select property as the group property to use board
+          view.
+        </p>
+      </div>
     );
   }
 
-  return (
-    <NodeViewWrapper>
-      <DatabaseProvider
-        attrs={attrs}
-        db={db}
-        editor={editor}
-        updateAttributes={updateAttributes}
-      >
-        <CardItemGroup>
-          <div className="db-board__toolbar-sticky">
-            <DatabaseToolbar
-              attrs={attrs}
-              db={db}
-              onUpdateAttributes={(a) => updateAttributes(a)}
-            />
-          </div>
-
-          <div
-            ref={boardRef}
-            className="db-board"
-            data-type="database-board"
-            style={boardVars}
-          >
-            {/* Column headers — one per column, CSS grid places them */}
-            <div
-              className="db-board__headers"
-              style={{
-                gridTemplateColumns: `repeat(${allColumns.length}, var(--db-board-col-width, 260px))`,
-              }}
-            >
-              {allColumns.map((col) => (
-                <div key={col.id} className="db-board-col-header">
-                  {groupProp?.config.type === "select" ? (
-                    <SelectCellDisplay
-                      value={
-                        (
-                          groupProp.config as { options: SelectOption[] }
-                        ).options.find((o) => o.id === col.id) ?? null
-                      }
-                      options={
-                        (groupProp.config as { options: SelectOption[] })
-                          .options
-                      }
-                      readonly
-                    />
-                  ) : groupProp?.config.type === "status" ? (
-                    <StatusCellDisplay
-                      value={col.id}
-                      groups={
-                        (groupProp.config as { groups: StatusGroup[] }).groups
-                      }
-                      readonly
-                    />
-                  ) : groupProp?.config.type === "checkbox" ? (
-                    <CheckboxCellDisplay value={col.id === "true"} readonly />
-                  ) : (
-                    <span className="db-board-col-header__label">
-                      {col.label}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Record cards — each positions itself into the right column */}
-            <div
-              className="db-board__body"
-              style={{
-                gridTemplateColumns: `repeat(${allColumns.length}, var(--db-board-col-width, 260px))`,
-              }}
-            >
-              <NodeViewContent as="div" className="db-board__records" />
-            </div>
-
-            {/* Per-column New buttons */}
-            <div
-              className="db-board__footers"
-              style={{
-                gridTemplateColumns: `repeat(${allColumns.length}, var(--db-board-col-width, 260px))`,
-              }}
-            >
-              {allColumns.map((col) => (
-                <Button
-                  key={col.id}
-                  variant="ghost"
-                  className="db-board-col-footer__add"
-                  onClick={() => {
-                    editor.commands.addDatabaseRecord(node.attrs.id);
-                    // Set the group value on the new record after it's created
-                    setTimeout(() => {
-                      if (!groupProp || col.id === NONE_COLUMN_ID) return;
-                      let lastRecordId: string | null = null;
-                      editor.state.doc.descendants((n) => {
-                        if (n.type.name === "databaseRecord") {
-                          lastRecordId = n.attrs.id;
-                        }
-                      });
-                      if (!lastRecordId) return;
-
-                      let newValue: unknown = null;
-                      if (
-                        groupProp.config.type === "select" ||
-                        groupProp.config.type === "multi_select"
-                      ) {
-                        const option = (
-                          groupProp.config as { options: SelectOption[] }
-                        ).options.find((o) => o.id === col.id);
-                        newValue =
-                          groupProp.config.type === "multi_select"
-                            ? [option]
-                            : (option ?? null);
-                      } else if (groupProp.config.type === "status") {
-                        newValue = col.id;
-                      } else if (groupProp.config.type === "checkbox") {
-                        newValue = col.id === "true";
-                      }
-
-                      editor.commands.updateDatabaseCell(
-                        attrs.id,
-                        lastRecordId,
-                        groupProp.id,
-                        newValue,
-                      );
-                    }, 0);
-                  }}
-                >
-                  <Plus className="tiptap-button-icon" />
-                  <span className="tiptap-button-text">New</span>
-                </Button>
-              ))}
-            </div>
-          </div>
-        </CardItemGroup>
-      </DatabaseProvider>
-    </NodeViewWrapper>
+  const cardProps = source.properties.filter(
+    (p) =>
+      p.id !== groupProp?.id &&
+      !(activeView?.hiddenProperties ?? []).includes(p.id),
   );
+  return (
+    <DndContext
+      sensors={sensors}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+    >
+      <div
+        className="db-board"
+        data-type="database-board"
+        style={{ ["--db-board-col-width" as string]: `${colWidth}px` }}
+      >
+        {allColumns.map((col) => {
+          const recs = buckets.get(col.id) ?? [];
+          return (
+            <div
+              key={col.id}
+              className="db-board-col"
+              style={{ width: colWidth }}
+            >
+              <div className="db-board-col-header">
+                {col.id === NONE_COLUMN_ID ? (
+                  <span className="db-board-col-header__label">
+                    {col.label}
+                  </span>
+                ) : groupProp?.config.type === "select" ? (
+                  <SelectCellDisplay
+                    value={
+                      groupProp.config.options.find((o) => o.id === col.id) ??
+                      null
+                    }
+                    options={groupProp.config.options}
+                    readonly
+                  />
+                ) : groupProp?.config.type === "status" ? (
+                  <StatusCellDisplay
+                    value={col.id}
+                    groups={
+                      (groupProp.config as { groups: StatusGroup[] }).groups
+                    }
+                    readonly
+                  />
+                ) : groupProp?.config.type === "checkbox" ? (
+                  <CheckboxCellDisplay value={col.id === "true"} readonly />
+                ) : (
+                  <span className="db-board-col-header__label">
+                    {col.label}
+                  </span>
+                )}
+                {/* <span className="db-board-col-header__count">
+                {records.length}
+              </span> */}
+              </div>
+
+              <BoardColumn columnId={col.id} isOver={false}>
+                {recs.map((rec) => (
+                  <BoardCard
+                    key={rec.id}
+                    record={rec}
+                    properties={cardProps}
+                    cardPreview={activeView?.cardPreview ?? "none"}
+                    sourceId={attrs.sourceId!}
+                    onChange={(propId, v) => setCellValue(rec.id, propId, v)}
+                  />
+                ))}
+              </BoardColumn>
+
+              <Button
+                variant="ghost"
+                className="db-board-col-footer__add"
+                onClick={async () => {
+                  const rec = await addRecordWithPageAsync({
+                    title: "",
+                    parentPageId: recordParentId,
+                    createPage: addPageAsync,
+                  });
+                  setGroupValue(rec.id, col.id);
+                }}
+              >
+                <Plus className="tiptap-button-icon" />
+                <span className="tiptap-button-text">New</span>
+              </Button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Drag overlay — the card that follows the cursor */}
+      <DragOverlay>
+        {activeRecord ? (
+          <div className="db-board-card db-board-card--overlay">
+            {cardProps.find((p) => p.config.type === "title") && (
+              <span className="db-board-card__title-text">
+                {String(
+                  activeRecord.values[
+                    cardProps.find((p) => p.config.type === "title")!.id
+                  ] ?? "Untitled",
+                )}
+              </span>
+            )}
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
+  );
+
+  // return (
+  //   <div
+  //     className="db-board"
+  //     data-type="database-board"
+  //     style={{ ["--db-board-col-width" as string]: `${colWidth}px` }}
+  //   >
+  //     {allColumns.map((col) => {
+  //       const records = buckets.get(col.id) ?? [];
+  //       return (
+  //         <div
+  //           key={col.id}
+  //           className="db-board-col"
+  //           style={{ width: colWidth }}
+  //         >
+
+  //           <div className="db-board-col__cards">
+  //             {records.map((rec) => (
+  //               <BoardCard
+  //                 key={rec.id}
+  //                 record={rec}
+  //                 properties={cardProps}
+  //                 cardPreview={activeView?.cardPreview ?? "none"}
+  //                 sourceId={attrs.sourceId!}
+  //                 onChange={(propId, v) => setCellValue(rec.id, propId, v)}
+  //               />
+  //             ))}
+  //           </div>
+
+  //           <Button
+  //             variant="ghost"
+  //             className="db-board-col-footer__add"
+  //             onClick={async () => {
+  //               const rec = await addRecordWithPageAsync({
+  //                 title: "",
+  //                 parentPageId: null,
+  //                 createPage: addPageAsync,
+  //               });
+  //               setGroupValue(rec.id, col.id);
+  //             }}
+  //           >
+  //             <Plus className="tiptap-button-icon" />
+  //             <span className="tiptap-button-text">New</span>
+  //           </Button>
+  //         </div>
+  //       );
+  //     })}
+  //   </div>
+  // );
 }

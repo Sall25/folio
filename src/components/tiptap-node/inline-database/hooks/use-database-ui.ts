@@ -1,5 +1,4 @@
 import { useState, useCallback, useMemo } from "react";
-import type { Editor } from "@tiptap/core";
 import type {
   DatabaseAttrs,
   DatabaseView,
@@ -8,14 +7,25 @@ import type {
   PanelView,
   DatabaseUIState,
 } from "../types/types";
+import { makeDefaultView } from "../utils";
 
 export type UseDatabaseUIReturn = ReturnType<typeof useDatabaseUI>;
 
-export function useDatabaseUI(attrs: DatabaseAttrs, editor: Editor) {
-  const nodeId = attrs.id;
+/**
+ * export function useDatabaseUI(
+  attrs: DatabaseAttrs,
+) {
+  // … all ephemeral state unchanged …
 
+ 
+  // … return unchanged …
+}
+ */
+export function useDatabaseUI(
+  attrs: DatabaseAttrs,
+  updateAttributes: (attrs: Record<string, unknown>) => void,
+) {
   // ── Ephemeral UI state ─────────────────────────────────────────────────
-
   const [uiState, setUIState] = useState<DatabaseUIState>({
     editingCell: null,
     openRecordId: null,
@@ -108,31 +118,43 @@ export function useDatabaseUI(attrs: DatabaseAttrs, editor: Editor) {
   // ── View mutations (persisted into ProseMirror attrs) ──────────────────
 
   const setActiveView = useCallback(
-    (viewId: ID) => {
-      editor.commands.updateDatabaseAttrs(nodeId, { activeViewId: viewId });
-    },
-    [editor, nodeId],
+    (viewId: ID) => updateAttributes({ activeViewId: viewId }),
+    [updateAttributes],
   );
 
   const addView = useCallback(
     (type: DatabaseView["type"], name: string) => {
-      editor.commands.addDatabaseView(nodeId, type, name);
+      const newView = makeDefaultView(type, name);
+      updateAttributes({
+        views: [...attrs.views, newView],
+        activeViewId: newView.id,
+      });
     },
-    [editor, nodeId],
+    [attrs.views, updateAttributes],
   );
 
   const updateView = useCallback(
-    (viewId: ID, patch: Partial<Omit<DatabaseView, "id">>) => {
-      editor.commands.updateDatabaseView(nodeId, viewId, patch);
-    },
-    [editor, nodeId],
+    (viewId: ID, patch: Partial<Omit<DatabaseView, "id">>) =>
+      updateAttributes({
+        views: attrs.views.map((v) =>
+          v.id === viewId ? ({ ...v, ...patch } as DatabaseView) : v,
+        ),
+      }),
+    [attrs.views, updateAttributes],
   );
 
   const deleteView = useCallback(
     (viewId: ID) => {
-      editor.commands.deleteDatabaseView(nodeId, viewId);
+      const remaining = attrs.views.filter((v) => v.id !== viewId);
+      updateAttributes({
+        views: remaining,
+        activeViewId:
+          attrs.activeViewId === viewId
+            ? (remaining[0]?.id ?? null)
+            : attrs.activeViewId,
+      });
     },
-    [editor, nodeId],
+    [attrs.views, attrs.activeViewId, updateAttributes],
   );
 
   return {

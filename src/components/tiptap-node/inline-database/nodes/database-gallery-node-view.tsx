@@ -1,12 +1,9 @@
-import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
-import type { NodeViewProps } from "@tiptap/core";
 import { Plus } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { DatabaseToolbar } from "../components/database-toolbar";
-import { useDatabase } from "../hooks/use-database";
-import { DatabaseProvider } from "./database-provider";
-import type { DatabaseAttrs, GalleryView } from "../types/types";
+import { usePages } from "src/components/tiptap-templates/simple/use-pages";
+import { useDataSource } from "../hooks/use-data-source";
+import { BoardCard } from "../primitives/board-card";
+import type { DatabaseAttrs, DataSource, GalleryView } from "../types/types";
 import "./database-gallery-node-view.scss";
 
 const CARD_SIZES = {
@@ -16,64 +13,74 @@ const CARD_SIZES = {
 } as const;
 
 export function DatabaseGalleryNodeView({
-  node,
-  editor,
-  updateAttributes,
-}: NodeViewProps) {
-  const attrs = node.attrs as DatabaseAttrs;
-  const onUpdateTitle = (title: string) =>
-    updateAttributes({ ...attrs, title });
-  const db = useDatabase(attrs, editor, onUpdateTitle);
+  attrs,
+  source,
+}: {
+  attrs: DatabaseAttrs & { sourceId?: string | null };
+  source: DataSource;
+}) {
+  const { addPageAsync } = usePages();
+  const { addRecordWithPageAsync, setCellValue } = useDataSource(
+    attrs.sourceId,
+  );
+  const recordParentId = source.pageId ?? null;
 
-  const activeView = db.activeView as GalleryView | undefined;
+  const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
+    attrs.views[0]) as GalleryView | undefined;
+
   const cardSize = activeView?.cardSize ?? "medium";
   const coverFit = activeView?.coverFit ?? "cover";
-  const coverPropertyId = activeView?.coverPropertyId ?? "";
-
   const cardWidth = CARD_SIZES[cardSize];
 
+  const hidden = new Set(activeView?.hiddenProperties ?? []);
+  const cardProps = source.properties.filter((p) => !hidden.has(p.id));
+
   return (
-    <NodeViewWrapper>
-      <DatabaseProvider
-        attrs={attrs}
-        db={db}
-        editor={editor}
-        updateAttributes={updateAttributes}
-      >
-        <CardItemGroup>
-          <DatabaseToolbar
-            attrs={attrs}
-            db={db}
-            onUpdateAttributes={(a) => updateAttributes(a)}
-          />
-
+    <div
+      className="db-gallery"
+      data-type="database-gallery"
+      style={
+        {
+          "--db-gallery-card-width": `${cardWidth}px`,
+          "--db-gallery-cover-fit": coverFit,
+        } as React.CSSProperties
+      }
+    >
+      <div className="db-gallery__body">
+        {source.records.map((rec) => (
           <div
-            className="db-gallery"
-            data-type="database-gallery"
-            style={
-              {
-                "--db-gallery-card-width": `${cardWidth}px`,
-                "--db-gallery-cover-fit": coverFit,
-                "--db-gallery-cover-prop": JSON.stringify(coverPropertyId),
-              } as React.CSSProperties
-            }
+            key={rec.id}
+            className="db-gallery__card"
+            style={{ width: cardWidth }}
           >
-            <NodeViewContent as="div" className="db-gallery__body" />
+            <BoardCard
+              record={rec}
+              properties={cardProps}
+              cardPreview="cover"
+              sourceId={attrs.sourceId!}
+              onChange={(propId, v) => setCellValue(rec.id, propId, v)}
+            />
           </div>
+        ))}
+      </div>
 
-          <Button
-            variant="ghost"
-            style={{
-              justifyContent: "flex-start",
-              borderRadius: "var(--tt-radius-sm)",
-            }}
-            onClick={() => editor.commands.addDatabaseRecord(node.attrs.id)}
-          >
-            <Plus className="tiptap-button-icon" />
-            <span className="tiptap-button-text">New</span>
-          </Button>
-        </CardItemGroup>
-      </DatabaseProvider>
-    </NodeViewWrapper>
+      <Button
+        variant="ghost"
+        style={{
+          justifyContent: "flex-start",
+          borderRadius: "var(--tt-radius-sm)",
+        }}
+        onClick={() =>
+          addRecordWithPageAsync({
+            title: "",
+            parentPageId: recordParentId,
+            createPage: addPageAsync,
+          })
+        }
+      >
+        <Plus className="tiptap-button-icon" />
+        <span className="tiptap-button-text">New</span>
+      </Button>
+    </div>
   );
 }

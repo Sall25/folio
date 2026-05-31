@@ -1,0 +1,27 @@
+.db-td--url {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+}
+
+.db-cell-link--url {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--tt-brand-color-400);
+  text-decoration: none;
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.db-cell-link__empty {
+  display: block;
+  min-height: 1em;
+  width: 100%;
+}

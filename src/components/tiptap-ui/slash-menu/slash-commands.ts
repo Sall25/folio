@@ -322,7 +322,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     id: "database-view",
     type: "command",
     title: "Inline Database",
-    run: (e) => e.chain().focus().insertDatabase().run(),
+    run: (e) => e.chain().focus().insertDatabaseNode().run(),
   },
   {
     id: "title-property",

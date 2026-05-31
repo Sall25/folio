@@ -6,9 +6,8 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import type { DatabaseAttrs, DatabaseProperty } from "../../types/types";
+import type { DatabaseProperty, DataSourceRecord } from "../../types/types";
 import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
-import type { Node } from "@tiptap/pm/model";
 import "./database-calculations.scss";
 
 // ── Calculation types ──────────────────────────────────────────────────────
@@ -98,18 +97,9 @@ function getCalcGroups(prop: DatabaseProperty): CalcGroup[] | null {
 }
 
 // ── Calculation logic ──────────────────────────────────────────────────────
-
-function getCellValue(record: Node, propertyId: string): unknown {
-  let value: unknown = null;
-  record.forEach((cell) => {
-    if (cell.attrs.propertyId !== propertyId) return;
-    value =
-      cell.attrs.value ??
-      (cell.type.name === "textCell" ? cell.textContent : null);
-  });
-  return value;
+function getCellValue(record: DataSourceRecord, propertyId: string): unknown {
+  return record.values[propertyId] ?? null;
 }
-
 function runCalc(calc: CalcType, values: unknown[]): string {
   if (calc === "none") return "";
   const total = values.length;
@@ -209,10 +199,9 @@ function useCalcAvailable(
 }
 
 // ── Per-column calc cell ───────────────────────────────────────────────────
-
 interface CalcCellProps {
   prop: DatabaseProperty;
-  records: Node[];
+  records: DataSourceRecord[];
   calc: CalcType;
   onChange: (calc: CalcType) => void;
   hideWhenUnavailable?: boolean;
@@ -295,16 +284,13 @@ function CalcCell({
 }
 
 // ── Main calculations row ──────────────────────────────────────────────────
-
 export function DatabaseCalculations({
-  // attrs,
+  properties,
   records,
-  visibleProperties,
   gridTemplateColumns,
 }: {
-  attrs: DatabaseAttrs;
-  records: Node[];
-  visibleProperties: DatabaseProperty[];
+  properties: DatabaseProperty[];
+  records: DataSourceRecord[];
   gridTemplateColumns: string;
 }) {
   const [calcs, setCalcs] = useState<Record<string, CalcType>>({});
@@ -315,7 +301,7 @@ export function DatabaseCalculations({
 
   return (
     <div className="db-calculations" style={{ gridTemplateColumns }}>
-      {visibleProperties.map((prop) => (
+      {properties.map((prop) => (
         <CalcCell
           key={prop.id}
           prop={prop}
@@ -324,7 +310,6 @@ export function DatabaseCalculations({
           onChange={(c) => setCalc(prop.id, c)}
         />
       ))}
-      {/* trailing actions column — empty */}
       <div className="db-calc-cell db-calc-cell--empty" />
     </div>
   );

@@ -49,34 +49,15 @@ import { PageLinkNode } from "src/components/tiptap-node/page-link-node";
 import { DiffExtension } from "src/components/tiptap-ui/version-history";
 import type { EditorExtensionRefs } from "../context/editor-extension-refs";
 import { CodeBlockNode } from "src/components/tiptap-node/code-block-node";
-import { SelectPropertyNode } from "src/components/tiptap-node/database-node/select-property-node";
 import { CalloutExtension } from "src/components/tiptap-node/callout-node";
 import { AudioExtension } from "src/components/tiptap-node/audio-node";
-import { DatabaseRecordNode } from "src/components/tiptap-node/inline-database/nodes/database-record-node";
-import { TitleCellNode } from "src/components/tiptap-node/inline-database/nodes/title-cell-node";
-import { SelectCellNode } from "src/components/tiptap-node/inline-database/nodes/select-cell-node";
-import { CheckboxCellNode } from "src/components/tiptap-node/inline-database/nodes/checkbox-cell-node";
-import { FileNode } from "src/components/tiptap-node/file-node";
-import { EmailCellNode } from "src/components/tiptap-node/inline-database/nodes/email-cell-node";
-import { FileCellNode } from "src/components/tiptap-node/inline-database/nodes/file-cell-node";
-import { MultiSelectCellNode } from "src/components/tiptap-node/inline-database/nodes/multiselect-cell-node";
-import { StatusCellNode } from "src/components/tiptap-node/inline-database/nodes/status-cell-node";
-import { NumberCellNode } from "src/components/tiptap-node/inline-database/nodes/number-cell-node";
-import { PhoneCellNode } from "src/components/tiptap-node/inline-database/nodes/phone-cell-node";
-import { RollupCellNode } from "src/components/tiptap-node/inline-database/nodes/rollup-cell-node";
-import { TextCellNode } from "src/components/tiptap-node/inline-database/nodes/text-cell-node";
-import { UrlCellNode } from "src/components/tiptap-node/inline-database/nodes/url-cell-node";
-import { CreatedTimeCellNode } from "src/components/tiptap-node/inline-database/nodes/created-time-cell-node";
-import { EditedTimeCellNode } from "src/components/tiptap-node/inline-database/nodes/edited-time-cell-node";
-import { DueDateCellNode } from "src/components/tiptap-node/inline-database/nodes/due-date-cell-node";
-import { FormulaCellNode } from "src/components/tiptap-node/inline-database/nodes/formula-cell-node";
 import { YoutubeExtension } from "src/components/tiptap-node/video-node";
 import { BookmarkNode } from "src/components/tiptap-node/bookmark-node/bookmark-node-extension";
 import { PageBreadcrumb } from "src/components/tiptap-ui/page-breadcrumb/page-breadcrumb";
 import { RecordPropertyPanelNode } from "src/components/tiptap-node/record-property-panel-node";
-import { PersonCellNode } from "src/components/tiptap-node/inline-database/nodes/person-cell-node";
 import { MathInlineNode } from "src/components/tiptap-node/math-inline-node";
 import { MathBlockNode } from "src/components/tiptap-node/math-block-node";
+import { FileNode } from "src/components/tiptap-node/file-node";
 
 export function useEditorExtensions(
   refsRef: React.RefObject<EditorExtensionRefs>,
@@ -220,26 +201,6 @@ export function useEditorExtensions(
       }),
       DiffExtension,
       DragHandleExtension,
-
-      FormulaCellNode,
-      EmailCellNode,
-      FileCellNode,
-      MultiSelectCellNode,
-      StatusCellNode,
-      NumberCellNode,
-      PhoneCellNode,
-      PersonCellNode,
-      RollupCellNode,
-      TextCellNode,
-      UrlCellNode,
-      CreatedTimeCellNode,
-      EditedTimeCellNode,
-      DueDateCellNode,
-      SelectPropertyNode,
-      CheckboxCellNode,
-      TitleCellNode,
-      SelectCellNode,
-      DatabaseRecordNode,
       DatabaseNode,
       CalloutExtension,
       AudioExtension,

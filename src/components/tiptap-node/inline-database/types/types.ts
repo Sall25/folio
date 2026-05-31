@@ -33,6 +33,28 @@ export interface StatusPropertyProps {
 
 export type ID = string;
 
+export interface DataSourceRecord {
+  id: ID;
+  /** cell values keyed by propertyId */
+  values: Record<ID, unknown>;
+  /** if this row is also a page */
+  pageId?: number;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface DataSource {
+  id: ID;
+  /** the schema — moved off the database node */
+  properties: DatabaseProperty[];
+  /** the rows */
+  records: DataSourceRecord[];
+  createdAt: string;
+  updatedAt: string | null;
+  pageId?: number;
+  name?: string;
+}
+
 export type { SelectOption } from "../../database-node/select-property-node/select-property-node";
 
 export type PropertyType =
@@ -317,6 +339,9 @@ export interface DatabaseAttrs {
   templateId?: number;
 
   hideTitle?: boolean;
+
+  sourceId?: ID;
+  pageId?: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

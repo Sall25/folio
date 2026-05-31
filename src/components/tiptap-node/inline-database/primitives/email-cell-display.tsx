@@ -1,0 +1,106 @@
+import { ArrowUp } from "lucide-react";
+import { useState } from "react";
+import { Button } from "src/components/tiptap-ui-primitive/button";
+import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "src/components/tiptap-ui-primitive/popover";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
+import "./email-cell-display.scss";
+
+export interface EmailCellDisplayProps {
+  value: string;
+  onChange: (value: string) => void;
+  readonly?: boolean;
+}
+
+export function EmailCellDisplay({
+  value,
+  onChange,
+  readonly,
+}: EmailCellDisplayProps) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  const link = value ? (
+    <a
+      href={`mailto:${value}`}
+      className="db-cell-email__link"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {value}
+    </a>
+  ) : (
+    <span className="db-cell-email__empty" />
+  );
+
+  if (readonly) return <div className="db-td--email">{link}</div>;
+
+  function save() {
+    const next = draft.trim();
+    if (next !== value) onChange(next);
+    setOpen(false);
+  }
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (v) setDraft(value);
+      }}
+    >
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          style={{
+            background: "transparent",
+            width: "100%",
+            justifyContent: "flex-start",
+          }}
+        >
+          {link}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent side="bottom" align="start">
+        <Card style={{ padding: "5px 10px" }}>
+          <CardItemGroup orientation="horizontal">
+            <TextareaAutosize
+              cols={40}
+              maxRows={1}
+              placeholder="example@email.com"
+              value={draft}
+              autoFocus
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  save();
+                }
+                if (e.key === "Escape") setOpen(false);
+              }}
+            />
+            <Spacer />
+            <Button
+              variant="ghost"
+              style={{
+                background: "var(--tt-brand-color-400)",
+                borderRadius: "var(--tt-radius-xl)",
+              }}
+              disabled={!draft.trim()}
+              onClick={save}
+            >
+              <ArrowUp
+                className="tiptap-button-icon"
+                style={{ color: "white" }}
+              />
+            </Button>
+          </CardItemGroup>
+        </Card>
+      </PopoverContent>
+    </Popover>
+  );
+}

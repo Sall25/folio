@@ -1,6 +1,11 @@
 import { createContext, useContext } from "react";
 import type { Editor } from "@tiptap/core";
-import type { DatabaseAttrs, DatabaseProperty, ID } from "../types/types";
+import type {
+  DatabaseAttrs,
+  DatabaseProperty,
+  DataSource,
+  ID,
+} from "../types/types";
 import type { UseDatabaseReturn } from "../hooks/use-database";
 
 // ── Context shape ──────────────────────────────────────────────────────────
@@ -18,6 +23,8 @@ interface DatabaseContextValue {
   gridTemplateColumns: string;
 
   updateAttributes: (attributes: Record<string, DatabaseAttrs>) => void;
+
+  source: DataSource | null;
 }
 
 // ── Context ────────────────────────────────────────────────────────────────
