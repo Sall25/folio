@@ -1,6 +1,6 @@
 import type { JSONContent, NodeViewProps } from "@tiptap/core";
 import { NodeViewWrapper } from "@tiptap/react";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState, type CSSProperties } from "react";
 import { Ellipsis, Plus } from "lucide-react";
 import {
   Card,
@@ -40,6 +40,7 @@ import { DatabaseTimelineNodeView } from "./database-timeline-node-view";
 import type {
   DatabaseAttrs,
   DatabaseView,
+  DatabaseProperty,
   PropertyConfig,
   CellValue,
 } from "../types/types";
@@ -50,6 +51,20 @@ import {
   GridCell,
   GridRow,
 } from "src/components/tiptap-ui-primitive/grid";
+import {
+  closestCenter,
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  horizontalListSortingStrategy,
+  SortableContext,
+} from "@dnd-kit/sortable";
+
 import { chunk } from "lodash";
 
 type PropertyType = PropertyConfig["type"];
@@ -99,6 +114,17 @@ export function DatabaseNodeView({
     updateSourceMetaAsync,
   } = useDataSource(attrs.sourceId);
 
+  // ── Draft column widths ──────────────────────────────────────────────────
+  // Populated only during an active resize drag. The grid template reads
+  // draft-first so the resize is reflected live without any network writes.
+  // Cleared after the commit lands in `source` (see onResizeEnd) so the
+  // column never snaps back to the stale width on release.
+  const [draftWidths, setDraftWidths] = useState<Record<string, number>>({});
+
+  // Guards against onResizeEnd double-firing (some pointer setups fire
+  // mouseup twice). Drops an identical immediate repeat commit.
+  const lastCommitRef = useRef<{ propId: string; width: number } | null>(null);
+
   // debounced persistence of the title to source.name + the database page
   const persistTitle = useDebouncedCallback(
     (title: string) => {
@@ -143,35 +169,59 @@ export function DatabaseNodeView({
     onUpdateTitle,
   );
 
+  const [dragX, setDragX] = useState(0);
+  const [overId, setOverId] = useState<string | null>(null);
+
   // resolve the database page early — works whether or not source is loaded yet
   const dbPageId = source?.pageId ?? attrs.pageId ?? null;
   const dbPage =
     dbPageId != null && pages ? (findPage(pages, dbPageId) ?? null) : null;
 
-  // in DatabaseNodeView, after dbPage is resolved
-  // useEffect(() => {
-  //   if (!dbPage) return;
-  //   if (dbPage.title !== attrs.title) {
-  //     updateAttributes({ ...attrs, title: dbPage.title });
-  //     updateSourceMetaAsync({ name: dbPage.title });
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [dbPage?.title]);
-
   const tableRef = useRef<HTMLDivElement>(null);
+  const [activeColId, setActiveColId] = useState<string | null>(null);
 
+  // ── Live resize: write draft width only, NO network call ──────────────────
+  // The ResizeObserver in PropertyHeader dispatches `column:resize` continuously
+  // during a drag. Previously this fired updatePropertiesAsync per tick, flooding
+  // the source endpoint with racing mutations. Now it only updates local draft
+  // state; the single persistence happens in onResizeEnd.
   useEffect(() => {
     const el = tableRef.current;
-    if (!el || !source) return;
+    if (!el) return;
     const handler = (e: Event) => {
-      const { propId, width } = (e as CustomEvent).detail;
-      updatePropertiesAsync(
-        source.properties.map((p) => (p.id === propId ? { ...p, width } : p)),
-      );
+      const { propId, width } = (e as CustomEvent).detail as {
+        propId: string;
+        width: number;
+      };
+      setDraftWidths((d) => ({ ...d, [propId]: width }));
     };
     el.addEventListener("column:resize", handler);
     return () => el.removeEventListener("column:resize", handler);
-  }, [source, updatePropertiesAsync]);
+  }, []); // no source dep — handler only touches local state
+
+  // inside DatabaseNodeView, table view:
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
+
+  const onDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIndex = visibleProperties.findIndex((p) => p.id === active.id);
+    const newIndex = visibleProperties.findIndex((p) => p.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const reordered = arrayMove(visibleProperties, oldIndex, newIndex).map(
+      (p) => p.id,
+    );
+    // reorderProperties keeps any properties not in the list at the end —
+    // pass full source order so hidden props don't get dropped
+    const visibleSet = new Set(reordered);
+    const hidden = source?.properties
+      .filter((p) => !visibleSet.has(p.id))
+      .map((p) => p.id);
+    if (!hidden) return;
+    db.reorderProperties([...reordered, ...hidden]);
+  };
 
   // ── No source yet → picker ────────────────────────────────────────────────
   if (!attrs.sourceId) {
@@ -275,13 +325,25 @@ export function DatabaseNodeView({
 
   // ── Non-table views ──────────────────────────────────────────────────────
   if (activeView?.type === "board")
-    return chrome(<DatabaseBoardNodeView view={db.activeView} attrs={attrs} source={source} />);
+    return chrome(
+      <DatabaseBoardNodeView
+        view={db.activeView}
+        attrs={attrs}
+        source={source}
+      />,
+    );
   if (activeView?.type === "gallery")
-    return chrome(<DatabaseGalleryNodeView view={db.activeView} attrs={attrs} source={source} />);
+    return chrome(
+      <DatabaseGalleryNodeView
+        view={db.activeView}
+        attrs={attrs}
+        source={source}
+      />,
+    );
   if (activeView?.type === "list")
     return chrome(
       <DatabaseListNodeView
-      view={db.activeView}
+        view={db.activeView}
         attrs={attrs}
         source={source}
         onUpdateView={onUpdateView}
@@ -301,8 +363,63 @@ export function DatabaseNodeView({
   // ── Table view ─────────────────────────────────────────────────────────
   const hidden = new Set(activeView?.hiddenProperties ?? []);
   const visibleProperties = source.properties.filter((p) => !hidden.has(p.id));
+
+  // draft-first width: the live drag value wins, falling back to the persisted
+  // width, falling back to the default. Every row reads gridTemplateColumns, so
+  // setting a draft width reflects across header + all body rows automatically.
+  const widthFor = (p: DatabaseProperty) => draftWidths[p.id] ?? p.width ?? 160;
+  const activeIndex = activeColId
+    ? visibleProperties.findIndex((p) => p.id === activeColId)
+    : -1;
+  const overIndex = overId
+    ? visibleProperties.findIndex((p) => p.id === overId)
+    : -1;
+
+  // width of the column being dragged
+  const activeWidth =
+    activeIndex >= 0 ? widthFor(visibleProperties[activeIndex]) : 0;
+
+  const shiftFor = (i: number): number => {
+    if (activeIndex < 0 || overIndex < 0 || i === activeIndex) return 0;
+    // dragging right: columns between (active, over] move LEFT by activeWidth
+    if (activeIndex < overIndex && i > activeIndex && i <= overIndex) {
+      return -activeWidth;
+    }
+    // dragging left: columns between [over, active) move RIGHT by activeWidth
+    if (activeIndex > overIndex && i >= overIndex && i < activeIndex) {
+      return activeWidth;
+    }
+    return 0;
+  };
+
   const gridTemplateColumns =
-    visibleProperties.map((p) => `${p.width ?? 160}px`).join(" ") + " 1fr";
+    visibleProperties.map((p) => `${widthFor(p)}px`).join(" ") + " 1fr";
+
+  const frozenId = activeView?.frozenPropertyId ?? null;
+  const freezeIndex = frozenId
+    ? visibleProperties.findIndex((p) => p.id === frozenId)
+    : -1;
+
+  // cumulative left offset per column, accumulating through the freeze boundary.
+  // Uses widthFor so a frozen column's sticky offset stays correct mid-drag.
+  const leftOffsets: number[] = [];
+  let acc = 0;
+  visibleProperties.forEach((p, i) => {
+    leftOffsets[i] = acc;
+    if (i <= freezeIndex) acc += widthFor(p);
+  });
+
+  const stickyStyle = (i: number): React.CSSProperties => {
+    if (i > freezeIndex) return {};
+    const isBoundary = i === freezeIndex;
+    return {
+      position: "sticky",
+      left: leftOffsets[i],
+      zIndex: 2,
+      background: "var(--tt-bg-color)",
+      borderRight: isBoundary ? "2px solid var(--tt-border-color)" : undefined,
+    };
+  };
 
   const addProperty = (type: PropertyType) =>
     updatePropertiesAsync([
@@ -315,30 +432,84 @@ export function DatabaseNodeView({
       },
     ]);
 
+  // ── Commit a resize once, on release ──────────────────────────────────────
+  // - guards against double-fire (identical immediate repeat is dropped)
+  // - awaits the source update, THEN clears the draft, so the column doesn't
+  //   snap back to the stale width during the async round-trip
+  const commitColumnWidth = async (
+    ref: { current: HTMLElement | null } | undefined,
+    width: number,
+  ) => {
+    const propId = (ref?.current as HTMLElement | null)?.dataset.propId;
+    if (!propId) return;
+
+    const last = lastCommitRef.current;
+    if (last && last.propId === propId && last.width === width) {
+      // identical immediate repeat → drop (double-fire guard)
+      return;
+    }
+    lastCommitRef.current = { propId, width };
+
+    await updatePropertiesAsync(
+      source.properties.map((p) => (p.id === propId ? { ...p, width } : p)),
+    );
+
+    // commit landed in source → safe to drop the draft for this column
+    setDraftWidths((d) => {
+      if (!(propId in d)) return d;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { [propId]: _drop, ...rest } = d;
+      return rest;
+    });
+  };
+
   return chrome(
     <NodeViewWrapper
       as={"div"}
       ref={tableRef}
       className="db-table"
       data-type="database-table"
+      contentEditable={false}
     >
       <div className="db-header-row" style={{ gridTemplateColumns }}>
-        {visibleProperties.map((prop) => (
-          <ResizableNodeProvider
-            key={prop.id}
-            onResizeEnd={({ width }, ref) => {
-              const propId = (ref?.current as HTMLElement)?.dataset.propId;
-              if (!propId) return;
-              updatePropertiesAsync(
-                source.properties.map((p) =>
-                  p.id === propId ? { ...p, width } : p,
-                ),
-              );
-            }}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={(e) => setActiveColId(String(e.active.id))}
+          onDragMove={(e) => setDragX(e.delta.x)}
+          onDragOver={(e) => setOverId(e.over ? String(e.over.id) : null)}
+          onDragEnd={(e) => {
+            setActiveColId(null);
+            setOverId(null);
+            setDragX(0);
+            onDragEnd(e);
+          }}
+          onDragCancel={() => {
+            setActiveColId(null);
+            setOverId(null);
+            setDragX(0);
+          }}
+        >
+          <SortableContext
+            items={visibleProperties.map((p) => p.id)}
+            strategy={horizontalListSortingStrategy}
           >
-            <PropertyHeader prop={prop} />
-          </ResizableNodeProvider>
-        ))}
+            {visibleProperties.map((prop, i) => (
+              <ResizableNodeProvider
+                key={prop.id}
+                onResizeEnd={({ width }, ref) =>
+                  void commitColumnWidth(ref, width)
+                }
+              >
+                <PropertyHeader
+                  prop={prop}
+                  style={stickyStyle(i) as Partial<CSSProperties>}
+                />
+              </ResizableNodeProvider>
+            ))}
+          </SortableContext>
+        </DndContext>
+        {/* actions cell stays outside SortableContext — not reorderable */}
         <CardItemGroup
           orientation="horizontal"
           className="db-header-cell db-header-cell--actions"
@@ -404,37 +575,57 @@ export function DatabaseNodeView({
         </CardItemGroup>
       </div>
 
-      <div className="db-body">
+      <div className="db-grid" style={{ display: "grid", gridTemplateColumns }}>
         {source.records.map((record) => (
-          <div
-            key={record.id}
-            className="db-row"
-            style={{ display: "grid", gridTemplateColumns }}
-          >
-            {visibleProperties.map((prop) => (
-              <div
-                key={prop.id}
-                style={{
-                  borderRight: "1px solid var(--tt-border-color)",
-                  display: "block",
-                  overflow: "hidden",
-                }}
-              >
-                <Cell
-                  property={prop}
-                  value={(record.values[prop.id] ?? null) as CellValue | null}
-                  record={record}
-                  templateId={attrs.templateId}
-                  columnValues={source.records.map(
-                    (r) => (r.values[prop.id] ?? null) as CellValue,
-                  )}
-                  onChange={(v) => setCellValue(record.id, prop.id, v)}
-                  unwrapped={db.isUnwrapped(db.activeView.id, prop.id)}
-                  view={db.activeView}
-                />
-              </div>
-            ))}
-            <div className="db-cell db-cell--actions" />
+          <div key={`${record.id}`} style={{ display: "contents" }}>
+            {/**
+style={{
+ 
+}} */}
+            {visibleProperties.map((prop, i) => {
+              const shift = shiftFor(i);
+              return (
+                <div
+                  key={`${record.id}:${prop.id}`}
+                  data-row-id={record.id}
+                  style={{
+                    borderRight: "1px solid var(--tt-border-color)",
+                    borderBottom: "1px solid var(--tt-border-color)",
+                    display: "block",
+                    overflow: "hidden",
+                    ...stickyStyle(i),
+                    transform:
+                      activeColId === prop.id
+                        ? `translate3d(${dragX}px,0,0)`
+                        : shift
+                          ? `translate3d(${shift}px,0,0)`
+                          : undefined,
+                    transition:
+                      activeColId === prop.id
+                        ? undefined
+                        : "transform 0.15s ease",
+                    ...(activeColId === prop.id && {
+                      background: "var(--tt-bg-color)",
+                      zIndex: 3,
+                    }),
+                  }}
+                >
+                  <Cell
+                    property={prop}
+                    value={(record.values[prop.id] ?? null) as CellValue | null}
+                    record={record}
+                    templateId={attrs.templateId}
+                    columnValues={source.records.map(
+                      (r) => (r.values[prop.id] ?? null) as CellValue,
+                    )}
+                    onChange={(v) => setCellValue(record.id, prop.id, v)}
+                    unwrapped={db.isUnwrapped(db.activeView.id, prop.id)}
+                    view={db.activeView}
+                  />
+                </div>
+              );
+            })}
+            <div className="db-header-cell--actions"></div>
           </div>
         ))}
       </div>

@@ -6,38 +6,6 @@
       "pageId": 75,
       "properties": [
         {
-          "id": "dcb333ba-6ffe-41d3-b20a-b904f1401a93",
-          "name": "Coffee Name",
-          "config": {
-            "type": "title"
-          },
-          "width": 212
-        },
-        {
-          "id": "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8",
-          "name": "Wifi",
-          "config": {
-            "type": "checkbox"
-          },
-          "width": 85
-        },
-        {
-          "id": "e5f09289-9d25-4ce1-9871-e2b8a6567686",
-          "name": "Time",
-          "config": {
-            "type": "text"
-          },
-          "width": 150
-        },
-        {
-          "id": "e34bf4d3-4fa7-407d-9b96-4876d5274089",
-          "name": "Bonus Point",
-          "config": {
-            "type": "text"
-          },
-          "width": 163
-        },
-        {
           "id": "019df765-cc54-4621-9a04-c709fdf90c81",
           "name": "District",
           "config": {
@@ -55,7 +23,39 @@
               }
             ]
           },
-          "width": 160
+          "width": 124
+        },
+        {
+          "id": "dcb333ba-6ffe-41d3-b20a-b904f1401a93",
+          "name": "Coffee Name",
+          "config": {
+            "type": "title"
+          },
+          "width": 217
+        },
+        {
+          "id": "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8",
+          "name": "Wifi",
+          "config": {
+            "type": "checkbox"
+          },
+          "width": 72
+        },
+        {
+          "id": "e5f09289-9d25-4ce1-9871-e2b8a6567686",
+          "name": "Time",
+          "config": {
+            "type": "text"
+          },
+          "width": 337
+        },
+        {
+          "id": "e34bf4d3-4fa7-407d-9b96-4876d5274089",
+          "name": "Bonus Point",
+          "config": {
+            "type": "text"
+          },
+          "width": 279
         },
         {
           "id": "5d2c13f1-d96a-431c-aa51-cb665710029a",
@@ -63,7 +63,7 @@
           "config": {
             "type": "date"
           },
-          "width": 160
+          "width": 174
         }
       ],
       "records": [
@@ -228,7 +228,7 @@
         }
       ],
       "createdAt": "1780236168406",
-      "updatedAt": "1780369371450"
+      "updatedAt": "1780406513821"
     }
   ]
 }

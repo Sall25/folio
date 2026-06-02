@@ -2,6 +2,7 @@ import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import type { ID } from "../types/types";
 import { DatabaseNodeView } from "./database-node-view";
+import { Plugin } from "@tiptap/pm/state";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -18,7 +19,7 @@ export const DatabaseNode = Node.create({
   group: "block",
   atom: true,
   content: "block*",
-  selectable: true,
+  selectable: false,
   draggable: true,
   isolating: true,
 
@@ -51,6 +52,30 @@ export const DatabaseNode = Node.create({
 
   addNodeView() {
     return ReactNodeViewRenderer(DatabaseNodeView);
+  },
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        props: {
+          handleDOMEvents: {
+            mousedown: (view, event) => {
+              const target = event.target as HTMLElement;
+              // let real editable controls through
+              if (target.closest("input, textarea, [contenteditable='true']")) {
+                return false;
+              }
+              // swallow clicks inside the database chrome so PM never selects
+              if (target.closest('[data-type="database"]')) {
+                event.preventDefault();
+                return true; // tell PM we handled it
+              }
+              return false;
+            },
+          },
+        },
+      }),
+    ];
   },
 
   addCommands() {

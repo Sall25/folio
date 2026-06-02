@@ -38,7 +38,11 @@ export function DatabaseViewTabs({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="db-view-tabs">
+    <div
+      className="db-view-tabs"
+      contentEditable={false}
+      onMouseDown={(e) => e.preventDefault()}
+    >
       {attrs.views.map((view) => {
         const isActive = view.id === attrs.activeViewId;
         return isActive ? (
@@ -58,7 +62,11 @@ export function DatabaseViewTabs({
           <Button
             variant="ghost"
             key={view.id}
-            onClick={() => db.setActiveView(view.id)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              db.setActiveView(view.id);
+            }}
             style={{
               borderRadius: "var(--tt-radius-xl)",
               minWidth: 32,

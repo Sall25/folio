@@ -1,10 +1,24 @@
-.db-header-row,
-.db-row {
+.db-table {
+  overflow-x: scroll;
+  max-width: var(--db-editor-width);   /* bound the scroller so it overflows */
+  scrollbar-width: thin;
+  scrollbar-color: var(--tt-scrollbar-color) transparent;
+}
+
+.db-grid {
+  display: grid !important;
+  grid-template-columns: var(--db-grid-columns);
+  width: max-content;
+  min-width: 100%;
+ 
+}
+.db-header-row {
   display: grid;
   grid-template-columns: var(--db-grid-columns);
   border-bottom: 1px solid var(--tt-border-color);
+  width: max-content;     /* was: max-width: var(--db-editor-width) */
+  min-width: 100%;
 }
-
 .db-td {
   height: 34px;
   overflow: hidden;
@@ -22,22 +36,6 @@
   text-overflow: ellipsis;
 }
 
-.db-row > div {
-  min-width: 0; /* prevents grid blowout */
-}
-.db-row {
-  padding: 0;
-  height: 34px;        // fixed height, not auto
-//  border-top: 1px solid var(--tt-border-color);
-  // overflow: hidden;    // clip anything that escapes
-}
-
-// Collapse all the Tiptap wrapper divs between .db-row and .db-td
-.db-row > div,
-.db-row > div > div,
-.db-row > div > div > div {
-  display: contents;   // remove them from layout entirely
-}
 
 // ====================================================================
 // Wrap mode — when a row contains any wrapping cell, the row and every

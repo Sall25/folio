@@ -1,4 +1,4 @@
-import { useEffect, useState, type Ref } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import type {
   DatabaseProperty,
   PropertyConfig,
@@ -33,8 +33,24 @@ import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-au
 import { NumberEditDisplay } from "../number-edit-display";
 import { DateEditDisplay } from "../date-edit-display/date-edit-display";
 import { PersonEditDisplay } from "../person-edit-display";
-export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+export function PropertyHeader({
+  prop,
+  style,
+}: {
+  prop: DatabaseProperty;
+  style?: Partial<CSSProperties>;
+}) {
   const [open, setOpen] = useState(false);
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: prop.id });
 
   const { db, attrs } = useDatabaseContext();
   const Icon = PROPERTY_TYPE_ICONS[prop.config.type];
@@ -63,15 +79,34 @@ export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
   return (
     <div
       className="db-th"
-      ref={nodeRef as unknown as Ref<HTMLDivElement>}
-      style={{ position: "relative", paddingLeft: 5 }}
+      ref={(el) => {
+        setNodeRef(el);
+        (nodeRef as React.MutableRefObject<HTMLElement | null>).current = el;
+      }}
+      style={{
+        position: "relative",
+        transform: CSS.Translate.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 3 : undefined,
+        paddingLeft: 5,
+        ...style,
+      }}
       data-prop-id={prop.id}
+      contentEditable={false}
+      onMouseDown={(e) => {
+        const t = e.target as HTMLElement;
+        if (t.closest("input, textarea, [contenteditable='true']")) return;
+        e.preventDefault();
+      }}
     >
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="ghost"
             className="db-th__trigger"
+            {...attributes}
+            {...listeners}
             style={{
               width: "100%",
               borderRadius: "var(--tt-radius-sm)",
@@ -112,6 +147,7 @@ export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
                     maxRows={1}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    contentEditable={true}
                     onBlur={() =>
                       db.updateProperty(prop.id, {
                         ...prop,
@@ -126,8 +162,8 @@ export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
                     }
                   />
                 </CardItemGroup>
-                <PropertyEditPopover>
-                  {prop.config.type === "select" && (
+                {prop.config.type === "select" && (
+                  <PropertyEditPopover>
                     <SelectOptionsEditor
                       options={prop.config.options}
                       onEditOption={(option) =>
@@ -159,8 +195,10 @@ export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
                         })
                       }
                     />
-                  )}
-                  {prop.config.type === "multi_select" && (
+                  </PropertyEditPopover>
+                )}
+                {prop.config.type === "multi_select" && (
+                  <PropertyEditPopover>
                     <SelectOptionsEditor
                       options={prop.config.options}
                       onEditOption={(option) =>
@@ -192,15 +230,19 @@ export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
                         })
                       }
                     />
-                  )}
-                  {prop.config.type === "formula" && (
+                  </PropertyEditPopover>
+                )}
+                {prop.config.type === "formula" && (
+                  <PropertyEditPopover>
                     <FormulaEditor
                       propertyId={prop.id}
                       properties={attrs.properties}
                       onDone={() => setOpen(false)}
                     />
-                  )}
-                  {prop.config.type === "number" && (
+                  </PropertyEditPopover>
+                )}
+                {prop.config.type === "number" && (
+                  <PropertyEditPopover>
                     <NumberEditDisplay
                       prop={prop}
                       onChange={(patch) => {
@@ -211,29 +253,39 @@ export function PropertyHeader({ prop }: { prop: DatabaseProperty }) {
                         });
                       }}
                     />
-                  )}
-                  {prop.config.type === "date" && (
+                  </PropertyEditPopover>
+                )}
+                {prop.config.type === "date" && (
+                  <PropertyEditPopover>
                     <DateEditDisplay
                       prop={prop}
                       onChange={(config) =>
                         db.updateProperty(prop.id, { ...prop, config })
                       }
                     />
-                  )}
-                  {prop.config.type === "person" && (
+                  </PropertyEditPopover>
+                )}
+                {prop.config.type === "person" && (
+                  <PropertyEditPopover>
                     <PersonEditDisplay
                       prop={prop}
                       onChange={(config) =>
                         db.updateProperty(prop.id, { ...prop, config })
                       }
                     />
-                  )}
-                </PropertyEditPopover>
+                  </PropertyEditPopover>
+                )}
               </CardItemGroup>
               <CardItemGroup>
                 <FreezePropertyButton
                   isFrozen={db.isFrozen(db.activeView.id, prop.id)}
-                  onFreeze={() => db.freezeProperty(db.activeView.id, prop.id)}
+                  onFreeze={() => {
+                    const isFrozen = db.isFrozen(db.activeView.id, prop.id);
+                    db.freezeProperty(
+                      db.activeView.id,
+                      isFrozen ? null : prop.id,
+                    );
+                  }}
                 />
                 <HidePropertyButton
                   onHide={() => db.hideProperty(db.activeView.id, prop.id)}

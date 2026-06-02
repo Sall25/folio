@@ -31,14 +31,14 @@ export function SelectCellDisplay({
           background: displayed.color,
           minHeight: 18,
           height: 20,
-          padding: "0 10px",
+          padding: "2px 4px",
           width: "fit-content",
           justifyContent: "center",
+          alignItems: "center",
           borderRadius: "var(--tt-radius-sm)",
           color: "var(--tt-theme-text)",
           // margin: "5px 3px",
         }}
-        className="db-cell"
       >
         <span className="tiptap-button-text">{displayed.label}</span>
       </Button>
