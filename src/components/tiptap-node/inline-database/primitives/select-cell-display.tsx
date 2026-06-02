@@ -20,7 +20,7 @@ export function SelectCellDisplay({
   onChange,
   readonly = false,
 }: SelectCellDisplayProps) {
-  const displayed = value ?? options[0] ?? null;
+  const displayed = value ?? null;
   if (!displayed) return null;
 
   const trigger = (

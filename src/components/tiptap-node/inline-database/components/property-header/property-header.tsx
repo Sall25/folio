@@ -301,7 +301,9 @@ export function PropertyHeader({
               {prop.config.type !== "title" && (
                 <CardItemGroup>
                   <Separator orientation="horizontal" />
-                  <DuplicatePropertyButton onDuplicate={() => {}} />
+                  <DuplicatePropertyButton
+                    onDuplicate={() => db.duplicateProperty(prop.id)}
+                  />
                   <DeletePropertyButton
                     onDelete={() => db.deleteProperty(prop.id)}
                   />

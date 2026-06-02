@@ -1,7 +1,7 @@
 import type { JSONContent, NodeViewProps } from "@tiptap/core";
 import { NodeViewWrapper } from "@tiptap/react";
-import { useRef, useEffect, useState, type CSSProperties } from "react";
-import { Ellipsis, Plus } from "lucide-react";
+import React, { useRef, useEffect, useState, type CSSProperties } from "react";
+import { ChevronDown, ChevronRight, Ellipsis, Plus } from "lucide-react";
 import {
   Card,
   CardBody,
@@ -66,6 +66,10 @@ import {
 } from "@dnd-kit/sortable";
 
 import { chunk } from "lodash";
+import { groupRecords } from "../utils/group-records";
+import { Badge } from "src/components/tiptap-ui-primitive/badge";
+import { recordMatchesFilters } from "../utils/apply-filters";
+import { sortRecords } from "../utils/apply-sorts";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -302,7 +306,11 @@ export function DatabaseNodeView({
             }
           />
           <CardItemGroup orientation="horizontal">
-            <FilterRuleChips attrs={attrs} db={db} activeView={activeView} />
+            <FilterRuleChips
+              properties={source.properties}
+              db={db}
+              activeView={activeView}
+            />
             {activeView && activeView.sorts.length > 0 && (
               <>
                 <Spacer orientation="horizontal" size={5} />
@@ -311,7 +319,7 @@ export function DatabaseNodeView({
               </>
             )}
             <SortRuleChips
-              attrs={attrs}
+              properties={source.properties}
               db={db}
               activeView={activeView}
               sorts={activeView?.sorts ?? []}
@@ -363,6 +371,25 @@ export function DatabaseNodeView({
   // ── Table view ─────────────────────────────────────────────────────────
   const hidden = new Set(activeView?.hiddenProperties ?? []);
   const visibleProperties = source.properties.filter((p) => !hidden.has(p.id));
+  const filteredRecords = activeView?.filters?.length
+    ? source.records.filter((r) => recordMatchesFilters(r, activeView.filters))
+    : source.records;
+  const sortedRecords = sortRecords(filteredRecords, activeView?.sorts ?? []);
+
+  const groupProp = activeView?.groupByPropertyId
+    ? source.properties.find((p) => p.id === activeView.groupByPropertyId)
+    : undefined;
+  const collapsedGroups = new Set(activeView?.collapsedGroups ?? []);
+  const ungrouped = !groupProp;
+
+  const groups = groupRecords(sortedRecords, groupProp);
+
+  const toggleCollapse = (key: string) => {
+    const next = collapsedGroups.has(key)
+      ? [...collapsedGroups].filter((k) => k !== key)
+      : [...collapsedGroups, key];
+    onUpdateView({ collapsedGroups: next });
+  };
 
   // draft-first width: the live drag value wins, falling back to the persisted
   // width, falling back to the default. Every row reads gridTemplateColumns, so
@@ -576,58 +603,112 @@ export function DatabaseNodeView({
       </div>
 
       <div className="db-grid" style={{ display: "grid", gridTemplateColumns }}>
-        {source.records.map((record) => (
-          <div key={`${record.id}`} style={{ display: "contents" }}>
-            {/**
-style={{
- 
-}} */}
-            {visibleProperties.map((prop, i) => {
-              const shift = shiftFor(i);
-              return (
+        {groups.map((group) => {
+          const isCollapsed = !ungrouped && collapsedGroups.has(group.key);
+          return (
+            <React.Fragment key={group.key}>
+              {/* ── Group header row — spans all columns, label pinned left ── */}
+              {!ungrouped && (
                 <div
-                  key={`${record.id}:${prop.id}`}
-                  data-row-id={record.id}
+                  className="db-group-header"
                   style={{
-                    borderRight: "1px solid var(--tt-border-color)",
+                    gridColumn: "1 / -1",
+                    position: "sticky",
+                    left: 0,
+                    zIndex: 4,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    // the spanning cell is full grid width; this inner box is the
+                    // viewport-wide sticky surface that keeps the label visible.
+                    width: "var(--db-editor-width)",
+                    background: "var(--tt-bg-color)",
                     borderBottom: "1px solid var(--tt-border-color)",
-                    display: "block",
-                    overflow: "hidden",
-                    ...stickyStyle(i),
-                    transform:
-                      activeColId === prop.id
-                        ? `translate3d(${dragX}px,0,0)`
-                        : shift
-                          ? `translate3d(${shift}px,0,0)`
-                          : undefined,
-                    transition:
-                      activeColId === prop.id
-                        ? undefined
-                        : "transform 0.15s ease",
-                    ...(activeColId === prop.id && {
-                      background: "var(--tt-bg-color)",
-                      zIndex: 3,
-                    }),
+                    padding: "4px 6px",
+                    cursor: "pointer",
+                    userSelect: "none",
                   }}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => toggleCollapse(group.key)}
                 >
-                  <Cell
-                    property={prop}
-                    value={(record.values[prop.id] ?? null) as CellValue | null}
-                    record={record}
-                    templateId={attrs.templateId}
-                    columnValues={source.records.map(
-                      (r) => (r.values[prop.id] ?? null) as CellValue,
-                    )}
-                    onChange={(v) => setCellValue(record.id, prop.id, v)}
-                    unwrapped={db.isUnwrapped(db.activeView.id, prop.id)}
-                    view={db.activeView}
-                  />
+                  {isCollapsed ? (
+                    <ChevronRight className="tiptap-button-icon" size={14} />
+                  ) : (
+                    <ChevronDown className="tiptap-button-icon" size={14} />
+                  )}
+                  <span
+                    className="tiptap-button-text"
+                    style={{ fontWeight: 500 }}
+                  >
+                    {group.label}
+                  </span>
+                  <Badge data-style="gray" size="small">
+                    <span>{group.records.length}</span>
+                  </Badge>
                 </div>
-              );
-            })}
-            <div className="db-header-cell--actions"></div>
-          </div>
-        ))}
+              )}
+
+              {/* ── Records in this group ── */}
+              {!isCollapsed &&
+                group.records.map((record) => (
+                  <div key={record.id} style={{ display: "contents" }}>
+                    {visibleProperties.map((prop, i) => {
+                      const shift = shiftFor(i);
+                      return (
+                        <div
+                          key={`${record.id}:${prop.id}`}
+                          data-row-id={record.id}
+                          style={{
+                            borderRight: "1px solid var(--tt-border-color)",
+                            borderBottom: "1px solid var(--tt-border-color)",
+                            display: "block",
+                            overflow: "hidden",
+                            ...stickyStyle(i),
+                            transform:
+                              activeColId === prop.id
+                                ? `translate3d(${dragX}px,0,0)`
+                                : shift
+                                  ? `translate3d(${shift}px,0,0)`
+                                  : undefined,
+                            transition:
+                              activeColId === prop.id
+                                ? undefined
+                                : "transform 0.15s ease",
+                            ...(activeColId === prop.id && {
+                              background: "var(--tt-bg-color)",
+                              zIndex: 3,
+                            }),
+                          }}
+                        >
+                          <Cell
+                            property={prop}
+                            value={
+                              (record.values[prop.id] ??
+                                null) as CellValue | null
+                            }
+                            record={record}
+                            templateId={attrs.templateId}
+                            columnValues={source.records.map(
+                              (r) => (r.values[prop.id] ?? null) as CellValue,
+                            )}
+                            onChange={(v) =>
+                              setCellValue(record.id, prop.id, v)
+                            }
+                            unwrapped={db.isUnwrapped(
+                              db.activeView.id,
+                              prop.id,
+                            )}
+                            view={db.activeView}
+                          />
+                        </div>
+                      );
+                    })}
+                    <div className="db-header-cell--actions" />
+                  </div>
+                ))}
+            </React.Fragment>
+          );
+        })}
       </div>
 
       <Button

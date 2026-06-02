@@ -4,6 +4,7 @@ import {
   Card,
   CardFooter,
   CardGroupLabel,
+  CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 import {
   Popover,
@@ -11,7 +12,6 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import type {
-  DatabaseAttrs,
   DatabaseProperty,
   DatabaseView,
   ID,
@@ -37,6 +37,12 @@ import {
   GridRow,
 } from "src/components/tiptap-ui-primitive/grid";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "src/components/tiptap-ui-primitive/dropdown-menu";
 
 function makeFilterRule(property: DatabaseProperty): FilterRule {
   const type = property.config.type;
@@ -102,6 +108,82 @@ function makeFilterRule(property: DatabaseProperty): FilterRule {
   }
 }
 
+function OptionDropdown({
+  current,
+  options,
+  includeAny = true,
+  onSelect,
+}: {
+  current: string;
+  options: { id: string; label: string }[];
+  includeAny?: boolean;
+  onSelect: (id: string) => void;
+}) {
+  const selected = options.find((o) => o.id === current);
+  const label = selected ? selected.label : includeAny ? "Any" : "Select…";
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          style={{
+            width: "100%",
+            borderRadius: "var(--tt-radius-sm)",
+            border: "1px solid var(--tt-border-color)",
+            padding: "3px 5px",
+            justifyContent: "flex-start",
+          }}
+        >
+          <span className="tiptap-button-text">{label}</span>
+          <Spacer orientation="horizontal" />
+          <ChevronDown className="tiptap-button-icon-sub" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <Card
+          style={{
+            padding: "5px",
+            minWidth: 160,
+            maxHeight: 260,
+            overflowY: "auto",
+            boxShadow: "var(--tt-shadow-elevated-sm)",
+          }}
+        >
+          <CardItemGroup
+            style={{ width: "100%", justifyContent: "flex-start" }}
+          >
+            {includeAny && (
+              <DropdownMenuItem asChild>
+                <Button
+                  variant="ghost"
+                  style={{ justifyContent: "flex-start", width: "100%" }}
+                  data-active-state={current === "" ? "on" : "off"}
+                  onClick={() => onSelect("")}
+                >
+                  <span className="tiptap-button-text">Any</span>
+                </Button>
+              </DropdownMenuItem>
+            )}
+            {options.map((o) => (
+              <DropdownMenuItem key={o.id} asChild>
+                <Button
+                  variant="ghost"
+                  style={{ justifyContent: "flex-start", width: "100%" }}
+                  data-active-state={current === o.id ? "on" : "off"}
+                  onClick={() => onSelect(o.id)}
+                >
+                  <span className="tiptap-button-text">{o.label}</span>
+                </Button>
+              </DropdownMenuItem>
+            ))}
+          </CardItemGroup>
+        </Card>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function FilterValueInput({
   rule,
   property,
@@ -113,6 +195,7 @@ function FilterValueInput({
 }) {
   const config = property.config;
   const type = rule.propertyType;
+  const current = (rule.value as string) ?? "";
 
   if (type === "select" || type === "multi_select") {
     const options =
@@ -121,20 +204,11 @@ function FilterValueInput({
             .options
         : [];
     return (
-      <select
-        className="db-chip__select"
-        value={(rule.value as string) ?? ""}
-        onChange={(e) =>
-          onChange({ value: e.target.value } as Partial<FilterRule>)
-        }
-      >
-        <option value="">Any</option>
-        {options.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+      <OptionDropdown
+        current={current}
+        options={options.map((o) => ({ id: o.id, label: o.label }))}
+        onSelect={(id) => onChange({ value: id } as Partial<FilterRule>)}
+      />
     );
   }
 
@@ -143,49 +217,35 @@ function FilterValueInput({
       "groups" in config
         ? (config as { groups: { items: { id: ID; name: string }[] }[] }).groups
         : [];
-    const options = groups.flatMap((g) => g.items);
+    const options = groups
+      .flatMap((g) => g.items)
+      .map((i) => ({ id: String(i.id), label: i.name }));
     return (
-      <select
-        className="db-chip__select"
-        value={(rule.value as string) ?? ""}
-        onChange={(e) =>
-          onChange({ value: e.target.value } as Partial<FilterRule>)
-        }
-      >
-        <option value="">Any</option>
-        {options.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.name}
-          </option>
-        ))}
-      </select>
+      <OptionDropdown
+        current={current}
+        options={options}
+        onSelect={(id) => onChange({ value: id } as Partial<FilterRule>)}
+      />
     );
   }
 
   if (type === "date" || type === "created_time" || type === "edited_time") {
     if (rule.operator === "is_within") {
       const opts = [
-        { value: "past_week", label: "Past week" },
-        { value: "past_month", label: "Past month" },
-        { value: "the_past_7_days", label: "Past 7 days" },
-        { value: "the_past_30_days", label: "Past 30 days" },
-        { value: "next_week", label: "Next week" },
-        { value: "next_month", label: "Next month" },
+        { id: "past_week", label: "Past week" },
+        { id: "past_month", label: "Past month" },
+        { id: "the_past_7_days", label: "Past 7 days" },
+        { id: "the_past_30_days", label: "Past 30 days" },
+        { id: "next_week", label: "Next week" },
+        { id: "next_month", label: "Next month" },
       ];
       return (
-        <select
-          className="db-chip__select"
-          value={(rule.value as string) ?? ""}
-          onChange={(e) =>
-            onChange({ value: e.target.value } as Partial<FilterRule>)
-          }
-        >
-          {opts.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+        <OptionDropdown
+          current={current}
+          options={opts}
+          includeAny={false}
+          onSelect={(id) => onChange({ value: id } as Partial<FilterRule>)}
+        />
       );
     }
     return (
@@ -288,8 +348,14 @@ function FilterChip({
         </Button>
       </PopoverTrigger>
       <PopoverContent side="bottom" align="start" className="db-panel">
-        <Card style={{ padding: "8px 5px", minWidth: 300 }}>
-          <Grid columns="1fr 2fr 1fr" gap={10}>
+        <Card
+          style={{
+            padding: "5px",
+            minWidth: 380,
+            boxShadow: "var(--tt-shadow-elevated-sm)",
+          }}
+        >
+          <Grid columns={`${needsValue ? "1fr 1fr 1fr" : "1fr 1fr"}`} gap={10}>
             <GridRow>
               <GridCell>
                 <CardGroupLabel>Property</CardGroupLabel>
@@ -297,53 +363,125 @@ function FilterChip({
               <GridCell>
                 <CardGroupLabel>Condition</CardGroupLabel>
               </GridCell>
-              <GridCell>
-                <CardGroupLabel>Value</CardGroupLabel>
-              </GridCell>
+              {needsValue && (
+                <GridCell>
+                  <CardGroupLabel>Value</CardGroupLabel>
+                </GridCell>
+              )}
             </GridRow>
             <GridRow>
               <GridCell>
-                <select
-                  className="db-chip__select"
-                  value={rule.propertyId}
-                  onChange={(e) => onPropertyChange(e.target.value)}
-                >
-                  {properties.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      style={{
+                        width: "100%",
+                        borderRadius: "var(--tt-radius-sm)",
+                        border: "1px solid var(--tt-border-color)",
+                        padding: "3px 5px",
+                      }}
+                    >
+                      {Icon && <Icon className="tiptap-button-icon" />}
+                      <span className="tiptap-button-text">{propLabel}</span>
+                      <Spacer orientation="horizontal" />
+                      <ChevronDown className="tiptap-button-icon-sub" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <Card
+                      style={{
+                        padding: "5px",
+                        minWidth: 180,
+                        boxShadow: "var(--tt-shadow-elevated-sm)",
+                      }}
+                    >
+                      <CardItemGroup
+                        style={{ width: "100%", justifyContent: "flex-start" }}
+                      >
+                        {properties.map((p) => {
+                          const PIcon = PROPERTY_TYPE_ICONS[p.config.type];
+                          return (
+                            <DropdownMenuItem key={p.id} asChild>
+                              <Button
+                                variant="ghost"
+                                onClick={() => onPropertyChange(p.id)}
+                                style={{ justifyContent: "flex-start" }}
+                              >
+                                <PIcon className="tiptap-button-icon" />
+                                <span>{p.name}</span>
+                              </Button>
+                            </DropdownMenuItem>
+                          );
+                        })}
+                      </CardItemGroup>
+                    </Card>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </GridCell>
               <GridCell>
-                <select
-                  className="db-chip__select"
-                  value={rule.operator}
-                  onChange={(e) =>
-                    onChange({
-                      operator: e.target.value as FilterOperator,
-                    } as Partial<FilterRule>)
-                  }
-                >
-                  {operators.map((op) => (
-                    <option key={op} value={op}>
-                      {OPERATOR_LABEL[op]}
-                    </option>
-                  ))}
-                </select>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      style={{
+                        width: "100%",
+                        borderRadius: "var(--tt-radius-sm)",
+                        border: "1px solid var(--tt-border-color)",
+                      }}
+                    >
+                      <span className="tiptap-button-text">
+                        {rule.operator}
+                      </span>
+                      <Spacer orientation="horizontal" />
+                      <ChevronDown className="tiptap-button-icon-sub" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <Card
+                      style={{
+                        padding: "5px",
+                        minWidth: 180,
+                        boxShadow: "var(--tt-shadow-elevated-sm)",
+                      }}
+                    >
+                      <CardItemGroup
+                        style={{ width: "100%", justifyContent: "flex-start" }}
+                      >
+                        {operators.map((op) => (
+                          <DropdownMenuItem key={op} asChild>
+                            <Button
+                              variant="ghost"
+                              onClick={() =>
+                                onChange({
+                                  operator: op as FilterOperator,
+                                } as Partial<FilterRule>)
+                              }
+                            >
+                              <span className="tiptap-button-text">
+                                {OPERATOR_LABEL[op]}
+                              </span>
+                            </Button>
+                          </DropdownMenuItem>
+                        ))}
+                      </CardItemGroup>
+                    </Card>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </GridCell>
-              <GridCell>
-                {/* Value */}
-                {needsValue && property && (
-                  <div className="db-chip-edit__row">
-                    <FilterValueInput
-                      rule={rule}
-                      property={property}
-                      onChange={onChange}
-                    />
-                  </div>
-                )}
-              </GridCell>
+              {needsValue && (
+                <GridCell>
+                  {property && (
+                    <div className="db-chip-edit__row">
+                      <FilterValueInput
+                        rule={rule}
+                        property={property}
+                        onChange={onChange}
+                      />
+                    </div>
+                  )}
+                </GridCell>
+              )}
             </GridRow>
           </Grid>
           <Spacer orientation="vertical" size={10} />
@@ -352,9 +490,20 @@ function FilterChip({
               variant="ghost"
               onClick={onDelete}
               aria-label="Remove filter"
-              style={{ justifyContent: "flex-start", width: "100%" }}
+              style={{
+                justifyContent: "flex-start",
+                width: "100%",
+                fontSize: 12,
+              }}
             >
-              <Trash className="tiptap-button-icon" />
+              <Trash
+                className="tiptap-button-icon"
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: "var(--tt-radius-sm)",
+                }}
+              />
               <span className="tiptap-button-text">Remove Filter</span>
             </Button>
           </CardFooter>
@@ -363,15 +512,14 @@ function FilterChip({
     </Popover>
   );
 }
-
 export function FilterRuleChips({
-  attrs,
   db,
   activeView,
+  properties,
 }: {
-  attrs: DatabaseAttrs;
   db: UseDatabaseReturn;
   activeView: DatabaseView | undefined;
+  properties: DatabaseProperty[];
 }) {
   if (!activeView) return null;
 
@@ -387,7 +535,7 @@ export function FilterRuleChips({
   }
 
   function addRule() {
-    const firstProp = attrs.properties[0];
+    const firstProp = properties[0];
     if (!firstProp) return;
     const currentGroup: FilterGroup = activeView!.filters[0] ?? {
       id: nanoid(),
@@ -424,11 +572,11 @@ export function FilterRuleChips({
         <FilterChip
           key={rule.id}
           rule={rule}
-          properties={attrs.properties}
+          properties={properties}
           onChange={(patch) => updateRule(rule.id, patch)}
           onDelete={() => deleteRule(rule.id)}
           onPropertyChange={(propertyId) => {
-            const newProp = attrs.properties.find((p) => p.id === propertyId);
+            const newProp = properties.find((p) => p.id === propertyId);
             if (!newProp) return;
             updateRule(rule.id, makeFilterRule(newProp));
           }}

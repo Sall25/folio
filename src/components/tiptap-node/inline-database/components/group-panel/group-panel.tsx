@@ -18,6 +18,7 @@ import { isGroupableProperty } from "../../types/types";
 import type { UseDatabaseReturn } from "../../hooks/use-database";
 import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
 import "./group-panel.scss";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
 export function GroupPanel({
   properties,
@@ -83,10 +84,11 @@ export function GroupPanel({
               data-active-state={!groupByPropertyId ? "on" : "off"}
               onClick={() => setGroup(null)}
             >
-              {!groupByPropertyId && (
-                <Check size={13} className="tiptap-button-icon" />
-              )}
               <span className="tiptap-button-text">No grouping</span>
+              <Spacer orientation="horizontal" />
+              {!groupByPropertyId && (
+                <Check size={13} className="tiptap-button-icon-sub" />
+              )}
             </Button>
 
             <Separator orientation="horizontal" style={{ margin: "4px 0" }} />

@@ -91,7 +91,8 @@
               "label": "salvador",
               "color": "var(--tt-color-highlight-gray)"
             },
-            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-02T00:00:00.000Z"
+            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-02T00:00:00.000Z",
+            "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8": true
           },
           "pageId": 77,
           "createdAt": "1780249720122",
@@ -136,7 +137,8 @@
             "dcb333ba-6ffe-41d3-b20a-b904f1401a93": "Haus",
             "e34bf4d3-4fa7-407d-9b96-4876d5274089": "Owner's pug",
             "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-10T00:00:00.000Z",
-            "e5f09289-9d25-4ce1-9871-e2b8a6567686": "07AM-09PM"
+            "e5f09289-9d25-4ce1-9871-e2b8a6567686": "07AM-09PM",
+            "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8": true
           },
           "pageId": 87,
           "createdAt": "1780352428181",
@@ -148,7 +150,12 @@
             "dcb333ba-6ffe-41d3-b20a-b904f1401a93": "Joy's Place",
             "e5f09289-9d25-4ce1-9871-e2b8a6567686": "09AM-07PM",
             "e34bf4d3-4fa7-407d-9b96-4876d5274089": "Sweet patato latte",
-            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-09T00:00:00.000Z"
+            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-09T00:00:00.000Z",
+            "019df765-cc54-4621-9a04-c709fdf90c81": {
+              "id": "1134d06d-2115-426a-bb49-00ab29b0b588",
+              "label": "mission",
+              "color": "var(--tt-color-highlight-pink)"
+            }
           },
           "pageId": 88,
           "createdAt": "1780352523650",
@@ -160,7 +167,8 @@
             "dcb333ba-6ffe-41d3-b20a-b904f1401a93": "Cafe Bean",
             "e5f09289-9d25-4ce1-9871-e2b8a6567686": "06AM-11PM",
             "e34bf4d3-4fa7-407d-9b96-4876d5274089": "bomb black tea latte",
-            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-02T00:00:00.000Z"
+            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-02T00:00:00.000Z",
+            "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8": true
           },
           "pageId": 89,
           "createdAt": "1780352628186",
@@ -184,7 +192,13 @@
             "dcb333ba-6ffe-41d3-b20a-b904f1401a93": "Workshop Cafe soma",
             "e5f09289-9d25-4ce1-9871-e2b8a6567686": "MF: 7AM-09PM",
             "e34bf4d3-4fa7-407d-9b96-4876d5274089": "Nice space, lots of outlets",
-            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-08T00:00:00.000Z"
+            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-08T00:00:00.000Z",
+            "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8": true,
+            "019df765-cc54-4621-9a04-c709fdf90c81": {
+              "id": "1134d06d-2115-426a-bb49-00ab29b0b588",
+              "label": "mission",
+              "color": "var(--tt-color-highlight-pink)"
+            }
           },
           "pageId": 91,
           "createdAt": "1780352805653",
@@ -220,15 +234,31 @@
             "dcb333ba-6ffe-41d3-b20a-b904f1401a93": "Equator LinkedIn",
             "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-03T00:00:00.000Z",
             "e5f09289-9d25-4ce1-9871-e2b8a6567686": "M-F: 7AM-6PM",
-            "e34bf4d3-4fa7-407d-9b96-4876d5274089": "POPOS, beautiful open space"
+            "e34bf4d3-4fa7-407d-9b96-4876d5274089": "POPOS, beautiful open space",
+            "019df765-cc54-4621-9a04-c709fdf90c81": {
+              "id": "27d58b07-8ca9-4366-a10d-8ab896f345e9",
+              "label": "salvador",
+              "color": "var(--tt-color-highlight-gray)"
+            }
           },
           "pageId": 94,
           "createdAt": "1780369200465",
           "updatedAt": null
+        },
+        {
+          "id": "63bcb2fc-0552-4e09-b4a8-89e496fa32db",
+          "values": {
+            "dcb333ba-6ffe-41d3-b20a-b904f1401a93": "Cafe International",
+            "e5f09289-9d25-4ce1-9871-e2b8a6567686": "Sunday: 7AM-7PM",
+            "e34bf4d3-4fa7-407d-9b96-4876d5274089": "Creative Coffee"
+          },
+          "pageId": 95,
+          "createdAt": "1780423373691",
+          "updatedAt": null
         }
       ],
       "createdAt": "1780236168406",
-      "updatedAt": "1780406513821"
+      "updatedAt": "1780423492989"
     }
   ]
 }

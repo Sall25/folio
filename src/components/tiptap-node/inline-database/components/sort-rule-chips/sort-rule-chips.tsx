@@ -12,7 +12,6 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import type {
-  DatabaseAttrs,
   DatabaseProperty,
   DatabaseView,
   ID,
@@ -82,7 +81,13 @@ function SortChip({
         </Button>
       </PopoverTrigger>
       <PopoverContent side="bottom" align="start" className="db-panel">
-        <Card style={{ padding: "8px 5px", minWidth: 200 }}>
+        <Card
+          style={{
+            padding: "5px",
+            minWidth: 200,
+            boxShadow: "var(--tt-shadow-elevated-sm)",
+          }}
+        >
           <CardBody>
             <Grid columns="1fr 1fr" gap={5}>
               <GridRow>
@@ -112,7 +117,12 @@ function SortChip({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    <Card style={{ padding: "5px 10px" }}>
+                    <Card
+                      style={{
+                        padding: "5px 10px",
+                        boxShadow: "var(--tt-shadow-elevated-sm)",
+                      }}
+                    >
                       {properties.map((p) => {
                         const PIcon = PROPERTY_TYPE_ICONS[p.config.type];
                         return (
@@ -221,12 +231,12 @@ function SortChip({
 }
 
 export function SortRuleChips({
-  attrs,
+  properties,
   db,
   activeView,
   sorts,
 }: {
-  attrs: DatabaseAttrs;
+  properties: DatabaseProperty[];
   db: UseDatabaseReturn;
   activeView: DatabaseView | undefined;
   sorts: SortRule[];
@@ -238,16 +248,14 @@ export function SortRuleChips({
     db.updateView(activeView!.id, {
       sorts: sorts.map((s) => (s.id === id ? { ...s, ...patch } : s)),
     });
-    db.sortDatabaseRecords();
   }
 
   function deleteSort(id: ID) {
     db.updateView(activeView!.id, { sorts: sorts.filter((s) => s.id !== id) });
-    db.sortDatabaseRecords();
   }
 
   function addSort() {
-    const unused = attrs.properties.find(
+    const unused = properties.find(
       (p) => !sorts.some((s) => s.propertyId === p.id),
     );
     if (!unused) return;
@@ -257,7 +265,6 @@ export function SortRuleChips({
         { id: nanoid(), propertyId: unused.id, direction: "asc" },
       ],
     });
-    db.sortDatabaseRecords();
   }
 
   return (
@@ -266,12 +273,12 @@ export function SortRuleChips({
         <SortChip
           key={sort.id}
           sort={sort}
-          properties={attrs.properties}
+          properties={properties}
           onUpdate={(patch) => updateSort(sort.id, patch)}
           onDelete={() => deleteSort(sort.id)}
         />
       ))}
-      {sorts.length < attrs.properties.length && (
+      {sorts.length < properties.length && (
         <Button
           variant="ghost"
           className="db-sort-chips__add"

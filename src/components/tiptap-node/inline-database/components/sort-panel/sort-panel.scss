@@ -1,9 +1,20 @@
 .db-sort-panel {
   min-width: 260px;
   padding: 6px;
+  box-shadow: var(--tt-shadow-elevated-sm);
+  border-radius: var(--tt-radius-sm);
 
-  &__search {
-    padding: 4px;
+  .tiptap-card-body{
+    width: 100%;
+    .tiptap-card-group{
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
+
+  &__search{
+   padding: 0 8px;
+    width: 100%;
   }
 
   &__search-input {
@@ -13,9 +24,9 @@
     font-size: 14px;
     color: var(--tt-paragraph-text-color);
     background: transparent;
-    border: 1px solid var(--tt-border-color, rgba(255, 255, 255, 0.12));
-    border-radius: var(--tt-radius-md, 8px);
-    outline: none;
+    border: none;
+    border-radius: var(--tt-radius-sm, 8px);
+    outline: 1px solid var(--tt-brand-color-400);
 
     &::placeholder {
       color: var(--tt-muted-foreground, #8b8b8b);

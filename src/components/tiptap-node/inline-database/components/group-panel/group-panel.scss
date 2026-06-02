@@ -1,0 +1,10 @@
+.db-group-panel{
+  width: 260px;
+  padding: 6px;
+  border-radius: var(--tt-radius-sm);
+  box-shadow: var(--tt-shadow-elevated-sm);
+
+  .tiptap-card-body{
+    width: 100%;
+  }
+}

@@ -84,13 +84,21 @@ function WorkspaceHeader() {
       orientation={collapsed ? "vertical" : "horizontal"}
       onMouseLeave={() => setHide(true)}
       onMouseOver={() => setHide(false)}
-      style={{ width: "100%", paddingLeft: 7 }}
+      style={{
+        width: "100%",
+        paddingLeft: !collapsed ? 7 : 0,
+      }}
     >
       {/* {!collapsed && <Logo collapsed={collapsed} />} */}
       {!collapsed && <User />}
 
       {collapsed && (
-        <Button variant="ghost" onClick={onToggle} tooltip={"Expand"}>
+        <Button
+          variant="ghost"
+          onClick={onToggle}
+          tooltip={"Expand"}
+          style={{ justifyContent: "flex-start" }}
+        >
           <ChevronsRight className="tiptap-button-icon" />
         </Button>
       )}

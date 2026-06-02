@@ -1,26 +1,21 @@
-import type { Node } from "@tiptap/pm/model";
 import type {
   FilterGroup,
   FilterRule,
   FilterOperator,
 } from "../types/filter-types";
 import { NO_VALUE_OPERATORS } from "../types/filter-types";
+import type { DataSourceRecord } from "../types/types";
 
-function getCellValue(record: Node, propertyId: string): unknown {
-  let value: unknown = null;
-  record.forEach((cell) => {
-    if (cell.attrs.propertyId !== propertyId) return;
-    if (cell.type.name === "textCell") {
-      value = cell.attrs.value ?? cell.textContent;
-    } else {
-      value = cell.attrs.value;
-    }
-  });
-  return value;
+export function getCellValue(
+  record: DataSourceRecord,
+  propertyId: string,
+): unknown {
+  return record.values[propertyId] ?? null;
 }
 
-function matchesRule(record: Node, rule: FilterRule): boolean {
+function matchesRule(record: DataSourceRecord, rule: FilterRule): boolean {
   const value = getCellValue(record, rule.propertyId);
+
   const op: FilterOperator = rule.operator;
 
   if (NO_VALUE_OPERATORS.has(op)) {
@@ -37,14 +32,37 @@ function matchesRule(record: Node, rule: FilterRule): boolean {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ruleValue = (rule as any).value;
+  if (
+    (rule.propertyType === "select" ||
+      rule.propertyType === "multi_select" ||
+      rule.propertyType === "status") &&
+    (ruleValue == null || ruleValue === "")
+  ) {
+    return true;
+  }
 
-  // Array-valued cells (multi_select, relation, person): membership, not text
-  // if (Array.isArray(value)) {
-  //   const arr = value as unknown[];
-  //   if (op === "contains") return arr.includes(ruleValue);
-  //   if (op === "does_not_contain") return !arr.includes(ruleValue);
-  //   return false;
-  // }
+  if (rule.propertyType === "select") {
+    const cellId =
+      value && typeof value === "object" && "id" in value
+        ? String((value as { id: unknown }).id)
+        : String(value ?? "");
+    console.log("SELECT match", {
+      rawValue: value,
+      cellId,
+      ruleValue: String(ruleValue ?? ""),
+      eq: cellId === String(ruleValue ?? ""),
+    });
+  }
+
+  if (rule.propertyType === "select" || rule.propertyType === "status") {
+    const cellId =
+      value && typeof value === "object" && "id" in value
+        ? String((value as { id: unknown }).id)
+        : String(value ?? "");
+    if (op === "is") return cellId === String(ruleValue ?? "");
+    if (op === "is_not") return cellId !== String(ruleValue ?? "");
+  }
+
   if (Array.isArray(value)) {
     const arr = value as unknown[];
     const has = arr.some(
@@ -155,7 +173,7 @@ function matchesRule(record: Node, rule: FilterRule): boolean {
   }
 }
 
-function matchesGroup(record: Node, group: FilterGroup): boolean {
+function matchesGroup(record: DataSourceRecord, group: FilterGroup): boolean {
   const rules = group.rules as FilterRule[];
   if (rules.length === 0) return true;
   if (group.operator === "and")
@@ -167,7 +185,7 @@ function matchesGroup(record: Node, group: FilterGroup): boolean {
  * Returns true if the record should be shown given the view's filters.
  */
 export function recordMatchesFilters(
-  record: Node,
+  record: DataSourceRecord,
   filters: FilterGroup[],
 ): boolean {
   if (!filters || filters.length === 0) return true;

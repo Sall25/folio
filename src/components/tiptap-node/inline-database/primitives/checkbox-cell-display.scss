@@ -1,15 +1,18 @@
+.db-cell{
+  height: 34px;
+}
 .db-checkbox {
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
-  min-height: 16px;
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
    
   border-radius: var(--tt-radius-xs);
   border: 1.5px solid var(--tt-border-color);
   background: transparent !important;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: center !important;
+  justify-content: center !important;
   cursor: pointer;
   transition: background var(--tt-transition-duration-short),
               border-color var(--tt-transition-duration-short);
@@ -24,10 +27,16 @@
   &--checked {
   background: var(--tt-brand-color-500) !important;
   border-color: var(--tt-brand-color-500);
+  // width: 16px;
+  // height: 16px;
+  // min-width: 16px;
+  // min-height: 16px;
+  
 
   svg {
     stroke: white;
     color: white;
+    
   }
 
   .dark & {

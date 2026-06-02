@@ -1,17 +1,5 @@
-import type { Node } from "@tiptap/pm/model";
-import type { SortRule } from "../types/types";
-
-function getCellValue(record: Node, propertyId: string): unknown {
-  let value: unknown = null;
-  record.forEach((cell) => {
-    if (cell.attrs.propertyId !== propertyId) return;
-    value =
-      cell.type.name === "textCell"
-        ? (cell.attrs.value ?? cell.textContent)
-        : cell.attrs.value;
-  });
-  return value;
-}
+import type { DataSourceRecord, SortRule } from "../types/types";
+import { getCellValue } from "./apply-filters";
 
 function compareValues(
   a: unknown,
@@ -43,17 +31,16 @@ function compareValues(
 }
 
 /**
- * Returns the CSS `order` value for this record given the active sorts.
- * Call in DatabaseRecordNodeView and apply to the NodeViewWrapper style.
+ * Returns a NEW sorted array (does not mutate). Use in the table render —
+ * sort source.records before mapping. Reuses the same compareValues as
+ * getSortOrder so the two stay consistent.
  */
-export function getSortOrder(
-  record: Node,
-  allRecords: Node[],
+export function sortRecords(
+  records: DataSourceRecord[],
   sorts: SortRule[],
-): number {
-  if (!sorts || sorts.length === 0) return 0;
-
-  const sorted = [...allRecords].sort((a, b) => {
+): DataSourceRecord[] {
+  if (!sorts || sorts.length === 0) return records;
+  return [...records].sort((a, b) => {
     for (const sort of sorts) {
       const av = getCellValue(a, sort.propertyId);
       const bv = getCellValue(b, sort.propertyId);
@@ -62,6 +49,18 @@ export function getSortOrder(
     }
     return 0;
   });
+}
 
-  return sorted.findIndex((r) => r.attrs.id === record.attrs.id);
+/**
+ * Returns the CSS `order` value for this record given the active sorts.
+ * Call in DatabaseRecordNodeView and apply to the NodeViewWrapper style.
+ */
+export function getSortOrder(
+  record: DataSourceRecord,
+  allRecords: DataSourceRecord[],
+  sorts: SortRule[],
+): number {
+  if (!sorts || sorts.length === 0) return 0;
+  const sorted = sortRecords(allRecords, sorts);
+  return sorted.findIndex((r) => r.id === record.id);
 }
