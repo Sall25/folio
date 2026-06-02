@@ -1,0 +1,80 @@
+// page-category-select.scss
+// Toolbar dropdown for changing the current page's category.
+
+.page-category-select {
+  position: relative;
+  display: inline-flex;
+
+  &__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 8px;
+    border: 1px solid var(--tt-border-color);
+    background: transparent;
+    border-radius: var(--tt-radius-sm);
+    color: var(--tt-text-color);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+
+    &:hover {
+      background: var(--tt-gray-light-a-100);
+      .dark & { background: var(--tt-gray-dark-a-100); }
+    }
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  &__label {
+    white-space: nowrap;
+  }
+
+  &__chevron {
+    opacity: 0.55;
+  }
+
+  &__menu {
+    position: fixed; // coordinates supplied inline from the trigger's rect
+    z-index: 1000; // portaled to body, above sidebar (120) and modals (101)
+    min-width: 184px;
+    padding: 4px;
+    background: var(--tt-card-bg-color);
+    border: 1px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-md, 8px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+
+    .dark & { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 13px;
+    text-align: left;
+    background: transparent;
+    border: none;
+    border-radius: var(--tt-radius-sm);
+    color: var(--tt-gray-light-900);
+    cursor: pointer;
+
+    .dark & { color: var(--tt-gray-dark-900); }
+
+    &:hover {
+      background: var(--tt-gray-light-a-100);
+      .dark & { background: var(--tt-gray-dark-a-100); }
+    }
+  }
+
+  &__check {
+    margin-left: auto;
+    color: var(--tt-text-color);
+  }
+}

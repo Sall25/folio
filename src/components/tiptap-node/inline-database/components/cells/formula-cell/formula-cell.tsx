@@ -7,11 +7,11 @@ function formatValue(value: FormulaCellAttrs["value"]): string {
   return String(value);
 }
 
-export function FormulaCell({ value }: CellProps<"formula">) {
+export function FormulaCell({ value, unwrapped }: CellProps<"formula">) {
   const isEmpty = value === null || value === undefined || value === "";
 
   return (
-    <div className="db-cell">
+    <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
       <span className="formula-cell__value" data-empty={isEmpty}>
         {isEmpty ? "" : formatValue(value)}
       </span>

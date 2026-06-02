@@ -6,13 +6,16 @@ export function SelectCell({
   onChange,
   readonly,
   config,
+  unwrapped,
 }: CellProps<"select">) {
   return (
-    <SelectCellDisplay
-      value={value}
-      options={config.options ?? []}
-      onChange={onChange}
-      readonly={readonly}
-    />
+    <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
+      <SelectCellDisplay
+        value={value}
+        options={config.options ?? []}
+        onChange={onChange}
+        readonly={readonly}
+      />
+    </div>
   );
 }

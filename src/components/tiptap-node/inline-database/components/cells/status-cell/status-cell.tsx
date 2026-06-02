@@ -1,9 +1,14 @@
 import { StatusCellDisplay } from "../../../primitives/status-cell-display";
 import type { CellProps } from "../types";
 
-export function StatusCell({ value, onChange, config }: CellProps<"status">) {
+export function StatusCell({
+  value,
+  onChange,
+  config,
+  unwrapped,
+}: CellProps<"status">) {
   return (
-    <div className="db-cell">
+    <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
       <StatusCellDisplay
         value={value}
         groups={config.groups}

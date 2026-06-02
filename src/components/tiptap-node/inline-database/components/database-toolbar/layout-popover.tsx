@@ -3,7 +3,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import type { BoardView, DatabaseView } from "../../types/types";
+import type { BoardView, DatabaseView, OpenPageIn } from "../../types/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Calendar,
@@ -15,6 +15,10 @@ import {
   List,
   Table,
   ChartGantt,
+  PanelRight,
+  Check,
+  SquareSquare,
+  Square,
 } from "lucide-react";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import {
@@ -28,6 +32,12 @@ import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Toggle } from "src/components/tiptap-ui-primitive/toggle";
 import { type UseDatabaseReturn } from "../../hooks";
 import { useCurrentEditor } from "@tiptap/react";
+import {
+  Grid,
+  GridCell,
+  GridRow,
+} from "src/components/tiptap-ui-primitive/grid";
+import { useState } from "react";
 
 function ViewPallette({
   type,
@@ -40,19 +50,25 @@ function ViewPallette({
 }) {
   return (
     <CardItemGroup
-      className={`items-center w-24 h-20 border m-1 cursor-pointer ${
+      className={`items-center w-16 h-12 border m-1 cursor-pointer ${
         active ? "border-brand" : ""
       }`}
+      style={{
+        color: "var(--tt-text-primary)",
+        borderRadius: "var(--tt-radius-md)",
+      }}
       onClick={() => onSelect(type)}
     >
-      <CardItemGroup className="items-center w-16 h-16 text-brand">
+      <CardItemGroup
+        className={`items-center w-12 h-8 ${active ? "text-brand" : ""}`}
+      >
         {type === "table" && <Table />}
         {type === "list" && <List />}
         {type === "board" && <Columns3 />}
         {type === "gallery" && <LayoutGrid />}
         {type === "calendar" && <Calendar />}
         {type === "timeline" && <ChartGantt />}
-        <span className={`text-xs ${active ? "text-brand" : ""}`}>
+        <span className={`text-xs`}>
           {type === "table" && "Table"}
           {type === "list" && "List"}
           {type === "board" && "Board"}
@@ -87,10 +103,14 @@ export function LayoutPopover({
   wrapAllCols = false,
 }: LayoutPopoverProps) {
   const { editor } = useCurrentEditor();
-
+  const [openIn, setOpenIn] = useState(db.activeView.openPageIn ?? "Side");
   const onSelect = (type: DatabaseView["type"]) => {
     if (view.type === type) return;
     db.updateView(view.id, { ...view, type });
+  };
+  const onOpenInChange = (o: OpenPageIn) => {
+    setOpenIn(o);
+    db.updateView(db.activeView.id, { ...db.activeView, openPageIn: o });
   };
 
   if (!editor) return null;
@@ -109,49 +129,65 @@ export function LayoutPopover({
         </Button>
       </PopoverTrigger>
       <PopoverContent side="right" align="start">
-        <Card className="w-64 p-4">
+        <Card
+          style={{
+            padding: "5px 10px",
+            boxShadow: "var(--tt-shadow-elevated-sm)",
+          }}
+        >
           <CardHeader>
             <CardGroupLabel>Layouts</CardGroupLabel>
           </CardHeader>
           <CardBody className="w-full justify-start mt-2">
-            <CardItemGroup orientation="horizontal">
-              <ViewPallette
-                onSelect={onSelect}
-                active={view.type === "table"}
-                type="table"
-              />
-              <ViewPallette
-                onSelect={onSelect}
-                active={view.type === "list"}
-                type="list"
-              />
-            </CardItemGroup>
-            <CardItemGroup orientation="horizontal">
-              <ViewPallette
-                onSelect={onSelect}
-                active={view.type === "board"}
-                type="board"
-              />
-              <ViewPallette
-                onSelect={onSelect}
-                active={view.type === "gallery"}
-                type="gallery"
-              />
-            </CardItemGroup>
-            <CardItemGroup orientation="horizontal">
-              <ViewPallette
-                onSelect={onSelect}
-                active={view.type === "calendar"}
-                type="calendar"
-              />
-              <ViewPallette
-                onSelect={onSelect}
-                active={view.type === "timeline"}
-                type="timeline"
-              />
-            </CardItemGroup>
+            <Grid columns="1fr 1fr 1fr">
+              <GridRow>
+                <GridCell>
+                  <ViewPallette
+                    onSelect={onSelect}
+                    active={view.type === "table"}
+                    type="table"
+                  />
+                </GridCell>
+                <GridCell>
+                  <ViewPallette
+                    onSelect={onSelect}
+                    active={view.type === "list"}
+                    type="list"
+                  />
+                </GridCell>
+                <GridCell>
+                  <ViewPallette
+                    onSelect={onSelect}
+                    active={view.type === "board"}
+                    type="board"
+                  />
+                </GridCell>
+              </GridRow>
+              <GridRow>
+                <GridCell>
+                  <ViewPallette
+                    onSelect={onSelect}
+                    active={view.type === "gallery"}
+                    type="gallery"
+                  />
+                </GridCell>
+                <GridCell>
+                  <ViewPallette
+                    onSelect={onSelect}
+                    active={view.type === "calendar"}
+                    type="calendar"
+                  />
+                </GridCell>
+                <GridCell>
+                  <ViewPallette
+                    onSelect={onSelect}
+                    active={view.type === "timeline"}
+                    type="timeline"
+                  />
+                </GridCell>
+              </GridRow>
+            </Grid>
 
-            <Separator orientation="horizontal" />
             {/* Card preview — board view only */}
             {view.type === "board" && (
               <>
@@ -220,7 +256,9 @@ export function LayoutPopover({
               className="w-full justify-start"
               orientation="horizontal"
             >
-              <span>Show database title</span>
+              <Button variant="ghost" style={{ background: "transparent" }}>
+                <span className="tiptap-button-text">Show database title</span>
+              </Button>
               <Spacer orientation="horizontal" />
               <Toggle
                 checked={showDbTitle}
@@ -231,7 +269,10 @@ export function LayoutPopover({
               className="w-full justify-start"
               orientation="horizontal"
             >
-              <span>Show vertical lines</span>
+              <Button variant="ghost" style={{ background: "transparent" }}>
+                <span className="tiptap-button-text">Show vertical lines</span>
+              </Button>
+
               <Spacer orientation="horizontal" />
               <Toggle
                 checked={showVLines}
@@ -242,7 +283,9 @@ export function LayoutPopover({
               className="w-full justify-start"
               orientation="horizontal"
             >
-              <span>Wrap all columns</span>
+              <Button variant="ghost" style={{ background: "transparent" }}>
+                <span className="tiptap-button-text">Wrap all columns</span>
+              </Button>
               <Spacer orientation="horizontal" />
               <Toggle
                 checked={wrapAllCols}
@@ -252,14 +295,161 @@ export function LayoutPopover({
 
             <Separator orientation="horizontal" />
             <CardItemGroup>
-              <Button variant="ghost">
-                <span className="tiptap-button-text">Open pages in</span>
-                <Spacer orientation="horizontal" />
-                <span className="tiptap-button-text opacity-85">Side peek</span>
-                <ChevronRight className="tiptap-button-icon-sub" />
-              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost">
+                    <span className="tiptap-button-text">Open pages in</span>
+                    <Spacer orientation="horizontal" />
+                    <span>
+                      <span className="tiptap-button-text opacity-85">
+                        Side peek
+                      </span>
+                      <ChevronRight className="tiptap-button-icon-sub" />
+                    </span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                  <Card style={{ padding: "5px 10px" }}>
+                    <CardItemGroup>
+                      <Grid columns="34px 150px 34px">
+                        <GridRow
+                          style={{ cursor: "pointer" }}
+                          onClick={() => onOpenInChange("Side")}
+                        >
+                          <GridCell>
+                            <Button
+                              variant="ghost"
+                              style={{ background: "transparent" }}
+                            >
+                              <PanelRight className="tiptap-button-icon" />
+                            </Button>
+                          </GridCell>
+                          <GridCell>
+                            <CardItemGroup>
+                              <CardGroupLabel>Side peek</CardGroupLabel>
+                              <span
+                                style={{
+                                  display: "block",
+                                  width: "150px",
+                                  textWrap: "balance",
+                                  fontSize: 12,
+                                  paddingLeft: "10px",
+                                  color: "var(--tt-text-secondary)",
+                                }}
+                              >
+                                Open pages on the side. Keeps the view behind
+                                interactive
+                              </span>
+                              <span
+                                style={{
+                                  color: "var(--tt-brand-color-400)",
+                                  fontSize: 12,
+                                  paddingLeft: "10px",
+                                }}
+                              >
+                                Default for table
+                              </span>
+                            </CardItemGroup>
+                          </GridCell>
+                          <GridCell>
+                            {openIn === "Side" && (
+                              <Button variant="ghost">
+                                <Check className="tiptap-button-icon" />
+                              </Button>
+                            )}
+                          </GridCell>
+                        </GridRow>
+                      </Grid>
+                      <Spacer orientation="vertical" size={10} />
+                      <Grid columns="34px 150px 34px">
+                        <GridRow
+                          style={{ cursor: "pointer" }}
+                          onClick={() => onOpenInChange("Center")}
+                        >
+                          <GridCell>
+                            <Button
+                              variant="ghost"
+                              style={{ background: "transparent" }}
+                            >
+                              <SquareSquare className="tiptap-button-icon" />
+                            </Button>
+                          </GridCell>
+                          <GridCell>
+                            <CardItemGroup>
+                              <CardGroupLabel>Center peek</CardGroupLabel>
+                              <span
+                                style={{
+                                  display: "block",
+                                  width: "150px",
+                                  textWrap: "balance",
+                                  fontSize: 12,
+                                  paddingLeft: "10px",
+                                  color: "var(--tt-text-secondary)",
+                                }}
+                              >
+                                Open pages in a focused, centered modal
+                              </span>
+                              {/* <span style={{color: "var(--tt-brand-color-400)"}}>Default for table</span> */}
+                            </CardItemGroup>
+                          </GridCell>
+                          <GridCell>
+                            {openIn === "Center" && (
+                              <Button variant="ghost">
+                                <Check className="tiptap-button-icon" />
+                              </Button>
+                            )}
+                          </GridCell>
+                        </GridRow>
+                      </Grid>
+                      <Spacer orientation="vertical" size={10} />
+                      <Grid columns="34px 150px 34px">
+                        <GridRow
+                          style={{ cursor: "pointer" }}
+                          onClick={() => onOpenInChange("Full")}
+                        >
+                          <GridCell>
+                            <Button
+                              variant="ghost"
+                              style={{ background: "transparent" }}
+                            >
+                              <Square className="tiptap-button-icon" />
+                            </Button>
+                          </GridCell>
+                          <GridCell>
+                            <CardItemGroup>
+                              <CardGroupLabel>Full page</CardGroupLabel>
+                              <span
+                                style={{
+                                  display: "block",
+                                  width: "150px",
+                                  textWrap: "balance",
+                                  fontSize: 12,
+                                  paddingLeft: "10px",
+                                  color: "var(--tt-text-secondary)",
+                                }}
+                              >
+                                Open pages in full page
+                              </span>
+                              {/* <span style={{color: "var(--tt-brand-color-400)"}}>Default for table</span> */}
+                            </CardItemGroup>
+                          </GridCell>
+                          <GridCell>
+                            {openIn === "Full" && (
+                              <Button variant="ghost">
+                                <Check className="tiptap-button-icon" />
+                              </Button>
+                            )}
+                          </GridCell>
+                        </GridRow>
+                      </Grid>
+                    </CardItemGroup>
+                  </Card>
+                </PopoverContent>
+              </Popover>
               <CardItemGroup orientation="horizontal">
-                <span>Show page icon</span>
+                <Button variant="ghost" style={{ background: "transparent" }}>
+                  <span className="tiptap-button-text">Show page icon</span>
+                </Button>
                 <Spacer />
                 <Toggle checked={true} />
               </CardItemGroup>

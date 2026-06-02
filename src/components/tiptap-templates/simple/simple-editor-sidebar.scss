@@ -36,6 +36,10 @@
   padding: 0;
   z-index: 10;
 
+  .tiptap-card-body {
+    scrollbar-width: auto;
+  }
+
   // top-down light wash — fades out before the lower nav items
  &::before {
     content: "";
@@ -128,19 +132,17 @@
 .sidebar-nav-item {
   width: 100%;
   justify-content: flex-start;
-  padding: 1px 8px;
+  padding: 0;
   gap: 0;
 
   .tiptap-button {
     width: 100%;
     justify-content: flex-start;
-    padding: 0 8px;
     border-radius: var(--tt-radius-md);
-    // resting state is MUTED — this is the fix that reads as "designed"
-    color: var(--sidebar-text-secondary);
+  
     transition: background 0.1s, color 0.1s;
      min-height: 32px;
-    height: 28px;
+    height: 30px;
     line-height: 1.5;
 
     &:hover {
@@ -148,12 +150,22 @@
       color: var(--sidebar-text-color);
     }
 
+    .tiptap-button-icon{
+      width: 18px;
+      height: 18px;
+      stroke-width: 1.5px;
+    }
+
     .tiptap-button-text {
-      font-family: "Inter", -apple-system, sans-serif;
       font-size: 14px;
-      font-weight: 450;
-      letter-spacing: 0.01em;
-      color: inherit;                // follows the button, not pinned to full
+      font-weight: 500;            // 450 only exists if Inter is loaded as a variable font
+     // letter-spacing: -0.006em;    // Inter wants tight tracking, not loose
+      color: inherit;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.5;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+     -webkit-font-smoothing: auto;
     }
   }
 
@@ -169,13 +181,14 @@
 // ── Section label ──
 .sidebar-section-label {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--tt-text-secondary);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
   padding: 0 10px 4px;
   margin-top: 8px;
+  padding-left: 15px;
+  
 }
 
 .sidebar-empty {
@@ -196,6 +209,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 4px 8px 16px 10px; // ← extra bottom padding so last item isn't clipped
+ 
   display: flex;
   flex-direction: column;
   justify-content: flex-start !important;
@@ -207,7 +221,7 @@
     min-height: 0;
     flex-shrink: 0; // ← let it grow naturally, don't constrain
   }
-  scrollbar-color: var(--tt-border-color) transparent;
+  //scrollbar-color: var(--tt-border-color) transparent;
 
 
   // force all CardItemGroup children to not clip
@@ -218,15 +232,14 @@
 
   .title {
     font-family: inherit;
-    text-transform: uppercase;
-    font-size: 10.5px;
+    font-size: 11.5px;
     font-weight: 600;
     letter-spacing: 0.06em;
     margin-bottom: 6px;
     margin-left: 6px;
     margin-top: 8px;
     color: var(--sidebar-text-secondary);
-    opacity: 0.6;
+    opacity: 0.9;
   }
 }
 

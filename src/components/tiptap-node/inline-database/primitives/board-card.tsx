@@ -9,6 +9,7 @@ import type {
   DataSourceRecord,
   DatabaseProperty,
   CellValue,
+  DatabaseView,
 } from "../types/types";
 import "./board-card.scss";
 import { useDraggable } from "@dnd-kit/core";
@@ -18,12 +19,14 @@ export function BoardCard({
   properties,
   cardPreview,
   onChange,
+  view,
 }: {
   record: DataSourceRecord;
   properties: DatabaseProperty[];
   cardPreview: "none" | "cover" | "content";
   sourceId: string;
   onChange: (propertyId: string, value: CellValue | null) => void;
+  view: DatabaseView;
 }) {
   const { pages } = usePages();
   const { setPeekPageId } = usePeekPage();
@@ -77,6 +80,7 @@ export function BoardCard({
             value={(record.values[titleProp.id] ?? null) as CellValue | null}
             record={record}
             onChange={(v) => onChange(titleProp.id, v)}
+            view={view}
           />
         </div>
       )}
@@ -92,6 +96,7 @@ export function BoardCard({
             value={(record.values[prop.id] ?? null) as CellValue | null}
             record={record}
             onChange={(v) => onChange(prop.id, v)}
+            view={view}
           />
         ))}
       </div>

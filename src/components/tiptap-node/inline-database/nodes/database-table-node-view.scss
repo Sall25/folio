@@ -1,10 +1,3 @@
-.node-databaseRecord{
-  margin-bottom: 0;
-
-  &.ProseMirror-selectednode{
-    background-color: var(--tt-selection-color);
-  }
-}
 .db-header-row,
 .db-row {
   display: grid;
@@ -46,6 +39,39 @@
   display: contents;   // remove them from layout entirely
 }
 
+// ====================================================================
+// Wrap mode — when a row contains any wrapping cell, the row and every
+// cell in it must become content-driven instead of locked at 34px.
+//
+// The grid already makes all cells in a row share the same height (grid
+// rows size to their tallest item), so the fix is just: stop forcing
+// 34px, stop clipping, and let the paragraph wrap.
+// ====================================================================
+.db-row:has(.db-cell[data-wrap="true"]) {
+  height: auto;
+  min-height: 34px;
+
+  // Cells: drop the fixed height + overflow clip, top-align content.
+  .db-td {
+    height: auto;
+    min-height: 34px;
+    overflow: visible;
+    align-items: flex-start;
+  }
+
+  // The ProseMirror paragraph carries its own nowrap + 34px line-height;
+  // override both so text actually flows onto multiple lines.
+  .db-td p {
+    line-height: 1.5;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    padding: 7px 0;
+  }
+}
+
 .title-input{
   caret-color: var(--tt-cursor-color);
   min-width: 160px;
@@ -57,23 +83,3 @@
 
   outline: none;
 }
-
-
-// .db-body > div {
-//   display: grid;
-//   grid-template-columns: 1fr 160px 160px 50px;
-// }
-
-// .db-row {
-//   display: grid;
-//   // gridTemplateColumns comes from inline style
-
-//   &__content {
-//     display: contents; // collapse this wrapper — cells become direct grid children
-//   }
-
-//   // Tiptap also wraps each cell in .react-renderer
-//   .react-renderer {
-//     display: contents; // collapse those too
-//   }
-// }

@@ -151,7 +151,6 @@ export function PageCreateModal({
   const { setActivePageId } = useActivePage();
   const { setPeekPageId } = usePeekPage();
   const { extensions } = usePeekEditorExtensions(setActivePageId);
-  const { editor: mainEditor } = useCurrentEditor();
 
   const floatingRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -193,48 +192,11 @@ export function PageCreateModal({
 
   const editor = useEditor({
     extensions,
-    content: {
+    content: page?.content ?? {
       type: "doc",
       content: [{ type: "title", content: [] }],
     },
     autofocus: "start",
-    onUpdate: ({ editor }) => {
-      const newTitle = editor.state.doc.firstChild?.textContent ?? "";
-      if (!newTitle.trim()) return;
-      if (!pageRef.current) return;
-
-      updatePageAsync({
-        ...pageRef.current,
-        content: editor.getJSON(),
-        title: newTitle,
-      });
-
-      if (!mainEditor) return;
-
-      let titleCellPos: number | null = null;
-      let titleCellNode: typeof mainEditor.state.doc.firstChild | null = null;
-
-      mainEditor.state.doc.descendants((node, pos) => {
-        if (titleCellPos !== null) return false;
-        if (node.type.name !== "titleCell") return;
-        if (node.attrs.pageId !== pageRef.current?.id) return;
-        titleCellPos = pos;
-        titleCellNode = node;
-        return false;
-      });
-
-      if (titleCellPos === null || titleCellNode === null) return;
-      if ((titleCellNode as any).textContent === newTitle) return;
-      if (!newTitle.trim()) return;
-
-      const { tr } = mainEditor.state;
-      tr.insertText(
-        newTitle,
-        titleCellPos + 1,
-        titleCellPos + 1 + (titleCellNode as any).content.size,
-      );
-      mainEditor.view.dispatch(tr);
-    },
   });
 
   useRecordPropertyPanel(editor, pages, page?.id ?? null);
@@ -258,10 +220,6 @@ export function PageCreateModal({
           ...pageRef.current,
           title: text ?? pageRef.current.title,
           content: stripPropertyPanels(editor.getJSON()) as JSONContent,
-          // // content: editor.getJSON(),
-          // // preserve record link fields — not part of editor content
-          // databaseId: pageRef.current.databaseId,
-          // recordId: pageRef.current.recordId,
           updatedAt: Date.now().toString(),
         });
       } else {
@@ -319,7 +277,6 @@ export function PageCreateModal({
           </CardItemGroup>
         </CardItemGroup>
 
-        {/* Body */}
         <CardBody style={{ width: "100%" }}>
           <CoverHeader
             collapsed={false}

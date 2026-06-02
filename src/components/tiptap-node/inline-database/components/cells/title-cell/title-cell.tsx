@@ -4,7 +4,9 @@ import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek
 import { findPage } from "src/lib/find-page";
 import type { JSONContent } from "@tiptap/core";
 import { TitleCellDisplay } from "../../../primitives/title-cell-display";
-import type { ID } from "../../../types/types";
+import type { DatabaseView, ID } from "../../../types/types";
+import { useCreatePage } from "src/components/tiptap-templates/simple/context/create-page-context";
+import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 
 export function TitleCell({
   value,
@@ -13,16 +15,22 @@ export function TitleCell({
   templateId,
   onChange,
   readonly,
+  unwrapped,
+  view,
 }: {
   value: string;
   recordId: ID;
+  view: DatabaseView;
   pageId?: number;
   templateId?: number;
   onChange: (value: string) => void;
   readonly?: boolean;
+  unwrapped?: boolean;
 }) {
   const { pages, updatePageAsync } = usePages();
+  const { setActivePageId } = useActivePage();
   const { setPeekPageId } = usePeekPage();
+  const { setCreatePageId } = useCreatePage();
 
   const linkedPage = useMemo(
     () => (pageId != null && pages ? (findPage(pages, pageId) ?? null) : null),
@@ -64,13 +72,30 @@ export function TitleCell({
   }, [linkedPage?.title]);
 
   return (
-    <div className="db-cell">
+    <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
       <TitleCellDisplay
         value={value}
         onChange={handleChange}
         icon={icon}
         hasPage={pageId != null}
-        onOpen={() => pageId != null && setPeekPageId(pageId)}
+        onOpen={() => {
+          if (pageId === null || pageId === undefined) return;
+          if (view.openPageIn === "Side") {
+            setPeekPageId(pageId);
+          } else if (view.openPageIn === "Center") {
+            setCreatePageId(pageId);
+          } else {
+            if (view.type === "list") {
+              setPeekPageId(pageId);
+            } else if (view.type === "gallery") {
+              setCreatePageId(pageId);
+            } else if (view.type === "board") {
+              setCreatePageId(pageId);
+            } else {
+              setActivePageId(pageId);
+            }
+          }
+        }}
         readonly={readonly}
       />
     </div>

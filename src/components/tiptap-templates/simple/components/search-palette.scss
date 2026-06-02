@@ -1,0 +1,249 @@
+// SearchPalette.scss
+// Command-palette search, built on the same modal/backdrop pattern as
+// PageCreateModal. Theme-aware via CSS variables (light defaults + .dark).
+
+:root {
+  --background-drop: rgba(216, 211, 211, 0.3);
+
+  --sp-surface: #ffffff;
+  --sp-text: #37352f;
+  --sp-text-muted: rgba(55, 53, 47, 0.45);
+  --sp-text-soft: rgba(55, 53, 47, 0.85);
+  --sp-border: rgba(55, 53, 47, 0.16);
+  --sp-border-strong: rgba(55, 53, 47, 0.28);
+  --sp-hover: rgba(55, 53, 47, 0.06);
+  --sp-pill-on: rgba(55, 53, 47, 0.08);
+  --sp-footer-bg: #fcfcfb;
+  --sp-divider: rgba(55, 53, 47, 0.09);
+  --sp-scroll: rgba(55, 53, 47, 0.18);
+  --sp-accent: #2383e2;
+  --sp-shadow: 0 0 0 1px rgba(15, 15, 15, 0.05), 0 14px 40px rgba(15, 15, 15, 0.18);
+}
+
+.dark {
+  --background-drop: rgba(15, 15, 15, 0.258);
+
+  --sp-surface: #252525;
+  --sp-text: rgba(255, 255, 255, 0.9);
+  --sp-text-muted: rgba(255, 255, 255, 0.4);
+  --sp-text-soft: rgba(255, 255, 255, 0.7);
+  --sp-border: rgba(255, 255, 255, 0.12);
+  --sp-border-strong: rgba(255, 255, 255, 0.24);
+  --sp-hover: rgba(255, 255, 255, 0.06);
+  --sp-pill-on: rgba(255, 255, 255, 0.1);
+  --sp-footer-bg: rgba(255, 255, 255, 0.02);
+  --sp-divider: rgba(255, 255, 255, 0.08);
+  --sp-scroll: rgba(255, 255, 255, 0.1);
+  --sp-accent: #5b9ef0;
+  --sp-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+.sp-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--background-drop);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: sp-backdrop-in 120ms ease;
+}
+
+@keyframes sp-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.sp {
+  position: fixed;
+  z-index: 101;
+
+  // Anchored toward the top — the command-palette convention
+  top: 96px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: min(860px, 92vw);
+  max-height: min(80vh, 720px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  background: var(--sp-surface);
+  color: var(--sp-text);
+  border-radius: 12px;
+  box-shadow: var(--sp-shadow);
+
+  animation: sp-modal-in 160ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  &-search {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    flex: none;
+
+    &__icon {
+      display: flex;
+      color: var(--sp-text-muted);
+    }
+
+    &__input {
+      flex: 1;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      font: inherit;
+      font-size: 18px;
+      letter-spacing: -0.01em;
+      color: var(--sp-text);
+
+      &::placeholder { color: var(--sp-text-muted); }
+    }
+  }
+
+  &-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 18px 14px;
+    flex: none;
+  }
+
+  &-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font: inherit;
+    font-size: 13px;
+    color: var(--sp-text-soft);
+    background: transparent;
+    border: 1px solid var(--sp-border);
+    border-radius: 999px;
+    padding: 5px 11px;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+
+    &:hover { background: var(--sp-hover); }
+
+    &--on {
+      background: var(--sp-pill-on);
+      border-color: var(--sp-border-strong);
+    }
+
+    &__aa { font-weight: 500; font-size: 12px; }
+    &__chev { display: flex; color: var(--sp-text-muted); }
+  }
+
+  // Scrollable results — mirrors the PageCreateModal scrollbar treatment
+  &-results {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0 8px;
+
+    scrollbar-width: thin;
+    scrollbar-color: var(--sp-scroll) transparent;
+
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb {
+      background: var(--sp-scroll);
+      border-radius: 2px;
+    }
+  }
+
+  &-section {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--sp-text-muted);
+    padding: 10px 18px 4px;
+  }
+
+  &-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    padding: 7px 18px;
+    margin: 0 6px;
+    border-radius: 6px;
+    cursor: pointer;
+
+    &--sel { background: var(--sp-hover); }
+
+    &__icon {
+      flex: none;
+      width: 20px;
+      font-size: 16px;
+      line-height: 1;
+      text-align: center;
+    }
+
+    &__title {
+      font-weight: 500;
+      font-size: 14px;
+      white-space: nowrap;
+      color: var(--sp-text);
+    }
+
+    &__loc {
+      font-size: 14px;
+      color: var(--sp-text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &__right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      color: var(--sp-text-muted);
+    }
+
+    &__date { font-size: 13px; }
+  }
+
+  &-hl {
+    color: var(--sp-accent);
+    font-weight: 600;
+  }
+
+  &-empty {
+    padding: 28px 18px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--sp-text-muted);
+  }
+
+  &-footer {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 9px 18px;
+    border-top: 1px solid var(--sp-divider);
+    background: var(--sp-footer-bg);
+    flex: none;
+  }
+
+  &-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--sp-text-muted);
+  }
+
+  &-kbd { font-size: 12px; line-height: 1; }
+}
+
+@keyframes sp-modal-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}

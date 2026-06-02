@@ -6,9 +6,10 @@ export function DueDateCell({
   onChange,
   config,
   readonly,
+  unwrapped,
 }: CellProps<"date">) {
   return (
-    <div className="db-cell">
+    <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
       <DateCellDisplay
         value={value}
         onChange={onChange}

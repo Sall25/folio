@@ -30,10 +30,7 @@ export function BoardCardCover({
   // Image cover
   if (coverImage) {
     return (
-      <div
-        className="db-board-card__cover"
-        style={{ height, borderRadius: "var(--tt-radius-xs)" }}
-      >
+      <div className="db-board-card__cover" style={{ height }}>
         <img
           src={coverImage}
           alt="cover"
@@ -60,7 +57,6 @@ export function BoardCardCover({
         style={{
           background: gradient,
           height,
-          borderRadius: "var(--tt-radius-xs)",
         }}
       />
     );
@@ -73,7 +69,6 @@ export function BoardCardCover({
       style={{
         background: getPlaceholderGradient(recordId),
         height,
-        borderRadius: "var(--tt-radius-xs)",
       }}
     />
   );

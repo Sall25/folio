@@ -162,7 +162,11 @@ export function PagePeekView({
 
   const editor = useEditor({
     extensions,
-    content: page.content ?? "",
+    content: page.content ?? {
+      type: "doc",
+      content: [{ type: "title", content: [] }],
+    },
+    autofocus: "start",
     onUpdate: ({ editor }) => {
       const newTitle = editor.state.doc.firstChild?.textContent ?? "";
       if (!newTitle.trim()) return;

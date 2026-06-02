@@ -6,9 +6,10 @@ export function MultiSelectCell({
   onChange,
   config,
   readonly,
+  unwrapped,
 }: CellProps<"multi_select">) {
   return (
-    <div className="db-cell">
+    <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
       <MultiSelectCellDisplay
         value={value ?? []}
         onChange={onChange}

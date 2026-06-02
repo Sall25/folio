@@ -228,6 +228,7 @@ export interface DatabaseProperty {
   config: PropertyConfig;
   /** Display width in pixels — used by table view */
   width?: number;
+  wrap?: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -358,12 +359,15 @@ export interface SortRule {
 // Views
 // ─────────────────────────────────────────────────────────────────────────────
 
+export type OpenPageIn = "Full" | "Side" | "Center";
+
 interface BaseView {
   id: ID;
   name: string;
   filters: FilterGroup[];
   sorts: SortRule[];
   hiddenProperties: ID[];
+  openPageIn?: OpenPageIn;
 }
 
 export interface TableView extends BaseView {

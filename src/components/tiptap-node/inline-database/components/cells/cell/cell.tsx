@@ -1,4 +1,9 @@
-import type { CellValue, DatabaseProperty, ID } from "../../../types/types";
+import type {
+  CellValue,
+  DatabaseProperty,
+  DatabaseView,
+  ID,
+} from "../../../types/types";
 import { TitleCell } from "../title-cell";
 import { TextCell } from "../text-cell";
 import { NumberCell } from "../number-cell";
@@ -34,16 +39,20 @@ export function Cell({
   templateId,
   onChange,
   readonly,
+  unwrapped,
+  view,
 }: {
   property: DatabaseProperty;
   value: CellValue | null;
   record: CellRecord;
+  view: DatabaseView;
   /** all values in this column — only number bar/ring uses it */
   columnValues?: CellValue[];
   /** parent database templateId — title uses it for the template icon */
   templateId?: number;
   onChange: (value: CellValue | null) => void;
   readonly?: boolean;
+  unwrapped?: boolean;
 }) {
   const { config } = property;
 
@@ -64,6 +73,8 @@ export function Cell({
           templateId={templateId}
           onChange={change}
           readonly={readonly}
+          unwrapped={unwrapped}
+          view={view}
         />
       );
 
@@ -74,6 +85,7 @@ export function Cell({
           config={config}
           onChange={change}
           readonly={readonly}
+          unwrapped={unwrapped}
         />
       );
 

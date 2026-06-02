@@ -8,6 +8,8 @@ import { SimpleEditorSidebar } from "./components/tiptap-templates/simple/simple
 import { ActivePageProvider } from "./components/tiptap-templates/simple/context/active-page-provider";
 import { CreatePageProvider } from "./components/tiptap-templates/simple/context/create-page-provider";
 import { PeekPageProvider } from "./components/tiptap-templates/simple/context/peek-page-provider";
+import { SearchProvider } from "./components/tiptap-templates/simple/context/search-provider";
+import { LibraryProvider } from "./components/tiptap-templates/simple/context/library-provider";
 
 const client = new QueryClient();
 
@@ -15,18 +17,22 @@ function App() {
   return (
     <QueryClientProvider client={client}>
       <EditorLayoutProvider>
-        <PeekPageProvider>
-          <EditorProvider>
-            <CreatePageProvider>
-              <Router location={location} routes={routes}>
-                <ActivePageProvider>
-                  <SimpleEditorSidebar />
-                  <Outlet />
-                </ActivePageProvider>
-              </Router>
-            </CreatePageProvider>
-          </EditorProvider>
-        </PeekPageProvider>
+        <SearchProvider>
+          <LibraryProvider>
+            <PeekPageProvider>
+              <EditorProvider>
+                <CreatePageProvider>
+                  <Router location={location} routes={routes}>
+                    <ActivePageProvider>
+                      <SimpleEditorSidebar />
+                      <Outlet />
+                    </ActivePageProvider>
+                  </Router>
+                </CreatePageProvider>
+              </EditorProvider>
+            </PeekPageProvider>
+          </LibraryProvider>
+        </SearchProvider>
       </EditorLayoutProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

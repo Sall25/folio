@@ -40,6 +40,10 @@ import type { View } from "./types";
 import { ResourcesPage } from "./components/resources/resources-page";
 import { usePeekPage } from "./context/peek-page-context";
 import { Editor, useCurrentEditor } from "@tiptap/react";
+import { useSearch } from "./context/search-context";
+import SearchPalette from "./components/search-palette";
+import { useLibrary } from "./context/library-context";
+import { LibraryPalette } from "./components/library-palette";
 
 const VERSION_SIDEBAR_WIDTH = 260;
 
@@ -51,12 +55,14 @@ function triggerMainEditorSync(mainEditor: Editor | null) {
 
 function SimpleEditorMain({ view }: { view: View }) {
   const { pages } = useActivePage();
-  const { versionHistoryOpen, onVersionHistoryOpenChanged/*, collapsed*/ } =
+  const { versionHistoryOpen, onVersionHistoryOpenChanged /*, collapsed*/ } =
     useEditorLayout();
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
   const { setPeekPageId, peekPageId } = usePeekPage();
   const { createPageId, setCreatePageId } = useCreatePage();
   const { editor } = useCurrentEditor();
+  const { open } = useSearch();
+  const { open: libraryOpen, onOpenChange } = useLibrary();
 
   const peekPage =
     peekPageId !== null && pages ? findPage(pages, peekPageId) : null;
@@ -96,6 +102,10 @@ function SimpleEditorMain({ view }: { view: View }) {
           }}
         />
       )}
+
+      {open && <SearchPalette />}
+
+      {libraryOpen && <LibraryPalette onClose={() => onOpenChange?.(false)} />}
 
       {createPageId !== null && (
         <PageCreateModal onClose={() => setCreatePageId(null)} />

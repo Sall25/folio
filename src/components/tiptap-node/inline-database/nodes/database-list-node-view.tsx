@@ -53,11 +53,13 @@ function ListRow({
   inlineProperties,
   titleProp,
   onChange,
+  view,
 }: {
   record: DataSourceRecord;
   inlineProperties: DatabaseProperty[];
   titleProp: DatabaseProperty | undefined;
   onChange: (propertyId: string, value: CellValue | null) => void;
+  view: DatabaseView;
 }) {
   return (
     <div className="db-list-row">
@@ -68,6 +70,7 @@ function ListRow({
             value={(record.values[titleProp.id] ?? null) as CellValue | null}
             record={record}
             onChange={(v) => onChange(titleProp.id, v)}
+            view={view}
           />
         )}
       </div>
@@ -80,6 +83,7 @@ function ListRow({
             value={(record.values[prop.id] ?? null) as CellValue | null}
             record={record}
             onChange={(v) => onChange(prop.id, v)}
+            view={view}
           />
         ))}
       </div>
@@ -91,10 +95,12 @@ export function DatabaseListNodeView({
   attrs,
   source,
   onUpdateView,
+  view,
 }: {
   attrs: DatabaseAttrs & { sourceId?: string | null };
   source: DataSource;
   onUpdateView: (patch: Partial<DatabaseView>) => void;
+  view: DatabaseView;
 }) {
   const { addPageAsync } = usePages();
   const { addRecordWithPageAsync, setCellValue } = useDataSource(
@@ -177,6 +183,7 @@ export function DatabaseListNodeView({
                     inlineProperties={inlineProperties}
                     titleProp={titleProp}
                     onChange={(propId, v) => setCellValue(rec.id, propId, v)}
+                    view={view}
                   />
                 ))}
             </div>

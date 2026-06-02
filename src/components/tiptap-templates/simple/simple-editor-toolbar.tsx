@@ -19,9 +19,11 @@ import { buildBreadcrumb } from "src/lib/build-breadcrumb";
 import { PageItemIcon } from "./page-item-icon";
 import { useMemo } from "react";
 import { useActivePage } from "./use-active-page";
+import { usePages } from "./use-pages";
 import { useMatch } from "@tanstack/react-location";
 import type { Page, View } from "./types";
 import { Home } from "lucide-react";
+import { PageCategorySelect } from "./components/page-category-select";
 
 // ============================================================
 // Types
@@ -73,15 +75,18 @@ export const MainToolbarContent = ({
   view,
 }: MainToolbarProps) => {
   const { pages, setActivePageId } = useActivePage();
+  const { updatePageAsync } = usePages();
 
   const { params } = useMatch();
   const activePageId = params.pageId ? Number(params.pageId) : undefined;
 
-  const breadcrumbs = useMemo(() => {
-    if (!activePageId || !pages) return [];
+  const activePage = useMemo(
+    () => (activePageId && pages ? findPage(pages, activePageId) : undefined),
+    [activePageId, pages],
+  );
 
-    const activePage = findPage(pages, activePageId);
-    if (!activePage) return [];
+  const breadcrumbs = useMemo(() => {
+    if (!activePage || !pages) return [];
 
     return buildBreadcrumb(activePage, pages).map((page) => {
       const isActive = page.id === activePageId;
@@ -99,7 +104,7 @@ export const MainToolbarContent = ({
         onClick: () => setActivePageId(page.id),
       };
     });
-  }, [activePageId, pages, setActivePageId]);
+  }, [activePage, activePageId, pages, setActivePageId]);
 
   return (
     <>
@@ -113,6 +118,14 @@ export const MainToolbarContent = ({
           </Button>
         )}
         <PageBreadcrumb items={breadcrumbs} />
+        {view !== "home" && activePage && (
+          <PageCategorySelect
+            value={activePage.category}
+            onChange={(category) =>
+              updatePageAsync({ ...activePage, category })
+            }
+          />
+        )}
       </ToolbarGroup>
       <Spacer />
 

@@ -5,12 +5,15 @@ export function CheckboxCell({
   value,
   onChange,
   readonly,
+  unwrapped,
 }: CellProps<"checkbox">) {
   return (
-    <CheckboxCellDisplay
-      value={value as boolean}
-      onChange={() => onChange(!value)}
-      readonly={readonly}
-    />
+    <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
+      <CheckboxCellDisplay
+        value={value as boolean}
+        onChange={() => onChange(!value)}
+        readonly={readonly}
+      />
+    </div>
   );
 }

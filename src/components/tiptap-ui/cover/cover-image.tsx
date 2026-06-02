@@ -11,7 +11,7 @@ export default function CoverImage({
   page: Page;
   onRemoveCoverAsync: () => Promise<void>;
 }) {
-  const { updatePageAsync, activePage } = useActivePage();
+  const { updatePageAsync } = useActivePage();
   const [btnPosition, setBtnPosition] = useState({ top: 0, right: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const [hovering, setHovering] = useState(false);
@@ -21,7 +21,7 @@ export default function CoverImage({
   );
   const [localPositionY, setLocalPositionY] = useState<number | null>(null);
 
-  const coverImage = pendingCoverImage ?? activePage?.cover.coverImage;
+  const coverImage = pendingCoverImage ?? page.cover.coverImage;
   const positionY = localPositionY ?? (page.cover as any)?.positionY ?? 50;
 
   const onCoverImageChange = useCallback((url: string) => {

@@ -3,7 +3,12 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import { useDataSource } from "../hooks/use-data-source";
 import { BoardCard } from "../primitives/board-card";
-import type { DatabaseAttrs, DataSource, GalleryView } from "../types/types";
+import type {
+  DatabaseAttrs,
+  DatabaseView,
+  DataSource,
+  GalleryView,
+} from "../types/types";
 import "./database-gallery-node-view.scss";
 
 const CARD_SIZES = {
@@ -15,9 +20,11 @@ const CARD_SIZES = {
 export function DatabaseGalleryNodeView({
   attrs,
   source,
+  view,
 }: {
   attrs: DatabaseAttrs & { sourceId?: string | null };
   source: DataSource;
+  view: DatabaseView;
 }) {
   const { addPageAsync } = usePages();
   const { addRecordWithPageAsync, setCellValue } = useDataSource(
@@ -59,6 +66,7 @@ export function DatabaseGalleryNodeView({
               cardPreview="cover"
               sourceId={attrs.sourceId!}
               onChange={(propId, v) => setCellValue(rec.id, propId, v)}
+              view={view}
             />
           </div>
         ))}

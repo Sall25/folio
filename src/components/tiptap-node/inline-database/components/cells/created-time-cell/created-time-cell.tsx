@@ -1,8 +1,11 @@
 import type { CellProps } from "../types";
 
-export function CreatedTimeCell({ value }: CellProps<"created_time">) {
+export function CreatedTimeCell({
+  value,
+  unwrapped,
+}: CellProps<"created_time">) {
   return (
-    <div className="db-cell">
+    <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
       {" "}
       <span>{value}</span>
     </div>

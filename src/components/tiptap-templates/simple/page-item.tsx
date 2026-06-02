@@ -95,6 +95,7 @@ export function PageItem({
             e.stopPropagation();
             if (hasChildren) setExpanded((v) => !v);
           }}
+          data-active-state={isActive ? "on" : "off"}
           style={{
             zIndex: 10,
             opacity: shouldShow && hasChildren ? 1 : 0,
@@ -117,7 +118,7 @@ export function PageItem({
           styles={{
             opacity: shouldShow && hasChildren ? 0 : 1,
             transition: "opacity 150ms ease",
-            width: 16,
+            width: 18,
             height: 16,
           }}
         />

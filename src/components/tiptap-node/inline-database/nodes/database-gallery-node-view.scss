@@ -25,14 +25,14 @@
     display: grid;
     grid-template-columns: repeat(
       auto-fill,
-      minmax(var(--db-gallery-card-width, 260px), 1fr)
+      minmax(var(--db-gallery-card-width, 280px), 1fr)
     );
     gap: 6px;
     padding: 4px 0;
   }
 
   &__card {
-    border-radius: var(--tt-radius-sm);
+    border-radius: var(--tt-radius-xs);
     // BoardCard provides the inner styling; this just sizes the slot
   }
 }

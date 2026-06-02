@@ -275,12 +275,13 @@ export function DatabaseNodeView({
 
   // ── Non-table views ──────────────────────────────────────────────────────
   if (activeView?.type === "board")
-    return chrome(<DatabaseBoardNodeView attrs={attrs} source={source} />);
+    return chrome(<DatabaseBoardNodeView view={db.activeView} attrs={attrs} source={source} />);
   if (activeView?.type === "gallery")
-    return chrome(<DatabaseGalleryNodeView attrs={attrs} source={source} />);
+    return chrome(<DatabaseGalleryNodeView view={db.activeView} attrs={attrs} source={source} />);
   if (activeView?.type === "list")
     return chrome(
       <DatabaseListNodeView
+      view={db.activeView}
         attrs={attrs}
         source={source}
         onUpdateView={onUpdateView}
@@ -416,6 +417,7 @@ export function DatabaseNodeView({
                 style={{
                   borderRight: "1px solid var(--tt-border-color)",
                   display: "block",
+                  overflow: "hidden",
                 }}
               >
                 <Cell
@@ -427,6 +429,8 @@ export function DatabaseNodeView({
                     (r) => (r.values[prop.id] ?? null) as CellValue,
                   )}
                   onChange={(v) => setCellValue(record.id, prop.id, v)}
+                  unwrapped={db.isUnwrapped(db.activeView.id, prop.id)}
+                  view={db.activeView}
                 />
               </div>
             ))}

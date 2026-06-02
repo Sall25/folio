@@ -9,9 +9,9 @@
   padding: 0;
   gap: 6px;
   cursor: text;
-  min-width: 200px;
+  width: fit-content;
   font-weight: 400;
-  
+
   &__text {
     flex: 1;
     min-width: 0;
@@ -90,6 +90,48 @@
   // Remove table cell styles in board context
   border: none;
   padding: 0;
+}
+
+// ====================================================================
+// Wrap mode — when the enclosing .db-cell carries data-wrap="true",
+// the single-line defaults above (and the button primitive's own
+// nowrap/ellipsis + fixed height) must be overridden down to the text
+// node. NOTE: the button is a DIRECT child of .db-cell (there is no
+// .db-cell-title wrapper in the rendered DOM), so these target
+// .tiptap-button directly.
+// ====================================================================
+.db-cell[data-wrap="true"] {
+  // The cell itself must grow and stop clipping.
+  height: auto;
+  min-height: 34px;
+  overflow: visible;
+  align-items: flex-start;
+  white-space: normal;
+
+  // The ghost Button is a fixed-height, single-line flex row by default.
+  // Let it grow, fill the column, and allow its content to wrap.
+  .tiptap-button {
+    height: auto;
+    min-height: 0;
+    width: auto;
+    white-space: normal;
+    align-items: flex-start;
+    text-align: left;
+    overflow: visible;
+  }
+
+  // Keep the optional .db-cell-title path working too, if present.
+  .db-cell-title {
+    min-width: 100px;
+    width: auto;
+    align-items: flex-start;
+  }
+
+  .db-cell-title__content {
+    height: auto;
+    min-height: 35px;
+    line-height: 1.5;
+  }
 }
 
 .db-board-card__cover {

@@ -7,11 +7,12 @@ export function PersonCell({
   config,
   onChange,
   readonly,
+  unwrapped,
 }: CellProps<"person">) {
   const people = useWorkspacePeople();
 
   return (
-    <div className="db-cell">
+    <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
       <PersonCellDisplay
         value={value ?? []}
         people={people}

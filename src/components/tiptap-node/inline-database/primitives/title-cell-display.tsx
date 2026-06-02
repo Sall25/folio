@@ -4,6 +4,8 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 import type { PageCover } from "src/components/tiptap-templates/simple/types";
 import "./title-cell-display.scss";
+import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
 export interface TitleCellDisplayProps {
   value: string;
@@ -41,11 +43,12 @@ export function TitleCellDisplay({
   }
 
   return (
-    <div
+    <CardItemGroup
       className={`${editing ? " editing" : ""}`}
       onMouseOver={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      style={{ display: "flex" }}
+      orientation="horizontal"
+      style={{ width: "100%" }}
     >
       <div
         className="db-cell-title"
@@ -74,7 +77,7 @@ export function TitleCellDisplay({
             variant="ghost"
             style={{
               background: "transparent",
-              width: "100%",
+              width: "auto",
               justifyContent: "flex-start",
               color: "var(--tt-theme-text)",
               fontWeight: 500,
@@ -93,15 +96,20 @@ export function TitleCellDisplay({
         )}
       </div>
 
+      <Spacer size={10} orientation="horizontal" />
       {hasPage && !editing && onOpen && (
         <Button
           // className="db-cell-title__open"
           style={{
-            minHeight: 18,
+            minHeight: 24,
             height: 24,
             fontSize: 14,
+            minWidth: 68,
+            // width: 68,
+            alignItems: "center",
             borderRadius: "var(--tt-radius-sm)",
             background: "transparent",
+            cursor: "pointer",
             border: "1px solid var(--tt-border-color)",
             opacity: hover ? 1 : 0,
             transition: "opacity 0.15s ease",
@@ -115,6 +123,6 @@ export function TitleCellDisplay({
           <span className="tiptap-button-text">Open</span>
         </Button>
       )}
-    </div>
+    </CardItemGroup>
   );
 }

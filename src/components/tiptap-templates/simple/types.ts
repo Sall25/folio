@@ -8,6 +8,7 @@ export type PageCategory =
   | "Shared"
   | "Private"
   | "Template"
+  | "Teamspaces"
   | "Page";
 
 export type PageSettings = {

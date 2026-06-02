@@ -17,7 +17,7 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
     return (
       <span
         className="page-icon"
-        style={{ ...styles, fontSize: 16 }}
+        style={{ ...styles, fontSize: 17 }}
         aria-hidden="true"
       >
         {cover.iconName}
@@ -32,22 +32,22 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
           <DynamicIcon
             stroke={
               !cover.color || cover.color === "var(--tt-text-color)"
-                ? "var(--tt-theme-text)"
+                ? "var(--tt-text-primary)"
                 : cover.color
             }
             name={cover.iconName!}
             size={20}
-            strokeWidth={2}
+            strokeWidth={1.5}
           />
         ) : (
           <FileText
             stroke={
               !cover.color || cover.color === "var(--tt-text-color)"
-                ? "var(--tt-theme-text)"
+                ? "var(--tt-text-primary)"
                 : cover.color
             }
             size={20}
-            strokeWidth={2}
+            strokeWidth={1.5}
           />
         )}
       </span>

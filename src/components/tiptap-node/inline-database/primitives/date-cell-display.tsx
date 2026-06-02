@@ -76,10 +76,10 @@ export function DateCellDisplay({
         background: "transparent",
         width: "100%",
         justifyContent: "flex-start",
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: 400,
-        lineHeight: 1.6,
-        color: "var(--tt-theme-text)",
+        lineHeight: 1.5,
+        color: "var(--tt-theme-primary)",
       }}
     >
       <span>
