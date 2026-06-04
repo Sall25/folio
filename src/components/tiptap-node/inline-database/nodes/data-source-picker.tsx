@@ -31,7 +31,7 @@ function defaultProperties(): DatabaseProperty[] {
 export function DataSourcePicker({
   onSelect,
 }: {
-  onSelect: (sourceId: ID, pageId?: number) => void;
+  onSelect: (sourceId: ID, pageId?: number, isLinked?: boolean) => void;
 }) {
   const { sources, isLoading, createSourceAsync } = useDataSources();
   const { addPageAsync, pages } = usePages();
@@ -63,7 +63,7 @@ export function DataSourcePicker({
         records: [],
       });
 
-      onSelect(source.id, dbPage.id);
+      onSelect(source.id, dbPage.id, false);
     } finally {
       setCreating(false);
     }
@@ -128,7 +128,7 @@ export function DataSourcePicker({
                       gap: 8,
                       borderRadius: "var(--tt-radius-sm)",
                     }}
-                    onClick={() => onSelect(s.id, s.pageId)}
+                    onClick={() => onSelect(s.id, s.pageId, true)}
                   >
                     {sourcePage ? (
                       <PageItemIcon

@@ -1,0 +1,137 @@
+// Map to your global theme tokens. Same Notion-dark warm-gray as the strip,
+// so the strip sits flush with the leading/trailing areas (no seam).
+$bg-bar: #191919;
+$border: rgba(255, 255, 255, 0.06);
+$text-muted: #9b9a97;
+
+:root{
+  --tt-toolbar-height: 2.5rem;
+}
+/**
+
+.tiptap-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  overflow: visible;
+  //border-bottom: 1px solid var(--tt-toolbar-border-color);
+
+  &-group {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+
+    &:empty {
+      display: none;
+    }
+
+    &:empty + .tiptap-separator,
+    .tiptap-separator + &:empty {
+      display: none;
+    }
+  }
+
+  &[data-variant="fixed"] {
+    //position: sticky;
+    transition: width 0.2s ease, left 0.2s ease, right 0.2s ease;
+    // left: var(--sidebar-width, 240px); 
+    // right: var(--version-sidebar-width);
+    // width: calc(100% - var(--sidebar-width, 240px)); 
+    z-index: 600;
+    // width: 100%;
+    min-height: var(--tt-toolbar-height);
+    background: var(--tt-toolbar-bg-color);
+    // border-bottom: 1px solid var(--tt-toolbar-border-color);
+    padding: .5rem .75rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      position: absolute;
+      top: auto;
+      height: calc(var(--tt-toolbar-height) + var(--tt-safe-area-bottom));
+      border-top: 1px solid var(--tt-toolbar-border-color);
+      border-bottom: none;
+      padding: 0 0.5rem var(--tt-safe-area-bottom);
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+
+      .tiptap-toolbar-group {
+        flex: 0 0 auto;
+      }
+    }
+  }
+
+  &[data-variant="floating"] {
+    --tt-toolbar-padding: 0.125rem;
+    --tt-toolbar-border-width: 1px;
+
+    padding: 0.188rem;
+    border-radius: calc(
+      var(--tt-toolbar-padding) + var(--tt-radius-lg) +
+        var(--tt-toolbar-border-width)
+    );
+    border: var(--tt-toolbar-border-width) solid var(--tt-toolbar-border-color);
+    background-color: var(--tt-toolbar-bg-color);
+    box-shadow: var(--tt-shadow-elevated-md);
+    outline: none;
+    overflow: hidden;
+
+    &[data-plain="true"] {
+      padding: 0;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+      background-color: transparent;
+    }
+
+    @media screen and (max-width: 480px) {
+      width: 100%;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+    }
+  }
+}
+
+*/
+
+.bar {
+  position: fixed !important;
+  top: 0 !important;
+  left: var(--sidebar-width, 240px) !important;
+  right: 0 !important;
+  height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 1rem !important;
+  z-index: 100;
+  width: auto !important;
+  border-bottom: 0.5px solid $border; // separates the tab row from the breadcrumb
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// The Tabs strip takes the remaining width; its own bg already matches $bg-bar.
+.tabs {
+  flex: 1 1 auto;
+  min-width: 0; // let the inner scroller actually scroll instead of overflowing
+ 
+}
+
+.leading,
+.trailing {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 0 8px 6px; // align onto the tab baseline
+  color: $text-muted;
+}

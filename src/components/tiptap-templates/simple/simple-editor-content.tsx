@@ -201,7 +201,7 @@ const StableShell = React.memo(function StableShell() {
       <section
         className="simple-editor-center"
         style={{
-          width: `calc(100vw - ${sidebarWidth}px)`,
+          width: `calc(100vw)`,
           marginLeft: sidebarWidth,
           transition: "margin-left 0.2s ease, width 0.2s ease",
         }}

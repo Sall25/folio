@@ -11,10 +11,11 @@ import type {
 } from "../types/types";
 import "./database-gallery-node-view.scss";
 
-const CARD_SIZES = {
-  small: 230,
-  medium: 280,
-  large: 320,
+// Cards per row by size. Larger size = fewer, wider cards.
+const CARD_COLUMNS = {
+  small: 5,
+  medium: 4,
+  large: 3,
 } as const;
 
 export function DatabaseGalleryNodeView({
@@ -37,7 +38,7 @@ export function DatabaseGalleryNodeView({
 
   const cardSize = activeView?.cardSize ?? "medium";
   const coverFit = activeView?.coverFit ?? "cover";
-  const cardWidth = CARD_SIZES[cardSize];
+  const cardCols = CARD_COLUMNS[cardSize];
 
   const hidden = new Set(activeView?.hiddenProperties ?? []);
   const cardProps = source.properties.filter((p) => !hidden.has(p.id));
@@ -48,18 +49,14 @@ export function DatabaseGalleryNodeView({
       data-type="database-gallery"
       style={
         {
-          "--db-gallery-card-width": `${cardWidth}px`,
+          "--db-gallery-cols": cardCols,
           "--db-gallery-cover-fit": coverFit,
         } as React.CSSProperties
       }
     >
       <div className="db-gallery__body">
         {source.records.map((rec) => (
-          <div
-            key={rec.id}
-            className="db-gallery__card"
-            style={{ width: cardWidth }}
-          >
+          <div key={rec.id} className="db-gallery__card">
             <BoardCard
               record={rec}
               properties={cardProps}

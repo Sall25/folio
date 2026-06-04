@@ -342,7 +342,12 @@ export interface DatabaseAttrs {
   hideTitle?: boolean;
 
   sourceId?: ID;
+
   pageId?: number;
+
+  locked?: boolean;
+
+  isLinked?: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -400,6 +405,7 @@ export interface GalleryView extends BaseView {
   coverPropertyId?: ID;
   cardSize: "small" | "medium" | "large";
   coverFit: "cover" | "contain";
+  cardPreview?: "none" | "cover" | "content";
 }
 
 export interface CalendarView extends BaseView {

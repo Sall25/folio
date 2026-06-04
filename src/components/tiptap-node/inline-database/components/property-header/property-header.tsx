@@ -35,12 +35,17 @@ import { DateEditDisplay } from "../date-edit-display/date-edit-display";
 import { PersonEditDisplay } from "../person-edit-display";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+
 export function PropertyHeader({
   prop,
   style,
+  locked = false,
 }: {
   prop: DatabaseProperty;
   style?: Partial<CSSProperties>;
+  /** When true, all structural edits are frozen: no edit popover, no drag
+      reorder, no resize. The header still renders the name + icon. */
+  locked?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const {
@@ -50,7 +55,7 @@ export function PropertyHeader({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: prop.id });
+  } = useSortable({ id: prop.id, disabled: locked });
 
   const { db, attrs } = useDatabaseContext();
   const Icon = PROPERTY_TYPE_ICONS[prop.config.type];
@@ -63,7 +68,6 @@ export function PropertyHeader({
     if (!el) return;
 
     const observer = new ResizeObserver(() => {
-      // dispatch a custom event with the propId and new width
       el.dispatchEvent(
         new CustomEvent("column:resize", {
           bubbles: true,
@@ -75,6 +79,30 @@ export function PropertyHeader({
     observer.observe(el);
     return () => observer.disconnect();
   }, [isResizing, nodeRef, prop.id]);
+
+  // The trigger button. When locked it carries no drag listeners and never
+  // opens the edit popover — it's a plain, inert label.
+  const triggerButton = (
+    <Button
+      variant="ghost"
+      className="db-th__trigger"
+      {...(locked ? {} : attributes)}
+      {...(locked ? {} : listeners)}
+      style={{
+        width: "100%",
+        borderRadius: "var(--tt-radius-sm)",
+        justifyContent: "flex-start",
+        overflow: "hidden",
+        background: "transparent",
+        fontSize: 14,
+        color: "var(--tt-text-color)",
+        cursor: locked ? "default" : undefined,
+      }}
+    >
+      <Icon className="tiptap-button-icon" style={{ width: 16, height: 16 }} />
+      <span className="tiptap-button-text">{prop.name}</span>
+    </Button>
+  );
 
   return (
     <div
@@ -100,239 +128,217 @@ export function PropertyHeader({
         e.preventDefault();
       }}
     >
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            className="db-th__trigger"
-            {...attributes}
-            {...listeners}
-            style={{
-              width: "100%",
-              borderRadius: "var(--tt-radius-sm)",
-              justifyContent: "flex-start",
-              overflow: "hidden",
-              background: "transparent",
-              fontSize: 14,
-              color: "var(--tt-text-color)",
-            }}
-          >
-            <Icon
-              className="tiptap-button-icon"
-              // fill="var(--tt-text-secondary)"
-              style={{ width: 16, height: 16 }}
-            />
-            <span className="tiptap-button-text">{prop.name}</span>
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent side="bottom" align="start">
-          <Card
-            style={{
-              padding: "5px 10px",
-              boxShadow: "var(--tt-shadow-elevated-sm)",
-              minWidth: 260,
-            }}
-          >
-            <CardHeader>
-              <CardGroupLabel>Edit Property</CardGroupLabel>
-            </CardHeader>
-            <CardBody>
-              <CardItemGroup>
-                <CardItemGroup orientation="horizontal">
-                  <Button variant="ghost">
-                    <Icon className="tiptap-button-icon" />
-                  </Button>
-                  <TextareaAutosize
-                    cols={30}
-                    maxRows={1}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    contentEditable={true}
-                    onBlur={() =>
-                      db.updateProperty(prop.id, {
-                        ...prop,
-                        name: name,
-                      })
-                    }
-                    onSubmit={() =>
-                      db.updateProperty(prop.id, {
-                        ...prop,
-                        name: name,
-                      })
-                    }
-                  />
-                </CardItemGroup>
-                {prop.config.type === "select" && (
-                  <PropertyEditPopover>
-                    <SelectOptionsEditor
-                      options={prop.config.options}
-                      onEditOption={(option) =>
-                        db.updateProperty(prop.id, {
-                          ...prop,
-                          config: {
-                            ...prop.config,
-                            options: (
-                              prop.config as {
-                                type: typeof prop.config.type;
-                                options: SelectOption[];
-                              }
-                            ).options.map((o) =>
-                              o.id !== option.id ? o : option,
-                            ),
-                          } as PropertyConfig,
-                        })
-                      }
-                      onChange={(options) =>
-                        db.updateProperty(prop.id, {
-                          ...prop,
-                          config: {
-                            ...(prop.config as {
-                              type: "select";
-                              options: SelectOption[];
-                            }),
-                            options,
-                          },
-                        })
-                      }
-                    />
-                  </PropertyEditPopover>
-                )}
-                {prop.config.type === "multi_select" && (
-                  <PropertyEditPopover>
-                    <SelectOptionsEditor
-                      options={prop.config.options}
-                      onEditOption={(option) =>
-                        db.updateProperty(prop.id, {
-                          ...prop,
-                          config: {
-                            ...prop.config,
-                            options: (
-                              prop.config as {
-                                type: typeof prop.config.type;
-                                options: SelectOption[];
-                              }
-                            ).options.map((o) =>
-                              o.id !== option.id ? o : option,
-                            ),
-                          } as PropertyConfig,
-                        })
-                      }
-                      onChange={(options) =>
-                        db.updateProperty(prop.id, {
-                          ...prop,
-                          config: {
-                            ...(prop.config as {
-                              type: "select";
-                              options: SelectOption[];
-                            }),
-                            options,
-                          },
-                        })
-                      }
-                    />
-                  </PropertyEditPopover>
-                )}
-                {prop.config.type === "formula" && (
-                  <PropertyEditPopover>
-                    <FormulaEditor
-                      propertyId={prop.id}
-                      properties={attrs.properties}
-                      onDone={() => setOpen(false)}
-                    />
-                  </PropertyEditPopover>
-                )}
-                {prop.config.type === "number" && (
-                  <PropertyEditPopover>
-                    <NumberEditDisplay
-                      prop={prop}
-                      onChange={(patch) => {
-                        if (prop.config.type !== "number") return;
-                        db.updateProperty(prop.id, {
-                          ...prop,
-                          config: { ...prop.config, ...patch },
-                        });
-                      }}
-                    />
-                  </PropertyEditPopover>
-                )}
-                {prop.config.type === "date" && (
-                  <PropertyEditPopover>
-                    <DateEditDisplay
-                      prop={prop}
-                      onChange={(config) =>
-                        db.updateProperty(prop.id, { ...prop, config })
-                      }
-                    />
-                  </PropertyEditPopover>
-                )}
-                {prop.config.type === "person" && (
-                  <PropertyEditPopover>
-                    <PersonEditDisplay
-                      prop={prop}
-                      onChange={(config) =>
-                        db.updateProperty(prop.id, { ...prop, config })
-                      }
-                    />
-                  </PropertyEditPopover>
-                )}
-              </CardItemGroup>
-              <CardItemGroup>
-                <FreezePropertyButton
-                  isFrozen={db.isFrozen(db.activeView.id, prop.id)}
-                  onFreeze={() => {
-                    const isFrozen = db.isFrozen(db.activeView.id, prop.id);
-                    db.freezeProperty(
-                      db.activeView.id,
-                      isFrozen ? null : prop.id,
-                    );
-                  }}
-                />
-                <HidePropertyButton
-                  onHide={() => db.hideProperty(db.activeView.id, prop.id)}
-                />
-                <UnwrapPropertyButton
-                  isUnwrapped={db.isUnwrapped(db.activeView.id, prop.id)}
-                  onUnwrap={() =>
-                    db.toggleUnwrapProperty(db.activeView.id, prop.id)
-                  }
-                />
-              </CardItemGroup>
-
-              {prop.config.type !== "title" && (
+      {locked ? (
+        // Locked: no popover, no edit surface — just the label.
+        triggerButton
+      ) : (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
+          <PopoverContent side="bottom" align="start">
+            <Card
+              style={{
+                padding: "5px 10px",
+                boxShadow: "var(--tt-shadow-elevated-sm)",
+                minWidth: 260,
+              }}
+            >
+              <CardHeader>
+                <CardGroupLabel>Edit Property</CardGroupLabel>
+              </CardHeader>
+              <CardBody>
                 <CardItemGroup>
-                  <Separator orientation="horizontal" />
-                  <DuplicatePropertyButton
-                    onDuplicate={() => db.duplicateProperty(prop.id)}
+                  <CardItemGroup orientation="horizontal">
+                    <Button variant="ghost">
+                      <Icon className="tiptap-button-icon" />
+                    </Button>
+                    <TextareaAutosize
+                      cols={30}
+                      maxRows={1}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      contentEditable={true}
+                      onBlur={() =>
+                        db.updateProperty(prop.id, { ...prop, name })
+                      }
+                      onSubmit={() =>
+                        db.updateProperty(prop.id, { ...prop, name })
+                      }
+                    />
+                  </CardItemGroup>
+                  {prop.config.type === "select" && (
+                    <PropertyEditPopover>
+                      <SelectOptionsEditor
+                        options={prop.config.options}
+                        onEditOption={(option) =>
+                          db.updateProperty(prop.id, {
+                            ...prop,
+                            config: {
+                              ...prop.config,
+                              options: (
+                                prop.config as {
+                                  type: typeof prop.config.type;
+                                  options: SelectOption[];
+                                }
+                              ).options.map((o) =>
+                                o.id !== option.id ? o : option,
+                              ),
+                            } as PropertyConfig,
+                          })
+                        }
+                        onChange={(options) =>
+                          db.updateProperty(prop.id, {
+                            ...prop,
+                            config: {
+                              ...(prop.config as {
+                                type: "select";
+                                options: SelectOption[];
+                              }),
+                              options,
+                            },
+                          })
+                        }
+                      />
+                    </PropertyEditPopover>
+                  )}
+                  {prop.config.type === "multi_select" && (
+                    <PropertyEditPopover>
+                      <SelectOptionsEditor
+                        options={prop.config.options}
+                        onEditOption={(option) =>
+                          db.updateProperty(prop.id, {
+                            ...prop,
+                            config: {
+                              ...prop.config,
+                              options: (
+                                prop.config as {
+                                  type: typeof prop.config.type;
+                                  options: SelectOption[];
+                                }
+                              ).options.map((o) =>
+                                o.id !== option.id ? o : option,
+                              ),
+                            } as PropertyConfig,
+                          })
+                        }
+                        onChange={(options) =>
+                          db.updateProperty(prop.id, {
+                            ...prop,
+                            config: {
+                              ...(prop.config as {
+                                type: "select";
+                                options: SelectOption[];
+                              }),
+                              options,
+                            },
+                          })
+                        }
+                      />
+                    </PropertyEditPopover>
+                  )}
+                  {prop.config.type === "formula" && (
+                    <PropertyEditPopover>
+                      <FormulaEditor
+                        propertyId={prop.id}
+                        properties={attrs.properties}
+                        onDone={() => setOpen(false)}
+                      />
+                    </PropertyEditPopover>
+                  )}
+                  {prop.config.type === "number" && (
+                    <PropertyEditPopover>
+                      <NumberEditDisplay
+                        prop={prop}
+                        onChange={(patch) => {
+                          if (prop.config.type !== "number") return;
+                          db.updateProperty(prop.id, {
+                            ...prop,
+                            config: { ...prop.config, ...patch },
+                          });
+                        }}
+                      />
+                    </PropertyEditPopover>
+                  )}
+                  {prop.config.type === "date" && (
+                    <PropertyEditPopover>
+                      <DateEditDisplay
+                        prop={prop}
+                        onChange={(config) =>
+                          db.updateProperty(prop.id, { ...prop, config })
+                        }
+                      />
+                    </PropertyEditPopover>
+                  )}
+                  {prop.config.type === "person" && (
+                    <PropertyEditPopover>
+                      <PersonEditDisplay
+                        prop={prop}
+                        onChange={(config) =>
+                          db.updateProperty(prop.id, { ...prop, config })
+                        }
+                      />
+                    </PropertyEditPopover>
+                  )}
+                </CardItemGroup>
+                <CardItemGroup>
+                  <FreezePropertyButton
+                    isFrozen={db.isFrozen(db.activeView.id, prop.id)}
+                    onFreeze={() => {
+                      const isFrozen = db.isFrozen(db.activeView.id, prop.id);
+                      db.freezeProperty(
+                        db.activeView.id,
+                        isFrozen ? null : prop.id,
+                      );
+                    }}
                   />
-                  <DeletePropertyButton
-                    onDelete={() => db.deleteProperty(prop.id)}
+                  <HidePropertyButton
+                    onHide={() => db.hideProperty(db.activeView.id, prop.id)}
+                  />
+                  <UnwrapPropertyButton
+                    isUnwrapped={db.isUnwrapped(db.activeView.id, prop.id)}
+                    onUnwrap={() =>
+                      db.toggleUnwrapProperty(db.activeView.id, prop.id)
+                    }
                   />
                 </CardItemGroup>
-              )}
-            </CardBody>
-          </Card>
-        </PopoverContent>
-      </Popover>
-      <span
-        className="column-resizer"
-        style={{ right: -8 }}
-        onMouseDown={(e) => {
-          if (nodeRef?.current) {
-            const currentPx = nodeRef.current.getBoundingClientRect().width;
-            nodeRef.current.style.width = `${currentPx}px`;
-            //    nodeRef.current.style.flexBasis = `${currentPx}px`;
-          }
-          handleResizeStart?.(e, "right");
-        }}
-        onTouchStart={(e) => {
-          if (nodeRef?.current) {
-            const currentPx = nodeRef.current.getBoundingClientRect().width;
-            nodeRef.current.style.width = `${currentPx}px`;
-            //  nodeRef.current.style.flexBasis = `${currentPx}px`;
-          }
-          handleResizeStart?.(e, "right");
-        }}
-      />
+
+                {prop.config.type !== "title" && (
+                  <CardItemGroup>
+                    <Separator orientation="horizontal" />
+                    <DuplicatePropertyButton
+                      onDuplicate={() => db.duplicateProperty(prop.id)}
+                    />
+                    <DeletePropertyButton
+                      onDelete={() => db.deleteProperty(prop.id)}
+                    />
+                  </CardItemGroup>
+                )}
+              </CardBody>
+            </Card>
+          </PopoverContent>
+        </Popover>
+      )}
+
+      {/* Resize handle — omitted entirely when locked. */}
+      {!locked && (
+        <span
+          className="column-resizer"
+          style={{ right: -8 }}
+          onMouseDown={(e) => {
+            if (nodeRef?.current) {
+              const currentPx = nodeRef.current.getBoundingClientRect().width;
+              nodeRef.current.style.width = `${currentPx}px`;
+            }
+            handleResizeStart?.(e, "right");
+          }}
+          onTouchStart={(e) => {
+            if (nodeRef?.current) {
+              const currentPx = nodeRef.current.getBoundingClientRect().width;
+              nodeRef.current.style.width = `${currentPx}px`;
+            }
+            handleResizeStart?.(e, "right");
+          }}
+        />
+      )}
     </div>
   );
 }

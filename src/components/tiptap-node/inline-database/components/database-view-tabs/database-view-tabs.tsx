@@ -18,6 +18,9 @@ interface DatabaseViewTabsProps {
   db: UseDatabaseReturn;
   onRename: () => void;
   onUpdateAttributes?: (attrs: DatabaseAttrs) => void;
+  /** When locked: no add-view, no rename/delete-view. View SWITCHING stays
+      allowed (clicking a tab is reading, not structural). */
+  locked?: boolean;
 }
 
 const VIEW_TYPES: { type: DatabaseView["type"]; label: string }[] = [
@@ -34,6 +37,7 @@ export function DatabaseViewTabs({
   db,
   onRename,
   onUpdateAttributes,
+  locked = false,
 }: DatabaseViewTabsProps) {
   const [open, setOpen] = useState(false);
 
@@ -45,20 +49,46 @@ export function DatabaseViewTabs({
     >
       {attrs.views.map((view) => {
         const isActive = view.id === attrs.activeViewId;
-        return isActive ? (
-          <ViewPopover
-            key={view.id}
-            attrs={attrs}
-            view={view}
-            onRename={onRename}
-            onDelete={() => db.deleteView(view.id)}
-            canDelete={attrs.views.length > 1}
-            active={isActive}
-            onShowDatabaseTitle={() =>
-              onUpdateAttributes?.({ ...attrs, hideTitle: false })
-            }
-          />
-        ) : (
+
+        // Active tab: when locked, render a plain switch-only tab instead of
+        // the ViewPopover (which exposes rename/delete/config). When unlocked,
+        // the ViewPopover gives the full management menu.
+        if (isActive) {
+          if (locked) {
+            return (
+              <Button
+                variant="ghost"
+                key={view.id}
+                data-active-state="on"
+                style={{
+                  borderRadius: "var(--tt-radius-xl)",
+                  minWidth: 32,
+                  minHeight: 26,
+                }}
+              >
+                <ViewIcon view={view} />
+                <span className="tiptap-button-text">{view.name}</span>
+              </Button>
+            );
+          }
+          return (
+            <ViewPopover
+              key={view.id}
+              attrs={attrs}
+              view={view}
+              onRename={onRename}
+              onDelete={() => db.deleteView(view.id)}
+              canDelete={attrs.views.length > 1}
+              active={isActive}
+              onShowDatabaseTitle={() =>
+                onUpdateAttributes?.({ ...attrs, hideTitle: false })
+              }
+            />
+          );
+        }
+
+        // Inactive tab: switching is always allowed (reading), locked or not.
+        return (
           <Button
             variant="ghost"
             key={view.id}
@@ -79,37 +109,40 @@ export function DatabaseViewTabs({
         );
       })}
 
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            className="db-view-tab db-view-tab--add"
-            aria-label="Add view"
-          >
-            <Plus size={13} />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent side="bottom" align="start" className="db-panel">
-          <Card style={{ padding: "5px 10px", minWidth: 160 }}>
-            <CardItemGroup>
-              {VIEW_TYPES.map(({ type, label }) => (
-                <Button
-                  key={type}
-                  variant="ghost"
-                  style={{ justifyContent: "flex-start", width: "100%" }}
-                  onClick={() => {
-                    db.addView(type, label);
-                    setOpen(false);
-                  }}
-                >
-                  <ViewIcon view={{ type } as DatabaseView} />
-                  <span className="tiptap-button-text">{label}</span>
-                </Button>
-              ))}
-            </CardItemGroup>
-          </Card>
-        </PopoverContent>
-      </Popover>
+      {/* Add view — omitted when locked. */}
+      {!locked && (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              className="db-view-tab db-view-tab--add"
+              aria-label="Add view"
+            >
+              <Plus size={13} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent side="bottom" align="start" className="db-panel">
+            <Card style={{ padding: "5px 10px", minWidth: 160 }}>
+              <CardItemGroup>
+                {VIEW_TYPES.map(({ type, label }) => (
+                  <Button
+                    key={type}
+                    variant="ghost"
+                    style={{ justifyContent: "flex-start", width: "100%" }}
+                    onClick={() => {
+                      db.addView(type, label);
+                      setOpen(false);
+                    }}
+                  >
+                    <ViewIcon view={{ type } as DatabaseView} />
+                    <span className="tiptap-button-text">{label}</span>
+                  </Button>
+                ))}
+              </CardItemGroup>
+            </Card>
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   );
 }

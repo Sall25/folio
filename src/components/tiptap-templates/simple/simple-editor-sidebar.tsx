@@ -374,10 +374,10 @@ export function SimpleEditorSidebar() {
               });
               if (p?.id != null) await updatePageAsync({ ...p, category });
             }}
-            onRenameSection={(category) => {
+            onRenameSection={() => {
               // TODO: open your rename dialog for `category`
             }}
-            onDeleteSection={(category) => {
+            onDeleteSection={() => {
               // TODO: confirm and delete pages in `category`
             }}
             onAddSection={() => {

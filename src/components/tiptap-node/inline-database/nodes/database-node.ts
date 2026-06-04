@@ -36,6 +36,8 @@ export const DatabaseNode = Node.create({
       hideTitle: { default: null },
       pageId: { default: null },
       properties: { default: [] },
+      locked: { default: false },
+      isLinked: { default: false },
     };
   },
 
@@ -102,6 +104,8 @@ export const DatabaseNode = Node.create({
               ],
               activeViewId: null,
               pageId: pageId ?? null,
+              locked: false,
+              isLinked: true,
             },
           }),
       insertDatabaseNode:
@@ -126,6 +130,7 @@ export const DatabaseNode = Node.create({
                 },
               ],
               activeViewId: null,
+              locked: false,
             },
           }),
     };

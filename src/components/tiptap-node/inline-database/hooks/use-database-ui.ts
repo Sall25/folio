@@ -157,6 +157,16 @@ export function useDatabaseUI(
     [attrs.views, attrs.activeViewId, updateAttributes],
   );
 
+  const toggleLock = useCallback(
+    () => updateAttributes({ locked: !attrs.locked }),
+    [attrs.locked, updateAttributes],
+  );
+
+  const setLocked = useCallback(
+    (locked: boolean) => updateAttributes({ locked }),
+    [updateAttributes],
+  );
+
   return {
     // Derived
     activeView,
@@ -189,5 +199,10 @@ export function useDatabaseUI(
     addView,
     updateView,
     deleteView,
+
+    // Locking
+    locked: !!attrs.locked,
+    toggleLock,
+    setLocked,
   };
 }

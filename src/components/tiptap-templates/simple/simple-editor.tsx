@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
+//import { useNavigate } from "@tanstack/react-location";
 
 // --- Providers ---
 import { ToastProvider } from "src/components/tiptap-ui/copy-toast";
@@ -44,6 +45,8 @@ import { useSearch } from "./context/search-context";
 import SearchPalette from "./components/search-palette";
 import { useLibrary } from "./context/library-context";
 import { LibraryPalette } from "./components/library-palette";
+// import TabToolbar from "./components/tabs/tab-toolbar";
+// import { useTabs } from "./hooks/use-tabs";
 
 const VERSION_SIDEBAR_WIDTH = 260;
 
@@ -119,11 +122,57 @@ function SimpleEditorInner({ view }: { view: View }) {
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const isMobile = useIsBreakpoint();
   const { height } = useWindowSize();
+
+  // `activePage` is assumed to be exposed by useActivePage (the same active
+  // page that feeds SimpleEditorContentProps). If it actually comes from a
+  // route param or a different field, point `activePageId` below at that.
   const { isLoading } = useActivePage();
   const { sidebarWidth, versionHistoryOpen, onVersionHistoryOpenChanged } =
     useEditorLayout();
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
 
+  //  const navigate = useNavigate();
+
+  // // --- Navigation seams: match these to your real route config. ---
+  // const navigateToPage = useCallback(
+  //   (pageId: number) => navigate({ to: `/page/${pageId}` }), // TODO: verify route
+  //   [navigate],
+  // );
+  // const navigateToView = useCallback(
+  //   (v: "home" | "resources") =>
+  //     navigate({ to: v === "home" ? "/" : "/resources" }), // TODO: verify resources route
+  //   [navigate],
+  // );
+
+  // // Maps cover.iconName to a node. Emoji names render as-is; everything else
+  // // falls back to a file glyph. Swap for your real cover-icon component.
+  // const renderIcon = useCallback(
+  //   (iconName: string | null) =>
+  //     iconName ? (
+  //       <span className="tab-icon-glyph">{iconName}</span>
+  //     ) : (
+  //       <FileText size={15} />
+  //     ),
+  //   [],
+  // );
+
+  // const {
+  //   tabsRef,
+  //   activeTabId,
+  //   selectTab,
+  //   closeTab,
+  //   reorderTabs,
+  //   openInNewTab,
+  //   createAndOpen,
+  //   recentPageIds,
+  // } = useTabs({
+  //   pages,
+  //   activePageId: activePage?.id ?? null,
+  //   view,
+  //   navigateToPage,
+  //   navigateToView,
+  //   createPage: (title) => addPageAsync({ title, parentId: null }),
+  // });
   useEffect(() => {
     if (!isMobile && mobileView !== "main")
       requestAnimationFrame(() => setMobileView("main"));

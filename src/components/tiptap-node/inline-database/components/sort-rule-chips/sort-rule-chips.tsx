@@ -35,51 +35,58 @@ function SortChip({
   properties,
   onUpdate,
   onDelete,
+  locked,
 }: {
   sort: SortRule;
   properties: DatabaseProperty[];
   onUpdate: (patch: Partial<SortRule>) => void;
   onDelete: () => void;
+  locked: boolean;
 }) {
   const property = properties.find((p) => p.id === sort.propertyId);
   const Icon = property ? PROPERTY_TYPE_ICONS[property.config.type] : null;
   const DirIcon = sort.direction === "asc" ? ArrowUp : ArrowDown;
 
+  const chipButton = (
+    <Button
+      variant="ghost"
+      style={{
+        border: "1px solid var(--tt-brand-color-400)",
+        padding: "2px 8px",
+        height: 24,
+        minHeight: 24,
+        color: "var(--tt-brand-color-400)",
+        fontSize: 12,
+        cursor: locked ? "default" : undefined,
+      }}
+    >
+      {Icon && (
+        <Icon
+          className="tiptap-button-icon"
+          style={{ color: "inherit", width: 12.5 }}
+        />
+      )}
+      <span className="tiptap-button-text">{property?.name ?? "Property"}</span>
+      <DirIcon
+        size={11}
+        className="tiptap-button-icon-sub"
+        style={{ color: "inherit" }}
+      />
+      {!locked && (
+        <ChevronDown
+          size={10}
+          className="tiptap-button-icon-sub"
+          style={{ color: "inherit" }}
+        />
+      )}
+    </Button>
+  );
+
+  if (locked) return chipButton;
+
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          style={{
-            border: "1px solid var(--tt-brand-color-400)",
-            padding: "2px 8px",
-            height: 24,
-            minHeight: 24,
-            color: "var(--tt-brand-color-400)",
-            fontSize: 12,
-          }}
-        >
-          {Icon && (
-            <Icon
-              className="tiptap-button-icon"
-              style={{ color: "inherit", width: 12.5 }}
-            />
-          )}
-          <span className="tiptap-button-text">
-            {property?.name ?? "Property"}
-          </span>
-          <DirIcon
-            size={11}
-            className="tiptap-button-icon-sub"
-            style={{ color: "inherit" }}
-          />
-          <ChevronDown
-            size={10}
-            className="tiptap-button-icon-sub"
-            style={{ color: "inherit" }}
-          />
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger asChild>{chipButton}</PopoverTrigger>
       <PopoverContent side="bottom" align="start" className="db-panel">
         <Card
           style={{
@@ -244,6 +251,8 @@ export function SortRuleChips({
   if (!activeView) return null;
   if (sorts.length === 0) return null;
 
+  const locked = db.locked;
+
   function updateSort(id: ID, patch: Partial<SortRule>) {
     db.updateView(activeView!.id, {
       sorts: sorts.map((s) => (s.id === id ? { ...s, ...patch } : s)),
@@ -276,9 +285,10 @@ export function SortRuleChips({
           properties={properties}
           onUpdate={(patch) => updateSort(sort.id, patch)}
           onDelete={() => deleteSort(sort.id)}
+          locked={locked}
         />
       ))}
-      {sorts.length < properties.length && (
+      {!locked && sorts.length < properties.length && (
         <Button
           variant="ghost"
           className="db-sort-chips__add"

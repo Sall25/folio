@@ -3,7 +3,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import type { BoardView, DatabaseView, OpenPageIn } from "../../types/types";
+import type {
+  BoardView,
+  DatabaseView,
+  GalleryView,
+  OpenPageIn,
+} from "../../types/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Calendar,
@@ -50,7 +55,7 @@ function ViewPallette({
 }) {
   return (
     <CardItemGroup
-      className={`items-center w-16 h-12 border m-1 cursor-pointer ${
+      className={`items-center w-24 h-24 border m-1 cursor-pointer ${
         active ? "border-brand" : ""
       }`}
       style={{
@@ -60,7 +65,7 @@ function ViewPallette({
       onClick={() => onSelect(type)}
     >
       <CardItemGroup
-        className={`items-center w-12 h-8 ${active ? "text-brand" : ""}`}
+        className={`items-center w-12 h-16 ${active ? "text-brand" : ""}`}
       >
         {type === "table" && <Table />}
         {type === "list" && <List />}
@@ -293,7 +298,149 @@ export function LayoutPopover({
               />
             </CardItemGroup>
 
-            <Separator orientation="horizontal" />
+            {view.type === "gallery" && (
+              <>
+                <Separator orientation="horizontal" />
+
+                {/* Card preview */}
+                <CardItemGroup
+                  className="w-full justify-start"
+                  orientation="horizontal"
+                >
+                  <span className="tiptap-button-text">Card preview</span>
+                  <Spacer orientation="horizontal" />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" style={{ fontSize: 11 }}>
+                        <span className="opacity-85">
+                          {(view as GalleryView).cardPreview === "none"
+                            ? "None"
+                            : (view as GalleryView).cardPreview === "cover"
+                              ? "Page cover"
+                              : "Page content"}
+                        </span>
+                        <ChevronRight className="tiptap-button-icon-sub" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent side="right" align="start">
+                      <Card className="p-2" style={{ minWidth: 140 }}>
+                        <CardItemGroup>
+                          {(
+                            [
+                              { value: "none", label: "None" },
+                              { value: "cover", label: "Page cover" },
+                              { value: "content", label: "Page content" },
+                            ] as const
+                          ).map(({ value, label }) => (
+                            <Button
+                              key={value}
+                              variant="ghost"
+                              style={{
+                                justifyContent: "flex-start",
+                                width: "100%",
+                                fontWeight:
+                                  (view as GalleryView).cardPreview === value
+                                    ? 600
+                                    : 400,
+                              }}
+                              onClick={() =>
+                                db.updateView(view.id, {
+                                  cardPreview: value,
+                                } as Partial<GalleryView>)
+                              }
+                            >
+                              <span className="tiptap-button-text">
+                                {label}
+                              </span>
+                            </Button>
+                          ))}
+                        </CardItemGroup>
+                      </Card>
+                    </PopoverContent>
+                  </Popover>
+                </CardItemGroup>
+
+                {/* Card size */}
+                <CardItemGroup
+                  className="w-full justify-start"
+                  orientation="horizontal"
+                >
+                  <span className="tiptap-button-text">Card size</span>
+                  <Spacer orientation="horizontal" />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" style={{ fontSize: 11 }}>
+                        <span className="opacity-85">
+                          {(view as GalleryView).cardSize === "small"
+                            ? "Small"
+                            : (view as GalleryView).cardSize === "medium"
+                              ? "Medium"
+                              : "Large"}
+                        </span>
+                        <ChevronRight className="tiptap-button-icon-sub" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent side="right" align="start">
+                      <Card className="p-2" style={{ minWidth: 140 }}>
+                        <CardItemGroup>
+                          {(
+                            [
+                              { value: "small", label: "Small" },
+                              { value: "medium", label: "Medium" },
+                              { value: "large", label: "Large" },
+                            ] as const
+                          ).map(({ value, label }) => (
+                            <Button
+                              key={value}
+                              variant="ghost"
+                              style={{
+                                justifyContent: "flex-start",
+                                width: "100%",
+                                fontWeight:
+                                  (view as GalleryView).cardSize === value
+                                    ? 600
+                                    : 400,
+                              }}
+                              onClick={() =>
+                                db.updateView(view.id, {
+                                  cardSize: value,
+                                } as Partial<GalleryView>)
+                              }
+                            >
+                              <span className="tiptap-button-text">
+                                {label}
+                              </span>
+                            </Button>
+                          ))}
+                        </CardItemGroup>
+                      </Card>
+                    </PopoverContent>
+                  </Popover>
+                </CardItemGroup>
+
+                {/* Fit image */}
+                <CardItemGroup
+                  className="w-full justify-start"
+                  orientation="horizontal"
+                >
+                  <Button variant="ghost" style={{ background: "transparent" }}>
+                    <span className="tiptap-button-text">Fit image</span>
+                  </Button>
+                  <Spacer orientation="horizontal" />
+                  <Toggle
+                    checked={(view as GalleryView).coverFit == "contain"}
+                    onChangeAsync={async () =>
+                      db.updateView(view.id, {
+                        fitImage: !(view as GalleryView).coverFit,
+                      } as Partial<GalleryView>)
+                    }
+                  />
+                </CardItemGroup>
+
+                <Separator orientation="horizontal" />
+              </>
+            )}
+
             <CardItemGroup>
               <Popover>
                 <PopoverTrigger asChild>

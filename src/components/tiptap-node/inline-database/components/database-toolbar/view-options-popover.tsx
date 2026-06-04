@@ -34,7 +34,7 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import type { DatabaseView } from "../../types/types";
+import type { DatabaseProperty, DatabaseView } from "../../types/types";
 import {
   useEffect,
   useRef,
@@ -46,6 +46,9 @@ import "./view-options-popover.scss";
 import type { UseDatabaseReturn } from "../../hooks";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { LayoutPopover } from "./layout-popover";
+import { PropertiesPanel } from "../properties-panel";
+import { FilterPanel } from "../filter-panel";
+import { SortPanel } from "../sort-panel";
 
 type LucideIcon = ComponentType<{ className?: string; size?: number }>;
 
@@ -73,13 +76,17 @@ function layoutMeta(type: DatabaseView["type"]): {
 function OptionRow({
   Icon,
   label,
+  sub,
   value,
   onClick,
+  disabled = false,
 }: {
   Icon: LucideIcon;
   label: string;
+  sub?: string | ReactNode;
   value?: ReactNode;
   onClick?: () => void;
+  disabled?: boolean;
 }) {
   const navigable = value !== undefined;
   if (navigable)
@@ -89,35 +96,43 @@ function OptionRow({
           <Button
             variant="ghost"
             onClick={onClick}
-            style={{ width: "100%", justifyContent: "flex-start" }}
+            disabled={disabled}
+            style={{
+              width: "100%",
+              justifyContent: "flex-start",
+              opacity: disabled ? 0.5 : 1,
+            }}
           >
             <Icon className="tiptap-button-icon" />
             <span className="tiptap-button-text">{label}</span>
             <Spacer orientation="horizontal" />
             {navigable && (
-              <span className="view-options__row-value">{value}</span>
+              <span className="view-options__row-value">{sub}</span>
             )}
             {navigable && (
               <ChevronRight className="tiptap-button-icon-sub" size={14} />
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent>{value}</PopoverContent>
+        <PopoverContent side="left" align="start">
+          {value}
+        </PopoverContent>
       </Popover>
     );
   return (
     <Button
       variant="ghost"
       onClick={onClick}
-      style={{ width: "100%", justifyContent: "flex-start" }}
+      disabled={disabled}
+      style={{
+        width: "100%",
+        justifyContent: "flex-start",
+        opacity: disabled ? 0.5 : 1,
+      }}
     >
       <Icon className="tiptap-button-icon" />
       <span className="tiptap-button-text">{label}</span>
       <Spacer orientation="horizontal" />
-      {navigable && <span className="view-options__row-value">{value}</span>}
-      {navigable && (
-        <ChevronRight className="tiptap-button-icon-sub" size={14} />
-      )}
     </Button>
   );
 }
@@ -126,30 +141,43 @@ function ViewOptionsContent({
   view,
   db,
   onClose,
+  properties,
+  onCopyLink,
 }: {
   view: DatabaseView;
   db: UseDatabaseReturn;
+  properties: DatabaseProperty[];
   onClose?: () => void;
+  // copy-link needs pageId, which db doesn't have → stays a prop from the
+  // node-view / toolbar. Lock lives on db (db.locked / db.toggleLock).
+  onCopyLink?: () => void;
 }) {
   const [name, setName] = useState(view.name);
+  const [copied, setCopied] = useState(false);
 
-  // Best-effort reads — confirm these field names against your own
-  // DatabaseView / UseDatabaseReturn types and adjust as needed.
+  const locked = db.locked;
+
   const v = view as DatabaseView & {
     filters?: unknown[];
     sorts?: unknown[];
     hiddenProperties?: string[];
   };
-  const totalProps =
-    (db as unknown as { attrs?: { properties?: unknown[] } }).attrs?.properties
-      ?.length ?? 0;
-  const hiddenCount = v.hiddenProperties?.length ?? 0;
+
+  const totalProps = properties.length;
+  const hiddenCount = view.hiddenProperties?.length ?? 0;
   const shownCount = Math.max(totalProps - hiddenCount, 0);
 
   const filterCount = v.filters?.length ?? 0;
   const sortCount = v.sorts?.length ?? 0;
 
   const { Icon: LayoutIcon } = layoutMeta(view.type);
+
+  const handleCopy = () => {
+    onCopyLink?.();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
   return (
     <Card className="view-options">
       <CardHeader>
@@ -178,65 +206,114 @@ function ViewOptionsContent({
             className="view-options__name-input"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            disabled={locked}
             onBlur={() =>
+              !locked &&
               db.updateView(db.activeView.id, { ...db.activeView, name })
             }
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.stopPropagation();
-                db.updateView(db.activeView.id, { ...db.activeView, name });
+                if (!locked)
+                  db.updateView(db.activeView.id, { ...db.activeView, name });
               }
             }}
-            /* TODO: persist on blur/Enter via your rename handler */
           />
         </CardItemGroup>
-        <LayoutPopover view={view} db={db} />
+
+        {/* Layout / properties / filter / sort / group / sub-items are all
+            view config → disabled when locked. */}
+        {!locked && <LayoutPopover view={view} db={db} />}
         <OptionRow
           Icon={SlidersHorizontal}
           label="Properties"
-          value={`${shownCount} shown`}
-          onClick={() => {
-            /* open properties sub-panel */
-          }}
+          sub={`${shownCount} shown`}
+          value={
+            locked ? undefined : (
+              <PropertiesPanel
+                properties={properties}
+                db={db}
+                activeView={view}
+              />
+            )
+          }
+          disabled={locked}
         />
         <OptionRow
           Icon={Filter}
           label="Filter"
-          value={filterCount === 1 ? "1 filter" : `${filterCount} filters`}
-          onClick={() => {
-            /* open filter sub-panel */
-          }}
+          sub={filterCount === 1 ? "1 filter" : `${filterCount} filters`}
+          value={
+            locked ? undefined : (
+              <FilterPanel properties={properties} db={db} activeView={view} />
+            )
+          }
+          disabled={locked}
         />
         <OptionRow
           Icon={ArrowUpDown}
           label="Sort"
-          value={sortCount === 1 ? "1 sort" : `${sortCount} sorts`}
-          onClick={() => {
-            /* open sort sub-panel */
-          }}
+          sub={sortCount === 1 ? "1 sort" : `${sortCount} sorts`}
+          value={
+            locked ? undefined : (
+              <SortPanel
+                sorts={view.sorts}
+                properties={properties}
+                db={db}
+                activeView={view}
+              />
+            )
+          }
+          disabled={locked}
         />
-        <OptionRow Icon={Group} label="Group" value="None" onClick={() => {}} />
+        <OptionRow
+          Icon={Group}
+          label="Group"
+          onClick={locked ? undefined : () => {}}
+          disabled={locked}
+        />
         <OptionRow
           Icon={ListTree}
           label="Sub-items"
-          value="None"
-          onClick={() => {}}
+          onClick={locked ? undefined : () => {}}
+          disabled={locked}
         />
+
         <Separator orientation="horizontal" />
+
+        {/* Slack notifications — backend feature, placeholder. */}
+        <OptionRow Icon={Bell} label="Slack notifications" onClick={() => {}} />
+
+        {/* Lock toggle — always available; reads/writes db. */}
         <OptionRow
-          Icon={Bell}
-          label="Slack notifications"
-          value="None"
-          onClick={() => {}}
+          Icon={Lock}
+          label={locked ? "Unlock database" : "Lock database"}
+          onClick={() => {
+            db.toggleLock();
+            console.log("locked", locked);
+          }}
         />
-        <OptionRow Icon={Lock} label="Lock database" onClick={() => {}} />
+
+        {/* Copy link — read-only, always available. */}
         <OptionRow
           Icon={LinkIcon}
-          label="Copy link to view"
-          onClick={() => {}}
+          label={copied ? "Copied!" : "Copy link to view"}
+          onClick={handleCopy}
         />
-        <OptionRow Icon={Copy} label="Duplicate view" onClick={() => {}} />
-        <OptionRow Icon={Trash2} label="Delete view" onClick={() => {}} />
+
+        {/* Duplicate / delete view — structural, disabled when locked. */}
+        <OptionRow
+          Icon={Copy}
+          label="Duplicate view"
+          onClick={locked ? undefined : () => {}}
+          disabled={locked}
+        />
+        <OptionRow
+          Icon={Trash2}
+          label="Delete view"
+          onClick={locked ? undefined : () => {}}
+          disabled={locked}
+        />
       </CardBody>
     </Card>
   );
@@ -245,13 +322,17 @@ function ViewOptionsContent({
 export function ViewOptionsPopover({
   view,
   db,
+  properties,
   open: providedOpen,
   onOpenChange,
+  onCopyLink,
 }: {
   view: DatabaseView;
   open?: boolean;
   db: UseDatabaseReturn;
+  properties: DatabaseProperty[];
   onOpenChange?: (o: boolean) => void;
+  onCopyLink?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -280,8 +361,10 @@ export function ViewOptionsPopover({
         }}
       >
         <ViewOptionsContent
+          properties={properties}
           view={view}
           db={db}
+          onCopyLink={onCopyLink}
           onClose={() => onOpenChange?.(false)}
         />
       </div>
@@ -302,7 +385,12 @@ export function ViewOptionsPopover({
         collisionPadding={16}
         style={{ width: 280, padding: 0 }}
       >
-        <ViewOptionsContent view={view} db={db} />
+        <ViewOptionsContent
+          properties={properties}
+          view={view}
+          db={db}
+          onCopyLink={onCopyLink}
+        />
       </PopoverContent>
     </Popover>
   );

@@ -1,0 +1,134 @@
+// Map these to your global theme tokens. Notion-dark warm-gray values matched
+// to the mockup.
+$bg-strip: #191919;
+$bg-active: #1f1f1f; // should equal your content-area background so the
+                     // active tab reads as "connected" to the page below
+$bg-hover: rgba(255, 255, 255, 0.05);
+$text: #e9e9e7;
+$text-muted: #9b9a97;
+$tab-radius: 8px;
+$tab-max: 180px;
+
+.strip {
+  display: flex;
+  align-items: flex-end;
+  background: $bg-strip;
+  padding: 8px 8px 0;
+  font-family: "Inter", system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.scroller {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none; // Firefox
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto; // never shrink to nothing — scroll instead
+  max-width: $tab-max;
+  padding: 8px 10px 8px 12px;
+  border-radius: $tab-radius $tab-radius 0 0;
+  font-size: 13px;
+  color: $text-muted;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background: $bg-hover;
+    color: $text;
+
+    .close {
+      opacity: 1;
+    }
+  }
+}
+
+.active {
+  background: $bg-active;
+  color: $text;
+
+  .close {
+    opacity: 1;
+  }
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 15px;
+  flex: 0 0 auto;
+}
+
+.title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: $text-muted;
+  font-size: 11px;
+  line-height: 1;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0; // revealed on hover / when active
+  transition: opacity 0.1s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: $text;
+  }
+}
+
+.newWrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.newTab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: 0 0 4px 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: $text-muted;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+
+  &:hover {
+    background: $bg-hover;
+    color: $text;
+  }
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 4px;
+  z-index: 50;
+}

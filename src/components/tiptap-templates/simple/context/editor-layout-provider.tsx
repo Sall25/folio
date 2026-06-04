@@ -19,6 +19,9 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
   const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH;
   const editorWrapperRef = useRef<HTMLDivElement>(null);
   const [editorLeft, setEditorLeft] = useState(0);
+  const paddingLeft = collapsed
+    ? PADDING_LEFT - Math.round(sidebarWidth / 4)
+    : PADDING_LEFT;
 
   const onCollapsedChange = useCallback((v: boolean) => setCollapsed(v), []);
   const onVersionHistoryOpenChanged = useCallback(
@@ -46,7 +49,7 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
         collapsed,
         editorWrapperRef,
         editorLeft,
-        paddingLeft: PADDING_LEFT,
+        paddingLeft,
         translateX: TRANSLATE_X,
         onCollapsedChange,
         versionHistoryOpen,

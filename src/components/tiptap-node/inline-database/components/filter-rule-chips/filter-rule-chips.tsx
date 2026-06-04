@@ -286,6 +286,8 @@ function FilterValueInput({
     />
   );
 }
+// ── Replace the FilterChip component with this version ─────────────────────
+// (adds `locked`: renders a static chip with no edit popover when locked)
 
 function FilterChip({
   rule,
@@ -293,60 +295,59 @@ function FilterChip({
   onChange,
   onDelete,
   onPropertyChange,
+  locked = false,
 }: {
   rule: FilterRule;
   properties: DatabaseProperty[];
   onChange: (patch: Partial<FilterRule>) => void;
   onDelete: () => void;
   onPropertyChange: (propertyId: ID) => void;
+  locked?: boolean;
 }) {
   const property = properties.find((p) => p.id === rule.propertyId);
   const Icon = property ? PROPERTY_TYPE_ICONS[property.config.type] : null;
   const operators = OPERATORS_FOR_TYPE[rule.propertyType] as FilterOperator[];
   const needsValue = !NO_VALUE_OPERATORS.has(rule.operator);
-
-  // Build display label
   const propLabel = property?.name ?? "Property";
-  // const opLabel = OPERATOR_LABEL[rule.operator];
-  // const valLabel =
-  //   needsValue && rule.value != null && rule.value !== ""
-  //     ? String(rule.value)
-  //     : null;
+
+  const chipButton = (
+    <Button
+      variant="ghost"
+      style={{
+        border: "1px solid var(--tt-brand-color-400)",
+        padding: "2px 8px",
+        height: 24,
+        minHeight: 24,
+        color: "var(--tt-brand-color-400)",
+        fontSize: 12,
+        cursor: locked ? "default" : undefined,
+      }}
+    >
+      {Icon && (
+        <Icon
+          className="tiptap-button-icon"
+          style={{ color: "inherit", width: 12.5 }}
+        />
+      )}
+      <span className="tiptap-button-text db-filter-chip__prop">
+        {propLabel}
+      </span>
+      {!locked && (
+        <ChevronDown
+          size={10}
+          className="tiptap-button-icon-sub"
+          style={{ color: "inherit" }}
+        />
+      )}
+    </Button>
+  );
+
+  // Locked → static chip, no edit popover.
+  if (locked) return chipButton;
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          style={{
-            border: "1px solid var(--tt-brand-color-400)",
-            padding: "2px 8px",
-            height: 24,
-            minHeight: 24,
-            color: "var(--tt-brand-color-400)",
-            fontSize: 12,
-          }}
-        >
-          {Icon && (
-            <Icon
-              className="tiptap-button-icon"
-              style={{ color: "inherit", width: 12.5 }}
-            />
-          )}
-          <span className="tiptap-button-text db-filter-chip__prop">
-            {propLabel}
-          </span>
-          {/* <span className="db-filter-chip__op">{opLabel}</span> */}
-          {/* {valLabel && (
-              <span className="db-filter-chip__val">{valLabel}</span>
-            )} */}
-          <ChevronDown
-            size={10}
-            className="tiptap-button-icon-sub"
-            style={{ color: "inherit" }}
-          />
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger asChild>{chipButton}</PopoverTrigger>
       <PopoverContent side="bottom" align="start" className="db-panel">
         <Card
           style={{
@@ -512,14 +513,17 @@ function FilterChip({
     </Popover>
   );
 }
+
 export function FilterRuleChips({
   db,
   activeView,
   properties,
+  locked = false,
 }: {
   db: UseDatabaseReturn;
   activeView: DatabaseView | undefined;
   properties: DatabaseProperty[];
+  locked?: boolean;
 }) {
   if (!activeView) return null;
 
@@ -580,16 +584,20 @@ export function FilterRuleChips({
             if (!newProp) return;
             updateRule(rule.id, makeFilterRule(newProp));
           }}
+          locked={locked}
         />
       ))}
-      <Button
-        variant="ghost"
-        className="db-filter-chips__add"
-        onClick={addRule}
-      >
-        <Plus className="tiptap-button-icon" />
-        <span className="tiptap-button-text">Add filter</span>
-      </Button>
+      {/* Add filter — hidden when locked. */}
+      {!locked && (
+        <Button
+          variant="ghost"
+          className="db-filter-chips__add"
+          onClick={addRule}
+        >
+          <Plus className="tiptap-button-icon" />
+          <span className="tiptap-button-text">Add filter</span>
+        </Button>
+      )}
     </div>
   );
 }

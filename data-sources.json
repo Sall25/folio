@@ -47,7 +47,7 @@
           "config": {
             "type": "text"
           },
-          "width": 337
+          "width": 169
         },
         {
           "id": "e34bf4d3-4fa7-407d-9b96-4876d5274089",
@@ -74,7 +74,12 @@
             "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8": false,
             "e5f09289-9d25-4ce1-9871-e2b8a6567686": "8AM-7PM",
             "e34bf4d3-4fa7-407d-9b96-4876d5274089": "Also a bookstore",
-            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-01T00:00:00.000Z"
+            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-01T00:00:00.000Z",
+            "019df765-cc54-4621-9a04-c709fdf90c81": {
+              "id": "27d58b07-8ca9-4366-a10d-8ab896f345e9",
+              "label": "salvador",
+              "color": "var(--tt-color-highlight-gray)"
+            }
           },
           "pageId": 76,
           "createdAt": "1780236232217",
@@ -108,7 +113,8 @@
               "id": "1134d06d-2115-426a-bb49-00ab29b0b588",
               "label": "mission",
               "color": "var(--tt-color-highlight-pink)"
-            }
+            },
+            "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8": true
           },
           "pageId": 79,
           "createdAt": "1780335412135",
@@ -138,7 +144,12 @@
             "e34bf4d3-4fa7-407d-9b96-4876d5274089": "Owner's pug",
             "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-10T00:00:00.000Z",
             "e5f09289-9d25-4ce1-9871-e2b8a6567686": "07AM-09PM",
-            "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8": true
+            "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8": true,
+            "019df765-cc54-4621-9a04-c709fdf90c81": {
+              "id": "1134d06d-2115-426a-bb49-00ab29b0b588",
+              "label": "mission",
+              "color": "var(--tt-color-highlight-pink)"
+            }
           },
           "pageId": 87,
           "createdAt": "1780352428181",
@@ -155,7 +166,8 @@
               "id": "1134d06d-2115-426a-bb49-00ab29b0b588",
               "label": "mission",
               "color": "var(--tt-color-highlight-pink)"
-            }
+            },
+            "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8": true
           },
           "pageId": 88,
           "createdAt": "1780352523650",
@@ -168,7 +180,12 @@
             "e5f09289-9d25-4ce1-9871-e2b8a6567686": "06AM-11PM",
             "e34bf4d3-4fa7-407d-9b96-4876d5274089": "bomb black tea latte",
             "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-02T00:00:00.000Z",
-            "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8": true
+            "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8": true,
+            "019df765-cc54-4621-9a04-c709fdf90c81": {
+              "id": "27d58b07-8ca9-4366-a10d-8ab896f345e9",
+              "label": "salvador",
+              "color": "var(--tt-color-highlight-gray)"
+            }
           },
           "pageId": 89,
           "createdAt": "1780352628186",
@@ -180,7 +197,12 @@
             "dcb333ba-6ffe-41d3-b20a-b904f1401a93": "Cup a Joe",
             "e5f09289-9d25-4ce1-9871-e2b8a6567686": "07AM-10PM.",
             "e34bf4d3-4fa7-407d-9b96-4876d5274089": "White board, meeting rooms",
-            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-09T00:00:00.000Z"
+            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-09T00:00:00.000Z",
+            "019df765-cc54-4621-9a04-c709fdf90c81": {
+              "id": "27d58b07-8ca9-4366-a10d-8ab896f345e9",
+              "label": "salvador",
+              "color": "var(--tt-color-highlight-gray)"
+            }
           },
           "pageId": 90,
           "createdAt": "1780352698952",
@@ -210,7 +232,13 @@
             "dcb333ba-6ffe-41d3-b20a-b904f1401a93": "Simple Cafe",
             "e5f09289-9d25-4ce1-9871-e2b8a6567686": "08:30AM-08PM",
             "e34bf4d3-4fa7-407d-9b96-4876d5274089": "Lots of tables, usually not full",
-            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-09T00:00:00.000Z"
+            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-09T00:00:00.000Z",
+            "019df765-cc54-4621-9a04-c709fdf90c81": {
+              "id": "27d58b07-8ca9-4366-a10d-8ab896f345e9",
+              "label": "salvador",
+              "color": "var(--tt-color-highlight-gray)"
+            },
+            "f5e3d7c6-8884-40d4-bbe9-32cae14a04f8": false
           },
           "pageId": 92,
           "createdAt": "1780352916110",
@@ -222,7 +250,12 @@
             "dcb333ba-6ffe-41d3-b20a-b904f1401a93": "Mercury Cafe",
             "e34bf4d3-4fa7-407d-9b96-4876d5274089": "Big windows",
             "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-10T00:00:00.000Z",
-            "e5f09289-9d25-4ce1-9871-e2b8a6567686": "S-S:08AM-05PM"
+            "e5f09289-9d25-4ce1-9871-e2b8a6567686": "S-S: 08AM-05PM",
+            "019df765-cc54-4621-9a04-c709fdf90c81": {
+              "id": "1134d06d-2115-426a-bb49-00ab29b0b588",
+              "label": "mission",
+              "color": "var(--tt-color-highlight-pink)"
+            }
           },
           "pageId": 93,
           "createdAt": "1780368537478",
@@ -250,7 +283,13 @@
           "values": {
             "dcb333ba-6ffe-41d3-b20a-b904f1401a93": "Cafe International",
             "e5f09289-9d25-4ce1-9871-e2b8a6567686": "Sunday: 7AM-7PM",
-            "e34bf4d3-4fa7-407d-9b96-4876d5274089": "Creative Coffee"
+            "e34bf4d3-4fa7-407d-9b96-4876d5274089": "Creative Coffee",
+            "019df765-cc54-4621-9a04-c709fdf90c81": {
+              "id": "1134d06d-2115-426a-bb49-00ab29b0b588",
+              "label": "mission",
+              "color": "var(--tt-color-highlight-pink)"
+            },
+            "5d2c13f1-d96a-431c-aa51-cb665710029a": "2026-06-10T00:00:00.000Z"
           },
           "pageId": 95,
           "createdAt": "1780423373691",
@@ -258,7 +297,7 @@
         }
       ],
       "createdAt": "1780236168406",
-      "updatedAt": "1780423492989"
+      "updatedAt": "1780566738020"
     }
   ]
 }

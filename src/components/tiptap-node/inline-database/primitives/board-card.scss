@@ -1,14 +1,61 @@
-.db-board-card{
-  &__title{
+.db-board-card {
+  // The card must be allowed to shrink within its grid track; without this,
+  // any intrinsically-wide child (cover image, long title, fixed input) sets
+  // a min content width that the grid honors, pushing the row past the
+  // container and clipping.
+  min-width: 0;
+  width: 100%;
+  overflow: hidden; // belt-and-suspenders: clip anything that still escapes
+
+  &__title {
     padding: 0 10px;
-    .db-cell{
+    min-width: 0;
+    overflow: hidden;
+
+    .db-cell {
       display: contents !important;
     }
+
+    // The actual title text/input must ellipsis or wrap, never push width.
+    .tiptap-button-text,
+    input,
+    textarea {
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
-  &__cover{
+
+  &__cover {
+    position: relative;          // positioning context for the absolute image
+    width: 100%;
     max-width: 100%;
+    overflow: hidden;            // clip the cover image to the card
     margin: 0 !important;
     border-top-left-radius: var(--tt-radius-xs);
     border-top-right-radius: var(--tt-radius-xs);
+  }
+
+  &__cover-img {
+    // inline styles set position/size; this guards against width escape
+    min-width: 0;
+    max-width: none; // image is intentionally 100% width / 200% height, clipped by cover
+  }
+
+  &__placeholder {
+    width: 100%;
+    border-top-left-radius: var(--tt-radius-xs);
+    border-top-right-radius: var(--tt-radius-xs);
+  }
+
+  &__props {
+    min-width: 0;
+
+    .db-cell {
+      min-width: 0;
+      max-width: 100%;
+    }
   }
 }

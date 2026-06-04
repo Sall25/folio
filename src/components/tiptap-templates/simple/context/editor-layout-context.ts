@@ -1,6 +1,6 @@
 import { createContext, useContext, type RefObject } from "react";
 
-export const PADDING_LEFT = 250;
+export const PADDING_LEFT = 230;
 export const TRANSLATE_X = -80;
 
 // ─── Types ────────────────────────────────────────────────────────────────────

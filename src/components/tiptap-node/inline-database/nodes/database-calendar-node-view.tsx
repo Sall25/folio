@@ -4,16 +4,21 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek-page-context";
 import { useDataSource } from "../hooks/use-data-source";
+import { CalendarChip } from "../components/calendar-chip";
 import type {
   CalendarView,
   DatabaseAttrs,
   DataSource,
   DatabaseView,
   ID,
+  CellValue,
 } from "../types/types";
 import "./database-calendar-node-view.scss";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+// How many chips a day shows before collapsing the rest into "+N more".
+const MAX_VISIBLE_PER_DAY = 3;
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -49,8 +54,8 @@ export function DatabaseCalendarNodeView({
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
+  const [expandedDay, setExpandedDay] = useState<number | null>(null);
 
-  // Date property: explicit selection wins, else fall back to the first date prop
   const dateProp = useMemo(() => {
     if (activeView?.datePropertyId) {
       const explicit = source.properties.find(
@@ -63,7 +68,15 @@ export function DatabaseCalendarNodeView({
 
   const titleProp = source.properties.find((p) => p.config.type === "title");
 
-  // Persist the auto-pick so calendar settings reflect it (only if not set)
+  // Visible properties for the hover preview card (respects hidden list,
+  // minus the calendar's own date prop).
+  const cardProps = useMemo(() => {
+    const hidden = new Set(activeView?.hiddenProperties ?? []);
+    return source.properties.filter(
+      (p) => !hidden.has(p.id) && p.id !== dateProp?.id,
+    );
+  }, [source.properties, activeView?.hiddenProperties, dateProp?.id]);
+
   useEffect(() => {
     if (!activeView || !onUpdateView) return;
     if (activeView.datePropertyId) return;
@@ -72,18 +85,21 @@ export function DatabaseCalendarNodeView({
   }, [activeView?.id, dateProp?.id]);
 
   function prevMonth() {
+    setExpandedDay(null);
     if (month === 0) {
       setMonth(11);
       setYear((y) => y - 1);
     } else setMonth((m) => m - 1);
   }
   function nextMonth() {
+    setExpandedDay(null);
     if (month === 11) {
       setMonth(0);
       setYear((y) => y + 1);
     } else setMonth((m) => m + 1);
   }
   function goToday() {
+    setExpandedDay(null);
     setYear(today.getFullYear());
     setMonth(today.getMonth());
   }
@@ -92,23 +108,18 @@ export function DatabaseCalendarNodeView({
   const firstDow = getFirstDayOfWeek(year, month);
   const totalCells = Math.ceil((firstDow + daysInMonth) / 7) * 7;
 
-  // Bucket records by day-of-month, reading straight from the registry
-  const recordsByDay = useMemo<
-    Record<number, Array<{ id: ID; title: string }>>
-  >(() => {
+  const recordsByDay = useMemo<Record<number, ID[]>>(() => {
     if (!dateProp) return {};
-    const map: Record<number, Array<{ id: ID; title: string }>> = {};
+    const map: Record<number, ID[]> = {};
     for (const rec of source.records) {
       const iso = rec.values[dateProp.id] as string | null | undefined;
       if (!iso) continue;
       const parsed = isoToMonthDay(iso);
       if (!parsed || parsed.year !== year || parsed.month !== month) continue;
-      const title =
-        (titleProp && (rec.values[titleProp.id] as string)) || "Untitled";
-      map[parsed.day] = [...(map[parsed.day] ?? []), { id: rec.id, title }];
+      map[parsed.day] = [...(map[parsed.day] ?? []), rec.id];
     }
     return map;
-  }, [source.records, dateProp, titleProp, year, month]);
+  }, [source.records, dateProp, year, month]);
 
   if (!dateProp) {
     return (
@@ -175,6 +186,13 @@ export function DatabaseCalendarNodeView({
             month === today.getMonth() &&
             year === today.getFullYear();
 
+          const dayRecords = isCurrentMonth ? (recordsByDay[dayNum] ?? []) : [];
+          const isExpanded = expandedDay === dayNum;
+          const visible = isExpanded
+            ? dayRecords
+            : dayRecords.slice(0, MAX_VISIBLE_PER_DAY);
+          const overflow = dayRecords.length - visible.length;
+
           return (
             <div
               key={i}
@@ -182,6 +200,7 @@ export function DatabaseCalendarNodeView({
                 "db-calendar__cell",
                 !isCurrentMonth && "db-calendar__cell--outside",
                 isToday && "db-calendar__cell--today",
+                isExpanded && "db-calendar__cell--expanded",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -200,20 +219,46 @@ export function DatabaseCalendarNodeView({
                   </div>
 
                   <div className="db-calendar__cell-records">
-                    {(recordsByDay[dayNum] ?? []).map(({ id, title }) => {
+                    {visible.map((id) => {
                       const rec = source.records.find((r) => r.id === id);
+                      if (!rec) return null;
+                      const title =
+                        (titleProp && (rec.values[titleProp.id] as string)) ||
+                        "Untitled";
                       return (
-                        <button
+                        <CalendarChip
                           key={id}
-                          className="db-calendar__record-chip"
-                          onClick={() =>
-                            rec?.pageId != null && setPeekPageId(rec.pageId)
+                          record={rec}
+                          title={title}
+                          cardProps={cardProps}
+                          sourceId={attrs.sourceId!}
+                          view={activeView as DatabaseView}
+                          onOpenPeek={() =>
+                            rec.pageId != null && setPeekPageId(rec.pageId)
                           }
-                        >
-                          {title || "Untitled"}
-                        </button>
+                          onChange={(propId, v) =>
+                            setCellValue(rec.id, propId, v as CellValue | null)
+                          }
+                        />
                       );
                     })}
+
+                    {overflow > 0 && (
+                      <button
+                        className="db-calendar__more"
+                        onClick={() => setExpandedDay(dayNum)}
+                      >
+                        +{overflow} more
+                      </button>
+                    )}
+                    {isExpanded && dayRecords.length > MAX_VISIBLE_PER_DAY && (
+                      <button
+                        className="db-calendar__more"
+                        onClick={() => setExpandedDay(null)}
+                      >
+                        Show less
+                      </button>
+                    )}
                   </div>
                 </>
               )}

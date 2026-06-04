@@ -41,6 +41,11 @@ export function MultiSelectCellDisplay({
         flexWrap: "nowrap",
         overflow: "hidden",
         borderRadius: "var(--tt-radius-sm)",
+        fontFamily:
+          'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif',
+        fontSize: 14,
+        fontWeight: 400,
+        lineHeight: 1.5,
       }}
     >
       {value.length > 0 ? (

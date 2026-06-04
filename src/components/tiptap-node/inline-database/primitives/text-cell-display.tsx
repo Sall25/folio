@@ -50,9 +50,9 @@ export function TextCellDisplay({
         justifyContent: "flex-start",
         fontFamily:
           'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif',
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: 400,
-        lineHeight: 1.6,
+        lineHeight: 1.5,
       }}
       onClick={() => {
         setDraft(value ?? "");

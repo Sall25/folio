@@ -12,7 +12,7 @@
   position: absolute;  // stays in viewport while parent scrolls
   top: 0;
   right: 0;
-  min-width: 320px;
+  min-width: 0px;
   height: 100%;     // full viewport height so items can position freely
   pointer-events: none;
   flex-grow: 0;

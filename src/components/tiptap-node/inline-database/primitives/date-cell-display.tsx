@@ -82,7 +82,7 @@ export function DateCellDisplay({
         color: "var(--tt-theme-primary)",
       }}
     >
-      <span>
+      <span className="tiptap-button-text">
         {value ? formatForCell(date, format, timeFormat, includeTime) : ""}
       </span>
     </Button>

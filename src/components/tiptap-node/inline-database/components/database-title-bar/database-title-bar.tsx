@@ -14,6 +14,9 @@ interface DatabaseTitleBarProps {
   hideTitle?: boolean;
   onTitleChange: (title: string) => void;
   onHideTitleChange: (hide: boolean) => void;
+  /** When locked, the title is read-only and the options menu (hide title)
+      is removed — title/visibility are layout config, frozen when locked. */
+  locked?: boolean;
 }
 
 export function DatabaseTitleBar({
@@ -21,6 +24,7 @@ export function DatabaseTitleBar({
   hideTitle = false,
   onTitleChange,
   onHideTitleChange,
+  locked = false,
 }: DatabaseTitleBarProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(title);
@@ -37,7 +41,7 @@ export function DatabaseTitleBar({
       className="db-title-bar"
       style={{ display: hideTitle ? "none" : "flex" }}
     >
-      {editing ? (
+      {editing && !locked ? (
         <input
           ref={inputRef}
           className="db-title-bar__input"
@@ -56,41 +60,51 @@ export function DatabaseTitleBar({
       ) : (
         <button
           className="db-title-bar__title"
-          onClick={() => {
-            setDraft(title);
-            setEditing(true);
-          }}
+          // locked → plain label, no rename on click
+          onClick={
+            locked
+              ? undefined
+              : () => {
+                  setDraft(title);
+                  setEditing(true);
+                }
+          }
+          style={locked ? { cursor: "default" } : undefined}
         >
           {title || "Untitled database"}
         </button>
       )}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" className="db-title-bar__options">
-            <Ellipsis size={14} className="tiptap-button-icon" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent>
-          <Card
-            style={{
-              boxShadow: "var(--tt-shadow-elevated-sm)",
-              padding: "5px 10px",
-            }}
-          >
-            <Button
-              variant="ghost"
-              onClick={() => onHideTitleChange(!hideTitle)}
-            >
-              {hideTitle ? (
-                <EyeOff className="tiptap-button-icon" />
-              ) : (
-                <Eye className="tiptap-button-icon" />
-              )}
-              <span className="tiptap-button-text">Hide Title</span>
+
+      {/* Options (hide title) is layout config — omitted when locked. */}
+      {!locked && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" className="db-title-bar__options">
+              <Ellipsis size={14} className="tiptap-button-icon" />
             </Button>
-          </Card>
-        </PopoverContent>
-      </Popover>
+          </PopoverTrigger>
+          <PopoverContent>
+            <Card
+              style={{
+                boxShadow: "var(--tt-shadow-elevated-sm)",
+                padding: "5px 10px",
+              }}
+            >
+              <Button
+                variant="ghost"
+                onClick={() => onHideTitleChange(!hideTitle)}
+              >
+                {hideTitle ? (
+                  <EyeOff className="tiptap-button-icon" />
+                ) : (
+                  <Eye className="tiptap-button-icon" />
+                )}
+                <span className="tiptap-button-text">Hide Title</span>
+              </Button>
+            </Card>
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   );
 }

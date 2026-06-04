@@ -27,10 +27,20 @@ export function BoardCardCover({
   const gradient = (cover as any)?.gradient as string | undefined;
   const positionY = (cover as any)?.positionY ?? 50;
 
-  // Image cover
+  // Image cover. The wrapper is the positioning context (position: relative)
+  // and clips the absolutely-positioned image (overflow: hidden), so a wide
+  // natural image can never push the card past its grid track.
   if (coverImage) {
     return (
-      <div className="db-board-card__cover" style={{ height }}>
+      <div
+        className="db-board-card__cover"
+        style={{
+          height,
+          position: "relative",
+          width: "100%",
+          overflow: "hidden",
+        }}
+      >
         <img
           src={coverImage}
           alt="cover"
@@ -57,6 +67,7 @@ export function BoardCardCover({
         style={{
           background: gradient,
           height,
+          width: "100%",
         }}
       />
     );
@@ -69,6 +80,7 @@ export function BoardCardCover({
       style={{
         background: getPlaceholderGradient(recordId),
         height,
+        width: "100%",
       }}
     />
   );

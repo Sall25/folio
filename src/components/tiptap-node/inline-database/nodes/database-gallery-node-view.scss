@@ -1,38 +1,32 @@
-// .db-gallery {
-//   width: 100%;
-// }
-
-// .db-gallery__body {
-//   display: grid;
-//   grid-template-columns: repeat(
-//     auto-fill,
-//     minmax(var(--db-gallery-card-width, 220px), 1fr)
-//   );
-//   gap: 12px;
-//   align-items: start;
-
-//   // Tiptap wrappers — transparent to the grid
-//   .react-renderer,
-//   [data-node-view-content-react],
-//   [data-node-view-wrapper]:not(.db-gallery-card) {
-//     display: contents;
-//   }
-// }
 .db-gallery {
   width: 100%;
+  overflow-x: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: var(--tt-scrollbar-color) transparent;
+  max-width: var(--db-editor-width);   /* bound the scroller so it overflows */
+  
+ 
 
   &__body {
     display: grid;
-    grid-template-columns: repeat(
-      auto-fill,
-      minmax(var(--db-gallery-card-width, 280px), 1fr)
-    );
-    gap: 6px;
+    // Fixed columns-per-row driven by card size (large=3, medium=4, small=5).
+    // Cards fill their 1fr share evenly — no stretch-to-fill-the-row.
+    grid-template-columns: repeat(var(--db-gallery-cols, 4), 1fr);
+    gap: 12px;
     padding: 4px 0;
+     width: max-content;
+  min-width: 100%;
+ 
+    // Below a cramped width, drop to 2 columns so cards don't get too narrow.
+    @container (max-width: 640px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 
   &__card {
     border-radius: var(--tt-radius-xs);
+    min-width: 0; // allow the card to shrink within its track (prevents overflow)
+    img { max-width: 100%; display: block; }
     // BoardCard provides the inner styling; this just sizes the slot
   }
 }
