@@ -98,6 +98,25 @@ const deletePageFnAsync = async (id: number) => {
   if (!res.ok) throw new Error("Failed to delete page");
 };
 
+// const updatePageFnAsync = async (page: Page) => {
+//   const res = await fetch(`/api/pages/${page.id}`, {
+//     method: "PATCH",
+//     body: JSON.stringify({
+//       title: page.title,
+//       settings: page.settings,
+//       cover: page.cover,
+//       content: page.content,
+//       updatedAt: Date.now().toString(),
+//     }),
+//     headers: { "Content-Type": "application/json" },
+//   });
+//   if (!res.ok) {
+//     const errorBody = await res.text();
+//     throw new Error(`Failed to update page: ${errorBody}`);
+//   }
+
+//   return res.json();
+// };
 const updatePageFnAsync = async (page: Page) => {
   const res = await fetch(`/api/pages/${page.id}`, {
     method: "PATCH",
@@ -106,18 +125,22 @@ const updatePageFnAsync = async (page: Page) => {
       settings: page.settings,
       cover: page.cover,
       content: page.content,
+      parentId: page.parentId,
+      category: page.category,
       updatedAt: Date.now().toString(),
     }),
     headers: { "Content-Type": "application/json" },
   });
-  if (!res.ok) {
-    const errorBody = await res.text();
-    throw new Error(`Failed to update page: ${errorBody}`);
-  }
-
-  return res.json();
+  const json = await res.json().catch(() => null);
+  console.log("PATCH move:", {
+    status: res.status,
+    sentParent: page.parentId,
+    gotParent: json?.parentId,
+  });
+  if (!res.ok)
+    throw new Error(`Failed to update page: ${JSON.stringify(json)}`);
+  return json;
 };
-
 export interface UsePagesReturn {
   pages: Page[] | undefined;
   isLoading: boolean;

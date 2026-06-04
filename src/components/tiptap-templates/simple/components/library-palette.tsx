@@ -9,7 +9,7 @@ import {
   Users,
   PanelRight,
 } from "lucide-react";
-import type { Page } from "../types";
+import type { Page, PageCategory } from "../types";
 import { PageItemIcon } from "../page-item-icon";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
@@ -17,9 +17,11 @@ import { useActivePage } from "../use-active-page";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import "./library-palette.scss";
 import { useLibrary } from "../context/library-context";
+
+type LibraryTab = "Recents" | "Favorites" | "Shared" | "Private";
 
 function formatRelativeTime(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
@@ -42,31 +44,36 @@ function flattenPages(pages: Page[]): Page[] {
   return pages.flatMap((p) => [p, ...flattenPages(p.children ?? [])]);
 }
 
-function Tabs() {
+function Tabs({
+  active,
+  onChange,
+}: {
+  active: LibraryTab;
+  onChange: (t: LibraryTab) => void;
+}) {
+  const tabs: { id: LibraryTab; label: string; Icon: typeof Clock1 }[] = [
+    { id: "Recents", label: "Recents", Icon: Clock1 },
+    { id: "Favorites", label: "Favorites", Icon: Star },
+    { id: "Shared", label: "Shared", Icon: Users },
+    { id: "Private", label: "Private", Icon: Lock },
+  ];
+
   return (
     <ButtonGroup orientation="horizontal">
-      <Button
-        data-highlighted={true}
-        style={{ borderRadius: "var(--tt-radius-xl)" }}
-      >
-        <Clock1 className="tiptap-button-icon" />
-        <span className="tiptap-button-text">Recents</span>
-      </Button>
-      <Spacer orientation="horizontal" size={15} />
-      <Button variant="ghost">
-        <Star className="tiptap-button-icon" />
-        <span className="tiptap-button-text">Favorites</span>
-      </Button>
-      <Spacer orientation="horizontal" size={15} />
-      <Button variant="ghost">
-        <Users className="tiptap-button-icon" />
-        <span className="tiptap-button-text">Shared</span>
-      </Button>
-      <Spacer orientation="horizontal" size={15} />
-      <Button variant="ghost">
-        <Lock className="tiptap-button-icon" />
-        <span className="tiptap-button-text">Private</span>
-      </Button>
+      {tabs.map(({ id, label, Icon }, i) => (
+        <div key={id} style={{ display: "flex", alignItems: "center" }}>
+          {i > 0 && <Spacer orientation="horizontal" size={15} />}
+          <Button
+            variant={active === id ? undefined : "ghost"}
+            data-highlighted={active === id ? true : undefined}
+            style={{ borderRadius: "var(--tt-radius-xl)" }}
+            onClick={() => onChange(id)}
+          >
+            <Icon className="tiptap-button-icon" />
+            <span className="tiptap-button-text">{label}</span>
+          </Button>
+        </div>
+      ))}
     </ButtonGroup>
   );
 }
@@ -126,7 +133,6 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
         key={`${page.id}-title`}
         style={{ ...cellStyle, paddingLeft: depth * 20 }}
       >
-        {/* Chevron toggle or spacer */}
         <span
           style={{
             width: 16,
@@ -212,7 +218,7 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
           {formatRelativeTime(page.updatedAt ?? page.createdAt)}
         </span>
       </div>
-      {/* Render children if expanded */}
+
       {isOpen &&
         page.children?.map((child) => (
           <RecentRow key={child.id} page={child} depth={depth + 1} />
@@ -221,8 +227,7 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
   );
 }
 
-// Add this to your state or component-level state
-function RecentGrid({ recent }: { recent: Page[] }) {
+function RecentGrid({ rows }: { rows: Page[] }) {
   return (
     <div
       style={{
@@ -231,7 +236,6 @@ function RecentGrid({ recent }: { recent: Page[] }) {
         width: "100%",
       }}
     >
-      {/* Headers */}
       <div style={headerStyle}>
         <Button variant="ghost">
           <File className="tiptap-button-icon" />
@@ -251,7 +255,7 @@ function RecentGrid({ recent }: { recent: Page[] }) {
         </Button>
       </div>
 
-      {recent.map((page) => (
+      {rows.map((page) => (
         <div key={page.id} style={{ display: "contents" }}>
           <RecentRow page={page} />
         </div>
@@ -260,10 +264,18 @@ function RecentGrid({ recent }: { recent: Page[] }) {
   );
 }
 
+// Per-tab empty copy.
+const TAB_EMPTY: Record<LibraryTab, string> = {
+  Recents: "No recent pages",
+  Favorites: "No favorites yet",
+  Shared: "Nothing shared yet",
+  Private: "No private pages yet",
+};
+
 export function LibraryPalette({ onClose }: { onClose?: () => void }) {
   const { pages, addPageAndActivateAsync } = useActivePage();
+  const [tab, setTab] = useState<LibraryTab>("Recents");
 
-  // Close on Escape
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -275,7 +287,6 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // Lock background scroll while open
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -284,16 +295,35 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
     };
   }, []);
 
+  // Rows for the active tab.
+  // - Recents: every page, flattened, newest first, top 8 (children not nested).
+  // - Category tabs: top-level pages of that category, as a tree (children nest).
+  const rows = useMemo<Page[]>(() => {
+    if (!pages) return [];
+
+    if (tab === "Recents") {
+      const flat = flattenPages(pages).filter((p) => p.category !== "Template");
+      return [...flat]
+        .sort(
+          (a, b) =>
+            new Date(b.updatedAt ?? b.createdAt).getTime() -
+            new Date(a.updatedAt ?? a.createdAt).getTime(),
+        )
+        .slice(0, 8);
+    }
+
+    // Category tab → top-level pages whose category matches.
+    const category = tab as PageCategory;
+    return pages
+      .filter((p) => p.parentId == null && p.category === category)
+      .sort(
+        (a, b) =>
+          new Date(b.updatedAt ?? b.createdAt).getTime() -
+          new Date(a.updatedAt ?? a.createdAt).getTime(),
+      );
+  }, [pages, tab]);
+
   if (!pages) return null;
-
-  const flat = flattenPages(pages);
-
-  const sorted = [...flat].sort((a, b) => {
-    const aDate = new Date(a.updatedAt ?? a.createdAt).getTime();
-    const bDate = new Date(b.updatedAt ?? b.createdAt).getTime();
-    return bDate - aDate;
-  });
-  const recent = sorted.slice(0, 8);
 
   return (
     <>
@@ -321,6 +351,12 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
                   color: "white",
                   borderRadius: "var(--tt-radius-sm)",
                 }}
+                onClick={() =>
+                  addPageAndActivateAsync({
+                    title: "New Page",
+                    parentId: null,
+                  })
+                }
               >
                 <span
                   className="tiptap-button-text"
@@ -333,26 +369,28 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
 
             <Spacer orientation="vertical" size={10} />
 
-            <Tabs />
+            <Tabs active={tab} onChange={setTab} />
             <Spacer orientation="vertical" size={10} />
 
-            {recent.length > 0 && <RecentGrid recent={recent} />}
-
-            {pages.length === 0 && (
+            {rows.length > 0 ? (
+              <RecentGrid rows={rows} />
+            ) : (
               <div className="library-empty">
                 <FileText size={32} className="library-empty__icon" />
-                <p className="library-empty__text">No pages yet</p>
-                <button
-                  className="library-palette-content__new-btn"
-                  onClick={() =>
-                    addPageAndActivateAsync({
-                      title: "New Page",
-                      parentId: null,
-                    })
-                  }
-                >
-                  Create your first page
-                </button>
+                <p className="library-empty__text">{TAB_EMPTY[tab]}</p>
+                {tab === "Recents" && pages.length === 0 && (
+                  <button
+                    className="library-palette-content__new-btn"
+                    onClick={() =>
+                      addPageAndActivateAsync({
+                        title: "New Page",
+                        parentId: null,
+                      })
+                    }
+                  >
+                    Create your first page
+                  </button>
+                )}
               </div>
             )}
           </CardItemGroup>

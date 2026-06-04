@@ -1,0 +1,143 @@
+// Append to (or import alongside) sidebar-sections.scss.
+// Styles for the recursive tree DnD: rows, nest highlight, reorder lines.
+
+.sidebar-tree {
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    border-radius: var(--tt-radius-sm);
+    min-height: 28px;
+
+    // "nest into" affordance — highlight the whole row as the drop target
+    &--nest {
+      background: var(--tt-brand-color-100, rgba(99, 102, 241, 0.12));
+      box-shadow: inset 0 0 0 1px var(--tt-brand-color-400);
+    }
+  }
+
+  &__caret {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: var(--tt-radius-xs);
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--tt-bg-hover, rgba(0, 0, 0, 0.06));
+    }
+  }
+
+  &__item {
+    flex: 1 1 auto;
+    min-width: 0; // let the page item ellipsis instead of pushing width
+  }
+
+  &__children {
+    display: flex;
+    flex-direction: column;
+  }
+
+  // reorder indicator — a thin brand line at the top or bottom edge
+  &__line {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background: var(--tt-brand-color-400);
+    border-radius: 2px;
+    pointer-events: none;
+
+    &--top {
+      top: -1px;
+    }
+    &--bottom {
+      bottom: -1px;
+    }
+  }
+}
+
+// Section header as a drop target — highlight when a page is dragged over it.
+.sidebar-section__header--drop-active {
+  background: var(--tt-brand-color-100, rgba(99, 102, 241, 0.12));
+  border-radius: var(--tt-radius-sm);
+  box-shadow: inset 0 0 0 1px var(--tt-brand-color-400);
+}
+
+// Empty-state row — icon + label + hint, clickable to add a page.
+.sidebar-section__empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px dashed var(--tt-border-color);
+  border-radius: var(--tt-radius-sm);
+  padding: 8px 10px;
+  cursor: pointer;
+  color: var(--tt-text-secondary);
+  transition: background 0.12s ease, border-color 0.12s ease;
+
+  &:hover {
+    background: var(--tt-bg-subtle, rgba(0, 0, 0, 0.03));
+    border-color: var(--tt-brand-color-400);
+
+    .sidebar-section__empty-add {
+      opacity: 1;
+    }
+  }
+
+  &-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--tt-radius-sm);
+    background: var(--tt-bg-subtle, rgba(0, 0, 0, 0.05));
+    color: var(--tt-text-secondary);
+  }
+
+  &-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  &-title {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--tt-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &-hint {
+    font-size: 11px;
+    color: var(--tt-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &-add {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tt-text-secondary);
+    opacity: 0;
+    transition: opacity 0.12s ease;
+  }
+}

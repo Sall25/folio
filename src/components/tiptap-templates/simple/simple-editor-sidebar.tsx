@@ -28,9 +28,10 @@ import { useCreatePage } from "./context/create-page-context";
 import { usePages } from "./use-pages";
 import { useSearch } from "./context/search-context";
 import { useLibrary } from "./context/library-context";
-import { SidebarSections } from "./components/sidebar-sections";
 import type { Page } from "./types";
 import { PageItem } from "./page-item";
+import { SidebarTree } from "./components/sidebar-tree";
+import { findPage } from "src/lib/find-page";
 
 function User() {
   const { collapsed, onCollapsedChange } = useEditorLayout();
@@ -360,12 +361,18 @@ export function SimpleEditorSidebar() {
         <Spacer orientation="vertical" size={20} />
         {pages.length > 0 && !collapsed && <RecentSection pages={pages} />}
         <Spacer orientation="vertical" size={10} />
+
         {!collapsed && (
-          <SidebarSections
+          <SidebarTree
             pages={pages}
-            onMovePage={(id, toCategory) => {
-              const page = pages.find((p) => p.id === id);
-              if (page) updatePageAsync({ ...page, category: toCategory });
+            onMovePage={({ pageId, newParentId, category }) => {
+              const page = findPage(pages, pageId);
+              if (!page) return;
+              updatePageAsync({
+                ...page,
+                parentId: newParentId,
+                ...(category ? { category } : {}),
+              });
             }}
             onAddPageToSection={async (category) => {
               const p = await addPageAsync({
@@ -375,13 +382,13 @@ export function SimpleEditorSidebar() {
               if (p?.id != null) await updatePageAsync({ ...p, category });
             }}
             onRenameSection={() => {
-              // TODO: open your rename dialog for `category`
+              // TODO: open rename dialog
             }}
             onDeleteSection={() => {
-              // TODO: confirm and delete pages in `category`
+              // TODO: confirm + delete
             }}
             onAddSection={() => {
-              // TODO: open your add-section dialog
+              // TODO: add-section dialog
             }}
           />
         )}

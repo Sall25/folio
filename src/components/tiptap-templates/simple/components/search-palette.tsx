@@ -5,22 +5,18 @@ import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { X } from "lucide-react";
 import { useSearch } from "../context/search-context";
+import { useActivePage } from "../use-active-page";
+import { PageItemIcon } from "../page-item-icon";
+import type { Page } from "../types";
 
-// ---- Types ----
 type Group = "today" | "past";
 
-export interface SearchItem {
-  id: number;
+interface SearchEntry {
+  page: Page;
   title: string;
-  location: string | null;
-  icon: string;
+  location: string | null; // parent page title
   group: Group;
-  date?: string;
-}
-
-interface SearchPaletteProps {
-  items?: SearchItem[];
-  onSelect?: (item: SearchItem) => void;
+  date: string | null;
 }
 
 type IconName =
@@ -43,83 +39,10 @@ interface FilterDef {
 }
 
 interface Match {
-  item: SearchItem;
+  entry: SearchEntry;
   titleHl: number[] | null;
   locHl: number[] | null;
 }
-
-// ---- Demo data (replace with your real results) ----
-const ITEMS: SearchItem[] = [
-  {
-    id: 1,
-    title: "My first project",
-    location: "Projects",
-    icon: "👾",
-    group: "today",
-  },
-  {
-    id: 2,
-    title: "Company Home",
-    location: "General",
-    icon: "💼",
-    group: "today",
-  },
-  {
-    id: 3,
-    title: "Vision to Values",
-    location: null,
-    icon: "🖼️",
-    group: "today",
-  },
-  { id: 4, title: "Tasks", location: "Marketing", icon: "☑️", group: "today" },
-  {
-    id: 5,
-    title: "Projects",
-    location: "Marketing",
-    icon: "🎯",
-    group: "today",
-  },
-  {
-    id: 6,
-    title: "Tasks",
-    location: "General",
-    icon: "✏️",
-    group: "past",
-    date: "Jan 18",
-  },
-  {
-    id: 7,
-    title: "Teamspace Home",
-    location: "New teamspace",
-    icon: "🏠",
-    group: "past",
-    date: "Jan 18",
-  },
-  {
-    id: 8,
-    title: "Marketing Home",
-    location: "Marketing",
-    icon: "🎬",
-    group: "past",
-    date: "Jan 18",
-  },
-  {
-    id: 9,
-    title: "Meeting notes",
-    location: "General",
-    icon: "🎷",
-    group: "past",
-    date: "Jan 18",
-  },
-  {
-    id: 10,
-    title: "Docs",
-    location: "General",
-    icon: "📄",
-    group: "past",
-    date: "Jan 18",
-  },
-];
 
 const FILTERS: FilterDef[] = [
   { id: "titles", label: "Only search titles", lead: "Aa", toggle: true },
@@ -129,7 +52,30 @@ const FILTERS: FilterDef[] = [
   { id: "date", label: "Date", icon: "calendar" },
 ];
 
-// ---- Fuzzy matcher: greedy subsequence, returns matched indices or null ----
+// ---- helpers ----
+function flattenPages(pages: Page[]): Page[] {
+  return pages.flatMap((p) => [p, ...flattenPages(p.children ?? [])]);
+}
+
+function isToday(dateStr: string | null | undefined): boolean {
+  if (!dateStr) return false;
+  const d = new Date(Number(dateStr));
+  if (isNaN(d.getTime())) return false;
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
+}
+
+function shortDate(dateStr: string | null | undefined): string | null {
+  if (!dateStr) return null;
+  const d = new Date(Number(dateStr));
+  if (isNaN(d.getTime())) return null;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 function fuzzyMatch(query: string, text: string): number[] | null {
   const q = query.toLowerCase();
   const t = text.toLowerCase();
@@ -144,7 +90,6 @@ function fuzzyMatch(query: string, text: string): number[] | null {
   return qi === q.length ? indices : null;
 }
 
-// ---- Inline icon set ----
 function Icon({ name, size = 14 }: { name: IconName; size?: number }) {
   const p = {
     width: size,
@@ -217,7 +162,6 @@ function Icon({ name, size = 14 }: { name: IconName; size?: number }) {
   }
 }
 
-// ---- Highlight matched characters ----
 function Highlight({
   text,
   indices,
@@ -242,41 +186,59 @@ function Highlight({
   );
 }
 
-export default function SearchPalette({
-  items = ITEMS,
-  onSelect,
-}: SearchPaletteProps) {
+export default function SearchPalette() {
+  const { pages, setActivePageId } = useActivePage();
+  const { onOpenChange } = useSearch();
+
   const [query, setQuery] = useState("");
   const [titlesOnly, setTitlesOnly] = useState(false);
-  const [selected, setSelected] = useState(1);
+  const [selected, setSelected] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Build searchable entries from the real page tree.
+  const entries = useMemo<SearchEntry[]>(() => {
+    if (!pages) return [];
+    const flat = flattenPages(pages).filter((p) => p.category !== "Template");
+    const byId = new Map<number, Page>();
+    for (const p of flat) byId.set(p.id, p);
+
+    return flat.map((p) => {
+      const parent = p.parentId != null ? byId.get(p.parentId) : null;
+      const when = p.updatedAt ?? p.createdAt;
+      return {
+        page: p,
+        title: p.title || "Untitled",
+        location: parent ? parent.title || "Untitled" : (p.category ?? null),
+        group: isToday(when) ? "today" : "past",
+        date: shortDate(when),
+      };
+    });
+  }, [pages]);
+
   const results = useMemo<Match[]>(() => {
     const q = query.trim();
-    if (!q) return items.map((item) => ({ item, titleHl: [], locHl: [] }));
+    if (!q) return entries.map((entry) => ({ entry, titleHl: [], locHl: [] }));
     const out: Match[] = [];
-    for (const item of items) {
-      const titleHl = fuzzyMatch(q, item.title);
+    for (const entry of entries) {
+      const titleHl = fuzzyMatch(q, entry.title);
       const locHl =
-        !titlesOnly && item.location ? fuzzyMatch(q, item.location) : null;
+        !titlesOnly && entry.location ? fuzzyMatch(q, entry.location) : null;
       if (titleHl !== null || locHl !== null)
-        out.push({ item, titleHl, locHl });
+        out.push({ entry, titleHl, locHl });
     }
     return out;
-  }, [query, titlesOnly, items]);
+  }, [query, titlesOnly, entries]);
 
   const groups = useMemo(() => {
-    const today = results.filter((r) => r.item.group === "today");
-    const past = results.filter((r) => r.item.group === "past");
+    const today = results.filter((r) => r.entry.group === "today");
+    const past = results.filter((r) => r.entry.group === "past");
     return { today, past, order: [...today, ...past] };
   }, [results]);
 
-  const { onOpenChange } = useSearch();
-
-  // useEffect(() => {
-  //   setSelected((s) => Math.min(s, Math.max(0, groups.order.length - 1)));
-  // }, [groups.order.length]);
+  // Clamp selection at point of use — no effect, no cascading render.
+  const maxIndex = Math.max(0, groups.order.length - 1);
+  const safeSelected = Math.min(selected, maxIndex);
 
   useEffect(() => {
     listRef.current
@@ -288,9 +250,9 @@ export default function SearchPalette({
     inputRef.current?.focus();
   }, []);
 
-  const open = (item: SearchItem) => {
-    if (onSelect) onSelect(item);
-    else console.log("open", item.title);
+  const open = (page: Page) => {
+    onOpenChange?.(false);
+    setActivePageId(page.id);
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -301,36 +263,38 @@ export default function SearchPalette({
       e.preventDefault();
       setSelected((s) => Math.max(s - 1, 0));
     } else if (e.key === "Enter") {
-      const m = groups.order[selected];
-      if (m) open(m.item);
+      const m = groups.order[safeSelected];
+      if (m) open(m.entry.page);
     }
   };
 
   const renderRow = (m: Match) => {
     const idx = groups.order.indexOf(m);
-    const isSel = idx === selected;
+    const isSel = idx === safeSelected;
     return (
       <div
-        key={m.item.id}
+        key={m.entry.page.id}
         data-idx={idx}
         className={`sp-row${isSel ? " sp-row--sel" : ""}`}
         onMouseEnter={() => setSelected(idx)}
-        onClick={() => open(m.item)}
+        onClick={() => open(m.entry.page)}
       >
-        <span className="sp-row__icon">{m.item.icon}</span>
-        <span className="sp-row__title">
-          <Highlight text={m.item.title} indices={m.titleHl} />
+        <span className="sp-row__icon">
+          <PageItemIcon cover={m.entry.page.cover} styles={{ fontSize: 15 }} />
         </span>
-        {m.item.location && (
+        <span className="sp-row__title">
+          <Highlight text={m.entry.title} indices={m.titleHl} />
+        </span>
+        {m.entry.location && (
           <span className="sp-row__loc">
-            — <Highlight text={m.item.location} indices={m.locHl} />
+            — <Highlight text={m.entry.location} indices={m.locHl} />
           </span>
         )}
         <span className="sp-row__right">
           {isSel ? (
             <Icon name="return" size={15} />
-          ) : m.item.date ? (
-            <span className="sp-row__date">{m.item.date}</span>
+          ) : m.entry.date ? (
+            <span className="sp-row__date">{m.entry.date}</span>
           ) : null}
         </span>
       </div>
@@ -338,8 +302,13 @@ export default function SearchPalette({
   };
 
   return (
-    <div className="sp-backdrop">
-      <div className="sp" role="dialog" aria-label="Search">
+    <div className="sp-backdrop" onClick={() => onOpenChange?.(false)}>
+      <div
+        className="sp"
+        role="dialog"
+        aria-label="Search"
+        onClick={(e) => e.stopPropagation()}
+      >
         <CardItemGroup orientation="horizontal">
           <div className="sp-search">
             <span className="sp-search__icon">
@@ -348,7 +317,7 @@ export default function SearchPalette({
             <input
               ref={inputRef}
               className="sp-search__input"
-              placeholder="Search Acme Inc...."
+              placeholder="Search pages..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={onKeyDown}
@@ -387,7 +356,9 @@ export default function SearchPalette({
 
         <div className="sp-results" ref={listRef}>
           {groups.order.length === 0 && (
-            <div className="sp-empty">No results for “{query}”</div>
+            <div className="sp-empty">
+              {query ? `No results for "${query}"` : "No pages yet"}
+            </div>
           )}
           {groups.today.length > 0 && (
             <>
@@ -397,7 +368,7 @@ export default function SearchPalette({
           )}
           {groups.past.length > 0 && (
             <>
-              <div className="sp-section">Past Week</div>
+              <div className="sp-section">Past</div>
               {groups.past.map(renderRow)}
             </>
           )}
