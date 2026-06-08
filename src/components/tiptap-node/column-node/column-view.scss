@@ -8,12 +8,12 @@
 .column-drop-zone {
   position: absolute;
   top: 0;
-  width: 20%;
+  width: 6% !important;
   height: 100%;
   z-index: 10;
   pointer-events: none;
   // pointer-events: all; // must be all so dragover fires
-
+ 
   &--left { left: 0; }
   &--right { right: 0; }
 
@@ -22,7 +22,7 @@
       content: "";
       position: absolute;
       top: 0;
-      width: 3px;
+      width: 5px;
       height: 100%;
       background: var(--tt-brand-color-500);
       border-radius: 2px;
@@ -36,4 +36,25 @@
 // Only enable pointer events on drop zones while dragging
 .is-dragging .column-drop-zone {
   pointer-events: all;
+}
+
+[data-type="column"] {
+  /* database sizes to the column, not the page (you already had this) */
+  --db-editor-width: 100%;
+
+  /* Let the node + wrappers shrink with the column instead of imposing their
+     content's intrinsic width. overflow-x: clip contains any chrome that
+     still overflows, WITHOUT creating a vertical scrollbar. */
+  .db-node {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  /* The table scrolls horizontally inside the column as it narrows. */
+  .db-table {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+  }
 }

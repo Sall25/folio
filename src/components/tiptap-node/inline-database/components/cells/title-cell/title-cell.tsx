@@ -20,7 +20,7 @@ export function TitleCell({
 }: {
   value: string;
   recordId: ID;
-  view: DatabaseView;
+  view?: DatabaseView;
   pageId?: number;
   templateId?: number;
   onChange: (value: string) => void;
@@ -79,11 +79,14 @@ export function TitleCell({
         icon={icon}
         hasPage={pageId != null}
         onOpen={() => {
-          if (pageId === null || pageId === undefined) return;
+          if (pageId === null || pageId === undefined || !view) return;
+
           if (view.openPageIn === "Side") {
             setPeekPageId(pageId);
           } else if (view.openPageIn === "Center") {
             setCreatePageId(pageId);
+          } else if (view.openPageIn === "Full") {
+            setActivePageId(pageId);
           } else {
             if (view.type === "list") {
               setPeekPageId(pageId);
@@ -92,7 +95,7 @@ export function TitleCell({
             } else if (view.type === "board") {
               setCreatePageId(pageId);
             } else {
-              setActivePageId(pageId);
+              setPeekPageId(pageId);
             }
           }
         }}

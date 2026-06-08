@@ -1,4 +1,9 @@
-import type { CellValue, ConfigOf, PropertyType } from "../../types/types";
+import type {
+  CellValue,
+  ConfigOf,
+  DatabaseProperty,
+  PropertyType,
+} from "../../types/types";
 
 export interface CellProps<T extends PropertyType = PropertyType> {
   value: CellValue<T> | null;
@@ -6,4 +11,6 @@ export interface CellProps<T extends PropertyType = PropertyType> {
   onChange: (value: CellValue<T> | null) => void;
   columnValues?: CellValue<T>[];
   readonly?: boolean;
+  unwrapped?: boolean;
+  property?: DatabaseProperty;
 }

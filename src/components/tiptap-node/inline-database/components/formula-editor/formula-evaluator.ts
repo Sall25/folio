@@ -199,36 +199,6 @@ function buildFunctionScope(): Record<string, unknown> {
 
       return fmt.replace(pattern, (match) => tokens[match] ?? match);
     },
-    // formatDate: (d: unknown, fmt: string) => {
-    //   const date = parseAnyDate(d);
-    //   const weekNum = (() => {
-    //     const start = new Date(date.getFullYear(), 0, 1);
-    //     return Math.ceil(
-    //       ((date.getTime() - start.getTime()) / 86_400_000 +
-    //         start.getDay() +
-    //         1) /
-    //         7,
-    //     );
-    //   })();
-
-    //   // Order matters — longer tokens first to avoid partial matches
-    //   return fmt
-    //     .replace("MMMM", date.toLocaleString("en", { month: "long" }))
-    //     .replace("MMM", date.toLocaleString("en", { month: "short" }))
-    //     .replace("MM", String(date.getMonth() + 1).padStart(2, "0"))
-    //     .replace("YYYY", String(date.getFullYear()))
-    //     .replace("YY", String(date.getFullYear()).slice(-2))
-    //     .replace("DD", String(date.getDate()).padStart(2, "0"))
-    //     .replace("D", String(date.getDate()))
-    //     .replace("ddd", date.toLocaleString("en", { weekday: "short" }))
-    //     .replace("dddd", date.toLocaleString("en", { weekday: "long" }))
-    //     .replace("HH", String(date.getHours()).padStart(2, "0"))
-    //     .replace("h", String(date.getHours()))
-    //     .replace("mm", String(date.getMinutes()).padStart(2, "0"))
-    //     .replace("ss", String(date.getSeconds()).padStart(2, "0"))
-    //     .replace("A", date.getHours() >= 12 ? "PM" : "AM")
-    //     .replace("w", String(weekNum));
-    // },
     dateBetween: (a: unknown, b: unknown, unit: string) => {
       const ms = parseAnyDate(a).getTime() - parseAnyDate(b).getTime();
       const units: Record<string, number> = {
@@ -318,26 +288,68 @@ export interface EvaluationContext {
   cellValues: Record<string, CellValue>;
 }
 
+// Shared core. THROWS on any failure (parse error, unknown function, runtime).
+// Both the swallowing evaluateFormula and the reporting validateFormula build
+// on this so they evaluate identically — they only differ in how they treat a
+// thrown error.
+function evaluateFormulaCore(
+  expression: string,
+  ctx: EvaluationContext,
+): string | number | boolean | null {
+  if (!expression?.trim()) return null;
+
+  const propScope: Record<string, unknown> = {};
+  for (const prop of ctx.properties) {
+    const varName = sanitizePropName(prop.name);
+    const raw = ctx.cellValues[prop.id] ?? null;
+    propScope[varName] = cellToFormulaValue(prop.config.type, raw);
+  }
+
+  const substituted = preprocessExpression(substitutePropCalls(expression));
+  const scope = { ...buildFunctionScope(), ...propScope };
+  const result = math.evaluate(substituted, scope);
+  return castResult(result);
+}
+
+// Evaluation for render/resolve paths: swallows errors and returns null so a
+// bad formula doesn't crash the table. Behavior unchanged from before.
 export function evaluateFormula(
   expression: string,
   ctx: EvaluationContext,
 ): string | number | boolean | null {
-  if (!expression.trim()) return null;
-
   try {
-    const propScope: Record<string, unknown> = {};
-    for (const prop of ctx.properties) {
-      const varName = sanitizePropName(prop.name);
-      const raw = ctx.cellValues[prop.id] ?? null;
-      propScope[varName] = cellToFormulaValue(prop.config.type, raw);
-    }
-
-    const substituted = preprocessExpression(substitutePropCalls(expression));
-    const scope = { ...buildFunctionScope(), ...propScope };
-    const result = math.evaluate(substituted, scope);
-    return castResult(result);
+    return evaluateFormulaCore(expression, ctx);
   } catch (err) {
     console.error("evaluateFormula error:", err);
     return null;
+  }
+}
+
+// Validation for the editor: returns null if the expression is valid, or the
+// error message if it's not. This is the detector behind the error strip.
+//
+// IMPORTANT: this PARSES, it does not EVALUATE. Evaluating against empty (or
+// any) data makes valid formulas throw runtime errors — e.g. formatDate on a
+// null date — which produced false positives on formulas that actually work.
+// Parsing checks structure only (parentheses, strings, tokens, call syntax)
+// and never runs the functions, so well-formed formulas pass regardless of
+// data, and only genuinely malformed syntax fails. This matches the intended
+// scope: catching syntactical mistakes.
+//
+// Note: because it doesn't evaluate, this does NOT catch semantic errors like
+// unknown function names or wrong argument counts — only true syntax errors.
+// ctx is unused but kept for call-site symmetry / future use.
+export function validateFormula(
+  expression: string,
+  _ctx: EvaluationContext,
+): string | null {
+  if (!expression?.trim()) return null; // empty is not an error
+  try {
+    // Mirror the transforms evaluation applies, then parse (no evaluate).
+    const substituted = preprocessExpression(substitutePropCalls(expression));
+    math.parse(substituted);
+    return null;
+  } catch (err) {
+    return err instanceof Error ? err.message : "Invalid formula";
   }
 }

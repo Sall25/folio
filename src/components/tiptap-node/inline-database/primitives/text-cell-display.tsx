@@ -1,72 +1,70 @@
 import { useState } from "react";
-import { Button } from "src/components/tiptap-ui-primitive/button";
+import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
+import { CellEditorPopover } from "./cell-editor-popover";
+import "./text-cell-display.scss";
 
 interface TextCellDisplayProps {
   value: string | null | undefined;
   onChange?: (value: string) => void;
   placeholder?: string;
+  readonly?: boolean;
 }
 
 export function TextCellDisplay({
   value,
   onChange,
   placeholder = "Empty",
+  readonly,
 }: TextCellDisplayProps) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value ?? "");
+  const text = value ?? "";
+  const [draft, setDraft] = useState(text);
 
-  const commit = () => {
-    setEditing(false);
-    if (onChange && draft !== value) onChange(draft);
-  };
-
-  if (editing) {
-    return (
-      <input
-        autoFocus
-        className="title-cell-input"
-        style={{ width: "100%" }}
-        placeholder={placeholder}
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") commit();
-          if (e.key === "Escape") {
-            setDraft(value ?? "");
-            setEditing(false);
-          }
-        }}
-      />
-    );
+  // adopt external changes when idle (popover closed)
+  const [prev, setPrev] = useState(text);
+  if (text !== prev) {
+    setPrev(text);
+    setDraft(text);
   }
 
+  const commit = (close: () => void) => {
+    if (onChange && draft !== text) onChange(draft);
+    close();
+  };
+
   return (
-    <Button
-      variant="ghost"
-      style={{
-        background: "transparent",
-        width: "100%",
-        justifyContent: "flex-start",
-        fontFamily:
-          'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif',
-        fontSize: 14,
-        fontWeight: 400,
-        lineHeight: 1.5,
-      }}
-      onClick={() => {
-        setDraft(value ?? "");
-        setEditing(true);
-      }}
+    <CellEditorPopover
+      readonly={readonly || !onChange}
+      trigger={
+        <span
+          className={`db-cell-text__display${
+            value ? "" : " db-cell-text__display--empty"
+          }`}
+        >
+          {value || placeholder}
+        </span>
+      }
     >
-      <span
-        className="tiptap-button-text"
-        style={{
-          color: value ? "var(--tt-theme-text)" : "var(--tt-text-color)",
-        }}
-      >
-        {value || placeholder}
-      </span>
-    </Button>
+      {(close) => (
+        <TextareaAutosize
+          className="db-cell-text__field"
+          autoFocus
+          placeholder={placeholder}
+          value={draft}
+          spellCheck={false}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={() => commit(close)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              commit(close);
+            }
+            if (e.key === "Escape") {
+              setDraft(text);
+              close();
+            }
+          }}
+        />
+      )}
+    </CellEditorPopover>
   );
 }

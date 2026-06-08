@@ -11,16 +11,6 @@ import { makeDefaultView } from "../utils";
 
 export type UseDatabaseUIReturn = ReturnType<typeof useDatabaseUI>;
 
-/**
- * export function useDatabaseUI(
-  attrs: DatabaseAttrs,
-) {
-  // … all ephemeral state unchanged …
-
- 
-  // … return unchanged …
-}
- */
 export function useDatabaseUI(
   attrs: DatabaseAttrs,
   updateAttributes: (attrs: Record<string, unknown>) => void,
@@ -157,6 +147,23 @@ export function useDatabaseUI(
     [attrs.views, attrs.activeViewId, updateAttributes],
   );
 
+  const duplicateView = useCallback(
+    (viewId: ID) => {
+      const src = attrs.views.find((v) => v.id === viewId);
+      if (!src) return;
+      const copy = {
+        ...src,
+        id: crypto.randomUUID(),
+        name: `${src.name} copy`,
+      } as DatabaseView;
+      updateAttributes({
+        views: [...attrs.views, copy],
+        activeViewId: copy.id,
+      });
+    },
+    [attrs.views, updateAttributes],
+  );
+
   const toggleLock = useCallback(
     () => updateAttributes({ locked: !attrs.locked }),
     [attrs.locked, updateAttributes],
@@ -199,6 +206,7 @@ export function useDatabaseUI(
     addView,
     updateView,
     deleteView,
+    duplicateView,
 
     // Locking
     locked: !!attrs.locked,

@@ -37,6 +37,7 @@ import type { Page, PageCategory } from "../types";
 import { PageItem } from "../page-item";
 import "./sidebar-sections.scss";
 import "./sidebar-tree.scss";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 
 const SECTION_CATEGORIES: PageCategory[] = [
   "Private",
@@ -146,9 +147,17 @@ function TreeRow({
           <div className="sidebar-tree__line sidebar-tree__line--bottom" />
         )}
 
-        <button
-          className="sidebar-tree__caret"
-          style={{ visibility: hasChildren ? "visible" : "hidden" }}
+        <Button
+          // className="sidebar-tree__caret"
+          variant="ghost"
+          style={{
+            visibility: hasChildren ? "visible" : "hidden",
+            padding: 0,
+            margin: 0,
+            minWidth: 20,
+            width: 22,
+            background: "transparent",
+          }}
           onClick={(e) => {
             e.stopPropagation();
             onToggleExpand(page.id);
@@ -156,8 +165,12 @@ function TreeRow({
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={isExpanded ? "Collapse" : "Expand"}
         >
-          {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        </button>
+          {isExpanded ? (
+            <ChevronDown className="tiptap-button-icon" size={14} />
+          ) : (
+            <ChevronRight className="tiptap-button-icon" size={14} />
+          )}
+        </Button>
 
         <div className="sidebar-tree__item">
           <PageItem page={page} disableExpand={true} />

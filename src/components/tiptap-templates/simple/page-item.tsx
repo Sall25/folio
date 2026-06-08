@@ -69,9 +69,7 @@ export function PageItem({
 
   const { setActivePageId } = useActivePage();
   const onSelect = (pageId: number) => {
-    console.time("navigation");
     setActivePageId(pageId);
-    console.timeEnd("navigation");
   };
 
   return (

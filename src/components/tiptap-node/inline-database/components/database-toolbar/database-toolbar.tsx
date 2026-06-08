@@ -53,6 +53,9 @@ interface DatabaseToolbarProps {
   /** Notion-style lock: view config + structure frozen. Search and New
       (add record) stay available. */
   locked?: boolean;
+  /** Hover-reveal: when false the control cluster + add-view "+" are hidden
+      (kept in layout) until the database node is hovered. */
+  hovered?: boolean;
 }
 
 function getActiveView(attrs: DatabaseAttrs): DatabaseView | undefined {
@@ -69,6 +72,7 @@ export function DatabaseToolbar({
   properties,
   onUpdateAttributes,
   locked = false,
+  hovered = false,
 }: DatabaseToolbarProps) {
   const activeView = getActiveView(attrs);
   const filters = activeView?.filters ?? [];
@@ -92,6 +96,16 @@ export function DatabaseToolbar({
     [setTemplateOpen],
   );
 
+  // Keep the controls visible while one of their popovers is open, so they
+  // don't disappear out from under the user when the mouse leaves the node.
+  const showControls = hovered || viewOptionsOpen || templateOpen;
+
+  const revealStyle: React.CSSProperties = {
+    opacity: showControls ? 1 : 0,
+    pointerEvents: showControls ? "auto" : "none",
+    transition: "opacity 0.2s ease",
+  };
+
   const { addRecordWithPageAsync, source } = useDataSource(attrs.sourceId);
   const handleNewPage = async () => {
     const rec = await addRecordWithPageAsync({
@@ -114,250 +128,256 @@ export function DatabaseToolbar({
       <CardItemGroup orientation="horizontal">
         {/* View tabs: add/rename/delete view is view-config → frozen when locked.
             Passing locked lets the tabs disable the + and rename affordances
-            while still allowing view SWITCHING (reading). */}
+            while still allowing view SWITCHING (reading). The tab itself stays
+            visible always; `hovered` only governs the add-view "+". */}
         <DatabaseViewTabs
           attrs={attrs}
           db={db}
           onRename={() => onViewOptionsOpenChange(true)}
           onUpdateAttributes={onUpdateAttributes}
           locked={locked}
+          hovered={hovered}
         />
         <Spacer orientation="horizontal" />
 
-        <CardItemGroup orientation="horizontal">
-          {/* Search is reading — always available. */}
-          <SearchButton db={db} />
+        {/* Hover-revealed control cluster — search / filter / sort / group /
+            hide / view-options / New. Hidden (but space kept) off-hover. */}
+        <div style={revealStyle}>
+          <CardItemGroup orientation="horizontal">
+            {/* Search is reading — always available. */}
+            <SearchButton db={db} />
 
-          {/* Filter / Sort / Group / Hide-properties / View-options are all
-              view config → hidden when locked. */}
-          {!locked && (
-            <>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    tooltip="Filter"
-                    data-active-state={activeFilterCount > 0 ? "on" : "off"}
-                    style={{
-                      minHeight: 22,
-                      height: 22,
-                      borderRadius: "var(--tt-radius-sm)",
-                      background: "transparent",
-                    }}
-                  >
-                    <ListFilter className="tiptap-button-icon" size={14} />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  side="bottom"
-                  align="start"
-                  className="db-panel"
-                >
-                  <FilterPanel
-                    properties={source?.properties ?? []}
-                    db={db}
-                    activeView={activeView}
-                  />
-                </PopoverContent>
-              </Popover>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    tooltip="Sort"
-                    variant="ghost"
-                    data-active-state={activeSortCount > 0 ? "on" : "off"}
-                    style={{
-                      minHeight: 22,
-                      height: 22,
-                      borderRadius: "var(--tt-radius-sm)",
-                      background: "transparent",
-                    }}
-                  >
-                    <ArrowUpDown className="tiptap-button-icon" size={14} />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  side="bottom"
-                  align="start"
-                  className="db-panel"
-                >
-                  <SortPanel
-                    properties={source?.properties ?? []}
-                    db={db}
-                    activeView={activeView}
-                    sorts={sorts}
-                  />
-                </PopoverContent>
-              </Popover>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost">
-                    <Group className="tiptap-button-icon" size={14} />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  side="bottom"
-                  align="start"
-                  className="db-panel"
-                >
-                  <GroupPanel
-                    properties={source?.properties ?? []}
-                    db={db}
-                    activeView={activeView}
-                  />
-                </PopoverContent>
-              </Popover>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    tooltip="Hide Properties"
-                    variant="ghost"
-                    data-active-state={activePropsCount > 0 ? "on" : "off"}
-                    style={{
-                      minHeight: 22,
-                      height: 22,
-                      borderRadius: "var(--tt-radius-sm)",
-                      background: "transparent",
-                    }}
-                  >
-                    <SlidersHorizontal
-                      className="tiptap-button-icon"
-                      size={14}
-                    />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  side="bottom"
-                  align="start"
-                  className="db-panel"
-                >
-                  <PropertiesPanel
-                    properties={source?.properties ?? []}
-                    db={db}
-                    activeView={activeView}
-                  />
-                </PopoverContent>
-              </Popover>
-
-              {activeView && (
-                <ViewOptionsPopover
-                  properties={properties}
-                  db={db}
-                  view={activeView}
-                />
-              )}
-            </>
-          )}
-
-          {/* New record stays available when locked (adding data is allowed).
-              The template dropdown changes the database template → frozen. */}
-          <CardItemGroup
-            orientation="horizontal"
-            style={{
-              background: "var(--tt-brand-color-400)",
-              borderRadius: "var(--tt-radius-sm)",
-              color: "white",
-              minHeight: 24,
-              height: 24,
-              padding: "0px 5px",
-              cursor: "pointer",
-            }}
-          >
-            <span
-              style={{ fontSize: 11.5, fontWeight: "bold" }}
-              onClick={handleNewPage}
-            >
-              New
-            </span>
+            {/* Filter / Sort / Group / Hide-properties / View-options are all
+                view config → hidden when locked. */}
             {!locked && (
               <>
-                <Separator orientation="vertical" />
-                <Popover
-                  open={templateOpen}
-                  onOpenChange={onTemplateOpenChange}
-                >
+                <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="ghost"
+                      tooltip="Filter"
+                      data-active-state={activeFilterCount > 0 ? "on" : "off"}
                       style={{
+                        minHeight: 22,
+                        height: 22,
+                        borderRadius: "var(--tt-radius-sm)",
                         background: "transparent",
-                        minWidth: 15,
-                        width: 15,
                       }}
                     >
-                      <ChevronDown
+                      <ListFilter className="tiptap-button-icon" size={14} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    side="bottom"
+                    align="start"
+                    className="db-panel"
+                  >
+                    <FilterPanel
+                      properties={source?.properties ?? []}
+                      db={db}
+                      activeView={activeView}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      tooltip="Sort"
+                      variant="ghost"
+                      data-active-state={activeSortCount > 0 ? "on" : "off"}
+                      style={{
+                        minHeight: 22,
+                        height: 22,
+                        borderRadius: "var(--tt-radius-sm)",
+                        background: "transparent",
+                      }}
+                    >
+                      <ArrowUpDown className="tiptap-button-icon" size={14} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    side="bottom"
+                    align="start"
+                    className="db-panel"
+                  >
+                    <SortPanel
+                      properties={source?.properties ?? []}
+                      db={db}
+                      activeView={activeView}
+                      sorts={sorts}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost">
+                      <Group className="tiptap-button-icon" size={14} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    side="bottom"
+                    align="start"
+                    className="db-panel"
+                  >
+                    <GroupPanel
+                      properties={source?.properties ?? []}
+                      db={db}
+                      activeView={activeView}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      tooltip="Hide Properties"
+                      variant="ghost"
+                      data-active-state={activePropsCount > 0 ? "on" : "off"}
+                      style={{
+                        minHeight: 22,
+                        height: 22,
+                        borderRadius: "var(--tt-radius-sm)",
+                        background: "transparent",
+                      }}
+                    >
+                      <SlidersHorizontal
                         className="tiptap-button-icon"
-                        style={{ color: "white" }}
+                        size={14}
                       />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent>
-                    <Card style={{ padding: "5px 10px" }}>
-                      <CardBody>
-                        <CardItemGroup>
-                          {pages &&
-                            pages
-                              .filter((p) => p.category === "Template")
-                              .map((p) => (
-                                <Button
-                                  key={p.id}
-                                  variant="ghost"
-                                  style={{
-                                    justifyContent: "flex-start",
-                                    minHeight: 24,
-                                    height: 24,
-                                  }}
-                                  onClick={() =>
-                                    onUpdateAttributes?.({
-                                      ...attrs,
-                                      templateId: p.id,
-                                    })
-                                  }
-                                >
-                                  <PageItemIcon cover={p.cover} />
-                                  <span className="tiptap-button-text">
-                                    {p.title}
-                                  </span>
-                                </Button>
-                              ))}
-                        </CardItemGroup>
-                      </CardBody>
-                      <CardFooter>
-                        <Button
-                          variant="ghost"
-                          style={{
-                            background: "var(--tt-brand-color-400)",
-                            justifyContent: "flex-start",
-                          }}
-                          onClick={() => {
-                            onTemplateOpenChange(false);
-                            addPageTemplateAsync({
-                              title: "New template",
-                              parentId: null,
-                            })
-                              .then((newPage) => setPeekPageId(newPage.id))
-                              .catch((err) =>
-                                console.log(
-                                  "Failed to add a new template",
-                                  err,
-                                ),
-                              );
-                          }}
-                        >
-                          <Plus className="tiptap-button-icon" />
-                          <span>Create a template</span>
-                        </Button>
-                      </CardFooter>
-                    </Card>
+                  <PopoverContent
+                    side="bottom"
+                    align="start"
+                    className="db-panel"
+                  >
+                    <PropertiesPanel
+                      properties={source?.properties ?? []}
+                      db={db}
+                      activeView={activeView}
+                    />
                   </PopoverContent>
                 </Popover>
+
+                {activeView && (
+                  <ViewOptionsPopover
+                    properties={properties}
+                    db={db}
+                    view={activeView}
+                  />
+                )}
               </>
             )}
+
+            {/* New record stays available when locked (adding data is allowed).
+                The template dropdown changes the database template → frozen. */}
+            <CardItemGroup
+              orientation="horizontal"
+              style={{
+                background: "var(--tt-brand-color-400)",
+                borderRadius: "var(--tt-radius-sm)",
+                color: "white",
+                minHeight: 24,
+                height: 24,
+                padding: "0px 5px",
+                cursor: "pointer",
+              }}
+            >
+              <span
+                style={{ fontSize: 11.5, fontWeight: "bold" }}
+                onClick={handleNewPage}
+              >
+                New
+              </span>
+              {!locked && (
+                <>
+                  <Separator orientation="vertical" />
+                  <Popover
+                    open={templateOpen}
+                    onOpenChange={onTemplateOpenChange}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        style={{
+                          background: "transparent",
+                          minWidth: 15,
+                          width: 15,
+                        }}
+                      >
+                        <ChevronDown
+                          className="tiptap-button-icon"
+                          style={{ color: "white" }}
+                        />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent>
+                      <Card style={{ padding: "5px 10px" }}>
+                        <CardBody>
+                          <CardItemGroup>
+                            {pages &&
+                              pages
+                                .filter((p) => p.category === "Template")
+                                .map((p) => (
+                                  <Button
+                                    key={p.id}
+                                    variant="ghost"
+                                    style={{
+                                      justifyContent: "flex-start",
+                                      minHeight: 24,
+                                      height: 24,
+                                    }}
+                                    onClick={() =>
+                                      onUpdateAttributes?.({
+                                        ...attrs,
+                                        templateId: p.id,
+                                      })
+                                    }
+                                  >
+                                    <PageItemIcon cover={p.cover} />
+                                    <span className="tiptap-button-text">
+                                      {p.title}
+                                    </span>
+                                  </Button>
+                                ))}
+                          </CardItemGroup>
+                        </CardBody>
+                        <CardFooter>
+                          <Button
+                            variant="ghost"
+                            style={{
+                              background: "var(--tt-brand-color-400)",
+                              justifyContent: "flex-start",
+                            }}
+                            onClick={() => {
+                              onTemplateOpenChange(false);
+                              addPageTemplateAsync({
+                                title: "New template",
+                                parentId: null,
+                              })
+                                .then((newPage) => setPeekPageId(newPage.id))
+                                .catch((err) =>
+                                  console.log(
+                                    "Failed to add a new template",
+                                    err,
+                                  ),
+                                );
+                            }}
+                          >
+                            <Plus className="tiptap-button-icon" />
+                            <span>Create a template</span>
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    </PopoverContent>
+                  </Popover>
+                </>
+              )}
+            </CardItemGroup>
           </CardItemGroup>
-        </CardItemGroup>
+        </div>
 
         {!locked && viewOptionsOpen && activeView && (
           <div style={{ position: "absolute", top: 25, right: 0, zIndex: 999 }}>

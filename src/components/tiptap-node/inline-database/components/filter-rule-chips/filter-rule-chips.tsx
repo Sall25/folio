@@ -348,12 +348,13 @@ function FilterChip({
   return (
     <Popover>
       <PopoverTrigger asChild>{chipButton}</PopoverTrigger>
-      <PopoverContent side="bottom" align="start" className="db-panel">
+      <PopoverContent side="bottom" align="start">
         <Card
           style={{
             padding: "5px",
             minWidth: 380,
             boxShadow: "var(--tt-shadow-elevated-sm)",
+            background: "var(--tt-card-bg-color)",
           }}
         >
           <Grid columns={`${needsValue ? "1fr 1fr 1fr" : "1fr 1fr"}`} gap={10}>
@@ -527,21 +528,24 @@ export function FilterRuleChips({
 }) {
   if (!activeView) return null;
 
-  const group: FilterGroup = activeView.filters[0] ?? {
-    id: nanoid(),
-    operator: "and" as FilterGroupOperator,
-    rules: [],
-  };
-  const rules = group.rules as FilterRule[];
+  const group: FilterGroup = activeView?.filters
+    ? activeView?.filters[0]
+    : {
+        id: nanoid(),
+        operator: "and" as FilterGroupOperator,
+        rules: [],
+      };
+  const rules = group?.rules ?? ([] as FilterRule[]);
 
   function saveGroup(updated: FilterGroup) {
+    if (!activeView) return;
     db.updateView(activeView!.id, { filters: [updated] });
   }
 
   function addRule() {
     const firstProp = properties[0];
     if (!firstProp) return;
-    const currentGroup: FilterGroup = activeView!.filters[0] ?? {
+    const currentGroup: FilterGroup = activeView?.filters[0] ?? {
       id: nanoid(),
       operator: "and" as FilterGroupOperator,
       rules: [],
@@ -575,7 +579,7 @@ export function FilterRuleChips({
       {rules.map((rule) => (
         <FilterChip
           key={rule.id}
-          rule={rule}
+          rule={rule as FilterRule}
           properties={properties}
           onChange={(patch) => updateRule(rule.id, patch)}
           onDelete={() => deleteRule(rule.id)}

@@ -6,13 +6,11 @@ import {
 } from "@tanstack/react-query";
 import type { Page, PageCategory } from "./types";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  useDebounce,
-  useDebouncedCallback,
-  type DebouncedState,
-} from "use-debounce";
+import { useDebouncedCallback, type DebouncedState } from "use-debounce";
 import { findPage } from "src/lib/find-page";
 import type { JSONContent } from "@tiptap/core";
+import type { DataSource } from "src/components/tiptap-node/inline-database/types/types";
+import { useDataSources } from "src/components/tiptap-node/inline-database/hooks/use-data-sources";
 
 function getDescendantIds(pages: Page[], parentId: number): number[] {
   const children = pages.filter((p) => p.parentId === parentId);
@@ -45,7 +43,8 @@ const fetchPagesAsync = async () => {
   const res = await fetch("/api/pages");
   if (!res.ok) throw new Error("Failed to fetch pages");
 
-  return res.json();
+  const data = await res.json();
+  return data;
 };
 
 const addPageFnAsync = async ({
@@ -93,30 +92,20 @@ const addPageFnAsync = async ({
   return res.json();
 };
 
-const deletePageFnAsync = async (id: number) => {
-  const res = await fetch(`/api/pages/${id}`, { method: "DELETE" });
-  if (!res.ok) throw new Error("Failed to delete page");
+// json-server has no cascade delete, so delete the page AND every descendant
+// id explicitly (one DELETE each). Descendant ids are computed by the caller
+// from the cache before deletion.
+const deletePageFnAsync = async (id: number, descendantIds: number[] = []) => {
+  const ids = [id, ...descendantIds];
+  await Promise.all(
+    ids.map((pid) =>
+      fetch(`/api/pages/${pid}`, { method: "DELETE" }).then((res) => {
+        if (!res.ok) throw new Error(`Failed to delete page ${pid}`);
+      }),
+    ),
+  );
 };
 
-// const updatePageFnAsync = async (page: Page) => {
-//   const res = await fetch(`/api/pages/${page.id}`, {
-//     method: "PATCH",
-//     body: JSON.stringify({
-//       title: page.title,
-//       settings: page.settings,
-//       cover: page.cover,
-//       content: page.content,
-//       updatedAt: Date.now().toString(),
-//     }),
-//     headers: { "Content-Type": "application/json" },
-//   });
-//   if (!res.ok) {
-//     const errorBody = await res.text();
-//     throw new Error(`Failed to update page: ${errorBody}`);
-//   }
-
-//   return res.json();
-// };
 const updatePageFnAsync = async (page: Page) => {
   const res = await fetch(`/api/pages/${page.id}`, {
     method: "PATCH",
@@ -132,15 +121,11 @@ const updatePageFnAsync = async (page: Page) => {
     headers: { "Content-Type": "application/json" },
   });
   const json = await res.json().catch(() => null);
-  console.log("PATCH move:", {
-    status: res.status,
-    sentParent: page.parentId,
-    gotParent: json?.parentId,
-  });
   if (!res.ok)
     throw new Error(`Failed to update page: ${JSON.stringify(json)}`);
   return json;
 };
+
 export interface UsePagesReturn {
   pages: Page[] | undefined;
   isLoading: boolean;
@@ -165,14 +150,20 @@ export interface UsePagesReturn {
     title: string;
     parentId: number | null;
   }) => Promise<Page>;
+  patchPageLocal: (page: Page) => void;
 }
 
 export function usePages(): UsePagesReturn {
   const client = useQueryClient();
   const [query, setQuery] = useState("");
-  const [debounceQuery] = useDebounce(query, 300);
   const selectPages = useCallback((data: Page[]) => buildTree(data), []);
   const onSearch = useCallback((search: string) => setQuery(search), []);
+
+  // Source deletion is owned by useDataSources. We consume it here so that
+  // deleting a database PAGE also deletes its data source (database-is-a-page
+  // model). The ["dataSources"] query is shared/deduped by React Query, so
+  // this adds a subscriber, not a duplicate fetch.
+  const { deleteSourceAsync } = useDataSources();
 
   const { data: pages, isLoading } = useQuery({
     queryKey: ["pages"],
@@ -184,22 +175,33 @@ export function usePages(): UsePagesReturn {
   const { mutateAsync: _addPageAsync } = useMutation({
     mutationKey: ["addPage"],
     mutationFn: addPageFnAsync,
-    onSuccess: () => {
+    onSuccess: (created) => {
+      client.setQueryData<Page[]>(["pages"], (old = []) => [...old, created]);
       client.invalidateQueries({ queryKey: ["pages"] });
     },
   });
 
   const { mutateAsync: _deletePageAsync } = useMutation({
-    mutationKey: ["deletePage"],
-    mutationFn: deletePageFnAsync,
-    onMutate: (id: number) => {
-      client.setQueryData<Page[]>(["pages", debounceQuery], (old = []) => {
+    mutationFn: ({
+      id,
+      descendantIds,
+    }: {
+      id: number;
+      descendantIds: number[];
+    }) => deletePageFnAsync(id, descendantIds),
+    onMutate: async ({ id }: { id: number; descendantIds: number[] }) => {
+      await client.cancelQueries({ queryKey: ["pages"] });
+      const previous = client.getQueryData<Page[]>(["pages"]);
+      client.setQueryData<Page[]>(["pages"], (old = []) => {
         const idsToRemove = new Set([id, ...getDescendantIds(old, id)]);
         return old.filter((p) => !idsToRemove.has(p.id));
       });
+      return { previous };
+    },
+    onError: (_e, _vars, ctx) => {
+      if (ctx?.previous) client.setQueryData(["pages"], ctx.previous);
     },
     onSuccess: () => client.invalidateQueries({ queryKey: ["pages"] }),
-    onError: () => client.invalidateQueries({ queryKey: ["pages"] }),
   });
 
   const { mutateAsync: _updatePageAsync } = useMutation({
@@ -208,8 +210,18 @@ export function usePages(): UsePagesReturn {
     onMutate: async (page: Page) => {
       await client.cancelQueries({ queryKey: ["pages"] });
       const previous = client.getQueryData<Page[]>(["pages"]);
+
       client.setQueryData<Page[]>(["pages"], (old = []) =>
-        old.map((p) => (p.id === page.id ? { ...p, ...page } : p)),
+        old.map((p) => {
+          if (p.id !== page.id) return p;
+          // Drop stale writes: if the cache already has a newer updatedAt than the
+          // incoming payload, this write is from an older snapshot — ignore it so a
+          // late/cross-page debounce flush can't clobber fresher content.
+          const incoming = Number(page.updatedAt ?? 0);
+          const current = Number(p.updatedAt ?? 0);
+          if (incoming < current) return p;
+          return { ...p, ...page };
+        }),
       );
       return { previous };
     },
@@ -225,7 +237,19 @@ export function usePages(): UsePagesReturn {
     },
   });
 
-  // Stable refs — mutateAsync changes every render, refs don't
+  // Synchronous local cache write (no network). Kept for callers that want an
+  // instant ["pages"] update. Do NOT call this on every keystroke — it
+  // serializes/writes the whole page and triggers a re-render.
+  const patchPageLocal = useCallback(
+    (page: Page) => {
+      client.setQueryData<Page[]>(["pages"], (old = []) =>
+        old.map((p) => (p.id === page.id ? { ...p, ...page } : p)),
+      );
+    },
+    [client],
+  );
+
+  // Stable refs — mutateAsync changes identity across renders, refs don't.
   const addPageAsyncRef = useRef(_addPageAsync);
   const deletePageAsyncRef = useRef(_deletePageAsync);
   const updatePageAsyncRef = useRef(_updatePageAsync);
@@ -240,7 +264,7 @@ export function usePages(): UsePagesReturn {
     updatePageAsyncRef.current = _updatePageAsync;
   }, [_updatePageAsync]);
 
-  //Stable function identities — never change after mount
+  // ── Stable function identities ────────────────────────────────────────────
 
   const addPageAsync = useCallback(
     (data: {
@@ -254,21 +278,47 @@ export function usePages(): UsePagesReturn {
     [],
   );
 
-  const deletePageAsync = useCallback(
-    (id: number) => deletePageAsyncRef.current(id),
-    [],
-  );
-
   const updatePageAsync = useCallback(
     (page: Page) => updatePageAsyncRef.current(page),
     [],
   );
 
-  // Debounces are now stable — updatePageAsync never changes
+  // Delete a page + all descendant pages (server cascade), then delete any
+  // data sources owned by those pages. "The database is a page": a source's
+  // pageId is the id of the database page that owns it, so deleting that page
+  // must also remove its source. Linked database NODES on OTHER pages are
+  // untouched — they reference the source but don't own it (their owning page
+  // isn't in the deleted set).
+  const deletePageAsync = useCallback(
+    async (id: number) => {
+      // Read the FLAT cache (getQueryData returns raw data; `select` only
+      // transforms what the hook consumer sees). getDescendantIds walks
+      // parentId on the flat list.
+      const flat = client.getQueryData<Page[]>(["pages"]) ?? [];
+      const descendantIds = getDescendantIds(flat, id);
+      const allIds = [id, ...descendantIds];
+
+      // Which deleted pages own a data source? Match page.id → source.pageId.
+      const sources = client.getQueryData<DataSource[]>(["dataSources"]) ?? [];
+      const sourceIdsToDelete = sources
+        .filter((s) => s.pageId != null && allIds.includes(s.pageId))
+        .map((s) => s.id);
+
+      // 1. Delete the pages (descendants cascade on the server).
+      await deletePageAsyncRef.current({ id, descendantIds });
+
+      // 2. Delete the sources those pages owned. deleteSourceAsync handles its
+      //    own cache (optimistic removal + evicting ["dataSource", id]).
+      await Promise.all(sourceIdsToDelete.map((sid) => deleteSourceAsync(sid)));
+    },
+    [client, deleteSourceAsync],
+  );
+
+  // Debounces — updatePageAsync is stable, so these are stable too.
   const debounceUpdatePage = useDebouncedCallback(
     (page: Page) => updatePageAsync(page),
-    30000,
-    { maxWait: 50000 },
+    6000,
+    { maxWait: 10000 },
   );
 
   const debounceUpdatePageFast = useDebouncedCallback(
@@ -326,5 +376,6 @@ export function usePages(): UsePagesReturn {
     onSearch,
     addCoverAsync,
     addPageTemplateAsync,
+    patchPageLocal,
   };
 }

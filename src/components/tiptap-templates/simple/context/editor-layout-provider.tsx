@@ -20,7 +20,7 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
   const editorWrapperRef = useRef<HTMLDivElement>(null);
   const [editorLeft, setEditorLeft] = useState(0);
   const paddingLeft = collapsed
-    ? PADDING_LEFT - Math.round(sidebarWidth / 4)
+    ? 100 //PADDING_LEFT - Math.round(sidebarWidth / 6)
     : PADDING_LEFT;
 
   const onCollapsedChange = useCallback((v: boolean) => setCollapsed(v), []);

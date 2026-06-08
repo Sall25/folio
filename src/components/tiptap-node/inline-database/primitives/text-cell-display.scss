@@ -1,0 +1,39 @@
+.db-cell-text {
+  // plain-text display in the cell — single line, ellipsis
+  &__display {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--tt-theme-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &--empty {
+      color: var(--tt-text-tertiary, var(--tt-text-color));
+    }
+  }
+
+  // textarea inside the popover editor — wraps, grows, borderless
+  &__field {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    resize: none;
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--tt-paragraph-text-color, var(--tt-theme-text));
+    caret-color: var(--tt-brand-color-400);
+
+    &::placeholder {
+      color: var(--tt-text-tertiary, var(--tt-text-color));
+    }
+  }
+}

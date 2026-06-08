@@ -1,0 +1,45 @@
+// Notion-style editable field: looks like plain text, becomes a caret on
+// focus. No visible box, no border, inherits typography from the cell.
+.editable-text {
+  // reset textarea chrome
+  appearance: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  resize: none;
+  box-shadow: none;
+
+  // inherit the surrounding text styling so it reads as plain text
+  font: inherit;
+  font-family: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+
+  width: 100%;
+  caret-color: var(--tt-brand-color-400);
+
+  // single-line default: one row, no wrap, ellipsis when idle
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+
+  &::placeholder {
+    color: var(--tt-text-tertiary, var(--tt-gray-light-a-600));
+    opacity: 1;
+  }
+
+  // multiline (title): wrap + grow, height is set inline by the auto-resize
+  &--multiline {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow: hidden; // height is managed; no scrollbar
+    text-overflow: clip;
+  }
+
+  &:read-only {
+    cursor: default;
+  }
+}

@@ -1,15 +1,40 @@
-import { FolderClosed, Plus, Database } from "lucide-react";
+import {
+  FolderClosed,
+  Plus,
+  Database,
+  Table,
+  Columns3,
+  LayoutGrid,
+  List as ListIcon,
+  Calendar,
+  GanttChart,
+  type LucideIcon,
+} from "lucide-react";
 import { useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 import { useDataSources } from "../hooks/use-data-sources";
-import type { DatabaseProperty, ID } from "../types/types";
+import type {
+  DatabaseProperty,
+  DatabaseView,
+  SavedView,
+  ID,
+} from "../types/types";
 import "./data-source-picker.scss";
 import { databasePageContent } from "../hooks/use-create-database";
 import { findPage } from "src/lib/find-page";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
+
+const VIEW_ICON: Record<DatabaseView["type"], LucideIcon> = {
+  table: Table,
+  board: Columns3,
+  gallery: LayoutGrid,
+  list: ListIcon,
+  calendar: Calendar,
+  timeline: GanttChart,
+};
 
 function defaultProperties(): DatabaseProperty[] {
   return [
@@ -31,7 +56,14 @@ function defaultProperties(): DatabaseProperty[] {
 export function DataSourcePicker({
   onSelect,
 }: {
-  onSelect: (sourceId: ID, pageId?: number, isLinked?: boolean) => void;
+  // savedView: when set, the caller should open a view of that layout on the
+  // linked node (rather than the default).
+  onSelect: (
+    sourceId: ID,
+    pageId?: number,
+    isLinked?: boolean,
+    savedView?: SavedView,
+  ) => void;
 }) {
   const { sources, isLoading, createSourceAsync } = useDataSources();
   const { addPageAsync, pages } = usePages();
@@ -118,28 +150,58 @@ export function DataSourcePicker({
                   s.pageId != null && pages
                     ? (findPage(pages, s.pageId) ?? null)
                     : null;
+                const saved = s.savedViews ?? [];
                 return (
-                  <Button
-                    key={s.id}
-                    variant="ghost"
-                    style={{
-                      justifyContent: "flex-start",
-                      width: "100%",
-                      gap: 8,
-                      borderRadius: "var(--tt-radius-sm)",
-                    }}
-                    onClick={() => onSelect(s.id, s.pageId, true)}
-                  >
-                    {sourcePage ? (
-                      <PageItemIcon
-                        cover={sourcePage.cover}
-                        styles={{ width: 16, height: 16 }}
-                      />
-                    ) : (
-                      <Database className="tiptap-button-icon" size={14} />
+                  <div key={s.id} className="db-source-picker__source">
+                    <Button
+                      variant="ghost"
+                      style={{
+                        justifyContent: "flex-start",
+                        width: "100%",
+                        gap: 8,
+                        borderRadius: "var(--tt-radius-sm)",
+                      }}
+                      onClick={() => onSelect(s.id, s.pageId, true)}
+                    >
+                      {sourcePage ? (
+                        <PageItemIcon
+                          cover={sourcePage.cover}
+                          styles={{ width: 16, height: 16 }}
+                        />
+                      ) : (
+                        <Database className="tiptap-button-icon" size={14} />
+                      )}
+                      <span className="tiptap-button-text">{s.name}</span>
+                    </Button>
+
+                    {saved.length > 0 && (
+                      <div className="db-source-picker__views">
+                        {saved.map((v) => {
+                          const Icon = VIEW_ICON[v.type] ?? Database;
+                          return (
+                            <Button
+                              key={v.id}
+                              variant="ghost"
+                              className="db-source-picker__view"
+                              style={{
+                                justifyContent: "flex-start",
+                                width: "100%",
+                                gap: 8,
+                                paddingLeft: 26,
+                                borderRadius: "var(--tt-radius-sm)",
+                              }}
+                              onClick={() => onSelect(s.id, s.pageId, true, v)}
+                            >
+                              <Icon className="tiptap-button-icon" size={13} />
+                              <span className="tiptap-button-text">
+                                {v.name}
+                              </span>
+                            </Button>
+                          );
+                        })}
+                      </div>
                     )}
-                    <span className="tiptap-button-text">{s.name}</span>
-                  </Button>
+                  </div>
                 );
               })
             )}

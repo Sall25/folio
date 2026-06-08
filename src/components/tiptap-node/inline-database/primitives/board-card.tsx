@@ -81,6 +81,7 @@ export function BoardCard({
             record={record}
             onChange={(v) => onChange(titleProp.id, v)}
             view={view}
+            properties={properties}
           />
         </div>
       )}
@@ -97,6 +98,7 @@ export function BoardCard({
             record={record}
             onChange={(v) => onChange(prop.id, v)}
             view={view}
+            properties={properties}
           />
         ))}
       </div>

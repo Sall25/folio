@@ -50,11 +50,59 @@ export const Column = Node.create({
   addNodeView() {
     return ReactNodeViewRenderer(WrappedColumnView);
   },
+  
 
   addProseMirrorPlugins() {
     return [
       new Plugin({
         key: new PluginKey("columnDropPlugin"),
+
+        // Capture-phase dragover: when the pointer is over a column drop zone,
+        // claim the event before it reaches the bubble-phase listeners that
+        // draw the block drop-cursor line (prosemirror-dropcursor listens on
+        // view.dom). This keeps the two indicators mutually exclusive — the
+        // column zone highlight OR the insertion line, never both at once.
+        view(editorView) {
+          const clearHighlights = () =>
+            document
+              .querySelectorAll(".column-drop-active")
+              .forEach((el) => el.classList.remove("column-drop-active"));
+
+          const onDragOverCapture = (event: Event) => {
+            const t = event.target as HTMLElement | null;
+            const zone = t?.closest?.("[data-drop-zone]") as HTMLElement | null;
+
+            if (!zone) {
+              // Not over a zone → let the normal line cursor behave; only
+              // clear any stale column highlight.
+              clearHighlights();
+              return;
+            }
+
+            // Over a zone → highlight it and stop the line cursor from also
+            // showing. stopImmediatePropagation here (capture phase) prevents
+            // every bubble-phase dragover listener on view.dom, including the
+            // drop-cursor's, from running. preventDefault keeps the drop
+            // allowed so handleDrop still fires.
+            console.log("over the drop zone")
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            clearHighlights();
+            zone.classList.add("column-drop-active");
+          };
+
+          editorView.dom.addEventListener("dragover", onDragOverCapture, true);
+
+          return {
+            destroy() {
+              editorView.dom.removeEventListener(
+                "dragover",
+                onDragOverCapture,
+                true,
+              );
+            },
+          };
+        },
 
         props: {
           /**
@@ -126,28 +174,23 @@ export const Column = Node.create({
             if (!dragNode) return false;
             if (dragNodePos === colNodePos) return false;
 
-            console.log("dragNode type:", dragNode.type.name);
-            console.log("dragNode content:", dragNode.content);
-            console.log("colNodePos:", colNodePos);
-            console.log("columnBlockPos:", columnBlockPos);
-            console.log(
-              "columnBlockNode childCount:",
-              columnBlockNode.childCount,
-            );
-
             const columnType = state.schema.nodes.column;
             const columnBlockType = state.schema.nodes.columnBlock;
             if (!columnType || !columnBlockType) return false;
 
-            // Wrap dragNode itself in a column — don't use .content
-            // since dragNode might already be a valid block (paragraph, heading etc.)
-            const dragContent =
+            // Build the content for the new column.
+            // - column  → reuse its children (never nest column-in-column)
+            // - text    → wrap in a paragraph (text isn't a valid block child)
+            // - any other block (heading, database, table, image, …) → place
+            //   the node ITSELF, so its type and marks are preserved. Building
+            //   a paragraph from `.content` here is what turned headings into
+            //   plain paragraphs and made nodes like the database vanish.
+            const dragColumnContent =
               dragNode.type.name === "column"
-                ? dragNode.content // already a column, use its content
-                : state.schema.nodes.paragraph.create(
-                    {},
-                    dragNode.isText ? dragNode : dragNode.content,
-                  );
+                ? dragNode.content
+                : dragNode.isText
+                  ? state.schema.nodes.paragraph.create(null, dragNode)
+                  : dragNode;
 
             let targetColumnIndex = -1;
             let offset = 0;
@@ -156,12 +199,6 @@ export const Column = Node.create({
               if (childPos === colNodePos) targetColumnIndex = index;
               offset += child.nodeSize;
             });
-
-            console.log("targetColumnIndex:", targetColumnIndex);
-            console.log(
-              "insertIndex:",
-              side === "left" ? targetColumnIndex : targetColumnIndex + 1,
-            );
 
             if (targetColumnIndex === -1) return false;
 
@@ -174,7 +211,7 @@ export const Column = Node.create({
             columnBlockNode.forEach((col: any, _: number, index: number) => {
               if (index === insertIndex) {
                 newColumns.push(
-                  columnType.create({ width: newWidth }, dragContent),
+                  columnType.create({ width: newWidth }, dragColumnContent),
                 );
               }
               newColumns.push(
@@ -183,7 +220,7 @@ export const Column = Node.create({
             });
             if (insertIndex >= columnBlockNode.childCount) {
               newColumns.push(
-                columnType.create({ width: newWidth }, dragContent),
+                columnType.create({ width: newWidth }, dragColumnContent),
               );
             }
 
@@ -196,44 +233,19 @@ export const Column = Node.create({
               newColumnBlock,
             );
 
-            const adjustedDragPos =
-              dragNodePos < columnBlockPos
-                ? dragNodePos
-                : dragNodePos +
-                  (newColumnBlock.nodeSize - columnBlockNode.nodeSize);
-
-            const adjustedDragNode = tr.doc.nodeAt(adjustedDragPos);
-            if (adjustedDragNode) {
-              tr.delete(
-                adjustedDragPos,
-                adjustedDragPos + adjustedDragNode.nodeSize,
-              );
-            }
+            // Delete the original dragged node. Map its range through the
+            // replace step above instead of doing manual size math — the
+            // mapping is correct by construction, so we never delete the
+            // wrong node.
+            const from = tr.mapping.map(dragNodePos);
+            const to = tr.mapping.map(dragNodePos + dragNode.nodeSize);
+            if (to > from) tr.delete(from, to);
 
             dispatch(tr);
             globalDragNodePos = null;
             return true;
           },
           handleDOMEvents: {
-            dragover(_view, event) {
-              const target = event.target as HTMLElement | null;
-              if (!target) return false;
-
-              document
-                .querySelectorAll(".column-drop-active")
-                .forEach((el) => el.classList.remove("column-drop-active"));
-
-              const dropZone = target.closest(
-                "[data-drop-zone]",
-              ) as HTMLElement | null;
-              if (dropZone) {
-                event.preventDefault();
-                dropZone.classList.add("column-drop-active");
-              }
-
-              return false;
-            },
-
             dragleave(_view, event) {
               const target = event.target as HTMLElement | null;
               const dropZone = target?.closest("[data-drop-zone]");

@@ -43,8 +43,8 @@
   background-color: transparent;
   overflow: hidden;
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.5px;
+  font-size: 11px;
+  line-height: 1.2px;
     
 
   &__trigger {
@@ -55,7 +55,7 @@
     color: var(--tt-brand-color-400);
     white-space: nowrap;
     border-radius: var(--tt-radius-md);
-
+   
     .tiptap-button-icon{
       color: var(--tt-brand-color-400);
     }

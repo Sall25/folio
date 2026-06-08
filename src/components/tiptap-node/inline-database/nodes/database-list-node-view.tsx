@@ -1,5 +1,4 @@
 import { Plus, ChevronDown, ChevronRight } from "lucide-react";
-import { useMemo } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import { usePages } from "src/components/tiptap-templates/simple/use-pages";
@@ -15,38 +14,10 @@ import type {
   DatabaseView,
 } from "../types/types";
 import "./database-list-node-view.scss";
-
-const NONE_KEY = "__none__";
-
-function groupKeyFor(value: unknown, prop: DatabaseProperty): string {
-  if (value == null) return NONE_KEY;
-  const t = prop.config.type;
-  if (t === "checkbox") return value ? "true" : "false";
-  if (typeof value === "object" && value !== null && "id" in value)
-    return String((value as { id: string }).id);
-  if (Array.isArray(value)) {
-    const first = value[0];
-    return first == null
-      ? NONE_KEY
-      : typeof first === "object" && "id" in first
-        ? String((first as { id: string }).id)
-        : String(first);
-  }
-  return String(value);
-}
-
-function groupLabel(key: string, prop: DatabaseProperty): string {
-  if (key === NONE_KEY) return `No ${prop.name}`;
-  const cfg = prop.config;
-  if (cfg.type === "select" || cfg.type === "multi_select")
-    return cfg.options.find((o) => o.id === key)?.label ?? key;
-  if (cfg.type === "status")
-    return (
-      cfg.groups.flatMap((g) => g.items).find((i) => i.id === key)?.name ?? key
-    );
-  if (cfg.type === "checkbox") return key === "true" ? "Checked" : "Unchecked";
-  return key;
-}
+import { resolveRecordFormulas } from "../components/formula-editor/resolve-records-formula";
+import { recordMatchesFilters } from "../utils/apply-filters";
+import { sortRecords } from "../utils/apply-sorts";
+import { groupRecords } from "../utils/group-records";
 
 function ListRow({
   record,
@@ -71,6 +42,7 @@ function ListRow({
             record={record}
             onChange={(v) => onChange(titleProp.id, v)}
             view={view}
+            properties={inlineProperties}
           />
         )}
       </div>
@@ -84,6 +56,7 @@ function ListRow({
             record={record}
             onChange={(v) => onChange(prop.id, v)}
             view={view}
+            properties={inlineProperties}
           />
         ))}
       </div>
@@ -122,22 +95,33 @@ export function DatabaseListNodeView({
     : undefined;
   const collapsed = new Set(activeView?.collapsedGroups ?? []);
 
+  const resolvedRecords = resolveRecordFormulas(
+    source.records,
+    source.properties,
+  );
+  // Filter → sort → group, all at render (no mutation of source.records).
+  const filteredRecords = activeView?.filters?.length
+    ? resolvedRecords.filter((r) => recordMatchesFilters(r, activeView.filters))
+    : resolvedRecords;
+  const sortedRecords = sortRecords(filteredRecords, activeView?.sorts ?? []);
+  const groups = groupRecords(sortedRecords, groupProp);
+
   // Bucket records by group (or one bucket if ungrouped)
-  const groups = useMemo(() => {
-    if (!groupProp)
-      return [{ key: "__all__", label: "", records: source.records }];
-    const map = new Map<string, DataSourceRecord[]>();
-    for (const rec of source.records) {
-      const key = groupKeyFor(rec.values[groupProp.id], groupProp);
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(rec);
-    }
-    return [...map.entries()].map(([key, records]) => ({
-      key,
-      label: groupLabel(key, groupProp),
-      records,
-    }));
-  }, [source.records, groupProp]);
+  // const groups = useMemo(() => {
+
+  //   if (!groupProp)  return [{ key: "__all__", label: "", records: sortedRecords }];
+  //   const map = new Map<string, DataSourceRecord[]>();
+  //   for (const rec of sortedRecords) {
+  //     const key = groupKeyFor(rec.values[groupProp.id], groupProp);
+  //     if (!map.has(key)) map.set(key, []);
+  //     map.get(key)!.push(rec);
+  //   }
+  //   return [...map.entries()].map(([key, records]) => ({
+  //     key,
+  //     label: groupLabel(key, groupProp),
+  //     records,
+  //   }));
+  // }, [groupProp]);
 
   function toggleCollapse(key: string) {
     if (!activeView) return;

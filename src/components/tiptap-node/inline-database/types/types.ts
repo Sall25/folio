@@ -1,5 +1,6 @@
 import type { FilterOperator, FilterGroup } from "./filter-types";
 import type { SelectOption } from "../../database-node/select-property-node/select-property-node";
+import { DatabaseView } from "../../database-node/database-view";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Primitives
@@ -42,6 +43,7 @@ export interface DataSourceRecord {
   createdAt: string;
   updatedAt: string | null;
 }
+export type SavedView = DatabaseView;
 
 export interface DataSource {
   id: ID;
@@ -53,6 +55,8 @@ export interface DataSource {
   updatedAt: string | null;
   pageId?: number;
   name?: string;
+  savedViews: SavedView[];
+  views: DatabaseView[];
 }
 
 export type { SelectOption } from "../../database-node/select-property-node/select-property-node";
@@ -229,6 +233,8 @@ export interface DatabaseProperty {
   /** Display width in pixels — used by table view */
   width?: number;
   wrap?: boolean;
+  icon?: string;
+  iconColor?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

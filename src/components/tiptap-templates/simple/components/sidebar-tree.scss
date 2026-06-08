@@ -18,9 +18,9 @@
 
   &__caret {
     flex: 0 0 auto;
-    width: 18px;
-    height: 18px;
-    display: inline-flex;
+    width: 42px;
+    height: 32px;
+    display: flex;
     align-items: center;
     justify-content: center;
     background: transparent;
@@ -29,6 +29,7 @@
     color: var(--tt-text-secondary);
     cursor: pointer;
 
+  
     &:hover {
       background: var(--tt-bg-hover, rgba(0, 0, 0, 0.06));
     }

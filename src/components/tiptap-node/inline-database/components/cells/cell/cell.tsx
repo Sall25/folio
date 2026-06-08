@@ -24,6 +24,9 @@ import { EditedTimeCell } from "../edited-time-cell";
 //import { CreatedByCell } from "../created-by-cell";
 //import { EditedByCell } from "../edited-by-cell";
 import "./cell.scss";
+import { evaluateFormula } from "../../formula-editor/formula-evaluator";
+import { RelationCell } from "../relation-cell";
+import { RollupCell } from "../rollup-cell";
 
 export interface CellRecord {
   id: ID;
@@ -33,6 +36,7 @@ export interface CellRecord {
 
 export function Cell({
   property,
+  properties,
   value,
   record,
   columnValues,
@@ -43,9 +47,10 @@ export function Cell({
   view,
 }: {
   property: DatabaseProperty;
+  properties?: DatabaseProperty[];
   value: CellValue | null;
   record: CellRecord;
-  view: DatabaseView;
+  view?: DatabaseView;
   /** all values in this column — only number bar/ring uses it */
   columnValues?: CellValue[];
   /** parent database templateId — title uses it for the template icon */
@@ -86,6 +91,27 @@ export function Cell({
           onChange={change}
           readonly={readonly}
           unwrapped={unwrapped}
+        />
+      );
+
+    case "relation":
+      return (
+        <RelationCell
+          value={v}
+          config={config}
+          onChange={change}
+          readonly={readonly}
+          unwrapped={unwrapped}
+          recordId={record.id}
+        />
+      );
+
+    case "rollup":
+      return (
+        <RollupCell
+          config={config}
+          record={record}
+          properties={properties ?? []}
         />
       );
 
@@ -190,26 +216,21 @@ export function Cell({
     //     />
     //   );
 
-    // case "relation":
-    //   return (
-    //     <RelationCell
-    //       value={v}
-    //       config={config}
-    //       onChange={change}
-    //       readonly={readonly}
-    //     />
-    //   );
-
     // ── Read-only / computed: always readonly, no onChange effect ────────────
-    case "formula":
+    case "formula": {
+      const computed = evaluateFormula(config.expression, {
+        properties: properties ?? [],
+        cellValues: record.values as Record<string, CellValue>,
+      });
       return (
-        <FormulaCell value={v} config={config} onChange={change} readonly />
+        <FormulaCell
+          value={computed as CellValue<"formula"> | null}
+          config={config}
+          onChange={onChange as (v: CellValue<"formula"> | null) => void}
+          unwrapped={unwrapped}
+        />
       );
-
-    // case "rollup":
-    //   return (
-    //     <RollupCell value={v} config={config} onChange={change} readonly />
-    //   );
+    }
 
     case "created_time":
       return (

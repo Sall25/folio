@@ -4,6 +4,7 @@
   gap: 16px;
   overflow-x: auto;
   max-width: 500px;
+  margin-top: 8px;
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 }
@@ -47,8 +48,10 @@
 
   // override button defaults when used as a <button> element
   &__name {
-    font-size: 13px;
-    font-weight: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    font-family: inherit;
+    font-weight: 500;
     color: inherit;
   }
 }

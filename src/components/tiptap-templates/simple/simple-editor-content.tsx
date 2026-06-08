@@ -18,51 +18,6 @@ import { useActivePage } from "./use-active-page";
 import { useEditorLayout } from "./context/editor-layout-context";
 import { useRecordPropertyPanel } from "./hooks/use-record-property-panel";
 
-function usePageSwitching() {
-  const { activePageId } = useActivePage();
-  const [switching, setSwitching] = useState(false);
-  const prevPageId = useRef(activePageId);
-
-  useEffect(() => {
-    if (prevPageId.current === activePageId) return;
-    prevPageId.current = activePageId;
-
-    const show = setTimeout(() => setSwitching(true), 0);
-    const hide = setTimeout(() => setSwitching(false), 300);
-
-    return () => {
-      clearTimeout(show);
-      clearTimeout(hide);
-    };
-  }, [activePageId]);
-
-  return switching;
-}
-
-function PageSwitchIndicator({ switching }: { switching: boolean }) {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 2,
-        zIndex: 9999,
-        width: 300,
-
-        background: "var(--tt-brand-color-400)",
-        transformOrigin: "left",
-        transform: switching ? "scaleX(0.7)" : "scaleX(1)",
-        opacity: switching ? 1 : 0,
-        transition: switching
-          ? "transform 0.3s ease"
-          : "opacity 0.2s ease 0.1s, transform 0.1s ease",
-      }}
-    />
-  );
-}
-
 // ============================================================
 // Memoized leaves
 // ============================================================
@@ -90,6 +45,7 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
 }) {
   const { editor } = useCurrentEditor();
   const { activePage, pages } = useActivePage();
+  const { collapsed } = useEditorLayout();
 
   useRecordPropertyPanel(editor, pages, activePage?.id ?? null);
 
@@ -99,6 +55,7 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
       data-size={activePage?.settings.width}
       data-text={activePage?.settings.text}
       data-locked={activePage?.settings.locked}
+      data-collapsed={collapsed ? "true" : "false"}
       role="presentation"
       className={`simple-editor-content ${hasThreads ? "has-threads" : ""}`}
     />
@@ -245,11 +202,9 @@ const StableShell = React.memo(function StableShell() {
 
 export function SimpleEditorContent() {
   const { editor } = useCurrentEditor();
-  const switching = usePageSwitching();
 
   return (
     <>
-      <PageSwitchIndicator switching={switching} />
       <StableShell />
       <DragHandle editor={editor} />
       <BubbleMenu editor={editor} />

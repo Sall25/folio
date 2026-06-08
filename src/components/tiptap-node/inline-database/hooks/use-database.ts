@@ -13,6 +13,8 @@ export function useDatabase(
 ) {
   const ui = useDatabaseUI(attrs, updateAttributes);
 
+  // Property/view-config edits (freeze, hide, unwrap, sort, filter, group)
+  // write through the SAME per-node updateView the node renders from.
   const prop = useDatabaseProperties(
     attrs,
     source,
@@ -23,6 +25,7 @@ export function useDatabase(
   return {
     ...prop,
     ...ui,
+    views: attrs.views,
     title: attrs.title,
     onUpdateTitle,
   };

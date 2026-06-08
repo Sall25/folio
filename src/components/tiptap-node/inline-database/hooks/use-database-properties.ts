@@ -49,6 +49,7 @@ function defaultConfigFor(type: PropertyType): PropertyConfig {
       return { type } as PropertyConfig;
   }
 }
+
 export function useDatabaseProperties(
   attrs: DatabaseAttrs,
   source: { properties: DatabaseProperty[] },

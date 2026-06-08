@@ -1,7 +1,4 @@
 .db-calendar {
-  // Narrow column width — cells are this wide regardless of editor width.
-  --db-cal-col: 130px;
-
   width: 100%;
 
   &__nav {
@@ -20,10 +17,20 @@
     cursor: pointer;
   }
 
+  // ── Horizontal scroller: header + grid scroll together. The grid is
+  //    exactly --db-editor-width wide; when the container is narrower
+  //    (medium screens) it overflows here and shows a bottom scrollbar.
+  &__scroll {
+    overflow-x: auto;
+    overflow-y: visible; // let the expanded-day cell escape upward
+    scrollbar-width: thin;
+    scrollbar-color: var(--tt-scrollbar-color) transparent;
+  }
+
   &__weekdays {
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, var(--db-cal-col)));
-    justify-content: start;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    width: var(--db-editor-width);
     border-bottom: 1px solid var(--tt-border-color);
   }
 
@@ -34,11 +41,11 @@
     text-align: left;
   }
 
-  // ── Grid: 7 fixed-width columns, uniform row height, packed left ───────
+  // ── Grid: 7 columns split the width evenly, uniform row height ─────────
   &__grid {
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, var(--db-cal-col)));
-    justify-content: start;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    width: var(--db-editor-width);
     grid-auto-rows: 110px;
   }
 

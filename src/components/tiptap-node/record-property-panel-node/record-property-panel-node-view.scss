@@ -4,11 +4,12 @@
   gap: 2px;
   padding: 8px 0 16px 0;
   width: 100%;
+  max-width: 580px;
 }
 
 .record-prop-panel__row {
   display: grid;
-  grid-template-columns: 160px 1fr;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
   min-height: 32px;
   border-radius: var(--tt-radius-sm);

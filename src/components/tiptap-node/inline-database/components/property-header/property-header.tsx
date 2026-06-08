@@ -1,4 +1,9 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { createElement, useEffect, useState, type CSSProperties } from "react";
+import {
+  Check,
+  Type as UltimateFallbackIcon,
+  type LucideIcon,
+} from "lucide-react";
 import type {
   DatabaseProperty,
   PropertyConfig,
@@ -35,6 +40,41 @@ import { DateEditDisplay } from "../date-edit-display/date-edit-display";
 import { PersonEditDisplay } from "../person-edit-display";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { IconPicker } from "src/components/tiptap-ui/cover/icon-picker.js";
+import { ICON_LIST } from "src/components/tiptap-ui/cover/data/icon-list.js";
+import { RelationEditDisplay } from "../relation-edit-display";
+import { RollupEditDisplay } from "../rollup-edit-display";
+import { useDataSource } from "../../hooks/use-data-source";
+import { PROPERTY_TYPE_META } from "../../types/property-type-meta";
+import { PropertyTypeChangePopover } from "../property-type-change-popover";
+
+// name -> Lucide component, so a stored `prop.icon` string can be rendered.
+const ICON_MAP = new Map<string, LucideIcon>(
+  (ICON_LIST ?? []).map((e) => [e.name, e.icon]),
+);
+
+/**
+ * Resolves a property's icon to a Lucide component and renders it.
+ * Declared at module level (and rendered via createElement on a lowercase
+ * binding) so the chosen component is never "created during render".
+ */
+function PropertyIcon({
+  iconName,
+  fallback,
+  color,
+  ...rest
+}: {
+  iconName?: string;
+  fallback: LucideIcon;
+  color?: string;
+} & React.ComponentProps<LucideIcon>) {
+  const resolved =
+    (iconName && ICON_MAP.get(iconName)) || fallback || UltimateFallbackIcon;
+  // Pass color through lucide's own `color` prop, and only when set — passing
+  // `stroke={undefined}` would override lucide's default stroke="currentColor"
+  // and the icon would render with no stroke (invisible).
+  return createElement(resolved, color ? { color, ...rest } : { ...rest });
+}
 
 export function PropertyHeader({
   prop,
@@ -48,6 +88,7 @@ export function PropertyHeader({
   locked?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [iconOpen, setIconOpen] = useState(false);
   const {
     attributes,
     listeners,
@@ -57,8 +98,12 @@ export function PropertyHeader({
     isDragging,
   } = useSortable({ id: prop.id, disabled: locked });
 
-  const { db, attrs } = useDatabaseContext();
-  const Icon = PROPERTY_TYPE_ICONS[prop.config.type];
+  const { db, source } = useDatabaseContext();
+  const { changePropertyTypeAsync } = useDataSource(source?.id);
+
+  // The type's default icon — used as fallback when no custom icon is set.
+  const TypeIcon = PROPERTY_TYPE_ICONS[prop.config.type];
+
   const { nodeRef, handleResizeStart, isResizing } = useResizableNode();
   const [name, setName] = useState(prop.name);
 
@@ -93,13 +138,21 @@ export function PropertyHeader({
         borderRadius: "var(--tt-radius-sm)",
         justifyContent: "flex-start",
         overflow: "hidden",
-        background: "transparent",
+        background: "transparent !important",
+        fontFamily: '"Inter", ui-sans-serif, system-ui, sans-serif',
         fontSize: 14,
         color: "var(--tt-text-color)",
+        lineHeight: 1.5,
         cursor: locked ? "default" : undefined,
       }}
     >
-      <Icon className="tiptap-button-icon" style={{ width: 16, height: 16 }} />
+      <PropertyIcon
+        iconName={prop.icon}
+        fallback={TypeIcon}
+        color={prop.iconColor}
+        className="tiptap-button-icon"
+        style={{ width: 16, height: 16 }}
+      />
       <span className="tiptap-button-text">{prop.name}</span>
     </Button>
   );
@@ -109,7 +162,7 @@ export function PropertyHeader({
       className="db-th"
       ref={(el) => {
         setNodeRef(el);
-        (nodeRef as React.MutableRefObject<HTMLElement | null>).current = el;
+        (nodeRef as React.RefObject<HTMLElement | null>).current = el;
       }}
       style={{
         position: "relative",
@@ -118,6 +171,7 @@ export function PropertyHeader({
         opacity: isDragging ? 0.5 : 1,
         zIndex: isDragging ? 3 : undefined,
         paddingLeft: 5,
+        background: "transparent",
         ...style,
       }}
       data-prop-id={prop.id}
@@ -148,9 +202,33 @@ export function PropertyHeader({
               <CardBody>
                 <CardItemGroup>
                   <CardItemGroup orientation="horizontal">
-                    <Button variant="ghost">
-                      <Icon className="tiptap-button-icon" />
-                    </Button>
+                    {/* Icon button → icon picker popover */}
+                    <Popover open={iconOpen} onOpenChange={setIconOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" tooltip="Change icon">
+                          <PropertyIcon
+                            iconName={prop.icon}
+                            fallback={TypeIcon}
+                            color={prop.iconColor}
+                            className="tiptap-button-icon"
+                          />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent side="bottom" align="start">
+                        <Card style={{ padding: "5px 10px", minWidth: 360 }}>
+                          <IconPicker
+                            onSelect={(iconName, color) => {
+                              db.updateProperty(prop.id, {
+                                ...prop,
+                                icon: iconName,
+                                iconColor: color,
+                              });
+                              setIconOpen(false);
+                            }}
+                          />
+                        </Card>
+                      </PopoverContent>
+                    </Popover>
                     <TextareaAutosize
                       cols={30}
                       maxRows={1}
@@ -165,6 +243,50 @@ export function PropertyHeader({
                       }
                     />
                   </CardItemGroup>
+                  <PropertyTypeChangePopover>
+                    <CardItemGroup
+                      style={{
+                        // maxHeight: 280,
+                        // overflowY: "auto",
+                        width: "100%",
+                        marginTop: 10,
+                      }}
+                    >
+                      {PROPERTY_TYPE_META.filter((m) => m.type !== "title").map(
+                        (m) => {
+                          const Icon = PROPERTY_TYPE_ICONS[m.type];
+                          return (
+                            <Button
+                              key={m.type}
+                              variant="ghost"
+                              onClick={async () =>
+                                await changePropertyTypeAsync(prop.id, m.type)
+                              }
+                              style={{
+                                justifyContent: "flex-start",
+                                width: "100%",
+                                gap: 8,
+                              }}
+                            >
+                              <Icon className="tiptap-button-icon" size={14} />
+                              <span className="tiptap-button-text">
+                                {m.label}
+                              </span>
+                              {prop.config.type === m.type && (
+                                <Check
+                                  size={14}
+                                  style={{
+                                    marginLeft: "auto",
+                                    color: "var(--tt-brand-color-400)",
+                                  }}
+                                />
+                              )}
+                            </Button>
+                          );
+                        },
+                      )}
+                    </CardItemGroup>
+                  </PropertyTypeChangePopover>
                   {prop.config.type === "select" && (
                     <PropertyEditPopover>
                       <SelectOptionsEditor
@@ -235,11 +357,37 @@ export function PropertyHeader({
                       />
                     </PropertyEditPopover>
                   )}
+                  {prop.config.type === "relation" && (
+                    <PropertyEditPopover>
+                      <RelationEditDisplay
+                        prop={prop}
+                        source={source ?? undefined}
+                        onChange={(config, name) =>
+                          db.updateProperty(prop.id, {
+                            ...prop,
+                            config,
+                            ...(name ? { name } : {}),
+                          })
+                        }
+                      />
+                    </PropertyEditPopover>
+                  )}
+                  {prop.config.type === "rollup" && (
+                    <PropertyEditPopover>
+                      <RollupEditDisplay
+                        prop={prop}
+                        properties={source?.properties ?? []}
+                        onChange={(config) =>
+                          db.updateProperty(prop.id, { ...prop, config })
+                        }
+                      />
+                    </PropertyEditPopover>
+                  )}
                   {prop.config.type === "formula" && (
                     <PropertyEditPopover>
                       <FormulaEditor
                         propertyId={prop.id}
-                        properties={attrs.properties}
+                        properties={source?.properties ?? []}
                         onDone={() => setOpen(false)}
                       />
                     </PropertyEditPopover>

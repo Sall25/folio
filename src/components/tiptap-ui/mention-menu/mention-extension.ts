@@ -148,9 +148,9 @@ export const MentionExtension = MentionWithView.configure({
         editor.commands.insertContent({
           type: "pageLink",
           attrs: {
-            pageId: String(props.id),
+            pageId: Number(props.id),
             parentId: editor.storage.slashCommand.activePage?.id
-              ? String(editor.storage.slashCommand.activePage?.id)
+              ? Number(editor.storage.slashCommand.activePage?.id)
               : null,
             title: "",
             nodeId: `pageLink-${Date.now()}`,

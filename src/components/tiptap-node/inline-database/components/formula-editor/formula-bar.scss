@@ -1,24 +1,36 @@
+:root{
+  --formula-editor-bg: rgba(246, 247, 253, 0.46);
+}
+.dark{
+  --formula-editor-bg: var(--tt-gray-dark-a-50);
+}
 .formula-bar {
-  display: flex;
-  flex-direction: column;
+ justify-content: flex-start;
   width: 100%;
+  gap: 6px;
+  padding: 6px 10px;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 .formula-bar__header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
+  width: 100%;
+  justify-content: flex-start;
+ 
 }
 
 .formula-bar__label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--tt-muted-color, #999);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  font-family: inherit;
+  color: var(--tt-text-secondary, #999);
 }
 
 .formula-bar__editor {
-  border-top: 1px solid var(--tt-border-color, #e5e5e5);
+  border: 1px solid var(--tt-border-color);
+  background-color: var(--formula-editor-bg);
+  border-radius: var(--tt-radius-sm);
 
   .cm-editor {
     background: transparent;
@@ -56,5 +68,60 @@
 
   .tok-variableName {
     color: #111;
+  }
+}
+
+.formula-snippet {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.formula-prop-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 6px;
+  margin: 0 1px;
+  border-radius: 4px;
+  background: var(--tt-gray-100, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--tt-border-color, rgba(255, 255, 255, 0.12));
+  font-family: var(--tt-font-family, sans-serif);
+  font-size: 12px;
+  line-height: 1.7;
+  vertical-align: baseline;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+
+  &__icon {
+    width: 12px;
+    height: 12px;
+    opacity: 0.8;
+    flex-shrink: 0;
+  }
+
+  &__name {
+    font-weight: 500;
+  }
+}
+
+// Error strip shown below the formula editor when the expression is invalid.
+.formula-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--tt-color-warning, #b45309);
+  background: var(--tt-color-warning-bg, rgba(245, 158, 11, 0.1));
+  border: 1px solid var(--tt-border-color, rgba(0, 0, 0, 0.08));
+  border-radius: 0 0 var(--tt-radius-sm, 6px) var(--tt-radius-sm, 6px);
+
+  &__icon {
+    flex-shrink: 0;
+    margin-top: 1px;
   }
 }

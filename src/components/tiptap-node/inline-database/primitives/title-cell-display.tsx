@@ -1,18 +1,18 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { PanelRightOpen } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
+import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 import type { PageCover } from "src/components/tiptap-templates/simple/types";
-import "./title-cell-display.scss";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { CellEditorPopover } from "./cell-editor-popover";
+import "./title-cell-display.scss";
 
 export interface TitleCellDisplayProps {
   value: string;
   onChange: (value: string) => void;
-  /** cover of the linked (or template) page, for the leading icon */
   icon?: PageCover | null;
-  /** whether the row has a linked page (controls the Open button) */
   hasPage?: boolean;
   onOpen?: () => void;
   readonly?: boolean;
@@ -26,93 +26,84 @@ export function TitleCellDisplay({
   onOpen,
   readonly,
 }: TitleCellDisplayProps) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value);
   const [hover, setHover] = useState(false);
-  const focused = useRef(false);
+  const [draft, setDraft] = useState(value);
 
-  // useEffect(() => {
-  //   if (!focused.current) setDraft(value);
-  // }, [value]);
-
-  function commit() {
-    setEditing(false);
-    focused.current = false;
-    const next = draft;
-    if (next !== value) onChange(next);
+  // adopt external changes when not actively editing (popover closed resets)
+  const [prev, setPrev] = useState(value);
+  if (value !== prev) {
+    setPrev(value);
+    setDraft(value);
   }
+
+  const commit = (close: () => void) => {
+    if (draft !== value) onChange(draft);
+    close();
+  };
 
   return (
     <CardItemGroup
-      className={`${editing ? " editing" : ""}`}
       onMouseOver={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       orientation="horizontal"
-      style={{ width: "100%" }}
+      style={{
+        width: "100%",
+        alignItems: "center",
+        background: "var(--tt-bg-color)",
+      }}
     >
-      <div
-        className="db-cell-title"
-        onClick={() => !readonly && setEditing(true)}
+      <CellEditorPopover
+        readonly={readonly}
+        trigger={
+          <div className="db-cell-title">
+            {icon && (
+              <span className="db-cell-title__icon">
+                <PageItemIcon cover={icon} styles={{ width: 17, height: 17 }} />
+              </span>
+            )}
+            <span className="db-cell-title__text">{value || "Untitled"}</span>
+          </div>
+        }
       >
-        {editing && !readonly ? (
-          <input
-            className="title-cell-input"
+        {(close) => (
+          <TextareaAutosize
+            className="db-cell-title__field"
             autoFocus
             placeholder="Untitled"
             value={draft}
-            onFocus={() => (focused.current = true)}
+            spellCheck={false}
             onChange={(e) => setDraft(e.target.value)}
-            onBlur={commit}
+            onBlur={() => commit(close)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") commit();
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                commit(close);
+              }
               if (e.key === "Escape") {
                 setDraft(value);
-                setEditing(false);
-                focused.current = false;
+                close();
               }
             }}
           />
-        ) : (
-          <Button
-            variant="ghost"
-            style={{
-              background: "transparent",
-              width: "auto",
-              justifyContent: "flex-start",
-              color: "var(--tt-theme-text)",
-              fontWeight: 500,
-              fontFamily: "inherit",
-              fontSize: 14,
-              flex: "1",
-              padding: "0",
-            }}
-            onClick={() => !readonly && setEditing(true)}
-          >
-            {icon && (
-              <PageItemIcon cover={icon} styles={{ width: 17, height: 17 }} />
-            )}
-            <span className="tiptap-button-text">{value || "Untitled"}</span>
-          </Button>
         )}
-      </div>
+      </CellEditorPopover>
 
       <Spacer size={10} orientation="horizontal" />
-      {hasPage && !editing && onOpen && (
+      {hasPage && onOpen && (
         <Button
-          // className="db-cell-title__open"
           style={{
             minHeight: 24,
             height: 24,
             fontSize: 14,
             minWidth: 68,
-            // width: 68,
             alignItems: "center",
             borderRadius: "var(--tt-radius-sm)",
-            background: "transparent",
+            background: "var(--tt-bg-color)",
             cursor: "pointer",
             border: "1px solid var(--tt-border-color)",
             opacity: hover ? 1 : 0,
             transition: "opacity 0.15s ease",
+            flexShrink: 0,
           }}
           onClick={(e) => {
             e.stopPropagation();

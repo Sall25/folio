@@ -1,3 +1,4 @@
+
 .db-table {
   overflow-x: scroll;
   max-width: var(--db-editor-width);   /* bound the scroller so it overflows */
@@ -19,6 +20,9 @@
   width: max-content;     /* was: max-width: var(--db-editor-width) */
   min-width: 100%;
 }
+.db-th{
+  border: none;
+}
 .db-td {
   height: 34px;
   overflow: hidden;
@@ -37,6 +41,11 @@
 }
 
 
+.db-row:hover .db-td{
+  background-color: transparent !important;
+}
+
+
 // ====================================================================
 // Wrap mode — when a row contains any wrapping cell, the row and every
 // cell in it must become content-driven instead of locked at 34px.
@@ -48,7 +57,7 @@
 .db-row:has(.db-cell[data-wrap="true"]) {
   height: auto;
   min-height: 34px;
-
+ 
   // Cells: drop the fixed height + overflow clip, top-align content.
   .db-td {
     height: auto;
@@ -80,4 +89,27 @@
   color: var(--tt-paragraph-text-color);
 
   outline: none;
+}
+
+.db-header-cell{
+  &__actions{
+    border-bottom: 1px solid var(--tt-border-color);
+  }
+}
+
+/* top level — not inside .db-table or any other selector */
+.db-node .db-hover-reveal {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s ease;
+ 
+}
+.db-node:hover .db-hover-reveal,
+.db-node:focus-within .db-hover-reveal {
+  opacity: 1;
+  visibility: visible;
+}
+
+.db-table{
+ margin-top: 4px;
 }

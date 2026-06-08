@@ -47,6 +47,7 @@ export type UseActivePageReturn = {
     title: string;
     parentId: number | null;
   }) => Promise<Page>;
+  patchPageLocal: (page: Page) => void;
 };
 
 export function useActivePage(): UseActivePageReturn {
@@ -62,6 +63,7 @@ export function useActivePage(): UseActivePageReturn {
     debounceUpdatePage,
     debounceUpdatePageFast,
     addPageTemplateAsync,
+    patchPageLocal,
   } = usePages();
 
   const navigate = useNavigate();
@@ -192,5 +194,6 @@ export function useActivePage(): UseActivePageReturn {
     debounceUpdatePage,
     debounceUpdatePageFast,
     addPageTemplateAsync,
+    patchPageLocal,
   };
 }

@@ -90,9 +90,10 @@ export function PageLinkNodeView({ node }: NodeViewProps) {
 
   if (!pages) return null;
 
+  const numericId = Number(pageId);
   const page =
-    pages.find((p) => p.id === pageId) ??
-    flattenPages(pages).find((p) => p.id === pageId);
+    pages.find((p) => p.id === numericId) ??
+    flattenPages(pages).find((p) => p.id === numericId);
 
   if (!page)
     return (

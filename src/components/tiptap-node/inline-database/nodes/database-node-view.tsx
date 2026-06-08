@@ -1,6 +1,12 @@
 import type { JSONContent, NodeViewProps } from "@tiptap/core";
 import { NodeViewWrapper } from "@tiptap/react";
-import React, { useRef, useEffect, useState, type CSSProperties } from "react";
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  useMemo,
+  type CSSProperties,
+} from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -135,6 +141,8 @@ export function DatabaseNodeView({
     addRecordWithPageAsync,
     updatePropertiesAsync,
     updateSourceMetaAsync,
+    registerViewsAsync,
+    resolvedRecords,
   } = useDataSource(attrs.sourceId);
 
   const [draftWidths, setDraftWidths] = useState<Record<string, number>>({});
@@ -186,8 +194,29 @@ export function DatabaseNodeView({
     onUpdateTitle,
   );
 
+  const activeView = db.activeView;
+
+  const sortedRecords = useMemo(() => {
+    const filtered = activeView?.filters?.length
+      ? resolvedRecords.filter((r) =>
+          recordMatchesFilters(r, activeView.filters),
+        )
+      : resolvedRecords;
+    return sortRecords(filtered, activeView?.sorts ?? []);
+  }, [resolvedRecords, activeView?.filters, activeView?.sorts]);
+
+  // Mirror this node's views into the source-level catalog (source.savedViews)
+  // so any node on this source can open one with its filters/sorts intact.
+  // registerViewsAsync no-ops when nothing changed, so this stays cheap.
+  useEffect(() => {
+    if (!source) return;
+    registerViewsAsync(attrs.views);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attrs.views, source?.id, registerViewsAsync]);
+
   const [dragX, setDragX] = useState(0);
   const [overId, setOverId] = useState<string | null>(null);
+  const [hovered, setHovered] = useState(false);
 
   const dbPageId = source?.pageId ?? attrs.pageId ?? null;
   const dbPage =
@@ -212,20 +241,25 @@ export function DatabaseNodeView({
     return () => el.removeEventListener("column:resize", handler);
   }, [locked]);
 
-  // Activate the view named in the URL hash (#view=<id>) on mount.
+  // Activate the view named in the URL hash (#view=<id>). Views are
+  // source-owned and load async, so run once they're available rather than
+  // on mount.
+  const hashActivatedRef = useRef(false);
   useEffect(() => {
+    if (hashActivatedRef.current || db.views?.length === 0) return;
+    hashActivatedRef.current = true;
     const m = window.location.hash.match(/view=([^&]+)/);
     const viewId = m?.[1];
-    if (!viewId) return;
     if (
-      attrs.views.some((v) => v.id === viewId) &&
+      viewId &&
+      db.views.some((v) => v.id === viewId) &&
       viewId !== attrs.activeViewId
     ) {
       db.setActiveView(viewId);
     }
-    // run once on mount
+    // run once, after the source's views have loaded
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [db.views?.length]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -254,13 +288,22 @@ export function DatabaseNodeView({
     return (
       <NodeViewWrapper as="div" data-type="database" contentEditable={false}>
         <DataSourcePicker
-          onSelect={(sourceId, pageId, isLinked) =>
+          onSelect={(sourceId, pageId, isLinked, savedView) =>
             updateAttributes({
               ...attrs,
               sourceId,
               pageId: pageId ?? attrs.pageId ?? null,
               isLinked: !!isLinked,
               title: "",
+              // If the user picked a saved view, open ONLY that view — its
+              // filters, sorts and layout — instead of keeping the node's
+              // default starter Table view alongside it.
+              ...(savedView
+                ? {
+                    views: [savedView],
+                    activeViewId: savedView.id,
+                  }
+                : {}),
             })
           }
         />
@@ -277,9 +320,6 @@ export function DatabaseNodeView({
   }
 
   const recordParentId = dbPageId;
-
-  const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
-    attrs.views[0]) as DatabaseView | undefined;
 
   const onUpdateView = (patch: Partial<DatabaseView>) => {
     if (!activeView) return;
@@ -355,7 +395,11 @@ export function DatabaseNodeView({
 
   // ── Shared chrome ───────────────────────────────────────────────────────
   const chrome = (body: React.ReactNode) => (
-    <NodeViewWrapper>
+    <NodeViewWrapper
+      className="db-node"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <DatabaseProvider
         attrs={attrs}
         db={db}
@@ -382,6 +426,7 @@ export function DatabaseNodeView({
               db={db}
               onUpdateAttributes={updateAttributes}
               locked={locked}
+              hovered={hovered}
             />
           </div>
           <DatabaseTitleBar
@@ -405,7 +450,7 @@ export function DatabaseNodeView({
               activeView={activeView}
               locked={locked}
             />
-            {activeView && activeView.sorts.length > 0 && (
+            {activeView && activeView.sorts?.length > 0 && (
               <>
                 <Spacer orientation="horizontal" size={5} />
                 <Separator orientation="vertical" />
@@ -472,11 +517,8 @@ export function DatabaseNodeView({
   const collapsedGroups = new Set(activeView?.collapsedGroups ?? []);
   const ungrouped = !groupProp;
 
-  // Filter → sort → group, all at render (no mutation of source.records).
-  const filteredRecords = activeView?.filters?.length
-    ? source.records.filter((r) => recordMatchesFilters(r, activeView.filters))
-    : source.records;
-  const sortedRecords = sortRecords(filteredRecords, activeView?.sorts ?? []);
+  // resolvedRecords + sortedRecords are memoized at the top of the component.
+  // Only grouping (cheap, and dependent on render-local groupProp) is done here.
   const groups = groupRecords(sortedRecords, groupProp);
 
   const toggleCollapse = (key: string) => {
@@ -529,12 +571,12 @@ export function DatabaseNodeView({
     return {
       position: "sticky",
       left: leftOffsets[i],
-      zIndex: 2,
+      zIndex: 8,
       background: "var(--tt-bg-color)",
+      overflow: "hidden",
       borderRight: isBoundary ? "2px solid var(--tt-border-color)" : undefined,
     };
   };
-
   const addProperty = (type: PropertyType) => {
     if (locked) return;
     updatePropertiesAsync([
@@ -643,14 +685,19 @@ export function DatabaseNodeView({
               </PopoverTrigger>
               <PopoverContent>
                 <Card
-                  style={{ maxHeight: 300, overflow: "scroll", minWidth: 300 }}
+                  style={{
+                    maxHeight: 300,
+                    overflow: "scroll",
+                    minWidth: 300,
+                    padding: "10px 5px",
+                  }}
                 >
                   <CardHeader>
                     <CardGroupLabel>Properties</CardGroupLabel>
                   </CardHeader>
-                  <CardBody style={{ width: "100%", padding: "0 5px" }}>
-                    <Grid columns="1fr 1fr 1fr 1fr" gap={10}>
-                      {chunk(allPropertyTypes, 4).map((row, i) => (
+                  <CardBody style={{ width: "100%" }}>
+                    <Grid columns="1fr 1fr 1fr" gap={10}>
+                      {chunk(allPropertyTypes, 3).map((row, i) => (
                         <GridRow key={i}>
                           {row.map((t) => {
                             const Icon = PROPERTY_TYPE_ICONS[t];
@@ -730,18 +777,25 @@ export function DatabaseNodeView({
 
               {!isCollapsed &&
                 group.records.map((record) => (
-                  <div key={record.id} style={{ display: "contents" }}>
+                  <div
+                    key={record.id}
+                    className="db-row"
+                    style={{ display: "contents" }}
+                  >
                     {visibleProperties.map((prop, i) => {
                       const shift = shiftFor(i);
                       return (
                         <div
                           key={`${record.id}:${prop.id}`}
                           data-row-id={record.id}
+                          className="db-td"
                           style={{
                             borderRight: "1px solid var(--tt-border-color)",
                             borderBottom: "1px solid var(--tt-border-color)",
-                            display: "block",
-                            overflow: "hidden",
+                            // display + overflow intentionally come from .db-td
+                            // (and the .db-row:has(.db-cell[data-wrap]) wrap
+                            // override). Setting them inline blocks the
+                            // height/centering/wrap CSS and collapses the rows.
                             ...stickyStyle(i),
                             transform:
                               activeColId === prop.id
@@ -780,6 +834,7 @@ export function DatabaseNodeView({
                               prop.id,
                             )}
                             view={db.activeView}
+                            properties={source.properties}
                           />
                         </div>
                       );
@@ -792,19 +847,28 @@ export function DatabaseNodeView({
         })}
       </div>
 
-      {/* New record stays available when locked (adding data is allowed). */}
-      <Button
-        variant="ghost"
+      {/* New record stays available when locked (adding data is allowed).
+          Visibility driven by React hover state — no CSS class needed. */}
+      <div
         style={{
-          justifyContent: "flex-start",
-          borderRadius: "var(--tt-radius-sm)",
-          fontSize: 12,
+          opacity: hovered ? 1 : 0,
+          pointerEvents: hovered ? "auto" : "none",
+          transition: "opacity 0.2s ease",
         }}
-        onClick={newRecord}
       >
-        <Plus className="tiptap-button-icon" />
-        <span className="tiptap-button-text">New</span>
-      </Button>
+        <Button
+          variant="ghost"
+          style={{
+            justifyContent: "flex-start",
+            borderRadius: "var(--tt-radius-sm)",
+            fontSize: 12,
+          }}
+          onClick={newRecord}
+        >
+          <Plus className="tiptap-button-icon" />
+          <span className="tiptap-button-text">New</span>
+        </Button>
+      </div>
 
       <DatabaseCalculations
         properties={visibleProperties}

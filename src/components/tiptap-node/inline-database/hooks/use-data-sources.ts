@@ -9,8 +9,10 @@ import type {
   DataSource,
   DataSourceRecord,
   DatabaseProperty,
+  DatabaseView,
   ID,
 } from "../types/types";
+import { makeDefaultView } from "../utils";
 
 // ── API ────────────────────────────────────────────────────────────────────
 const api = "http://localhost:3005";
@@ -26,6 +28,7 @@ const createSourceFnAsync = async (args: {
   pageId?: number;
   properties: DatabaseProperty[];
   records?: DataSourceRecord[];
+  views?: DatabaseView[];
 }): Promise<DataSource> => {
   const res = await fetch(`${api}/data-sources`, {
     method: "POST",
@@ -37,6 +40,7 @@ const createSourceFnAsync = async (args: {
       records: args.records ?? [],
       createdAt: Date.now().toString(),
       updatedAt: null,
+      views: args.views ?? [makeDefaultView("table", "Table")],
     }),
     headers: { "Content-Type": "application/json" },
   });
@@ -61,6 +65,7 @@ export interface UseDataSourcesReturn {
     pageId?: number;
     properties: DatabaseProperty[];
     records?: DataSourceRecord[];
+    views?: DatabaseView[];
   }) => Promise<DataSource>;
   deleteSourceAsync: (id: ID) => Promise<void>;
 }
@@ -120,6 +125,7 @@ export function useDataSources(): UseDataSourcesReturn {
       id?: ID;
       properties: DatabaseProperty[];
       records?: DataSourceRecord[];
+      views?: DatabaseView[];
     }) => createRef.current(args),
     [],
   );

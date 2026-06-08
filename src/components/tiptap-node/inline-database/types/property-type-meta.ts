@@ -225,7 +225,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "relation",
     label: "Relation",
-    icon: "ArrowLeftRight",
+    icon: "ArrowUpRight",
     defaultConfig: DEFAULT_CONFIGS.relation,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.relation,

@@ -1,4 +1,5 @@
 import { StreamLanguage, LanguageSupport } from "@codemirror/language";
+import { tags as t } from "@lezer/highlight";
 
 // All built-in Notion formula functions
 export const FORMULA_FUNCTIONS = [
@@ -148,7 +149,7 @@ const formulaStreamLanguage = StreamLanguage.define<{
     if (stream.match(/^(==|!=|>=|<=|>|<|\+|-|\*|\/|\^|%|\?|:)/))
       return "operator";
 
-    // prop() — highlight as a keyword
+    // prop() — grouped with keywords (purple)
     if (stream.match(/^prop\b/)) return "keyword";
 
     // Identifiers — check if function or keyword
@@ -164,6 +165,21 @@ const formulaStreamLanguage = StreamLanguage.define<{
 
     stream.next();
     return null;
+  },
+
+  // Explicit string → tag mapping. This is the piece that was missing: the
+  // default StreamLanguage name→tag table does NOT reliably map the "function"
+  // token, which is why styling function names failed. tokenTable pins each
+  // token string to an exact @lezer/highlight tag, version-independent. The
+  // HighlightStyle in formula-bar.tsx then colors these tags.
+  tokenTable: {
+    function: t.function(t.variableName), // formatDate, today, if, ...
+    keyword: t.keyword, // prop, true/false, and/or/not, current, index
+    string: t.string,
+    number: t.number,
+    operator: t.operator,
+    variableName: t.variableName,
+    punctuation: t.punctuation,
   },
 
   languageData: {

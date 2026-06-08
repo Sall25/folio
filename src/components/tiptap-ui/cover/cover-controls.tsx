@@ -81,10 +81,10 @@ export default function CoverControlsGroup({
       style={{
         position: "fixed",
         top: btnPosition.top,
-        right: btnPosition.right,
+        right: "20px",
         display: "flex",
         gap: 10,
-        zIndex: 9999,
+        zIndex: 99999,
         border: "1px solid var(--tt-border-color)",
         background: "var(--action-buttons-bg-color)",
         borderRadius: "var(--tt-radius-sm)",

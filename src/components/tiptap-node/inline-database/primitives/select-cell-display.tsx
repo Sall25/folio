@@ -36,12 +36,15 @@ export function SelectCellDisplay({
           borderRadius: "var(--tt-radius-sm)",
           color: "var(--tt-theme-text)",
           minWidth: !displayed ? 100 : "fit-content",
-          width: "100%",
+          // width: "100%",
 
           // margin: "5px 3px",
         }}
       >
-        <span className="tiptap-button-text" style={{ textAlign: "center" }}>
+        <span
+          className="tiptap-button-text"
+          style={{ textAlign: "center", width: "fit-content" }}
+        >
           {displayed ? displayed.label : ""}
         </span>
       </Button>

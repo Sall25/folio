@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { DatabaseProperty, PropertyType } from "../../types/types";
 import {
   CardItemGroup,
@@ -6,6 +7,7 @@ import {
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Copy } from "lucide-react";
+import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
 
 // ─── formula return types ─────────────────────────────────────────────────────
 
@@ -122,15 +124,72 @@ function getSnippets(prop: DatabaseProperty): string[] {
   }
 }
 
+// ─── prop("Name") -> pill rendering (display only) ──────────────────────────
+// Renders a snippet STRING as React nodes, replacing each prop("...") with a
+// pill (icon + name). This is purely visual: the raw string is still what gets
+// inserted. Names that don't resolve to a current property stay as plain text.
+
+function PropPill({ property }: { property: DatabaseProperty }) {
+  const Icon = PROPERTY_TYPE_ICONS[property.config.type];
+  return (
+    <span className="formula-prop-pill">
+      <Icon size={12} className="formula-prop-pill__icon" />
+      <span className="formula-prop-pill__name">{property.name}</span>
+    </span>
+  );
+}
+
+function renderSnippet(
+  snippet: string,
+  properties: DatabaseProperty[],
+): ReactNode[] {
+  const out: ReactNode[] = [];
+  const re = /prop\(\s*(["'])(.*?)\1\s*\)/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let key = 0;
+
+  while ((m = re.exec(snippet))) {
+    const name = m[2];
+    const prop = properties.find((p) => p.name === name);
+
+    // text before this match
+    if (m.index > last) {
+      out.push(<span key={key++}>{snippet.slice(last, m.index)}</span>);
+    }
+
+    if (prop) {
+      out.push(<PropPill key={key++} property={prop} />);
+    } else {
+      // unresolved -> leave the raw prop("...") text
+      out.push(<span key={key++}>{m[0]}</span>);
+    }
+
+    last = m.index + m[0].length;
+  }
+
+  // trailing text
+  if (last < snippet.length) {
+    out.push(<span key={key++}>{snippet.slice(last)}</span>);
+  }
+
+  return out;
+}
+
 // ─── component ────────────────────────────────────────────────────────────────
 
 interface PropertyDetailProps {
   property: DatabaseProperty | null;
+  // Full property list so prop("Other") references inside a snippet (e.g.
+  // relation's prop("Status")) can also resolve to a pill. Falls back to just
+  // the focused property if not provided.
+  properties?: DatabaseProperty[];
   onInsertSnippet?: (snippet: string) => void;
 }
 
 export default function PropertyDetail({
   property,
+  properties,
   onInsertSnippet,
 }: PropertyDetailProps) {
   if (!property) return null;
@@ -138,15 +197,16 @@ export default function PropertyDetail({
   const { config } = property;
   const snippets = getSnippets(property);
   const returnType = FORMULA_RETURN_TYPE[config.type];
+  const resolveList = properties ?? [property];
 
   return (
-    <CardItemGroup style={{ minWidth: 450 }}>
+    <CardItemGroup style={{ minWidth: 500 }}>
       <CardItemGroup>
-        <p style={{ fontWeight: 500, fontSize: 13 }}>{property.name}</p>
+        <span style={{ fontWeight: 500, fontSize: 13 }}>{property.name}</span>
         <p style={{ fontSize: 12, opacity: 0.5 }}>Returns {returnType}</p>
       </CardItemGroup>
 
-      <Separator />
+      <Separator style={{ height: 0.5 }} orientation="horizontal" />
 
       <CardItemGroup orientation="vertical">
         <CardGroupLabel>Examples</CardGroupLabel>
@@ -154,13 +214,17 @@ export default function PropertyDetail({
           <Button
             key={snippet}
             variant="ghost"
+            // Preserve editor focus through the click (mousedown would
+            // otherwise blur the editor and skip the focus-gated insert).
+            onMouseDown={(e) => e.preventDefault()}
+            // Insert the RAW snippet string — the pill is display-only.
             onClick={() => onInsertSnippet?.(snippet)}
           >
             <code
-              className="tiptap-button-text"
+              className="tiptap-button-text formula-snippet"
               style={{ fontFamily: "monospace", fontSize: 12 }}
             >
-              {snippet}
+              {renderSnippet(snippet, resolveList)}
             </code>
             <Copy className="tiptap-button-icon" />
           </Button>

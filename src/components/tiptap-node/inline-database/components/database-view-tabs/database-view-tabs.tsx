@@ -21,6 +21,9 @@ interface DatabaseViewTabsProps {
   /** When locked: no add-view, no rename/delete-view. View SWITCHING stays
       allowed (clicking a tab is reading, not structural). */
   locked?: boolean;
+  /** Hover-reveal: the add-view "+" is hidden (space kept) until the database
+      node is hovered. Tabs themselves are always visible. */
+  hovered?: boolean;
 }
 
 const VIEW_TYPES: { type: DatabaseView["type"]; label: string }[] = [
@@ -38,8 +41,12 @@ export function DatabaseViewTabs({
   onRename,
   onUpdateAttributes,
   locked = false,
+  hovered = false,
 }: DatabaseViewTabsProps) {
   const [open, setOpen] = useState(false);
+
+  // Keep the "+" visible while its picker is open, even if the mouse leaves.
+  const showAdd = hovered || open;
 
   return (
     <div
@@ -62,6 +69,11 @@ export function DatabaseViewTabs({
                 data-active-state="on"
                 style={{
                   borderRadius: "var(--tt-radius-xl)",
+                  color: "var(--tt-text-primary)",
+                  fontSize: 14,
+                  lineHeight: 1.5,
+                  fontWeight: 500,
+                  fontFamily: "inherit",
                   minWidth: 32,
                   minHeight: 26,
                 }}
@@ -99,6 +111,10 @@ export function DatabaseViewTabs({
             }}
             style={{
               borderRadius: "var(--tt-radius-xl)",
+              fontSize: 14,
+              lineHeight: 1.5,
+              fontWeight: 500,
+              fontFamily: "inherit",
               minWidth: 32,
               minHeight: 26,
             }}
@@ -109,39 +125,48 @@ export function DatabaseViewTabs({
         );
       })}
 
-      {/* Add view — omitted when locked. */}
+      {/* Add view — omitted when locked, hover-revealed otherwise. */}
       {!locked && (
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className="db-view-tab db-view-tab--add"
-              aria-label="Add view"
-            >
-              <Plus size={13} />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="start" className="db-panel">
-            <Card style={{ padding: "5px 10px", minWidth: 160 }}>
-              <CardItemGroup>
-                {VIEW_TYPES.map(({ type, label }) => (
-                  <Button
-                    key={type}
-                    variant="ghost"
-                    style={{ justifyContent: "flex-start", width: "100%" }}
-                    onClick={() => {
-                      db.addView(type, label);
-                      setOpen(false);
-                    }}
-                  >
-                    <ViewIcon view={{ type } as DatabaseView} />
-                    <span className="tiptap-button-text">{label}</span>
-                  </Button>
-                ))}
-              </CardItemGroup>
-            </Card>
-          </PopoverContent>
-        </Popover>
+        <div
+          style={{
+            display: "inline-flex",
+            opacity: showAdd ? 1 : 0,
+            pointerEvents: showAdd ? "auto" : "none",
+            transition: "opacity 0.2s ease",
+          }}
+        >
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                className="db-view-tab db-view-tab--add"
+                aria-label="Add view"
+              >
+                <Plus size={13} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="start" className="db-panel">
+              <Card style={{ padding: "5px 10px", minWidth: 160 }}>
+                <CardItemGroup>
+                  {VIEW_TYPES.map(({ type, label }) => (
+                    <Button
+                      key={type}
+                      variant="ghost"
+                      style={{ justifyContent: "flex-start", width: "100%" }}
+                      onClick={() => {
+                        db.addView(type, label);
+                        setOpen(false);
+                      }}
+                    >
+                      <ViewIcon view={{ type } as DatabaseView} />
+                      <span className="tiptap-button-text">{label}</span>
+                    </Button>
+                  ))}
+                </CardItemGroup>
+              </Card>
+            </PopoverContent>
+          </Popover>
+        </div>
       )}
     </div>
   );
