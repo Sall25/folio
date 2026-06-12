@@ -16,25 +16,6 @@
     }
   }
 
-  &__caret {
-    flex: 0 0 auto;
-    width: 42px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    border-radius: var(--tt-radius-xs);
-    color: var(--tt-text-secondary);
-    cursor: pointer;
-
-  
-    &:hover {
-      background: var(--tt-bg-hover, rgba(0, 0, 0, 0.06));
-    }
-  }
-
   &__item {
     flex: 1 1 auto;
     min-width: 0; // let the page item ellipsis instead of pushing width
@@ -141,4 +122,22 @@
     opacity: 0;
     transition: opacity 0.12s ease;
   }
+}
+
+.sidebar-tree__caret {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+  border-radius: var(--tt-radius-sm);
+}
+
+.sidebar-tree__row--has-children:hover .sidebar-tree__caret {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+// Cross-fade: hide PageItem's icon while the caret is showing.
+// !important is needed because PageItem sets the icon opacity inline.
+.sidebar-tree__row--has-children:hover .page-expand-btn + * {
+  opacity: 0 !important;
 }

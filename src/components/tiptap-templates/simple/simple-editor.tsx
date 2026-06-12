@@ -66,7 +66,6 @@ function SimpleEditorMain({ view }: { view: View }) {
   const { editor } = useCurrentEditor();
   const { open } = useSearch();
   const { open: libraryOpen, onOpenChange } = useLibrary();
-
   const peekPage =
     peekPageId !== null && pages ? findPage(pages, peekPageId) : null;
 
@@ -130,49 +129,6 @@ function SimpleEditorInner({ view }: { view: View }) {
   const { sidebarWidth, versionHistoryOpen, onVersionHistoryOpenChanged } =
     useEditorLayout();
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
-
-  //  const navigate = useNavigate();
-
-  // // --- Navigation seams: match these to your real route config. ---
-  // const navigateToPage = useCallback(
-  //   (pageId: number) => navigate({ to: `/page/${pageId}` }), // TODO: verify route
-  //   [navigate],
-  // );
-  // const navigateToView = useCallback(
-  //   (v: "home" | "resources") =>
-  //     navigate({ to: v === "home" ? "/" : "/resources" }), // TODO: verify resources route
-  //   [navigate],
-  // );
-
-  // // Maps cover.iconName to a node. Emoji names render as-is; everything else
-  // // falls back to a file glyph. Swap for your real cover-icon component.
-  // const renderIcon = useCallback(
-  //   (iconName: string | null) =>
-  //     iconName ? (
-  //       <span className="tab-icon-glyph">{iconName}</span>
-  //     ) : (
-  //       <FileText size={15} />
-  //     ),
-  //   [],
-  // );
-
-  // const {
-  //   tabsRef,
-  //   activeTabId,
-  //   selectTab,
-  //   closeTab,
-  //   reorderTabs,
-  //   openInNewTab,
-  //   createAndOpen,
-  //   recentPageIds,
-  // } = useTabs({
-  //   pages,
-  //   activePageId: activePage?.id ?? null,
-  //   view,
-  //   navigateToPage,
-  //   navigateToView,
-  //   createPage: (title) => addPageAsync({ title, parentId: null }),
-  // });
   useEffect(() => {
     if (!isMobile && mobileView !== "main")
       requestAnimationFrame(() => setMobileView("main"));

@@ -385,7 +385,7 @@
           "config": {
             "type": "title"
           },
-          "width": 398
+          "width": 502
         },
         {
           "id": "2460a502-c89d-4353-bded-8395eb59b5b8",
@@ -442,12 +442,12 @@
         {
           "id": "e5c820c5-9b68-4d99-83e2-0230034ef834",
           "values": {
-            "4bc93f87-ad37-43ab-9824-0754ba28920a": "Call my accountants",
-            "2460a502-c89d-4353-bded-8395eb59b5b8": "2026-06-04T00:00:00.000Z",
+            "4bc93f87-ad37-43ab-9824-0754ba28920a": "Spend the day learning about Tanstack query",
+            "2460a502-c89d-4353-bded-8395eb59b5b8": "2026-06-09T00:00:00.000Z",
             "dcb3e9d1-b46d-4654-accc-9c05d1fc3507": {
-              "id": "39a220ab-333f-4e8c-9fc2-f1c60f48d5dd",
-              "label": "low",
-              "color": "var(--tt-color-highlight-blue)"
+              "id": "0ff4a785-2431-46eb-982a-c15463515444",
+              "label": "high",
+              "color": "var(--tt-color-highlight-red)"
             },
             "4c4a69ec-d574-455a-a5bd-5d1f68eb60c3": "Thu",
             "32fb47e9-9e92-4134-b2fa-f72cd3c4cab8": false
@@ -570,7 +570,7 @@
         }
       ],
       "createdAt": "1780662227966",
-      "updatedAt": "1780907610586",
+      "updatedAt": "1780971191676",
       "views": [],
       "savedViews": [
         {
@@ -587,7 +587,7 @@
                   "propertyId": "4c4a69ec-d574-455a-a5bd-5d1f68eb60c3",
                   "propertyType": "formula",
                   "operator": "contains",
-                  "value": "Sun"
+                  "value": "Tue"
                 }
               ]
             }
@@ -690,11 +690,19 @@
           "config": {
             "type": "checkbox"
           },
-          "width": 292
+          "width": 225
         },
         {
           "id": "d8144e06-ab82-44f6-a3a0-adaca5acbe4f",
           "name": "Workout",
+          "config": {
+            "type": "checkbox"
+          },
+          "width": 160
+        },
+        {
+          "id": "6790eaff-5432-4cef-a2f3-90b4ac301abb",
+          "name": "2hrs of painting",
           "config": {
             "type": "checkbox"
           },
@@ -707,7 +715,8 @@
           "values": {
             "678fcef3-383d-4622-a227-d01f7b98df13": "Sunday",
             "a73d2fc3-9393-4ca8-b025-eaa709c2621a": "2026-06-07T00:00:00.000Z",
-            "639bfe12-235f-4769-ac8b-0f2ab18305d0": true
+            "639bfe12-235f-4769-ac8b-0f2ab18305d0": true,
+            "6790eaff-5432-4cef-a2f3-90b4ac301abb": true
           },
           "pageId": 161,
           "createdAt": "1780870365082",
@@ -945,7 +954,7 @@
         }
       ],
       "createdAt": "1780870300201",
-      "updatedAt": "1780875319519",
+      "updatedAt": "1780971249054",
       "views": [
         {
           "id": "e9ebde61-d8cb-42b9-ac4f-5a19dc5421e0",
@@ -1077,7 +1086,7 @@
         }
       ],
       "createdAt": "1780908253703",
-      "updatedAt": "1780918794659",
+      "updatedAt": "1780920640042",
       "views": [
         {
           "id": "441174fd-4f72-45be-8289-e45a0455f785",
@@ -1094,6 +1103,15 @@
         {
           "id": "cc3458f5-ab51-42da-986c-bb2d149a8f38",
           "name": "Customers",
+          "type": "table",
+          "filters": [],
+          "sorts": [],
+          "hiddenProperties": [],
+          "propertyOrder": []
+        },
+        {
+          "id": "8f981d06-6e16-4d5e-8c34-52ab81d1c4e0",
+          "name": "Table",
           "type": "table",
           "filters": [],
           "sorts": [],
@@ -1233,7 +1251,7 @@
         }
       ],
       "createdAt": "1780908501901",
-      "updatedAt": "1780911499790",
+      "updatedAt": "1780920642413",
       "views": [
         {
           "id": "ca69fbfe-f1e2-49ee-b3e4-4ef09cf88e6b",
@@ -1250,6 +1268,15 @@
         {
           "id": "2585bade-c3c3-4089-8957-603d41c05aa1",
           "name": "Items",
+          "type": "table",
+          "filters": [],
+          "sorts": [],
+          "hiddenProperties": [],
+          "propertyOrder": []
+        },
+        {
+          "id": "1da73821-5b3c-40dd-9d07-062fb6f15ee8",
+          "name": "Table",
           "type": "table",
           "filters": [],
           "sorts": [],

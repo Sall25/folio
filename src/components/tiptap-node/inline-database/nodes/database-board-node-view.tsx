@@ -16,6 +16,7 @@ import type {
   StatusGroup,
   CellValue,
   DatabaseAttrs,
+  DatabaseView,
 } from "../types/types";
 import "./database-board-node-view.scss";
 import {
@@ -86,7 +87,9 @@ function columnKeyFor(value: unknown, prop: DatabaseProperty): string {
 export function DatabaseBoardNodeView({
   attrs,
   source,
+  view
 }: {
+  view: DatabaseView
   attrs: DatabaseAttrs;
   source: DataSource;
 }) {
@@ -251,6 +254,7 @@ export function DatabaseBoardNodeView({
                     cardPreview={activeView?.cardPreview ?? "none"}
                     sourceId={attrs.sourceId!}
                     onChange={(propId, v) => setCellValue(rec.id, propId, v)}
+                    view={view}
                   />
                 ))}
               </BoardColumn>

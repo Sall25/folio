@@ -162,7 +162,6 @@ export function evaluateFormula(
     const args = Object.keys(ctx);
     const vals = Object.values(ctx);
 
-    // eslint-disable-next-line no-new-func
     const fn = new Function(...args, `"use strict"; return (${trimmed});`);
     const result = fn(...vals);
 

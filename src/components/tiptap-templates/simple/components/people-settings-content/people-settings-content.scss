@@ -1,0 +1,459 @@
+.people-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+// ── Invite link ───────────────────────────────────────────────────────
+.ps-invite {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  &__title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--tt-text-primary);
+  }
+  &__desc {
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+    max-width: 460px;
+    margin-top: 2px;
+  }
+  &__link-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  &__url {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 10px;
+    border: 1px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-sm);
+    font-size: 13px;
+    color: var(--tt-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// Toggle switch
+.ps-switch {
+  flex-shrink: 0;
+  width: 34px;
+  height: 20px;
+  padding: 2px;
+  border: none;
+  border-radius: 999px;
+  background: var(--tt-border-color);
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &__knob {
+    display: block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s ease;
+  }
+  &.is-on {
+    background: var(--tt-brand-color-400);
+  }
+  &.is-on .ps-switch__knob {
+    transform: translateX(14px);
+  }
+}
+
+// ── Toolbar: tabs + search + create ────────────────────────────────────
+.ps-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ps-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ps-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+
+  &__count {
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+  }
+  &:hover {
+    color: var(--tt-text-primary);
+  }
+  &.is-active {
+    color: var(--tt-text-primary);
+    font-weight: 600;
+    border-bottom-color: var(--tt-text-primary);
+  }
+}
+
+.ps-search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: var(--tt-radius-sm);
+  background: var(--tt-bg-subtle, rgba(0, 0, 0, 0.04));
+
+  input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--tt-text-primary);
+  }
+}
+
+// ── People list ────────────────────────────────────────────────────────
+.ps-people-list {
+  display: flex;
+  flex-direction: column;
+}
+.ps-person-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--tt-border-color);
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+  &__name {
+    font-size: 14px;
+    color: var(--tt-text-primary);
+  }
+  &__email {
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+  }
+  &__role {
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+    text-transform: capitalize;
+  }
+}
+
+.ps-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+
+  &--initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--tt-brand-color-400);
+    color: #fff;
+    font-weight: 600;
+  }
+}
+
+// ── Groups table ───────────────────────────────────────────────────────
+.ps-groups {
+  display: flex;
+  flex-direction: column;
+}
+.ps-groups__head {
+  display: grid;
+  grid-template-columns: 1fr 120px 120px 32px;
+  align-items: center;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--tt-border-color);
+}
+.ps-groups__col {
+  font-size: 12px;
+  color: var(--tt-text-secondary);
+  &--name {
+    padding-left: 26px;
+  }
+}
+
+.ps-group-row {
+  display: grid;
+  grid-template-columns: 1fr 120px 120px 32px;
+  align-items: center;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--tt-border-color);
+
+  &__expand {
+    grid-column: 1;
+    width: 0; // sits inside the name cell visually via negative flow
+  }
+}
+
+// place expand + name in one visual cell
+.ps-group-row {
+  &__expand {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+    border-radius: var(--tt-radius-sm);
+    &:hover {
+      background: var(--tt-bg-hover, rgba(0, 0, 0, 0.06));
+    }
+  }
+  &__name-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    font-size: 15px;
+    flex-shrink: 0;
+    color: var(--tt-text-secondary);
+  }
+  &__name {
+    font-size: 14px;
+    color: var(--tt-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  &__rename {
+    border: 1px solid var(--tt-brand-color-400);
+    outline: none;
+    background: transparent;
+    border-radius: var(--tt-radius-sm);
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--tt-text-primary);
+    padding: 1px 6px;
+  }
+  &__teamspaces,
+  &__members {
+    font-size: 13px;
+    color: var(--tt-text-secondary);
+  }
+  &__menu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: transparent;
+    color: var(--tt-text-secondary);
+    border-radius: var(--tt-radius-sm);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.1s ease;
+    &:hover {
+      background: var(--tt-bg-hover, rgba(0, 0, 0, 0.06));
+    }
+  }
+  &:hover &__menu {
+    opacity: 1;
+  }
+}
+
+// Restore the name cell to span correctly: expand + name share column 1.
+.ps-group-row {
+  grid-template-columns: 20px 1fr 120px 120px 32px;
+}
+.ps-groups__head {
+  grid-template-columns: 20px 1fr 120px 120px 32px;
+}
+.ps-groups__col--name {
+  padding-left: 0;
+}
+
+.ps-group-members {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 4px 10px 46px;
+  border-bottom: 1px solid var(--tt-border-color);
+
+  &__empty {
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+  }
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 0;
+  }
+  &__name {
+    font-size: 13px;
+    color: var(--tt-text-primary);
+  }
+  &__email {
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+  }
+}
+
+// Regenerate-link affordance under the invite row
+.ps-invite__regen {
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 12px;
+  color: var(--tt-text-secondary);
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--tt-text-primary);
+  }
+}
+
+// ── Member picker ──────────────────────────────────────────────────────
+.ps-group-members__row {
+  // make room for the remove X on hover without reflow
+  position: relative;
+}
+.ps-group-members__remove {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--tt-text-secondary);
+  border-radius: var(--tt-radius-sm);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+  &:hover {
+    background: var(--tt-bg-hover, rgba(0, 0, 0, 0.06));
+    color: var(--tt-text-primary);
+  }
+}
+.ps-group-members__row:hover .ps-group-members__remove {
+  opacity: 1;
+}
+
+.ps-add-members {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 4px 6px;
+  border: none;
+  background: transparent;
+  border-radius: var(--tt-radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+  &:hover {
+    background: var(--tt-bg-hover, rgba(0, 0, 0, 0.06));
+    color: var(--tt-text-primary);
+  }
+}
+
+.ps-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  margin: 2px 0 6px;
+  border-radius: var(--tt-radius-sm);
+  background: var(--tt-bg-subtle, rgba(0, 0, 0, 0.04));
+  input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--tt-text-primary);
+  }
+}
+.ps-picker-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 260px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.ps-picker-empty {
+  font-size: 12px;
+  color: var(--tt-text-secondary);
+  padding: 4px 6px;
+}
+.ps-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 6px;
+  border: none;
+  background: transparent;
+  border-radius: var(--tt-radius-sm);
+  text-align: left;
+  cursor: pointer;
+  &:hover {
+    background: var(--tt-bg-hover, rgba(0, 0, 0, 0.06));
+  }
+  &__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+  &__name {
+    font-size: 13px;
+    color: var(--tt-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  &__email {
+    font-size: 11px;
+    color: var(--tt-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

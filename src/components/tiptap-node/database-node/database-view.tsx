@@ -289,6 +289,7 @@ export function DatabaseView({
                             value={row[p.id]}
                             row={row}
                             onUpdate={db.updateRow}
+                            
                           />
                         </td>
                       ))}

@@ -132,6 +132,7 @@ function TreeRow({
         ref={setRefs}
         className={[
           "sidebar-tree__row",
+          hasChildren && "sidebar-tree__row--has-children",
           zone === "inside" && "sidebar-tree__row--nest",
         ]
           .filter(Boolean)
@@ -147,16 +148,23 @@ function TreeRow({
           <div className="sidebar-tree__line sidebar-tree__line--bottom" />
         )}
 
+        {/* Caret overlays the icon and cross-fades in on row hover.
+            Visibility is handled in SCSS; only positioning is inline. */}
         <Button
-          // className="sidebar-tree__caret"
+          className="sidebar-tree__caret"
           variant="ghost"
           style={{
-            visibility: hasChildren ? "visible" : "hidden",
+            position: "absolute",
+            left: depth * 14 + 6,
+            top: "50%",
+            transform: "translateY(-50%)",
             padding: 0,
             margin: 0,
-            minWidth: 20,
-            width: 22,
+            minWidth: 18,
+            width: 18,
+            height: 18,
             background: "transparent",
+            zIndex: 10,
           }}
           onClick={(e) => {
             e.stopPropagation();
