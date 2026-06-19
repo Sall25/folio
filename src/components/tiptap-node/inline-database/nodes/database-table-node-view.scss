@@ -4,6 +4,16 @@
   max-width: var(--db-editor-width);   /* bound the scroller so it overflows */
   scrollbar-width: thin;
   scrollbar-color: var(--tt-scrollbar-color) transparent;
+   &:not(:hover) {
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  &:hover {
+    scrollbar-width: thin;
+  }
+
 }
 
 .db-grid {
@@ -112,4 +122,8 @@
 
 .db-table{
  margin-top: 4px;
+}
+
+.db-header-cell--actions{
+  border-bottom: 1px solid var(--tt-border-color);
 }

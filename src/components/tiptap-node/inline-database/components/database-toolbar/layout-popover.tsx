@@ -8,7 +8,7 @@ import type {
   DatabaseView,
   GalleryView,
   OpenPageIn,
-} from "../../types/types";
+} from "src/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Calendar,

@@ -1,4 +1,4 @@
-import type { DatabaseView } from "../../types/types";
+import type { DatabaseView } from "src/types";
 import {
   Calendar,
   ChartBar,

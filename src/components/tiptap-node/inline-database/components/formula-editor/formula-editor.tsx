@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo } from "react";
 import { TriangleAlert } from "lucide-react";
-import type { DatabaseProperty, ID, ConfigOf } from "../../types/types";
+import type { DatabaseProperty, ID, ConfigOf } from "src/types";
 import { useDatabaseContext } from "../../nodes/database-context";
 import { useDataSource } from "../../hooks/use-data-source";
 import { resolveFormulaValues } from "./resolve-formula-values";
@@ -19,6 +19,7 @@ import {
   GridCell,
   GridRow,
 } from "src/components/tiptap-ui-primitive/grid";
+import { usePagesBase } from "src/hooks/use-pages";
 
 interface FormulaEditorProps {
   propertyId: ID;
@@ -33,6 +34,9 @@ export default function FormulaEditor({
 }: FormulaEditorProps) {
   const { db, attrs } = useDatabaseContext();
   const { source, setCellValue } = useDataSource(attrs.sourceId);
+  const { data: pages } = usePagesBase((pages) =>
+    pages.filter((p) => p.sourceId === source?.id),
+  );
 
   const formulaProperty = properties.find((p) => p.id === propertyId);
   const initialExpression =
@@ -67,7 +71,7 @@ export default function FormulaEditor({
     db.updateProperty(propertyId, { config: newConfig });
     if (!source) return;
 
-    resolveFormulaValues(source.records, updatedProperties, setCellValue);
+    resolveFormulaValues(pages ?? [], updatedProperties, setCellValue);
     onDone();
   }
 

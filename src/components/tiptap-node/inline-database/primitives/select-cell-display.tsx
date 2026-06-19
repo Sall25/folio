@@ -1,4 +1,4 @@
-import type { SelectOption } from "../types/types";
+import type { SelectOption } from "src/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Popover,
@@ -23,32 +23,30 @@ export function SelectCellDisplay({
   const displayed = value ?? null;
 
   const trigger = (
-    <div className="db-cell">
-      <Button
-        variant="ghost"
-        style={{
-          background: displayed ? displayed.color : "transparent",
-          minHeight: 18,
-          height: 20,
-          padding: "2px 4px",
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: "var(--tt-radius-sm)",
-          color: "var(--tt-theme-text)",
-          minWidth: !displayed ? 100 : "fit-content",
-          // width: "100%",
+    <Button
+      variant="ghost"
+      style={{
+        background: displayed ? displayed.color : "transparent",
+        minHeight: 18,
+        height: 20,
+        padding: "2px 4px",
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: "var(--tt-radius-sm)",
+        color: "var(--tt-theme-text)",
+        minWidth: !displayed ? 100 : "fit-content",
+        // width: "100%",
 
-          // margin: "5px 3px",
-        }}
+        // margin: "5px 3px",
+      }}
+    >
+      <span
+        className="tiptap-button-text"
+        style={{ textAlign: "center", width: "fit-content" }}
       >
-        <span
-          className="tiptap-button-text"
-          style={{ textAlign: "center", width: "fit-content" }}
-        >
-          {displayed ? displayed.label : ""}
-        </span>
-      </Button>
-    </div>
+        {displayed ? displayed.label : ""}
+      </span>
+    </Button>
   );
 
   if (readonly || !onChange) return trigger;
@@ -73,7 +71,7 @@ export function SelectCellDisplay({
               gap: 6,
             }}
           >
-            {options.map((option) => (
+            {(options ?? []).map((option) => (
               <Button
                 key={option.id}
                 variant="ghost"

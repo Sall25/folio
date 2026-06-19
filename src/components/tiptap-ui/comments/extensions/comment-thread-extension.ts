@@ -1,459 +1,109 @@
 import { Extension } from "@tiptap/core";
-import type { MeasuredThread, PositionedThread, Thread } from "../types";
-import { draftThread } from "./utils/draftThread";
-import { submitThread } from "./utils/submitThread";
-import { removeThread } from "./utils/removeThread";
-import { resolveThread } from "./utils/resolveThread";
-import { unresolveThread } from "./utils/unresolveThread";
-import { updateComment } from "./utils/updateComment";
-import { NodeSelection, Plugin, PluginKey } from "@tiptap/pm/state";
-import { mapThreads } from "./utils/mapThreads";
-import { measureAllThreads } from "./utils/measureAllThreads";
-import { resolveThreadCollisions } from "./utils/resolveThreadCollisions";
-import { resolveActiveThreadCollisions } from "./utils/resolveActiveThreadCollisions";
+import type { Thread } from "src/types";
+import { Plugin, PluginKey, NodeSelection } from "@tiptap/pm/state";
+import { CellSelection } from "@tiptap/pm/tables";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
-import { addComment } from "./utils/addComment";
-import { removeComment } from "./utils/removeComment";
 import { scrollToThread } from "./utils/scrollToThread";
-import { CellSelection } from "prosemirror-tables";
-import type { UseThreadSetupReturn } from "src/components/tiptap-templates/simple/hooks/use-thread-setup";
-
-interface CommentThreadStorage {
-  draftId: string | null;
-}
-
-type CommentThreadOptions = UseThreadSetupReturn;
-
-declare module "@tiptap/core" {
-  interface Storage {
-    commentThreadExtension: CommentThreadStorage;
-  }
-  interface Options {
-    commentThreadExtension: CommentThreadOptions;
-  }
-}
 
 export interface CommentThreadState {
-  threads: Thread[];
-  measuredThreads: MeasuredThread[];
-  positionedThreads: PositionedThread[];
-  selectedThreads: Thread[];
   selectedThread: Thread | null;
-  threadId: string | null;
+  hoveredThread: Thread | null;
+  threads: Thread[];
 }
 
-export const commentThreadPluginKey = new PluginKey("commentThreadPlugin");
+type CommentThreadMeta =
+  | { type: "setThreads"; threads: Thread[] }
+  | { type: "selectThread"; threadId: string }
+  | { type: "unselectThread"; threadId: string }
+  | { type: "hoverThread"; threadId: string | null }
+  | { type: "scroll" };
 
-export const CommentThreadExtension = Extension.create<
-  CommentThreadOptions,
-  CommentThreadStorage
->({
+export const commentThreadPluginKey = new PluginKey<CommentThreadState>(
+  "commentThreadPlugin",
+);
+
+export const CommentThreadExtension = Extension.create({
   name: "commentThreadExtension",
 
-  addStorage() {
-    return {
-      draftId: null,
-    };
-  },
-
-  addOptions() {
-    return {
-      threads: [],
-      isLoading: false,
-      onCreateThreadAsync: async () => {},
-      onDeleteThreadAsync: async () => {},
-      onResolveThreadAsync: async () => {},
-      onUnresolveThreadAsync: async () => {},
-      onAddCommentsAsync: async () => {},
-      onRemoveCommentsAsync: async () => {},
-      onUpdateCommentAsync: async () => {},
-    };
-  },
-
-  addCommands() {
-    return {
-      draftThread() {
-        return ({ editor }) => {
-          draftThread(editor);
-          return true;
-        };
-      },
-      submitThread(content, pageId) {
-        return ({ editor }) => {
-          submitThread(editor, content, pageId);
-          return true;
-        };
-      },
-      removeThread(threadId) {
-        return ({ editor }) => {
-          if (!threadId) {
-            const storedId = editor.storage.commentThreadExtension.draftId;
-            if (!storedId) return false;
-            removeThread(editor, storedId);
-          } else {
-            removeThread(editor, threadId);
-          }
-
-          return true;
-        };
-      },
-      selectThread(threadId) {
-        return ({ dispatch, tr }) => {
-          if (dispatch) {
-            dispatch(
-              tr.setMeta(commentThreadPluginKey, {
-                type: "selectThread",
-                threadId,
-              }),
-            );
-          }
-          return true;
-        };
-      },
-      unselectThread(threadId) {
-        return ({ dispatch, tr }) => {
-          if (dispatch) {
-            dispatch(
-              tr.setMeta(commentThreadPluginKey, {
-                type: "unselectThread",
-                threadId,
-              }),
-            );
-          }
-          return true;
-        };
-      },
-      hoverThread(threadId) {
-        return ({ dispatch, tr, editor }) => {
-          if (dispatch) {
-            if (!threadId) {
-              const storedId = editor.storage.commentThreadExtension.draftId;
-              dispatch(
-                tr.setMeta(commentThreadPluginKey, {
-                  type: "hoverThread",
-                  storedId,
-                }),
-              );
-            } else {
-              dispatch(
-                tr.setMeta(commentThreadPluginKey, {
-                  type: "hoverThread",
-                  threadId,
-                }),
-              );
-            }
-          }
-          return true;
-        };
-      },
-      hoverOffThread(threadId) {
-        return ({ dispatch, tr }) => {
-          if (dispatch) {
-            dispatch(
-              tr.setMeta(commentThreadPluginKey, {
-                type: "unhoverThread",
-                threadId,
-              }),
-            );
-          }
-          return true;
-        };
-      },
-      resolveThread(threadId) {
-        return ({ editor }) => {
-          resolveThread(editor, threadId);
-
-          return true;
-        };
-      },
-      unresolveThread(threadId) {
-        return ({ editor }) => {
-          unresolveThread(editor, threadId);
-
-          return true;
-        };
-      },
-      addComment(threadId, authorId, text) {
-        return ({ editor }) => {
-          addComment(editor, threadId, authorId, text);
-          return true;
-        };
-      },
-      removeComment(threadId, commentId) {
-        return ({ editor }) => {
-          removeComment(editor, threadId, commentId);
-          return true;
-        };
-      },
-      updateComment(threadId, commentId, newText) {
-        return ({ editor }) => {
-          updateComment(editor, threadId, commentId, newText);
-
-          return true;
-        };
-      },
-      forceMeasure(threadId) {
-        return ({ dispatch, tr }) => {
-          if (dispatch) {
-            dispatch(
-              tr.setMeta(commentThreadPluginKey, {
-                type: "forceMeasure",
-                threadId,
-              }),
-            );
-          }
-          return true;
-        };
-      },
-    };
-  },
-
   addProseMirrorPlugins() {
-    const editor = this.editor;
-
     return [
+      // State plugin: owns threads + selection/hover, keeps anchors aligned.
       new Plugin<CommentThreadState>({
         key: commentThreadPluginKey,
 
         state: {
-          init: () => {
-            return {
-              threads: this.options.threads ?? [],
-              measuredThreads: [],
-              positionedThreads: [],
-              selectedThreads: [],
-              selectedThread: null,
-              threadId: null,
-            };
-          },
+          init: (): CommentThreadState => ({
+            threads: [],
+            selectedThread: null,
+            hoveredThread: null,
+          }),
 
-          apply: (tr, next) => {
-            const meta = tr.getMeta(commentThreadPluginKey);
-            if (!meta) return next;
+          apply(tr, value): CommentThreadState {
+            // Keep live anchors aligned with edits to the document.
+            let threads = value.threads;
+            if (tr.docChanged) {
+              threads = threads.map((thread) => ({
+                ...thread,
+                anchor: {
+                  ...thread.anchor,
+                  from: tr.mapping.map(thread.anchor.from),
+                  to: tr.mapping.map(thread.anchor.to),
+                },
+              }));
+            }
 
-            const {
-              onCreateThreadAsync,
-              onDeleteThreadAsync,
-              onResolveThreadAsync,
-              onUnresolveThreadAsync,
-              onAddCommentsAsync,
-              onRemoveCommentsAsync,
-              onUpdateCommentAsync,
-            } = this.options;
+            const meta = tr.getMeta(commentThreadPluginKey) as
+              | CommentThreadMeta
+              | undefined;
+
+            if (!meta) {
+              return { ...value, threads };
+            }
 
             switch (meta.type) {
-              case "initialThreads":
-                {
-                  next.threads = meta.providedThreads;
-                }
-                break;
-              case "addComment":
-                {
-                  next.threads = next.threads.map((t) => {
-                    if (t.id !== meta.threadId) return t;
-                    return {
-                      ...t,
-                      comments: [
-                        ...t.comments,
-                        {
-                          id: crypto.randomUUID(),
-                          threadId: meta.threadId,
-                          text: meta.text,
-                          authorId: meta.authorId,
-                          createdAt: Date.now(),
-                        },
-                      ],
-                    };
-                  });
-                  const thread = next.threads.find(
-                    (t) => t.id === meta.threadId,
-                  );
-                  if (thread) onAddCommentsAsync(thread, thread.comments);
-                }
-                break;
+              case "setThreads": {
+                // Reconcile by id: keep the live (remapped) anchor for
+                // threads we already have, take the incoming anchor only
+                // for genuinely new threads.
+                const byId = new Map(threads.map((t) => [t.id, t]));
+                const next = meta.threads.map((incoming) => {
+                  const existing = byId.get(incoming.id);
+                  return existing
+                    ? { ...incoming, anchor: existing.anchor }
+                    : incoming;
+                });
+                return { ...value, threads: next };
+              }
 
-              case "removeComment":
-                {
-                  next.threads = next.threads.map((t) => {
-                    if (t.id !== meta.threadId) return t;
-                    return {
-                      ...t,
-                      comments: t.comments.filter(
-                        (c) => c.id !== meta.commentId,
-                      ),
-                    };
-                  });
-                  const thread = next.threads.find(
-                    (t) => t.id === meta.threadId,
-                  );
-                  if (thread) onRemoveCommentsAsync(thread);
-                }
-                break;
+              case "selectThread": {
+                const selectedThread =
+                  threads.find((t) => t.id === meta.threadId) ?? null;
+                return { ...value, threads, selectedThread };
+              }
 
-              case "updateComment":
-                {
-                  next.threads = next.threads.map((t) => {
-                    if (t.id !== meta.threadId) return t;
-                    return {
-                      ...t,
-                      comments: t.comments.map((comment) =>
-                        comment.id === meta.commentId
-                          ? { ...comment, text: meta.newText }
-                          : comment,
-                      ),
-                    };
-                  });
-                  const thread = next.threads.find(
-                    (t) => t.id === meta.threadId,
-                  );
-                  if (thread)
-                    onUpdateCommentAsync({
-                      thread,
-                      commentId: meta.commentId,
-                      newText: meta.newText,
-                    });
+              case "unselectThread": {
+                // Only clear if the cleared thread is the one selected.
+                if (value.selectedThread?.id !== meta.threadId) {
+                  return { ...value, threads };
                 }
-                break;
+                return { ...value, threads, selectedThread: null };
+              }
 
-              case "removeThread":
-                {
-                  const thread = next.threads.find(
-                    (t) => t.id === meta.threadId,
-                  );
-                  if (thread) onDeleteThreadAsync(thread);
-                  next.threads = next.threads.filter(
-                    (t) => t.id !== meta.threadId,
-                  );
-                }
-                break;
+              case "hoverThread": {
+                const hoveredThread =
+                  meta.threadId === null
+                    ? null
+                    : (threads.find((t) => t.id === meta.threadId) ?? null);
+                return { ...value, threads, hoveredThread };
+              }
 
-              case "resolveThread":
-                {
-                  const thread = next.threads.find((t) => t.id === meta.t);
-                  if (thread) onResolveThreadAsync(thread);
-                  next.threads = next.threads.map((t) =>
-                    t.id === meta.t ? { ...t, status: "resolved" } : t,
-                  ) as Thread[];
-                }
-                break;
-
-              case "unresolveThread":
-                {
-                  const thread = next.threads.find((t) => t.id === meta.t);
-                  if (thread) onUnresolveThreadAsync(thread);
-                  next.threads = next.threads.map((t) =>
-                    t.id === meta.t ? { ...t, status: "open" } : t,
-                  ) as Thread[];
-                }
-                break;
-
-              case "submitThread":
-                {
-                  next.threads = next.threads.map((t) => {
-                    if (t.id !== meta.threadId) return t;
-                    return {
-                      ...t,
-                      status: "open",
-                      pageId: meta.pageId,
-                      content: meta.content,
-                      comments: [
-                        ...t.comments,
-                        {
-                          id: crypto.randomUUID(),
-                          threadId: meta.threadId,
-                          authorId: "You",
-                          text: meta.content,
-                          createdAt: Date.now(),
-                        },
-                      ],
-                    };
-                  });
-                  editor.storage.commentThreadExtension.draftId = null;
-                  const thread = next.threads.find(
-                    (t) => t.id === meta.threadId,
-                  );
-                  if (thread) onCreateThreadAsync(thread);
-                }
-                break;
-              case "draftThread":
-                {
-                  next.threads.push({
-                    id: meta.threadId,
-                    content: "",
-                    anchor: { from: meta.from, to: meta.to },
-                    status: "drafted",
-                    comments: [],
-                  });
-                  editor.storage.commentThreadExtension.draftId = meta.threadId;
-                }
-                break;
               case "scroll":
-              case "selectThread":
-              case "forceMeasure":
-                {
-                  const selectedThread = next.threads.find(
-                    (t) => t.id === meta.threadId,
-                  );
-                  if (selectedThread) {
-                    next.selectedThread = selectedThread;
-                  }
-                }
-                break;
-
-              case "unselectThread":
-                {
-                  const selectedThread = next.threads.find(
-                    (t) => t.id === meta.threadId,
-                  );
-                  if (selectedThread) {
-                    next.selectedThread = null;
-                  }
-                }
-                break;
-
-              case "hoverThread":
-                {
-                  const hoveredThread = next.threads.find(
-                    (t) => t.id === meta.threadId,
-                  );
-                  if (hoveredThread) {
-                    const alreadySelected = next.selectedThreads.some(
-                      (t) => t.id === hoveredThread.id,
-                    );
-                    if (!alreadySelected) {
-                      next.selectedThreads.push(hoveredThread);
-                    }
-                  }
-                }
-                break;
-
-              case "unhoverThread":
-                {
-                  const newSelectedThreads = next.selectedThreads.filter(
-                    (s) => s.id !== meta.threadId,
-                  );
-                  next.selectedThreads = newSelectedThreads;
-                }
-                break;
+              default:
+                return { ...value, threads };
             }
-
-            next.threads = mapThreads(tr, next.threads);
-
-            next.measuredThreads = measureAllThreads(editor, next.threads);
-            next.positionedThreads = resolveThreadCollisions(
-              next.measuredThreads,
-            );
-
-            if (meta.type === "selectThread") {
-              next.positionedThreads = resolveActiveThreadCollisions(
-                next.measuredThreads,
-                meta.threadId,
-              );
-            }
-
-            return next;
           },
         },
+
         view(editorView) {
           const container = document.querySelector(".simple-editor-main");
           let rafId: number | null = null;
@@ -488,7 +138,7 @@ export const CommentThreadExtension = Extension.create<
               const pluginState = commentThreadPluginKey.getState(state);
               if (!pluginState) return;
 
-              const { threads } = pluginState as CommentThreadState;
+              const { threads } = pluginState;
               const { from, to } = state.selection;
 
               // Find threads overlapping the selection
@@ -523,6 +173,7 @@ export const CommentThreadExtension = Extension.create<
         },
       }),
 
+      // Decoration plugin: renders highlights from the state above.
       new Plugin({
         key: new PluginKey("commentThreadDecorationPlugin"),
 
@@ -534,21 +185,19 @@ export const CommentThreadExtension = Extension.create<
 
             if (!pluginState) return oldDecorations.map(tr.mapping, tr.doc);
 
-            const { selectedThreads, threads } =
-              pluginState as CommentThreadState;
+            const { selectedThread, hoveredThread, threads } = pluginState;
 
             const decorations: Decoration[] = [];
 
             for (const thread of threads) {
-              const isSelected = selectedThreads.some(
-                (t) => t.id === thread.id,
-              );
+              const isSelected = selectedThread?.id === thread.id;
+              const isHovered = hoveredThread?.id === thread.id;
 
               decorations.push(
                 Decoration.inline(thread.anchor.from, thread.anchor.to, {
-                  class: isSelected
-                    ? "thread-anchor selected"
-                    : "thread-anchor",
+                  class: `thread-anchor${isSelected ? " selected" : ""}${
+                    isHovered ? " hovered" : ""
+                  }`,
                   "data-thread-id": thread.id,
                 }),
               );

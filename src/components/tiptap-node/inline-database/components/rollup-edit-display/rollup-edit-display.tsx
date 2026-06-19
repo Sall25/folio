@@ -13,7 +13,7 @@ import type {
   ConfigOf,
   DatabaseProperty,
   PropertyType,
-} from "../../types/types";
+} from "src/types";
 
 type RollupConfig = ConfigOf<"rollup">;
 
@@ -113,7 +113,7 @@ export function RollupEditDisplay({
 
   const targetDatabaseId =
     selectedRelation?.config.type === "relation"
-      ? selectedRelation.config.targetDatabaseId
+      ? selectedRelation.config.targetSourceId
       : "";
 
   // Load the related database to list ITS properties as rollup targets.

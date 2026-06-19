@@ -20,18 +20,18 @@ import { Separator } from "src/components/tiptap-ui-primitive/separator";
 
 import "./simple-editor-sidebar.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "@tanstack/react-location";
-import { useActivePage } from "./use-active-page";
 import { useEditorLayout } from "./context/editor-layout-context";
-import { useCreatePage } from "./context/create-page-context";
-import { usePages } from "./use-pages";
 import { useSearch } from "./context/search-context";
 import { useLibrary } from "./context/library-context";
-import type { Page } from "./types";
 import { PageItem } from "./page-item";
 import { SidebarTree } from "./components/sidebar-tree";
-import { findPage } from "src/lib/find-page";
+import { usePageTree, useRecentPages } from "src/hooks/use-pages";
+import { makePage } from "src/utils/make-page";
+import { useCreatePage } from "src/hooks/use-create-page";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage as updatePage } from "src/api/pages";
 
 function User() {
   const { collapsed, onCollapsedChange } = useEditorLayout();
@@ -131,10 +131,10 @@ function WorkSpaceFooter() {
         <Button
           //variant="ghost"
           style={{
-            minWidth: 36,
-            width: 36,
-            height: 36,
-            minHeight: 36,
+            minWidth: 32,
+            width: 32,
+            height: 32,
+            minHeight: 32,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -149,7 +149,7 @@ function WorkSpaceFooter() {
           </span>
         </Button>
         <CardItemGroup>
-          <span style={{ fontSize: 14, color: "var(--tt-text-primary)" }}>
+          <span style={{ fontSize: 12, color: "var(--tt-text-primary)" }}>
             Jule
           </span>
           <span style={{ fontSize: 10, color: "var(--tt-text-secondary)" }}>
@@ -162,11 +162,9 @@ function WorkSpaceFooter() {
 }
 function NavItems() {
   const { collapsed } = useEditorLayout();
-  const { debounceUpdatePage } = useActivePage();
   const navigate = useNavigate();
 
   const handleHomeClick = () => {
-    debounceUpdatePage.flush();
     navigate({ to: "/" });
   };
   const { open, onOpenChange } = useSearch();
@@ -259,31 +257,22 @@ function NavItems() {
   );
 }
 
-function RecentSection({ pages }: { pages: Page[] }) {
-  const { addPageAsync } = usePages();
-  const { setCreatePageId } = useCreatePage();
+// ── RecentSection: just use the lens ─────────────────────────────────────────
+function RecentSection() {
+  const { data: recentPages } = useRecentPages(8); // the lens, with the null-fallback baked in
+  const createPage = useCreatePage();
 
-  const handleNewPage = async () => {
-    const newPage = await addPageAsync({
+  const handleNewPage = () => {
+    const page = makePage({
       title: "New Page",
       parentId: null,
+      category: "Private",
     });
-    if (newPage?.id != null) {
-      setCreatePageId(newPage.id);
-    }
+    createPage.mutate(page); // client id known up front
+    // activate it if you want: setActivePageId(page.id)
   };
 
-  const recentPages = useMemo(
-    () =>
-      pages
-        .filter((p) => p.updatedAt !== null && p.category !== "Template")
-        .sort(
-          (a, b) =>
-            new Date(b.updatedAt!).getTime() - new Date(a.updatedAt!).getTime(),
-        )
-        .slice(0, 8),
-    [pages],
-  );
+  if (!recentPages) return null;
 
   return (
     <CardItemGroup className="sidebar-section" orientation="vertical">
@@ -316,15 +305,14 @@ function RecentSection({ pages }: { pages: Page[] }) {
   );
 }
 
+// ── main component: lens + tree + mutation hooks ─────────────────────────────
 export function SimpleEditorSidebar() {
   const { collapsed, sidebarWidth } = useEditorLayout();
-  const { pages } = useActivePage();
-  // addPageAsync is already used by the header; updatePageAsync persists the
-  // category change on a cross-section drop. Point these at your real
-  // mutations if they live under a different hook/name.
-  const { addPageAsync, updatePageAsync } = usePages();
+  const { tree, data: pages, isPending } = usePageTree();
+  const patchPage = usePatchPage(({ id, patch }) => updatePage(id, patch));
+  const createPage = useCreatePage();
 
-  if (!pages) return null;
+  if (isPending || !pages) return null;
 
   return (
     <Card
@@ -344,12 +332,7 @@ export function SimpleEditorSidebar() {
         flexDirection: "column",
       }}
     >
-      <CardHeader
-        style={{
-          padding: !collapsed ? "5px 10px" : 0,
-          width: "100%",
-        }}
-      >
+      <CardHeader /* ... */>
         <CardItemGroup orientation="vertical" style={{ width: "100%" }}>
           <WorkspaceHeader />
           <Spacer orientation="vertical" size={4} />
@@ -359,37 +342,33 @@ export function SimpleEditorSidebar() {
 
       <CardBody style={{ width: "100%", padding: "0 10px" }}>
         <Spacer orientation="vertical" size={20} />
-        {pages.length > 0 && !collapsed && <RecentSection pages={pages} />}
+        {pages.length > 0 && !collapsed && <RecentSection />}
         <Spacer orientation="vertical" size={10} />
 
         {!collapsed && (
           <SidebarTree
-            pages={pages}
+            tree={tree}
             onMovePage={({ pageId, newParentId, category }) => {
-              const page = findPage(pages, pageId);
-              if (!page) return;
-              updatePageAsync({
-                ...page,
-                parentId: newParentId,
-                ...(category ? { category } : {}),
+              // optimistic move — patch parentId (+ category on cross-section drop)
+              patchPage.mutate({
+                id: pageId,
+                patch: {
+                  parentId: newParentId,
+                  ...(category ? { category } : {}),
+                },
               });
             }}
-            onAddPageToSection={async (category) => {
-              const p = await addPageAsync({
+            onAddPageToSection={(category) => {
+              const p = makePage({
                 title: "New Page",
                 parentId: null,
+                category,
               });
-              if (p?.id != null) await updatePageAsync({ ...p, category });
+              createPage.mutate(p); // one optimistic create, category seeded
             }}
-            onRenameSection={() => {
-              // TODO: open rename dialog
-            }}
-            onDeleteSection={() => {
-              // TODO: confirm + delete
-            }}
-            onAddSection={() => {
-              // TODO: add-section dialog
-            }}
+            onRenameSection={() => {}}
+            onDeleteSection={() => {}}
+            onAddSection={() => {}}
           />
         )}
       </CardBody>
@@ -398,3 +377,86 @@ export function SimpleEditorSidebar() {
     </Card>
   );
 }
+
+// export function SimpleEditorSidebar() {
+//   const { collapsed, sidebarWidth } = useEditorLayout();
+//   const { pages } = useActivePage();
+//   // addPageAsync is already used by the header; updatePageAsync persists the
+//   // category change on a cross-section drop. Point these at your real
+//   // mutations if they live under a different hook/name.
+//   const { addPageAsync, updatePageAsync } = usePages();
+
+//   if (!pages) return null;
+
+//   return (
+//     <Card
+//       className={`sidebar ${collapsed ? "sidebar--collapsed" : ""}`}
+//       style={{
+//         zIndex: 120,
+//         position: "fixed",
+//         left: 0,
+//         borderRadius: 0,
+//         width: sidebarWidth,
+//         // boxShadow: "none",
+//         //width: collapsed ? 52 : 290,
+//         transition: "width 0.2s ease",
+//         height: "100vh",
+//         overflow: "hidden",
+//         display: "flex",
+//         flexDirection: "column",
+//       }}
+//     >
+//       <CardHeader
+//         style={{
+//           padding: !collapsed ? "5px 10px" : 0,
+//           width: "100%",
+//         }}
+//       >
+//         <CardItemGroup orientation="vertical" style={{ width: "100%" }}>
+//           <WorkspaceHeader />
+//           <Spacer orientation="vertical" size={4} />
+//           <NavItems />
+//         </CardItemGroup>
+//       </CardHeader>
+
+//       <CardBody style={{ width: "100%", padding: "0 10px" }}>
+//         <Spacer orientation="vertical" size={20} />
+//         {pages.length > 0 && !collapsed && <RecentSection pages={pages} />}
+//         <Spacer orientation="vertical" size={10} />
+
+//         {!collapsed && (
+//           <SidebarTree
+//             pages={pages}
+//             onMovePage={({ pageId, newParentId, category }) => {
+//               const page = findPage(pages, pageId);
+//               if (!page) return;
+//               updatePageAsync({
+//                 ...page,
+//                 parentId: newParentId,
+//                 ...(category ? { category } : {}),
+//               });
+//             }}
+//             onAddPageToSection={async (category) => {
+//               const p = await addPageAsync({
+//                 title: "New Page",
+//                 parentId: null,
+//               });
+//               if (p?.id != null) await updatePageAsync({ ...p, category });
+//             }}
+//             onRenameSection={() => {
+//               // TODO: open rename dialog
+//             }}
+//             onDeleteSection={() => {
+//               // TODO: confirm + delete
+//             }}
+//             onAddSection={() => {
+//               // TODO: add-section dialog
+//             }}
+//           />
+//         )}
+//       </CardBody>
+//       <Separator orientation="horizontal" style={{ height: 0.5 }} />
+//       <WorkSpaceFooter />
+//     </Card>
+//   );
+// }

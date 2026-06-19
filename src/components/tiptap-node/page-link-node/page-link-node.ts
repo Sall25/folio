@@ -1,10 +1,11 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { PageLinkNodeView } from "./page-link-node-view.js";
-import type { Page } from "src/components/tiptap-templates/simple/types.js";
+import type { Page } from "src/types/types.js";
+import type { ID } from "src/types/types.js";
 
 interface PageLinkOptions {
-  onNavigate: (pageId: number) => void;
+  onNavigate: (pageId: ID) => void;
 }
 
 interface PageLinkStorage {

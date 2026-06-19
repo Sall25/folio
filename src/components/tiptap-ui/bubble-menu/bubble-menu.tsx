@@ -28,9 +28,11 @@ import {
   Button,
   type ButtonProps,
 } from "src/components/tiptap-ui-primitive/button";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NodeSelection } from "@tiptap/pm/state";
 import { CommentButton } from "src/components/tiptap-ui/comment-button";
+import { useDeleteThread } from "src/hooks/use-delete-thread";
+import { useThreadsBase } from "src/hooks/use-threads";
 
 interface MoreOptionsPopoverProps
   extends Omit<ButtonProps, "type">, UseMarkConfig {}
@@ -118,23 +120,34 @@ export function Group({ children }: { children: React.ReactNode }) {
 export function BubbleMenu({ editor }: { editor: Editor | null }) {
   const [visible, setVisible] = useState(true);
 
-  const onAction = useCallback(() => {
+  const { data: draftedThreads } = useThreadsBase((threads) =>
+    (threads ?? []).filter((t) => t.status === "drafted"),
+  );
+  const draftedThreadsRef = useRef(draftedThreads);
+  useEffect(
+    () => void (draftedThreadsRef.current = draftedThreads),
+    [draftedThreads],
+  );
+  const deleteThread = useDeleteThread();
+
+  const onAction = () => {
     setVisible(false);
-    //editor?.commands.setTextSelection(editor.state.selection.anchor);
-    editor?.commands.hoverThread();
-  }, [editor]);
+    draftedThreads?.forEach((t) => deleteThread.mutate({ id: t.id }));
+  };
 
   useEffect(() => {
     if (!editor) return;
     const handler = () => {
       setVisible(true);
-      editor.commands.removeThread();
+      draftedThreadsRef.current?.forEach((t) =>
+        deleteThread.mutate({ id: t.id }),
+      );
     };
     editor.on("selectionUpdate", handler);
     return () => {
       editor.off("selectionUpdate", handler);
     };
-  }, [editor]);
+  }, [editor, deleteThread]);
 
   if (!editor) return null;
 

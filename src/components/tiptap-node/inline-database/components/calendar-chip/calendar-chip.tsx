@@ -6,11 +6,11 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { BoardCard } from "../../primitives/board-card";
 import type {
-  DataSourceRecord,
   DatabaseProperty,
   DatabaseView,
   CellValue,
-} from "../../types/types";
+  Page,
+} from "src/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 
 // Hover timings — open is slower (avoid flashing on pass-through), close is
@@ -27,7 +27,7 @@ export function CalendarChip({
   onOpenPeek,
   onChange,
 }: {
-  record: DataSourceRecord;
+  record: Page;
   title: string;
   cardProps: DatabaseProperty[];
   sourceId: string;

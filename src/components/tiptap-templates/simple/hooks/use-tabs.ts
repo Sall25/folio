@@ -6,7 +6,7 @@ import {
   useState,
   type RefObject,
 } from "react";
-import type { Page } from "../types";
+import type { Page } from "src/types";
 import type { Tab } from "../components/tabs/types";
 
 const newId = (): string =>

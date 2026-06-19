@@ -1,5 +1,5 @@
-import type { DatabaseProperty, ID } from "../../types/types";
-import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
+import type { DatabaseProperty, ID } from "src/types";
+import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import {
   CardItemGroup,
   CardGroupLabel,

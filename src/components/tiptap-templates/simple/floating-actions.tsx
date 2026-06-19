@@ -11,8 +11,8 @@ import { IconPickerCard } from "src/components/tiptap-ui/cover/icon-picker-card"
 import { Button } from "src/components/tiptap-ui-primitive/button";
 
 import "./floating-actions.scss";
-import type { Page } from "./types";
-import { useActivePage } from "./use-active-page";
+import type { Page } from "src/types";
+import { useActivePage } from "./context/active-page-context";
 
 export function FloatingActions({
   open,

@@ -1,13 +1,13 @@
-import type React from "react"
-import { useCallback, useEffect, useRef } from "react"
+import type React from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 interface ThreadCardProps {
-  id: string
-  active: boolean
-  open: boolean
-  children: React.ReactNode
-  onClick: ((threadId: string) => unknown) | null
-  onClickOutside: () => unknown
+  id: string;
+  active: boolean;
+  open: boolean;
+  children: React.ReactNode;
+  onClick: ((threadId: string) => unknown) | null;
+  onClickOutside: () => unknown;
 }
 
 export const ThreadCard = ({
@@ -16,51 +16,47 @@ export const ThreadCard = ({
   open,
   children,
   onClick,
-  onClickOutside
+  onClickOutside,
 }: ThreadCardProps) => {
-  const cardRef = useRef<HTMLDivElement | null>(null)
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const handleClick = useCallback(() => {
     if (onClick) {
-      onClick(id)
+      onClick(id);
     }
-  }, [id, onClick])
+  }, [id, onClick]);
 
   useEffect(() => {
-    if (!active) {
-      return () => null
+    if (!active || !onClickOutside) {
+      return () => null;
     }
 
-    const clickHandler = onClickOutside
-      ? (event: MouseEvent) => {
-        if (!cardRef.current) {
-          return
-        }
-
-        if (!cardRef.current.contains(event.target as Node)) {
-          onClickOutside()
-        }
+    const pointerHandler = (event: MouseEvent | TouchEvent) => {
+      if (!cardRef.current) {
+        return;
       }
-      : null
 
-    if (clickHandler) {
-      document.addEventListener('click', clickHandler)
-    }
+      if (!cardRef.current.contains(event.target as Node)) {
+        onClickOutside();
+      }
+    };
+
+    document.addEventListener("mousedown", pointerHandler, true);
+    document.addEventListener("touchstart", pointerHandler, true);
 
     return () => {
-      if (clickHandler) {
-        document.removeEventListener('click', clickHandler)
-      }
-    }
-  }, [active, onClickOutside])
+      document.removeEventListener("mousedown", pointerHandler, true);
+      document.removeEventListener("touchstart", pointerHandler, true);
+    };
+  }, [active, onClickOutside]);
 
   return (
     <div
       ref={cardRef}
-      className={`thread${open ? ' is-open' : ''}${active ? ' is-active' : ''}`}
+      className={`thread${open ? " is-open" : ""}${active ? " is-active" : ""}`}
       onClick={handleClick}
       tabIndex={-1}
     >
       {children}
     </div>
-  )
-}
+  );
+};

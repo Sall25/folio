@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { DatabaseProperty, PropertyType } from "../../types/types";
+import type { DatabaseProperty, PropertyType } from "src/types";
 import {
   CardItemGroup,
   CardGroupLabel,
@@ -7,7 +7,7 @@ import {
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Copy } from "lucide-react";
-import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
+import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 
 // ─── formula return types ─────────────────────────────────────────────────────
 

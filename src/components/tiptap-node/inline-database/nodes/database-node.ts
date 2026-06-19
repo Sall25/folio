@@ -1,6 +1,6 @@
 import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import type { ID } from "../types/types";
+import type { ID } from "src/types";
 import { DatabaseNodeView } from "./database-node-view";
 import { Plugin } from "@tiptap/pm/state";
 
@@ -8,7 +8,7 @@ declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     database: {
       /** Insert an atom database node referencing an existing data source. */
-      insertDatabaseWithSource: (sourceId: ID, pageId?: number) => ReturnType;
+      insertDatabaseWithSource: (sourceId: ID, pageId?: ID) => ReturnType;
       insertDatabaseNode: () => ReturnType;
     };
   }
@@ -83,7 +83,7 @@ export const DatabaseNode = Node.create({
   addCommands() {
     return {
       insertDatabaseWithSource:
-        (sourceId: ID, pageId?: number) =>
+        (sourceId: ID, pageId?: ID) =>
         ({ commands }) =>
           commands.insertContent({
             type: this.name,

@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import type { Editor } from "@tiptap/react";
-import type { Page } from "src/components/tiptap-templates/simple/types";
-import { findPage } from "src/lib/find-page";
+import type { Page } from "src/types";
 
 export function stripPropertyPanels(content: unknown): unknown {
   if (!content || typeof content !== "object") return content;
@@ -18,36 +17,34 @@ export function stripPropertyPanels(content: unknown): unknown {
 
 export function useRecordPropertyPanel(
   editor: Editor | null,
-  pages: Page[] | undefined,
-  pageId: number | null | undefined,
+  page: Page | null,
 ) {
   useEffect(() => {
-    if (!editor || pageId == null || !pages) return;
-    if (!Array.isArray(pages) || pages.length === 0) return;
-    queueMicrotask(() => {
-      // The record's page carries its source + record ids (stamped at creation)
-      const page = findPage(pages, pageId);
-      const sourceId = page?.databaseId ?? null;
-      const recordId = page?.recordId ?? null;
-      if (!sourceId || !recordId) return;
+    if (!editor || !page) return;
 
-      // Already inserted?
-      const secondNode =
-        editor.state.doc.childCount > 1 ? editor.state.doc.child(1) : null;
-      if (secondNode?.type.name === "recordPropertyPanel") return;
+    const isRow = page.sourceId != null;
+    const secondNode =
+      editor.state.doc.childCount > 1 ? editor.state.doc.child(1) : null;
+    const hasPanel = secondNode?.type.name === "recordPropertyPanel";
 
+    if (isRow && !hasPanel) {
+      // insert after title
       const titleNode = editor.state.doc.firstChild;
       if (!titleNode || titleNode.type.name !== "title") return;
-
       const panelType = editor.schema.nodes.recordPropertyPanel;
       if (!panelType) return;
-
       editor.view.dispatch(
         editor.state.tr.insert(
           titleNode.nodeSize,
-          panelType.create({ pageId, sourceId, recordId }),
+          panelType.create({ pageId: page.id }),
         ),
       );
-    });
-  }, [editor, pages, pageId]);
+    } else if (!isRow && hasPanel) {
+      // page is NOT a row but a stale panel is present → remove it
+      const pos = editor.state.doc.firstChild!.nodeSize;
+      editor.view.dispatch(
+        editor.state.tr.delete(pos, pos + secondNode!.nodeSize),
+      );
+    }
+  }, [editor, page]);
 }

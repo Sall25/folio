@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { usePeekEditorExtensions } from "./hooks/use-peek-editor-extensions";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
-import { useActivePage } from "./use-active-page";
-import type { Page } from "./types";
+import { useActivePage } from "./context/active-page-context";
+import type { Page } from "src/types";
 import {
   Editor,
   useCurrentEditor,
@@ -18,7 +16,6 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { ChevronsRight, Ellipsis, Expand } from "lucide-react";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { EditorContent } from "@tiptap/react";
-import { usePeekPage } from "./context/peek-page-context";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { Target } from "src/components/tiptap-ui/cover/types";
 import { FloatingMenu } from "@tiptap/react/menus";
@@ -30,6 +27,11 @@ import {
 } from "./hooks/use-record-property-panel";
 import { type Transaction } from "@tiptap/pm/state";
 import { PeekEditorProvider } from "./context/peek-editor-provider";
+import { useDebouncedCallback } from "use-debounce";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage } from "src/api/pages";
+import { usePageView } from "./context/page-view-context";
+import { usePage } from "src/hooks/use-pages";
 //import { RecordPropertyPanel } from "./record-property-panel";
 
 const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
@@ -84,14 +86,6 @@ const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
   );
 });
 
-function getRecordPropertyPanelChange(
-  editor: Editor,
-  transaction: Transaction,
-): boolean {
-  const changed = transaction.getMeta("RecordPropertyPanelChanged");
-  return changed;
-}
-
 function getTitleChange(
   editor: Editor,
   transaction: Transaction,
@@ -116,24 +110,17 @@ function getTitleChange(
   };
 }
 
-export function PagePeekView({
-  page,
-  onClose,
-}: {
-  page: Page;
-  onClose?: () => void;
-}) {
-  const { updatePageAsync, addCoverAsync, pages } = usePages();
-  const { setActivePageId, debounceUpdatePage, debounceUpdatePageFast } =
-    useActivePage();
-  const { setPeekPageId } = usePeekPage();
+export function PagePeekView({ onClose }: { onClose?: () => void }) {
+  const { target: viewTarget, setTarget: setViewTarget } = usePageView();
+  const { setActivePageId } = useActivePage();
   const { extensions } = usePeekEditorExtensions(setActivePageId);
-  const { editor: mainEditor } = useCurrentEditor();
+  const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
 
   const floatingRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState<Target>("Emoji");
 
+  const { data: page } = usePage(viewTarget?.pageId ?? null);
   const pageRef = useRef(page);
   useEffect(() => {
     pageRef.current = page;
@@ -142,71 +129,69 @@ export function PagePeekView({
   const onSelectAsync = useCallback(
     async (name: string, color?: string) => {
       setOpen(false);
-      console.log("updating page", pageRef.current.id, "cover", {
-        iconName: name,
-      });
-      await updatePageAsync({
-        ...pageRef.current,
-        cover: { ...pageRef.current.cover, iconName: name, target, color },
+      if (!pageRef.current) return;
+      await mutateAsync({
+        id: pageRef.current.id,
+        patch: {
+          cover: {
+            ...pageRef.current.cover,
+            iconName: name,
+            target,
+            color: color ?? null,
+          },
+        },
       });
     },
-    [target, updatePageAsync], // no `page` in deps — use ref instead
+    [target, mutateAsync],
   );
 
   const onAddCoverAsync = useCallback(async () => {
-    await addCoverAsync(pageRef.current.id);
-  }, [addCoverAsync]);
-
-  const debounceUpdatePageRef = useRef(debounceUpdatePage);
-  const debounceUpdatePageFastRef = useRef(debounceUpdatePageFast);
+    if (!pageRef.current) return;
+    await mutateAsync({
+      id: pageRef.current.id,
+      patch: {
+        cover: {
+          ...pageRef.current.cover,
+          coverImage: "/covers/default-cover.jpg",
+        },
+      },
+    });
+  }, [mutateAsync]);
 
   const editor = useEditor({
     extensions,
-    content: page.content ?? {
+    content: page?.content ?? {
       type: "doc",
       content: [{ type: "title", content: [] }],
     },
     autofocus: "start",
-    onUpdate: ({ editor }) => {
-      const newTitle = editor.state.doc.firstChild?.textContent ?? "";
-      if (!newTitle.trim()) return;
-      if (!pageRef.current) return;
-
-      updatePageAsync({
-        ...pageRef.current,
-        content: editor.getJSON(),
-        title: newTitle,
-      });
-
-      if (!mainEditor) return;
-
-      let titleCellPos: number | null = null;
-      let titleCellNode: typeof mainEditor.state.doc.firstChild | null = null;
-
-      mainEditor.state.doc.descendants((node, pos) => {
-        if (titleCellPos !== null) return false;
-        if (node.type.name !== "titleCell") return;
-        if (node.attrs.pageId !== page.id) return;
-        titleCellPos = pos;
-        titleCellNode = node;
-        return false;
-      });
-
-      if (titleCellPos === null || titleCellNode === null) return;
-      if ((titleCellNode as any).textContent === newTitle) return;
-      if (!newTitle.trim()) return;
-
-      const { tr } = mainEditor.state;
-      tr.insertText(
-        newTitle,
-        titleCellPos + 1,
-        titleCellPos + 1 + (titleCellNode as any).content.size,
-      );
-      mainEditor.view.dispatch(tr);
-    },
   });
 
-  useRecordPropertyPanel(editor, pages, page?.id ?? null);
+  // deferred-serialization autosave — identical to PageCenterView
+  const latestTitleRef = useRef<string | null>(null);
+  const saveActivePage = useDebouncedCallback(
+    () => {
+      const p = pageRef.current;
+      if (!p || !editor) return;
+      const titleOverride = latestTitleRef.current;
+      latestTitleRef.current = null;
+      mutateAsync({
+        id: p.id,
+        patch: {
+          title: titleOverride ?? p.title,
+          content: stripPropertyPanels(editor.getJSON()) as JSONContent,
+          updatedAt: Date.now(),
+        },
+      });
+    },
+    800,
+    { maxWait: 2500 },
+  );
+
+  const saveRef = useRef(saveActivePage);
+  useEffect(() => {
+    saveRef.current = saveActivePage;
+  }, [saveActivePage]);
 
   useEffect(() => {
     if (!editor) return;
@@ -217,40 +202,20 @@ export function PagePeekView({
       editor: Editor;
       transaction: Transaction;
     }) => {
-      if (!pageRef.current) return;
-
+      if (!pageRef.current || !transaction.docChanged) return;
       const { changed, text } = getTitleChange(editor, transaction);
-      const recordChanged = getRecordPropertyPanelChange(editor, transaction);
-
-      if (changed || recordChanged) {
-        debounceUpdatePageFastRef.current({
-          ...pageRef.current,
-          title: text ?? pageRef.current.title,
-          //content: stripPropertyPanels(editor.getJSON()) as JSONContent,
-          content: editor.getJSON(),
-          // // preserve record link fields — not part of editor content
-          // databaseId: pageRef.current.databaseId,
-          // recordId: pageRef.current.recordId,
-          updatedAt: Date.now().toString(),
-        });
-      } else {
-        debounceUpdatePageRef.current({
-          ...pageRef.current,
-          content: stripPropertyPanels(editor.getJSON()) as JSONContent,
-          // content: editor.getJSON(),
-          // databaseId: pageRef.current.databaseId,
-          // recordId: pageRef.current.recordId,
-          updatedAt: Date.now().toString(),
-        });
-      }
+      if (changed) latestTitleRef.current = text;
+      saveRef.current();
     };
-
     editor.on("update", update);
-
     return () => {
       editor.off("update", update);
     };
-  }, [editor, debounceUpdatePage, debounceUpdatePageFast]);
+  }, [editor]);
+
+  useRecordPropertyPanel(editor, page ?? null);
+
+  const { editor: mainEditor } = useCurrentEditor();
 
   return (
     <Card
@@ -276,8 +241,13 @@ export function PagePeekView({
           <Button
             variant="ghost"
             onClick={() => {
-              setActivePageId(page.id);
-              setPeekPageId(null);
+              if (page) {
+                setViewTarget(undefined);
+                mainEditor?.commands.setContent(page.content, {
+                  emitUpdate: false,
+                });
+                setActivePageId(page.id);
+              }
             }}
           >
             <Expand className="tiptap-button-icon" />

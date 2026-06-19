@@ -1,88 +1,64 @@
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { useCallback, useEffect, useRef } from "react";
-import { useDebouncedCallback } from "use-debounce";
-import type { Page } from "src/components/tiptap-templates/simple/types";
 import type {
   DataSource,
-  DataSourceRecord,
+  Page,
   DatabaseProperty,
   DatabaseView,
   SavedView,
   ID,
   PropertyType,
-} from "../types/types";
-import { makeDefaultView } from "../utils";
-import { resolveRecordFormulas } from "../components/formula-editor/resolve-records-formula";
-import { planTypeChange } from "../utils/property-type-change";
-import { computeRollup } from "../utils/compute-rollup";
-
-// ── API ────────────────────────────────────────────────────────────────────
-const api = "http://localhost:3005";
-
-const fetchSourceAsync = async (id: ID): Promise<DataSource> => {
-  const res = await fetch(`${api}/data-sources/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch data source");
-  return res.json();
-};
-
-// One PATCH for everything — json-server supports PATCH /data-sources/:id.
-// We send the whole records/properties/views payload (whole-source write).
-const patchSourceFnAsync = async (source: DataSource): Promise<DataSource> => {
-  const res = await fetch(`${api}/data-sources/${source.id}`, {
-    method: "PATCH",
-    body: JSON.stringify({
-      name: source.name,
-      pageId: source.pageId,
-      properties: source.properties,
-      records: source.records,
-      views: source.views ?? [],
-      savedViews: source.savedViews ?? [],
-      updatedAt: Date.now().toString(),
-    }),
-    headers: { "Content-Type": "application/json" },
-  });
-  if (!res.ok) throw new Error("Failed to update source");
-  return res.json();
-};
-
-// ── Hook ─────────────────────────────────────────────────────────────────
+} from "src/types";
+import { resolveRecordFormulas } from "../../../../lib/resolve-records-formula";
+import { useRows } from "src/hooks/use-pages";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage } from "src/api/pages";
+import type { CellValue, RowTemplate } from "src/types";
+import { makeRow } from "src/utils/make-row";
+import { useAddRow } from "src/hooks/use-add-row";
+import { newId } from "src/lib/id";
+import { useDeletePage } from "src/hooks/use-delete-page";
+import { usePatchDataSource } from "src/hooks/use-patch-data-source";
+import { patchDataSource } from "src/api/data-sources";
+import { useDataSource as useDataSourceApi } from "src/hooks/use-data-sources";
+import { useChangePropertyType } from "src/hooks/use-change-property-type";
+import { useMaterializeComputedColumn } from "src/hooks/use-materialized-computed-column";
+import { makeDefaultView } from "src/utils/make-default-view";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 export interface UseDataSourceReturn {
   source: DataSource | undefined;
   isLoading: boolean;
-  getCellValue: (recordId: ID, propertyId: ID) => unknown;
-  setCellValue: (recordId: ID, propertyId: ID, value: unknown) => void;
-  addRecordAsync: (recordId?: ID) => Promise<DataSourceRecord>;
-  addRecordWithPageAsync: (opts: {
+  getCellValue: (
+    recordId: ID,
+    propertyId: ID,
+  ) => CellValue<PropertyType> | null;
+  setCellValue: (
+    recordId: ID,
+    propertyId: ID,
+    value: CellValue<PropertyType>,
+  ) => void;
+  addRecordAsync: (opts?: {
     title?: string;
-    parentPageId?: number | null;
-    createPage: (data: {
-      title: string;
-      parentId: number | null;
-      databaseId?: string;
-      recordId?: string;
-    }) => Promise<Page>;
-  }) => Promise<DataSourceRecord>;
+    templateId?: string;
+  }) => Promise<Page>;
   removeRecordAsync: (recordId: ID) => Promise<void>;
-  updatePropertiesAsync: (
-    properties: DatabaseProperty[],
-  ) => Promise<DataSource | undefined>;
-  updateSourceMetaAsync: (patch: {
-    name?: string;
-    pageId?: number;
-  }) => Promise<unknown>;
-
+  addRowTemplateAsync: (rowTemp: RowTemplate) => Promise<RowTemplate>;
+  removeRowTemplateAsync: (templateId: ID) => Promise<DataSource>;
+  saveRowAsTemplateAsync: (
+    rowId: ID,
+    name: string,
+  ) => Promise<RowTemplate | undefined>;
   /** Change a property's type, migrating every record's value in one PATCH. */
   changePropertyTypeAsync: (
     propId: ID,
-    newType: PropertyType,
-  ) => Promise<DataSource | undefined>;
-
+    newProp: DatabaseProperty,
+  ) => Promise<void>;
+  updatePropertiesAsync: (
+    properties: DatabaseProperty[],
+  ) => Promise<DataSource>;
+  updateSourceMetaAsync: (patch: {
+    name?: string;
+    pageId?: ID;
+  }) => Promise<DataSource>;
   // ── Source-owned views (shared across every node on this source) ────────
   addViewAsync: (
     type: DatabaseView["type"],
@@ -98,158 +74,138 @@ export interface UseDataSourceReturn {
   // ── Saved-view catalog (bookkeeping for "start from") ───────────────────
   registerViewsAsync: (entries: SavedView[]) => Promise<void>;
 
-  resolvedRecords: DataSourceRecord[];
+  resolvedRecords: Page[];
 }
 
 export function useDataSource(
   sourceId: ID | null | undefined,
 ): UseDataSourceReturn {
-  const client = useQueryClient();
-  const key = ["dataSource", sourceId] as const;
+  const { data: source, isLoading } = useDataSourceApi(sourceId ?? null);
+  const sourceRef = useRef(source);
+  useEffect(() => void (sourceRef.current = source), [source]);
 
-  const { data: source, isLoading } = useQuery({
-    queryKey: key,
-    queryFn: () => fetchSourceAsync(sourceId as ID),
-    enabled: !!sourceId,
-    placeholderData: keepPreviousData,
-    retry: 1, // don't hammer on a genuine 404
-  });
+  const { data: rowsData } = useRows(sourceId ?? "");
+  const rows = useMemo(() => rowsData ?? [], [rowsData]);
+  const rowsRef = useRef(rows);
+  useEffect(() => void (rowsRef.current = rows), [rows]);
 
-  const { mutateAsync: _patchSource } = useMutation({
-    mutationKey: ["patchSource", sourceId],
-    mutationFn: patchSourceFnAsync,
-  });
+  const getCellValue = useCallback((recordId: ID, propertyId: ID) => {
+    const page = rowsRef.current.find((p) => p.id === recordId);
+    return page ? (page.values?.[propertyId] ?? null) : null;
+  }, []);
 
-  const patchRef = useRef(_patchSource);
-  useEffect(() => void (patchRef.current = _patchSource), [_patchSource]);
-
-  // Read current source from cache, apply transform, write cache (optimistic),
-  // return the new source so the caller can persist it.
-  const mutateSource = useCallback(
-    (transform: (s: DataSource) => DataSource): DataSource | undefined => {
-      if (!sourceId) return undefined;
-      const current = client.getQueryData<DataSource>(["dataSource", sourceId]);
-      if (!current) return undefined;
-      const next = transform(current);
-      client.setQueryData(["dataSource", sourceId], next);
-      return next;
-    },
-    [sourceId, client],
-  );
-
-  // Cell values: optimistic now, debounced PATCH (whole source)
-  const debouncedPatch = useDebouncedCallback(
-    (next: DataSource) => patchRef.current(next),
-    600,
-    { maxWait: 2000 },
-  );
-
-  const getCellValue = useCallback(
-    (recordId: ID, propertyId: ID): unknown => {
-      const rec = source?.records.find((r) => r.id === recordId);
-      return rec ? (rec.values[propertyId] ?? null) : null;
-    },
-    [source],
-  );
-
+  const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const setCellValue = useCallback(
-    (recordId: ID, propertyId: ID, value: unknown) => {
-      const next = mutateSource((s) => ({
-        ...s,
-        records: s.records.map((r) =>
-          r.id !== recordId
-            ? r
-            : { ...r, values: { ...r.values, [propertyId]: value } },
-        ),
-      }));
-      if (next) debouncedPatch(next);
-    },
-    [mutateSource, debouncedPatch],
-  );
-
-  const addRecordAsync = useCallback(
-    async (recordId?: ID): Promise<DataSourceRecord> => {
-      const record: DataSourceRecord = {
-        id: recordId ?? crypto.randomUUID(),
-        values: {},
-        createdAt: Date.now().toString(),
-        updatedAt: null,
-      };
-      const next = mutateSource((s) => ({
-        ...s,
-        records: [...s.records, record],
-      }));
-      if (next) await patchRef.current(next);
-      return record;
-    },
-    [mutateSource],
-  );
-
-  const addRecordWithPageAsync = useCallback(
-    async (opts: {
-      title?: string;
-      parentPageId?: number | null;
-      createPage: (data: {
-        title: string;
-        parentId: number | null;
-        databaseId?: string;
-        recordId?: string;
-      }) => Promise<Page>;
-    }): Promise<DataSourceRecord> => {
-      if (!sourceId) throw new Error("No sourceId");
-      const recordId = crypto.randomUUID();
-
-      // 1. linked page (child of the database's page, per the dedicated-page model)
-      const page = await opts.createPage({
-        title: opts.title ?? "",
-        parentId: opts.parentPageId ?? null,
-        databaseId: sourceId,
-        recordId,
-      });
-
-      // 2. record stamped with the page id
-      const record: DataSourceRecord = {
+    (recordId: ID, propertyId: ID, value: CellValue<PropertyType>) => {
+      const record = rowsRef.current.find((r) => r.id === recordId);
+      if (!record) return;
+      mutatePage.mutate({
         id: recordId,
-        values: {},
-        pageId: page.id,
-        createdAt: Date.now().toString(),
-        updatedAt: null,
-      };
-      const next = mutateSource((s) => ({
-        ...s,
-        records: [...s.records, record],
-      }));
-      if (next) await patchRef.current(next);
-      return record;
+        patch: { values: { ...(record.values ?? {}), [propertyId]: value } },
+      });
     },
-    [sourceId, mutateSource],
+    [mutatePage],
   );
 
+  const addRow = useAddRow();
+  // CREATE row from optional template (templateId falls back to node default elsewhere)
+  const addRecordAsync = useCallback(
+    async (opts?: { title?: string; templateId?: ID }): Promise<Page> => {
+      if (!sourceRef.current) throw new Error("No source");
+      const template = opts?.templateId
+        ? sourceRef.current.rowTemplates.find((t) => t.id === opts.templateId)
+        : undefined;
+      const row = makeRow(sourceRef.current, { title: opts?.title, template });
+      await addRow.mutateAsync(row);
+      return row;
+    },
+    [addRow],
+  );
+
+  const deletePage = useDeletePage();
   const removeRecordAsync = useCallback(
     async (recordId: ID) => {
-      const next = mutateSource((s) => ({
-        ...s,
-        records: s.records.filter((r) => r.id !== recordId),
-      }));
-      if (next) await patchRef.current(next);
+      await deletePage.mutateAsync(recordId);
+    },
+    [deletePage],
+  );
+
+  const mutateSource = usePatchDataSource(({ id, patch }) =>
+    patchDataSource(id, patch),
+  );
+
+  // ── row-template CRUD (source-owned config, via source patch) ──────────────
+  const addRowTemplateAsync = useCallback(
+    async (template: RowTemplate) => {
+      if (!sourceRef.current) throw new Error("No source");
+      await mutateSource.mutateAsync({
+        id: sourceRef.current.id,
+        patch: {
+          rowTemplates: [...(sourceRef.current.rowTemplates ?? []), template],
+        },
+      });
+      return template;
     },
     [mutateSource],
   );
 
+  const removeRowTemplateAsync = useCallback(
+    async (templateId: ID) => {
+      if (!sourceRef.current) throw new Error("No source");
+      return mutateSource.mutateAsync({
+        id: sourceRef.current.id,
+        patch: {
+          rowTemplates: (sourceRef.current.rowTemplates ?? []).filter(
+            (t) => t.id !== templateId,
+          ),
+        },
+      });
+    },
+    [mutateSource],
+  );
+
+  // "save this row AS a template" — snapshot a row-page's values + content
+  const saveRowAsTemplateAsync = useCallback(
+    async (rowId: ID, name: string) => {
+      const row = rowsRef.current.find((r) => r.id === rowId);
+      if (!row || !sourceRef.current) return undefined;
+      const template: RowTemplate = {
+        id: newId(),
+        name,
+        values: { ...(row.values ?? {}) },
+        content: row.content ? structuredClone(row.content) : null,
+        createdAt: Date.now(),
+      };
+      await mutateSource.mutateAsync({
+        id: sourceRef.current.id,
+        patch: {
+          rowTemplates: [...(sourceRef.current.rowTemplates ?? []), template],
+        },
+      });
+      return template;
+    },
+    [mutateSource],
+  );
+  // the ONE hook allowed to write properties[] — layout only (reorder/width/wrap)
   const updatePropertiesAsync = useCallback(
     async (properties: DatabaseProperty[]) => {
-      const next = mutateSource((s) => ({ ...s, properties }));
-      if (next) return patchRef.current(next);
-      return undefined;
+      const src = sourceRef.current;
+      if (!src) throw new Error("No source");
+      return mutateSource.mutateAsync({
+        id: src.id,
+        patch: { properties } as Parameters<
+          typeof mutateSource.mutateAsync
+        >[0]["patch"],
+      });
     },
     [mutateSource],
   );
 
   const updateSourceMetaAsync = useCallback(
-    async (patch: { name?: string; pageId?: number }) => {
-      const next = mutateSource((s) => ({ ...s, ...patch }));
-      if (next) return patchRef.current(next);
-      return undefined;
+    async (patch: { name?: string; pageId?: ID }) => {
+      const src = sourceRef.current;
+      if (!src) throw new Error("No source");
+      return mutateSource.mutateAsync({ id: src.id, patch });
     },
     [mutateSource],
   );
@@ -259,101 +215,75 @@ export function useDataSource(
   // values. When converting away from a COMPUTED type (rollup/formula) — whose
   // displayed value isn't stored — we snapshot the computed values first (from
   // the cache) so the new column inherits them. planTypeChange is pure.
+  const changeType = useChangePropertyType();
+  const materialize = useMaterializeComputedColumn();
+
   const changePropertyTypeAsync = useCallback(
-    async (propId: ID, newType: PropertyType) => {
-      const current = client.getQueryData<DataSource>(["dataSource", sourceId]);
+    async (propId: ID, newProp: DatabaseProperty) => {
+      const src = sourceRef.current;
+      if (!src) throw new Error("No source");
+      const cfg = src.properties.find((p) => p.id === propId)?.config;
 
-      let resolved: Record<string, unknown> | undefined;
-      if (current) {
-        const prop = current.properties.find((p) => p.id === propId);
-        const cfg = prop?.config;
-        if (cfg?.type === "rollup") {
-          // Resolve the rollup's related database from cache, then compute each
-          // row's value just like the rollup cell does.
-          const relProp = current.properties.find(
-            (p) => p.id === cfg.relationPropertyId,
-          );
-          const relCfg = relProp?.config;
-          const targetId =
-            relCfg?.type === "relation" ? relCfg.targetDatabaseId : null;
-          const target = targetId
-            ? client.getQueryData<DataSource>(["dataSource", targetId])
-            : undefined;
-          resolved = {};
-          for (const r of current.records) {
-            resolved[r.id] = computeRollup({
-              record: r,
-              properties: current.properties,
-              targetSource: target,
-              config: cfg,
-            });
-          }
-        } else if (cfg?.type === "formula") {
-          const resolvedRecs = resolveRecordFormulas(
-            current.records,
-            current.properties,
-          );
-          resolved = {};
-          for (const r of resolvedRecs) resolved[r.id] = r.values[propId];
-        }
+      // converting AWAY from a computed type → materialize (snapshot + store)
+      if (cfg?.type === "rollup" || cfg?.type === "formula") {
+        return materialize.mutateAsync({
+          sourceId: src.id,
+          propertyId: propId,
+          newProp,
+        });
       }
-
-      const next = mutateSource((s) => {
-        const { properties, records } = planTypeChange(
-          s,
-          propId,
-          newType,
-          resolved,
-        );
-        return { ...s, properties, records };
+      // scalar → scalar (or scalar → relation/rollup is remove+add, handled elsewhere)
+      return changeType.mutateAsync({
+        sourceId: src.id,
+        propertyId: propId,
+        newProp,
       });
-      if (next) return patchRef.current(next);
-      return undefined;
     },
-    [sourceId, client, mutateSource],
+    [changeType, materialize],
   );
-
   // ── Views: the shared catalog. Every node on this source reads/writes
   //    here; a node only keeps which view is active (attrs.activeViewId).
-
   const addViewAsync = useCallback(
     async (
       type: DatabaseView["type"],
       name: string,
     ): Promise<DatabaseView | undefined> => {
+      if (!sourceRef.current) throw new Error("no source");
       const view = makeDefaultView(type, name);
-      const next = mutateSource((s) => ({
-        ...s,
-        views: [...(s.views ?? []), view],
-      }));
-      if (next) await patchRef.current(next);
-      return next ? view : undefined;
+      await mutateSource.mutateAsync({
+        id: sourceRef.current.id,
+        patch: { views: [...(sourceRef.current.views ?? []), view] },
+      });
+      return view;
     },
     [mutateSource],
   );
 
   const updateViewAsync = useCallback(
     async (viewId: ID, patch: Partial<Omit<DatabaseView, "id">>) => {
-      const next = mutateSource((s) => ({
-        ...s,
-        views: (s.views ?? []).map((v) =>
-          v.id === viewId ? ({ ...v, ...patch } as DatabaseView) : v,
-        ),
-      }));
-      if (next) return patchRef.current(next);
-      return undefined;
+      if (!sourceRef.current) throw new Error("no source");
+      return mutateSource.mutateAsync({
+        id: sourceRef.current.id,
+        patch: {
+          views: (sourceRef.current.views ?? []).map((v) =>
+            v.id === viewId ? ({ ...v, ...patch } as DatabaseView) : v,
+          ),
+        },
+      });
     },
     [mutateSource],
   );
 
   const deleteViewAsync = useCallback(
     async (viewId: ID): Promise<DatabaseView[]> => {
-      let remaining: DatabaseView[] = [];
-      const next = mutateSource((s) => {
-        remaining = (s.views ?? []).filter((v) => v.id !== viewId);
-        return { ...s, views: remaining };
+      if (!sourceRef.current) throw new Error("no source");
+      const next = await mutateSource.mutateAsync({
+        id: sourceRef.current.id,
+        patch: {
+          views: (sourceRef.current.views ?? []).filter((v) => v.id !== viewId),
+        },
       });
-      if (next) await patchRef.current(next);
+      const remaining = next.views;
       return remaining;
     },
     [mutateSource],
@@ -361,7 +291,9 @@ export function useDataSource(
 
   const duplicateViewAsync = useCallback(
     async (viewId: ID): Promise<DatabaseView | undefined> => {
-      const src = source?.views?.find((v) => v.id === viewId);
+      if (!sourceRef.current) throw new Error("no source");
+      const source = sourceRef.current;
+      const src = source.views.find((v) => v.id === viewId);
       if (!src) return undefined;
       // Clone every field — filters, sorts, grouping, layout — keeping only a
       // fresh identity. Spreading the union member preserves its type fields.
@@ -370,14 +302,13 @@ export function useDataSource(
         id: crypto.randomUUID(),
         name: `${src.name} copy`,
       } as DatabaseView;
-      const next = mutateSource((s) => ({
-        ...s,
-        views: [...(s.views ?? []), copy],
-      }));
-      if (next) await patchRef.current(next);
+      const next = await mutateSource.mutateAsync({
+        id: source.id,
+        patch: { views: [...(source.views ?? []), copy] },
+      });
       return next ? copy : undefined;
     },
-    [source, mutateSource],
+    [mutateSource],
   );
 
   // ── Saved-view catalog: snapshot full views into source.savedViews so any
@@ -385,11 +316,10 @@ export function useDataSource(
   //    only writes when a view actually changed (deep compare, no storms).
   const registerViewsAsync = useCallback(
     async (entries: SavedView[]) => {
-      if (!sourceId || entries.length === 0) return;
-      const current = client.getQueryData<DataSource>(["dataSource", sourceId]);
-      if (!current) return;
+      const src = sourceRef.current;
+      if (!src || entries.length === 0) return;
 
-      const existing = current.savedViews ?? [];
+      const existing = src.savedViews ?? [];
       const byId = new Map(existing.map((e) => [e.id, e]));
       let changed = false;
       for (const e of entries) {
@@ -401,24 +331,18 @@ export function useDataSource(
       }
       if (!changed) return;
 
-      const next: DataSource = { ...current, savedViews: [...byId.values()] };
-      client.setQueryData(["dataSource", sourceId], next);
-      await patchRef.current(next);
+      await mutateSource.mutateAsync({
+        id: src.id,
+        patch: { savedViews: [...byId.values()] },
+      });
     },
-    [sourceId, client],
+    [mutateSource],
   );
 
-  const resolvedCache = new WeakMap<object, DataSourceRecord[]>();
-
-  function getResolvedRecords(source: DataSource): DataSourceRecord[] {
-    // key on the records array identity — stable across callers until data changes
-    const cached = resolvedCache.get(source.records);
-    if (cached) return cached;
-    const resolved = resolveRecordFormulas(source.records, source.properties);
-    resolvedCache.set(source.records, resolved);
-    return resolved;
-  }
-  const resolvedRecords = source ? getResolvedRecords(source) : [];
+  const resolvedRecords = useMemo(
+    () => (source ? resolveRecordFormulas(rows, source.properties) : []),
+    [rows, source],
+  );
 
   return {
     source,
@@ -427,8 +351,10 @@ export function useDataSource(
     getCellValue,
     setCellValue,
     addRecordAsync,
-    addRecordWithPageAsync,
     removeRecordAsync,
+    addRowTemplateAsync,
+    removeRowTemplateAsync,
+    saveRowAsTemplateAsync,
     updatePropertiesAsync,
     updateSourceMetaAsync,
     changePropertyTypeAsync,

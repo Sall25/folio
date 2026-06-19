@@ -6,9 +6,10 @@ import {
   useCallback,
 } from "react";
 import { createPortal } from "react-dom";
-import { Star, Users, Lock, Building2, ChevronDown, Check } from "lucide-react";
-import type { PageCategory } from "../types";
+import { Star, Users, Lock, Building2, Check, ChevronDown } from "lucide-react";
+import type { PageCategory } from "src/types";
 import "./page-category-select.scss";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 
 // Selectable categories — mirror the sidebar sections.
 const OPTIONS: { value: PageCategory; label: string; icon: React.ReactNode }[] =
@@ -78,7 +79,7 @@ export function PageCategorySelect({
 
   return (
     <div className="page-category-select">
-      <button
+      <Button
         ref={triggerRef}
         className="page-category-select__trigger"
         onClick={() => setOpen((v) => !v)}
@@ -88,7 +89,7 @@ export function PageCategorySelect({
         <span className="page-category-select__icon">{current.icon}</span>
         <span className="page-category-select__label">{current.label}</span>
         <ChevronDown size={14} className="page-category-select__chevron" />
-      </button>
+      </Button>
 
       {open &&
         createPortal(

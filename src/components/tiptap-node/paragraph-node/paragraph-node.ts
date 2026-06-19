@@ -62,6 +62,24 @@ export const ParagraphNode = Paragraph.extend({
           const docChanged = transactions.some((tr) => tr.docChanged);
           if (!docChanged) return null;
 
+          // Structured (database) pages are title + database node only — no
+          // free-text body. Detect this locally from the doc itself (a
+          // top-level `database` node present) rather than via cross-extension
+          // storage: synchronous, race-free, and correct on first load. Never
+          // append a trailing paragraph on such a page.
+          let hasTopLevelDatabase = false;
+          newState.doc.forEach((n) => {
+            if (n.type.name === "database") hasTopLevelDatabase = true;
+          });
+
+          console.log(
+            "[para-plugin]",
+            newState.doc.content.content.map((n) => n.type.name),
+            "hasDb:",
+            hasTopLevelDatabase,
+          );
+          if (hasTopLevelDatabase) return null;
+
           const { doc, schema, tr } = newState;
           let modified = false;
 
@@ -101,28 +119,6 @@ export const ParagraphNode = Paragraph.extend({
           return modified ? tr : null;
         },
       }),
-      // new Plugin({
-      //   key: ensureTrailingParagraphKey,
-      //   appendTransaction(transactions, _oldState, newState) {
-      //     // Only run if the document actually changed
-      //     const docChanged = transactions.some((tr) => tr.docChanged);
-      //     if (!docChanged) return null;
-
-      //     const { doc, schema, tr } = newState;
-      //     const lastNode = doc.lastChild;
-
-      //     // Already ends with an empty paragraph — nothing to do
-      //     if (
-      //       lastNode?.type === schema.nodes.paragraph &&
-      //       lastNode.content.size === 0
-      //     ) {
-      //       return null;
-      //     }
-
-      //     // Append an empty paragraph at the end
-      //     return tr.insert(doc.content.size, schema.nodes.paragraph.create());
-      //   },
-      // }),
     ];
   },
 });

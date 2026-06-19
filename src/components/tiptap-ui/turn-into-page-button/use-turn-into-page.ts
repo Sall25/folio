@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import type { Editor } from "@tiptap/core";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { FileIcon } from "lucide-react";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
-import { useActivePageContext } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useCreatePage } from "src/hooks/use-create-page";
+import { makePage } from "src/utils/make-page";
 
 interface Props {
   editor: Editor | null;
@@ -31,8 +32,8 @@ export function useTurnIntoPage({
   onTurnedIntoPage,
 }: Props) {
   const [canTurn, setCanTurn] = useState(false);
-  const { addPageAsync } = usePages();
-  const { activePageId } = useActivePageContext();
+  const createPage = useCreatePage();
+  const { activePageId } = useActivePage();
 
   useEffect(() => {
     if (!editor) return;
@@ -73,8 +74,8 @@ export function useTurnIntoPage({
     }
 
     const title = paragraphText.trim() || "New Page";
-
-    const newPage = await addPageAsync({ title, parentId: activePageId });
+    const newPage = makePage({ title, parentId: activePageId });
+    await createPage.mutateAsync(newPage);
 
     // Update pageLink storage so the node view can resolve the page
     editor.storage.pageLink.pages.push(newPage);
@@ -97,7 +98,7 @@ export function useTurnIntoPage({
 
     onTurnedIntoPage?.();
     return true;
-  }, [editor, canTurn, activePageId, addPageAsync, onTurnedIntoPage]);
+  }, [editor, canTurn, activePageId, createPage, onTurnedIntoPage]);
 
   return {
     isVisible: hideWhenUnavailable ? canTurn : true,

@@ -1,5 +1,5 @@
 import type { CellProps } from "../types";
-import type { FormulaCellAttrs } from "../../../types/types";
+import type { FormulaCellAttrs } from "src/types";
 
 function formatValue(value: FormulaCellAttrs["value"]): string {
   if (value === null || value === undefined) return "";

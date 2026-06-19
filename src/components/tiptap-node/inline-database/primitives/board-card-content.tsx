@@ -1,4 +1,4 @@
-import type { Page } from "src/components/tiptap-templates/simple/types";
+import type { Page } from "src/types";
 import { getPageExcerpt } from "src/lib/get-page-excerpt";
 
 interface BoardCardContentProps {

@@ -18,7 +18,7 @@ import type {
   PersonLimit,
   PersonDefault,
   PersonNotifications,
-} from "../../types/types";
+} from "src/types";
 //import "./person-edit-display.scss";
 
 type PersonConfig = ConfigOf<"person">;

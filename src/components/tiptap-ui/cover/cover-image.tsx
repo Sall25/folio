@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
-import type { Page } from "src/components/tiptap-templates/simple/types";
+import type { Page } from "src/types";
 import CoverControlsGroup from "./cover-controls";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage } from "src/api/pages";
 
 export default function CoverImage({
   page,
@@ -11,7 +11,8 @@ export default function CoverImage({
   page: Page;
   onRemoveCoverAsync: () => Promise<void>;
 }) {
-  const { updatePageAsync } = useActivePage();
+  const {mutateAsync} = usePatchPage(({id, patch})=>patchPage(id, patch))
+  const mutateAsyncRef = useRef(mutateAsync)
   const [btnPosition, setBtnPosition] = useState({ top: 0, right: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const [hovering, setHovering] = useState(false);
@@ -22,7 +23,7 @@ export default function CoverImage({
   const [localPositionY, setLocalPositionY] = useState<number | null>(null);
 
   const coverImage = pendingCoverImage ?? page.cover.coverImage;
-  const positionY = localPositionY ?? (page.cover as any)?.positionY ?? 50;
+  const positionY = localPositionY ?? (page.cover)?.positionY ?? 50;
 
   const onCoverImageChange = useCallback((url: string) => {
     setPendingCoverImage(url);
@@ -33,13 +34,13 @@ export default function CoverImage({
   }, []);
 
   const handlePositionDragEnd = useCallback(async () => {
-    const y = localPositionY ?? (page.cover as any)?.positionY ?? 50;
-    await updatePageAsync({
-      ...page,
-      cover: { ...page.cover, positionY: y },
+    const y = localPositionY ?? (page.cover)?.positionY ?? 50;
+    await mutateAsyncRef.current({
+      id: page.id,
+      patch: {cover: { ...page.cover, positionY: y }}
     });
     setLocalPositionY(null);
-  }, [updatePageAsync, page, localPositionY]);
+  }, [page, localPositionY]);
 
   const onPopoverOpenChange = useCallback(
     (open: boolean) => setPopoverOpen(open),

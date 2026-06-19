@@ -14,7 +14,7 @@ import { FloatingMenu } from "@tiptap/react/menus";
 import { useCoverActions } from "./hooks/use-cover-actions";
 import { FloatingActions } from "./floating-actions";
 import type { Target } from "src/components/tiptap-ui/cover/types";
-import { useActivePage } from "./use-active-page";
+import { useActivePage } from "./context/active-page-context";
 import { useEditorLayout } from "./context/editor-layout-context";
 import { useRecordPropertyPanel } from "./hooks/use-record-property-panel";
 
@@ -44,10 +44,10 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
   hasThreads: boolean;
 }) {
   const { editor } = useCurrentEditor();
-  const { activePage, pages } = useActivePage();
+  const { activePage } = useActivePage();
   const { collapsed } = useEditorLayout();
 
-  useRecordPropertyPanel(editor, pages, activePage?.id ?? null);
+  useRecordPropertyPanel(editor, activePage ?? null);
 
   return (
     <EditorContent
@@ -68,6 +68,7 @@ const ThreadSidebarMemo = React.memo(function ThreadSidebarMemo({
   setHasThreads: (v: boolean) => void;
 }) {
   const { editor } = useCurrentEditor();
+
   return <ThreadSidebar editor={editor} setHasThreads={setHasThreads} />;
 });
 

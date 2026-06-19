@@ -34,15 +34,11 @@ import { MentionExtension } from "src/components/tiptap-ui/mention-menu";
 import { EmojiExtension } from "src/components/tiptap-ui/emoji-menu";
 import { handleImageUpload, MAX_FILE_SIZE } from "src/lib/tiptap-utils";
 import { DatabaseNode } from "src/components/tiptap-node/inline-database";
-import { DatabaseRecordNode } from "src/components/tiptap-node/inline-database/nodes/database-record-node";
-import { TitleCellNode } from "src/components/tiptap-node/inline-database/nodes/title-cell-node";
-import { SelectCellNode } from "src/components/tiptap-node/inline-database/nodes/select-cell-node";
-import { CheckboxCellNode } from "src/components/tiptap-node/inline-database/nodes/checkbox-cell-node";
-import { SelectPropertyNode } from "src/components/tiptap-node/database-node/select-property-node";
 import { AudioExtension } from "src/components/tiptap-node/audio-node";
-import { RecordPropertyPanelNode } from "src/components/tiptap-node/record-property-panel-node";
+import { RecordPropertyPanelNode } from "../record-property-panel-node";
+import type { ID } from "src/types";
 
-export function usePeekEditorExtensions(onNavigate?: (pageId: number) => void) {
+export function usePeekEditorExtensions(onNavigate?: (pageId: ID) => void) {
   const extensions = useMemo(
     () => [
       StarterKit.configure({
@@ -110,11 +106,6 @@ export function usePeekEditorExtensions(onNavigate?: (pageId: number) => void) {
       PageLinkNode.configure({
         onNavigate: (pageId) => onNavigate?.(pageId),
       }),
-      SelectPropertyNode,
-      CheckboxCellNode,
-      TitleCellNode,
-      SelectCellNode,
-      DatabaseRecordNode,
       DatabaseNode,
       CalloutExtension,
       AudioExtension,

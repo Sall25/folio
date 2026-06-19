@@ -1,12 +1,13 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { BreadcrumbNodeView } from "./breadcrumb-node-view";
+import type { ID } from "src/types";
 
 export interface BreadcrumbItem {
   label: string;
   iconName?: string;
   locked?: boolean;
-  pageId?: number;
+  pageId?: ID;
 }
 
 declare module "@tiptap/core" {

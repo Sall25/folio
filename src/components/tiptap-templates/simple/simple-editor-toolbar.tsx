@@ -14,16 +14,13 @@ import { LinkIcon } from "src/components/tiptap-icons/link-icon";
 import { ThemeToggle } from "src/components/tiptap-templates/simple/theme-toggle";
 import { NotificationBell } from "src/components/tiptap-ui/notification";
 import { MorePopover } from "./more-popover";
-import { PageBreadcrumb } from "src/components/tiptap-ui/page-breadcrumb/page-breadcrumb";
-import { buildBreadcrumb } from "src/lib/build-breadcrumb";
-import { PageItemIcon } from "./page-item-icon";
-import { useMemo } from "react";
-import { useActivePage } from "./use-active-page";
-import { usePages } from "./use-pages";
-import { useMatch } from "@tanstack/react-location";
-import type { Page, View } from "./types";
+import { useActivePage } from "./context/active-page-context";
+import type { View } from "src/types";
 import { Home } from "lucide-react";
 import { PageCategorySelect } from "./components/page-category-select";
+import { Breadcrumbs } from "./breadcrumbs";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage } from "src/api/pages";
 
 // ============================================================
 // Types
@@ -58,53 +55,13 @@ type SimpleEditorToolbarProps = {
 // ============================================================
 // Main toolbar
 // ============================================================
-
-function findPage(pages: Page[], id: number): Page | undefined {
-  for (const page of pages) {
-    if (page.id === id) return page;
-    if (page.children?.length) {
-      const found = findPage(page.children, id);
-      if (found) return found;
-    }
-  }
-}
-
 export const MainToolbarContent = ({
   isMobile,
   onTriggerVersionHistory,
   view,
 }: MainToolbarProps) => {
-  const { pages, setActivePageId } = useActivePage();
-  const { updatePageAsync } = usePages();
-
-  const { params } = useMatch();
-  const activePageId = params.pageId ? Number(params.pageId) : undefined;
-
-  const activePage = useMemo(
-    () => (activePageId && pages ? findPage(pages, activePageId) : undefined),
-    [activePageId, pages],
-  );
-
-  const breadcrumbs = useMemo(() => {
-    if (!activePage || !pages) return [];
-
-    return buildBreadcrumb(activePage, pages).map((page) => {
-      const isActive = page.id === activePageId;
-      const { title, cover, settings } = isActive ? activePage : page;
-
-      return {
-        label: title || "New Page",
-        icon: (
-          <PageItemIcon
-            cover={cover}
-            styles={{ fontSize: 14, color: page.cover.color }}
-          />
-        ),
-        locked: settings.locked,
-        onClick: () => setActivePageId(page.id),
-      };
-    });
-  }, [activePage, activePageId, pages, setActivePageId]);
+  const { activePage, activePageId } = useActivePage();
+  const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
 
   return (
     <>
@@ -117,20 +74,21 @@ export const MainToolbarContent = ({
             </span>
           </Button>
         )}
-        <PageBreadcrumb items={breadcrumbs} />
-        {view !== "home" && activePage && (
-          <PageCategorySelect
-            value={activePage.category}
-            onChange={(category) =>
-              updatePageAsync({ ...activePage, category })
-            }
-          />
-        )}
+        <Breadcrumbs pageId={activePageId} />
       </ToolbarGroup>
       <Spacer />
 
       {isMobile && <ToolbarSeparator />}
       <ToolbarGroup>
+        {view !== "home" && activePage && (
+          <PageCategorySelect
+            value={activePage.category}
+            onChange={(category) => {
+              if (activePageId)
+                mutateAsync({ id: activePageId, patch: { category } });
+            }}
+          />
+        )}
         <UndoRedoButton action="undo" />
         <UndoRedoButton action="redo" />
         <Separator orientation="vertical" />

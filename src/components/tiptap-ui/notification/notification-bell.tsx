@@ -17,9 +17,9 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Bell } from "lucide-react";
-import { useActivePageContext } from "src/components/tiptap-templates/simple/context/active-page-context";
-// ── Icons (inline SVG, no extra dep) ──────────────────────────────────────
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 
+// ── Icons (inline SVG, no extra dep) ──────────────────────────────────────
 function BellIcon() {
   return (
     <svg
@@ -135,7 +135,7 @@ export function NotificationBell() {
   } = useNotificationContext();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const { setActivePageId } = useActivePageContext();
+  const { setActivePageId } = useActivePage();
   // Close on outside click
   useEffect(() => {
     if (!open) return;
@@ -153,7 +153,7 @@ export function NotificationBell() {
   const handleNotificationClick = (notification: Notification) => {
     markRead(notification.id);
     if (notification.sourcePageId !== undefined) {
-      setActivePageId(Number(notification.sourcePageId));
+      setActivePageId(notification.sourcePageId as string);
     }
     // scroll after page has switched and content has rendered
     if (notification.targetNodeId) {

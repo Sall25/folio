@@ -5,7 +5,7 @@ import type {
   DatabaseProperty,
   DataSource,
   ID,
-} from "../types/types";
+} from "src/types";
 import type { UseDatabaseReturn } from "../hooks/use-database";
 import { DatabaseContext } from "./database-context";
 

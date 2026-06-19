@@ -1,6 +1,6 @@
-import { useContext } from "react"
-import { ThreadContext } from "./threadContext"
+import { useContext } from "react";
+import { ThreadContext } from "./threadContext";
 
 export function useThreadState() {
-  return useContext(ThreadContext)
+  return useContext(ThreadContext);
 }

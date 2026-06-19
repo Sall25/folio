@@ -3,9 +3,10 @@ import type {
   AggregationFunction,
   ConfigOf,
   DatabaseProperty,
-  ID,
-} from "../../../types/types";
-import { computeRollup } from "../../../utils/compute-rollup";
+  Page,
+} from "src/types";
+import { computeRollup } from "src/lib/compute-rollup";
+import { usePages } from "src/hooks/use-pages";
 
 function formatRollup(
   value: string | number | null,
@@ -34,20 +35,27 @@ export function RollupCell({
   properties,
 }: {
   config: ConfigOf<"rollup">;
-  record: { id: ID; values: Record<ID, unknown> };
+  record: Page;
   properties: DatabaseProperty[];
 }) {
   const relationProp = properties.find(
     (p) => p.id === config.relationPropertyId,
   );
-  const targetDatabaseId =
+  const targetSourceId =
     relationProp?.config.type === "relation"
-      ? relationProp.config.targetDatabaseId
+      ? relationProp.config.targetSourceId
       : null;
 
-  const { source: targetSource } = useDataSource(targetDatabaseId || null);
+  const { source: targetSource } = useDataSource(targetSourceId || null);
+  const { data: pages } = usePages();
 
-  const value = computeRollup({ record, properties, targetSource, config });
+  const value = computeRollup({
+    record: { values: record.values! },
+    properties,
+    targetSource,
+    config,
+    pages: pages ?? [],
+  });
 
   return (
     <div className="db-cell" data-wrap="false">

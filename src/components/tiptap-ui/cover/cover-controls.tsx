@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
@@ -11,8 +11,9 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { CoverPickerCard } from "./cover-picker-card";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
-import type { Page } from "src/components/tiptap-templates/simple/types";
+import type { Page } from "src/types";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage } from "src/api/pages";
 
 // ============================================================
 // CoverControlsGroup
@@ -39,7 +40,8 @@ export default function CoverControlsGroup({
 }) {
   const [positionY, setPositionY] = useState(50);
   const [, setCoverPickerOpen] = useState(false);
-  const { updatePageAsync } = useActivePage();
+  const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
+  const mutateAsyncRef = useRef(mutateAsync);
   const [coverImage, setCoverImage] = useState(page.cover.coverImage);
 
   const onChangeCover = () => {
@@ -62,17 +64,17 @@ export default function CoverControlsGroup({
       onCoverImageChange?.(url);
       const next = { ...page.cover, coverImage: url } as any;
       delete next.gradient;
-      await updatePageAsync({ ...page, cover: next });
+      await mutateAsyncRef.current({ id: page.id, patch: { cover: next } });
     },
-    [updatePageAsync, page, onCoverImageChange],
+    [page, onCoverImageChange],
   );
 
   const handleGradientChange = useCallback(
     async (gradient: string) => {
       const next = { ...page.cover, coverImage: null, gradient } as any;
-      await updatePageAsync({ ...page, cover: next });
+      await mutateAsyncRef.current({ id: page.id, patch: { cover: next } });
     },
-    [updatePageAsync, page],
+    [page],
   );
 
   return createPortal(

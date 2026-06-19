@@ -3,7 +3,12 @@ import type { ThreadContextType } from "./threadContextType";
 
 export const ThreadContext = createContext<ThreadContextType>({
   threads: [],
-  selectedThreads: [],
-  selectedThread: null
-})
-
+  selectedThread: null,
+  positionedThreads: [],
+  onMapThreads: () => {},
+  onMeasureAllThreads: () => {},
+  onResolveActiveThreadCollisions: () => {},
+  onResolveThreadCollisions: () => {},
+  onSelectedThreadChange: () => {},
+  requestReflow: () => {},
+});

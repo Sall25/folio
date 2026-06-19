@@ -24,7 +24,7 @@ import type {
   DatabaseProperty,
   NumberFormat,
   DecimalPlaces,
-} from "../../types/types";
+} from "src/types";
 import "./number-edit-display.scss";
 
 type NumberConfig = ConfigOf<"number">;

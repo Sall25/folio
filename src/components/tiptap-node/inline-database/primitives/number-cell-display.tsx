@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import type { NumberFormat, DecimalPlaces, NumberShowAs } from "../types/types";
+import type { NumberFormat, DecimalPlaces, NumberShowAs } from "src/types";
 import "./number-cell-display.scss";
 
 function formatNumber(

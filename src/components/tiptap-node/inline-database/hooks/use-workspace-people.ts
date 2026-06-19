@@ -1,4 +1,4 @@
-import type { PersonValue } from "../types/types";
+import type { PersonValue } from "src/types";
 
 // TODO: replace with the real workspace members source ("like Notion").
 // Could be a context, a query hook, or whatever created_by/edited_by resolves

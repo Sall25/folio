@@ -1,6 +1,5 @@
 import { Plus } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import { useDataSource } from "../hooks/use-data-source";
 import { BoardCard } from "../primitives/board-card";
 import type {
@@ -8,7 +7,7 @@ import type {
   DatabaseView,
   DataSource,
   GalleryView,
-} from "../types/types";
+} from "src/types";
 import "./database-gallery-node-view.scss";
 
 // Cards per row by size. Larger size = fewer, wider cards.
@@ -27,11 +26,9 @@ export function DatabaseGalleryNodeView({
   source: DataSource;
   view: DatabaseView;
 }) {
-  const { addPageAsync } = usePages();
-  const { addRecordWithPageAsync, setCellValue } = useDataSource(
+  const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
     attrs.sourceId,
   );
-  const recordParentId = source.pageId ?? null;
 
   const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
     attrs.views[0]) as GalleryView | undefined;
@@ -55,7 +52,7 @@ export function DatabaseGalleryNodeView({
       }
     >
       <div className="db-gallery__body">
-        {source.records.map((rec) => (
+        {resolvedRecords.map((rec) => (
           <div key={rec.id} className="db-gallery__card">
             <BoardCard
               record={rec}
@@ -75,13 +72,7 @@ export function DatabaseGalleryNodeView({
           justifyContent: "flex-start",
           borderRadius: "var(--tt-radius-sm)",
         }}
-        onClick={() =>
-          addRecordWithPageAsync({
-            title: "",
-            parentPageId: recordParentId,
-            createPage: addPageAsync,
-          })
-        }
+        onClick={() => addRecordAsync({ title: "" })}
       >
         <Plus className="tiptap-button-icon" />
         <span className="tiptap-button-text">New</span>

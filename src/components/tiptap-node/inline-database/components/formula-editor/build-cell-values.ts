@@ -1,5 +1,5 @@
 import type { Node } from "@tiptap/pm/model";
-import type { DatabaseProperty, CellValue, ID } from "../../types/types";
+import type { DatabaseProperty, CellValue, ID } from "src/types";
 
 /**
  * Walks a databaseRecord node's children and extracts each cell's value

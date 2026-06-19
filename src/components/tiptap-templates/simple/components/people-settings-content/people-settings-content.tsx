@@ -17,13 +17,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { usePeople } from "../../use-people";
-import { useGroups } from "../../use-groups";
-import { useTeamspaces } from "../../use-teamspaces";
-import { teamspacesOfGroup, type Teamspace } from "../../types";
+import { usePeople } from "src/hooks/use-people";
+import { useGroups } from "src/hooks/use-groups";
+import { useTeamspaces } from "src/hooks/use-teamspaces";
+import { teamspacesOfGroup, type Teamspace, membersOf, type Group, type Person } from "src/types";
 import { useWorkspaceSettings } from "../../use-workspace-settings";
-import { membersOf, type Group, type Person } from "../../types";
+
 import "./people-settings-content.scss";
+import { useCreateGroup } from "src/hooks/use-create-group";
+import { usePatchGroup } from "src/hooks/use-patch-group";
+import { patchGroup } from "src/api/groups";
+import { useDeleteGroup } from "src/hooks/use-delete-group";
+import { useCreateTeamspace } from "src/hooks/use-create-teamspace";
 
 type Tab = "members" | "guests" | "groups";
 
@@ -316,15 +321,21 @@ function GroupRow({
 
 export function PeopleSettingsContent() {
   const { people, members, guests } = usePeople();
-  const {
-    groups,
-    addGroupAsync,
-    renameGroupAsync,
-    deleteGroupAsync,
-    addMemberAsync,
-    removeMemberAsync,
-  } = useGroups();
-  const { teamspaces, createFromGroupAsync } = useTeamspaces();
+  const addGroup = useCreateGroup()
+  const mutateGroup = usePatchGroup(({id, patch})=>patchGroup(id, patch))
+  const deleteGroup = useDeleteGroup()
+  const {data: teamspaces} = useTeamspaces()
+  const addTreamspace = useCreateTeamspace()
+
+  // const {
+  //   groups,
+  //   addGroupAsync,
+  //   renameGroupAsync,
+  //   deleteGroupAsync,
+  //   addMemberAsync,
+  //   removeMemberAsync,
+  // } = useGroups();
+  //const { teamspaces, createFromGroupAsync } = useTeamspaces();
 
   const [tab, setTab] = useState<Tab>("members");
   const [query, setQuery] = useState("");

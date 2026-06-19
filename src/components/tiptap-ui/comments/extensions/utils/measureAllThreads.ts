@@ -1,5 +1,5 @@
 import type { Editor } from "@tiptap/core";
-import type { MeasuredThread, Thread } from "../../types";
+import type { MeasuredThread, Thread } from "src/types";
 
 export function measureAllThreads(
   editor: Editor,
@@ -9,8 +9,15 @@ export function measureAllThreads(
   const scrollTop = scrollContainer?.scrollTop ?? window.scrollY;
   const containerTop = scrollContainer?.getBoundingClientRect().top ?? 0;
 
-  return threads.map((t) => {
-    const { top } = editor.view.coordsAtPos(t.anchor.from);
+  // if not fixed use map
+  return threads.flatMap((t) => {
+    let top: number;
+    try {
+      ({ top } = editor.view.coordsAtPos(t.anchor.from));
+    } catch {
+      return [] as MeasuredThread[];
+    }
+
     console.log({
       top,
       containerTop,

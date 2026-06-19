@@ -13,13 +13,16 @@ import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { SettingsToggleButton } from "src/components/tiptap-ui/settings-toggle-button";
 import { ExportButtons } from "src/components/tiptap-ui/export-buttons/export-buttons";
 import { useCallback, useState } from "react";
-import { useActivePage } from "./use-active-page";
+import { useActivePage } from "./context/active-page-context";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage } from "src/api/pages";
 export function MorePopover({
   onTriggerVersionHistory,
 }: {
   onTriggerVersionHistory?: () => void;
 }) {
-  const { activePage, updateSettingsAsync } = useActivePage();
+  const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
+  const { activePage } = useActivePage();
   const [fullWidth, setFullWidth] = useState<boolean>(
     activePage?.settings.width === "full",
   );
@@ -36,13 +39,17 @@ export function MorePopover({
       if (!activePage) return;
 
       setFullWidth(checked);
-
-      await updateSettingsAsync({
-        ...activePage.settings,
-        width: checked ? "full" : "medium",
+      await mutatePage.mutateAsync({
+        id: activePage.id,
+        patch: {
+          settings: {
+            ...activePage.settings,
+            width: checked ? "full" : "medium",
+          },
+        },
       });
     },
-    [activePage, updateSettingsAsync],
+    [activePage, mutatePage],
   );
 
   const onSmallTextChangeAsync = useCallback(
@@ -51,12 +58,17 @@ export function MorePopover({
 
       setSmallText(checked);
 
-      await updateSettingsAsync({
-        ...activePage.settings,
-        text: checked ? "small" : "normal",
+      await mutatePage.mutateAsync({
+        id: activePage.id,
+        patch: {
+          settings: {
+            ...activePage.settings,
+            text: checked ? "small" : "normal",
+          },
+        },
       });
     },
-    [activePage, updateSettingsAsync],
+    [activePage, mutatePage],
   );
 
   const onLockedChangeAsync = useCallback(
@@ -65,9 +77,12 @@ export function MorePopover({
 
       setLocked(checked);
 
-      await updateSettingsAsync({ ...activePage.settings, locked: checked });
+      await mutatePage.mutateAsync({
+        id: activePage.id,
+        patch: { settings: { ...activePage.settings, locked: checked } },
+      });
     },
-    [activePage, updateSettingsAsync],
+    [activePage, mutatePage],
   );
 
   return (

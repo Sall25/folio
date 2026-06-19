@@ -6,8 +6,7 @@ import { EditorProvider } from "./components/tiptap-templates/simple/context/edi
 import { EditorLayoutProvider } from "./components/tiptap-templates/simple/context/editor-layout-provider";
 import { SimpleEditorSidebar } from "./components/tiptap-templates/simple/simple-editor-sidebar";
 import { ActivePageProvider } from "./components/tiptap-templates/simple/context/active-page-provider";
-import { CreatePageProvider } from "./components/tiptap-templates/simple/context/create-page-provider";
-import { PeekPageProvider } from "./components/tiptap-templates/simple/context/peek-page-provider";
+import { PageViewProvider } from "./components/tiptap-templates/simple/context/page-view-provider";
 import { SearchProvider } from "./components/tiptap-templates/simple/context/search-provider";
 import { LibraryProvider } from "./components/tiptap-templates/simple/context/library-provider";
 
@@ -19,18 +18,16 @@ function App() {
       <EditorLayoutProvider>
         <SearchProvider>
           <LibraryProvider>
-            <PeekPageProvider>
-              <EditorProvider>
-                <CreatePageProvider>
-                  <Router location={location} routes={routes}>
-                    <ActivePageProvider>
-                      <SimpleEditorSidebar />
-                      <Outlet />
-                    </ActivePageProvider>
-                  </Router>
-                </CreatePageProvider>
-              </EditorProvider>
-            </PeekPageProvider>
+            <PageViewProvider>
+              <Router location={location} routes={routes}>
+                <ActivePageProvider>
+                  <EditorProvider>
+                    <SimpleEditorSidebar />
+                    <Outlet />
+                  </EditorProvider>
+                </ActivePageProvider>
+              </Router>
+            </PageViewProvider>
           </LibraryProvider>
         </SearchProvider>
       </EditorLayoutProvider>

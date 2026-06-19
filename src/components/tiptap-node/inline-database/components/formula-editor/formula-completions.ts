@@ -2,7 +2,7 @@ import type {
   CompletionContext,
   CompletionResult,
 } from "@codemirror/autocomplete";
-import type { DatabaseProperty } from "../../types/types";
+import type { DatabaseProperty } from "src/types";
 import { FORMULA_FUNCTIONS } from "./formula-language";
 
 // Function signatures shown as detail in the autocomplete popup

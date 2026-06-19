@@ -13,19 +13,17 @@ import {
 import { useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
-import { useDataSources } from "../hooks/use-data-sources";
-import type {
-  DatabaseProperty,
-  DatabaseView,
-  SavedView,
-  ID,
-} from "../types/types";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import type { DatabaseView, SavedView, ID, DataSource } from "src/types";
 import "./data-source-picker.scss";
-import { databasePageContent } from "../hooks/use-create-database";
-import { findPage } from "src/lib/find-page";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
+import { useDataSources } from "src/hooks/use-data-sources";
+import { useCreateDataSource } from "src/hooks/use-create-data-source";
+import { makeDataSource } from "src/utils/make-data-source";
+import { makeDatabasePage } from "src/utils/make-page";
+import { useCreatePage } from "src/hooks/use-create-page";
+import { usePages } from "src/hooks/use-pages";
+import { newId } from "src/lib/id";
 
 const VIEW_ICON: Record<DatabaseView["type"], LucideIcon> = {
   table: Table,
@@ -36,23 +34,6 @@ const VIEW_ICON: Record<DatabaseView["type"], LucideIcon> = {
   timeline: GanttChart,
 };
 
-function defaultProperties(): DatabaseProperty[] {
-  return [
-    {
-      id: crypto.randomUUID(),
-      name: "Name",
-      config: { type: "title" },
-      width: 240,
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "Tags",
-      config: { type: "select", options: [] },
-      width: 160,
-    },
-  ];
-}
-
 export function DataSourcePicker({
   onSelect,
 }: {
@@ -60,40 +41,38 @@ export function DataSourcePicker({
   // linked node (rather than the default).
   onSelect: (
     sourceId: ID,
-    pageId?: number,
+    pageId?: ID,
     isLinked?: boolean,
     savedView?: SavedView,
   ) => void;
 }) {
-  const { sources, isLoading, createSourceAsync } = useDataSources();
-  const { addPageAsync, pages } = usePages();
-  const { activePageId } = useActivePage();
+  const { data: sources, isLoading } = useDataSources();
+  const createPage = useCreatePage();
+  const createDataSource = useCreateDataSource();
+  const { activePageId, activePage } = useActivePage();
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
+  const { data: pages } = usePages();
 
-  const filtered = (sources ?? []).filter((s) =>
+  const filtered = ((sources as DataSource[]) ?? []).filter((s) =>
     s.name?.toLowerCase().includes(query.trim().toLowerCase()),
   );
   async function handleNew() {
     setCreating(true);
     try {
-      const sourceId = crypto.randomUUID();
-      const name = query.trim() || "Untitled";
+      const sourceId = newId();
+      const name = query.trim() || "Untitled Database";
 
-      const dbPage = await addPageAsync({
-        title: name,
-        parentId: activePageId ?? null,
-        databaseId: sourceId,
-        content: databasePageContent(sourceId, name),
-      });
-
-      const source = await createSourceAsync({
-        id: sourceId,
+      const dbPage = makeDatabasePage({
+        sourceId,
         name,
-        pageId: dbPage.id,
-        properties: defaultProperties(),
-        records: [],
+        parentId: activePageId,
+        category: activePage?.category,
       });
+      const source = makeDataSource({ name, pageId: dbPage.id, sourceId });
+
+      await createPage.mutateAsync(dbPage);
+      await createDataSource.mutateAsync(source);
 
       onSelect(source.id, dbPage.id, false);
     } finally {
@@ -146,10 +125,7 @@ export function DataSourcePicker({
               <span className="db-source-picker__hint">No data sources</span>
             ) : (
               filtered.map((s) => {
-                const sourcePage =
-                  s.pageId != null && pages
-                    ? (findPage(pages, s.pageId) ?? null)
-                    : null;
+                const sourcePage = pages?.find((p) => p.id === s.pageId);
                 const saved = s.savedViews ?? [];
                 return (
                   <div key={s.id} className="db-source-picker__source">

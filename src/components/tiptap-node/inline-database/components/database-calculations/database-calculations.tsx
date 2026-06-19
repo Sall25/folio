@@ -6,8 +6,8 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import type { DatabaseProperty, DataSourceRecord } from "../../types/types";
-import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
+import type { DatabaseProperty, Page } from "src/types";
+import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import "./database-calculations.scss";
 
 // ── Calculation types ──────────────────────────────────────────────────────
@@ -97,8 +97,8 @@ function getCalcGroups(prop: DatabaseProperty): CalcGroup[] | null {
 }
 
 // ── Calculation logic ──────────────────────────────────────────────────────
-function getCellValue(record: DataSourceRecord, propertyId: string): unknown {
-  return record.values[propertyId] ?? null;
+function getCellValue(record: Page, propertyId: string): unknown {
+  return record.values?.[propertyId] ?? null;
 }
 function runCalc(calc: CalcType, values: unknown[]): string {
   if (calc === "none") return "";
@@ -201,7 +201,7 @@ function useCalcAvailable(
 // ── Per-column calc cell ───────────────────────────────────────────────────
 interface CalcCellProps {
   prop: DatabaseProperty;
-  records: DataSourceRecord[];
+  records: Page[];
   calc: CalcType;
   onChange: (calc: CalcType) => void;
   hideWhenUnavailable?: boolean;
@@ -290,7 +290,7 @@ export function DatabaseCalculations({
   gridTemplateColumns,
 }: {
   properties: DatabaseProperty[];
-  records: DataSourceRecord[];
+  records: Page[];
   gridTemplateColumns: string;
 }) {
   const [calcs, setCalcs] = useState<Record<string, CalcType>>({});

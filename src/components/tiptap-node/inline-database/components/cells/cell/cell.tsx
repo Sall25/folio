@@ -3,7 +3,8 @@ import type {
   DatabaseProperty,
   DatabaseView,
   ID,
-} from "../../../types/types";
+  Page,
+} from "src/types";
 import { TitleCell } from "../title-cell";
 import { TextCell } from "../text-cell";
 import { NumberCell } from "../number-cell";
@@ -28,12 +29,6 @@ import { evaluateFormula } from "../../formula-editor/formula-evaluator";
 import { RelationCell } from "../relation-cell";
 import { RollupCell } from "../rollup-cell";
 
-export interface CellRecord {
-  id: ID;
-  pageId?: number;
-  values: Record<ID, unknown>;
-}
-
 export function Cell({
   property,
   properties,
@@ -49,12 +44,12 @@ export function Cell({
   property: DatabaseProperty;
   properties?: DatabaseProperty[];
   value: CellValue | null;
-  record: CellRecord;
+  record: Page;
   view?: DatabaseView;
   /** all values in this column — only number bar/ring uses it */
   columnValues?: CellValue[];
   /** parent database templateId — title uses it for the template icon */
-  templateId?: number;
+  templateId?: ID;
   onChange: (value: CellValue | null) => void;
   readonly?: boolean;
   unwrapped?: boolean;
@@ -74,7 +69,7 @@ export function Cell({
         <TitleCell
           value={typeof value === "string" ? value : ""}
           recordId={record.id}
-          pageId={record.pageId}
+          pageId={record.id}
           templateId={templateId}
           onChange={change}
           readonly={readonly}
@@ -205,16 +200,6 @@ export function Cell({
           readonly={readonly}
         />
       );
-
-    // case "phone":
-    //   return (
-    //     <PhoneCell
-    //       value={v}
-    //       config={config}
-    //       onChange={change}
-    //       readonly={readonly}
-    //     />
-    //   );
 
     // ── Read-only / computed: always readonly, no onChange effect ────────────
     case "formula": {

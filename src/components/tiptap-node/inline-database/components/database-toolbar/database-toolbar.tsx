@@ -25,25 +25,20 @@ import {
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 
-import type {
-  DatabaseAttrs,
-  DatabaseProperty,
-  DatabaseView,
-} from "../../types/types";
+import type { DatabaseAttrs, DatabaseProperty, DatabaseView } from "src/types";
 import type { UseDatabaseReturn } from "../../hooks/use-database";
-import { type FilterGroup } from "../../types/filter-types";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
+import { type FilterGroup } from "src/types";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
-import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek-page-context";
 import { ViewOptionsPopover } from "./view-options-popover";
-import { useCreatePage } from "src/components/tiptap-templates/simple/context/create-page-context";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
 import { DatabaseViewTabs } from "../database-view-tabs/database-view-tabs";
 import { FilterPanel } from "../filter-panel";
 import { SortPanel } from "../sort-panel";
 import { PropertiesPanel } from "../properties-panel";
 import { GroupPanel } from "../group-panel";
 import { useDataSource } from "../../hooks/use-data-source";
+import { usePages } from "src/hooks/use-pages";
+import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
+import { makeRowTemplate } from "src/utils/make-row-template";
 
 interface DatabaseToolbarProps {
   attrs: DatabaseAttrs;
@@ -81,12 +76,13 @@ export function DatabaseToolbar({
   const activeFilterCount = totalFilterRules(filters);
   const activeSortCount = sorts.length;
   const activePropsCount = props.length;
-  const { pages, addPageTemplateAsync, addPageAsync } = usePages();
-  const { activePageId } = useActivePage();
-  const { setPeekPageId } = usePeekPage();
+  const { data: pages } = usePages();
+  const { setTarget } = usePageView();
+
+  const { addRowTemplateAsync } = useDataSource(attrs.sourceId ?? null);
+
   const [viewOptionsOpen, setViewOptionsOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
-  const { setCreatePageId } = useCreatePage();
   const onViewOptionsOpenChange = useCallback(
     (o: boolean) => setViewOptionsOpen(o),
     [setViewOptionsOpen],
@@ -106,14 +102,11 @@ export function DatabaseToolbar({
     transition: "opacity 0.2s ease",
   };
 
-  const { addRecordWithPageAsync, source } = useDataSource(attrs.sourceId);
+  const { addRecordAsync, source } = useDataSource(attrs.sourceId);
   const handleNewPage = async () => {
-    const rec = await addRecordWithPageAsync({
-      title: "New Page",
-      parentPageId: activePageId ?? null,
-      createPage: addPageAsync,
-    });
-    if (rec.pageId != null) setCreatePageId(rec.pageId);
+    addRecordAsync({ title: "" })
+      .then((page) => setTarget({ pageId: page.id, view: "Center" }))
+      .catch(() => console.log("Failed to create page"));
   };
 
   return (
@@ -353,17 +346,11 @@ export function DatabaseToolbar({
                             }}
                             onClick={() => {
                               onTemplateOpenChange(false);
-                              addPageTemplateAsync({
-                                title: "New template",
-                                parentId: null,
-                              })
-                                .then((newPage) => setPeekPageId(newPage.id))
-                                .catch((err) =>
-                                  console.log(
-                                    "Failed to add a new template",
-                                    err,
-                                  ),
-                                );
+                              if (!source) return;
+                              const rowTemplate = makeRowTemplate(source, {
+                                name: "New Template",
+                              });
+                              addRowTemplateAsync(rowTemplate);
                             }}
                           >
                             <Plus className="tiptap-button-icon" />

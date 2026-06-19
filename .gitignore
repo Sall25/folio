@@ -37,3 +37,4 @@ server/uploads
 *.css.map
 # if your authored styles are all .scss and bundler-handled:
 src/**/*.css
+db.json

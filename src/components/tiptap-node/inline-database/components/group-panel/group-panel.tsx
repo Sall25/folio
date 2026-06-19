@@ -13,10 +13,10 @@ import type {
   ListView,
   ID,
   DatabaseProperty,
-} from "../../types/types";
-import { isGroupableProperty } from "../../types/types";
+} from "src/types";
+import { isGroupableProperty } from "src/types";
 import type { UseDatabaseReturn } from "../../hooks/use-database";
-import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
+import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import "./group-panel.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 

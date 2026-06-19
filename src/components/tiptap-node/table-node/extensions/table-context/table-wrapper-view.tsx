@@ -14,7 +14,7 @@ import clsx from "clsx";
 import { ColorDropdownProvider } from "src/components/tiptap-ui/color-dropdown-menu/color-dropdown-provider";
 
 export function TableWrapperView(props: ReactNodeViewProps) {
-  const { editor, getPos, selected, deleteNode } = props;
+  const { editor, getPos, selected } = props;
   const tablePos = getPos()! + 1;
 
   const { open, handleMouseEnter, handleMouseLeave } = useHoverMenu();

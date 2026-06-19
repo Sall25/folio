@@ -3,7 +3,7 @@ import type {
   ConfigOf,
   DatabaseProperty,
   PropertyType,
-} from "../../types/types";
+} from "src/types";
 
 export interface CellProps<T extends PropertyType = PropertyType> {
   value: CellValue<T> | null;

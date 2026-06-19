@@ -1,13 +1,11 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import "./search-palette.scss";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { Button } from "src/components/tiptap-ui-primitive/button";
-import { X } from "lucide-react";
 import { useSearch } from "../context/search-context";
-import { useActivePage } from "../use-active-page";
+import { useActivePage } from "../context/active-page-context";
 import { PageItemIcon } from "../page-item-icon";
-import type { Page } from "../types";
+import type { ID, Page } from "src/types";
+import { usePages } from "src/hooks/use-pages";
 
 type Group = "today" | "past";
 
@@ -53,13 +51,10 @@ const FILTERS: FilterDef[] = [
 ];
 
 // ---- helpers ----
-function flattenPages(pages: Page[]): Page[] {
-  return pages.flatMap((p) => [p, ...flattenPages(p.children ?? [])]);
-}
 
-function isToday(dateStr: string | null | undefined): boolean {
+function isToday(dateStr: number | null | undefined): boolean {
   if (!dateStr) return false;
-  const d = new Date(Number(dateStr));
+  const d = new Date(dateStr);
   if (isNaN(d.getTime())) return false;
   const now = new Date();
   return (
@@ -69,7 +64,7 @@ function isToday(dateStr: string | null | undefined): boolean {
   );
 }
 
-function shortDate(dateStr: string | null | undefined): string | null {
+function shortDate(dateStr: number | null | undefined): string | null {
   if (!dateStr) return null;
   const d = new Date(Number(dateStr));
   if (isNaN(d.getTime())) return null;
@@ -187,9 +182,9 @@ function Highlight({
 }
 
 export default function SearchPalette() {
-  const { pages, setActivePageId } = useActivePage();
+  const { data: pages } = usePages();
+  const { setActivePageId } = useActivePage();
   const { onOpenChange } = useSearch();
-
   const [query, setQuery] = useState("");
   const [titlesOnly, setTitlesOnly] = useState(false);
   const [selected, setSelected] = useState(0);
@@ -199,8 +194,8 @@ export default function SearchPalette() {
   // Build searchable entries from the real page tree.
   const entries = useMemo<SearchEntry[]>(() => {
     if (!pages) return [];
-    const flat = flattenPages(pages).filter((p) => p.category !== "Template");
-    const byId = new Map<number, Page>();
+    const flat = pages.filter((p) => p.category !== "Template");
+    const byId = new Map<ID, Page>();
     for (const p of flat) byId.set(p.id, p);
 
     return flat.map((p) => {
@@ -267,6 +262,16 @@ export default function SearchPalette() {
       if (m) open(m.entry.page);
     }
   };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onOpenChange?.(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onOpenChange]);
 
   const renderRow = (m: Match) => {
     const idx = groups.order.indexOf(m);
@@ -323,10 +328,6 @@ export default function SearchPalette() {
               onKeyDown={onKeyDown}
             />
           </div>
-          <Spacer orientation="horizontal" />
-          <Button variant="ghost" onClick={() => onOpenChange?.(false)}>
-            <X className="tiptap-button-icon" />
-          </Button>
         </CardItemGroup>
 
         <div className="sp-filters">

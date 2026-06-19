@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import type { Editor } from "@tiptap/react";
-import type { Page } from "src/components/tiptap-templates/simple/types";
+import type { Page } from "src/types";
 import { DIFF_PLUGIN_KEY } from "./diff-extension";
 import { computeDiff } from "./utils";
 import type { DiffDecoration } from "./diff-extension";

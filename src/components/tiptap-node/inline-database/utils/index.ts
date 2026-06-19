@@ -5,12 +5,10 @@ import {
   type TableView,
   type BoardView,
   isGroupableProperty,
-} from "../types/types";
-import type {
-  CalendarView,
-  DatabaseProperty,
-  TimelineView,
-} from "../types/types";
+  type CalendarView,
+  type DatabaseProperty,
+  type TimelineView,
+} from "src/types";
 
 export * from "./cover-placeholder";
 

@@ -6,6 +6,15 @@
   max-width: var(--db-editor-width);   /* bound the scroller so it overflows */
   
  
+  &:not(:hover) {
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  &:hover {
+    scrollbar-width: thin;
+  }
 
   &__body {
     display: grid;

@@ -3,7 +3,7 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { ViewIcon } from "../database-toolbar/view-icon";
 import { ViewPopover } from "../database-toolbar/view-popover";
 import type { UseDatabaseReturn } from "../../hooks";
-import type { DatabaseAttrs, DatabaseView } from "../../types/types";
+import type { DatabaseAttrs, DatabaseView } from "src/types";
 import {
   Popover,
   PopoverContent,
@@ -54,7 +54,7 @@ export function DatabaseViewTabs({
       contentEditable={false}
       onMouseDown={(e) => e.preventDefault()}
     >
-      {attrs.views.map((view) => {
+      {attrs.views.map((view: DatabaseView) => {
         const isActive = view.id === attrs.activeViewId;
 
         // Active tab: when locked, render a plain switch-only tab instead of

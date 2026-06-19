@@ -3,7 +3,7 @@ import { PanelRightOpen } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
-import type { PageCover } from "src/components/tiptap-templates/simple/types";
+import type { PageCover } from "src/types";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { CellEditorPopover } from "./cell-editor-popover";

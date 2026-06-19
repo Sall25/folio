@@ -6,9 +6,9 @@ import {
   //CardFooter,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
-import type { DatabaseProperty, DatabaseView, ID } from "../../types/types";
+import type { DatabaseProperty, DatabaseView, ID } from "src/types";
 import type { UseDatabaseReturn } from "../../hooks/use-database";
-import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
+import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import {
   Grid,
   GridRow,

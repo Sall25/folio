@@ -17,7 +17,7 @@ import type {
   ID,
   PropertyConfig,
   SelectOption,
-} from "../../types/types";
+} from "src/types";
 import type { UseDatabaseReturn } from "../../hooks/use-database";
 import {
   OPERATORS_FOR_TYPE,
@@ -27,8 +27,8 @@ import {
   type FilterRule,
   type FilterGroup,
   type FilterGroupOperator,
-} from "../../types/filter-types";
-import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
+} from "src/types/filter-types";
+import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import "./filter-rule-chips.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {

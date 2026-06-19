@@ -1,5 +1,5 @@
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
-import type { Version } from "./types";
+import type { Version } from "src/types";
 import { formatVersionTime } from "./utils";
 
 interface VersionHistoryItemProps {
@@ -34,11 +34,11 @@ export function VersionHistoryItem({
         <span className="vh-item__time">
           {formatVersionTime(version.createdAt)}
         </span>
-        {version.isNamed && <Badge data-style="gray">{version.name}</Badge>}
+        {version.name && <Badge data-style="gray">{version.name}</Badge>}
       </div>
 
       <div className="vh-item__meta">
-        {version.isNamed ? "Named version" : "Auto-saved"}
+        {version.name ? "Named version" : "Auto-saved"}
       </div>
 
       {isSelected && (
@@ -68,7 +68,7 @@ export function VersionHistoryItem({
             </div>
           ) : (
             <button className="vh-btn" onClick={onStartNaming}>
-              {version.isNamed ? "Rename" : "Name this version"}
+              {version.name ? "Rename" : "Name this version"}
             </button>
           )}
         </div>

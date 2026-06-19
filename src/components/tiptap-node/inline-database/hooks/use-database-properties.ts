@@ -6,8 +6,8 @@ import type {
   DatabaseAttrs,
   DatabaseView,
   PropertyConfig,
-} from "../types/types";
-import type { FilterRule } from "../types/filter-types";
+} from "src/types";
+import type { FilterRule } from "src/types/filter-types";
 
 function defaultConfigFor(type: PropertyType): PropertyConfig {
   switch (type) {
@@ -36,7 +36,12 @@ function defaultConfigFor(type: PropertyType): PropertyConfig {
     case "formula":
       return { type: "formula", expression: "" };
     case "relation":
-      return { type: "relation", targetDatabaseId: "", showOnTarget: false };
+      return {
+        type: "relation",
+        targetSourceId: "",
+        mirrorPropertyId: null,
+        showOnTarget: false,
+      };
     case "rollup":
       return {
         type: "rollup",

@@ -4,11 +4,12 @@ import {
   Type as UltimateFallbackIcon,
   type LucideIcon,
 } from "lucide-react";
-import type {
-  DatabaseProperty,
-  PropertyConfig,
-  SelectOption,
-} from "../../types/types";
+import {
+  DEFAULT_CONFIGS,
+  type DatabaseProperty,
+  type PropertyConfig,
+  type SelectOption,
+} from "src/types";
 import {
   Popover,
   PopoverContent,
@@ -25,7 +26,7 @@ import {
 import { PropertyEditPopover } from "../property-edit-popover";
 import { SelectOptionsEditor } from "../../ui/select/select-options-editor";
 import { useDatabaseContext } from "../../nodes/database-context";
-import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
+import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { DeletePropertyButton } from "../delete-property-button";
 import { DuplicatePropertyButton } from "../duplicate-property-button";
@@ -45,7 +46,7 @@ import { ICON_LIST } from "src/components/tiptap-ui/cover/data/icon-list.js";
 import { RelationEditDisplay } from "../relation-edit-display";
 import { RollupEditDisplay } from "../rollup-edit-display";
 import { useDataSource } from "../../hooks/use-data-source";
-import { PROPERTY_TYPE_META } from "../../types/property-type-meta";
+import { PROPERTY_TYPE_META } from "src/types/property-type-meta";
 import { PropertyTypeChangePopover } from "../property-type-change-popover";
 
 // name -> Lucide component, so a stored `prop.icon` string can be rendered.
@@ -233,7 +234,10 @@ export function PropertyHeader({
                       cols={30}
                       maxRows={1}
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        db.updateProperty(prop.id, { ...prop, name });
+                      }}
                       contentEditable={true}
                       onBlur={() =>
                         db.updateProperty(prop.id, { ...prop, name })
@@ -259,9 +263,13 @@ export function PropertyHeader({
                             <Button
                               key={m.type}
                               variant="ghost"
-                              onClick={async () =>
-                                await changePropertyTypeAsync(prop.id, m.type)
-                              }
+                              onClick={async () => {
+                                const newProp = {
+                                  ...prop,
+                                  config: DEFAULT_CONFIGS[m.type],
+                                };
+                                await changePropertyTypeAsync(prop.id, newProp);
+                              }}
                               style={{
                                 justifyContent: "flex-start",
                                 width: "100%",

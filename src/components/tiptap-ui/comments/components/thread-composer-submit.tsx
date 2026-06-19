@@ -1,5 +1,4 @@
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import type { Editor } from "@tiptap/core";
 import {
   useCallback,
   useEffect,
@@ -7,9 +6,13 @@ import {
   useState,
   type FormEvent,
 } from "react";
-
 import "./thread-composer-submit.scss";
 import { ArrowUp } from "lucide-react";
+import type { ID } from "src/types";
+import { useCreateComment } from "src/hooks/use-create-comment";
+import { makeComment } from "src/utils/make-comment";
+import { usePatchThread } from "src/hooks/use-patch-thread";
+import { patchThread } from "src/api/threads";
 
 function SubmitBtn({ disabled = false }: { disabled?: boolean }) {
   return (
@@ -23,18 +26,15 @@ function SubmitBtn({ disabled = false }: { disabled?: boolean }) {
   );
 }
 
-export function ThreadComposerSubmit({
-  editor,
-  // threadId,
-  pageId,
-}: {
-  editor: Editor | null;
-  threadId: string;
-  pageId: number;
-}) {
+export function ThreadComposerSubmit({ threadId }: { threadId: ID }) {
   const [comment, setComment] = useState("");
+  const threadIdRef = useRef(threadId);
   //  const [focused, setFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const createComment = useCreateComment();
+  const mutateThread = usePatchThread(({ id, patch }) =>
+    patchThread(id, patch),
+  );
 
   useEffect(() => {
     const el = textareaRef.current;
@@ -46,14 +46,25 @@ export function ThreadComposerSubmit({
   const handleSubmit = useCallback(
     (e: FormEvent) => {
       e.preventDefault();
-      if (!comment.trim() || !editor) return;
-      console.log("thread submit pageId", pageId);
-      editor.commands.submitThread(comment, pageId);
+      if (!comment.trim()) return;
+      const newComment = makeComment({
+        threadId: threadIdRef.current,
+        text: comment,
+        authorId: "",
+      });
+      createComment.mutate({
+        comment: newComment,
+        threadId: threadIdRef.current,
+      });
+      mutateThread.mutate({
+        id: threadIdRef.current,
+        patch: { status: "open" },
+      });
       setComment("");
       //    setFocused(false);
       if (textareaRef.current) textareaRef.current.style.height = "auto";
     },
-    [editor, comment, pageId],
+    [comment, createComment, mutateThread],
   );
 
   // if (!editor) return null

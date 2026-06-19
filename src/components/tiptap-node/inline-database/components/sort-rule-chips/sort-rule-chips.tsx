@@ -11,14 +11,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import type {
-  DatabaseProperty,
-  DatabaseView,
-  ID,
-  SortRule,
-} from "../../types/types";
+import type { DatabaseProperty, DatabaseView, ID, SortRule } from "src/types";
 import type { UseDatabaseReturn } from "../../hooks/use-database";
-import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
+import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import "./sort-rule-chips.scss";

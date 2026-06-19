@@ -51,7 +51,7 @@
     background: rgba(135, 131, 120, 0.15);
     color: #EB5757;
     border-radius: 4px;
-    font-size: 85%;
+    font-size: 98%;
     padding: 0.2em 0.4em;
     position: relative;
     bottom: 0.065em;
@@ -255,14 +255,14 @@
   position: relative;
   background: var(--tt-code-bg, rgba(135, 131, 120, 0.08));
   border-radius: 4px;
- code{
-  display: contents;
- }
-  
-  &:hover .code-block-toolbar {
-    opacity: 1;
-    pointer-events: all;
+  code{
+    display: contents;
   }
+  
+  // &:hover .code-block-toolbar {
+  //   opacity: 1;
+  //   pointer-events: all;
+  // }
 }
 
 .code-block-filename {
@@ -286,10 +286,11 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  opacity: 0;
+  opacity: 1;
   pointer-events: none;
   transition: opacity 0.15s ease;
   z-index: 1;
+
 }
 
 .code-block-lang-wrap {

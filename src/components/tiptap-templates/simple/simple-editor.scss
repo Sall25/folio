@@ -207,7 +207,7 @@ body,
 .simple-editor-wrapper {
   width: 100%;
   display: flex;
-  overflow: hidden;
+  overflow: visible;
    overflow-y: hidden;
   transition: right 0.2s ease;
    position: fixed;
@@ -295,7 +295,7 @@ body,
   //    margin-left: -140px;
   // }
 
-  &.has-threads{
+  &.has-threads{  
     transform: translateX(var(--x));
   }
   &[data-size="medium"] {
@@ -345,11 +345,13 @@ z-index: 0;
 .simple-editor-content .tiptap.ProseMirror.simple-editor {
   flex: 1;
   padding: 1.1rem 2rem 30vh;
+  padding-top: 0;
 }
 
 @media screen and (max-width: 480px) {
   .simple-editor-content .tiptap.ProseMirror.simple-editor {
     padding: 1rem 1.5rem 30vh;
+    padding-top: 5px;
   }
 }
 

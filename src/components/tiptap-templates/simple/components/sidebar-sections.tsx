@@ -3,7 +3,6 @@ import {
   ChevronRight,
   Plus,
   MoreHorizontal,
-  GripVertical,
   Pencil,
   Trash2,
   EyeOff,
@@ -31,7 +30,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-import type { Page, PageCategory } from "../types";
+import type { ID, Page, PageCategory } from "src/types";
 import { PageItem } from "../page-item";
 import "./sidebar-sections.scss";
 
@@ -40,7 +39,6 @@ const SECTION_CATEGORIES: PageCategory[] = [
   "Private",
   "Favorites",
   "Shared",
-
   "Teamspaces",
 ];
 
@@ -49,12 +47,12 @@ const DEFAULT_CATEGORY: PageCategory = "Private";
 
 const PREVIEW_COUNT = 5;
 
-type ItemsMap = Record<string, number[]>;
+type ItemsMap = Record<string, ID[]>;
 
 export interface SidebarSectionsProps {
   pages: Page[];
   // Persist a reorder within a section (needs an order field on Page to stick).
-  onReorder?: (category: PageCategory, orderedIds: number[]) => void;
+  onReorder?: (category: PageCategory, orderedIds: ID[]) => void;
   // Persist a move between sections — should set page.category to `toCategory`.
   onMovePage?: (
     pageId: number,
@@ -75,7 +73,7 @@ function buildItems(
   pages: Page[],
   categories: PageCategory[],
 ): ItemsMap {
-  const byCat: Record<string, Page[]> = {};
+  const byCat: Record<ID, Page[]> = {};
   for (const cat of categories) byCat[cat] = [];
   for (const p of pages) {
     if (p.category === "Template") continue; // templates render elsewhere
@@ -107,14 +105,9 @@ function buildItems(
 
 // ---- Sortable row: drag handle carries listeners so the row stays clickable ----
 function SortableRow({ page }: { page: Page }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: page.id });
+  const { setNodeRef, transform, transition, isDragging } = useSortable({
+    id: page.id,
+  });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -124,7 +117,7 @@ function SortableRow({ page }: { page: Page }) {
 
   return (
     <div ref={setNodeRef} style={style} className="sidebar-section__row">
-      <PageItem page={page} disableExpand={true} />
+      <PageItem page={page} />
     </div>
   );
 }
@@ -202,8 +195,8 @@ function Section({
   onHide,
 }: {
   category: PageCategory;
-  ids: number[];
-  pagesById: Map<number, Page>;
+  ids: ID[];
+  pagesById: Map<ID, Page>;
   collapsed: boolean;
   expanded: boolean;
   onToggleCollapse: () => void;
@@ -330,14 +323,14 @@ export function SidebarSections({
   const [items, setItems] = useState<ItemsMap>(() =>
     buildItems({}, pages, SECTION_CATEGORIES),
   );
-  const [activeId, setActiveId] = useState<number | null>(null);
+  const [activeId, setActiveId] = useState<ID | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const sourceRef = useRef<string | null>(null);
 
   const pagesById = useMemo(() => {
-    const m = new Map<number, Page>();
+    const m = new Map<ID, Page>();
     for (const p of pages) m.set(p.id, p);
     return m;
   }, [pages]);
@@ -366,26 +359,26 @@ export function SidebarSections({
   );
 
   const findContainer = useCallback(
-    (id: string | number | undefined): string | undefined => {
+    (id: ID | undefined): string | undefined => {
       if (id == null) return undefined;
       if (typeof id === "string" && id.startsWith("section:"))
         return id.slice("section:".length);
       if (typeof id === "string" && id in items) return id;
-      return Object.keys(items).find((cat) => items[cat].includes(Number(id)));
+      return Object.keys(items).find((cat) => items[cat].includes(id));
     },
     [items],
   );
 
   const onDragStart = (e: DragStartEvent) => {
-    sourceRef.current = findContainer(e.active.id as number) ?? null;
-    setActiveId(Number(e.active.id));
+    sourceRef.current = findContainer(e.active.id.toString()) ?? null;
+    setActiveId(e.active.id.toString());
   };
 
   const onDragOver = (e: DragOverEvent) => {
     const { active, over } = e;
     if (!over) return;
-    const activeContainer = findContainer(active.id as number);
-    const overContainer = findContainer(over.id as string | number);
+    const activeContainer = findContainer(active.id.toString());
+    const overContainer = findContainer(over.id.toString());
     if (!activeContainer || !overContainer || activeContainer === overContainer)
       return;
 
@@ -396,15 +389,15 @@ export function SidebarSections({
         typeof over.id === "string" && over.id.startsWith("section:");
       const overIndex = overIsContainer
         ? overItems.length
-        : overItems.indexOf(Number(over.id));
+        : overItems.indexOf(over.id.toString());
       const insertAt = overIndex >= 0 ? overIndex : overItems.length;
 
       return {
         ...prev,
-        [activeContainer]: activeItems.filter((id) => id !== Number(active.id)),
+        [activeContainer]: activeItems.filter((id) => id !== active.id),
         [overContainer]: [
           ...overItems.slice(0, insertAt),
-          Number(active.id),
+          active.id.toString(),
           ...overItems.slice(insertAt),
         ],
       };
@@ -413,7 +406,7 @@ export function SidebarSections({
 
   const onDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
-    const dest = findContainer(active.id as number);
+    const dest = findContainer(active.id.toString());
     const source = sourceRef.current;
     sourceRef.current = null;
     setActiveId(null);
@@ -421,10 +414,10 @@ export function SidebarSections({
 
     if (source === dest) {
       const arr = items[dest] ?? [];
-      const oldIndex = arr.indexOf(Number(active.id));
+      const oldIndex = arr.indexOf(active.id.toString());
       let newIndex = arr.length - 1;
       if (over && !(over.id as string).toString().startsWith("section:")) {
-        const idx = arr.indexOf(Number(over.id));
+        const idx = arr.indexOf(over.id.toString());
         if (idx >= 0) newIndex = idx;
       }
       if (oldIndex >= 0 && newIndex >= 0 && oldIndex !== newIndex) {
@@ -433,7 +426,7 @@ export function SidebarSections({
         onReorder?.(dest as PageCategory, reordered);
       }
     } else {
-      const idx = (items[dest] ?? []).indexOf(Number(active.id));
+      const idx = (items[dest] ?? []).indexOf(active.id.toString());
       onMovePage?.(Number(active.id), dest as PageCategory, idx);
     }
   };
@@ -500,7 +493,7 @@ export function SidebarSections({
       <DragOverlay>
         {activePage ? (
           <div className="sidebar-drag-overlay">
-            <PageItem page={activePage} disableExpand={true} />
+            <PageItem page={activePage} />
           </div>
         ) : null}
       </DragOverlay>

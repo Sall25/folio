@@ -28,7 +28,7 @@
 
   &.active {
     background: var(--page-item-active-bg-color);
-    color: var(--sidebar-text-color);
+    color: var(--tt-text-primary);
     font-weight: 700;
 
     .page-icon {
@@ -58,11 +58,11 @@
 
 .page-item-title {
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif;
-  font-size: 14px;
+  font-size: 13.8px;
   font-weight: 500;
-  color: var(--tt-text-color);
+  color: inherit;
   //opacity: 0.98;
-  max-width: 140px;
+  max-width: 150px;
   flex: 1;           
   min-width: 0;     
   overflow: hidden;
@@ -70,7 +70,7 @@
   white-space: nowrap;
   margin: 0;
   padding: 0;
-  line-height: 1.5;
+  line-height: 1.4;
   cursor: pointer;
   // &:hover{
   //   max-width: 144px;

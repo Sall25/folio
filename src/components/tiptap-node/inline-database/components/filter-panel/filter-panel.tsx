@@ -8,15 +8,16 @@ import {
   CardFooter,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
-import type { DatabaseProperty, DatabaseView } from "../../types/types";
-import type { UseDatabaseReturn } from "../../hooks/use-database";
 import {
+  type DatabaseProperty,
+  type DatabaseView,
   OPERATORS_FOR_TYPE,
   type FilterGroup,
   type FilterGroupOperator,
   type FilterRule,
-} from "../../types/filter-types";
-import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
+} from "src/types";
+import type { UseDatabaseReturn } from "../../hooks/use-database";
+import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import "./filter-panel.scss";
 
 // ── makeFilterRule ─────────────────────────────────────────────────────────

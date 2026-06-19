@@ -17,12 +17,9 @@ import { SimpleEditorToolbar, type MobileView } from "./simple-editor-toolbar";
 import { SimpleEditorContent } from "./simple-editor-content";
 import { VersionHistorySidebar } from "src/components/tiptap-ui/version-history/version-history-sidebar";
 import { HomePageContent } from "./components";
-import { useActivePage } from "./use-active-page";
+import { useActivePage } from "./context/active-page-context";
 import EditorSkeleton from "./editor-skeleton";
 import { PagePeekView } from "./page-peek-view";
-import { PageCreateModal } from "./page-create-modal";
-import { useCreatePage } from "./context/create-page-context";
-import { findPage } from "src/lib/find-page";
 import { useEditorLayout } from "./context/editor-layout-context";
 
 // --- Styles ---
@@ -37,16 +34,14 @@ import "src/components/tiptap-templates/simple/simple-editor.scss";
 import "src/components/tiptap-templates/simple/toc.scss";
 import "src/components/tiptap-templates/simple/page-create-modal.scss";
 import { TocSidebar } from "src/components/tiptap-node/toc-node/toc-sidebar";
-import type { View } from "./types";
-import { ResourcesPage } from "./components/resources/resources-page";
-import { usePeekPage } from "./context/peek-page-context";
+import type { View } from "src/types";
 import { Editor, useCurrentEditor } from "@tiptap/react";
 import { useSearch } from "./context/search-context";
 import SearchPalette from "./components/search-palette";
 import { useLibrary } from "./context/library-context";
 import { LibraryPalette } from "./components/library-palette";
-// import TabToolbar from "./components/tabs/tab-toolbar";
-// import { useTabs } from "./hooks/use-tabs";
+import { usePageView } from "./context/page-view-context";
+import { PageCenterView } from "./page-center-view";
 
 const VERSION_SIDEBAR_WIDTH = 260;
 
@@ -57,22 +52,17 @@ function triggerMainEditorSync(mainEditor: Editor | null) {
 }
 
 function SimpleEditorMain({ view }: { view: View }) {
-  const { pages } = useActivePage();
   const { versionHistoryOpen, onVersionHistoryOpenChanged /*, collapsed*/ } =
     useEditorLayout();
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
-  const { setPeekPageId, peekPageId } = usePeekPage();
-  const { createPageId, setCreatePageId } = useCreatePage();
+  const { target, setTarget } = usePageView();
   const { editor } = useCurrentEditor();
   const { open } = useSearch();
   const { open: libraryOpen, onOpenChange } = useLibrary();
-  const peekPage =
-    peekPageId !== null && pages ? findPage(pages, peekPageId) : null;
 
   return (
     <>
       {view === "home" && <HomePageContent />}
-      {view === "resources" && <ResourcesPage />}
       {view === "page" && (
         <>
           <div
@@ -95,23 +85,22 @@ function SimpleEditorMain({ view }: { view: View }) {
         </>
       )}
 
-      {peekPage && (
+      {target && target.view === "Peek" && (
         <PagePeekView
-          page={peekPage}
           onClose={() => {
             triggerMainEditorSync(editor);
-            setPeekPageId(null);
+            setTarget(undefined);
           }}
         />
+      )}
+
+      {target && target.view === "Center" && (
+        <PageCenterView onClose={() => setTarget(undefined)} />
       )}
 
       {open && <SearchPalette />}
 
       {libraryOpen && <LibraryPalette onClose={() => onOpenChange?.(false)} />}
-
-      {createPageId !== null && (
-        <PageCreateModal onClose={() => setCreatePageId(null)} />
-      )}
     </>
   );
 }

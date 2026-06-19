@@ -27,6 +27,7 @@ export function TableAddRowColOverlay({
             position: "absolute",
             width: `${tableWidth}px`,
             bottom: "-12px",
+            marginLeft: "-20px",
           }}
         >
           {children}

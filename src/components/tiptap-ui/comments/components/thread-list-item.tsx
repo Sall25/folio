@@ -1,10 +1,9 @@
-import { useCallback, useMemo } from "react";
-
+import { useCallback, useEffect, useRef } from "react";
 import { useThreadState } from "../context/useThreadState.js";
 import { CommentCard } from "./comment-card.js";
 import { ThreadCard } from "./thread-card.js";
 import { ThreadComposer } from "./thread-composer.js";
-import type { PositionedThread, Thread } from "../types/index.js";
+import type { PositionedThread, Thread } from "src/types";
 import type { Editor } from "@tiptap/core";
 
 import Button, {
@@ -15,6 +14,10 @@ import { scrollToThread } from "../extensions/utils/scrollToThread.js";
 import "./thread-list-item.scss";
 import { Check, RotateCw, Trash } from "lucide-react";
 import { ThreadComposerSubmit } from "./thread-composer-submit.js";
+import { useCommentsByThread } from "src/hooks/use-comments.js";
+import { useDeleteComment } from "src/hooks/use-delete-comment.js";
+import { usePatchComment } from "src/hooks/use-patch-comment.js";
+import { patchComment } from "src/api/comments.js";
 
 interface ThreadListItemProps {
   thread: Thread;
@@ -22,16 +25,13 @@ interface ThreadListItemProps {
   active: boolean;
   open: boolean;
   layout: PositionedThread;
-  pageId: number;
 }
 
 export const ThreadsListItem = ({
   thread,
-  editor,
   active,
   open,
   layout,
-  pageId,
 }: ThreadListItemProps) => {
   const {
     onClickThread,
@@ -40,56 +40,79 @@ export const ThreadsListItem = ({
     onLeaveThread,
     resolveThread,
     unresolveThread,
+    onSelectedThreadChange,
+    onResolveActiveThreadCollisions,
+    requestReflow,
   } = useThreadState();
+
+  const itemRef = useRef<HTMLDivElement | null>(null);
+
+  // Re-resolve collisions whenever this card's own height changes
+  // (textarea auto-grow, a reply rendering, open/close). measureAllThreads
+  // caches heights, so without this the stale heights leave cards overlapping.
+  useEffect(() => {
+    const el = itemRef.current;
+    if (!el || !requestReflow) return;
+
+    const observer = new ResizeObserver(() => {
+      requestReflow();
+    });
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, [requestReflow]);
+
   const classNames = ["threadsList--item"];
 
   if (active || open) {
     classNames.push("threadsList--item--active");
   }
 
-  const comments = useMemo(() => thread.comments, [thread]);
-
+  const { data: comments } = useCommentsByThread(thread?.id ?? null);
+  const deleteComment = useDeleteComment();
+  const updateComment = usePatchComment(({ id, patch }) =>
+    patchComment(id, patch),
+  );
   const firstComment = comments?.[0];
 
   const handleDeleteClick = useCallback(() => {
+    if (!thread) return;
     deleteThread?.(thread.id);
-  }, [thread.id, deleteThread]);
+  }, [thread, deleteThread]);
 
   const handleResolveClick = useCallback(() => {
+    if (!thread) return;
     resolveThread?.(thread.id);
-  }, [thread.id, resolveThread]);
+  }, [thread, resolveThread]);
 
   const handleUnresolveClick = useCallback(() => {
+    if (!thread) return;
     unresolveThread?.(thread.id);
-  }, [thread.id, unresolveThread]);
-
-  // if (thread.status === "drafted") return null;
+  }, [thread, unresolveThread]);
 
   return (
     <>
-      {thread.status === "drafted" && (
+      {thread && thread.status === "drafted" && (
         <span
+          ref={itemRef}
           style={{
             position: "absolute",
-            top: layout.anchorTop,
-            // transform: `translateY(${layout.resolvedTop - layout.anchorTop}px)`,
+            top: layout.resolvedTop,
+            background: "aqua",
+            right: 25,
           }}
         >
-          <ThreadComposerSubmit
-            pageId={pageId}
-            editor={editor}
-            threadId={thread.id}
-          />
+          <ThreadComposerSubmit threadId={thread.id} />
         </span>
       )}
-      {thread.status !== "drafted" && (
+      {thread && thread.status !== "drafted" && (
         <div
+          ref={itemRef}
           data-thread-list-item-id={thread.id}
           className="thread-list-item"
           style={{
-            top: layout.anchorTop,
-            //   transition: "top 0.2s ease",
-            // transform: `translateY(${layout.resolvedTop - layout.anchorTop}px)`,
+            top: layout.resolvedTop,
+            right: 25,
             width: "280px",
           }}
           tabIndex={0}
@@ -105,13 +128,13 @@ export const ThreadsListItem = ({
                 ? (threadId: string) => {
                     onClickThread?.(threadId);
                     scrollToThread(threadId);
+                    onResolveActiveThreadCollisions(threadId);
                   }
                 : null
             }
             onClickOutside={() => {
-              editor.commands.unselectThread();
+              onSelectedThreadChange(null);
             }}
-            // onClickOutside
           >
             {open ? (
               <>
@@ -126,7 +149,6 @@ export const ThreadsListItem = ({
                       >
                         <Check size={12} />
                         <span>Resolve</span>
-                        {/* ✓ Resolve */}
                       </Button>
                     ) : (
                       <Button
@@ -137,7 +159,6 @@ export const ThreadsListItem = ({
                       >
                         <RotateCw size={12} />
                         <span>Unresolve</span>
-                        {/* ⟲ Unresolve */}
                       </Button>
                     )}
                     <Button
@@ -146,7 +167,6 @@ export const ThreadsListItem = ({
                       variant="ghost"
                       onClick={handleDeleteClick}
                     >
-                      {/* × Delete */}
                       <Trash size={12} />
                       <span>Delete</span>
                     </Button>
@@ -158,29 +178,28 @@ export const ThreadsListItem = ({
                 ) : null}
 
                 <div className="comments-group">
-                  {comments.map((comment) => (
+                  {comments?.map((comment) => (
                     <CommentCard
                       key={comment.id}
-                      name={comment.authorId}
-                      content={comment.text}
+                      name={comment.personId}
+                      content={comment.body}
                       createdAt={comment.createdAt}
                       deleted={false}
                       onEdit={(val) => {
-                        editor.commands.updateComment(
-                          thread.id,
-                          comment.id,
-                          val,
-                        );
+                        updateComment.mutate({
+                          id: comment.id,
+                          patch: { body: val },
+                        });
                       }}
                       onDelete={() => {
-                        editor.commands.removeComment(thread.id, comment.id);
+                        deleteComment.mutate(comment.id);
                       }}
                       showActions={true}
                     />
                   ))}
                 </div>
                 <div className="reply-group">
-                  <ThreadComposer editor={editor} threadId={thread.id} />
+                  <ThreadComposer threadId={thread.id} />
                 </div>
               </>
             ) : null}
@@ -189,26 +208,18 @@ export const ThreadsListItem = ({
               <div className="comments-group">
                 <CommentCard
                   key={firstComment.id}
-                  name={firstComment.authorId}
-                  content={firstComment.text}
+                  name={firstComment.personId}
+                  content={firstComment.body}
                   createdAt={firstComment.createdAt}
                   deleted={false}
                   onDelete={() => {
-                    editor.commands.removeComment(thread.id, firstComment.id);
+                    deleteComment.mutate(firstComment.id);
                   }}
-                  onEdit={() => {
-                    // if (val) {
-                    //   editComment(firstComment.id, val)
-                    // }
-                  }}
+                  onEdit={() => {}}
                   showActions={false}
                 />
                 <div className="comments-count">
-                  <label
-                    style={{
-                      marginLeft: "10px",
-                    }}
-                  >
+                  <label style={{ marginLeft: "10px" }}>
                     {Math.max(0, comments.length - 1) || 0}{" "}
                     {(comments.length - 1 || 0) === 1 ? "reply" : "replies"}
                   </label>

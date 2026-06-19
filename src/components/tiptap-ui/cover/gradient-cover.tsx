@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 import CoverControlsGroup from "./cover-controls";
-import type { Page } from "src/components/tiptap-templates/simple/types";
+import type { Page } from "src/types";
 
 export default function GradientCover({
   gradient,

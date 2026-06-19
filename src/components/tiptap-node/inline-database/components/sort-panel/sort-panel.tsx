@@ -6,13 +6,9 @@ import {
   CardBody,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
-import type {
-  DatabaseProperty,
-  DatabaseView,
-  SortRule,
-} from "../../types/types";
+import type { DatabaseProperty, DatabaseView, SortRule } from "src/types";
+import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import type { UseDatabaseReturn } from "../../hooks/use-database";
-import { PROPERTY_TYPE_ICONS } from "../../types/property-type-meta";
 import "./sort-panel.scss";
 
 export function SortPanel({

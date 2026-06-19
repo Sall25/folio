@@ -9,21 +9,24 @@ import {
   Users,
   PanelRight,
 } from "lucide-react";
-import type { Page, PageCategory } from "../types";
+import type { ID, Page, PageCategory } from "src/types";
 import { PageItemIcon } from "../page-item-icon";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
-import { useActivePage } from "../use-active-page";
+import { useActivePage } from "../context/active-page-context";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
 import { useState, useEffect, useMemo } from "react";
 import "./library-palette.scss";
 import { useLibrary } from "../context/library-context";
+import { useChildPages, usePages } from "src/hooks/use-pages";
+import { useCreatePage } from "src/hooks/use-create-page";
+import { makePage } from "src/utils/make-page";
 
 type LibraryTab = "Recents" | "Favorites" | "Shared" | "Private";
 
-function formatRelativeTime(dateStr: string | null | undefined): string {
+function formatRelativeTime(dateStr: number | null | undefined): string {
   if (!dateStr) return "—";
   const date = new Date(Number(dateStr));
   if (isNaN(date.getTime())) return "—";
@@ -38,10 +41,6 @@ function formatRelativeTime(dateStr: string | null | undefined): string {
   if (diffD === 1) return "Yesterday";
   if (diffD < 7) return `${diffD} days ago`;
   return date.toLocaleDateString();
-}
-
-function flattenPages(pages: Page[]): Page[] {
-  return pages.flatMap((p) => [p, ...flattenPages(p.children ?? [])]);
 }
 
 function Tabs({
@@ -106,9 +105,9 @@ const dataStyle: React.CSSProperties = {
 
 function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
   const [show, setShow] = useState(false);
-  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const [expanded, setExpanded] = useState<Set<ID>>(new Set());
   const { setActivePageId } = useActivePage();
-  const toggle = (id: number) =>
+  const toggle = (id: ID) =>
     setExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -119,12 +118,13 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
       return next;
     });
   const { onOpenChange } = useLibrary();
-  const navigate = (id: number) => {
+  const navigate = (id: ID) => {
     onOpenChange?.(false);
     setActivePageId(id);
   };
 
-  const hasChildren = (page.children?.length ?? 0) > 0;
+  const children = useChildPages(page.id);
+  const hasChildren = (children.data?.length ?? 0) > 0;
   const isOpen = expanded.has(page.id);
 
   return (
@@ -220,7 +220,7 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
       </div>
 
       {isOpen &&
-        page.children?.map((child) => (
+        children.data?.map((child) => (
           <RecentRow key={child.id} page={child} depth={depth + 1} />
         ))}
     </>
@@ -273,7 +273,9 @@ const TAB_EMPTY: Record<LibraryTab, string> = {
 };
 
 export function LibraryPalette({ onClose }: { onClose?: () => void }) {
-  const { pages, addPageAndActivateAsync } = useActivePage();
+  const { data: pages } = usePages();
+  const createPage = useCreatePage();
+  const { setActivePageId } = useActivePage();
   const [tab, setTab] = useState<LibraryTab>("Recents");
 
   useEffect(() => {
@@ -302,8 +304,7 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
     if (!pages) return [];
 
     if (tab === "Recents") {
-      const flat = flattenPages(pages).filter((p) => p.category !== "Template");
-      return [...flat]
+      return [...pages]
         .sort(
           (a, b) =>
             new Date(b.updatedAt ?? b.createdAt).getTime() -
@@ -351,12 +352,13 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
                   color: "white",
                   borderRadius: "var(--tt-radius-sm)",
                 }}
-                onClick={() =>
-                  addPageAndActivateAsync({
-                    title: "New Page",
-                    parentId: null,
-                  })
-                }
+                onClick={() => {
+                  const page = makePage({ title: "New Page", parentId: null });
+                  createPage
+                    .mutateAsync(page)
+                    .then(() => setActivePageId(page.id))
+                    .catch(() => console.log("Failed to create page"));
+                }}
               >
                 <span
                   className="tiptap-button-text"
@@ -381,12 +383,16 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
                 {tab === "Recents" && pages.length === 0 && (
                   <button
                     className="library-palette-content__new-btn"
-                    onClick={() =>
-                      addPageAndActivateAsync({
+                    onClick={() => {
+                      const page = makePage({
                         title: "New Page",
                         parentId: null,
-                      })
-                    }
+                      });
+                      createPage
+                        .mutateAsync(page)
+                        .then(() => setActivePageId(page.id))
+                        .catch(() => console.log("Failed to create page"));
+                    }}
                   >
                     Create your first page
                   </button>

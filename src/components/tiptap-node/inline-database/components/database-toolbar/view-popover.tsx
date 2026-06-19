@@ -3,7 +3,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import type { DatabaseAttrs, DatabaseView } from "../../types/types";
+import type { DatabaseAttrs, DatabaseView } from "src/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card } from "src/components/tiptap-ui-primitive/card";
 import {

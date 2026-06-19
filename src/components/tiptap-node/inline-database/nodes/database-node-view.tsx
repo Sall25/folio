@@ -36,8 +36,7 @@ import {
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
-import { findPage } from "src/lib/find-page";
+import { usePage, usePages } from "src/hooks/use-pages";
 import { useDataSource } from "../hooks/use-data-source";
 import { useDatabase } from "../hooks/use-database";
 import { DatabaseProvider } from "./database-provider";
@@ -48,7 +47,7 @@ import { SortRuleChips } from "../components/sort-rule-chips/sort-rule-chips";
 import { PropertyHeader } from "../components/property-header";
 import { DatabaseCalculations } from "../components/database-calculations";
 import { ResizableNodeProvider } from "../../figure-node";
-import { PROPERTY_TYPE_ICONS } from "../types/property-type-meta";
+import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import { Cell } from "../components/cells/cell";
 import { DataSourcePicker } from "./data-source-picker";
 import { DatabaseBoardNodeView } from "./database-board-node-view";
@@ -62,7 +61,7 @@ import type {
   DatabaseProperty,
   PropertyConfig,
   CellValue,
-} from "../types/types";
+} from "src/types";
 import "./database-table-node-view.scss";
 import { useDebouncedCallback } from "use-debounce";
 import {
@@ -89,6 +88,10 @@ import { groupRecords } from "../utils/group-records";
 import { recordMatchesFilters } from "../utils/apply-filters";
 import { sortRecords } from "../utils/apply-sorts";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage } from "src/api/pages";
+import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
+import { DatabaseLoadingSkeleton } from "../components/database-loading-skeleton";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -119,10 +122,9 @@ export function DatabaseNodeView({
   editor,
   updateAttributes,
 }: NodeViewProps) {
-  const attrs = node.attrs as DatabaseAttrs & {
-    sourceId?: string | null;
-    pageId?: number | null;
-  };
+  const attrs = node.attrs as DatabaseAttrs;
+
+  const { setTarget } = usePageView();
 
   // Notion-style lock: structure/layout/view-config is frozen, but cell
   // values and add/delete record stay editable. This protects a shared or
@@ -132,28 +134,31 @@ export function DatabaseNodeView({
 
   const onUpdateTitle = (title: string) =>
     updateAttributes({ ...attrs, title });
+  const { data: pages } = usePages();
+  const pagesRef = useRef(pages);
 
-  const { addPageAsync, pages, updatePageAsync } = usePages();
+  useEffect(() => void (pagesRef.current = pages), [pages]);
   const {
     source,
     isLoading,
     setCellValue,
-    addRecordWithPageAsync,
     updatePropertiesAsync,
     updateSourceMetaAsync,
     registerViewsAsync,
     resolvedRecords,
+    addRecordAsync,
   } = useDataSource(attrs.sourceId);
 
   const [draftWidths, setDraftWidths] = useState<Record<string, number>>({});
   const lastCommitRef = useRef<{ propId: string; width: number } | null>(null);
 
+  const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const persistTitle = useDebouncedCallback(
     (title: string) => {
       updateSourceMetaAsync({ name: title });
       const dbPageId = source?.pageId ?? attrs.pageId ?? null;
-      if (dbPageId != null && pages) {
-        const dbPage = findPage(pages, dbPageId);
+      if (dbPageId != null && pagesRef.current) {
+        const dbPage = pagesRef.current.find((p) => p.id === dbPageId);
         if (dbPage) {
           const content = dbPage.content as JSONContent;
           const updatedContent: JSONContent = content.content?.length
@@ -166,12 +171,15 @@ export function DatabaseNodeView({
                 ),
               }
             : content;
-          updatePageAsync({ ...dbPage, title, content: updatedContent });
+          mutatePage.mutateAsync({
+            id: dbPageId,
+            patch: { title, content: updatedContent },
+          });
         }
       }
     },
-    600,
-    { maxWait: 2000 },
+    300,
+    { maxWait: 600 },
   );
   const isLinked = !!attrs.isLinked;
   const resolvedTitle = attrs.title || source?.name || "";
@@ -219,9 +227,7 @@ export function DatabaseNodeView({
   const [hovered, setHovered] = useState(false);
 
   const dbPageId = source?.pageId ?? attrs.pageId ?? null;
-  const dbPage =
-    dbPageId != null && pages ? (findPage(pages, dbPageId) ?? null) : null;
-
+  const { data: dbPage } = usePage(dbPageId);
   const tableRef = useRef<HTMLDivElement>(null);
   const [activeColId, setActiveColId] = useState<string | null>(null);
 
@@ -311,27 +317,24 @@ export function DatabaseNodeView({
     );
   }
 
-  if (isLoading || !source) {
-    return (
-      <NodeViewWrapper as="div" data-type="database">
-        <div className="db-empty-state">Loading…</div>
-      </NodeViewWrapper>
-    );
+  if (!source) {
+    return null;
   }
 
-  const recordParentId = dbPageId;
+  if (isLoading) {
+    return <DatabaseLoadingSkeleton />;
+  }
 
   const onUpdateView = (patch: Partial<DatabaseView>) => {
     if (!activeView) return;
     db.updateView(activeView.id, patch);
   };
 
-  const newRecord = () =>
-    addRecordWithPageAsync({
-      title: "",
-      parentPageId: recordParentId,
-      createPage: addPageAsync,
-    });
+  const newRecord = () => {
+    addRecordAsync({ title: "" })
+      .then((page) => setTarget({ pageId: page.id, view: "Peek" }))
+      .catch(() => console.log("Failed to create page"));
+  };
 
   const toggleLock = () =>
     updateAttributes({ ...attrs, locked: !attrs.locked });
@@ -665,10 +668,7 @@ export function DatabaseNodeView({
         </DndContext>
 
         {/* Add-property cell — hidden when locked (no schema changes). */}
-        <CardItemGroup
-          orientation="horizontal"
-          className="db-header-cell db-header-cell--actions"
-        >
+        <CardItemGroup orientation="horizontal" className="db-header-cell ">
           {!locked && (
             <Popover>
               <PopoverTrigger asChild>
@@ -818,7 +818,7 @@ export function DatabaseNodeView({
                           <Cell
                             property={prop}
                             value={
-                              (record.values[prop.id] ??
+                              (record.values?.[prop.id] ??
                                 null) as CellValue | null
                             }
                             record={record}

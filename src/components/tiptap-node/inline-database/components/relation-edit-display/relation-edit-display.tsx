@@ -7,13 +7,9 @@ import {
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import { useDataSources } from "../../hooks/use-data-sources";
 import { useDataSource } from "../../hooks/use-data-source";
-import type {
-  DatabaseProperty,
-  DataSource,
-  PropertyConfig,
-} from "../../types/types";
+import type { DatabaseProperty, DataSource, PropertyConfig } from "src/types";
+import { useDataSources } from "src/hooks/use-data-sources";
 
 type RelationConfig = Extract<PropertyConfig, { type: "relation" }>;
 
@@ -29,7 +25,7 @@ function newPropId(): string {
  * - Pick the related database (targetDatabaseId).
  * - "Show on related database" (showOnTarget): two-way sync. Turning it on
  *   creates a mirror relation property on the TARGET source that points back
- *   here, storing its id in this config's syncedPropertyId. Turning it off
+ *   here, storing its id in this config's mirrorPropertyId. Turning it off
  *   removes that mirror. The mirror's display name is editable below, and the
  *   Preview shows both sides of the link.
  */
@@ -43,11 +39,11 @@ export function RelationEditDisplay({
   source?: DataSource;
   onChange: (config: RelationConfig, name?: string) => void;
 }) {
-  const { sources, isLoading } = useDataSources();
+  const { data: sources, isLoading } = useDataSources();
   const [query, setQuery] = useState("");
 
   const config = prop.config as RelationConfig;
-  const targetId = config.targetDatabaseId;
+  const targetId = config.targetSourceId;
 
   // Load the target so we can read/mutate its properties (the mirror lives
   // there). updatePropertiesAsync is a whole-source properties PATCH.
@@ -57,12 +53,13 @@ export function RelationEditDisplay({
 
   const currentName = source?.name?.trim() || "This database";
   const targetName =
-    (sources ?? []).find((s) => s.id === targetId)?.name?.trim() ||
-    "related database";
+    ((sources as DataSource[]) ?? [])
+      .find((s) => s.id === targetId)
+      ?.name?.trim() || "related database";
 
   // The mirror property on the target (if synced).
   const mirror = target?.properties.find(
-    (p) => p.id === config.syncedPropertyId,
+    (p) => p.id === config.mirrorPropertyId,
   );
 
   // Editable mirror name (adopt external changes when not editing).
@@ -75,7 +72,7 @@ export function RelationEditDisplay({
 
   const filtered = useMemo(
     () =>
-      (sources ?? []).filter((s) =>
+      ((sources as DataSource[]) ?? []).filter((s) =>
         (s.name ?? "Untitled")
           .toLowerCase()
           .includes(query.trim().toLowerCase()),
@@ -85,23 +82,25 @@ export function RelationEditDisplay({
 
   // ── Mirror lifecycle ────────────────────────────────────────────────────
   const removeMirror = async () => {
-    if (!target || !config.syncedPropertyId) return;
+    if (!target || !config.mirrorPropertyId) return;
     await updatePropertiesAsync(
-      target.properties.filter((p) => p.id !== config.syncedPropertyId),
+      target.properties.filter((p) => p.id !== config.mirrorPropertyId),
     );
   };
 
   const setTarget = async (id: string) => {
     // Changing the related DB drops any existing mirror on the OLD target and
     // resets two-way (must be re-enabled for the new target).
-    if (config.showOnTarget && config.syncedPropertyId) {
+    if (config.showOnTarget && config.mirrorPropertyId) {
       await removeMirror();
     }
 
     // Auto-name the property after the related database — but only if the
     // user hasn't already given it a custom name.
     const targetSourceName =
-      (sources ?? []).find((s) => s.id === id)?.name?.trim() || "";
+      ((sources as DataSource[]) ?? [])
+        .find((s) => s.id === id)
+        ?.name?.trim() || "";
     const DEFAULT_NAMES = ["relation", "new property", ""];
     const isDefaultName = DEFAULT_NAMES.includes(
       prop.name.trim().toLowerCase(),
@@ -110,9 +109,9 @@ export function RelationEditDisplay({
     onChange(
       {
         ...config,
-        targetDatabaseId: id,
+        targetSourceId: id,
         showOnTarget: false,
-        syncedPropertyId: undefined,
+        mirrorPropertyId: null,
       },
       isDefaultName ? targetSourceName || "Related" : undefined,
     );
@@ -124,7 +123,7 @@ export function RelationEditDisplay({
     if (config.showOnTarget) {
       // OFF — remove the mirror property from the target.
       await removeMirror();
-      onChange({ ...config, showOnTarget: false, syncedPropertyId: undefined });
+      onChange({ ...config, showOnTarget: false, mirrorPropertyId: null });
     } else {
       // ON — create a mirror relation on the target pointing back here.
       const mirrorId = newPropId();
@@ -133,23 +132,23 @@ export function RelationEditDisplay({
         name: currentName,
         config: {
           type: "relation",
-          targetDatabaseId: source.id,
+          targetSourceId: source.id,
           showOnTarget: false,
-          syncedPropertyId: prop.id,
+          mirrorPropertyId: prop.id,
         },
       };
       await updatePropertiesAsync([...target.properties, mirrorProp]);
-      onChange({ ...config, showOnTarget: true, syncedPropertyId: mirrorId });
+      onChange({ ...config, showOnTarget: true, mirrorPropertyId: mirrorId });
     }
   };
 
   const commitMirrorName = async () => {
-    if (!target || !config.syncedPropertyId) return;
+    if (!target || !config.mirrorPropertyId) return;
     const name = mirrorName.trim() || currentName;
     if (name === mirror?.name) return;
     await updatePropertiesAsync(
       target.properties.map((p) =>
-        p.id === config.syncedPropertyId ? { ...p, name } : p,
+        p.id === config.mirrorPropertyId ? { ...p, name } : p,
       ),
     );
   };

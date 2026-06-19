@@ -7,10 +7,9 @@ import {
 } from "lucide-react";
 import { useMemo, useRef, useState, useCallback } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
-import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek-page-context";
+import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { useDataSource } from "../hooks/use-data-source";
-import type { DatabaseAttrs, DataSource, TimelineView } from "../types/types";
+import type { DatabaseAttrs, DataSource, TimelineView } from "src/types";
 import "./database-timeline-node-view.scss";
 import {
   DndContext,
@@ -124,7 +123,6 @@ function parseIso(iso: unknown): Date | null {
 
 interface TimelineRecord {
   id: string;
-  pageId?: number;
   title: string;
   start: Date | null;
   end: Date | null;
@@ -159,12 +157,10 @@ export function DatabaseTimelineNodeView({
   source: DataSource;
   onUpdateView: (patch: Partial<TimelineView>) => void;
 }) {
-  const { addPageAsync } = usePages();
-  const { setPeekPageId } = usePeekPage();
-  const { addRecordWithPageAsync, setCellValue } = useDataSource(
+  const { setTarget } = usePageView();
+  const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
     attrs.sourceId,
   );
-  const recordParentId = source.pageId ?? null;
 
   const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
     attrs.views[0]) as TimelineView | undefined;
@@ -191,14 +187,13 @@ export function DatabaseTimelineNodeView({
   const todayLeft = todayIdx >= 0 ? todayIdx * DAY_WIDTH + DAY_WIDTH / 2 : null;
 
   const records = useMemo<TimelineRecord[]>(() => {
-    return source.records.map((r) => ({
+    return resolvedRecords.map((r) => ({
       id: r.id,
-      pageId: r.pageId,
-      title: (titleProp && (r.values[titleProp.id] as string)) || "Untitled",
-      start: parseIso(startProp ? r.values[startProp.id] : null),
-      end: parseIso(endProp ? r.values[endProp.id] : null),
+      title: (titleProp && (r.values?.[titleProp.id] as string)) || "Untitled",
+      start: parseIso(startProp ? r.values?.[startProp.id] : null),
+      end: parseIso(endProp ? r.values?.[endProp.id] : null),
     }));
-  }, [source.records, titleProp, startProp, endProp]);
+  }, [resolvedRecords, titleProp, startProp, endProp]);
 
   // ── Drag-resize via pointer math → setCellValue ──────────────────────────
   const dragRef = useRef<{
@@ -267,7 +262,7 @@ export function DatabaseTimelineNodeView({
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 4 }, // must move 4px before it's a drag
+      activationConstraint: { distance: 4 },
     }),
   );
 
@@ -281,13 +276,11 @@ export function DatabaseTimelineNodeView({
       const rec = records.find((r) => r.id === recordId);
       if (!rec || !rec.start) return;
 
-      // shift start
       const nextStart = new Date(rec.start);
       nextStart.setDate(nextStart.getDate() + daysDelta);
       if (startPropId)
         setCellValue(recordId, startPropId, nextStart.toISOString());
 
-      // shift end too, if there is one (keeps duration constant)
       if (hasEnd && endPropId && rec.end) {
         const nextEnd = new Date(rec.end);
         nextEnd.setDate(nextEnd.getDate() + daysDelta);
@@ -378,9 +371,7 @@ export function DatabaseTimelineNodeView({
                 >
                   <button
                     className="db-tl-table__name-btn"
-                    onClick={() =>
-                      rec.pageId != null && setPeekPageId(rec.pageId)
-                    }
+                    onClick={() => setTarget({ pageId: rec.id, view: "Peek" })}
                   >
                     {rec.title}
                   </button>
@@ -390,13 +381,7 @@ export function DatabaseTimelineNodeView({
                 <Button
                   variant="ghost"
                   className="db-tl-table__add-btn"
-                  onClick={() =>
-                    addRecordWithPageAsync({
-                      title: "",
-                      parentPageId: recordParentId,
-                      createPage: addPageAsync,
-                    })
-                  }
+                  onClick={() => addRecordAsync({ title: "" })}
                 >
                   <Plus className="tiptap-button-icon" />
                   <span className="tiptap-button-text">New</span>
@@ -442,9 +427,7 @@ export function DatabaseTimelineNodeView({
                             : (rec.end ?? rec.start!),
                         )
                       }
-                      onOpen={() =>
-                        rec.pageId != null && setPeekPageId(rec.pageId)
-                      }
+                      onOpen={() => setTarget({ pageId: rec.id, view: "Peek" })}
                     />
                   )}
                 </div>

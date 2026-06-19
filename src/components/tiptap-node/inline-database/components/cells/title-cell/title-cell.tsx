@@ -1,12 +1,12 @@
-import { useEffect, useMemo } from "react";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
-import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek-page-context";
-import { findPage } from "src/lib/find-page";
+import { useEffect } from "react";
+import { usePage } from "src/hooks/use-pages";
 import type { JSONContent } from "@tiptap/core";
 import { TitleCellDisplay } from "../../../primitives/title-cell-display";
-import type { DatabaseView, ID } from "../../../types/types";
-import { useCreatePage } from "src/components/tiptap-templates/simple/context/create-page-context";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
+import type { DatabaseView, ID } from "src/types";
+import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage } from "src/api/pages";
 
 export function TitleCell({
   value,
@@ -21,32 +21,24 @@ export function TitleCell({
   value: string;
   recordId: ID;
   view?: DatabaseView;
-  pageId?: number;
-  templateId?: number;
+  pageId?: ID;
+  templateId?: ID;
   onChange: (value: string) => void;
   readonly?: boolean;
   unwrapped?: boolean;
 }) {
-  const { pages, updatePageAsync } = usePages();
+  const { data: linkedPage } = usePage(pageId ?? null);
+  const { data: templatePage } = usePage(templateId ?? null);
+  const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const { setActivePageId } = useActivePage();
-  const { setPeekPageId } = usePeekPage();
-  const { setCreatePageId } = useCreatePage();
-
-  const linkedPage = useMemo(
-    () => (pageId != null && pages ? (findPage(pages, pageId) ?? null) : null),
-    [pages, pageId],
-  );
-  const templatePage = useMemo(
-    () => (templateId && pages ? (findPage(pages, templateId) ?? null) : null),
-    [pages, templateId],
-  );
+  const { setTarget } = usePageView();
 
   const icon = templatePage?.cover ?? linkedPage?.cover ?? null;
 
   function handleChange(next: string) {
-    // 1. registry value
+    //  registry value
     onChange(next);
-    // 2. linked page title + its content's title node
+    //  linked page title + its content's title node
     if (linkedPage) {
       const content = linkedPage.content as JSONContent;
       const updatedContent: JSONContent = content.content?.length
@@ -57,7 +49,10 @@ export function TitleCell({
             ),
           }
         : content;
-      updatePageAsync({ ...linkedPage, title: next, content: updatedContent });
+      mutatePage.mutate({
+        id: linkedPage.id,
+        patch: { title: next, content: updatedContent },
+      });
     }
   }
 
@@ -82,20 +77,19 @@ export function TitleCell({
           if (pageId === null || pageId === undefined || !view) return;
 
           if (view.openPageIn === "Side") {
-            setPeekPageId(pageId);
+            setTarget({ pageId, view: "Peek" });
           } else if (view.openPageIn === "Center") {
-            setCreatePageId(pageId);
+            setTarget({ pageId, view: "Center" });
           } else if (view.openPageIn === "Full") {
             setActivePageId(pageId);
           } else {
             if (view.type === "list") {
-              setPeekPageId(pageId);
-            } else if (view.type === "gallery") {
-              setCreatePageId(pageId);
-            } else if (view.type === "board") {
-              setCreatePageId(pageId);
-            } else {
-              setPeekPageId(pageId);
+              setTarget({ pageId, view: "Peek" });
+            } else if (view.type === "gallery" || view.type == "board") {
+              setTarget({ pageId, view: "Center" });
+            }
+            {
+              setTarget({ pageId, view: "Peek" });
             }
           }
         }}

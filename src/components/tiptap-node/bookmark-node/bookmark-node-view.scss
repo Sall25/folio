@@ -33,7 +33,7 @@
   border: 0.5px solid var(--tt-border-color);
   border-radius: var(--tt-radius-md);
   background: var(--tt-card-bg-color);
-  color: var(--tt-text-color);
+  color: var(--tt-text-primary);
   outline: none;
   font-family: inherit;
 
@@ -103,7 +103,7 @@
 .bookmark-card-title {
   font-size: 14px;
   font-weight: 500;
-  color: var(--tt-text-color);
+  color: var(--tt-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

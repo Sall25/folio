@@ -7,25 +7,23 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek-page-context";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
-import { findPage } from "src/lib/find-page";
-import type { PageCover } from "src/components/tiptap-templates/simple/types";
+import type { PageCover, CellValue, ID, RelationValue } from "src/types";
 import { useDataSource } from "../../../hooks/use-data-source";
-import type { CellValue, ID, RelationValue } from "../../../types/types";
+import { useRows } from "src/hooks/use-pages";
 import type { CellProps } from "../types";
 import "./relation-cell.scss";
+import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 
-// Tolerates BOTH shapes: string[] (bare ids) and RelationValue[] ({recordId}).
+// Tolerates BOTH shapes: string[] (bare ids) and RelationValue[] ({ pageId }).
 function relationRecordIds(raw: unknown): ID[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .map((item) =>
       typeof item === "string"
         ? item
-        : item && typeof item === "object" && "recordId" in item
-          ? String((item as RelationValue).recordId)
+        : item && typeof item === "object" && "pageId" in item
+          ? String((item as RelationValue).pageId)
           : null,
     )
     .filter((x): x is string => !!x);
@@ -34,11 +32,14 @@ function relationRecordIds(raw: unknown): ID[] {
 /**
  * Relation cell.
  *
- * Origin side (stored): value is the linked target record ids; editable.
+ * Origin side (stored): value is the linked target row ids; editable.
  * Mirror side (derived): when this property is the synced counterpart
- * (syncedPropertyId set + showOnTarget false), its links are COMPUTED by
- * scanning the origin source for records whose synced relation points back at
- * this record. Read-only — can't desync because nothing is stored.
+ * (mirrorPropertyId set + showOnTarget false), its links are COMPUTED by
+ * scanning the target source's rows whose synced relation points back at
+ * this row. Read-only.
+ *
+ * Post-collapse: a row IS a page, so a linked id is directly the page id —
+ * no record→page lookup.
  */
 export function RelationCell({
   value,
@@ -48,96 +49,84 @@ export function RelationCell({
   unwrapped,
   recordId,
 }: CellProps<"relation"> & { recordId?: ID }) {
-  const { source: target } = useDataSource(config.targetDatabaseId || null);
-  const { setPeekPageId } = usePeekPage();
-  const { pages } = usePages();
+  const { source: target } = useDataSource(config.targetSourceId || null);
+  const { setTarget } = usePageView();
+  const { data: targetRows } = useRows(config.targetSourceId || "");
+  const rows = useMemo(() => targetRows ?? [], [targetRows]);
   const [query, setQuery] = useState("");
 
-  // Mirror = synced counterpart that only displays the reverse links.
-  const isMirror = !!config.syncedPropertyId && !config.showOnTarget;
+  const isMirror = !!config.mirrorPropertyId && !config.showOnTarget;
   const effectiveReadonly = readonly || isMirror;
 
   // Linked ids: derived for the mirror, stored for the origin.
   const ids = useMemo(() => {
     if (isMirror) {
-      if (!target || !config.syncedPropertyId || !recordId) return [];
-      return target.records
+      if (!config.mirrorPropertyId || !recordId) return [];
+      return rows
         .filter((r) =>
-          relationRecordIds(r.values[config.syncedPropertyId as ID]).includes(
+          relationRecordIds(r.values?.[config.mirrorPropertyId as ID]).includes(
             recordId,
           ),
         )
         .map((r) => r.id);
     }
-    return (value as unknown as string[] | null) ?? [];
-  }, [isMirror, target, config.syncedPropertyId, recordId, value]);
+    return relationRecordIds(value);
+  }, [isMirror, rows, config.mirrorPropertyId, recordId, value]);
 
   const titleProp = useMemo(
     () => target?.properties.find((p) => p.config.type === "title"),
     [target?.properties],
   );
 
-  const recById = (recId: string) =>
-    target?.records.find((r) => r.id === recId);
+  const rowById = (id: string) => rows.find((r) => r.id === id);
 
-  const labelOf = (recId: string): string => {
-    const rec = recById(recId);
-    if (!rec) return "Untitled";
-    const t = titleProp ? rec.values[titleProp.id] : null;
+  const labelOf = (id: string): string => {
+    const row = rowById(id);
+    if (!row) return "Untitled";
+    const t = titleProp ? row.values?.[titleProp.id] : null;
     return (typeof t === "string" && t.trim()) || "Untitled";
   };
 
-  const pageOf = (recId: string): number | null =>
-    recById(recId)?.pageId ?? null;
-
-  const coverOf = (recId: string): PageCover | null => {
-    const pid = pageOf(recId);
-    if (pid == null || !pages) return null;
-    return findPage(pages, pid)?.cover ?? null;
-  };
+  // a linked id IS the page id (row = page) — cover comes straight off the row
+  const coverOf = (id: string): PageCover | null => rowById(id)?.cover ?? null;
 
   const candidates = useMemo(() => {
-    const recs = target?.records ?? [];
     const q = query.trim().toLowerCase();
-    if (!q) return recs;
-    return recs.filter((r) => {
-      const t = titleProp ? r.values[titleProp.id] : null;
+    if (!q) return rows;
+    return rows.filter((r) => {
+      const t = titleProp ? r.values?.[titleProp.id] : null;
       const label = (typeof t === "string" && t) || "Untitled";
       return label.toLowerCase().includes(q);
     });
-  }, [target?.records, titleProp, query]);
+  }, [rows, titleProp, query]);
 
   const commit = (next: string[]) =>
     onChange?.(next as unknown as CellValue<"relation"> | null);
 
-  const toggle = (recId: string) =>
-    commit(
-      ids.includes(recId) ? ids.filter((x) => x !== recId) : [...ids, recId],
-    );
+  const toggle = (id: string) =>
+    commit(ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]);
 
-  const remove = (recId: string) => commit(ids.filter((x) => x !== recId));
+  const remove = (id: string) => commit(ids.filter((x) => x !== id));
 
-  const openPeek = (recId: string) => {
-    const pid = pageOf(recId);
-    if (pid != null) setPeekPageId(pid);
-  };
+  // linked id is the page id — open it directly
+  const openPeek = (id: string) => setTarget({ pageId: id, view: "Peek" });
 
   // ── Chips ───────────────────────────────────────────────────────────────
-  const chip = (recId: string) => {
-    const cover = coverOf(recId);
+  const chip = (id: string) => {
+    const cover = coverOf(id);
     return (
       <span
-        key={recId}
+        key={id}
         className="db-relation-chip"
         onClick={(e) => {
           e.stopPropagation();
-          openPeek(recId);
+          openPeek(id);
         }}
       >
         {cover && (
           <PageItemIcon cover={cover} styles={{ width: 14, height: 14 }} />
         )}
-        <span className="db-relation-chip__label">{labelOf(recId)}</span>
+        <span className="db-relation-chip__label">{labelOf(id)}</span>
         {!effectiveReadonly && (
           <button
             type="button"
@@ -145,7 +134,7 @@ export function RelationCell({
             aria-label="Remove"
             onClick={(e) => {
               e.stopPropagation();
-              remove(recId);
+              remove(id);
             }}
           >
             <X size={11} />
@@ -204,11 +193,11 @@ export function RelationCell({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={
-                config.targetDatabaseId
+                config.targetSourceId
                   ? "Search records…"
                   : "No related database set"
               }
-              disabled={!config.targetDatabaseId}
+              disabled={!config.targetSourceId}
               style={{
                 border: "none",
                 outline: "none",
@@ -229,7 +218,7 @@ export function RelationCell({
               justifyContent: "flex-start",
             }}
           >
-            {!config.targetDatabaseId ? (
+            {!config.targetSourceId ? (
               <span style={{ fontSize: 12, color: "var(--tt-text-secondary)" }}>
                 Set a related database in the property settings.
               </span>
@@ -238,16 +227,16 @@ export function RelationCell({
                 No records
               </span>
             ) : (
-              candidates.map((rec) => {
-                const selected = ids.includes(rec.id);
-                const t = titleProp ? rec.values[titleProp.id] : null;
+              candidates.map((row) => {
+                const selected = ids.includes(row.id);
+                const t = titleProp ? row.values?.[titleProp.id] : null;
                 const label = (typeof t === "string" && t.trim()) || "Untitled";
-                const cover = coverOf(rec.id);
+                const cover = coverOf(row.id);
                 return (
                   <Button
-                    key={rec.id}
+                    key={row.id}
                     variant="ghost"
-                    onClick={() => toggle(rec.id)}
+                    onClick={() => toggle(row.id)}
                     style={{
                       justifyContent: "flex-start",
                       width: "100%",

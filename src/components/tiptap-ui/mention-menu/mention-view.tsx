@@ -16,7 +16,7 @@ import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import CalendarView from "./calendar-view/calendar-view";
 import { useMentionNotification } from "../notification";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 
 function getRelativeLabel(date: Date): string {
   const today = new Date();

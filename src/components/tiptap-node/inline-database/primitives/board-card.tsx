@@ -1,48 +1,56 @@
-import { useMemo } from "react";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
-import { findPage } from "src/lib/find-page";
-import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek-page-context";
+import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { Cell } from "../components/cells/cell";
 import { BoardCardCover } from "../primitives/board-card-cover";
 import { BoardCardContent } from "../primitives/board-card-content";
 import type {
-  DataSourceRecord,
+  Page,
   DatabaseProperty,
   CellValue,
   DatabaseView,
-} from "../types/types";
+} from "src/types";
 import "./board-card.scss";
 import { useDraggable } from "@dnd-kit/core";
 
+// A card hides properties that have no value (Notion behavior), so cards size
+// to their real content instead of showing empty boxes. Checkbox is excluded:
+// `false` is a meaningful value, not "empty", so checkboxes always render.
+function isEmptyCellValue(
+  value: CellValue | null,
+  prop: DatabaseProperty,
+): boolean {
+  if (prop.config.type === "checkbox") return false; // always show checkboxes
+  if (value == null) return true;
+  if (typeof value === "string") return value.trim() === "";
+  if (Array.isArray(value)) return value.length === 0;
+  return false;
+}
+
 export function BoardCard({
-  record,
+  record: linkedPage,
   properties,
   cardPreview,
   onChange,
   view,
 }: {
-  record: DataSourceRecord;
+  record: Page;
   properties: DatabaseProperty[];
   cardPreview: "none" | "cover" | "content";
   sourceId: string;
   onChange: (propertyId: string, value: CellValue | null) => void;
   view: DatabaseView;
 }) {
-  const { pages } = usePages();
-  const { setPeekPageId } = usePeekPage();
+  const { setTarget } = usePageView();
   const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({ id: record.id });
-
-  const linkedPage = useMemo(
-    () =>
-      record.pageId != null && pages
-        ? (findPage(pages, record.pageId) ?? null)
-        : null,
-    [pages, record.pageId],
-  );
+    useDraggable({ id: linkedPage.id });
 
   const titleProp = properties.find((p) => p.config.type === "title") ?? null;
-  const otherProps = properties.filter((p) => p.config.type !== "title");
+  // Non-title props that actually have a value — empty ones are hidden so the
+  // card has no blank-box gap between title and the populated fields.
+  const otherProps = properties.filter((p) => {
+    if (p.config.type === "title") return false;
+    const v = (linkedPage.values?.[p.id] ?? null) as CellValue | null;
+    return !isEmptyCellValue(v, p);
+  });
 
   return (
     <div
@@ -62,11 +70,16 @@ export function BoardCard({
       {...listeners}
       onClick={() => {
         if (isDragging) return;
-        if (record.pageId != null) setPeekPageId(record.pageId);
+        if (linkedPage.id != null)
+          setTarget({ pageId: linkedPage.id, view: "Center" });
       }}
     >
       {cardPreview === "cover" && (
-        <BoardCardCover page={linkedPage} recordId={record.id} height={120} />
+        <BoardCardCover
+          page={linkedPage}
+          recordId={linkedPage.id}
+          height={120}
+        />
       )}
       {cardPreview === "content" && <BoardCardContent page={linkedPage} />}
 
@@ -77,8 +90,10 @@ export function BoardCard({
         >
           <Cell
             property={titleProp}
-            value={(record.values[titleProp.id] ?? null) as CellValue | null}
-            record={record}
+            value={
+              (linkedPage.values?.[titleProp.id] ?? null) as CellValue | null
+            }
+            record={linkedPage}
             onChange={(v) => onChange(titleProp.id, v)}
             view={view}
             properties={properties}
@@ -86,22 +101,24 @@ export function BoardCard({
         </div>
       )}
 
-      <div
-        className="db-board-card__props"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {otherProps.map((prop) => (
-          <Cell
-            key={prop.id}
-            property={prop}
-            value={(record.values[prop.id] ?? null) as CellValue | null}
-            record={record}
-            onChange={(v) => onChange(prop.id, v)}
-            view={view}
-            properties={properties}
-          />
-        ))}
-      </div>
+      {otherProps.length > 0 && (
+        <div
+          className="db-board-card__props"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {otherProps.map((prop) => (
+            <Cell
+              key={prop.id}
+              property={prop}
+              value={(linkedPage.values?.[prop.id] ?? null) as CellValue | null}
+              record={linkedPage}
+              onChange={(v) => onChange(prop.id, v)}
+              view={view}
+              properties={properties}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -34,7 +34,7 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import type { DatabaseProperty, DatabaseView } from "../../types/types";
+import type { DatabaseProperty, DatabaseView } from "src/types";
 import {
   useEffect,
   useRef,

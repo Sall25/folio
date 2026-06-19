@@ -1,5 +1,3 @@
-// page-item-options.tsx
-
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardHeader } from "src/components/tiptap-ui-primitive/card";
 import {
@@ -9,9 +7,12 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { TrashIcon } from "src/components/tiptap-icons";
 import { Ellipsis, Plus, PencilIcon } from "lucide-react";
-import type { Page } from "./types";
+import type { Page } from "src/types";
 import { PageItemIcon } from "./page-item-icon";
-import { useActivePage } from "./use-active-page";
+import { useActivePage } from "./context/active-page-context";
+import { useDeletePage } from "src/hooks/use-delete-page";
+import { useCreatePage } from "src/hooks/use-create-page";
+import { makeChildPage } from "src/utils/make-page";
 
 interface PageItemOptionsProps {
   page: Page;
@@ -24,7 +25,9 @@ export function PageItemOptions({
   onRenameAsync,
   onOpenChange,
 }: PageItemOptionsProps) {
-  const { addPageAndActivateAsync, deletePageAsync } = useActivePage();
+  const { setActivePageId } = useActivePage();
+  const createPage = useCreatePage();
+  const deletePage = useDeletePage();
 
   return (
     <Popover onOpenChange={onOpenChange}>
@@ -74,10 +77,9 @@ export function PageItemOptions({
               }}
               onClick={async (e) => {
                 e.stopPropagation();
-                await addPageAndActivateAsync({
-                  title: "New Page",
-                  parentId: page.id,
-                });
+                const child = makeChildPage(page);
+                createPage.mutate(child);
+                setActivePageId(child.id);
               }}
             >
               <Plus className="tiptap-button-icon" />
@@ -93,7 +95,7 @@ export function PageItemOptions({
               }}
               onClick={async (e) => {
                 e.stopPropagation();
-                await deletePageAsync(page.id);
+                deletePage.mutate(page.id);
               }}
             >
               <TrashIcon className="tiptap-button-icon" />

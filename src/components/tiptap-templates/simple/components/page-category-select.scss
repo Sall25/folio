@@ -9,13 +9,14 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    height: 30px;
+    height: 28px;
     padding: 0 8px;
     border: 1px solid var(--tt-border-color);
     background: transparent;
     border-radius: var(--tt-radius-sm);
-    color: var(--tt-text-color);
+    color: var(--tt-text-secondary);
     font-size: 13px;
+    opacity: 0.9;
     cursor: pointer;
     transition: background 0.12s ease;
 
@@ -35,7 +36,7 @@
   }
 
   &__chevron {
-    opacity: 0.55;
+     opacity: 0.55;
   }
 
   &__menu {

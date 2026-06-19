@@ -1,8 +1,7 @@
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
-import { usePeekPage } from "src/components/tiptap-templates/simple/context/peek-page-context";
+import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { useDataSource } from "../hooks/use-data-source";
 import { CalendarChip } from "../components/calendar-chip";
 import type {
@@ -12,7 +11,7 @@ import type {
   DatabaseView,
   ID,
   CellValue,
-} from "../types/types";
+} from "src/types";
 import "./database-calendar-node-view.scss";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -41,12 +40,10 @@ export function DatabaseCalendarNodeView({
   source: DataSource;
   onUpdateView?: (patch: Partial<DatabaseView>) => void;
 }) {
-  const { addPageAsync } = usePages();
-  const { setPeekPageId } = usePeekPage();
-  const { addRecordWithPageAsync, setCellValue } = useDataSource(
+  const { setTarget } = usePageView();
+  const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
     attrs.sourceId,
   );
-  const recordParentId = source.pageId ?? null;
 
   const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
     attrs.views[0]) as CalendarView | undefined;
@@ -68,8 +65,6 @@ export function DatabaseCalendarNodeView({
 
   const titleProp = source.properties.find((p) => p.config.type === "title");
 
-  // Visible properties for the hover preview card (respects hidden list,
-  // minus the calendar's own date prop).
   const cardProps = useMemo(() => {
     const hidden = new Set(activeView?.hiddenProperties ?? []);
     return source.properties.filter(
@@ -111,15 +106,15 @@ export function DatabaseCalendarNodeView({
   const recordsByDay = useMemo<Record<number, ID[]>>(() => {
     if (!dateProp) return {};
     const map: Record<number, ID[]> = {};
-    for (const rec of source.records) {
-      const iso = rec.values[dateProp.id] as string | null | undefined;
+    for (const rec of resolvedRecords) {
+      const iso = rec.values?.[dateProp.id] as string | null | undefined;
       if (!iso) continue;
       const parsed = isoToMonthDay(iso);
       if (!parsed || parsed.year !== year || parsed.month !== month) continue;
       map[parsed.day] = [...(map[parsed.day] ?? []), rec.id];
     }
     return map;
-  }, [source.records, dateProp, year, month]);
+  }, [resolvedRecords, dateProp, year, month]);
 
   if (!dateProp) {
     return (
@@ -135,14 +130,10 @@ export function DatabaseCalendarNodeView({
   });
 
   async function addOnDay(dayNum: number) {
-    const rec = await addRecordWithPageAsync({
-      title: "",
-      parentPageId: recordParentId,
-      createPage: addPageAsync,
-    });
+    const row = await addRecordAsync({ title: "" });
     if (dateProp) {
       const iso = new Date(year, month, dayNum).toISOString();
-      setCellValue(rec.id, dateProp.id, iso);
+      setCellValue(row.id, dateProp.id, iso);
     }
   }
 
@@ -220,10 +211,10 @@ export function DatabaseCalendarNodeView({
 
                   <div className="db-calendar__cell-records">
                     {visible.map((id) => {
-                      const rec = source.records.find((r) => r.id === id);
+                      const rec = resolvedRecords.find((r) => r.id === id);
                       if (!rec) return null;
                       const title =
-                        (titleProp && (rec.values[titleProp.id] as string)) ||
+                        (titleProp && (rec.values?.[titleProp.id] as string)) ||
                         "Untitled";
                       return (
                         <CalendarChip
@@ -234,7 +225,7 @@ export function DatabaseCalendarNodeView({
                           sourceId={attrs.sourceId!}
                           view={activeView as DatabaseView}
                           onOpenPeek={() =>
-                            rec.pageId != null && setPeekPageId(rec.pageId)
+                            setTarget({ pageId: rec.id, view: "Peek" })
                           }
                           onChange={(propId, v) =>
                             setCellValue(rec.id, propId, v as CellValue | null)

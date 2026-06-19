@@ -1,4 +1,4 @@
-import type { DatabaseAttrs, DatabaseProperty } from "../types/types";
+import type { DatabaseAttrs, DatabaseProperty } from "src/types";
 import { useDatabaseProperties } from "./use-database-properties";
 import { useDatabaseUI } from "./use-database-ui";
 

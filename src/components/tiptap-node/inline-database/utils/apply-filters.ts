@@ -1,19 +1,16 @@
+import type { Page } from "src/types";
 import type {
   FilterGroup,
   FilterRule,
   FilterOperator,
-} from "../types/filter-types";
-import { NO_VALUE_OPERATORS } from "../types/filter-types";
-import type { DataSourceRecord } from "../types/types";
+} from "src/types/filter-types";
+import { NO_VALUE_OPERATORS } from "src/types/filter-types";
 
-export function getCellValue(
-  record: DataSourceRecord,
-  propertyId: string,
-): unknown {
-  return record.values[propertyId] ?? null;
+export function getCellValue(record: Page, propertyId: string): unknown {
+  return record.values?.[propertyId] ?? null;
 }
 
-function matchesRule(record: DataSourceRecord, rule: FilterRule): boolean {
+function matchesRule(record: Page, rule: FilterRule): boolean {
   const value = getCellValue(record, rule.propertyId);
 
   const op: FilterOperator = rule.operator;
@@ -173,7 +170,7 @@ function matchesRule(record: DataSourceRecord, rule: FilterRule): boolean {
   }
 }
 
-function matchesGroup(record: DataSourceRecord, group: FilterGroup): boolean {
+function matchesGroup(record: Page, group: FilterGroup): boolean {
   const rules = group.rules as FilterRule[];
   if (rules.length === 0) return true;
   if (group.operator === "and")
@@ -185,7 +182,7 @@ function matchesGroup(record: DataSourceRecord, group: FilterGroup): boolean {
  * Returns true if the record should be shown given the view's filters.
  */
 export function recordMatchesFilters(
-  record: DataSourceRecord,
+  record: Page,
   filters: FilterGroup[],
 ): boolean {
   if (!filters || filters.length === 0) return true;

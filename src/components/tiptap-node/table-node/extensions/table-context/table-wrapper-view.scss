@@ -5,6 +5,7 @@
   .table-overlays{
     width: fit-content;
     margin: 20px;
+    z-index: 999;
 
     .table-overlays-fade {
       opacity: 0;
@@ -18,7 +19,8 @@
 
   .tableWrapper {
     margin-top: 12px;
-    overflow-x: auto;
+    overflow-x: visible;
+    margin-left: -20px;
   }
 
   table {

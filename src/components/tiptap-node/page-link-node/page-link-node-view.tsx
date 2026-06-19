@@ -4,27 +4,11 @@ import type { NodeViewProps } from "@tiptap/react";
 import "./page-link-node.scss";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 import { useRef, useState } from "react";
-import type { Page } from "src/components/tiptap-templates/simple/types";
+import type { Page } from "src/types";
 import { createPortal } from "react-dom";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
-
-function flattenPages(pages: Page[]): Page[] {
-  return pages.flatMap((p) => [p, ...flattenPages(p.children ?? [])]);
-}
-
-function buildBreadcrumb(page: Page, allPages: Page[]): string {
-  const trail: string[] = [];
-  let current: Page | undefined = page;
-  while (current?.parentId) {
-    const parent = allPages.find(
-      (p) => String(p.id) === String(current!.parentId),
-    );
-    if (!parent) break;
-    trail.unshift(parent.title || "Untitled");
-    current = parent;
-  }
-  return trail.join(" / ");
-}
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { usePage } from "src/hooks/use-pages";
+import { Breadcrumbs } from "src/components/tiptap-templates/simple/breadcrumbs";
 
 function getContentExcerpt(page: Page): string {
   try {
@@ -46,7 +30,8 @@ function getContentExcerpt(page: Page): string {
 
 export function PageLinkNodeView({ node }: NodeViewProps) {
   const { pageId } = node.attrs;
-  const { pages, setActivePageId } = useActivePage();
+  const { data: page, isError } = usePage(pageId);
+  const { setActivePageId } = useActivePage();
   const [isHovered, setIsHovered] = useState(false);
   const [previewPos, setPreviewPos] = useState({ top: 0, left: 0 });
   const linkRef = useRef<HTMLDivElement>(null);
@@ -88,12 +73,7 @@ export function PageLinkNodeView({ node }: NodeViewProps) {
     leaveTimer.current = setTimeout(() => setIsHovered(false), 300);
   };
 
-  if (!pages) return null;
-
-  const numericId = Number(pageId);
-  const page =
-    pages.find((p) => p.id === numericId) ??
-    flattenPages(pages).find((p) => p.id === numericId);
+  if (isError) return null;
 
   if (!page)
     return (
@@ -112,7 +92,6 @@ export function PageLinkNodeView({ node }: NodeViewProps) {
       </NodeViewWrapper>
     );
 
-  const breadcrumb = buildBreadcrumb(page, pages);
   const excerpt = getContentExcerpt(page);
   const handleClick = () => setActivePageId(pageId);
 
@@ -126,7 +105,7 @@ export function PageLinkNodeView({ node }: NodeViewProps) {
     >
       <div ref={linkRef} className="page-link-node" onClick={handleClick}>
         <PageItemIcon cover={page.cover} />
-        <span style={{ color: page.cover.color }}>
+        <span style={{ color: page.cover.color ?? undefined }}>
           {page.title || "New Page"}
         </span>
       </div>
@@ -147,9 +126,7 @@ export function PageLinkNodeView({ node }: NodeViewProps) {
             <div className="page-link-preview__icon">
               <PageItemIcon cover={page.cover} styles={{ fontSize: 32 }} />
             </div>
-            {breadcrumb && (
-              <p className="page-link-preview__breadcrumb">{breadcrumb}</p>
-            )}
+            <Breadcrumbs pageId={pageId} />
             <p className="page-link-preview__title">
               {page.title || "New Page"}
             </p>

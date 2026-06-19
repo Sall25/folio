@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Check } from "lucide-react";
-import type { StatusGroup, StatusItem } from "../types/types";
+import type { StatusGroup, StatusItem } from "src/types";
 import {
   Popover,
   PopoverContent,

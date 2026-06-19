@@ -1,4 +1,4 @@
-import type { DatabaseProperty, DataSourceRecord } from "../types/types";
+import type { DatabaseProperty, Page } from "src/types";
 
 export const NONE_KEY = "__none__";
 export const ALL_KEY = "__all__";
@@ -36,30 +36,29 @@ export function groupLabel(key: string, prop: DatabaseProperty): string {
 export interface RecordGroup {
   key: string;
   label: string;
-  records: DataSourceRecord[];
+  records: Page[]; // whole pages — consumers need .id / .values
 }
 
 /**
- * Buckets records by the given group property. If no group property is
- * provided, returns a single bucket containing every record (key = ALL_KEY,
- * empty label) so callers can render ungrouped without branching.
+ * Buckets ROWS (pages) by the given group property. No group property →
+ * one bucket with every row (key = ALL_KEY).
  */
 export function groupRecords(
-  records: DataSourceRecord[],
+  rows: Page[],
   groupProp: DatabaseProperty | undefined,
 ): RecordGroup[] {
   if (!groupProp) {
-    return [{ key: ALL_KEY, label: "", records }];
+    return [{ key: ALL_KEY, label: "", records: rows }];
   }
-  const map = new Map<string, DataSourceRecord[]>();
-  for (const rec of records) {
-    const key = groupKeyFor(rec.values[groupProp.id], groupProp);
+  const map = new Map<string, Page[]>();
+  for (const row of rows) {
+    const key = groupKeyFor(row.values?.[groupProp.id], groupProp);
     if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push(rec);
+    map.get(key)!.push(row);
   }
-  return [...map.entries()].map(([key, recs]) => ({
+  return [...map.entries()].map(([key, records]) => ({
     key,
     label: groupLabel(key, groupProp),
-    records: recs,
+    records,
   }));
 }

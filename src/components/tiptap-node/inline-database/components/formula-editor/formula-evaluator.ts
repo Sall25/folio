@@ -6,7 +6,7 @@ import type {
   CellValue,
   PropertyType,
   CellValueMap,
-} from "../../types/types";
+} from "src/types";
 
 // ─── mathjs instance ──────────────────────────────────────────────────────────
 

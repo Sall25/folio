@@ -4,12 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite\" \"json-server --watch pages.json --port 3001\" \"json-server --watch threads.json --port 3002\" \"json-server --watch versions.json --port 3003\" \"node server/upload-server.js\"  \"json-server --watch data-sources.json --port 3005\"",
+   "dev": "concurrently \"vite\" \"node server.js\" \"node server/upload-server.js\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "json-server": "0.17.4",
     "@codemirror/autocomplete": "^6.20.2",
     "@codemirror/commands": "^6.10.3",
     "@codemirror/language": "^6.12.3",

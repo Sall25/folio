@@ -1,7 +1,7 @@
 import type { TocItem } from "src/components/tiptap-node/toc-node/toc-context";
-import type { UseThreadsOnPageReturn } from "src/components/tiptap-ui/comments/hooks/use-threads-on-page";
+import type { ID } from "src/types";
 
 export type EditorExtensionRefs = {
   setTocContent: (content: TocItem[]) => void;
-  setActivePageId: (id: number | undefined) => void;
-} & Partial<UseThreadsOnPageReturn>;
+  setActivePageId: (id: ID) => void;
+};

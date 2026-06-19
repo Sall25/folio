@@ -7,8 +7,9 @@ import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import "./slash-command-list.scss";
 import { useMenuNavigation } from "src/hooks/use-menu-navigation";
 import type { SlashCommand as SlashItem } from "./slash-commands";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useCreatePage } from "src/hooks/use-create-page";
+import { makeChildPage } from "src/utils/make-page";
 
 type Props = SuggestionProps<SlashItem> & {
   selectedIndex?: number;
@@ -18,8 +19,8 @@ type Props = SuggestionProps<SlashItem> & {
 
 export default function SlashList(props: Props) {
   const { items = [], onClickItem, onClose, editor } = props;
-  const { addPageAsync } = usePages();
-  const { activePageId, setActivePageId } = useActivePage();
+  const createPage = useCreatePage();
+  const { activePageId, activePage, setActivePageId } = useActivePage();
   const isSelectable = (item: SlashItem) => item.type === "command";
 
   const selectableItems = useMemo(() => items.filter(isSelectable), [items]);
@@ -37,11 +38,9 @@ export default function SlashList(props: Props) {
       onClickItem?.(item);
       if (item.title === "Page") {
         const parentId = activePageId;
-        if (parentId === undefined) return;
-        addPageAsync({
-          title: "New Page",
-          parentId: parentId,
-        }).then((newPage) => {
+        if (parentId === null || !activePage) return;
+        const page = makeChildPage(activePage, "New Page");
+        createPage.mutateAsync(page).then((newPage) => {
           editor.storage.pageLink.pages = [
             ...editor.storage.pageLink.pages,
             newPage,

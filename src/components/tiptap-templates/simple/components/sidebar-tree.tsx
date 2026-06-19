@@ -32,8 +32,7 @@ import {
   type DragOverEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
-
-import type { Page, PageCategory } from "../types";
+import type { PageCategory, PageTreeNode, ID } from "src/types";
 import { PageItem } from "../page-item";
 import "./sidebar-sections.scss";
 import "./sidebar-tree.scss";
@@ -45,20 +44,20 @@ const SECTION_CATEGORIES: PageCategory[] = [
   "Shared",
   "Teamspaces",
 ];
-const DEFAULT_CATEGORY: PageCategory = "Private";
-
 type DropZone = "before" | "after" | "inside";
 
+// CHANGED: pageId number → ID
 type DropTarget =
-  | { kind: "page"; pageId: number; zone: DropZone }
+  | { kind: "page"; pageId: ID; zone: DropZone }
   | { kind: "section"; category: PageCategory }
   | null;
 
+// CHANGED: consumes the derived tree, grouped by category, instead of flat Page[]
 export interface SidebarTreeProps {
-  pages: Page[];
+  tree: Record<PageCategory, PageTreeNode[]>;
   onMovePage: (args: {
-    pageId: number;
-    newParentId: number | null;
+    pageId: ID;
+    newParentId: ID | null;
     category?: PageCategory;
   }) => void;
   onAddPageToSection?: (category: PageCategory) => void;
@@ -68,40 +67,44 @@ export interface SidebarTreeProps {
   onHideSection?: (category: PageCategory) => void;
 }
 
+// CHANGED: walks PageTreeNode.children, collects string ids
 function collectSubtreeIds(
-  page: Page,
-  acc: Set<number> = new Set(),
-): Set<number> {
-  acc.add(page.id);
-  for (const c of page.children ?? []) collectSubtreeIds(c, acc);
+  node: PageTreeNode,
+  acc: Set<ID> = new Set(),
+): Set<ID> {
+  acc.add(node.page.id);
+  for (const c of node.children) collectSubtreeIds(c, acc);
   return acc;
 }
 
 // ── Recursive tree row ─────────────────────────────────────────────────────
+// CHANGED: takes a PageTreeNode (page + children) instead of a Page with .children
 function TreeRow({
-  page,
+  node,
   depth,
   expandedIds,
   onToggleExpand,
   dropTarget,
   activeId,
 }: {
-  page: Page;
+  node: PageTreeNode;
   depth: number;
-  expandedIds: Set<number>;
-  onToggleExpand: (id: number) => void;
+  expandedIds: Set<ID>;
+  onToggleExpand: (id: ID) => void;
   dropTarget: DropTarget;
-  activeId: number | null;
+  activeId: ID | null;
 }) {
-  const hasChildren = (page.children?.length ?? 0) > 0;
+  const page = node.page;
+  const hasChildren = node.children.length > 0;
   const isExpanded = expandedIds.has(page.id);
+  const [shouldShow, setShouldShow] = useState(true);
 
   const {
     attributes,
     listeners,
     setNodeRef: setDragRef,
   } = useDraggable({
-    id: page.id,
+    id: page.id, // already a string ID — dnd-kit accepts string ids
   });
   const { setNodeRef: setDropRef } = useDroppable({ id: page.id });
 
@@ -140,6 +143,8 @@ function TreeRow({
         style={rowStyle}
         {...attributes}
         {...listeners}
+        onMouseOver={() => setShouldShow(false)}
+        onMouseLeave={() => setShouldShow(true)}
       >
         {zone === "before" && (
           <div className="sidebar-tree__line sidebar-tree__line--top" />
@@ -148,8 +153,6 @@ function TreeRow({
           <div className="sidebar-tree__line sidebar-tree__line--bottom" />
         )}
 
-        {/* Caret overlays the icon and cross-fades in on row hover.
-            Visibility is handled in SCSS; only positioning is inline. */}
         <Button
           className="sidebar-tree__caret"
           variant="ghost"
@@ -181,16 +184,16 @@ function TreeRow({
         </Button>
 
         <div className="sidebar-tree__item">
-          <PageItem page={page} disableExpand={true} />
+          <PageItem page={page} showIcon={hasChildren ? shouldShow : true} />
         </div>
       </div>
 
       {hasChildren && isExpanded && (
         <div className="sidebar-tree__children">
-          {page.children.map((child) => (
+          {node.children.map((child) => (
             <TreeRow
-              key={child.id}
-              page={child}
+              key={child.page.id}
+              node={child}
               depth={depth + 1}
               expandedIds={expandedIds}
               onToggleExpand={onToggleExpand}
@@ -251,7 +254,6 @@ function SectionMenu({
   );
 }
 
-// Per-section empty-state copy + icon. Falls back to a generic page icon.
 const EMPTY_META: Record<
   string,
   { Icon: typeof FileText; title: string; hint: string }
@@ -298,7 +300,7 @@ function SectionEmpty({
       type="button"
     >
       <span className="sidebar-section__empty-icon">
-        <Icon size={16} />
+        <Icon size={20} />
       </span>
       <span className="sidebar-section__empty-text">
         <span className="sidebar-section__empty-title">{meta.title}</span>
@@ -311,7 +313,8 @@ function SectionEmpty({
   );
 }
 
-// ── Section: header (now a drop target) + body ─────────────────────────────
+// ── Section ────────────────────────────────────────────────────────────────
+// CHANGED: topLevel is now PageTreeNode[]
 function Section({
   category,
   topLevel,
@@ -327,11 +330,11 @@ function Section({
   onHide,
 }: {
   category: PageCategory;
-  topLevel: Page[];
-  expandedIds: Set<number>;
-  onToggleExpand: (id: number) => void;
+  topLevel: PageTreeNode[];
+  expandedIds: Set<ID>;
+  onToggleExpand: (id: ID) => void;
   dropTarget: DropTarget;
-  activeId: number | null;
+  activeId: ID | null;
   collapsed: boolean;
   onToggleCollapse: () => void;
   onAddPage?: (c: PageCategory) => void;
@@ -408,10 +411,10 @@ function Section({
             isSectionDrop ? " sidebar-section__body--drop-active" : ""
           }`}
         >
-          {topLevel.map((page) => (
+          {topLevel.map((node) => (
             <TreeRow
-              key={page.id}
-              page={page}
+              key={node.page.id}
+              node={node}
               depth={0}
               expandedIds={expandedIds}
               onToggleExpand={onToggleExpand}
@@ -429,7 +432,7 @@ function Section({
 }
 
 export function SidebarTree({
-  pages,
+  tree,
   onMovePage,
   onAddPageToSection,
   onAddSection,
@@ -437,45 +440,38 @@ export function SidebarTree({
   onDeleteSection,
   onHideSection,
 }: SidebarTreeProps) {
-  const [activeId, setActiveId] = useState<number | null>(null);
+  // CHANGED: all Set<number> → Set<ID>, activeId ID | null
+  const [activeId, setActiveId] = useState<ID | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget>(null);
-  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+  const [expandedIds, setExpandedIds] = useState<Set<ID>>(new Set());
   const [hidden, setHidden] = useState<Set<string>>(new Set());
-  // Collapse state lifted here so a drop on a collapsed section can expand it.
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
-    new Set(),
+    () =>
+      new Set(SECTION_CATEGORIES.filter((c) => (tree[c]?.length ?? 0) === 0)),
   );
 
-  const pageById = useMemo(() => {
-    const m = new Map<number, Page>();
-    const walk = (list: Page[]) => {
-      for (const p of list) {
-        m.set(p.id, p);
-        if (p.children?.length) walk(p.children);
+  // CHANGED: build the flat node lookup from the tree (keyed by string ID).
+  // We index every node in every category so drop-target resolution is O(1).
+  const nodeById = useMemo(() => {
+    const m = new Map<ID, PageTreeNode>();
+    const walk = (nodes: PageTreeNode[]) => {
+      for (const n of nodes) {
+        m.set(n.page.id, n);
+        if (n.children.length) walk(n.children);
       }
     };
-    walk(pages);
+    for (const cat of SECTION_CATEGORIES) walk(tree[cat] ?? []);
     return m;
-  }, [pages]);
-
-  const topLevelByCategory = useMemo(() => {
-    const by: Record<string, Page[]> = {};
-    for (const c of SECTION_CATEGORIES) by[c] = [];
-    for (const p of pages) {
-      if (p.parentId != null) continue;
-      if (p.category === "Template") continue;
-      const cat = p.category && by[p.category] ? p.category : DEFAULT_CATEGORY;
-      by[cat].push(p);
-    }
-    return by;
-  }, [pages]);
+  }, [tree]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
   );
 
+  // CHANGED: e.active.id is string | number from dnd-kit; ours are strings, so
+  // String() (not Number()) — and since we set them as strings, it's a no-op cast.
   const onDragStart = (e: DragStartEvent) => {
-    setActiveId(Number(e.active.id));
+    setActiveId(String(e.active.id));
   };
 
   const onDragOver = (e: DragOverEvent) => {
@@ -486,7 +482,6 @@ export function SidebarTree({
     }
     const overId = over.id;
 
-    // Section body OR header/label → drop into that section.
     if (typeof overId === "string" && overId.startsWith("section:")) {
       setDropTarget({
         kind: "section",
@@ -502,18 +497,17 @@ export function SidebarTree({
       return;
     }
 
-    const overPageId = Number(overId);
-    const activePageId = Number(active.id);
+    // CHANGED: ids are strings — no Number() coercion
+    const overPageId = String(overId);
+    const activePageId = String(active.id);
 
-    // Over a row in the dragged page's own subtree → fall back to that row's
-    // section instead of cancelling, so dragging within your own section works.
-    const activePage = pageById.get(activePageId);
-    if (activePage) {
-      const subtree = collectSubtreeIds(activePage);
+    const activeNode = nodeById.get(activePageId);
+    if (activeNode) {
+      const subtree = collectSubtreeIds(activeNode);
       if (subtree.has(overPageId)) {
-        const overPage = pageById.get(overPageId);
-        if (overPage && overPage.parentId == null && overPage.category) {
-          setDropTarget({ kind: "section", category: overPage.category });
+        const overNode = nodeById.get(overPageId);
+        if (overNode && overNode.page.parentId == null) {
+          setDropTarget({ kind: "section", category: overNode.page.category });
         } else {
           setDropTarget(null);
         }
@@ -539,14 +533,13 @@ export function SidebarTree({
 
   const onDragEnd = (e: DragEndEvent) => {
     const target = dropTarget;
-    const pageId = Number(e.active.id);
+    const pageId = String(e.active.id); // CHANGED: String, not Number
     setActiveId(null);
     setDropTarget(null);
     if (!target) return;
 
     if (target.kind === "section") {
       onMovePage({ pageId, newParentId: null, category: target.category });
-      // expand the section so the dropped page is visible
       setCollapsedSections((s) => {
         if (!s.has(target.category)) return s;
         const n = new Set(s);
@@ -556,13 +549,12 @@ export function SidebarTree({
       return;
     }
 
-    const overPage = pageById.get(target.pageId);
-    if (!overPage) return;
+    const overNode = nodeById.get(target.pageId);
+    if (!overNode) return;
+    const overPage = overNode.page;
 
-    // Dropping onto itself → treat as a move into its own section (no-op if
-    // unchanged). Prevents the one-page-section dead drop.
     if (overPage.id === pageId) {
-      if (overPage.parentId == null && overPage.category) {
+      if (overPage.parentId == null) {
         onMovePage({
           pageId,
           newParentId: null,
@@ -580,14 +572,12 @@ export function SidebarTree({
       onMovePage({
         pageId,
         newParentId: overPage.parentId ?? null,
-        ...(isTopLevel && overPage.category
-          ? { category: overPage.category }
-          : {}),
+        ...(isTopLevel ? { category: overPage.category } : {}),
       });
     }
   };
 
-  const onToggleExpand = (id: number) =>
+  const onToggleExpand = (id: ID) =>
     setExpandedIds((s) => {
       const n = new Set(s);
       if (n.has(id)) n.delete(id);
@@ -613,7 +603,7 @@ export function SidebarTree({
     onHideSection?.(c);
   };
 
-  const activePage = activeId != null ? pageById.get(activeId) : null;
+  const activeNode = activeId != null ? nodeById.get(activeId) : null;
   const visibleCategories = SECTION_CATEGORIES.filter((c) => !hidden.has(c));
 
   return (
@@ -633,7 +623,7 @@ export function SidebarTree({
           <Section
             key={category}
             category={category}
-            topLevel={topLevelByCategory[category] ?? []}
+            topLevel={tree[category] ?? []}
             expandedIds={expandedIds}
             onToggleExpand={onToggleExpand}
             dropTarget={dropTarget}
@@ -658,9 +648,9 @@ export function SidebarTree({
       </div>
 
       <DragOverlay>
-        {activePage ? (
+        {activeNode ? (
           <div className="sidebar-drag-overlay">
-            <PageItem page={activePage} disableExpand={true} />
+            <PageItem page={activeNode.page} />
           </div>
         ) : null}
       </DragOverlay>

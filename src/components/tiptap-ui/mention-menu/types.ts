@@ -2,7 +2,7 @@ import type {
   SuggestionKeyDownProps,
   SuggestionOptions,
 } from "@tiptap/suggestion";
-import type { Page } from "src/components/tiptap-templates/simple/types";
+import type { Page } from "src/types";
 
 export type MentionItem = {
   id: string;

@@ -9,10 +9,12 @@ import { useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { MessageSquareMore } from "lucide-react";
 import "./comment-popover.scss";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 
 export function CommentPopover({ editor }: { editor: Editor | null }) {
   const [comment, setComment] = useState("");
   const [open, setOpen] = useState(false);
+  const { activePageId } = useActivePage();
 
   const handleSubmit = () => {
     if (!comment.trim()) return;
@@ -34,7 +36,9 @@ export function CommentPopover({ editor }: { editor: Editor | null }) {
         {/* <CommentButton editor={editor!} /> */}
         <Button
           variant="ghost"
-          onPointerDown={() => editor?.commands.draftThread()}
+          onPointerDown={() => {
+            if (activePageId) editor?.commands.draftThread(activePageId);
+          }}
         >
           <MessageSquareMore className="tiptap-button-icon" />
         </Button>

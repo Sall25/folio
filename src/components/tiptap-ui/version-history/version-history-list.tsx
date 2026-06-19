@@ -1,4 +1,4 @@
-import type { Version } from "./types";
+import type { Version } from "src/types";
 import { VersionHistoryItem } from "./version-history-item";
 import { groupVersionsByDate } from "./utils";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";

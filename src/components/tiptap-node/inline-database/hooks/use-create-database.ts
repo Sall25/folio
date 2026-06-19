@@ -1,20 +1,18 @@
 import { useCallback } from "react";
 import type { Editor } from "@tiptap/core";
-import { useDataSources } from "../hooks/use-data-sources";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
-import type { DatabaseProperty } from "../types/types";
+import { newId } from "src/lib/id";
+import type { DatabaseProperty } from "src/types";
+import type { Page } from "src/types";
+import { useCreatePage } from "src/hooks/use-create-page";
+import { useCreateDataSource } from "src/hooks/use-create-data-source";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { makePage } from "src/utils/make-page";
 
 function defaultProperties(): DatabaseProperty[] {
   return [
+    { id: newId(), name: "Name", config: { type: "title" }, width: 240 },
     {
-      id: crypto.randomUUID(),
-      name: "Name",
-      config: { type: "title" },
-      width: 240,
-    },
-    {
-      id: crypto.randomUUID(),
+      id: newId(),
       name: "Tags",
       config: { type: "select", options: [] },
       width: 160,
@@ -24,7 +22,7 @@ function defaultProperties(): DatabaseProperty[] {
 
 function defaultView() {
   return {
-    id: crypto.randomUUID(),
+    id: newId(),
     name: "Table",
     type: "table" as const,
     filters: [],
@@ -34,7 +32,7 @@ function defaultView() {
   };
 }
 
-// builds the database page's content: title node + database node owning its sourceId/title
+// the database page's content: title node + database node referencing the source
 export function databasePageContent(sourceId: string, name: string) {
   const view = defaultView();
   return {
@@ -44,9 +42,9 @@ export function databasePageContent(sourceId: string, name: string) {
       {
         type: "database",
         attrs: {
-          id: crypto.randomUUID(),
+          id: newId(),
           sourceId,
-          pageId: null, // cover resolves via source.pageId
+          pageId: null, // resolves via source.pageId
           title: name,
           views: [view],
           activeViewId: view.id,
@@ -57,32 +55,43 @@ export function databasePageContent(sourceId: string, name: string) {
 }
 
 export function useCreateDatabase(editor: Editor) {
-  const { createSourceAsync } = useDataSources();
-  const { addPageAsync } = usePages();
+  const createPage = useCreatePage();
+  const createSource = useCreateDataSource();
   const { activePageId } = useActivePage();
 
   return useCallback(async () => {
-    const sourceId = crypto.randomUUID();
+    const sourceId = newId();
     const name = "Untitled";
 
-    // 1. dedicated page, content seeded with the database node (node owns its identity)
-    const dbPage = await addPageAsync({
-      title: name,
-      parentId: activePageId ?? null,
-      databaseId: sourceId,
+    // 1. CONTAINER PAGE FIRST. It owns the database, so sourceId stays null
+    //    (it is NOT a row). The source's guard fetches this page next and
+    //    requires sourceId == null — so the page must exist before the source.
+    const dbPage: Page = {
+      ...makePage({
+        title: name,
+        parentId: activePageId ?? null,
+        category: "Private",
+      }),
       content: databasePageContent(sourceId, name),
-    });
+    };
+    await createPage.mutateAsync(dbPage);
 
-    // 2. the source, carrying its page link
-    const source = await createSourceAsync({
+    // 2. the source, pointing at the now-existing container page.
+    //    useCreateDataSource's guard fetches dbPage, sees sourceId == null, allows it.
+    const source = await createSource.mutateAsync({
       id: sourceId,
       name,
       pageId: dbPage.id,
       properties: defaultProperties(),
-      records: [],
+      savedViews: [],
+      views: [defaultView()],
+      createdAt: Date.now(),
+      updatedAt: null,
+      rowTemplates: [],
     });
 
-    // 3. inline embed on the host page (a second database node → same source)
+    // 3. inline embed on the HOST page (the one being edited) — a second
+    //    database node referencing the same source.
     editor.chain().focus().insertDatabaseWithSource(source.id, dbPage.id).run();
-  }, [editor, createSourceAsync, addPageAsync, activePageId]);
+  }, [editor, createPage, createSource, activePageId]);
 }

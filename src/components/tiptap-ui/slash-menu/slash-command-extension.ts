@@ -20,7 +20,7 @@ import {
   SLASH_COMMANDS,
   type SlashCommand as SlashItem,
 } from "./slash-commands";
-import type { Page } from "src/components/tiptap-templates/simple/types";
+import type { ID, Page } from "src/types";
 
 const COLOR_TRIGGER_KEYWORDS = ["color", "highlight", "colour"];
 
@@ -50,15 +50,15 @@ declare module "@tiptap/core" {
 }
 
 interface SlashCommandStorage {
-  activePageId: number;
+  activePageId: ID;
   addPageAsync: ({
     title,
     parentId,
   }: {
     title: string;
-    parentId: number | null;
+    parentId: ID | null;
   }) => Promise<Page>;
-  setActivePageId: (pageId: number) => void;
+  setActivePageId: (pageId: ID) => void;
 }
 
 declare module "@tiptap/core" {
@@ -89,7 +89,7 @@ export const SlashCommand = Extension.create<
 
   addStorage() {
     return {
-      activePageId: 0,
+      activePageId: "",
       addPageAsync: async () => ({}) as Page,
       setActivePageId: () => {},
     };

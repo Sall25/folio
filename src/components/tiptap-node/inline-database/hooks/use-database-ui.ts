@@ -6,7 +6,7 @@ import type {
   CellAddress,
   PanelView,
   DatabaseUIState,
-} from "../types/types";
+} from "src/types";
 import { makeDefaultView } from "../utils";
 
 export type UseDatabaseUIReturn = ReturnType<typeof useDatabaseUI>;
@@ -52,7 +52,7 @@ export function useDatabaseUI(
 
   const isCellEditing = useCallback(
     (recordId: ID, propertyId: ID) =>
-      uiState.editingCell?.recordId === recordId &&
+      uiState.editingCell?.pageId === recordId &&
       uiState.editingCell?.propertyId === propertyId,
     [uiState.editingCell],
   );

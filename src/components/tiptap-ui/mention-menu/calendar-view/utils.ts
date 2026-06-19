@@ -1,4 +1,4 @@
-import type { TimeFormat } from "src/components/tiptap-node/inline-database/types/types";
+import type { TimeFormat } from "src/types";
 
 export const DAYS_SHORT = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 

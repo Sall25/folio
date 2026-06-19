@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import type { TocItem } from "./toc-context";
 import { TocContext } from "./toc-context";
 import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 
 function normalizeDepths(items: TocItem[]): number[] {
   if (!items.length) return [];
@@ -128,8 +128,8 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
 
   // restore scroll on page switch
   useEffect(() => {
-    if (activePageId === undefined) return;
-    if (hasRestoredRef.current === activePageId.toString()) return;
+    if (activePageId === null) return;
+    if (hasRestoredRef.current === activePageId) return;
 
     const savedHeadingId = getActiveHeadingCache()[activePageId];
     const savedScroll = getScrollCache()[activePageId];
@@ -141,7 +141,7 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
 
       if (!savedHeadingId) {
         container.scrollTo({ top: 0, behavior: "smooth" });
-        hasRestoredRef.current = activePageId.toString();
+        hasRestoredRef.current = activePageId;
         return;
       }
 

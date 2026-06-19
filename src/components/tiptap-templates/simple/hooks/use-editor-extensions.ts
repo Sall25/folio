@@ -18,7 +18,6 @@ import { Color, TextStyle } from "@tiptap/extension-text-style";
 import { Placeholder } from "@tiptap/extensions";
 import { TableKit } from "@tiptap/extension-table";
 import UniqueID from "@tiptap/extension-unique-id";
-
 import { SlashCommand } from "src/components/tiptap-ui/slash-menu";
 import { MentionExtension } from "src/components/tiptap-ui/mention-menu";
 import { EmojiExtension } from "src/components/tiptap-ui/emoji-menu";
@@ -54,7 +53,7 @@ import { AudioExtension } from "src/components/tiptap-node/audio-node";
 import { YoutubeExtension } from "src/components/tiptap-node/video-node";
 import { BookmarkNode } from "src/components/tiptap-node/bookmark-node/bookmark-node-extension";
 import { PageBreadcrumb } from "src/components/tiptap-ui/page-breadcrumb/page-breadcrumb";
-import { RecordPropertyPanelNode } from "src/components/tiptap-node/record-property-panel-node";
+import { RecordPropertyPanelNode } from "../record-property-panel-node";
 import { MathInlineNode } from "src/components/tiptap-node/math-inline-node";
 import { MathBlockNode } from "src/components/tiptap-node/math-block-node";
 import { FileNode } from "src/components/tiptap-node/file-node";
@@ -91,6 +90,14 @@ export function useEditorExtensions(
           if (node.type.name === "title") return "New Page";
           if (["tableCell", "tableHeader", "table"].includes(node.type.name))
             return "";
+          // Blank the prompt on a dedicated DATABASE PAGE only (title +
+          // database, no body). Uses page-level detection via the guard's
+          // storage — NOT "doc contains a database node", so a normal page
+          // that embeds an inline database keeps its normal placeholders.
+          const isDbPage =
+            editor.storage.structuredPageGuard?.isStructuredActivePage?.() ===
+            true;
+          if (isDbPage && node.type.name === "paragraph") return "";
           if (editor.state.tr.getMeta("/Filter")) return "/Filter";
           return "Write, type '/' from commands...";
         },
@@ -107,13 +114,7 @@ export function useEditorExtensions(
       ParagraphNode,
       TitleNode,
       HorizontalRule,
-      // FigureCaption,
-      // Figure.configure({
-      //   directions: ["left", "right"],
-      //   preserveAspectRatio: true,
-      //   min: { width: 10, height: 10 },
-      //   max: { width: 2000, height: 2000 },
-      // }),
+
       Image.configure({
         resize: {
           enabled: true,
@@ -155,30 +156,7 @@ export function useEditorExtensions(
       EmojiExtension,
 
       // --- Collaboration / comments ---
-      CommentThreadExtension.configure({
-        threads: [],
-        onCreateThreadAsync: async (...args) => {
-          await refsRef.current?.createThreadAsync?.(...args);
-        },
-        onDeleteThreadAsync: async (...args) => {
-          await refsRef.current?.deleteThreadAsync?.(...args);
-        },
-        onResolveThreadAsync: async (...args) => {
-          await refsRef.current?.resolveThreadAsync?.(...args);
-        },
-        onUnresolveThreadAsync: async (...args) => {
-          await refsRef.current?.unresolveThreadAsync?.(...args);
-        },
-        onAddCommentsAsync: async (thread, newComments) => {
-          await refsRef.current?.addCommentsAsync?.({ thread, newComments });
-        },
-        onRemoveCommentsAsync: async (...args) => {
-          await refsRef.current?.removeCommentsAsync?.(...args);
-        },
-        onUpdateCommentAsync: async (...args) => {
-          await refsRef.current?.updateCommentAsync?.(...args);
-        },
-      }),
+      CommentThreadExtension,
       PageLinkNode.configure({
         onNavigate: (pageId) => refsRef.current?.setActivePageId(pageId),
       }),

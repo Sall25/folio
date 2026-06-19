@@ -1,14 +1,15 @@
-import type { Editor } from "@tiptap/core";
 import { useCallback, useState, type FormEvent } from "react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
+import { useCreateComment } from "src/hooks/use-create-comment";
+import { makeComment } from "src/utils/make-comment";
 
 interface ThreadComposerProps {
-  editor: Editor;
   threadId: string;
 }
 
-export const ThreadComposer = ({ editor, threadId }: ThreadComposerProps) => {
+export const ThreadComposer = ({ threadId }: ThreadComposerProps) => {
   const [comment, setComment] = useState("");
+  const createComment = useCreateComment();
 
   const handleSubmit = useCallback(
     (e: FormEvent) => {
@@ -17,21 +18,23 @@ export const ThreadComposer = ({ editor, threadId }: ThreadComposerProps) => {
       if (!comment) {
         return;
       }
-
-      if (editor) {
-        editor.commands.addComment(threadId, "You", comment);
-      }
+      const newComment = makeComment({
+        threadId,
+        text: comment,
+        authorId: "You",
+      });
+      createComment.mutate({ comment: newComment, threadId });
 
       setComment("");
     },
-    [editor, comment, threadId],
+    [comment, threadId, createComment],
   );
 
-  const handleFocus = useCallback(() => {
-    if (editor) {
-      editor.commands.forceMeasure(threadId);
-    }
-  }, [editor, threadId]);
+  // const handleFocus = useCallback(() => {
+  //   if (editor) {
+  //     editor.commands.forceMeasure(threadId);
+  //   }
+  // }, [editor, threadId]);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -39,7 +42,7 @@ export const ThreadComposer = ({ editor, threadId }: ThreadComposerProps) => {
         placeholder="Reply to thread..."
         onChange={(e) => setComment(e.currentTarget.value)}
         value={comment}
-        onFocus={handleFocus}
+        // onFocus={handleFocus}
       />
       <div className="flex-row">
         <ButtonGroup>

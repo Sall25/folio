@@ -10,7 +10,7 @@ import {
   formatTime,
 } from "src/components/tiptap-ui/mention-menu/calendar-view/utils";
 import CalendarView from "src/components/tiptap-ui/mention-menu/calendar-view/calendar-view";
-import type { DateFormat, TimeFormat } from "../types/types";
+import type { DateFormat, TimeFormat } from "src/types";
 
 interface DateCellDisplayProps {
   value: string | null;

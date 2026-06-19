@@ -2,7 +2,7 @@ import type { SuggestionKeyDownProps } from "@tiptap/suggestion";
 
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import type { EmojiListRef, EmojiListProps } from "./types";
-import { Card, CardGroupLabel } from "src/components/tiptap-ui-primitive/card";
+import { Card } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 
 import "./emoji-list.scss";

@@ -2,46 +2,48 @@ import { useEffect, useRef, useState } from "react";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { PageItemIcon } from "./page-item-icon";
 import { PageItemOptions } from "./page-item-options";
-import { ChevronRight, Plus } from "lucide-react";
-import type { Page } from "./types";
+import { Plus } from "lucide-react";
+import type { ID, Page } from "src/types";
 
 import "./page-item.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { useActivePage } from "./use-active-page";
 import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage } from "src/api/pages";
+import { useActivePage } from "./context/active-page-context";
+import { useCreatePage } from "src/hooks/use-create-page";
+import { makeChildPage } from "src/utils/make-page";
 
 interface PageItemProps {
   page: Page;
   depth?: number;
   disableActive?: boolean;
-  disableExpand?: boolean;
+  showIcon?: boolean;
 }
 
 export function PageItem({
   page,
   depth = 0,
   disableActive = false,
-  disableExpand = false,
+  showIcon = true,
 }: PageItemProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(page.title);
-  const [expanded, setExpanded] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const hasChildren =
-    page.children && page.children.length > 0 && !disableExpand;
   const [shouldShow, setShouldShow] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const { addPageAndActivateAsync, updatePageAsync, activePageId } =
-    useActivePage();
+  const { activePageId, setActivePageId } = useActivePage();
+
+  const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
+  const mutateAsyncRef = useRef(mutateAsync);
+  const createPage = useCreatePage();
+
   const isActive = activePageId === page.id && !disableActive;
   const title = page.title || "New Page";
-  const cover = page.cover;
 
   useEffect(() => {
-    if (editing) {
-      inputRef.current?.focus();
-    }
+    if (editing) inputRef.current?.focus();
   }, [editing]);
 
   useEffect(() => {
@@ -52,7 +54,8 @@ export function PageItem({
   const commit = async () => {
     const trimmed = draft.trim();
     if (trimmed && trimmed !== page.title) {
-      await updatePageAsync({ ...page, title: trimmed });
+      // optimistic title patch via your hook
+      await mutateAsyncRef.current({ id: page.id, patch: { title: trimmed } });
     } else {
       setDraft(page.title);
     }
@@ -67,8 +70,8 @@ export function PageItem({
     }
   };
 
-  const { setActivePageId } = useActivePage();
-  const onSelect = (pageId: number) => {
+  // ── the switching logic you wanted here ──────────────────────────────────
+  const onSelect = (pageId: ID) => {
     setActivePageId(pageId);
   };
 
@@ -78,48 +81,15 @@ export function PageItem({
       <CardItemGroup
         orientation="horizontal"
         className={`page-item ${isActive ? "active" : ""}`}
-        style={{
-          paddingLeft: `${6 + depth * 14}px`,
-        }}
+        style={{ paddingLeft: `${6 + depth * 14}px` }}
         onClick={() => onSelect(page.id)}
         onMouseOver={() => setShouldShow(true)}
         onMouseLeave={() => setShouldShow(false)}
       >
-        {/* Expand toggle */}
-        <Button
-          variant="ghost"
-          className={`page-expand-btn ${hasChildren ? "visible" : ""}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (hasChildren) setExpanded((v) => !v);
-          }}
-          data-active-state={isActive ? "on" : "off"}
-          style={{
-            zIndex: 10,
-            opacity: shouldShow && hasChildren ? 1 : 0,
-            borderRadius: "var(--tt-radius-sm)",
-            transition: "opacity 150ms ease",
-            position: "absolute",
-          }}
-        >
-          <ChevronRight
-            className="tiptap-button-icon"
-            style={{
-              transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
-              transition: "transform 200ms ease",
-            }}
-          />
-        </Button>
+        {showIcon && (
+          <PageItemIcon cover={page.cover} styles={{ width: 18, height: 16 }} />
+        )}
 
-        <PageItemIcon
-          cover={cover}
-          styles={{
-            opacity: shouldShow && hasChildren ? 0 : 1,
-            transition: "opacity 150ms ease",
-            width: 18,
-            height: 16,
-          }}
-        />
         <Spacer orientation="horizontal" size={0.2} />
 
         {editing ? (
@@ -135,10 +105,13 @@ export function PageItem({
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span className="page-item-title">{title || "New Page"}</span>
+          <span
+            className="page-item-title"
+            style={{ paddingLeft: !showIcon ? 15 : 0 }}
+          >
+            {title}
+          </span>
         )}
-
-        {/* <Spacer orientation="horizontal" /> */}
 
         <CardItemGroup orientation="horizontal" className="page-item-actions">
           <PageItemOptions
@@ -158,25 +131,15 @@ export function PageItem({
             tooltip="New page"
             onClick={async (e) => {
               e.stopPropagation();
-              await addPageAndActivateAsync({
-                title: "New Page",
-                parentId: page.id,
-              });
+              const child = makeChildPage(page, "New Page"); // your makePage seeded with parentId
+              createPage.mutate(child);
+              setActivePageId(child.id); // client id known up front — activate immediately
             }}
           >
             <Plus size={12} className="tiptap-button-icon" />
           </Button>
         </CardItemGroup>
       </CardItemGroup>
-
-      {/* Children */}
-      {hasChildren && expanded && (
-        <div className="page-item-children">
-          {page.children.map((child) => (
-            <PageItem key={child.id} page={child} depth={depth + 1} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }

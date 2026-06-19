@@ -44,6 +44,7 @@ export function TableCellOverlay({ className }: TableCellOverlayProps) {
             top: cellRect ? cellRect.top + cellRect.height / 3 : 0,
             left: cellRect ? cellRect?.left + cellRect.width - 8 : 0,
             zIndex: 20,
+            marginLeft: "-20px",
           }}
           onPointerDown={(e) => {
             e.preventDefault();

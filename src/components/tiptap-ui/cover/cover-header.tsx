@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef } from "react";
 import { DynamicIcon } from "./dynamic-icon";
 import "./cover-header.scss";
 import {
@@ -9,12 +8,15 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import type { Target } from "./types";
-import type { Page } from "src/components/tiptap-templates/simple/types";
+import type { Page } from "src/types";
 import { IconPickerCard } from "./icon-picker-card";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { usePage } from "src/hooks/use-pages";
 import CoverImage from "./cover-image";
 import GradientCover from "./gradient-cover";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage } from "src/api/pages";
 
 function IconButton({
   open,
@@ -35,48 +37,43 @@ function IconButton({
   hasThreads?: boolean;
   page: Page;
 }) {
-  const { activePageId, isLoading } = useActivePage();
+  const cover = page.cover;
+  const hasCover = !!cover.coverImage || !!cover.gradient;
 
-  const hasCoverImage = !!page.cover.coverImage;
-  const hasGradient = !!(page.cover as any).gradient;
-  const hasCover = hasCoverImage || hasGradient;
-
-  const cover = useMemo(
-    () => page.cover,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activePageId, page, isLoading],
-  );
-
-  const [optimisticCover, setOptimisticCover] = useState<
-    Page["cover"] | undefined
-  >();
-
-  useEffect(() => {
-    setOptimisticCover(undefined);
-  }, [activePageId]);
-
-  const displayCover = optimisticCover ?? cover;
-  const { updatePageAsync } = useActivePage();
+  const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
+  const mutateAsyncRef = useRef(mutateAsync);
 
   const onSelectIconAsync = useCallback(
     async (name: string, color?: string) => {
-      if (!cover) return;
-      await updatePageAsync({
-        ...page,
-        cover: { ...page.cover, iconName: name, target, color },
+      await mutateAsyncRef.current({
+        id: page.id,
+        patch: {
+          cover: {
+            ...page.cover,
+            iconName: name,
+            target,
+            color: color ?? null,
+          },
+        },
       });
     },
-    [updatePageAsync, page, target, cover],
+    [page, target],
   );
 
   const onRemoveIconAsync = useCallback(async () => {
-    if (!page) return;
-    await updatePageAsync({
-      ...page,
-      cover: { ...page.cover, iconName: null, target: null, color: undefined },
+    await mutateAsyncRef.current({
+      id: page.id,
+      patch: {
+        cover: { ...page.cover, iconName: null, target: null, color: null },
+      },
     });
     onOpenChange(false);
-  }, [updatePageAsync, page, onOpenChange]);
+  }, [page, onOpenChange]);
+
+  const iconColor =
+    cover.color == null || cover.color === "var(--tt-text-color)"
+      ? "var(--tt-theme-text)"
+      : cover.color;
 
   return (
     <div
@@ -95,30 +92,21 @@ function IconButton({
             style={{
               fontSize: 60,
               marginTop: hasCover ? -60 : 0,
-              color:
-                displayCover?.color === undefined ||
-                displayCover.color === "var(--tt-text-color)"
-                  ? "var(--tt-theme-text)"
-                  : displayCover.color,
+              color: iconColor,
             }}
           >
-            {displayCover?.target === "Emoji" && displayCover?.iconName}
-            {displayCover?.target === "Icons" && (
+            {cover.target === "Emoji" && cover.iconName}
+            {cover.target === "Icons" && cover.iconName && (
               <DynamicIcon
-                name={displayCover.iconName!}
-                stroke={
-                  displayCover?.color === undefined ||
-                  displayCover.color === "var(--tt-text-color)"
-                    ? "var(--tt-theme-text)"
-                    : displayCover.color
-                }
-                size={85}
+                name={cover.iconName}
+                stroke={iconColor}
+                size={95}
                 strokeWidth={2}
               />
             )}
-            {displayCover?.target === "Upload" && displayCover?.iconName && (
+            {cover.target === "Upload" && cover.iconName && (
               <img
-                src={displayCover.iconName}
+                src={cover.iconName}
                 alt="icon"
                 style={{
                   width: 85,
@@ -170,23 +158,29 @@ export function CoverHeader({
   providedPage,
 }: CoverHeaderProps) {
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
-
   const [target, setTarget] = useState<Target>("Emoji");
 
-  const { updatePageAsync, activePage } = useActivePage();
-
+  // fetch the active page only when no page is provided (peek passes its own)
+  const { activePageId } = useActivePage();
+  const { data: activePage } = usePage(providedPage ? null : activePageId);
   const page = providedPage ?? activePage;
 
-  const hasIcon = !!page?.cover.iconName;
-  const hasCoverImage = !!page?.cover.coverImage;
-  const hasGradient = !!page?.cover.gradient;
+  const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
+  const mutateAsyncRef = useRef(mutateAsync);
 
   const handleRemoveCover = useCallback(async () => {
     if (!page) return;
-    const next = { ...page.cover, coverImage: null } as any;
-    delete next.gradient;
-    await updatePageAsync({ ...page, cover: next });
-  }, [updatePageAsync, page]);
+    await mutateAsyncRef.current({
+      id: page.id,
+      patch: { cover: { ...page.cover, coverImage: null, gradient: null } },
+    });
+  }, [page]);
+
+  if (!page) return null;
+
+  const hasIcon = !!page.cover.iconName;
+  const hasCoverImage = !!page.cover.coverImage;
+  const hasGradient = !!page.cover.gradient;
 
   return (
     <div
@@ -198,19 +192,17 @@ export function CoverHeader({
         minHeight: 50,
       }}
     >
-      {/* ── Cover display ── */}
       {hasCoverImage && (
         <CoverImage page={page} onRemoveCoverAsync={handleRemoveCover} />
-      )}{" "}
+      )}
       {hasGradient && !hasCoverImage && (
         <GradientCover
           page={page}
-          gradient={(page?.cover as any).gradient}
+          gradient={page.cover.gradient!}
           onRemoveCoverAsync={handleRemoveCover}
         />
       )}
-      {/* ── Icon button ── */}
-      {hasIcon && page && (
+      {hasIcon && (
         <IconButton
           open={iconPickerOpen}
           onOpenChange={setIconPickerOpen}

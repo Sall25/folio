@@ -1,23 +1,23 @@
 import { Plus, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
 import { useDataSource } from "../hooks/use-data-source";
 import { Cell } from "../components/cells/cell";
 import type {
   DatabaseAttrs,
   DataSource,
-  DataSourceRecord,
   DatabaseProperty,
   ListView,
   CellValue,
   DatabaseView,
-} from "../types/types";
+  Page,
+  ID,
+} from "src/types";
 import "./database-list-node-view.scss";
-import { resolveRecordFormulas } from "../components/formula-editor/resolve-records-formula";
 import { recordMatchesFilters } from "../utils/apply-filters";
 import { sortRecords } from "../utils/apply-sorts";
 import { groupRecords } from "../utils/group-records";
+import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 
 function ListRow({
   record,
@@ -26,7 +26,7 @@ function ListRow({
   onChange,
   view,
 }: {
-  record: DataSourceRecord;
+  record: Page;
   inlineProperties: DatabaseProperty[];
   titleProp: DatabaseProperty | undefined;
   onChange: (propertyId: string, value: CellValue | null) => void;
@@ -38,7 +38,7 @@ function ListRow({
         {titleProp && (
           <Cell
             property={titleProp}
-            value={(record.values[titleProp.id] ?? null) as CellValue | null}
+            value={(record.values?.[titleProp.id] ?? null) as CellValue | null}
             record={record}
             onChange={(v) => onChange(titleProp.id, v)}
             view={view}
@@ -52,7 +52,7 @@ function ListRow({
           <Cell
             key={prop.id}
             property={prop}
-            value={(record.values[prop.id] ?? null) as CellValue | null}
+            value={(record.values?.[prop.id] ?? null) as CellValue | null}
             record={record}
             onChange={(v) => onChange(prop.id, v)}
             view={view}
@@ -70,16 +70,19 @@ export function DatabaseListNodeView({
   onUpdateView,
   view,
 }: {
-  attrs: DatabaseAttrs & { sourceId?: string | null };
+  attrs: DatabaseAttrs & { sourceId?: ID | null };
   source: DataSource;
   onUpdateView: (patch: Partial<DatabaseView>) => void;
   view: DatabaseView;
 }) {
-  const { addPageAsync } = usePages();
-  const { addRecordWithPageAsync, setCellValue } = useDataSource(
+  // Read the SAME resolved, source-scoped rows the table view uses. The list
+  // previously derived its own set from usePages() (every page in the
+  // workspace) and never filtered to this source — which is why unrelated
+  // pages showed up as random "Untitled" rows with foreign icons.
+  const { addRecordAsync, setCellValue, resolvedRecords } = useDataSource(
     attrs.sourceId,
   );
-  const recordParentId = source.pageId ?? null;
+  const { setTarget } = usePageView();
 
   const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
     attrs.views[0]) as ListView | undefined;
@@ -95,40 +98,19 @@ export function DatabaseListNodeView({
     : undefined;
   const collapsed = new Set(activeView?.collapsedGroups ?? []);
 
-  const resolvedRecords = resolveRecordFormulas(
-    source.records,
-    source.properties,
-  );
-  // Filter → sort → group, all at render (no mutation of source.records).
+  // Filter → sort → group, all at render (no mutation of source rows).
   const filteredRecords = activeView?.filters?.length
     ? resolvedRecords.filter((r) => recordMatchesFilters(r, activeView.filters))
     : resolvedRecords;
   const sortedRecords = sortRecords(filteredRecords, activeView?.sorts ?? []);
   const groups = groupRecords(sortedRecords, groupProp);
 
-  // Bucket records by group (or one bucket if ungrouped)
-  // const groups = useMemo(() => {
-
-  //   if (!groupProp)  return [{ key: "__all__", label: "", records: sortedRecords }];
-  //   const map = new Map<string, DataSourceRecord[]>();
-  //   for (const rec of sortedRecords) {
-  //     const key = groupKeyFor(rec.values[groupProp.id], groupProp);
-  //     if (!map.has(key)) map.set(key, []);
-  //     map.get(key)!.push(rec);
-  //   }
-  //   return [...map.entries()].map(([key, records]) => ({
-  //     key,
-  //     label: groupLabel(key, groupProp),
-  //     records,
-  //   }));
-  // }, [groupProp]);
-
   function toggleCollapse(key: string) {
     if (!activeView) return;
     const next = collapsed.has(key)
       ? [...collapsed].filter((k) => k !== key)
       : [...collapsed, key];
-    onUpdateView({ collapsedGroups: next }); // needs db/onUpdateView passed in
+    onUpdateView({ collapsedGroups: next });
   }
 
   const ungrouped = !groupProp;
@@ -181,13 +163,11 @@ export function DatabaseListNodeView({
           justifyContent: "flex-start",
           borderRadius: "var(--tt-radius-sm)",
         }}
-        onClick={async () =>
-          await addRecordWithPageAsync({
-            title: "",
-            parentPageId: recordParentId,
-            createPage: addPageAsync,
-          })
-        }
+        onClick={async () => {
+          addRecordAsync({ title: "" })
+            .then((page) => setTarget({ pageId: page.id, view: "Peek" }))
+            .catch(() => console.log("failed to add page to list"));
+        }}
       >
         <Plus className="tiptap-button-icon" />
         <span className="tiptap-button-text">New</span>

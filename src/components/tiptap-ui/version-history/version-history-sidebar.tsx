@@ -4,8 +4,8 @@ import "./version-history.scss";
 import { VersionHistoryList } from "./version-history-list";
 import { useVersionHistory } from "./use-version-history";
 import { useDiff } from "./use-diff";
-import type { Version } from "./types";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
+import type { Version } from "src/types";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { useCurrentEditor } from "@tiptap/react";
@@ -34,7 +34,8 @@ function VersionHistorySidebarInner({
   onClose: () => void;
   userColor?: string;
 }) {
-  const { activePage, updatePageAsync } = useActivePage();
+  // const mutatePage = usePatchPage(({id, patch})=>patchPage(id, patch))
+  const { activePage } = useActivePage();
   const {
     versions,
     selectedVersion,
@@ -47,7 +48,7 @@ function VersionHistorySidebarInner({
     saveNameAsync,
     restoreVersionAsync,
     createVersionAsync,
-  } = useVersionHistory(activePage, updatePageAsync);
+  } = useVersionHistory(activePage ?? null);
 
   const { editor } = useCurrentEditor();
   const { applyDiff, clearDiff } = useDiff(editor);
@@ -65,7 +66,7 @@ function VersionHistorySidebarInner({
   }, [createVersionAsync]);
 
   const filteredVersions =
-    filter === "named" ? versions.filter((v) => v.isNamed) : versions;
+    filter === "named" ? versions?.filter((v) => v.name) : versions;
 
   useEffect(() => {
     if (!editor) return;
@@ -87,15 +88,9 @@ function VersionHistorySidebarInner({
       const now = Date.now();
       const VERSION_INTERVAL = 30 * 60 * 1000;
       if (now - Date.now() >= VERSION_INTERVAL) {
-        createVersionAsyncRef.current({
-          pageId: activePageRef.current.id,
-          title: activePageRef.current.title,
-          content: activePageRef.current.content,
-          isNamed: false,
-        });
+        createVersionAsyncRef.current();
       }
     };
-
     editor.on("update", update);
     return () => {
       editor.off("update", update);
@@ -115,7 +110,7 @@ function VersionHistorySidebarInner({
     }
 
     editor.commands.setContent(version.content);
-    if (activePage.content) {
+    if (activePage.content && version.content) {
       applyDiff(version.content, activePage.content, userColor);
     }
   };
@@ -184,7 +179,7 @@ function VersionHistorySidebarInner({
         )}
 
         <VersionHistoryList
-          versions={filteredVersions}
+          versions={filteredVersions ?? []}
           selectedVersion={selectedVersion}
           namingVersionId={namingVersionId}
           nameInput={nameInput}

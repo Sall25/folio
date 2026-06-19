@@ -1,20 +1,23 @@
 // use-version-history.ts
 import { useState, useCallback, useEffect, useRef } from "react";
-import type { Version } from "./types";
-import type {
-  Page,
-  PageSettings,
-} from "src/components/tiptap-templates/simple/types";
-import { useVersions } from "./use-versions";
+import type { Version } from "src/types";
+import type { Page, PageSettings } from "src/types";
+import { useVersionsByPage } from "src/hooks/use-versions";
+import { usePatchVersion } from "src/hooks/use-patch-version";
+import { patchVersion } from "src/api/versions";
+import { useCreateVersion } from "src/hooks/use-create-version";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage } from "src/api/pages";
+import { makeVersion, makeVersionFromPage } from "src/utils/make-version";
 
-export function useVersionHistory(
-  activePage: Page | null,
-  updatePageAsync: (page: Page) => Promise<Page>,
-) {
-  // No longer calls useActivePage — receives values as args
-  const { versions, nameVersionAsync, createVersionAsync } = useVersions(
-    activePage?.id,
+export function useVersionHistory(activePage: Page | null) {
+  const { data: versions } = useVersionsByPage(activePage?.id ?? null);
+  const mutateVersion = usePatchVersion(({ id, patch }) =>
+    patchVersion(id, patch),
   );
+  const createVersion = useCreateVersion();
+
+  const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
 
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [namingVersionId, setNamingVersionId] = useState<string | null>(null);
@@ -42,9 +45,9 @@ export function useVersionHistory(
       ...activePage.settings,
       locked: selectedVersion !== null,
     };
-    updatePageAsync({ ...activePage, settings });
+    mutatePage.mutateAsync({ id: activePage.id, patch: { settings } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedVersion]);
+  }, [selectedVersion, mutatePage]);
 
   const selectVersion = useCallback((version: Version | null) => {
     setSelectedVersion(version);
@@ -65,35 +68,47 @@ export function useVersionHistory(
   const saveNameAsync = useCallback(
     async (versionId: string) => {
       if (!nameInput.trim()) return;
-      await nameVersionAsync({ id: Number(versionId), name: nameInput.trim() });
+      await mutateVersion.mutateAsync({
+        id: versionId,
+        patch: { name: nameInput.trim() },
+      });
       setNamingVersionId(null);
       setNameInput("");
     },
-    [nameVersionAsync, nameInput],
+    [mutateVersion, nameInput],
   );
 
   const restoreVersionAsync = useCallback(async () => {
     if (!selectedVersion || !activePage) return;
-    await updatePageAsync({
-      ...activePage,
-      title: selectedVersion.title,
-      content: selectedVersion.content,
+    await mutatePage.mutateAsync({
+      id: activePage.id,
+      patch: {
+        title: selectedVersion.title,
+        content: selectedVersion.content ?? undefined,
+      },
     });
     setSelectedVersion(null);
-  }, [selectedVersion, activePage, updatePageAsync]);
+  }, [selectedVersion, activePage, mutatePage]);
+
+  const createVersionAsync = useCallback(async () => {
+    if (!activePage) return;
+    const version = makeVersion({
+      pageId: activePage.id,
+      title: activePage.title,
+      content: activePage.content,
+    });
+    await createVersion.mutateAsync(version);
+    return version;
+  }, [activePage, createVersion]);
 
   const createNamedVersionAsync = useCallback(
     async (name: string) => {
       if (!activePage) return;
-      await createVersionAsync({
-        pageId: activePage.id,
-        title: activePage.title,
-        content: activePage.content,
-        isNamed: true,
-        name,
-      });
+      const version = makeVersionFromPage(activePage, { name });
+      await createVersion.mutateAsync(version);
+      return version;
     },
-    [activePage, createVersionAsync],
+    [activePage, createVersion],
   );
 
   return {

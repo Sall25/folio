@@ -1,5 +1,4 @@
-import type { Version } from "./types";
-import type { Page } from "src/components/tiptap-templates/simple/types";
+import type { Version, Page, CreatedAt } from "src/types";
 import { diffWords } from "diff";
 
 export type VersionGroup = {
@@ -21,7 +20,7 @@ export function groupVersionsByDate(versions: Version[]): VersionGroup[] {
   ];
 
   for (const version of versions) {
-    const date = new Date(Number(version.createdAt));
+    const date = new Date(version.createdAt);
     const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
     if (day >= today) groups[0].versions.push(version);
@@ -33,8 +32,8 @@ export function groupVersionsByDate(versions: Version[]): VersionGroup[] {
   return groups.filter((g) => g.versions.length > 0);
 }
 
-export function formatVersionTime(createdAt: string): string {
-  const date = new Date(Number(createdAt));
+export function formatVersionTime(createdAt: CreatedAt): string {
+  const date = new Date(createdAt);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());

@@ -1,8 +1,8 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { usePages } from "src/components/tiptap-templates/simple/use-pages";
-import { useActivePage } from "src/components/tiptap-templates/simple/use-active-page";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { useDataSource } from "../hooks/use-data-source";
 import { SelectCellDisplay } from "../primitives/select-cell-display";
 import { StatusCellDisplay } from "../primitives/status-cell-display";
@@ -11,13 +11,13 @@ import { BoardCard } from "../primitives/board-card";
 import type {
   BoardView,
   DataSource,
-  DataSourceRecord,
+  Page,
   DatabaseProperty,
   StatusGroup,
   CellValue,
   DatabaseAttrs,
   DatabaseView,
-} from "../types/types";
+} from "src/types";
 import "./database-board-node-view.scss";
 import {
   DndContext,
@@ -87,15 +87,14 @@ function columnKeyFor(value: unknown, prop: DatabaseProperty): string {
 export function DatabaseBoardNodeView({
   attrs,
   source,
-  view
+  view,
 }: {
-  view: DatabaseView
+  view: DatabaseView;
   attrs: DatabaseAttrs;
   source: DataSource;
 }) {
-  const { addPageAsync } = usePages();
   const { activePage } = useActivePage();
-  const { addRecordWithPageAsync, setCellValue } = useDataSource(
+  const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
     attrs.sourceId,
   );
 
@@ -103,38 +102,26 @@ export function DatabaseBoardNodeView({
     attrs.views[0]) as BoardView | undefined;
   const groupByPropertyId = activeView?.groupByPropertyId ?? "";
   const groupProp = source.properties.find((p) => p.id === groupByPropertyId);
-  const recordParentId = source.pageId ?? null;
   const columnDefs = useMemo(() => getColumnDefs(groupProp), [groupProp]);
-  const showNone = true;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const allColumns: ColumnDef[] = showNone
-    ? [
-        { id: NONE_COLUMN_ID, label: `No ${groupProp?.name ?? ""}` },
-        ...columnDefs,
-      ]
-    : columnDefs;
 
-  // Bucket records into columns
+  const allColumns: ColumnDef[] = [
+    { id: NONE_COLUMN_ID, label: `No ${groupProp?.name ?? ""}` },
+    ...columnDefs,
+  ];
+
+  // Bucket ROWS (pages) into columns
   const buckets = useMemo(() => {
-    const map = new Map<string, DataSourceRecord[]>();
+    const map = new Map<string, Page[]>();
     allColumns.forEach((c) => map.set(c.id, []));
     if (!groupProp) return map;
-    for (const rec of source.records) {
-      const key = columnKeyFor(rec.values[groupProp.id], groupProp);
+    for (const rec of resolvedRecords) {
+      const key = columnKeyFor(rec.values?.[groupProp.id], groupProp);
       (map.get(key) ?? map.get(NONE_COLUMN_ID)!).push(rec);
     }
     return map;
-  }, [source.records, groupProp, allColumns]);
+  }, [resolvedRecords, groupProp, allColumns]);
 
-  const colWidth = useMemo(() => {
-    const width = activePage?.settings.width === "full" ? 900 : 700;
-    const gap = 12;
-    const totalGaps = gap * Math.max(allColumns.length - 1, 0);
-    return Math.max(
-      200,
-      Math.floor((width - 80 - totalGaps) / Math.max(allColumns.length, 1)),
-    );
-  }, [allColumns.length, activePage?.settings.width]);
+  const colWidth = 260;
 
   function setGroupValue(recordId: string, columnId: string) {
     if (!groupProp) return;
@@ -154,6 +141,7 @@ export function DatabaseBoardNodeView({
     else if (cfg.type === "checkbox") value = columnId === "true";
     setCellValue(recordId, groupProp.id, value);
   }
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
@@ -168,12 +156,11 @@ export function DatabaseBoardNodeView({
     if (!e.over) return;
     const recordId = String(e.active.id);
     const targetColumn = String(e.over.id);
-    // setGroupValue already maps a columnId → the right cell value
     setGroupValue(recordId, targetColumn);
   }
 
   const activeRecord = activeId
-    ? (source.records.find((r) => r.id === activeId) ?? null)
+    ? (resolvedRecords.find((r) => r.id === activeId) ?? null)
     : null;
 
   if (!groupByPropertyId || columnDefs.length === 0) {
@@ -192,6 +179,7 @@ export function DatabaseBoardNodeView({
       p.id !== groupProp?.id &&
       !(activeView?.hiddenProperties ?? []).includes(p.id),
   );
+
   return (
     <DndContext
       sensors={sensors}
@@ -240,9 +228,6 @@ export function DatabaseBoardNodeView({
                     {col.label}
                   </span>
                 )}
-                {/* <span className="db-board-col-header__count">
-                {records.length}
-              </span> */}
               </div>
 
               <BoardColumn columnId={col.id} isOver={false}>
@@ -263,12 +248,8 @@ export function DatabaseBoardNodeView({
                 variant="ghost"
                 className="db-board-col-footer__add"
                 onClick={async () => {
-                  const rec = await addRecordWithPageAsync({
-                    title: "",
-                    parentPageId: recordParentId,
-                    createPage: addPageAsync,
-                  });
-                  setGroupValue(rec.id, col.id);
+                  const row = await addRecordAsync({ title: "" });
+                  setGroupValue(row.id, col.id);
                 }}
               >
                 <Plus className="tiptap-button-icon" />
@@ -286,7 +267,7 @@ export function DatabaseBoardNodeView({
             {cardProps.find((p) => p.config.type === "title") && (
               <span className="db-board-card__title-text">
                 {String(
-                  activeRecord.values[
+                  activeRecord.values?.[
                     cardProps.find((p) => p.config.type === "title")!.id
                   ] ?? "Untitled",
                 )}
@@ -297,53 +278,4 @@ export function DatabaseBoardNodeView({
       </DragOverlay>
     </DndContext>
   );
-
-  // return (
-  //   <div
-  //     className="db-board"
-  //     data-type="database-board"
-  //     style={{ ["--db-board-col-width" as string]: `${colWidth}px` }}
-  //   >
-  //     {allColumns.map((col) => {
-  //       const records = buckets.get(col.id) ?? [];
-  //       return (
-  //         <div
-  //           key={col.id}
-  //           className="db-board-col"
-  //           style={{ width: colWidth }}
-  //         >
-
-  //           <div className="db-board-col__cards">
-  //             {records.map((rec) => (
-  //               <BoardCard
-  //                 key={rec.id}
-  //                 record={rec}
-  //                 properties={cardProps}
-  //                 cardPreview={activeView?.cardPreview ?? "none"}
-  //                 sourceId={attrs.sourceId!}
-  //                 onChange={(propId, v) => setCellValue(rec.id, propId, v)}
-  //               />
-  //             ))}
-  //           </div>
-
-  //           <Button
-  //             variant="ghost"
-  //             className="db-board-col-footer__add"
-  //             onClick={async () => {
-  //               const rec = await addRecordWithPageAsync({
-  //                 title: "",
-  //                 parentPageId: null,
-  //                 createPage: addPageAsync,
-  //               });
-  //               setGroupValue(rec.id, col.id);
-  //             }}
-  //           >
-  //             <Plus className="tiptap-button-icon" />
-  //             <span className="tiptap-button-text">New</span>
-  //           </Button>
-  //         </div>
-  //       );
-  //     })}
-  //   </div>
-  // );
 }

@@ -1,17 +1,17 @@
 import type {
   DatabaseProperty,
-  DataSourceRecord,
+  Page,
   ID,
   ConfigOf,
   CellValue,
-} from "../../types/types.js";
+} from "src/types";
 import { evaluateFormula } from "./formula-evaluator";
 
 /**
  * Recomputes every formula property's value for the given records and writes
  * changed results back through `setCellValue`.
  *
- * DataSource model: records are plain `DataSourceRecord`s (values keyed by
+ * DataSource model: records are plain `Page`s (values keyed by
  * propertyId via `record.values`), not ProseMirror nodes — so this no longer
  * walks the doc or runs a transaction. The owning data source persists writes.
  *
@@ -20,7 +20,7 @@ import { evaluateFormula } from "./formula-evaluator";
  *  - After any cell value change a formula depends on
  */
 export function resolveFormulaValues(
-  records: DataSourceRecord[],
+  records: Page[],
   properties: DatabaseProperty[],
   setCellValue: (recordId: ID, propertyId: ID, value: CellValue) => void,
 ): void {
@@ -39,7 +39,7 @@ export function resolveFormulaValues(
         cellValues,
       }) as CellValue;
 
-      if (record.values[prop.id] === result) continue; // skip if unchanged
+      if (record.values?.[prop.id] === result) continue; // skip if unchanged
       setCellValue(record.id, prop.id, result);
     }
   }

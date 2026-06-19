@@ -1,4 +1,4 @@
-import type { SelectOption } from "../types/types";
+import type { SelectOption } from "src/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Popover,
@@ -84,7 +84,7 @@ export function MultiSelectCellDisplay({
               gap: 5,
             }}
           >
-            {options.map((option) => {
+            {(options ?? []).map((option) => {
               const isSelected = value.some((v) => v.id === option.id);
               return (
                 <Button

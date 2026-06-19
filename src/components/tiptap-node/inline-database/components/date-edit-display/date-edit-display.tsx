@@ -19,7 +19,7 @@ import type {
   DateFormat,
   TimeFormat,
   DateNotifications,
-} from "../../types/types";
+} from "src/types";
 import "./date-edit-display.scss";
 
 type DateConfig = ConfigOf<"date">;

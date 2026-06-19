@@ -1,5 +1,3 @@
-
-
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import type { SuggestionKeyDownProps } from "@tiptap/suggestion";
 import type { MentionListProps } from "./types";

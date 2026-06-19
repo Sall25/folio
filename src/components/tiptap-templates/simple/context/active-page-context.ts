@@ -1,13 +1,18 @@
 // active-page-context.tsx
 import { createContext, useContext } from "react";
-import type { UseActivePageReturn } from "../use-active-page";
+import type { ID, Page } from "src/types";
 
-type ActivePageContextType = UseActivePageReturn;
+type ActivePageContextType = {
+  activePageId: ID | null;
+  setActivePageId: (id: ID) => void;
+  activePage: Page | undefined;
+  isLoading: boolean;
+};
 export const ActivePageContext = createContext<
   ActivePageContextType | undefined
 >(undefined);
 
-export function useActivePageContext() {
+export function useActivePage() {
   const ctx = useContext(ActivePageContext);
   if (!ctx)
     throw new Error(

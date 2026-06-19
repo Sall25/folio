@@ -7,7 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import type { PersonValue } from "../types/types";
+import type { PersonValue } from "src/types";
 import "./person-cell-display.scss";
 
 function PersonChip({

@@ -1,59 +1,73 @@
 .node-database > [data-node-view-wrapper] {
-  // Remove overflow from here
+  // (intentionally empty — overflow lives on .db-board)
 }
+
+/* Fix the parent container */
+.tiptap-card-item-group {
+  min-width: 0 !important; /* Overrides the max-content that was forcing expansion */
+  max-width: 100%;
+}
+
+/* Ensure the board scrolls */
+// .db-board {
+//   display: flex;
+//   overflow-x: auto;
+//   max-width: 100%;
+//   width: 100%;
+// }
+/**
+.tiptap-card-item-group[data-orientation=vertical] {
+  min-width: 0px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.db-board:not(:hover) {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+*/
 
 .db-board {
   display: flex;
-  flex-direction: column;
-  overflow-x: auto; // scroll only here
-  // width: max-content; // grow to fit all columns
-  // min-width: 100%;    // at least fill the container
+  flex-direction: row;       
+  align-items: flex-start;    // each column sizes to its own height
+  gap: 12px;
+  overflow-x: auto !important;
+  width: 100%;          // fill the container...
+  max-width: 100%; 
   box-sizing: border-box;
   padding: 0;
   margin: 0;
-  // Hide scrollbar when content fits, show when actually needed
+
+
   &:not(:hover) {
     scrollbar-width: none;
     &::-webkit-scrollbar {
       display: none;
     }
   }
-
   &:hover {
     scrollbar-width: thin;
   }
-}
 
-.db-board__toolbar-sticky {
- width: 100%;
-}
-
-.db-board__headers,
-.db-board__body,
-.db-board__footers {
-  display: grid;
-  gap: 12px;
-  min-width: max-content;
-  grid-auto-flow: dense;
-  width: max-content;
-}
-
-.db-board__records {
-  // This div wraps all record node views — it must be display:contents
-  // so the records' grid-column placement works against the parent grid
-  display: contents;
-   // Tiptap injects these wrapper divs between NodeViewContent and the actual
-  // record node views — make them all transparent to the grid
-  [data-node-view-content-react],
-  [data-node-view-wrapper]:not(.db-board-card),
-  .react-renderer {
-    display: contents;
+  .db-board-card {
+    padding: 5px 10px !important;
+    width: auto;
+    // min-width: fit-content;
   }
+}
 
+.db-board-col {
+  display: flex;
+  flex-direction: column;     // header → cards → footer stack within a column
+  flex: 0 0 auto;             // honor inline colWidth, don't shrink
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 // ── Column header ───────────────────────────────────────────────────────────
-
 .db-board-col-header {
   display: flex;
   align-items: center;
@@ -63,7 +77,7 @@
   font-weight: 600;
   color: var(--tt-text-color);
   border-bottom: 0.5px solid var(--tt-border-color);
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 }
 
 .db-board-col-header__dot {
@@ -81,7 +95,6 @@
 }
 
 // ── Column footer ───────────────────────────────────────────────────────────
-
 .db-board-col-footer__add {
   justify-content: flex-start;
   width: 100%;
@@ -90,8 +103,7 @@
   font-size: 12px;
 }
 
-// ── Empty state ─────────────────────────────────────────────────────────────
-
+// ── Empty state ───────────────────────────────────────────────────────────
 .db-board-empty {
   display: flex;
   align-items: center;
@@ -100,4 +112,10 @@
   color: var(--tt-text-tertiary);
   font-size: 13px;
   text-align: center;
+}
+
+.db-board-col__cards{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }

@@ -76,6 +76,7 @@ export function ColumnDropdown({ tablePos }: { tablePos: number }) {
             minWidth: "100%",
             minHeight: "0.6rem",
             padding: "4px",
+            marginLeft: "-20px",
           }}
           onPointerDown={() => {
             if (colIndex === undefined || !tablePos) return;
@@ -284,6 +285,7 @@ export function RowDropdown({ tablePos }: { tablePos: number }) {
             minWidth: "0.8rem",
             minHeight: "100%",
             padding: "4px",
+            marginLeft: "-20px",
           }}
           onPointerDown={() => {
             if (rowIndex === undefined || !tablePos) return;
