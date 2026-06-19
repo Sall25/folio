@@ -1,0 +1,23 @@
+.es-sb {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.es-sb-label {
+  margin: 0 0 6px 8px;   // match sidebar-section__label inset
+}
+
+.es-sb-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;              // mirror RecentSection's CardItemGroup gap
+}
+
+.es-sb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;          // your tight 32px rows
+  border-radius: var(--tt-radius-sm, 6px);
+}

@@ -1,0 +1,66 @@
+.editor-skeleton-overlay {
+  position: absolute;
+  top: 44px;              // ← your toolbar height; overlay starts below it
+  left: 0;
+  right: 0;
+  bottom: 0;
+  inset: 0;
+  z-index: 5;            // above the editor content
+  background: var(--tt-bg-color, #fff); // opaque, so the editor underneath doesn't show through
+
+  .dark & {
+    background: var(--tt-bg-color, #1a1a1a);
+  }
+}
+
+// ============================================================
+// Editor skeleton — content
+// ============================================================
+.es-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;          // fill the overlay so body can extend down
+}
+
+// Cover band — spans the full content width, no column padding
+.es-cover {
+  flex: 0 0 auto;
+  border-radius: 0;       // covers are flush in Notion; round if yours differ
+}
+
+.es-content-col {
+  width: 100%;
+  max-width: 720px;       // ← match editor column max-width
+  margin: 0 auto;
+  padding: 0 3.5rem;      // ← match editor column horizontal padding
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1 1 auto;         // take remaining height
+}
+
+// Large emoji that pulls up over the cover, Notion-style
+.es-page-icon {
+  margin-top: -39px;      // ≈ half the icon height → overlaps the cover
+  position: relative;
+  z-index: 1;
+}
+
+.es-content-affordances {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.es-title {
+  margin-top: 0.5rem;
+}
+
+.es-content-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}

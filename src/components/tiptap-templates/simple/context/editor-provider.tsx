@@ -273,52 +273,33 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!editor) return;
     saveActivePage.flush();
-    // Unfreeze while the next page's content loads — the load transaction must
-    // not be judged against the previous page's structure.
     frozenStructureRef.current = null;
-    requestAnimationFrame(() => {
-      queueMicrotask(() => {
-        const page = activePageRef.current;
-        if (!page || page.id !== activePageId) return;
 
-        let content = page.content;
-        const isDb = dbPageIdsRef.current.has(page.id);
-        const nodes = content?.content ?? [];
-        const dbIndex = nodes.findIndex((n) => n.type === "database");
-        console.log("[db-strip] before setContent", {
-          pageId: page.id,
-          isDb,
-          topLevelTypes: nodes.map((n) => n.type),
-          dbIndex,
-          willTruncate: isDb && dbIndex >= 0 && dbIndex < nodes.length - 1,
-        });
+    let cancelled = false;
+    const raf = requestAnimationFrame(() => {
+      if (cancelled) return;
+      const page = activePageRef.current;
+      if (!page || page.id !== activePageId) return;
 
-        if (isDb && dbIndex >= 0 && dbIndex < nodes.length - 1) {
-          content = { ...content, content: nodes.slice(0, dbIndex + 1) };
-        }
+      let content = page.content;
+      const isDb = dbPageIdsRef.current.has(page.id);
+      const nodes = content?.content ?? [];
+      const dbIndex = nodes.findIndex((n) => n.type === "database");
 
-        editor.commands.setContent(content, { emitUpdate: false });
+      if (isDb && dbIndex >= 0 && dbIndex < nodes.length - 1) {
+        content = { ...content, content: nodes.slice(0, dbIndex + 1) };
+      }
 
-        // What does the live doc look like immediately after load?
-        console.log(
-          "[db-strip] after setContent",
-          editor.state.doc.content.content.map((n) => n.type.name),
-        );
-
-        captureBaseline();
-
-        console.log(
-          "[db-strip] after captureBaseline",
-          editor.state.doc.content.content.map((n) => n.type.name),
-          "frozen:",
-          frozenStructureRef.current,
-        );
-      });
+      editor.commands.setContent(content, { emitUpdate: false });
+      captureBaseline();
     });
 
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, activePageId, isLoading]);
-
   useWhyDidYouRender("editor-provider", {
     extensions,
     editor,

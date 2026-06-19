@@ -18,7 +18,6 @@ import { SimpleEditorContent } from "./simple-editor-content";
 import { VersionHistorySidebar } from "src/components/tiptap-ui/version-history/version-history-sidebar";
 import { HomePageContent } from "./components";
 import { useActivePage } from "./context/active-page-context";
-import EditorSkeleton from "./editor-skeleton";
 import { PagePeekView } from "./page-peek-view";
 import { useEditorLayout } from "./context/editor-layout-context";
 
@@ -42,6 +41,7 @@ import { useLibrary } from "./context/library-context";
 import { LibraryPalette } from "./components/library-palette";
 import { usePageView } from "./context/page-view-context";
 import { PageCenterView } from "./page-center-view";
+import { EditorContentSkeleton } from "./components/skeletons";
 
 const VERSION_SIDEBAR_WIDTH = 260;
 
@@ -110,11 +110,11 @@ function SimpleEditorInner({ view }: { view: View }) {
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const isMobile = useIsBreakpoint();
   const { height } = useWindowSize();
+  const { isLoading } = useActivePage();
 
   // `activePage` is assumed to be exposed by useActivePage (the same active
   // page that feeds SimpleEditorContentProps). If it actually comes from a
   // route param or a different field, point `activePageId` below at that.
-  const { isLoading } = useActivePage();
   const { sidebarWidth, versionHistoryOpen, onVersionHistoryOpenChanged } =
     useEditorLayout();
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
@@ -122,11 +122,6 @@ function SimpleEditorInner({ view }: { view: View }) {
     if (!isMobile && mobileView !== "main")
       requestAnimationFrame(() => setMobileView("main"));
   }, [isMobile, mobileView]);
-
-  if (isLoading)
-    return (
-      <EditorSkeleton toolbarRef={toolbarRef as RefObject<HTMLDivElement>} />
-    );
 
   return (
     <div className="simple-editor-wrapper">
@@ -145,6 +140,11 @@ function SimpleEditorInner({ view }: { view: View }) {
             onTriggerVersionHistory={() => onVersionHistoryOpenChanged(true)}
           />
           <SimpleEditorMain view={view} />
+          {isLoading && (
+            <div className="editor-skeleton-overlay">
+              <EditorContentSkeleton />
+            </div>
+          )}
         </ToastProvider>
       </NotificationProvider>
     </div>

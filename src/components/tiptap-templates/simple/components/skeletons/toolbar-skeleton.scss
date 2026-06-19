@@ -1,0 +1,123 @@
+// ============================================================
+// Editor skeleton — toolbar
+// ============================================================
+
+// Skeleton-local tokens (fall back if the --tt-* ones aren't defined)
+$es-bone-base: var(--tt-gray-light-a-100, rgba(0, 0, 0, 0.06));
+$es-bone-sheen: var(--tt-gray-light-a-200, rgba(0, 0, 0, 0.10));
+$es-sep: var(--tt-gray-light-a-200, rgba(0, 0, 0, 0.08));
+
+.es-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 44px;
+  padding: 0 0.75rem;
+  // match your real toolbar's bottom border if it has one
+  border-bottom: 1px solid var(--tt-gray-light-a-100, rgba(0, 0, 0, 0.06));
+
+  .dark & {
+    border-bottom-color: var(--tt-gray-dark-a-100, rgba(255, 255, 255, 0.06));
+  }
+}
+
+// --- Tabs (left side) ---
+.es-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.es-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  // mirror TabToolbar's tab padding so bones land where icon/label do
+  padding: 0.25rem 0.625rem;
+  height: 28px;
+  border-radius: 6px;
+}
+
+.es-spacer {
+  flex: 1 1 auto;
+}
+
+// --- Right-hand controls ---
+.es-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.es-toolbar-sep {
+  width: 1px;
+  height: 18px;
+  margin: 0 0.375rem;
+  background: $es-sep;
+  flex: 0 0 auto;
+
+  .dark & {
+    background: var(--tt-gray-dark-a-200, rgba(255, 255, 255, 0.08));
+  }
+}
+
+// ============================================================
+// Bone primitive
+// ============================================================
+
+.es-bone {
+  display: inline-block;
+  flex: 0 0 auto;
+  border-radius: 4px;
+  background-color: $es-bone-base;
+
+  // moving sheen
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    $es-bone-sheen 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: es-shimmer 1.4s ease-in-out infinite;
+
+  .dark & {
+    background-color: var(--tt-gray-dark-a-100, rgba(255, 255, 255, 0.07));
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--tt-gray-dark-a-200, rgba(255, 255, 255, 0.12)) 50%,
+      transparent 100%
+    );
+  }
+}
+
+.es-bone-rounded {
+  border-radius: 6px;
+}
+
+.es-bone-pill {
+  border-radius: 999px;
+}
+
+.es-bone-circle {
+  border-radius: 50%;
+}
+
+@keyframes es-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// Respect reduced-motion: hold a static tint instead of animating
+@media (prefers-reduced-motion: reduce) {
+  .es-bone {
+    animation: none;
+    background-image: none;
+  }
+}

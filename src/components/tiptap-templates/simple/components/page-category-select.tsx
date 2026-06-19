@@ -10,6 +10,8 @@ import { Star, Users, Lock, Building2, Check, ChevronDown } from "lucide-react";
 import type { PageCategory } from "src/types";
 import "./page-category-select.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+import { useActivePage } from "../context/active-page-context";
+import { Bone } from "./skeletons";
 
 // Selectable categories — mirror the sidebar sections.
 const OPTIONS: { value: PageCategory; label: string; icon: React.ReactNode }[] =
@@ -33,6 +35,7 @@ export function PageCategorySelect({
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { isLoading } = useActivePage();
 
   const current =
     OPTIONS.find((o) => o.value === value) ??
@@ -76,6 +79,18 @@ export function PageCategorySelect({
       document.removeEventListener("keydown", onKey);
     };
   }, [open, updatePosition]);
+
+  if (isLoading) {
+    return (
+      <div className="page-category-select" aria-hidden="true">
+        <Button className="page-category-select__trigger" disabled>
+          <Bone width={15} height={15} rounded />
+          <Bone width={56} height={12} />
+          <Bone width={14} height={14} rounded />
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="page-category-select">

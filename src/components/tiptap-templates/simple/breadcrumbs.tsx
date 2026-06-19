@@ -5,14 +5,17 @@ import { useBreadcrumbs } from "src/hooks/use-pages";
 import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 import "./breadcrumbs.scss";
+import { Bone } from "./components/skeletons";
 
 // how many crumbs before we collapse the middle
 const MAX_VISIBLE = 4;
 
 export function Breadcrumbs({ pageId }: { pageId: ID | null }) {
-  const { data: chain } = useBreadcrumbs(pageId);
+  const { data: chain, isPending } = useBreadcrumbs(pageId);
   const { setActivePageId } = useActivePage();
 
+  if (!pageId) return null;
+  if (isPending) return <BreadcrumbsSkeleton />;
   if (!chain || chain.length === 0) return null;
 
   // decide which crumbs to show: collapse the middle if too long.
@@ -94,5 +97,16 @@ function Crumb({
     >
       {content}
     </button>
+  );
+}
+
+function BreadcrumbsSkeleton() {
+  return (
+    <nav className="breadcrumbs" aria-label="Breadcrumb" aria-busy="true">
+      <span className="breadcrumbs__crumb">
+        <Bone width={16} height={16} rounded />
+        <Bone width={92} height={12} />
+      </span>
+    </nav>
   );
 }

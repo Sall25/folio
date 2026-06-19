@@ -1,0 +1,60 @@
+// ============================================================
+// Bone — shimmer skeleton primitive
+// ============================================================
+
+.es-bone {
+  display: inline-block;
+  flex: 0 0 auto;
+  border-radius: 4px;
+  background-color: var(--tt-gray-light-a-100, rgba(0, 0, 0, 0.06));
+
+  // moving sheen
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--tt-gray-light-a-200, rgba(0, 0, 0, 0.1)) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: es-shimmer 1.4s ease-in-out infinite;
+
+  .dark & {
+    background-color: var(--tt-gray-dark-a-100, rgba(255, 255, 255, 0.07));
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--tt-gray-dark-a-200, rgba(255, 255, 255, 0.12)) 50%,
+      transparent 100%
+    );
+  }
+}
+
+.es-bone-rounded {
+  border-radius: 6px;
+}
+
+.es-bone-pill {
+  border-radius: 999px;
+}
+
+.es-bone-circle {
+  border-radius: 50%;
+}
+
+@keyframes es-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// Respect reduced-motion: hold a static tint instead of animating
+@media (prefers-reduced-motion: reduce) {
+  .es-bone {
+    animation: none;
+    background-image: none;
+  }
+}
