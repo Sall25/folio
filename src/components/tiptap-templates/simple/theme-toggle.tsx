@@ -5,28 +5,42 @@ import { MoonStarIcon } from "src/components/tiptap-icons/moon-star-icon";
 import { SunIcon } from "src/components/tiptap-icons/sun-icon";
 import { useEffect, useState } from "react";
 
-export function ThemeToggle() {
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+const THEME_KEY = "folio-theme";
 
+function getInitialDarkMode(): boolean {
+  const stored = localStorage.getItem(THEME_KEY);
+  if (stored === "dark") return true;
+  if (stored === "light") return false;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+export function ThemeToggle() {
+  // reads localStorage synchronously on first render
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(getInitialDarkMode);
+
+  // writes on every toggle
+  const toggleDarkMode = () =>
+    setIsDarkMode((isDark) => {
+      const next = !isDark;
+      localStorage.setItem(THEME_KEY, next ? "dark" : "light");
+      return next;
+    });
+
+  // Follow OS changes only while the user hasn't set an explicit preference
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => setIsDarkMode(mediaQuery.matches);
+    const handleChange = () => {
+      if (!localStorage.getItem(THEME_KEY)) {
+        setIsDarkMode(mediaQuery.matches);
+      }
+    };
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  // useEffect(() => {
-  //   const initialDarkMode =
-  //     !!document.querySelector('meta[name="color-scheme"][content="dark"]') ||
-  //     window.matchMedia("(prefers-color-scheme: dark)").matches;
-  //   setIsDarkMode(initialDarkMode);
-  // }, []);
-
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDarkMode);
   }, [isDarkMode]);
-
-  const toggleDarkMode = () => setIsDarkMode((isDark) => !isDark);
 
   return (
     <Button
