@@ -2,13 +2,16 @@
   height: 34px;
 }
 .db-checkbox {
-  width: 16px !important;
-  height: 16px !important;
-  min-width: 16px !important;
-  min-height: 16px !important;
+  // width: 16px !important;
+  // height: 16px !important;
+  
+  width: 18px !important;
+  height: 16.5px !important;
+  min-width: 18px !important;
+  min-height: 16.5px !important;
+  border: 1.5px solid var(--tt-checklist-border-color);
+  border-radius: 1px;
    
-  border-radius: var(--tt-radius-xs);
-  border: 1.5px solid var(--tt-border-color);
   background: transparent !important;
   display: flex;
   align-items: center !important;

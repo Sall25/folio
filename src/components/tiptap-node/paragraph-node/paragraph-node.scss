@@ -6,9 +6,12 @@
   --placeholder-color: var(--tt-gray-light-a-400);
   --thread-bg-color: var(--tt-color-yellow-inc-2);
   --tt-cursor-color: var(--tt-brand-color-500);
+ 
 
   // ai
   --tiptap-ai-insertion-color: var(--tt-brand-color-600);
+  --tt-paragraph-text-color: #2c2c2b;
+
 
   .dark & {
     --tt-collaboration-carets-label: var(--tt-gray-dark-100);
@@ -19,6 +22,7 @@
     --tt-cursor-color: var(--tt-brand-color-400);
 
     --tiptap-ai-insertion-color: var(--tt-brand-color-400);
+    --tt-paragraph-text-color:  #f0efed;
   }
 }
 
@@ -112,14 +116,17 @@
   
   /* Sizing and Spacing */
   font-size: 16px;
-  line-height: 1.5; /* Equivalent to 24px */
+  line-height: 1.5 !important;  /* Equivalent to 24px */
   font-weight: 400;
   letter-spacing: normal;
 
   /* Text Appearance */
-  color: var(--tt-theme-text);
+  color: var(--tt-paragraph-text-color); //var(--tt-theme-text);
   text-transform: none;
   font-style: normal;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  padding-inline: 2px;
  }
  /* ── Font mode overrides (toggle class on <body> or a wrapper) ── */
  font-serif p {
