@@ -4,22 +4,77 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/folio.svg" />
+
+  <script>
+    (function () {
+      var t = localStorage.getItem("folio-theme");
+      var dark = t === "dark" || (!t && matchMedia("(prefers-color-scheme: dark)").matches);
+      if (dark) document.documentElement.classList.add("dark");
+    })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Folio</title>
+
+  <style>
+    html {
+      background: #ffffff;
+    }
+
+    html.dark {
+      background: #191919;
+    }
+
+    #folio-boot {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+    }
+
+    html.dark #folio-boot {
+      background: #191919;
+    }
+
+    #folio-boot .ring {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 3px solid rgba(0, 0, 0, 0.10);
+      border-top-color: rgba(98, 41, 255, 1);
+      animation: folio-spin 0.7s linear infinite;
+    }
+
+    html.dark #folio-boot .ring {
+      border-color: rgba(255, 255, 255, 0.12);
+      border-top-color: rgba(98, 41, 255, 1);
+    }
+
+    @keyframes folio-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #folio-boot .ring {
+        animation-duration: 1.6s;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <div id="folio-boot" role="status" aria-label="Loading Folio">
+      <div class="ring"></div>
+    </div>
+  </div>
   <script type="module" src="/src/main.tsx"></script>
-  <script>
-  (function () {
-    var t = localStorage.getItem("folio-theme");
-    var dark = t === "dark" || (!t && matchMedia("(prefers-color-scheme: dark)").matches);
-    if (dark) document.documentElement.classList.add("dark");
-  })();
-</script>
 </body>
 
 </html>
