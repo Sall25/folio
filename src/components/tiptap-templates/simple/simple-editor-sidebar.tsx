@@ -46,10 +46,10 @@ function User() {
     <ButtonGroup orientation="horizontal">
       <Button
         style={{
-          minWidth: 24,
-          width: 24,
-          minHeight: 24,
-          height: 24,
+          minWidth: 22,
+          width: 22,
+          minHeight: 22,
+          height: 22,
           borderRadius: "var(--tt-radius-sm)",
         }}
         data-highlighted={true}
@@ -62,6 +62,8 @@ function User() {
           color: "var(--tt-text-primary)",
           fontSize: 14,
           fontWeight: 600,
+           fontFamily: 'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif',
+  
         }}
       >
         Souleymane Sall's space

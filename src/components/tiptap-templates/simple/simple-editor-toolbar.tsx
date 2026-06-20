@@ -21,6 +21,7 @@ import { PageCategorySelect } from "./components/page-category-select";
 import { Breadcrumbs } from "./breadcrumbs";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
+import EditedTimeButton from "./components/edited-time-button/edited-time-button";
 
 // ============================================================
 // Types
@@ -81,13 +82,16 @@ export const MainToolbarContent = ({
       {isMobile && <ToolbarSeparator />}
       <ToolbarGroup>
         {view !== "home" && activePage && (
-          <PageCategorySelect
-            value={activePage.category}
-            onChange={(category) => {
-              if (activePageId)
-                mutateAsync({ id: activePageId, patch: { category } });
-            }}
-          />
+          <>
+            <EditedTimeButton page={activePage} />
+            <PageCategorySelect
+              value={activePage.category}
+              onChange={(category) => {
+                if (activePageId)
+                  mutateAsync({ id: activePageId, patch: { category } });
+              }}
+            />
+          </>
         )}
         <UndoRedoButton action="undo" />
         <UndoRedoButton action="redo" />

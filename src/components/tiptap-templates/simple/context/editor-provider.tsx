@@ -238,9 +238,8 @@ export function EditorProvider({ children }: { children: ReactNode }) {
           updatedAt: Date.now(),
         },
       });
-      console.log("saved");
     },
-    800,
+    1500,
     { maxWait: 2500 },
   );
 

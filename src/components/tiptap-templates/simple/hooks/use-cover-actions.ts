@@ -49,7 +49,12 @@ export function useCoverActions(providedPage?: Page) {
     if (activePageRef.current?.id === undefined) return;
     await mutateAsync({
       id: activePageRef.current.id,
-      patch: { cover: activePageRef.current.cover },
+      patch: {
+        cover: {
+          ...activePageRef.current.cover,
+          coverImage: "/covers/default-cover.jpg",
+        },
+      },
     });
   }, [mutateAsync]);
 

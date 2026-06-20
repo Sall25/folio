@@ -386,7 +386,7 @@ ul[data-type="taskList"] .is-empty[data-placeholder]:has(> .ProseMirror-trailing
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 24px;   /* FIXED width for the bullet zone */
+  width: fit-content;   /* FIXED width for the bullet zone */
   height: 28px;
   padding: 2px 0;
 }

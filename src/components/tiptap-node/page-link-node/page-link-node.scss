@@ -21,7 +21,7 @@ Box Model: box-sizing: border-box
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px !important;
+  font-size: 16px !important;
   cursor: pointer;
   transition: background 100ms ease;
   user-select: none;
@@ -29,7 +29,7 @@ Box Model: box-sizing: border-box
   padding-bottom: 2px;
   color: inherit;
   box-sizing: border-box;
- 
+  font-weight: 600;
   &:hover{
     background-color: var(--page-link-node-hover-bg-color);
   }

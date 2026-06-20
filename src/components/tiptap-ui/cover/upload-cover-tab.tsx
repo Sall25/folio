@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 
-const BANNER_WIDTH = 1500;
-const BANNER_HEIGHT = 600;
+// Largest edge we keep on upload. Notion stores the full image and crops at
+// display time, so we only shrink oversized files to keep uploads lean.
+const MAX_DIMENSION = 2000;
 
 async function processImageForCover(file: File): Promise<File> {
   return new Promise((resolve, reject) => {
@@ -11,38 +12,24 @@ async function processImageForCover(file: File): Promise<File> {
     img.onload = () => {
       URL.revokeObjectURL(objectUrl);
 
+      // Preserve the full image and its aspect ratio — no crop, no padding.
+      // The banner does the "fit" via object-fit: cover, exactly like Notion.
+      let width = img.width;
+      let height = img.height;
+
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        const scale = MAX_DIMENSION / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+
       const canvas = document.createElement("canvas");
-      canvas.width = BANNER_WIDTH;
-      canvas.height = BANNER_HEIGHT;
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext("2d");
       if (!ctx) return reject(new Error("Canvas not supported"));
 
-      // Step 1: draw blurred stretched version as background
-      ctx.filter = "blur(40px) brightness(0.6)";
-      ctx.drawImage(img, -40, -40, BANNER_WIDTH + 80, BANNER_HEIGHT + 80);
-      ctx.filter = "none";
-
-      // Step 2: draw the actual image centered, scaled to fit fully within banner
-      const imgAspect = img.width / img.height;
-      const bannerAspect = BANNER_WIDTH / BANNER_HEIGHT;
-
-      let drawWidth: number;
-      let drawHeight: number;
-
-      if (imgAspect > bannerAspect) {
-        // Wider than banner — constrain by width
-        drawWidth = BANNER_WIDTH;
-        drawHeight = BANNER_WIDTH / imgAspect;
-      } else {
-        // Taller than banner — constrain by height
-        drawHeight = BANNER_HEIGHT;
-        drawWidth = BANNER_HEIGHT * imgAspect;
-      }
-
-      const offsetX = (BANNER_WIDTH - drawWidth) / 2;
-      const offsetY = (BANNER_HEIGHT - drawHeight) / 2;
-
-      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+      ctx.drawImage(img, 0, 0, width, height);
 
       canvas.toBlob(
         (blob) => {
@@ -54,7 +41,7 @@ async function processImageForCover(file: File): Promise<File> {
           );
         },
         "image/jpeg",
-        0.92,
+        0.9,
       );
     };
 
@@ -96,7 +83,7 @@ export function UploadCoverTab({ onSelect }: UploadCoverTabProps) {
     setUploading(true);
 
     try {
-      // Resize/crop to banner dimensions before uploading
+      // Downscale oversized images before uploading (aspect ratio preserved)
       const processedFile = await processImageForCover(file);
 
       // Update preview to show the processed result

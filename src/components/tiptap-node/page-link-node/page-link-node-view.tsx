@@ -104,7 +104,7 @@ export function PageLinkNodeView({ node }: NodeViewProps) {
       onMouseLeave={handleMouseLeave}
     >
       <div ref={linkRef} className="page-link-node" onClick={handleClick}>
-        <PageItemIcon cover={page.cover} />
+        <PageItemIcon  cover={page.cover} />
         <span style={{ color: page.cover.color ?? undefined }}>
           {page.title || "New Page"}
         </span>
