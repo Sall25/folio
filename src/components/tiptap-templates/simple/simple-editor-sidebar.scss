@@ -3,7 +3,7 @@
   // --sidebar-bg-color: rgb(251, 251, 251);  //rgba(252, 249, 249, 1);
   --sidebar-shadow-color: rgba(240, 239, 237, 0.737);
   --sidebar-text-color: var(--tt-theme-text);
-  --sidebar-text-secondary:rgb(95, 99, 104);
+  --sidebar-text-secondary: var(--tt-gray-light-a-600);
   --sidebar-accent: #7c3aed;
   --sidebar-border-color: rgba(0, 0, 0, 0.08);
 }
@@ -11,7 +11,8 @@
 .dark {
   --sidebar-bg-color: #1f1f1f;
   --sidebar-shadow-color: #0f0f0e0c;
-  --sidebar-text-secondary: var(--tt-gray-dark-a-900);
+  --sidebar-text-secondary: var(--tt-gray-dark-a-600);
+  
   // --sidebar-text-color: #e4e4e4;
   --sidebar-text-color: #e4e4e4b7;
   --sidebar-accent: #a78bfa;

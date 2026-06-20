@@ -7,6 +7,9 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Plus,
+  ChevronUp,
+  Settings,
+  MoreHorizontal,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -16,7 +19,6 @@ import {
   CardHeader,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
-import { Separator } from "src/components/tiptap-ui-primitive/separator";
 
 import "./simple-editor-sidebar.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
@@ -33,6 +35,8 @@ import { useCreatePage } from "src/hooks/use-create-page";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage as updatePage } from "src/api/pages";
 import { SidebarBodySkeleton } from "./components/skeletons";
+import { usePageView } from "./context/page-view-context";
+import { useActivePage } from "./context/active-page-context";
 
 function User() {
   const { collapsed, onCollapsedChange } = useEditorLayout();
@@ -62,8 +66,8 @@ function User() {
           color: "var(--tt-text-primary)",
           fontSize: 14,
           fontWeight: 600,
-           fontFamily: 'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif',
-  
+          fontFamily:
+            'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif',
         }}
       >
         Souleymane Sall's space
@@ -96,6 +100,8 @@ function WorkspaceHeader() {
       {/* {!collapsed && <Logo collapsed={collapsed} />} */}
       {!collapsed && <User />}
 
+      <Spacer orientation="horizontal" />
+
       {collapsed && (
         <Button
           variant="ghost"
@@ -103,36 +109,69 @@ function WorkspaceHeader() {
           tooltip={"Expand"}
           style={{ justifyContent: "flex-start" }}
         >
-          <ChevronsRight className="tiptap-button-icon" />
+          <ChevronsRight
+            style={{ minWidth: 18, width: 18, minHeight: 18, height: 18 }}
+            className="tiptap-button-icon"
+          />
         </Button>
       )}
     </CardItemGroup>
   );
 }
 
-function WorkSpaceFooter() {
+function WorkSpaceFooter({
+  onSettingsClick,
+  onCreatePage,
+}: {
+  onSettingsClick?: () => void;
+  onCreatePage?: () => void;
+}) {
   return (
     <CardFooter
       style={{
+        position: "sticky",
+        bottom: 0,
+        zIndex: 5,
         minHeight: 50,
         display: "flex",
         justifyContent: "flex-start",
         alignItems: "center",
         width: "100%",
         padding: "0 15px",
+        borderTop: "0.5px solid var(--tt-border-color)",
+        // translucent sidebar bg + blur = the frost. Opaque bg kills the effect.
+        background:
+          "color-mix(in srgb, var(--sidebar-bg-color) 70%, transparent)",
+        backdropFilter: "blur(12px) saturate(1.4)",
+        WebkitBackdropFilter: "blur(12px) saturate(1.4)",
       }}
     >
+      {/* the fog: fades scrolling list into the sidebar bg, just above the bar */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: "100%",
+          height: 36,
+          pointerEvents: "none",
+          background:
+            "linear-gradient(to top, var(--sidebar-bg-color), transparent)",
+        }}
+      />
+
       <CardItemGroup
         orientation="horizontal"
         style={{
           width: "100%",
           justifyContent: "flex-start",
+          alignItems: "center",
           marginBottom: 5,
           gap: 5,
         }}
       >
         <Button
-          //variant="ghost"
           style={{
             minWidth: 32,
             width: 32,
@@ -151,6 +190,7 @@ function WorkSpaceFooter() {
             J
           </span>
         </Button>
+
         <CardItemGroup>
           <span style={{ fontSize: 12, color: "var(--tt-text-primary)" }}>
             Jule
@@ -159,10 +199,54 @@ function WorkSpaceFooter() {
             Pro plan
           </span>
         </CardItemGroup>
+
+        <CardItemGroup
+          orientation="horizontal"
+          style={{ marginLeft: "auto", gap: 4, alignItems: "center" }}
+        >
+          <Button
+            variant="ghost"
+            aria-label="Settings"
+            onClick={onSettingsClick}
+            style={{
+              minWidth: 32,
+              width: 32,
+              height: 32,
+              minHeight: 32,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: "var(--tt-radius-md)",
+              color: "var(--tt-text-secondary)",
+            }}
+          >
+            <Settings size={16} />
+          </Button>
+
+          <Button
+            aria-label="Create new page"
+            onClick={onCreatePage}
+            style={{
+              minWidth: 32,
+              width: 32,
+              height: 32,
+              minHeight: 32,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: "var(--tt-radius-md)",
+              background: "var(--tt-brand-color-400)",
+              color: "#fff",
+            }}
+          >
+            <Plus size={16} />
+          </Button>
+        </CardItemGroup>
       </CardItemGroup>
     </CardFooter>
   );
 }
+
 function NavItems() {
   const { collapsed } = useEditorLayout();
   const navigate = useNavigate();
@@ -260,10 +344,41 @@ function NavItems() {
   );
 }
 
+function ScrollFog({
+  edge,
+  height = 28,
+}: {
+  edge: "top" | "bottom";
+  height?: number;
+}) {
+  const isTop = edge === "top";
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: "sticky",
+        top: isTop ? 0 : undefined,
+        bottom: isTop ? undefined : 0,
+        height,
+        // negative margin pulls it out of flow so it overlays rows, not pushes them
+        marginBottom: isTop ? -height : undefined,
+        marginTop: isTop ? undefined : -height,
+        pointerEvents: "none",
+        zIndex: 2,
+        background: `linear-gradient(to ${
+          isTop ? "bottom" : "top"
+        }, var(--sidebar-bg-color), transparent)`,
+      }}
+    />
+  );
+}
+
 // ── RecentSection: just use the lens ─────────────────────────────────────────
 function RecentSection() {
-  const { data: recentPages } = useRecentPages(8); // the lens, with the null-fallback baked in
+  const COLLAPSED_COUNT = 8;
+  const { data: recentPages } = useRecentPages(); // all, recent-first
   const createPage = useCreatePage();
+  const [expanded, setExpanded] = useState(false);
 
   const handleNewPage = () => {
     const page = makePage({
@@ -277,31 +392,73 @@ function RecentSection() {
 
   if (!recentPages) return null;
 
+  const hasMore = recentPages.length > COLLAPSED_COUNT;
+  const visiblePages =
+    expanded || !hasMore ? recentPages : recentPages.slice(0, COLLAPSED_COUNT);
+
   return (
     <CardItemGroup className="sidebar-section" orientation="vertical">
+      {/* <ScrollFog edge="top" /> */}
       {recentPages.length > 0 && (
         <>
           <span className="sidebar-section__label">Recents</span>
           <Spacer orientation="vertical" size={5} />
-          <CardItemGroup style={{ gap: 2 }}>
-            {recentPages.map((page) => (
+          <CardItemGroup style={{ gap: 2.8 }}>
+            {visiblePages.map((page) => (
               <PageItem key={page.id} page={page} />
             ))}
           </CardItemGroup>
+          <Spacer orientation="vertical" size={5} />
+
+          {hasMore && (
+            <Button
+              variant="ghost"
+              style={{
+                justifyContent: "flex-start",
+                borderRadius: "var(--tt-radius-sm)",
+                background: "transparent",
+                color: "var(--sidebar-text-secondary)",
+                fontWeight: 500,
+                fontFamily: "Inter, -apple-system, system-ui, sans-serif",
+              }}
+              onClick={() => setExpanded((v) => !v)}
+            >
+              {expanded ? (
+                <ChevronUp
+                  stroke="var(--sidebar-text-secondary)"
+                  className="tiptap-button-icon"
+                />
+              ) : (
+                <MoreHorizontal
+                  stroke="var(--sidebar-text-secondary)"
+                  className="tiptap-button-icon"
+                />
+              )}
+              <Spacer orientation="horizontal" size={2} />
+              <span className="tiptap-button-text" style={{ fontSize: 13 }}>
+                {expanded ? "Less" : "More"}
+              </span>
+            </Button>
+          )}
         </>
       )}
-      <Spacer orientation="vertical" size={5} />
+      <Spacer orientation="vertical" size={1.5} />
       <Button
         variant="ghost"
         style={{
           justifyContent: "flex-start",
           borderRadius: "var(--tt-radius-sm)",
-          fontSize: 12,
-          lineHeight: 1.3,
+          fontSize: 13,
+          lineHeight: 1.4,
+          color: "var(--tt-brand-color-400)",
         }}
         onClick={handleNewPage}
       >
-        <Plus className="tiptap-button-icon" />
+        <Plus
+          stroke="var(--tt-brand-color-400)"
+          className="tiptap-button-icon"
+        />
+        <Spacer orientation="horizontal" size={2} />
         <span className="tiptap-button-text">New Page</span>
       </Button>
     </CardItemGroup>
@@ -311,9 +468,23 @@ function RecentSection() {
 // ── main component: lens + tree + mutation hooks ─────────────────────────────
 export function SimpleEditorSidebar() {
   const { collapsed, sidebarWidth } = useEditorLayout();
-  const { tree, data: pages, isPending } = usePageTree();
+  const { tree, data: pages, isPending, isLoading } = usePageTree();
   const patchPage = usePatchPage(({ id, patch }) => updatePage(id, patch));
   const createPage = useCreatePage();
+  const { setTarget } = usePageView();
+  const { setActivePageId } = useActivePage();
+
+  const onCreatePage = () => {
+    const newPage = makePage({
+      title: "New Page",
+      parentId: null,
+      category: "Private",
+    });
+    createPage
+      .mutateAsync(newPage)
+      .then((page) => setTarget({ pageId: page.id, view: "Center" }))
+      .catch(() => console.log("failed to create new page"));
+  };
 
   if (isPending || !pages) return null;
 
@@ -335,7 +506,7 @@ export function SimpleEditorSidebar() {
         flexDirection: "column",
       }}
     >
-      <CardHeader /* ... */>
+      <CardHeader style={{ border: "none" }}>
         <CardItemGroup orientation="vertical" style={{ width: "100%" }}>
           <WorkspaceHeader />
           <Spacer orientation="vertical" size={4} />
@@ -343,13 +514,16 @@ export function SimpleEditorSidebar() {
         </CardItemGroup>
       </CardHeader>
 
-      <CardBody style={{ width: "100%", padding: "0 10px" }}>
-        <Spacer orientation="vertical" size={20} />
+      <CardBody style={{ width: "100%", padding: "0 8px" }}>
+        {/* <Spacer orientation="vertical" size={20} /> */}
         {!collapsed &&
-          (isPending || !pages ? (
+          (isPending || isLoading || !pages ? (
             <SidebarBodySkeleton />
           ) : (
             <>
+              <ScrollFog edge="top" />
+              <Spacer orientation="vertical" size={15} />
+
               {pages.length > 0 && <RecentSection />}
               <Spacer orientation="vertical" size={10} />
               <SidebarTree
@@ -370,7 +544,9 @@ export function SimpleEditorSidebar() {
                     parentId: null,
                     category,
                   });
-                  createPage.mutate(p); // one optimistic create, category seeded
+                  createPage
+                    .mutateAsync(p)
+                    .then((page) => setActivePageId(page.id));
                 }}
                 onRenameSection={() => {}}
                 onDeleteSection={() => {}}
@@ -380,8 +556,8 @@ export function SimpleEditorSidebar() {
           ))}
       </CardBody>
 
-      <Separator orientation="horizontal" style={{ height: 0.5 }} />
-      <WorkSpaceFooter />
+      {/* <Separator orientation="horizontal" style={{ height: 0.5 }} /> */}
+      <WorkSpaceFooter onCreatePage={onCreatePage} />
     </Card>
   );
 }

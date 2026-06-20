@@ -28,6 +28,8 @@ import {
   useDraggable,
   DragOverlay,
   pointerWithin,
+  rectIntersection,
+  type CollisionDetection,
   type DragStartEvent,
   type DragOverEvent,
   type DragEndEvent,
@@ -51,6 +53,22 @@ type DropTarget =
   | { kind: "page"; pageId: ID; zone: DropZone }
   | { kind: "section"; category: PageCategory }
   | null;
+
+// Section containers use prefixed ids; page rows use bare page ids.
+const isSectionId = (id: string | number) =>
+  typeof id === "string" &&
+  (id.startsWith("section:") || id.startsWith("section-header:"));
+
+// A page row droppable is nested inside the section-body droppable, so the
+// section always intersects too. Prefer the row when the pointer is over one —
+// that's what unlocks before/after/inside (nesting). Fall back to the section
+// only when no row is under the pointer (empty space / headers).
+const treeCollisionDetection: CollisionDetection = (args) => {
+  const pointer = pointerWithin(args);
+  const collisions = pointer.length ? pointer : rectIntersection(args);
+  const pageHit = collisions.find((c) => !isSectionId(c.id));
+  return pageHit ? [pageHit] : collisions;
+};
 
 // CHANGED: consumes the derived tree, grouped by category, instead of flat Page[]
 export interface SidebarTreeProps {
@@ -609,7 +627,7 @@ export function SidebarTree({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={pointerWithin}
+      collisionDetection={treeCollisionDetection}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}

@@ -43,11 +43,10 @@ import { usePageView } from "./context/page-view-context";
 import { PageCenterView } from "./page-center-view";
 import { EditorContentSkeleton } from "./components/skeletons";
 
-const VERSION_SIDEBAR_WIDTH = 260;
+const VERSION_SIDEBAR_WIDTH = 280;
 
 function triggerMainEditorSync(mainEditor: Editor | null) {
   if (!mainEditor) return;
-  console.log("peekPageClosed dispatched");
   mainEditor.view.dispatch(mainEditor.state.tr.setMeta("peekPageClosed", true));
 }
 

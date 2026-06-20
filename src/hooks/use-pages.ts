@@ -107,8 +107,8 @@ export function useTabPages(tabIds: ID[]) {
 // so without useMemo every pages change re-renders the entire sidebar. This is
 // the one lens where referential stability is load-bearing, not optional.
 export function usePageTree() {
-  const query = usePagesBase((pages) =>
-    pages.filter((p) => p.sourceId == null),
+  const query = usePagesBase(
+    (pages) => pages /*.filter((p) => p.sourceId == null),*/,
   );
 
   const pages = query.data;
