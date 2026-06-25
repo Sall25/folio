@@ -58,12 +58,15 @@ export default function EditedTimeButton({
             padding: "4px 8px",
             borderRadius: 6,
             border: "none",
-            fontSize: 13,
+            fontSize: 13.5,
+            lineHeight: 1.4,
             cursor: onClick ? "pointer" : "default",
             background: active ? "var(--tt-card-bg-color)" : "transparent",
-            color: "var(--tt-theme-muted)",
+            color: "var(--tt-text-color)",
             whiteSpace: "nowrap",
             transition: "background 0.12s",
+            fontFamily:
+              'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"',
           }}
           onMouseEnter={(e) =>
             onClick &&

@@ -16,6 +16,7 @@ import { useCallback, useState } from "react";
 import { useActivePage } from "./context/active-page-context";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
+import { PageTemplateMenu } from "./components/page-template-menu";
 export function MorePopover({
   onTriggerVersionHistory,
 }: {
@@ -121,6 +122,7 @@ export function MorePopover({
             </CardItemGroup>
             <Separator orientation="horizontal" />
             <CardItemGroup className="more-item">
+              <PageTemplateMenu />
               <ExportButtons documentTitle="First Document" />
               <Button
                 className="version-history-btn"

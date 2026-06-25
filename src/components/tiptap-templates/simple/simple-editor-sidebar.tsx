@@ -4,12 +4,13 @@ import {
   Inbox,
   Store,
   LibraryBig,
-  ChevronsLeft,
-  ChevronsRight,
   Plus,
   ChevronUp,
   Settings,
   MoreHorizontal,
+  PanelLeft,
+  PanelRight,
+  LayoutGrid,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -37,6 +38,7 @@ import { patchPage as updatePage } from "src/api/pages";
 import { SidebarBodySkeleton } from "./components/skeletons";
 import { usePageView } from "./context/page-view-context";
 import { useActivePage } from "./context/active-page-context";
+import { useTemplates } from "./context/templates-context";
 
 function User() {
   const { collapsed, onCollapsedChange } = useEditorLayout();
@@ -47,7 +49,12 @@ function User() {
   );
 
   return (
-    <ButtonGroup orientation="horizontal">
+    <ButtonGroup
+      orientation="horizontal"
+      style={{ width: "100%", justifyContent: "flex-start" }}
+    >
+      {/**
+       */}
       <Button
         style={{
           minWidth: 22,
@@ -56,6 +63,7 @@ function User() {
           height: 22,
           borderRadius: "var(--tt-radius-sm)",
         }}
+        className="name-initial"
         data-highlighted={true}
       >
         <span className="tiptap-button-icon">S</span>
@@ -72,8 +80,14 @@ function User() {
       >
         Souleymane Sall's space
       </span>
+      <Spacer orientation="horizontal" />
+
       <Button variant="ghost" tooltip="Collapse" onClick={onToggle}>
-        <ChevronsLeft className="tiptap-button-icon" />
+        <PanelLeft
+          className="tiptap-button-icon"
+          // fill="var(--tt-brand-color-400)"
+        />
+        {/* <ChevronsLeft className="tiptap-button-icon" /> */}
       </Button>
     </ButtonGroup>
   );
@@ -109,7 +123,7 @@ function WorkspaceHeader() {
           tooltip={"Expand"}
           style={{ justifyContent: "flex-start" }}
         >
-          <ChevronsRight
+          <PanelRight
             style={{ minWidth: 18, width: 18, minHeight: 18, height: 18 }}
             className="tiptap-button-icon"
           />
@@ -173,10 +187,10 @@ function WorkSpaceFooter({
       >
         <Button
           style={{
-            minWidth: 32,
-            width: 32,
-            height: 32,
-            minHeight: 32,
+            minWidth: 28,
+            width: 28,
+            height: 28,
+            minHeight: 28,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -185,14 +199,14 @@ function WorkSpaceFooter({
         >
           <span
             className="tiptap-button-text"
-            style={{ textAlign: "center", fontSize: 14, fontWeight: 600 }}
+            style={{ textAlign: "center", fontSize: 13, fontWeight: 600 }}
           >
             J
           </span>
         </Button>
 
         <CardItemGroup>
-          <span style={{ fontSize: 12, color: "var(--tt-text-primary)" }}>
+          <span style={{ fontSize: 11.5, color: "var(--tt-text-primary)" }}>
             Jule
           </span>
           <span style={{ fontSize: 10, color: "var(--tt-text-secondary)" }}>
@@ -255,6 +269,10 @@ function NavItems() {
     navigate({ to: "/" });
   };
   const { open, onOpenChange } = useSearch();
+  const {
+    open: templatesGalleryOpen,
+    onOpenChange: onTemplatesGalleryOpenChange,
+  } = useTemplates();
   const { open: libraryOpen, onOpenChange: onLibraryOpenChange } = useLibrary();
 
   return (
@@ -274,6 +292,24 @@ function NavItems() {
           <Search size={32} className="tiptap-button-icon" />
           <Spacer orientation="horizontal" size={1} />
           {!collapsed && <span className="tiptap-button-text">Search</span>}
+        </Button>
+
+        <Button
+          variant="ghost"
+          onClick={() => {
+            onTemplatesGalleryOpenChange?.(true);
+          }}
+          style={{
+            fontWeight: 400,
+            color: "var(--tt-text-color)",
+            minHeight: 32,
+            height: 32,
+          }}
+          data-active-state={templatesGalleryOpen ? "on" : "off"}
+        >
+          <LayoutGrid size={32} className="tiptap-button-icon" />
+          <Spacer orientation="horizontal" size={1} />
+          {!collapsed && <span className="tiptap-button-text">Templates</span>}
         </Button>
 
         <Button
@@ -480,10 +516,15 @@ export function SimpleEditorSidebar() {
       parentId: null,
       category: "Private",
     });
+    setTarget({ pageId: newPage.id, view: "Center" });
+
     createPage
       .mutateAsync(newPage)
-      .then((page) => setTarget({ pageId: page.id, view: "Center" }))
-      .catch(() => console.log("failed to create new page"));
+      // .then((page) => setTarget({ pageId: page.id, view: "Center" }))
+      .catch(() => {
+        setTarget(undefined);
+        console.log("failed to create new page");
+      });
   };
 
   if (isPending || !pages) return null;
@@ -506,7 +547,7 @@ export function SimpleEditorSidebar() {
         flexDirection: "column",
       }}
     >
-      <CardHeader style={{ border: "none" }}>
+      <CardHeader>
         <CardItemGroup orientation="vertical" style={{ width: "100%" }}>
           <WorkspaceHeader />
           <Spacer orientation="vertical" size={4} />
@@ -514,7 +555,7 @@ export function SimpleEditorSidebar() {
         </CardItemGroup>
       </CardHeader>
 
-      <CardBody style={{ width: "100%", padding: "0 8px" }}>
+      <CardBody style={{ width: "100%", padding: "0 12px" }}>
         {/* <Spacer orientation="vertical" size={20} /> */}
         {!collapsed &&
           (isPending || isLoading || !pages ? (

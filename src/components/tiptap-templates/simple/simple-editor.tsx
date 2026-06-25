@@ -42,6 +42,9 @@ import { LibraryPalette } from "./components/library-palette";
 import { usePageView } from "./context/page-view-context";
 import { PageCenterView } from "./page-center-view";
 import { EditorContentSkeleton } from "./components/skeletons";
+import { useTemplates } from "./context/templates-context";
+import { useTemplates as useTemplatesApi } from "src/hooks/use-templates";
+import { TemplatesGallery } from "./components/template-gallery";
 
 const VERSION_SIDEBAR_WIDTH = 280;
 
@@ -57,8 +60,15 @@ function SimpleEditorMain({ view }: { view: View }) {
   const { target, setTarget } = usePageView();
   const { editor } = useCurrentEditor();
   const { open } = useSearch();
+  const {
+    open: templatesGalleryOpen,
+    onOpenChange: onTemplatesGalleryOpenChange,
+  } = useTemplates();
+
+  const { data: templates } = useTemplatesApi();
   const { open: libraryOpen, onOpenChange } = useLibrary();
 
+  console.log("templates gallery:", { templatesGalleryOpen, templates });
   return (
     <>
       {view === "home" && <HomePageContent />}
@@ -98,6 +108,19 @@ function SimpleEditorMain({ view }: { view: View }) {
       )}
 
       {open && <SearchPalette />}
+
+      {templatesGalleryOpen && (
+        <TemplatesGallery
+          templates={templates ?? []}
+          open={templatesGalleryOpen}
+          onClose={() => onTemplatesGalleryOpenChange?.(false)}
+          getTemplateMeta={() => ({
+            createdBy: { name: "Souleymane Sall", avatarUrl: null },
+            usedBy: [{ name: "Jule" }, { name: "Amadou" }],
+            usedCount: 12,
+          })}
+        />
+      )}
 
       {libraryOpen && <LibraryPalette onClose={() => onOpenChange?.(false)} />}
     </>

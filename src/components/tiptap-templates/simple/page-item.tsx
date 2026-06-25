@@ -87,10 +87,17 @@ export function PageItem({
         onMouseLeave={() => setShouldShow(false)}
       >
         {showIcon && (
-          <PageItemIcon cover={page.cover} styles={{ width: 18, height: 16 }} />
+          <PageItemIcon
+            cover={page.cover}
+            styles={{
+              width: 18,
+              height: 18,
+              opacity: 1,
+              fontSize: 16,
+            }}
+          />
         )}
-
-        <Spacer orientation="horizontal" size={0.2} />
+        <Spacer orientation="horizontal" size={0.5} />
 
         {editing ? (
           <TextareaAutosize
@@ -113,7 +120,11 @@ export function PageItem({
           </span>
         )}
 
-        <CardItemGroup orientation="horizontal" className="page-item-actions">
+        <CardItemGroup
+          orientation="horizontal"
+          className="page-item-actions"
+          style={{ maxWidth: shouldShow ? "fit-content" : 0 }}
+        >
           <PageItemOptions
             onOpenChange={(v) => setShouldShow(v)}
             page={page}

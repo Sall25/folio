@@ -1,3 +1,12 @@
+:root {
+  --page-icon-bg: rgba(0, 0, 0, 0.04);
+  --page-icon-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
+}
+.dark {
+  --page-icon-bg: rgba(255, 255, 255, 0.06);
+  --page-icon-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
 .page-item-tree {
   display: flex;
   flex-direction: column;
@@ -63,7 +72,7 @@
   color: #5f5e59;
   // color: inherit;
   //opacity: 0.98;
-  max-width: 150px;
+  max-width: 180px;
   flex: 1;           
   min-width: 0;     
   overflow: hidden;
@@ -111,4 +120,15 @@
   &::selection {
     background: var(--tt-gray-light-a-200);
   }
+}
+
+.sidebar-item-icon-wrapper {
+  background-color: var(--white);
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+
+/* Pop the icon background slightly more when hovering over the row */
+.sidebar-item:hover .sidebar-item-icon-wrapper {
+  background-color: rgba(255, 255, 255, 0.09);
 }

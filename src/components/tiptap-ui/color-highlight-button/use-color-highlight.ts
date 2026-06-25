@@ -51,10 +51,34 @@ export const HIGHLIGHT_COLORS = [
     border: "var(--tt-color-highlight-yellow-contrast)",
   },
   {
+    label: "Lime background",
+    value: "var(--tt-color-highlight-lime)",
+    colorValue: "#ecfccb",
+    border: "var(--tt-color-highlight-lime-contrast)",
+  },
+  {
     label: "Green background",
     value: "var(--tt-color-highlight-green)",
     colorValue: "#dcfce7",
     border: "var(--tt-color-highlight-green-contrast)",
+  },
+  {
+    label: "Mint background",
+    value: "var(--tt-color-highlight-mint)",
+    colorValue: "#d1faec",
+    border: "var(--tt-color-highlight-mint-contrast)",
+  },
+  {
+    label: "Teal background",
+    value: "var(--tt-color-highlight-teal)",
+    colorValue: "#cdf3f0",
+    border: "var(--tt-color-highlight-teal-contrast)",
+  },
+  {
+    label: "Cyan background",
+    value: "var(--tt-color-highlight-cyan)",
+    colorValue: "#d7f0fa",
+    border: "var(--tt-color-highlight-cyan-contrast)",
   },
   {
     label: "Blue background",
@@ -63,16 +87,46 @@ export const HIGHLIGHT_COLORS = [
     border: "var(--tt-color-highlight-blue-contrast)",
   },
   {
+    label: "Slate background",
+    value: "var(--tt-color-highlight-slate)",
+    colorValue: "#e7ebf0",
+    border: "var(--tt-color-highlight-slate-contrast)",
+  },
+  {
+    label: "Indigo background",
+    value: "var(--tt-color-highlight-indigo)",
+    colorValue: "#e6e7fb",
+    border: "var(--tt-color-highlight-indigo-contrast)",
+  },
+  {
     label: "Purple background",
     value: "var(--tt-color-highlight-purple)",
     colorValue: "#f3e8ff",
     border: "var(--tt-color-highlight-purple-contrast)",
   },
   {
+    label: "Violet background",
+    value: "var(--tt-color-highlight-violet)",
+    colorValue: "#eee6fb",
+    border: "var(--tt-color-highlight-violet-contrast)",
+  },
+  {
+    label: "Magenta background",
+    value: "var(--tt-color-highlight-magenta)",
+    colorValue: "#f9e4f7",
+    border: "var(--tt-color-highlight-magenta-contrast)",
+  },
+  {
     label: "Pink background",
     value: "var(--tt-color-highlight-pink)",
     colorValue: "#fcf1f6",
     border: "var(--tt-color-highlight-pink-contrast)",
+  },
+  {
+    label: "Rose background",
+    value: "var(--tt-color-highlight-rose)",
+    colorValue: "#ffe4ec",
+    border: "var(--tt-color-highlight-rose-contrast)",
   },
   {
     label: "Red background",

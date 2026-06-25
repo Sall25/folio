@@ -114,6 +114,7 @@ export function PageItemOptions({
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
+                  onOpenChange(false);
                   setConfirmOpen(true);
                 }}
               >

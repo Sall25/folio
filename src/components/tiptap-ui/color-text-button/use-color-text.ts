@@ -50,10 +50,34 @@ export const TEXT_COLORS = [
     border: "var(--tt-color-text-yellow-contrast)",
   },
   {
+    label: "Lime color",
+    value: "var(--tt-color-text-lime)",
+    colorValue: "#ecfccb",
+    border: "var(--tt-color-text-lime-contrast)",
+  },
+  {
     label: "Green color",
     value: "var(--tt-color-text-green)",
     colorValue: "#dcfce7",
     border: "var(--tt-color-text-green-contrast)",
+  },
+  {
+    label: "Mint color",
+    value: "var(--tt-color-text-mint)",
+    colorValue: "#d1faec",
+    border: "var(--tt-color-text-mint-contrast)",
+  },
+  {
+    label: "Teal color",
+    value: "var(--tt-color-text-teal)",
+    colorValue: "#cdf3f0",
+    border: "var(--tt-color-text-teal-contrast)",
+  },
+  {
+    label: "Cyan color",
+    value: "var(--tt-color-text-cyan)",
+    colorValue: "#d7f0fa",
+    border: "var(--tt-color-text-cyan-contrast)",
   },
   {
     label: "Blue color",
@@ -62,16 +86,46 @@ export const TEXT_COLORS = [
     border: "var(--tt-color-text-blue-contrast)",
   },
   {
+    label: "Slate color",
+    value: "var(--tt-color-text-slate)",
+    colorValue: "#e7ebf0",
+    border: "var(--tt-color-text-slate-contrast)",
+  },
+  {
+    label: "Indigo color",
+    value: "var(--tt-color-text-indigo)",
+    colorValue: "#e6e7fb",
+    border: "var(--tt-color-text-indigo-contrast)",
+  },
+  {
     label: "Purple color",
     value: "var(--tt-color-text-purple)",
     colorValue: "#f3e8ff",
     border: "var(--tt-color-text-purple-contrast)",
   },
   {
+    label: "Violet color",
+    value: "var(--tt-color-text-violet)",
+    colorValue: "#eee6fb",
+    border: "var(--tt-color-text-violet-contrast)",
+  },
+  {
+    label: "Magenta color",
+    value: "var(--tt-color-text-magenta)",
+    colorValue: "#f9e4f7",
+    border: "var(--tt-color-text-magenta-contrast)",
+  },
+  {
     label: "Pink color",
     value: "var(--tt-color-text-pink)",
     colorValue: "#fcf1f6",
     border: "var(--tt-color-text-pink-contrast)",
+  },
+  {
+    label: "Rose color",
+    value: "var(--tt-color-text-rose)",
+    colorValue: "#ffe4ec",
+    border: "var(--tt-color-text-rose-contrast)",
   },
   {
     label: "Red color",
@@ -205,7 +259,7 @@ export function removeText(
   mode: TextMode = "mark",
 ): boolean {
   if (!editor || !editor.isEditable) return false;
-  if (!canColorText(editor, mode)) return false;
+  if (!canColorText(editor)) return false;
 
   if (mode === "mark") {
     return editor
@@ -243,7 +297,7 @@ export function shouldShowButton(props: {
   // }
 
   if (!editor.isActive("code")) {
-    return canColorText(editor, mode);
+    return canColorText(editor);
   }
 
   return true;
@@ -263,11 +317,11 @@ export function useColorText(config: UseColorTextConfig) {
   const { editor } = useTiptapEditor(providedEditor);
   const isMobile = useIsBreakpoint();
   const [isVisible, setIsVisible] = useState<boolean>(true);
-  const canColortextState = canColorText(editor, mode);
+  const canColortextState = canColorText(editor);
   const actualColor = textColor
     ? getTextColorValue(textColor, useColorValue)
     : textColor;
-  const isActive = isColortextActive(editor, actualColor, mode);
+  const isActive = isColortextActive(editor, actualColor);
 
   useEffect(() => {
     if (!editor) return;
@@ -286,7 +340,7 @@ export function useColorText(config: UseColorTextConfig) {
   }, [editor, hideWhenUnavailable, mode]);
 
   const handleColorText = useCallback(() => {
-    const canApply = canColorText(editor, mode);
+    const canApply = canColorText(editor);
     if (!editor || !canApply || !actualColor || !label) return false;
 
     const success = editor
@@ -328,14 +382,14 @@ export function useColorText(config: UseColorTextConfig) {
     //     .run();
 
     //   if (success) {
-    //     onApplied?.({ color: actualColor, label, mode });
+    //     onApplied?.({ color: actualColor, label });
     //   }
     //   return success;
     // }
   }, [actualColor, editor, label, onApplied, mode]);
 
   const handleRemovetext = useCallback(() => {
-    const success = removeText(editor, mode);
+    const success = removeText(editor);
     if (success) {
       onApplied?.({ color: "", label: "Remove text", mode });
     }

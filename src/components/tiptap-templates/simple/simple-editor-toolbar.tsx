@@ -6,7 +6,6 @@ import {
   ToolbarSeparator,
 } from "src/components/tiptap-ui-primitive/toolbar";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
 import { UndoRedoButton } from "src/components/tiptap-ui/undo-redo-button";
 import { ArrowLeftIcon } from "src/components/tiptap-icons/arrow-left-icon";
 import { HighlighterIcon } from "src/components/tiptap-icons/highlighter-icon";
@@ -76,6 +75,17 @@ export const MainToolbarContent = ({
           </Button>
         )}
         <Breadcrumbs pageId={activePageId} />
+        {/* <Separator orientation="vertical" /> */}
+
+        {view !== "home" && activePage && (
+          <PageCategorySelect
+            value={activePage.category}
+            onChange={(category) => {
+              if (activePageId)
+                mutateAsync({ id: activePageId, patch: { category } });
+            }}
+          />
+        )}
       </ToolbarGroup>
       <Spacer />
 
@@ -84,22 +94,14 @@ export const MainToolbarContent = ({
         {view !== "home" && activePage && (
           <>
             <EditedTimeButton page={activePage} />
-            <PageCategorySelect
-              value={activePage.category}
-              onChange={(category) => {
-                if (activePageId)
-                  mutateAsync({ id: activePageId, patch: { category } });
-              }}
-            />
+            <UndoRedoButton action="undo" />
+            <UndoRedoButton action="redo" />
+            <Separator orientation="vertical" />
           </>
         )}
-        <UndoRedoButton action="undo" />
-        <UndoRedoButton action="redo" />
-        <Separator orientation="vertical" />
         <ThemeToggle />
         <NotificationBell />
         <MorePopover onTriggerVersionHistory={onTriggerVersionHistory} />
-        <AvatarDemo />
       </ToolbarGroup>
     </>
   );

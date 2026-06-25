@@ -31,6 +31,8 @@ import { usePage } from "src/hooks/use-pages";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import { useDebouncedCallback } from "use-debounce";
+// NOTE: adjust this path to wherever you place template-choice-panel.tsx
+import { TemplateChoicePanel } from "./components/template-choice-panel";
 
 // Backdrop overlay for the centered modal
 function ModalBackdrop({ onClose }: { onClose?: () => void }) {
@@ -41,6 +43,22 @@ function ModalBackdrop({ onClose }: { onClose?: () => void }) {
       aria-hidden="true"
     />
   );
+}
+
+// Body is empty when nothing past the title node carries content.
+function isBodyEmpty(editor: Editor): boolean {
+  let hasBody = false;
+  editor.state.doc.forEach((node) => {
+    if (hasBody) return;
+    if (node.type.name === "title") return;
+    if (node.type.name === "paragraph") {
+      if (node.content.size > 0) hasBody = true;
+    } else {
+      // any non-paragraph block (heading, image, list, etc.) counts as content
+      hasBody = true;
+    }
+  });
+  return !hasBody;
 }
 
 const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
@@ -159,6 +177,27 @@ export function PageCenterView({
 
   const { editor: mainEditor } = useCurrentEditor();
 
+  // Show the blank/template chooser while the body is empty and not dismissed.
+  const [templateDismissed, setTemplateDismissed] = useState(false);
+  const [bodyEmpty, setBodyEmpty] = useState(true);
+
+  useEffect(() => {
+    if (!editor) return;
+    const check = () => setBodyEmpty(isBodyEmpty(editor));
+    check();
+    editor.on("update", check);
+    return () => {
+      editor.off("update", check);
+    };
+  }, [editor]);
+
+  // Reset the chooser when a different page loads — during render, no effect.
+  const [seenPageId, setSeenPageId] = useState(page?.id);
+  if (page?.id !== seenPageId) {
+    setSeenPageId(page?.id);
+    setTemplateDismissed(false);
+  }
+
   // One debounced save. The expensive work — getJSON() + stripPropertyPanels —
   // runs HERE, at flush, at most once per ~800ms of typing. The per-keystroke
   // handler just captures the title and reschedules. That deferral is the
@@ -266,6 +305,8 @@ export function PageCenterView({
 
   if (!page) return null;
 
+  const showTemplatePanel = bodyEmpty && !templateDismissed;
+
   return (
     <>
       <ModalBackdrop onClose={onClose} />
@@ -316,6 +357,15 @@ export function PageCenterView({
           <div>
             <EditorContent editor={editor} className="page-create-content" />
           </div>
+
+          {showTemplatePanel && (
+            <TemplateChoicePanel
+              page={page}
+              editor={editor}
+              onDismiss={() => setTemplateDismissed(true)}
+            />
+          )}
+
           <FloatingMenuMemo
             editor={editor}
             open={open}

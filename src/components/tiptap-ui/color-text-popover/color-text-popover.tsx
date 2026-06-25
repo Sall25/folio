@@ -100,6 +100,15 @@ export function ColorTextPopoverContent({
     "var(--tt-color-text-red)",
     "var(--tt-color-text-purple)",
     "var(--tt-color-text-yellow)",
+    "var(--tt-color-text-lime)",
+    "var(--tt-color-text-mint)",
+    "var(--tt-color-text-teal)",
+    "var(--tt-color-text-cyan)",
+    "var(--tt-color-text-slate)",
+    "var(--tt-color-text-indigo)",
+    "var(--tt-color-text-violet)",
+    "var(--tt-color-text-magenta)",
+    "var(--tt-color-text-rose)",
   ]),
   useColorValue = false,
 }: ColorTextPopoverContentProps) {
@@ -136,7 +145,15 @@ export function ColorTextPopoverContent({
     >
       <CardBody style={isMobile ? { padding: 0 } : {}}>
         <CardItemGroup orientation="horizontal">
-          <ButtonGroup orientation="horizontal">
+          <ButtonGroup
+            orientation="horizontal"
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 4,
+              maxWidth: 240,
+            }}
+          >
             {colors.map((color, index) => (
               <ColorTextButton
                 key={color.value}
@@ -149,9 +166,7 @@ export function ColorTextPopoverContent({
                 useColorValue={useColorValue}
               />
             ))}
-          </ButtonGroup>
-          <Separator />
-          <ButtonGroup orientation="horizontal">
+            <Separator />
             <Button
               onClick={handleRemovetext}
               aria-label="Remove text"
@@ -179,6 +194,15 @@ export function ColorTextPopover({
     "var(--tt-color-text-red)",
     "var(--tt-color-text-purple)",
     "var(--tt-color-text-yellow)",
+    "var(--tt-color-text-lime)",
+    "var(--tt-color-text-mint)",
+    "var(--tt-color-text-teal)",
+    "var(--tt-color-text-cyan)",
+    "var(--tt-color-text-slate)",
+    "var(--tt-color-text-indigo)",
+    "var(--tt-color-text-violet)",
+    "var(--tt-color-text-magenta)",
+    "var(--tt-color-text-rose)",
   ]),
   hideWhenUnavailable = false,
   useColorValue = false,

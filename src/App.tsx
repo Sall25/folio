@@ -9,6 +9,7 @@ import { ActivePageProvider } from "./components/tiptap-templates/simple/context
 import { PageViewProvider } from "./components/tiptap-templates/simple/context/page-view-provider";
 import { SearchProvider } from "./components/tiptap-templates/simple/context/search-provider";
 import { LibraryProvider } from "./components/tiptap-templates/simple/context/library-provider";
+import { TemplatesProvider } from "./components/tiptap-templates/simple/context/templates-provider";
 
 const client = new QueryClient();
 
@@ -18,16 +19,18 @@ function App() {
       <EditorLayoutProvider>
         <SearchProvider>
           <LibraryProvider>
-            <PageViewProvider>
-              <Router location={location} routes={routes}>
-                <ActivePageProvider>
-                  <EditorProvider>
-                    <SimpleEditorSidebar />
-                    <Outlet />
-                  </EditorProvider>
-                </ActivePageProvider>
-              </Router>
-            </PageViewProvider>
+            <TemplatesProvider>
+              <PageViewProvider>
+                <Router location={location} routes={routes}>
+                  <ActivePageProvider>
+                    <EditorProvider>
+                      <SimpleEditorSidebar />
+                      <Outlet />
+                    </EditorProvider>
+                  </ActivePageProvider>
+                </Router>
+              </PageViewProvider>
+            </TemplatesProvider>
           </LibraryProvider>
         </SearchProvider>
       </EditorLayoutProvider>

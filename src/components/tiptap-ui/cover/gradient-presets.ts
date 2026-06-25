@@ -96,4 +96,97 @@ export const GRADIENT_PRESETS: GradientPreset[] = [
     label: "Steel",
     value: "linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%)",
   },
+
+  // ── Highlight palette — uniform with --tt-color-highlight-* (theme-aware) ──
+  // Same color both stops so the cover matches the highlight token exactly.
+  {
+    label: "Highlight gray",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-gray) 0%, var(--tt-color-highlight-gray) 100%)",
+  },
+  {
+    label: "Highlight brown",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-brown) 0%, var(--tt-color-highlight-brown) 100%)",
+  },
+  {
+    label: "Highlight orange",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-orange) 0%, var(--tt-color-highlight-orange) 100%)",
+  },
+  {
+    label: "Highlight yellow",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-yellow) 0%, var(--tt-color-highlight-yellow) 100%)",
+  },
+  {
+    label: "Highlight lime",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-lime) 0%, var(--tt-color-highlight-lime) 100%)",
+  },
+  {
+    label: "Highlight green",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-green) 0%, var(--tt-color-highlight-green) 100%)",
+  },
+  {
+    label: "Highlight mint",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-mint) 0%, var(--tt-color-highlight-mint) 100%)",
+  },
+  {
+    label: "Highlight teal",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-teal) 0%, var(--tt-color-highlight-teal) 100%)",
+  },
+  {
+    label: "Highlight cyan",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-cyan) 0%, var(--tt-color-highlight-cyan) 100%)",
+  },
+  {
+    label: "Highlight blue",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-blue) 0%, var(--tt-color-highlight-blue) 100%)",
+  },
+  {
+    label: "Highlight slate",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-slate) 0%, var(--tt-color-highlight-slate) 100%)",
+  },
+  {
+    label: "Highlight indigo",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-indigo) 0%, var(--tt-color-highlight-indigo) 100%)",
+  },
+  {
+    label: "Highlight purple",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-purple) 0%, var(--tt-color-highlight-purple) 100%)",
+  },
+  {
+    label: "Highlight violet",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-violet) 0%, var(--tt-color-highlight-violet) 100%)",
+  },
+  {
+    label: "Highlight magenta",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-magenta) 0%, var(--tt-color-highlight-magenta) 100%)",
+  },
+  {
+    label: "Highlight pink",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-pink) 0%, var(--tt-color-highlight-pink) 100%)",
+  },
+  {
+    label: "Highlight rose",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-rose) 0%, var(--tt-color-highlight-rose) 100%)",
+  },
+  {
+    label: "Highlight red",
+    value:
+      "linear-gradient(135deg, var(--tt-color-highlight-red) 0%, var(--tt-color-highlight-red) 100%)",
+  },
 ];

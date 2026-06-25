@@ -316,14 +316,9 @@ export function DatabaseNodeView({
       </NodeViewWrapper>
     );
   }
-
-  if (!source) {
-    return null;
-  }
-
-  if (isLoading) {
-    return <DatabaseLoadingSkeleton />;
-  }
+if (isLoading || !source) {
+  return <DatabaseLoadingSkeleton />;
+}
 
   const onUpdateView = (patch: Partial<DatabaseView>) => {
     if (!activeView) return;
