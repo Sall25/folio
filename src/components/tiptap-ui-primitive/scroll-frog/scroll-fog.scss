@@ -1,0 +1,28 @@
+.scroll-fog {
+  position: sticky;
+  width: 100%; // stretch even inside flex containers with align-items: flex-start
+  height: var(--scroll-fog-height, 28px);
+  pointer-events: none;
+  z-index: 2;
+
+  &[data-edge="top"] {
+    top: 0;
+    // negative margin pulls it out of flow so it overlays rows, not pushes them
+    margin-bottom: calc(-1 * var(--scroll-fog-height, 28px));
+    background: linear-gradient(
+      to bottom,
+      var(--scroll-fog-color, transparent),
+      transparent
+    );
+  }
+
+  &[data-edge="bottom"] {
+    bottom: 0;
+    margin-top: calc(-1 * var(--scroll-fog-height, 28px));
+    background: linear-gradient(
+      to top,
+      var(--scroll-fog-color, transparent),
+      transparent
+    );
+  }
+}

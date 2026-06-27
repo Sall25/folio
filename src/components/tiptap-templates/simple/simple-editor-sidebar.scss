@@ -6,6 +6,8 @@
   --sidebar-text-secondary: var(--tt-gray-light-a-600);
   --sidebar-accent: #7c3aed;
   --sidebar-border-color: rgba(0, 0, 0, 0.08);
+  --sidebar-stroke-color: var(--sidebar-bg-color);
+  --sidebar-fog-color: rgba(249, 248, 245, 0.879);
 }
 
 .dark {
@@ -17,6 +19,8 @@
   --sidebar-text-color: #e4e4e4b7;
   --sidebar-accent: #a78bfa;
   --sidebar-border-color: var(--tt-border-color);
+  --sidebar-stroke-color: var(--sidebar-bg-color);
+  --sidebar-fog-color: #1f1e1ec4;
 }
 
 .sidebar {
@@ -384,4 +388,113 @@
 
 .name-initial {
   padding: 2px;
+}
+
+.sidebar-section__header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 2px 4px;
+  background: transparent;
+  border: none;
+  border-radius: var(--tt-radius-sm);
+  cursor: pointer;
+  transition: background 0.12s ease;
+  font-family: inherit;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+  }
+
+  .sidebar-section__label {
+    cursor: pointer;
+    font-weight: 500;
+    font-family: inherit;
+  }
+}
+
+.sidebar-section__chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sidebar-text-secondary);
+  opacity: 0.7;
+}
+
+.sidebar-section__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+  padding: 5px 6px;
+  font-size: 9.5px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--tt-brand-color-400);
+  background: color-mix(in srgb, var(--tt-brand-color-400) 12%, transparent);
+  border-radius: 999px;
+
+  svg {
+    display: block;
+  }
+}
+
+.sidebar-showcase-empty {
+  display: flex;
+  flex-direction: row; // icon left, text right
+  align-items: flex-start;
+  gap: 8px;
+  margin: 2px 2px 0;
+  padding: 4px 4px 2px;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+
+  transition: background-color 0.15s ease;
+
+  &:hover{
+    background-color: var(--tt-gray-light-a-50);
+    .dark &{
+       background-color: var(--tt-gray-dark-a-50);
+    }
+  }
+
+  &__icon {
+    flex: 0 0 auto;
+    margin-top: 1px; // nudge to align with the title's first line
+    color: var(--tt-brand-color-400);
+    opacity: 0.9;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0; // lets the description wrap inside the narrow sidebar
+  }
+
+  &__title {
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 600;
+    color: var(--tt-text-color);
+  }
+
+  &__desc {
+    font-size: 11.5px;
+    line-height: 1.45;
+    font-weight: 400;
+    color: var(--tt-text-secondary);
+  }
+
+  &__hint {
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: var(--sidebar-text-secondary);
+    opacity: 0.75;
+  }
 }

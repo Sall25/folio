@@ -1,5 +1,3 @@
-
-
 :root {
   --slash-item-border-color: var(--tt-gray-light-100);
   --slash-item-separator-color: var(--tt-gray-light-a-100);
@@ -9,8 +7,8 @@
   --slash-item-separator-color: var(--tt-gray-dark-a-100);
 }
 
-/* Soft landing keyframes */
-
+/* Soft landing keyframes.
+   SHARED: the emoji and mention menus animate with these — do not remove. */
 @keyframes slashFadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -26,20 +24,16 @@
 }
 
 .slash-menu {
-  justify-content: left;
-  align-items: flex-start;
-  min-width: 14.8rem;
+  /* The Card is now a flex column: [scrolling list] + [pinned footer].
+     Scroll moved to .slash-menu__scroll so the footer stays put. */
+  display: flex;
+  flex-direction: column;
+  min-width: 17rem;
+  max-width: 22rem;
   max-height: 350px;
-  gap: 3px;
-  padding: 8px 10px;
-  overflow-y: scroll;
   margin: 6px -12px;
-
-  overscroll-behavior: contain;
-  scroll-padding: 6px;
-
-  scrollbar-width: thin;
-  scrollbar-color: var(--tt-scrollbar-color) transparent;
+  padding: 0 !important;              /* inner regions own their padding now */
+  overflow: hidden;        /* clip list + footer to the Card's rounded corners */
 
   /* Anchor the scale to where the menu "grows from" */
   transform-origin: top left;
@@ -48,21 +42,208 @@
   opacity: 0;
   z-index: 400;
 
- &[data-slash-menu-open="true"] {
-  animation:
-    slashFadeIn     150ms linear forwards,
-    slashSlideScale 150ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  &[data-slash-menu-open="true"] {
+    animation:
+      slashFadeIn     150ms linear forwards,
+      slashSlideScale 150ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
+  /* ── scrolling list region ── */
+  .slash-menu__scroll {
+    width: 100%;
+    position: relative;      /* offsetParent for the auto-scroll math */
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    padding: 8px 10px;
+    // background-color: rgba(0, 255, 255, 0.181);
+    overflow-y: auto;
+
+    margin: 0;
+
+    overscroll-behavior: contain;
+    scroll-padding: 6px;
+
+    scrollbar-width: thin;
+    scrollbar-color: var(--tt-scrollbar-color) transparent;
+
+  }
+
+  /* ── pinned footer ── */
+  .slash-menu__footer {
+    width: 100%;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 6px 10px;
+    border-top: 1px solid var(--tt-border-color);
+  }
+
+  .slash-menu__close {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: none;
+    border-radius: var(--tt-radius-sm, 6px);
+    background: transparent;
+    color: var(--tt-text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition:
+      background 0.08s ease,
+      color 0.08s ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--tt-text-primary) 7%, transparent);
+      color: var(--tt-text-primary);
+    }
+  }
+
+  .slash-menu__kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    font-family: inherit;
+    font-size: 11px;
+    line-height: 1;
+    color: var(--tt-text-secondary);
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+    border: 1px solid var(--slash-item-border-color);
+    border-radius: 4px;
+  }
+
+  /* ───────────────────────────────────────────────────────────────
+     Notion-style styling for the slash command dropdown.
+     All scoped under .slash-menu so the generic .slash-item /
+     .slash-color-swatch / keyframes shared with emoji & mention
+     stay untouched.
+     ─────────────────────────────────────────────────────────────── */
+
+  /* section headers ("Style", "Insert", "Upload") */
+  .slash-title {
+    width: 100%;
+    padding: 8px 6px 4px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--tt-text-secondary);
+    user-select: none;
+  }
+  .slash-menu__scroll > :first-child .slash-title {
+    padding-top: 2px;
+  }
+
+  /* TipTap Separator primitive between groups */
+  .tiptap-separator {
+    margin: 5px 4px;
+    background: var(--slash-item-separator-color);
+  }
+
+  /* command rows — only layout extras here; alignment stays on the
+     generic .slash-item rule below (which mention also relies on) */
+  .slash-item {
+    gap: 10px;
+    width: 100%;
+    height: auto;
+    min-height: 32px;
+    padding: 7px 8px;
+    border-radius: var(--tt-radius-md, 8px);
+    transition: background 0.08s ease;
+
+    &:hover,
+    &[data-active-state="on"] {
+      background: color-mix(in srgb, var(--tt-text-primary) 7%, transparent);
+    }
+  }
+
+  /* leading icon tile */
+  .slash-item__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    border: 1px solid var(--slash-item-border-color);
+    background: color-mix(in srgb, var(--tt-text-primary) 3.5%, transparent);
+
+    .tiptap-button-icon {
+      width: 17px;
+      height: 17px;
+      color: var(--tt-text-primary);
+      opacity: 0.82;
+    }
+
+    /* text-color "A" — inline color sets the glyph color */
+    .slash-text-swatch {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1;
+    }
+  }
+
+  /* color chips read better without the tile box around them */
+  .slash-item__icon--bare {
+    border: none;
+    background: transparent;
+  }
+
+  /* title + description column */
+  .slash-item__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .slash-item__title {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.25;
+    color: var(--tt-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .slash-item__desc {
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--tt-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
-.slash-item{
+/* ── generic / shared (kept as the original had them) ── */
+
+/* mention reuses this; emoji historically did too (see the commented
+   className in emoji-list.tsx). Leave the alignment here, unscoped. */
+.slash-item {
   justify-content: flex-start !important;
   align-items: center !important;
   //font-family: var(--font-ui);
 }
 
-.slash-item-separator{
+.slash-item-separator {
   width: fit-content;
 }
 
@@ -73,4 +254,3 @@
   flex-shrink: 0;
   border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
 }
-

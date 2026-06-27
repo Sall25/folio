@@ -77,7 +77,7 @@ export function PageItem({
 
   return (
     <div className="page-item-tree">
-      <Spacer orientation="vertical" size={1.4} />
+      <Spacer orientation="vertical" size={1.1} />
       <CardItemGroup
         orientation="horizontal"
         className={`page-item ${isActive ? "active" : ""}`}
@@ -90,14 +90,18 @@ export function PageItem({
           <PageItemIcon
             cover={page.cover}
             styles={{
-              width: 18,
-              height: 18,
+              width: 16,
+              height: 16,
               opacity: 1,
-              fontSize: 16,
+              fontSize: 16.8,
+              color: "inherit",
+              // padding: 4,
+              // borderRadius: 5,
+              // background: "var(--tt-button-active-bg-color)",
             }}
           />
         )}
-        <Spacer orientation="horizontal" size={0.5} />
+        <Spacer orientation="horizontal" size={1.2} />
 
         {editing ? (
           <TextareaAutosize

@@ -1,56 +1,42 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
+import "./breadcrumb-node.scss";
 import { BreadcrumbNodeView } from "./breadcrumb-node-view";
-import type { ID } from "src/types";
 
-export interface BreadcrumbItem {
-  label: string;
-  iconName?: string;
-  locked?: boolean;
-  pageId?: ID;
+export interface BreadcrumbOptions {
+  HTMLAttributes: Record<string, unknown>;
 }
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     breadcrumb: {
-      insertBreadcrumb: (items: BreadcrumbItem[]) => ReturnType;
+      /** Insert a breadcrumb block showing the current page's location. */
+      insertBreadcrumb: () => ReturnType;
     };
   }
 }
 
-export const BreadcrumbNode = Node.create({
+export const BreadcrumbNode = Node.create<BreadcrumbOptions>({
   name: "breadcrumb",
   group: "block",
   atom: true,
-  selectable: true,
+  selectable: false,
   draggable: false,
 
-  addAttributes() {
-    return {
-      items: {
-        default: [],
-        parseHTML: (el) => {
-          try {
-            return JSON.parse(el.getAttribute("data-items") ?? "[]");
-          } catch {
-            return [];
-          }
-        },
-        renderHTML: (attrs) => ({
-          "data-items": JSON.stringify(attrs.items),
-        }),
-      },
-    };
+  addOptions() {
+    return { HTMLAttributes: {} };
   },
 
   parseHTML() {
-    return [{ tag: "div[data-type='breadcrumb']" }];
+    return [{ tag: 'div[data-type="breadcrumb"]' }];
   },
 
   renderHTML({ HTMLAttributes }) {
     return [
       "div",
-      mergeAttributes(HTMLAttributes, { "data-type": "breadcrumb" }),
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+        "data-type": "breadcrumb",
+      }),
     ];
   },
 
@@ -61,13 +47,9 @@ export const BreadcrumbNode = Node.create({
   addCommands() {
     return {
       insertBreadcrumb:
-        (items) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: { items },
-          });
-        },
+        () =>
+        ({ commands }) =>
+          commands.insertContent({ type: this.name }),
     };
   },
 });

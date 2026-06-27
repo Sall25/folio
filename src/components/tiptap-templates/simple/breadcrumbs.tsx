@@ -1,7 +1,8 @@
-import { Fragment } from "react";
-import { ChevronRight, MoreHorizontal } from "lucide-react";
-import type { Page, ID } from "src/types";
-import { useBreadcrumbs } from "src/hooks/use-pages";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { MoreHorizontal } from "lucide-react";
+import type { Page, ID, PageCategory } from "src/types";
+import { useBreadcrumbs, usePagesByCategory } from "src/hooks/use-pages";
 import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 import "./breadcrumbs.scss";
@@ -9,6 +10,14 @@ import { Bone } from "./components/skeletons";
 
 // how many crumbs before we collapse the middle
 const MAX_VISIBLE = 4;
+
+function Sep() {
+  return (
+    <span className="breadcrumbs__sep" aria-hidden="true">
+      /
+    </span>
+  );
+}
 
 export function Breadcrumbs({ pageId }: { pageId: ID | null }) {
   const { data: chain, isPending } = useBreadcrumbs(pageId);
@@ -38,9 +47,10 @@ export function Breadcrumbs({ pageId }: { pageId: ID | null }) {
               page={page}
               isLast={isLast}
               onClick={isLast ? undefined : () => setActivePageId(page.id)}
+              onNavigate={setActivePageId}
             />
             {/* separator + optional ellipsis */}
-            {!isLast && <ChevronRight size={14} className="breadcrumbs__sep" />}
+            {!isLast && <Sep />}
             {i === ellipsisAfter && (
               <>
                 <span
@@ -49,7 +59,7 @@ export function Breadcrumbs({ pageId }: { pageId: ID | null }) {
                 >
                   <MoreHorizontal size={14} />
                 </span>
-                <ChevronRight size={14} className="breadcrumbs__sep" />
+                <Sep />
               </>
             )}
           </Fragment>
@@ -63,12 +73,27 @@ function Crumb({
   page,
   isLast,
   onClick,
+  onNavigate,
 }: {
   page: Page;
   isLast: boolean;
   onClick?: () => void;
+  onNavigate: (id: ID) => void;
 }) {
   const label = page.title || "Untitled";
+  const wrapRef = useRef<HTMLSpanElement>(null);
+  const [open, setOpen] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+
+  const openNow = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpen(true);
+  };
+  const closeSoon = () => {
+    closeTimer.current = setTimeout(() => setOpen(false), 120);
+  };
 
   const content = (
     <>
@@ -77,26 +102,132 @@ function Crumb({
     </>
   );
 
-  if (isLast || !onClick) {
-    // current page — not a link
-    return (
+  const crumbEl =
+    isLast || !onClick ? (
       <span
         className="breadcrumbs__crumb breadcrumbs__crumb--current"
         aria-current="page"
       >
         {content}
       </span>
+    ) : (
+      <button
+        type="button"
+        className="breadcrumbs__crumb breadcrumbs__crumb--link"
+        onClick={onClick}
+      >
+        {content}
+      </button>
     );
-  }
 
   return (
-    <button
-      type="button"
-      className="breadcrumbs__crumb breadcrumbs__crumb--link"
-      onClick={onClick}
+    <span
+      ref={wrapRef}
+      className="breadcrumbs__crumb-wrap"
+      onMouseEnter={openNow}
+      onMouseLeave={closeSoon}
     >
-      {content}
-    </button>
+      {crumbEl}
+      {open && (
+        <CrumbDropdown
+          category={page.category}
+          currentId={page.id}
+          anchorRef={wrapRef}
+          onHoverEnter={openNow}
+          onHoverLeave={closeSoon}
+          requestClose={() => setOpen(false)}
+          onPick={(id) => {
+            setOpen(false);
+            onNavigate(id);
+          }}
+        />
+      )}
+    </span>
+  );
+}
+
+function CrumbDropdown({
+  category,
+  currentId,
+  anchorRef,
+  onHoverEnter,
+  onHoverLeave,
+  requestClose,
+  onPick,
+}: {
+  category: PageCategory;
+  currentId: ID;
+  anchorRef: React.RefObject<HTMLElement | null>;
+  onHoverEnter: () => void;
+  onHoverLeave: () => void;
+  requestClose: () => void;
+  onPick: (id: ID) => void;
+}) {
+  const { data: pages } = usePagesByCategory(category);
+  const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    const el = anchorRef.current;
+    if (el) {
+      const r = el.getBoundingClientRect();
+      setPos({ top: r.bottom + 4, left: r.left });
+      inputRef.current?.focus();
+    }
+    // fixed positioning doesn't follow scroll — close instead of drifting
+    const onScroll = () => requestClose();
+    window.addEventListener("scroll", onScroll, true);
+    return () => window.removeEventListener("scroll", onScroll, true);
+  }, [anchorRef, requestClose]);
+
+  const q = query.trim().toLowerCase();
+  const list = (pages ?? []).filter((p) =>
+    (p.title || "Untitled").toLowerCase().includes(q),
+  );
+
+  if (!pos) return null;
+
+  return createPortal(
+    <div
+      className="breadcrumbs__dropdown"
+      style={{ position: "fixed", top: pos.top, left: pos.left }}
+      onMouseEnter={onHoverEnter}
+      onMouseLeave={onHoverLeave}
+    >
+      <div className="breadcrumbs__dropdown-search">
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={`Search ${category.toLowerCase()}…`}
+        />
+      </div>
+
+      <div className="breadcrumbs__dropdown-list">
+        {list.length === 0 ? (
+          <div className="breadcrumbs__dropdown-empty">No pages</div>
+        ) : (
+          list.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => onPick(p.id)}
+              className={`breadcrumbs__dropdown-item${
+                p.id === currentId ? " breadcrumbs__dropdown-item--current" : ""
+              }`}
+            >
+              <PageItemIcon
+                cover={p.cover}
+                styles={{ width: 16, height: 16 }}
+              />
+              <span>{p.title || "Untitled"}</span>
+            </button>
+          ))
+        )}
+      </div>
+    </div>,
+    document.body,
   );
 }
 

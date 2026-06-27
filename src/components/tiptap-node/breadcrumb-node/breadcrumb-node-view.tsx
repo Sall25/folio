@@ -1,14 +1,17 @@
 import { NodeViewWrapper } from "@tiptap/react";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
-import "./page-breadcrumb.scss";
-import { Breadcrumbs } from "src/components/tiptap-templates/simple/breadcrumbs";
+import { PageBreadcrumb } from "src/components/tiptap-ui/page-breadcrumb/page-breadcrumb";
 
+// Non-editable view — reuses the app-layer container, which derives the
+// active page's ancestry and renders the <Breadcrumb> primitive.
 export function BreadcrumbNodeView() {
-  const { activePageId } = useActivePage();
-
   return (
-    <NodeViewWrapper contentEditable={false}>
-      <Breadcrumbs pageId={activePageId} />
+    <NodeViewWrapper
+      as="div"
+      className="breadcrumb-node"
+      contentEditable={false}
+      data-type="breadcrumb"
+    >
+      <PageBreadcrumb />
     </NodeViewWrapper>
   );
 }

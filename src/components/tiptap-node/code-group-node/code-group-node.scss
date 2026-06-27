@@ -1,0 +1,57 @@
+.code-group {
+  margin: 10px 0;
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md, 8px);
+  overflow: hidden;
+
+  &__headers {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--tt-border-color);
+
+    .tab-list {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  &__copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    padding: 4px 8px;
+    border: none;
+    border-radius: var(--tt-radius-sm, 6px);
+    background: transparent;
+    color: var(--tt-text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition:
+      background 0.08s ease,
+      color 0.08s ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--tt-text-primary) 7%, transparent);
+      color: var(--tt-text-primary);
+    }
+  }
+
+  // the active panel renders flush under the header
+  &__panels {
+    display: block;
+  }
+
+  &__item {
+    // Reset the inner code block so it sits flush inside the card.
+    // Adjust these selectors to match your code block's markup (pre / .cm-editor).
+    pre,
+    .cm-editor {
+      margin: 0;
+      border: none;
+      border-radius: 0;
+    }
+  }
+}

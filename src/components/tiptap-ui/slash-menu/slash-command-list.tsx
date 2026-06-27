@@ -10,6 +10,7 @@ import type { SlashCommand as SlashItem } from "./slash-commands";
 import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { makeChildPage } from "src/utils/make-page";
+import { Badge } from "src/components/tiptap-ui-primitive/badge";
 
 type Props = SuggestionProps<SlashItem> & {
   selectedIndex?: number;
@@ -26,7 +27,10 @@ export default function SlashList(props: Props) {
   const selectableItems = useMemo(() => items.filter(isSelectable), [items]);
 
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // containerRef → the Card (what useMenuNavigation expects).
+  // scrollRef → the inner scrolling region (used for auto-scroll math).
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const { selectedIndex } = useMenuNavigation({
     editor: props.editor,
@@ -92,7 +96,7 @@ export default function SlashList(props: Props) {
 
   useEffect(() => {
     const el = itemRefs.current[selectedFullIndex];
-    const container = containerRef.current;
+    const container = scrollRef.current;
     if (!el || !container) return;
 
     const elTop = el.offsetTop;
@@ -121,71 +125,102 @@ export default function SlashList(props: Props) {
       aria-label="Slash commands"
       data-slash-menu-open={menuVisible}
     >
-      {items.map((item, i) => {
-        const selectable = isSelectable(item);
-        const isActive = selectedFullIndex === i;
-        const Icon = item.icon;
-        const highlighted =
-          item.isActive?.(props.editor) || selectedFullIndex === i;
+      <div className="slash-menu__scroll" ref={scrollRef}>
+        {items.map((item, i) => {
+          const selectable = isSelectable(item);
+          const isActive = selectedFullIndex === i;
+          const Icon = item.icon;
+          const isColor = !!(item.highlightColor || item.textColor);
+          const highlighted =
+            item.isActive?.(props.editor) || selectedFullIndex === i;
 
-        return (
-          <ButtonGroup
-            style={{ minWidth: "200px" }}
-            orientation="vertical"
-            key={item.id}
-            ref={(node) => {
-              if (selectable) itemRefs.current[i] = node;
-            }}
-            role={selectable ? "option" : undefined}
-            aria-selected={selectable ? isActive : undefined}
-            onMouseDown={(e) => {
-              if (!selectable) return;
-              e.preventDefault();
-              onClickItem?.(item);
-            }}
-          >
-            {item.type === "title" && (
-              <CardGroupLabel className="slash-title">
-                {item.title}
-              </CardGroupLabel>
-            )}
+          return (
+            <ButtonGroup
+              style={{ minWidth: "200px", width: "100%" }}
+              orientation="vertical"
+              key={item.id}
+              ref={(node) => {
+                if (selectable) itemRefs.current[i] = node;
+              }}
+              role={selectable ? "option" : undefined}
+              aria-selected={selectable ? isActive : undefined}
+              onMouseDown={(e) => {
+                if (!selectable) return;
+                e.preventDefault();
+                onClickItem?.(item);
+              }}
+            >
+              {item.type === "title" && (
+                <CardGroupLabel className="slash-title">
+                  {item.title}
+                </CardGroupLabel>
+              )}
 
-            {item.type === "separator" && (
-              <Separator orientation="horizontal" />
-            )}
+              {item.type === "separator" && (
+                <Separator orientation="horizontal" />
+              )}
 
-            {item.type === "command" && (
-              <Button
-                role="menuitem"
-                variant="ghost"
-                // data-highlighted={highlighted}
-                data-active-state={highlighted ? "on" : "off"}
-                className="slash-item"
-              >
-                {item.highlightColor ? (
+              {item.type === "command" && (
+                <Button
+                  role="menuitem"
+                  variant="ghost"
+                  // data-highlighted={highlighted}
+                  data-active-state={highlighted ? "on" : "off"}
+                  className="slash-item"
+                >
                   <span
-                    className="tiptap-button-icon slash-color-swatch"
-                    style={{ backgroundColor: item.highlightColor }}
-                  />
-                ) : item.textColor ? (
-                  <span
-                    style={{
-                      color: item.textColor,
-                    }}
+                    className={`slash-item__icon${
+                      isColor ? " slash-item__icon--bare" : ""
+                    }`}
                   >
-                    A
+                    {item.highlightColor ? (
+                      <span
+                        className="slash-color-swatch"
+                        style={{ backgroundColor: item.highlightColor }}
+                      />
+                    ) : item.textColor ? (
+                      <span
+                        className="slash-text-swatch"
+                        style={{ color: item.textColor }}
+                      >
+                        A
+                      </span>
+                    ) : (
+                      Icon && <Icon className="tiptap-button-icon" />
+                    )}
                   </span>
-                ) : (
-                  Icon && <Icon className="tiptap-button-icon" />
-                )}
 
-                {/* {Icon && <Icon className="tiptap-button-icon" />} */}
-                <span className="tiptap-button-text">{item.title}</span>
-              </Button>
-            )}
-          </ButtonGroup>
-        );
-      })}
+                  <span className="slash-item__text">
+                    <span className="slash-item__title">{item.title}</span>
+                    {item.description && (
+                      <span className="slash-item__desc">
+                        {item.description}
+                      </span>
+                    )}
+                  </span>
+                </Button>
+              )}
+            </ButtonGroup>
+          );
+        })}
+      </div>
+
+      <div className="slash-menu__footer">
+        <Button
+          type="button"
+          className="slash-menu__close"
+          aria-label="Close (Esc)"
+          onMouseDown={(e) => {
+            // preventDefault keeps editor focus so onClose can exit cleanly
+            e.preventDefault();
+            onClose?.();
+          }}
+        >
+          <span className="tiptap-button-text">Close</span>
+          <Badge>Esc</Badge>
+          {/* <kbd className="slash-menu__kbd">Esc</kbd> */}
+        </Button>
+      </div>
     </Card>
   );
 }

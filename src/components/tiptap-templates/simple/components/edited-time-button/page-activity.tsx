@@ -47,12 +47,12 @@ export default function PageActivity({ page, authorName }: PageActivityProps) {
       style={{
         position: "absolute",
         top: "calc(100% + 6px)",
-        right: 0,
+        right: -30,
         minWidth: 280,
         background: "var(--tt-card-bg-color)",
         border: "1px solid var(--tt-border-color)",
         borderRadius: "var(--tt-radius-lg)",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+        boxShadow: "var(--tt-shadow-elevated-sm)",
         overflow: "hidden",
         zIndex: 50,
       }}

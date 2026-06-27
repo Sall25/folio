@@ -57,6 +57,12 @@ import { RecordPropertyPanelNode } from "../record-property-panel-node";
 import { MathInlineNode } from "src/components/tiptap-node/math-inline-node";
 import { MathBlockNode } from "src/components/tiptap-node/math-block-node";
 import { FileNode } from "src/components/tiptap-node/file-node";
+import { BreadcrumbNode } from "src/components/tiptap-node/breadcrumb-node";
+import { Tab, Tabs } from "src/components/tiptap-node/tabs-node";
+import {
+  CodeGroup,
+  CodeGroupItem,
+} from "src/components/tiptap-node/code-group-node";
 
 export function useEditorExtensions(
   refsRef: React.RefObject<EditorExtensionRefs>,
@@ -188,6 +194,11 @@ export function useEditorExtensions(
       RecordPropertyPanelNode,
       MathInlineNode,
       MathBlockNode,
+      BreadcrumbNode,
+      Tabs,
+      Tab,
+      CodeGroup,
+      CodeGroupItem,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

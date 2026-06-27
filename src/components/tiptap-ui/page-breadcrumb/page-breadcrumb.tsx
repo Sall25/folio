@@ -1,42 +1,58 @@
-import { Lock } from "lucide-react";
-import type { PageBreadcrumbProps } from "./types";
+import { useMemo } from "react";
+import type { PageCategory, PageTreeNode, ID, Page } from "src/types";
+import { usePageTree } from "src/hooks/use-pages";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import {
+  Breadcrumb,
+  type BreadcrumbItem,
+} from "src/components/tiptap-ui-primitive/breadcrumb/breadcrumb";
 
-import "./page-breadcrumb.scss";
-import { Button } from "src/components/tiptap-ui-primitive/button";
+/**
+ * App-layer wrapper around the <Breadcrumb> primitive. Derives the active
+ * page's root → current chain from the page tree and wires navigation.
+ *
+ * NOTE: adjust the two context import paths to your project, and see the
+ * `icon` line below to render page emojis/icons.
+ */
+export function PageBreadcrumb() {
+  const { tree } = usePageTree();
+  const { activePageId, setActivePageId } = useActivePage();
 
-export function PageBreadcrumb({ items }: PageBreadcrumbProps) {
-  return (
-    <div className="page-breadcrumb">
-      {items.map((item, i) => (
-        <span key={i} className="page-breadcrumb__item">
-          {i > 0 && <span className="page-breadcrumb__separator">/</span>}
-          <Button
-            variant="ghost"
-            className={`page-breadcrumb__label ${i === items.length - 1 ? "page-breadcrumb__label--active" : ""}`}
-            onClick={item.onClick}
-          >
-            {item.icon && (
-              <span className="tiptap-button-icon" style={{ marginRight: 5 }}>
-                {item.icon}
-              </span>
-            )}
-            {item.label}{" "}
-            {i === items.length - 1 && item.locked && (
-              <span
-                className="tiptap-button-text"
-                style={{
-                  display: "flex",
-                  gap: 5,
-                  fontFamily: "'Inter', sans-serif",
-                }}
-              >
-                <Lock size={14} className="page-breadcrumb__lock" />
-                <span>locked</span>
-              </span>
-            )}
-          </Button>
-        </span>
-      ))}
-    </div>
-  );
+  const items: BreadcrumbItem[] = useMemo(() => {
+    if (!tree || !activePageId) return [];
+
+    // walk every category once, recording parent links + page objects
+    const parentOf = new Map<ID, ID | null>();
+    const pageOf = new Map<ID, Page>();
+    const walk = (nodes: PageTreeNode[], parent: ID | null) => {
+      for (const n of nodes) {
+        parentOf.set(n.page.id, parent);
+        pageOf.set(n.page.id, n.page);
+        walk(n.children, n.page.id);
+      }
+    };
+    (Object.keys(tree) as PageCategory[]).forEach((cat) =>
+      walk(tree[cat] ?? [], null),
+    );
+
+    // climb from the active page up to the root
+    const chain: Page[] = [];
+    let cur: ID | null | undefined = activePageId;
+    while (cur) {
+      const p = pageOf.get(cur);
+      if (!p) break;
+      chain.unshift(p);
+      cur = parentOf.get(cur) ?? null;
+    }
+
+    return chain.map((p) => ({
+      id: p.id,
+      title: p.title || "Untitled",
+      // icon: <render p.<your-icon-field> here, e.g. an emoji or PageIcon />,
+    }));
+  }, [tree, activePageId]);
+
+  if (items.length === 0) return null;
+
+  return <Breadcrumb items={items} onNavigate={(id) => setActivePageId(id)} />;
 }

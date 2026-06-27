@@ -1,0 +1,29 @@
+.section-skeleton {
+  display: block;
+
+  // space between stacked section skeletons
+  & + & {
+    margin-top: 20px;
+  }
+
+  &__label {
+    display: block;
+    margin: 0 0 8px 8px; // align with the rows' padding-left
+  }
+
+  &__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.sidebar-skeleton {
+  padding-top: 12px;
+}

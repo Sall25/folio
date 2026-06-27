@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 
 export const ICON_COLORS = [
-  { name: "Default", value: "var(--tt-text-color)" },
+  { name: "Default", value: "var(--icon-default-color)" },
   { name: "Gray", value: "#888780" },
   { name: "Brown", value: "#9f6b53" },
   { name: "Orange", value: "#d9730d" },

@@ -6,6 +6,8 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import type { Page } from "src/types";
 import PageActivity from "./page-activity";
+import { Button } from "src/components/tiptap-ui-primitive/button";
+import { Clock } from "lucide-react";
 
 // Recent → relative; older → absolute date. Mirrors useRecentPages' fallback.
 function formatRelative(ts: number): string {
@@ -52,22 +54,9 @@ export default function EditedTimeButton({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button
+        <Button
+          variant="ghost"
           onClick={onClick}
-          style={{
-            padding: "4px 8px",
-            borderRadius: 6,
-            border: "none",
-            fontSize: 13.5,
-            lineHeight: 1.4,
-            cursor: onClick ? "pointer" : "default",
-            background: active ? "var(--tt-card-bg-color)" : "transparent",
-            color: "var(--tt-text-color)",
-            whiteSpace: "nowrap",
-            transition: "background 0.12s",
-            fontFamily:
-              'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"',
-          }}
           onMouseEnter={(e) =>
             onClick &&
             (e.currentTarget.style.background = "var(--tt-card-bg-color)")
@@ -78,10 +67,14 @@ export default function EditedTimeButton({
               : "transparent")
           }
         >
-          Edited {formatRelative(editedAt)}
-        </button>
+          <Clock className="tiptap-button-icon" />
+          <span className="tiptap-button-text">
+            {" "}
+            Edited {formatRelative(editedAt)}
+          </span>
+        </Button>
       </PopoverTrigger>
-      <PopoverContent>
+      <PopoverContent align="end">
         <PageActivity page={page} authorName="Souleymane Sall" />
       </PopoverContent>
     </Popover>

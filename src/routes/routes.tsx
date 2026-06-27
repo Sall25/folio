@@ -9,6 +9,10 @@ export const routes = [
     element: <SimpleEditor view="home" />,
   },
   {
+    path: "/library/:tab",
+    element: <SimpleEditor view="library" />,
+  },
+  {
     path: "page/:pageId",
     element: <SimpleEditor view="page" />,
   },

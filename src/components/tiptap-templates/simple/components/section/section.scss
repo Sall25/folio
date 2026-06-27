@@ -1,0 +1,23 @@
+
+.sidebar-section-menu__caption {
+  padding: 6px 10px 2px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--sidebar-text-secondary, var(--tt-text-secondary));
+  opacity: 0.7;
+}
+
+// Make menu rows flex so a trailing check can right-align. Matches the existing
+// icon-then-text look; only layout props are set so existing padding/colors win.
+.sidebar-section-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-section-menu__check {
+  margin-left: auto;
+  color: var(--tt-brand-color-400);
+}

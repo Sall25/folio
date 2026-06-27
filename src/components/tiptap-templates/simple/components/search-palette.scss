@@ -41,7 +41,7 @@
 .sp-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 200;
   background: var(--background-drop);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
@@ -55,15 +55,15 @@
 
 .sp {
   position: fixed;
-  z-index: 101;
+  z-index: 201;
 
   // Anchored toward the top — the command-palette convention
   top: 96px;
   left: 50%;
   transform: translateX(-50%);
 
-  width: min(860px, 92vw);
-  max-height: min(80vh, 720px);
+  width: min(960px, 100vw);
+  max-height: min(90vh, 920px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -245,5 +245,18 @@
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+.preview-panel,
+.sp-results{
+   &:not(:hover) {
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  &:hover {
+    scrollbar-width: thin;
   }
 }

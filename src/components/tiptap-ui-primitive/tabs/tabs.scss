@@ -1,0 +1,118 @@
+.tab-list {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tab-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  max-width: 200px;
+  padding: 5px 10px;
+  border-radius: var(--tt-radius-sm, 6px);
+  color: var(--tt-text-secondary);
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+  user-select: none;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background 0.08s ease,
+    color 0.08s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--tt-brand-color-400) 50%, transparent);
+  }
+
+  &.is-active {
+    color: var(--tt-text-primary);
+    font-weight: 500;
+    background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+
+    svg,
+    img {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__input {
+    width: 6em;
+    border: none;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+  }
+
+  &__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+    opacity: 0.55;
+    transition:
+      opacity 0.08s ease,
+      background 0.08s ease;
+
+    &:hover {
+      opacity: 1;
+      background: color-mix(in srgb, var(--tt-text-primary) 12%, transparent);
+    }
+  }
+}
+
+.tab-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--tt-radius-sm, 6px);
+  background: transparent;
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+  transition:
+    background 0.08s ease,
+    color 0.08s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 7%, transparent);
+    color: var(--tt-text-primary);
+  }
+}

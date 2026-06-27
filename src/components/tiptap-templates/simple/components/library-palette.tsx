@@ -1,13 +1,13 @@
 import {
   FileText,
   Lock,
-  File,
   CircleUser,
   Clock,
   Clock1,
   Star,
   Users,
   PanelRight,
+  Users2,
 } from "lucide-react";
 import type { ID, Page, PageCategory } from "src/types";
 import { PageItemIcon } from "../page-item-icon";
@@ -19,12 +19,12 @@ import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
 import { useState, useEffect, useMemo } from "react";
 import "./library-palette.scss";
-import { useLibrary } from "../context/library-context";
 import { useChildPages, usePages } from "src/hooks/use-pages";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { makePage } from "src/utils/make-page";
+import { useLibrary } from "../context/library-context";
 
-type LibraryTab = "Recents" | "Favorites" | "Shared" | "Private";
+export type LibraryTab = Exclude<PageCategory, "Template"> | "Recents";
 
 function formatRelativeTime(dateStr: number | null | undefined): string {
   if (!dateStr) return "—";
@@ -55,6 +55,7 @@ function Tabs({
     { id: "Favorites", label: "Favorites", Icon: Star },
     { id: "Shared", label: "Shared", Icon: Users },
     { id: "Private", label: "Private", Icon: Lock },
+    { id: "Teamspaces", label: "Teamspaces", Icon: Users2 },
   ];
 
   return (
@@ -95,12 +96,16 @@ const cellStyle: React.CSSProperties = {
   minWidth: 0,
   color: "var(--tt-text-color)",
   borderBottom: "0.5px solid var(--tt-border-color, rgba(0,0,0,0.08))",
+  fontFamily: "inherit",
+  fontWeight: 400,
 };
 
 const dataStyle: React.CSSProperties = {
   fontSize: 14,
-  fontWeight: 400,
+  fontWeight: "inherit",
+  lineHeight: 1.4,
   color: "var(--tt-text-color)",
+  fontFamily: "inherit",
 };
 
 function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
@@ -117,9 +122,7 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
       }
       return next;
     });
-  const { onOpenChange } = useLibrary();
   const navigate = (id: ID) => {
-    onOpenChange?.(false);
     setActivePageId(id);
   };
 
@@ -210,7 +213,7 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
 
       <div key={`${page.id}-author`} style={cellStyle}>
         <AvatarDemo />
-        <span style={dataStyle}>Jule Sall</span>
+        <span style={{ ...dataStyle, fontWeight: 500 }}>Jule Sall</span>
       </div>
 
       <div key={`${page.id}-date`} style={cellStyle}>
@@ -238,7 +241,7 @@ function RecentGrid({ rows }: { rows: Page[] }) {
     >
       <div style={headerStyle}>
         <Button variant="ghost">
-          <File className="tiptap-button-icon" />
+          <FileText className="tiptap-button-icon" />
           <span className="tiptap-button-text">Page</span>
         </Button>
       </div>
@@ -270,13 +273,15 @@ const TAB_EMPTY: Record<LibraryTab, string> = {
   Favorites: "No favorites yet",
   Shared: "Nothing shared yet",
   Private: "No private pages yet",
+  Teamspaces: "No teamspace pages yet",
 };
 
 export function LibraryPalette({ onClose }: { onClose?: () => void }) {
   const { data: pages } = usePages();
   const createPage = useCreatePage();
   const { setActivePageId } = useActivePage();
-  const [tab, setTab] = useState<LibraryTab>("Recents");
+  const { activeTab } = useLibrary();
+  const [tab, setTab] = useState<LibraryTab>(activeTab ?? "Recents");
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -327,81 +332,71 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
   if (!pages) return null;
 
   return (
-    <>
-      <div className="library-palette-backdrop" onClick={() => onClose?.()} />
-      <div
-        className="library-palette-content"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Library"
+    <div className="library-palette-content__inner">
+      <CardItemGroup
+        orientation="vertical"
+        style={{ alignItems: "flex-start" }}
       >
-        <div className="library-palette-content__inner">
-          <CardItemGroup
-            orientation="vertical"
-            style={{ alignItems: "flex-start" }}
+        <CardItemGroup
+          style={{ width: "100%", alignItems: "center" }}
+          orientation="horizontal"
+        >
+          <span className="library">Library</span>
+          <Spacer orientation="horizontal" />
+          <Button
+            style={{
+              background: "var(--tt-brand-color-400)",
+              color: "white",
+              borderRadius: "var(--tt-radius-sm)",
+            }}
+            onClick={() => {
+              const page = makePage({ title: "New Page", parentId: null });
+              createPage
+                .mutateAsync(page)
+                .then(() => setActivePageId(page.id))
+                .catch(() => console.log("Failed to create page"));
+            }}
           >
-            <CardItemGroup
-              style={{ width: "100%", alignItems: "center" }}
-              orientation="horizontal"
+            <span
+              className="tiptap-button-text"
+              style={{ whiteSpace: "nowrap" }}
             >
-              <span className="library">Library</span>
-              <Spacer orientation="horizontal" />
-              <Button
-                style={{
-                  background: "var(--tt-brand-color-400)",
-                  color: "white",
-                  borderRadius: "var(--tt-radius-sm)",
-                }}
+              New Page
+            </span>
+          </Button>
+        </CardItemGroup>
+
+        <Spacer orientation="vertical" size={10} />
+
+        <Tabs active={tab} onChange={setTab} />
+        <Spacer orientation="vertical" size={10} />
+
+        {rows.length > 0 ? (
+          <RecentGrid rows={rows} />
+        ) : (
+          <div className="library-empty">
+            <FileText size={32} className="library-empty__icon" />
+            <p className="library-empty__text">{TAB_EMPTY[tab]}</p>
+            {tab === "Recents" && pages.length === 0 && (
+              <button
+                className="library-palette-content__new-btn"
                 onClick={() => {
-                  const page = makePage({ title: "New Page", parentId: null });
+                  const page = makePage({
+                    title: "New Page",
+                    parentId: null,
+                  });
                   createPage
                     .mutateAsync(page)
                     .then(() => setActivePageId(page.id))
                     .catch(() => console.log("Failed to create page"));
                 }}
               >
-                <span
-                  className="tiptap-button-text"
-                  style={{ whiteSpace: "nowrap" }}
-                >
-                  New Page
-                </span>
-              </Button>
-            </CardItemGroup>
-
-            <Spacer orientation="vertical" size={10} />
-
-            <Tabs active={tab} onChange={setTab} />
-            <Spacer orientation="vertical" size={10} />
-
-            {rows.length > 0 ? (
-              <RecentGrid rows={rows} />
-            ) : (
-              <div className="library-empty">
-                <FileText size={32} className="library-empty__icon" />
-                <p className="library-empty__text">{TAB_EMPTY[tab]}</p>
-                {tab === "Recents" && pages.length === 0 && (
-                  <button
-                    className="library-palette-content__new-btn"
-                    onClick={() => {
-                      const page = makePage({
-                        title: "New Page",
-                        parentId: null,
-                      });
-                      createPage
-                        .mutateAsync(page)
-                        .then(() => setActivePageId(page.id))
-                        .catch(() => console.log("Failed to create page"));
-                    }}
-                  >
-                    Create your first page
-                  </button>
-                )}
-              </div>
+                Create your first page
+              </button>
             )}
-          </CardItemGroup>
-        </div>
-      </div>
-    </>
+          </div>
+        )}
+      </CardItemGroup>
+    </div>
   );
 }

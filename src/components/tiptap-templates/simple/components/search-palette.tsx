@@ -4,8 +4,10 @@ import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { useSearch } from "../context/search-context";
 import { useActivePage } from "../context/active-page-context";
 import { PageItemIcon } from "../page-item-icon";
-import type { ID, Page } from "src/types";
+import type { ID, Page, PageCover } from "src/types";
+import type { JSONContent } from "@tiptap/core";
 import { usePages } from "src/hooks/use-pages";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
 type Group = "today" | "past";
 
@@ -26,7 +28,8 @@ type IconName =
   | "chevron"
   | "return"
   | "updown"
-  | "enter";
+  | "enter"
+  | "arrow";
 
 interface FilterDef {
   id: string;
@@ -83,6 +86,23 @@ function fuzzyMatch(query: string, text: string): number[] | null {
     }
   }
   return qi === q.length ? indices : null;
+}
+
+// cover → CSS background (image > gradient > color), same as the gallery
+function coverBackground(cover: PageCover | undefined): string {
+  if (cover?.coverImage)
+    return `center / cover no-repeat url(${cover.coverImage})`;
+  if (cover?.gradient) return cover.gradient;
+  if (cover?.color) return cover.color;
+  return "var(--tt-hover-bg-color, rgba(0,0,0,0.04))";
+}
+
+// flatten a node's inline text
+function inlineText(node: JSONContent | undefined): string {
+  if (!node) return "";
+  if (node.type === "text") return node.text ?? "";
+  if (Array.isArray(node.content)) return node.content.map(inlineText).join("");
+  return "";
 }
 
 function Icon({ name, size = 14 }: { name: IconName; size?: number }) {
@@ -152,6 +172,12 @@ function Icon({ name, size = 14 }: { name: IconName; size?: number }) {
           <path d="m7 4 0 16M3 8l4-4 4 4M17 20l0-16M13 16l4 4 4-4" />
         </svg>
       );
+    case "arrow":
+      return (
+        <svg {...p}>
+          <path d="M7 17 17 7M7 7h10v10" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -181,6 +207,119 @@ function Highlight({
   );
 }
 
+// Lightweight content preview — walks the doc into simple blocks (no editor).
+function PreviewBlocks({ content }: { content: JSONContent }) {
+  const blocks = (content?.content ?? [])
+    .filter((n) => n.type !== "title")
+    .slice(0, 25);
+
+  if (blocks.length === 0) {
+    return <div className="sp-preview__empty">No content yet</div>;
+  }
+
+  return (
+    <>
+      {blocks.map((node, i) => {
+        const text = inlineText(node).trim();
+        switch (node.type) {
+          case "heading": {
+            const lvl = (node.attrs?.level as number) ?? 2;
+            return (
+              <div
+                key={i}
+                className="sp-preview__heading"
+                style={{
+                  fontSize: lvl <= 1 ? 17 : lvl === 2 ? 15 : 14,
+                  fontWeight: 600,
+                  margin: "10px 0 4px",
+                }}
+              >
+                {text}
+              </div>
+            );
+          }
+          case "bulletList":
+          case "orderedList":
+            return (
+              <ul
+                key={i}
+                style={{ margin: "4px 0", paddingLeft: 18, fontSize: 13 }}
+              >
+                {(node.content ?? []).map((li, j) => (
+                  <li key={j} style={{ margin: "2px 0" }}>
+                    {inlineText(li).trim()}
+                  </li>
+                ))}
+              </ul>
+            );
+          case "taskList":
+            return (
+              <div key={i} style={{ margin: "4px 0", fontSize: 13 }}>
+                {(node.content ?? []).map((li, j) => (
+                  <div
+                    key={j}
+                    style={{ display: "flex", gap: 6, margin: "2px 0" }}
+                  >
+                    <span style={{ color: "var(--tt-theme-muted)" }}>
+                      {li.attrs?.checked ? "☑" : "☐"}
+                    </span>
+                    <span>{inlineText(li).trim()}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          case "codeBlock":
+            return (
+              <pre
+                key={i}
+                style={{
+                  margin: "6px 0",
+                  padding: "8px 10px",
+                  borderRadius: 6,
+                  background: "var(--tt-hover-bg-color, rgba(0,0,0,0.05))",
+                  fontSize: 12,
+                  overflowX: "auto",
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {text}
+              </pre>
+            );
+          case "blockquote":
+            return (
+              <blockquote
+                key={i}
+                style={{
+                  margin: "6px 0",
+                  paddingLeft: 10,
+                  borderLeft: "3px solid var(--tt-border-color)",
+                  color: "var(--tt-theme-muted)",
+                  fontSize: 13,
+                }}
+              >
+                {text}
+              </blockquote>
+            );
+          default:
+            return text ? (
+              <p
+                key={i}
+                style={{
+                  margin: "4px 0",
+                  fontSize: 13,
+                  lineHeight: 1.5,
+                  color: "var(--tt-text-color)",
+                }}
+              >
+                {text}
+              </p>
+            ) : null;
+        }
+      })}
+    </>
+  );
+}
+
 export default function SearchPalette() {
   const { data: pages } = usePages();
   const { setActivePageId } = useActivePage();
@@ -191,15 +330,22 @@ export default function SearchPalette() {
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // id → page, for breadcrumb resolution in the preview
+  const byId = useMemo(() => {
+    const m = new Map<ID, Page>();
+    for (const p of pages ?? []) m.set(p.id, p);
+    return m;
+  }, [pages]);
+
   // Build searchable entries from the real page tree.
   const entries = useMemo<SearchEntry[]>(() => {
     if (!pages) return [];
     const flat = pages.filter((p) => p.category !== "Template");
-    const byId = new Map<ID, Page>();
-    for (const p of flat) byId.set(p.id, p);
+    const map = new Map<ID, Page>();
+    for (const p of flat) map.set(p.id, p);
 
     return flat.map((p) => {
-      const parent = p.parentId != null ? byId.get(p.parentId) : null;
+      const parent = p.parentId != null ? map.get(p.parentId) : null;
       const when = p.updatedAt ?? p.createdAt;
       return {
         page: p,
@@ -234,6 +380,26 @@ export default function SearchPalette() {
   // Clamp selection at point of use — no effect, no cascading render.
   const maxIndex = Math.max(0, groups.order.length - 1);
   const safeSelected = Math.min(selected, maxIndex);
+
+  // The page shown in the preview panel = the currently highlighted result.
+  const selectedPage = groups.order[safeSelected]?.entry.page ?? null;
+
+  // ancestor chain (root → parent) for the preview breadcrumb
+  const breadcrumb = useMemo(() => {
+    if (!selectedPage) return "";
+    const chain: string[] = [];
+    const seen = new Set<ID>();
+    let cur =
+      selectedPage.parentId != null
+        ? byId.get(selectedPage.parentId)
+        : undefined;
+    while (cur && !seen.has(cur.id)) {
+      seen.add(cur.id);
+      chain.push(cur.title || "Untitled");
+      cur = cur.parentId != null ? byId.get(cur.parentId) : undefined;
+    }
+    return chain.reverse().join("  /  ");
+  }, [selectedPage, byId]);
 
   useEffect(() => {
     listRef.current
@@ -313,6 +479,7 @@ export default function SearchPalette() {
         role="dialog"
         aria-label="Search"
         onClick={(e) => e.stopPropagation()}
+        style={{ width: 1200, maxWidth: "99vw" }}
       >
         <CardItemGroup orientation="horizontal">
           <div className="sp-search">
@@ -355,24 +522,126 @@ export default function SearchPalette() {
           })}
         </div>
 
-        <div className="sp-results" ref={listRef}>
-          {groups.order.length === 0 && (
-            <div className="sp-empty">
-              {query ? `No results for "${query}"` : "No pages yet"}
-            </div>
-          )}
-          {groups.today.length > 0 && (
-            <>
-              <div className="sp-section">Today</div>
-              {groups.today.map(renderRow)}
-            </>
-          )}
-          {groups.past.length > 0 && (
-            <>
-              <div className="sp-section">Past</div>
-              {groups.past.map(renderRow)}
-            </>
-          )}
+        {/* body: results (left) + preview (right) */}
+        <div style={{ display: "flex", flex: 1, minHeight: 0, gap: 10 }}>
+          <div className="sp-results" ref={listRef} style={{ flex: 1 }}>
+            {groups.order.length === 0 && (
+              <div className="sp-empty">
+                {query ? `No results for "${query}"` : "No pages yet"}
+              </div>
+            )}
+            {groups.today.length > 0 && (
+              <>
+                <div className="sp-section">Today</div>
+                {groups.today.map(renderRow)}
+              </>
+            )}
+            {groups.past.length > 0 && (
+              <>
+                <div className="sp-section">Past</div>
+                {groups.past.map(renderRow)}
+              </>
+            )}
+          </div>
+
+          <Spacer orientation="horizontal" size={10} />
+
+          {/* preview panel */}
+          <div
+            className="preview-panel"
+            style={{
+              width: 320,
+              flexShrink: 0,
+              borderLeft: "0.5px solid var(--tt-border-color)",
+              overflowY: "auto",
+            }}
+          >
+            {selectedPage ? (
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <div
+                  style={{
+                    position: "relative",
+                    height: 110,
+                    background: coverBackground(selectedPage.cover),
+                  }}
+                >
+                  <button
+                    type="button"
+                    aria-label="Open page"
+                    onClick={() => open(selectedPage)}
+                    style={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 26,
+                      height: 26,
+                      borderRadius: 6,
+                      border: "none",
+                      background: "var(--tt-card-bg-color)",
+                      color: "var(--tt-text-color)",
+                      cursor: "pointer",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                    }}
+                  >
+                    <Icon name="arrow" size={14} />
+                  </button>
+                </div>
+
+                <div style={{ padding: "14px 16px 18px" }}>
+                  <div style={{ marginBottom: 8 }}>
+                    <PageItemIcon
+                      cover={selectedPage.cover}
+                      styles={{ fontSize: 28 }}
+                    />
+                  </div>
+
+                  {breadcrumb && (
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: "var(--tt-theme-muted)",
+                        marginBottom: 6,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {breadcrumb}
+                    </div>
+                  )}
+
+                  <div
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: "var(--tt-text-color)",
+                      marginBottom: 10,
+                      lineHeight: 1.25,
+                    }}
+                  >
+                    {selectedPage.title || "Untitled"}
+                  </div>
+
+                  <PreviewBlocks content={selectedPage.content} />
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  padding: 24,
+                  fontSize: 13,
+                  color: "var(--tt-theme-muted)",
+                  lineHeight: 1.5,
+                }}
+              >
+                Select a result to preview it here.
+              </div>
+            )}
+          </div>
+          <Spacer orientation="horizontal" size={10} />
         </div>
 
         <div className="sp-footer">

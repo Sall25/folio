@@ -149,6 +149,7 @@ interface CoverHeaderProps {
   translateX: number;
   hasThreads?: boolean;
   providedPage?: Page;
+  marginLeft: number;
 }
 
 export function CoverHeader({
@@ -156,6 +157,7 @@ export function CoverHeader({
   translateX,
   hasThreads,
   providedPage,
+  marginLeft,
 }: CoverHeaderProps) {
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [target, setTarget] = useState<Target>("Emoji");
@@ -192,28 +194,44 @@ export function CoverHeader({
         minHeight: 50,
       }}
     >
-      {hasCoverImage && (
-        <CoverImage page={page} onRemoveCoverAsync={handleRemoveCover} />
-      )}
-      {hasGradient && !hasCoverImage && (
-        <GradientCover
-          page={page}
-          gradient={page.cover.gradient!}
-          onRemoveCoverAsync={handleRemoveCover}
-        />
-      )}
-      {hasIcon && (
-        <IconButton
-          open={iconPickerOpen}
-          onOpenChange={setIconPickerOpen}
-          target={target}
-          onTargetChange={setTarget}
-          paddingLeft={paddingLeft}
-          translateX={translateX}
-          hasThreads={hasThreads}
-          page={page}
-        />
-      )}
+      <div
+        style={{
+          width: `calc(100vw)`,
+          marginLeft,
+          transition: "margin-left 0.2s ease, width 0.2s ease",
+        }}
+      >
+        {hasCoverImage && (
+          <CoverImage page={page} onRemoveCoverAsync={handleRemoveCover} />
+        )}
+        {hasGradient && !hasCoverImage && (
+          <GradientCover
+            page={page}
+            gradient={page.cover.gradient!}
+            onRemoveCoverAsync={handleRemoveCover}
+          />
+        )}
+      </div>
+      <div
+        style={{
+          width: `calc(100vw)`,
+          marginLeft: page.settings.width === "medium" ? 280 : marginLeft,
+          transition: "margin-left 0.2s ease, width 0.2s ease",
+        }}
+      >
+        {hasIcon && (
+          <IconButton
+            open={iconPickerOpen}
+            onOpenChange={setIconPickerOpen}
+            target={target}
+            onTargetChange={setTarget}
+            paddingLeft={paddingLeft}
+            translateX={translateX}
+            hasThreads={hasThreads}
+            page={page}
+          />
+        )}
+      </div>
     </div>
   );
 }

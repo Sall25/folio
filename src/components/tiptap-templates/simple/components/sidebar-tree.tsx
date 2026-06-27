@@ -1,15 +1,8 @@
-import {
-  useState,
-  useMemo,
-  useRef,
-  useCallback,
-  type CSSProperties,
-} from "react";
+import { useState, useMemo, useCallback, type CSSProperties } from "react";
 import {
   ChevronRight,
   ChevronDown,
   Plus,
-  MoreHorizontal,
   Pencil,
   Trash2,
   EyeOff,
@@ -39,6 +32,10 @@ import { PageItem } from "../page-item";
 import "./sidebar-sections.scss";
 import "./sidebar-tree.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+import { Section, SectionMenuItem, SectionMenuSeparator } from "./section";
+import { useNavigate } from "@tanstack/react-location";
+import { useLibrary } from "../context/library-context";
+import type { LibraryTab } from "./library-palette";
 
 const SECTION_CATEGORIES: PageCategory[] = [
   "Private",
@@ -225,53 +222,6 @@ function TreeRow({
   );
 }
 
-function SectionMenu({
-  category,
-  onRename,
-  onDelete,
-  onHide,
-  onClose,
-}: {
-  category: PageCategory;
-  onRename?: (c: PageCategory) => void;
-  onDelete?: (c: PageCategory) => void;
-  onHide?: (c: PageCategory) => void;
-  onClose: () => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const run = (fn?: (c: PageCategory) => void) => {
-    fn?.(category);
-    onClose();
-  };
-  return (
-    <div
-      ref={ref}
-      className="sidebar-section-menu"
-      style={{ top: 24, right: 0 }}
-    >
-      <button
-        className="sidebar-section-menu__item"
-        onClick={() => run(onRename)}
-      >
-        <Pencil size={14} /> Rename
-      </button>
-      <button
-        className="sidebar-section-menu__item"
-        onClick={() => run(onHide)}
-      >
-        <EyeOff size={14} /> Hide section
-      </button>
-      <div className="sidebar-section-menu__sep" />
-      <button
-        className="sidebar-section-menu__item sidebar-section-menu__item--danger"
-        onClick={() => run(onDelete)}
-      >
-        <Trash2 size={14} /> Delete
-      </button>
-    </div>
-  );
-}
-
 const EMPTY_META: Record<
   string,
   { Icon: typeof FileText; title: string; hint: string }
@@ -331,9 +281,11 @@ function SectionEmpty({
   );
 }
 
-// ── Section ────────────────────────────────────────────────────────────────
-// CHANGED: topLevel is now PageTreeNode[]
-function Section({
+// ── TreeSection: wires dnd-kit droppables into the reusable Section ──────────
+// The reusable Section is dnd-agnostic; this wrapper owns the droppables and
+// passes their refs + active state down. Header/body droppable ids are
+// unchanged, so collision detection and onDragOver/End keep working as-is.
+function TreeSection({
   category,
   topLevel,
   expandedIds,
@@ -360,9 +312,9 @@ function Section({
   onDelete?: (c: PageCategory) => void;
   onHide?: (c: PageCategory) => void;
 }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [hover, setHover] = useState(false);
-  const { setNodeRef } = useDroppable({ id: `section:${category}` });
+  const { setNodeRef: setBodyRef } = useDroppable({
+    id: `section:${category}`,
+  });
   const { setNodeRef: setHeaderRef } = useDroppable({
     id: `section-header:${category}`,
   });
@@ -370,82 +322,65 @@ function Section({
   const isSectionDrop =
     dropTarget?.kind === "section" && dropTarget.category === category;
 
-  return (
-    <div className="sidebar-section">
-      <div
-        ref={setHeaderRef}
-        className={`sidebar-section__header${
-          isSectionDrop ? " sidebar-section__header--drop-active" : ""
-        }`}
-        onClick={onToggleCollapse}
-        style={{ position: "relative" }}
-        onMouseOver={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-      >
-        <span className="sidebar-section__label">{category}</span>
-        <span
-          style={{
-            marginTop: 5,
-            opacity: hover ? 1 : 0,
-            transition: "opacity 0.15s ease",
-          }}
-        >
-          {collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-        </span>
-        <div
-          className="sidebar-section__actions"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            className="sidebar-section__action-btn"
-            aria-label={`New page in ${category}`}
-            onClick={() => onAddPage?.(category)}
-          >
-            <Plus size={15} />
-          </button>
-          <button
-            className="sidebar-section__action-btn"
-            aria-label={`${category} options`}
-            onClick={() => setMenuOpen((v) => !v)}
-          >
-            <MoreHorizontal size={15} />
-          </button>
-        </div>
-        {menuOpen && (
-          <SectionMenu
-            category={category}
-            onRename={onRename}
-            onDelete={onDelete}
-            onHide={onHide}
-            onClose={() => setMenuOpen(false)}
-          />
-        )}
-      </div>
+  const { setActiveTab } = useLibrary();
 
-      {!collapsed && (
-        <div
-          ref={setNodeRef}
-          className={`sidebar-section__body${
-            isSectionDrop ? " sidebar-section__body--drop-active" : ""
-          }`}
-        >
-          {topLevel.map((node) => (
-            <TreeRow
-              key={node.page.id}
-              node={node}
-              depth={0}
-              expandedIds={expandedIds}
-              onToggleExpand={onToggleExpand}
-              dropTarget={dropTarget}
-              activeId={activeId}
-            />
-          ))}
-          {topLevel.length === 0 && (
-            <SectionEmpty category={category} onAddPage={onAddPage} />
-          )}
-        </div>
+  const handleLibraryClick = (tab: LibraryTab) => {
+    setActiveTab(tab);
+  };
+
+  return (
+    <Section
+      label={category}
+      collapsed={collapsed}
+      onToggleCollapse={onToggleCollapse}
+      headerRef={setHeaderRef}
+      bodyRef={setBodyRef}
+      dropActive={isSectionDrop}
+      onAddClick={() => onAddPage?.(category)}
+      addLabel={`New page in ${category}`}
+      menuLabel={`${category} options`}
+      hasLibrary={true}
+      onLibraryClick={() => {
+        if (category === "Template") return;
+        handleLibraryClick(category);
+      }}
+      menu={
+        <>
+          <SectionMenuItem
+            icon={<Pencil size={14} />}
+            label="Rename"
+            onClick={() => onRename?.(category)}
+          />
+          <SectionMenuItem
+            icon={<EyeOff size={14} />}
+            label="Hide section"
+            onClick={() => onHide?.(category)}
+          />
+          <SectionMenuSeparator />
+          <SectionMenuItem
+            danger
+            icon={<Trash2 size={14} />}
+            label="Delete"
+            onClick={() => onDelete?.(category)}
+          />
+        </>
+      }
+    >
+      {topLevel.map((node) => (
+        <TreeRow
+          key={node.page.id}
+          node={node}
+          depth={0}
+          expandedIds={expandedIds}
+          onToggleExpand={onToggleExpand}
+          dropTarget={dropTarget}
+          activeId={activeId}
+        />
+      ))}
+      {topLevel.length === 0 && (
+        <SectionEmpty category={category} onAddPage={onAddPage} />
       )}
-    </div>
+    </Section>
   );
 }
 
@@ -638,7 +573,7 @@ export function SidebarTree({
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {visibleCategories.map((category) => (
-          <Section
+          <TreeSection
             key={category}
             category={category}
             topLevel={tree[category] ?? []}

@@ -1,341 +1,360 @@
-import {
-  FileText,
-  Lock,
-  File,
-  CircleUser,
-  Clock,
-  Clock1,
-  Star,
-  Users,
-  PanelRight,
-} from "lucide-react";
-import type { ID, Page } from "src/types";
-import { PageItemIcon } from "../page-item-icon";
-import "./home-page-content.scss";
-import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { Badge } from "src/components/tiptap-ui-primitive/badge";
-import { useActivePage } from "../context/active-page-context";
-import { useEditorLayout } from "../context/editor-layout-context";
-import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
-import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
-import { useState } from "react";
-import { useChildPages, usePages } from "src/hooks/use-pages";
+import type { Page, PageCover } from "src/types";
+import { useRecentPages } from "src/hooks/use-pages";
 import { useCreatePage } from "src/hooks/use-create-page";
+import { useActivePage } from "../context/active-page-context";
+import { useTemplates } from "../context/templates-context";
 import { makePage } from "src/utils/make-page";
+import { PageItemIcon } from "../page-item-icon";
+import { Plus, LayoutGrid } from "lucide-react";
+import { List, ListItem } from "src/components/tiptap-ui-primitive/list/list";
+import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
+import { Greeting } from "src/components/tiptap-ui-primitive/greeting/greeting";
+import {
+  Board,
+  BoardContent,
+  BoardCover,
+} from "src/components/tiptap-ui-primitive/board/board";
+import { getPageExcerpt } from "src/lib/get-page-excerpt";
 
-function formatRelativeTime(dateStr: number | null | undefined): string {
-  if (!dateStr) return "—";
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return "—";
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "Just now";
-  if (diffMin < 60) return `${diffMin}min ago`;
-  const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `${diffH}h ago`;
-  const diffD = Math.floor(diffH / 24);
-  if (diffD === 1) return "Yesterday";
-  if (diffD < 7) return `${diffD} days ago`;
-  return date.toLocaleDateString();
+const GRID: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+  gap: 12,
+};
+
+// cover → CSS background (image > gradient > color), same as the gallery
+function coverBackground(cover: PageCover | undefined): string {
+  if (cover?.coverImage)
+    return `center / cover no-repeat url(${cover.coverImage})`;
+  if (cover?.gradient) return cover.gradient;
+  if (cover?.color) return cover.color;
+  return "var(--tt-hover-bg-color, rgba(0,0,0,0.04))";
 }
 
-function Tabs() {
-  return (
-    <ButtonGroup orientation="horizontal">
-      <Button
-        data-highlighted={true}
-        style={{ borderRadius: "var(--tt-radius-xl)" }}
-      >
-        <Clock1 className="tiptap-button-icon" />
-        <span className="tiptap-button-text">Recents</span>
-      </Button>
-      <Spacer orientation="horizontal" size={15} />
-      <Button variant="ghost">
-        <Star className="tiptap-button-icon" />
-        <span className="tiptap-button-text">Favorites</span>
-      </Button>
-      <Spacer orientation="horizontal" size={15} />
-      <Button variant="ghost">
-        <Users className="tiptap-button-icon" />
-        <span className="tiptap-button-text">Shared</span>
-      </Button>
-      <Spacer orientation="horizontal" size={15} />
-      <Button variant="ghost">
-        <Lock className="tiptap-button-icon" />
-        <span className="tiptap-button-text">Private</span>
-      </Button>
-    </ButtonGroup>
-  );
+function formatRelative(ts: number): string {
+  const diff = Date.now() - ts;
+  const sec = Math.floor(diff / 1000);
+  if (sec < 60) return "just now";
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  if (day === 1) return "yesterday";
+  if (day < 7) return `${day}d ago`;
+  return new Date(ts).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
 }
 
-const headerStyle: React.CSSProperties = {
-  fontSize: 11,
-  fontWeight: 500,
-  color: "var(--tt-theme-text)",
-  textTransform: "uppercase",
-  letterSpacing: "0.06em",
-  padding: "0 0 8px",
-  borderBottom: "0.5px solid var(--tt-border-color, rgba(0,0,0,0.08))",
-};
+const todayLabel = () =>
+  new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 
-const cellStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  padding: "8px 0",
-  minWidth: 0,
-  color: "var(--tt-text-color)",
-  borderBottom: "0.5px solid var(--tt-border-color, rgba(0,0,0,0.08))",
-};
-
-const dataStyle: React.CSSProperties = {
-  fontSize: 14,
-  fontWeight: 400,
-  color: "var(--tt-text-color)",
-};
-
-function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
-  const [show, setShow] = useState(false);
-  const [expanded, setExpanded] = useState<Set<ID>>(new Set());
+export function HomePageContent({ userName }: { userName?: string }) {
+  const { data, isPending } = useRecentPages();
   const { setActivePageId } = useActivePage();
-  const toggle = (id: ID) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
+  const createPage = useCreatePage();
+  const { onOpenChange: openTemplates } = useTemplates();
+
+  const recents = (data ?? []).filter((p) => p.category !== "Template");
+  const visited = recents.slice(0, 4);
+  const earlier = recents.slice(4, 12);
+
+  const newPage = () => {
+    const page = makePage({
+      title: "New Page",
+      parentId: null,
+      category: "Private",
     });
+    createPage.mutate(page);
+    setActivePageId(page.id);
+  };
 
-  const navigate = (id: ID) => setActivePageId(id);
-  const children = useChildPages(page.id);
-  const hasChildren = (children.data?.length ?? 0) > 0;
-  const isOpen = expanded.has(page.id);
-
-  return (
-    <>
-      <div
-        key={`${page.id}-title`}
-        style={{ ...cellStyle, paddingLeft: depth * 20 }}
-      >
-        {/* Chevron toggle or spacer */}
-        <span
-          style={{
-            width: 16,
-            flexShrink: 0,
-            display: "flex",
-            alignItems: "center",
-            cursor: hasChildren ? "pointer" : "default",
-            color: "var(--tt-text-color)",
-            transition: "transform 0.18s ease",
-            transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
-          }}
-          onClick={hasChildren ? () => toggle(page.id) : undefined}
-        >
-          {hasChildren && (
-            <svg
-              width="8"
-              height="8"
-              viewBox="0 0 8 8"
-              style={{ display: "block" }}
-            >
-              <polygon
-                points={isOpen ? "0,0 8,0 4,8" : "0,0 8,4 0,8"}
-                fill="currentColor"
-              />
-            </svg>
-          )}
-        </span>
-
-        <CardItemGroup orientation="horizontal" style={{ width: "100%" }}>
-          <CardItemGroup
-            orientation="horizontal"
-            onMouseEnter={() => setShow(true)}
-            onMouseLeave={() => setShow(false)}
-            style={{ width: "100%" }}
-          >
-            <PageItemIcon cover={page.cover} styles={{ fontSize: 15 }} />
-            <span
-              style={{
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                fontSize: 14,
-                fontWeight: depth === 0 ? 500 : 400,
-                color: "var(--tt-text-color)",
-              }}
-            >
-              {page.title || "Untitled"}
-            </span>
-
-            <Spacer orientation="horizontal" />
-            {show && (
-              <Button
-                style={{
-                  background: "transparent",
-                  border: "1px solid var(--tt-border-color)",
-                  borderRadius: "var(--tt-radius-sm)",
-                  minHeight: 22,
-                  height: 22,
-                }}
-                onClick={() => navigate(page.id)}
-              >
-                <PanelRight className="tiptap-button-icon" />
-                <span className="tiptap-button-text">Open</span>
-              </Button>
-            )}
-          </CardItemGroup>
-          {page.settings?.locked && (
-            <Badge data-style="gray">
-              <Lock className="tiptap-badge-icon" />
-              <span className="tiptap-badge-text">Locked</span>
-            </Badge>
-          )}
-        </CardItemGroup>
-      </div>
-
-      <div key={`${page.id}-author`} style={cellStyle}>
-        <AvatarDemo />
-        <span style={dataStyle}>Jule Sall</span>
-      </div>
-
-      <div key={`${page.id}-date`} style={cellStyle}>
-        <span style={dataStyle}>
-          {formatRelativeTime(page.updatedAt ?? page.createdAt)}
-        </span>
-      </div>
-      {/* Render children if expanded */}
-      {isOpen &&
-        children.data?.map((child) => (
-          <RecentRow key={child.id} page={child} depth={depth + 1} />
-        ))}
-    </>
-  );
-}
-
-// Add this to your state or component-level state
-function RecentGrid({ recent }: { recent: Page[] }) {
   return (
     <div
       style={{
-        display: "grid",
-        gridTemplateColumns: "2fr 1fr 1fr",
-        width: "100%",
+        maxWidth: "80%",
+        margin: "0 auto",
+        padding: "32px 24px 48px",
+        paddingLeft: "20rem",
+        overflowY: "auto",
       }}
     >
-      {/* Headers */}
-      <div style={headerStyle}>
-        <Button variant="ghost">
-          <File className="tiptap-button-icon" />
-          <span className="tiptap-button-text">Page</span>
-        </Button>
-      </div>
-      <div style={headerStyle}>
-        <Button variant="ghost">
-          <CircleUser className="tiptap-button-icon" />
-          <span className="tiptap-button-text">Created by</span>
-        </Button>
-      </div>
-      <div style={headerStyle}>
-        <Button variant="ghost">
-          <Clock className="tiptap-button-icon" />
-          <span className="tiptap-button-text">Last edited time</span>
-        </Button>
+      {/* greeting */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 4,
+          marginBottom: 28,
+        }}
+      >
+        <Greeting name={userName} />
+        <div style={{ fontSize: 13, color: "var(--tt-theme-muted)" }}>
+          {todayLabel()}
+        </div>
       </div>
 
-      {recent.map((page) => (
-        <div key={page.id} style={{ display: "contents" }}>
-          <RecentRow page={page} />
+      {/* quick actions */}
+      <div
+        style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}
+      >
+        <ButtonGroup orientation="horizontal" style={{ gap: 8 }}>
+          <Button data-active-state="on" variant="ghost" onClick={newPage}>
+            <Plus className="tiptap-button-icon" />
+            <span className="tiptap-button-text">New page</span>
+          </Button>
+          <Button variant="ghost" onClick={() => openTemplates?.(true)}>
+            <LayoutGrid className="tiptap-button-icon" />
+            <span className="tiptap-button-text">Templates</span>
+          </Button>
+        </ButtonGroup>
+      </div>
+
+      {/* recently visited */}
+      <SectionLabel>Recently visited</SectionLabel>
+      {isPending ? (
+        <CardGridSkeleton />
+      ) : visited.length === 0 ? (
+        <EmptyState onNewPage={newPage} />
+      ) : (
+        <div style={{ ...GRID, marginBottom: earlier.length ? 32 : 0 }}>
+          {visited.map((page) => (
+            <RecentCard
+              key={page.id}
+              page={page}
+              onOpen={() => setActivePageId(page.id)}
+            />
+          ))}
         </div>
-      ))}
+      )}
+
+      {/* earlier */}
+      {earlier.length > 0 && (
+        <>
+          <SectionLabel>Earlier</SectionLabel>
+          <List showLines spacing="compact">
+            {earlier.map((page, i) => (
+              <ListItem
+                key={page.id}
+                showLine={i !== earlier.length - 1}
+                onClick={() => setActivePageId(page.id)}
+                style={{ cursor: "pointer" }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <PageItemIcon
+                    cover={page.cover}
+                    styles={{ width: 17, height: 17 }}
+                  />
+                  <span
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      fontSize: 14,
+                      lineHeight: 1.4,
+                      color: "var(--tt-text-color)",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    {page.title || "Untitled"}
+                  </span>
+                  <span
+                    style={{ fontSize: 12, color: "var(--tt-text-secondary)" }}
+                  >
+                    {formatRelative(page.updatedAt ?? page.createdAt)}
+                  </span>
+                </div>
+              </ListItem>
+            ))}
+          </List>
+        </>
+      )}
     </div>
   );
 }
 
-export function HomePageContent() {
-  const { sidebarWidth } = useEditorLayout();
-  const { data: pages } = usePages();
-  const createPage = useCreatePage();
-  const { setActivePageId } = useActivePage();
-
-  if (!pages) return null;
-
-  const sorted = [...pages].sort((a, b) => {
-    const aDate = new Date(a.updatedAt ?? a.createdAt).getTime();
-    const bDate = new Date(b.updatedAt ?? b.createdAt).getTime();
-    return bDate - aDate;
-  });
-  const recent = sorted.slice(0, 8);
-
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="home-page-content"
       style={{
-        marginLeft: sidebarWidth,
-        transition: "margin-left 0.2s ease",
+        fontSize: 13,
+        fontWeight: 500,
+        color: "var(--tt-text-secondary, var(--tt-theme-muted))",
+        marginBottom: 10,
       }}
     >
-      <div className="home-page-content__inner">
-        {/* <div className="home-page-content__header">
-          <Greeting name="Jule" className="home-greeting" />
-        </div> */}
-        <CardItemGroup
-          orientation="vertical"
-          style={{ alignItems: "flex-start" }}
+      {children}
+    </div>
+  );
+}
+
+function RecentCard({ page, onOpen }: { page: Page; onOpen: () => void }) {
+  return (
+    <Board onClick={onOpen}>
+      <BoardCover
+        style={{
+          height: 64,
+          background: coverBackground(page.cover),
+        }}
+      />
+      <BoardContent>
+        <PageItemIcon cover={page.cover} styles={{ width: 18, height: 18 }} />
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 500,
+            color: "var(--tt-text-color)",
+            marginTop: 6,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            fontFamily: "inherit",
+          }}
         >
-          <CardItemGroup
-            style={{ width: "100%", alignItems: "center" }}
-            orientation="horizontal"
-          >
-            <span className="library">Library</span>
-            <Spacer orientation="horizontal" />
-            <Button
-              style={{
-                background: "var(--tt-brand-color-400)",
-                color: "white",
-                borderRadius: "var(--tt-radius-sm)",
-              }}
-            >
-              <span
-                className="tiptap-button-text"
-                style={{ whiteSpace: "nowrap" }}
-              >
-                New Page
-              </span>
-            </Button>
-          </CardItemGroup>
+          {page.title || "Untitled"}
+        </div>
+        <span
+          style={{
+            fontSize: 11,
+            color: "var(--tt-text-color)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            fontFamily: "inherit",
+          }}
+        >
+          {getPageExcerpt(page)}
+        </span>
+        <div
+          style={{
+            fontSize: 12,
+            color: "var(--tt-text-secondary)",
+            marginTop: 2,
+            whiteSpace: "nowrap",
+            fontFamily: "inherit",
+          }}
+        >
+          Edited {formatRelative(page.updatedAt ?? page.createdAt)}
+        </div>
+      </BoardContent>
+    </Board>
+  );
+  // return (
+  //   <button
+  //     type="button"
+  //
+  //     style={{
+  //       display: "flex",
+  //       flexDirection: "column",
+  //       width: "100%",
+  //       minWidth: 0,
+  //       overflow: "hidden",
+  //       border: "0.5px solid var(--tt-border-color)",
+  //       borderRadius: 12,
+  //       background: "var(--tt-card-bg-color)",
+  //       cursor: "pointer",
+  //       padding: 0,
+  //       textAlign: "left",
+  //       transition: "border-color 0.12s",
+  //     }}
+  //     onMouseEnter={(e) =>
+  //       (e.currentTarget.style.borderColor = "var(--tt-brand-color-500)")
+  //     }
+  //     onMouseLeave={(e) =>
+  //       (e.currentTarget.style.borderColor = "var(--tt-border-color)")
+  //     }
+  //   >
+  //     <div
+  //       style={{
+  //         height: 64,
+  //         background: coverBackground(page.cover),
+  //         borderBottom: "0.5px solid var(--tt-border-color)",
+  //       }}
+  //     />
+  //     <div style={{ padding: "10px 12px", minWidth: 0 }}>
+  //       <PageItemIcon cover={page.cover} styles={{ width: 18, height: 18 }} />
+  //       <div
+  //         style={{
+  //           fontSize: 14,
+  //           color: "var(--tt-text-color)",
+  //           marginTop: 6,
+  //           overflow: "hidden",
+  //           textOverflow: "ellipsis",
+  //           whiteSpace: "nowrap",
+  //         }}
+  //       >
+  //         {page.title || "Untitled"}
+  //       </div>
+  //       <div
+  //         style={{ fontSize: 12, color: "var(--tt-theme-muted)", marginTop: 2 }}
+  //       >
+  //         Edited {formatRelative(page.updatedAt ?? page.createdAt)}
+  //       </div>
+  //     </div>
+  //   </button>
+  // );
+}
 
-          <Spacer orientation="vertical" size={10} />
-
-          <Tabs />
-          <Spacer orientation="vertical" size={10} />
-
-          {recent.length > 0 && <RecentGrid recent={recent} />}
-
-          {pages.length === 0 && (
-            <div className="home-empty">
-              <FileText size={32} className="home-empty__icon" />
-              <p className="home-empty__text">No pages yet</p>
-              <button
-                className="home-page-content__new-btn"
-                onClick={() => {
-                  const page = makePage({ title: "New Page", parentId: null });
-                  createPage
-                    .mutateAsync(page)
-                    .then(() => setActivePageId(page.id))
-                    .catch(() => console.log("Failed to create page"));
-                }}
-              >
-                Create your first page
-              </button>
-            </div>
-          )}
-        </CardItemGroup>
+function EmptyState({ onNewPage }: { onNewPage: () => void }) {
+  return (
+    <div
+      style={{
+        border: "0.5px dashed var(--tt-border-color)",
+        borderRadius: 12,
+        padding: "32px 16px",
+        textAlign: "center",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 14,
+          fontWeight: 500,
+          color: "var(--tt-text-color)",
+          marginBottom: 4,
+        }}
+      >
+        Start your first page
       </div>
+      <div
+        style={{
+          fontSize: 13,
+          color: "var(--tt-theme-muted)",
+          marginBottom: 14,
+        }}
+      >
+        Your recently opened pages will show up here.
+      </div>
+      <Button variant="ghost" onClick={onNewPage}>
+        <Plus className="tiptap-button-icon" />
+        <span className="tiptap-button-text">New page</span>
+      </Button>
+    </div>
+  );
+}
+
+function CardGridSkeleton() {
+  return (
+    <div style={GRID}>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          style={{
+            height: 124,
+            borderRadius: 12,
+            border: "0.5px solid var(--tt-border-color)",
+            background: "var(--tt-hover-bg-color, rgba(0,0,0,0.03))",
+          }}
+        />
+      ))}
     </div>
   );
 }

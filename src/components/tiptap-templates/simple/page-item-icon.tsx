@@ -37,7 +37,7 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
             }
             name={cover.iconName!}
             size={20}
-            strokeWidth={1.5}
+            strokeWidth={2}
           />
         ) : (
           <FileText

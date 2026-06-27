@@ -18,20 +18,20 @@ function App() {
     <QueryClientProvider client={client}>
       <EditorLayoutProvider>
         <SearchProvider>
-          <LibraryProvider>
-            <TemplatesProvider>
-              <PageViewProvider>
-                <Router location={location} routes={routes}>
+          <TemplatesProvider>
+            <PageViewProvider>
+              <Router location={location} routes={routes}>
+                <LibraryProvider>
                   <ActivePageProvider>
                     <EditorProvider>
                       <SimpleEditorSidebar />
                       <Outlet />
                     </EditorProvider>
                   </ActivePageProvider>
-                </Router>
-              </PageViewProvider>
-            </TemplatesProvider>
-          </LibraryProvider>
+                </LibraryProvider>
+              </Router>
+            </PageViewProvider>
+          </TemplatesProvider>
         </SearchProvider>
       </EditorLayoutProvider>
       <ReactQueryDevtools initialIsOpen={false} />

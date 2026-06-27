@@ -1,0 +1,22 @@
+// Node-specific chrome only. The tab row/items/add styling now lives in the
+// tab primitives (tabs.scss), imported by the primitive component.
+
+.tabs {
+  margin: 10px 0;
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md, 8px);
+  overflow: hidden;
+
+  &__headers {
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--tt-border-color);
+  }
+
+  &__panels {
+    padding: 10px 12px;
+  }
+}
+
+.tab-panel__content {
+  min-height: 1.5em;
+}

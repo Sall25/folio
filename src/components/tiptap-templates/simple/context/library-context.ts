@@ -1,13 +1,14 @@
 import { createContext, useContext } from "react";
+import type { LibraryTab } from "../components/library-palette";
 
 export type LibraryContextType = {
-  open?: boolean;
-  onOpenChange?: (o: boolean) => void;
+  activeTab: LibraryTab | null;
+  setActiveTab: (tab: LibraryTab | null) => void;
 };
 
 export const LibraryContext = createContext<LibraryContextType>({
-  open: false,
-  onOpenChange() {},
+  activeTab: null,
+  setActiveTab: () => {},
 });
 
 export function useLibrary() {

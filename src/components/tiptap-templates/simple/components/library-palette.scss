@@ -53,12 +53,14 @@
     // Now the scrollable body of the modal
     flex: 1;
     overflow-y: auto;
-    margin: 0;
-    padding: 20px 56px;
+    margin: 0 auto;
+    padding: 32px 24px 48px;
     display: flex;
     flex-direction: column;
     gap: 36px;
-
+    width: 90%;
+    padding-left: 20rem;
+   
     // Scrollbar to match PageCreateModal
     scrollbar-width: thin;
     scrollbar-color: var(--tt-border-color) transparent;

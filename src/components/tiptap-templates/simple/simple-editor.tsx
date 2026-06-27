@@ -37,7 +37,6 @@ import type { View } from "src/types";
 import { Editor, useCurrentEditor } from "@tiptap/react";
 import { useSearch } from "./context/search-context";
 import SearchPalette from "./components/search-palette";
-import { useLibrary } from "./context/library-context";
 import { LibraryPalette } from "./components/library-palette";
 import { usePageView } from "./context/page-view-context";
 import { PageCenterView } from "./page-center-view";
@@ -46,7 +45,7 @@ import { useTemplates } from "./context/templates-context";
 import { useTemplates as useTemplatesApi } from "src/hooks/use-templates";
 import { TemplatesGallery } from "./components/template-gallery";
 
-const VERSION_SIDEBAR_WIDTH = 280;
+const VERSION_SIDEBAR_WIDTH = 270;
 
 function triggerMainEditorSync(mainEditor: Editor | null) {
   if (!mainEditor) return;
@@ -66,12 +65,36 @@ function SimpleEditorMain({ view }: { view: View }) {
   } = useTemplates();
 
   const { data: templates } = useTemplatesApi();
-  const { open: libraryOpen, onOpenChange } = useLibrary();
 
   console.log("templates gallery:", { templatesGalleryOpen, templates });
   return (
     <>
-      {view === "home" && <HomePageContent />}
+      {view === "home" && (
+        <div
+          style={{
+            width: "100%",
+            minWidth: 950,
+            padding: "1rem 1.5rem 30vh",
+            overflowY: "auto",
+          }}
+        >
+          {" "}
+          <HomePageContent />
+        </div>
+      )}
+      {view === "library" && (
+        <div
+          style={{
+            width: "100%",
+            minWidth: 950,
+            padding: "1rem 1.5rem 30vh",
+            overflowY: "auto",
+          }}
+        >
+          {" "}
+          <LibraryPalette />
+        </div>
+      )}
       {view === "page" && (
         <>
           <div
@@ -121,8 +144,6 @@ function SimpleEditorMain({ view }: { view: View }) {
           })}
         />
       )}
-
-      {libraryOpen && <LibraryPalette onClose={() => onOpenChange?.(false)} />}
     </>
   );
 }

@@ -15,7 +15,7 @@ import { NotificationBell } from "src/components/tiptap-ui/notification";
 import { MorePopover } from "./more-popover";
 import { useActivePage } from "./context/active-page-context";
 import type { View } from "src/types";
-import { Home } from "lucide-react";
+import { Home, LibraryBig } from "lucide-react";
 import { PageCategorySelect } from "./components/page-category-select";
 import { Breadcrumbs } from "./breadcrumbs";
 import { usePatchPage } from "src/hooks/use-patch-page";
@@ -71,6 +71,14 @@ export const MainToolbarContent = ({
             <Home className="tiptap-button-icon" strokeWidth={2} />
             <span className="tiptap-button-text" style={{ fontWeight: "bold" }}>
               Home
+            </span>
+          </Button>
+        )}
+        {view === "library" && (
+          <Button variant="ghost">
+            <LibraryBig className="tiptap-button-icon" strokeWidth={2} />
+            <span className="tiptap-button-text" style={{ fontWeight: "bold" }}>
+              Library
             </span>
           </Button>
         )}

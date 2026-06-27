@@ -588,7 +588,7 @@ export type PageTreeNode = {
 
 export type SaveState = "saved" | "unsaved" | "saving";
 
-export type View = "home" | "page" | "resources";
+export type View = "home" | "page" | "resources" | "library";
 
 export type SimpleEditorContentProps = {
   activePage: Page;

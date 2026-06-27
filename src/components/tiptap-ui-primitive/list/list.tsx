@@ -44,6 +44,7 @@ const ListItem = forwardRef<HTMLDivElement, ListItemProps>(
         <div className="tiptap-list-item__content">{children}</div>
         {showLine !== false && (
           <Separator
+            style={{ height: 0.5 }}
             orientation="horizontal"
             className="tiptap-list-item__separator"
             decorative
