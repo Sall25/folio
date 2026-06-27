@@ -44,6 +44,7 @@ import {
 } from "./components/section";
 import { ScrollFog } from "src/components/tiptap-ui-primitive/scroll-frog";
 import { useLibrary } from "./context/library-context";
+import { useLocalStorage } from "./hooks/use-local-storage";
 
 function User() {
   const { collapsed, onCollapsedChange } = useEditorLayout();
@@ -277,7 +278,7 @@ function NavItems() {
     navigate({ to: "/" });
   };
   const handleLibraryClick = () => {
-    navigate({ to: "/library" });
+    navigate({ to: "/library/Recents" });
   };
 
   const { open, onOpenChange } = useSearch();
@@ -448,7 +449,7 @@ function ShowcaseSection() {
   );
 }
 
-// ── RecentSection: just use the lens ─────────────────────────────────────────
+// ── RecentSection: persisted limit + collapse ────────────────────────────────
 const RECENT_LIMIT_OPTIONS = [5, 10, 20] as const;
 function RecentSection({
   onMoveUp,
@@ -458,7 +459,10 @@ function RecentSection({
   onMoveDown?: () => void;
 }) {
   const { data: recentPages } = useRecentPages();
-  const [limit, setLimit] = useState<number | "all">(10);
+  const [limit, setLimit] = useLocalStorage<number | "all">(
+    "folio:recents:limit",
+    10,
+  );
 
   const { setActiveTab } = useLibrary();
   if (!recentPages || recentPages.length === 0) return null;
@@ -472,6 +476,7 @@ function RecentSection({
     <Section
       label="Recents"
       defaultCollapsed={false}
+      persistKey="folio:recents:collapsed"
       menuLabel="Recents options"
       menu={
         <>

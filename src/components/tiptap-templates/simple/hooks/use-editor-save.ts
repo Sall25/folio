@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import type { Editor } from "@tiptap/core";
-import type { SimpleEditorContentProps, SaveState } from "../types";
+import type { SimpleEditorContentProps, SaveState } from "src/types";
 
 export function useEditorSave({
   updatePageAsync,

@@ -17,7 +17,7 @@ declare module "@tiptap/core" {
 export interface NodeColorOptions {
   /**
    * Node types that should support colors
-   * @default ["paragraph", "heading", "blockquote", "taskList", "bulletList", "orderedList", "tableCell", "tableHeader"]
+   * @default ["paragraph", "heading", "blockquote", "taskList", "bulletList", "orderedList", "tableCell", "tableHeader", "callout"]
    */
   types: string[];
   /**
@@ -60,6 +60,7 @@ export const NodeColor = Extension.create<NodeColorOptions>({
         "orderedList",
         "tableCell",
         "tableHeader",
+        "callout",
       ],
       useStyle: true,
     };

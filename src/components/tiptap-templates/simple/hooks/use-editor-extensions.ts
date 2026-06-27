@@ -166,6 +166,7 @@ export function useEditorExtensions(
       PageLinkNode.configure({
         onNavigate: (pageId) => refsRef.current?.setActivePageId(pageId),
       }),
+      CalloutExtension,
       UniqueID.configure({
         types: [
           "paragraph",
@@ -174,6 +175,7 @@ export function useEditorExtensions(
           "figure",
           "codeBlock",
           "table",
+          "callout",
         ],
         attributeName: "id",
       }),
@@ -186,7 +188,7 @@ export function useEditorExtensions(
       DiffExtension,
       DragHandleExtension,
       DatabaseNode,
-      CalloutExtension,
+
       AudioExtension,
       YoutubeExtension,
       BookmarkNode,

@@ -37,6 +37,7 @@ const NODE_LABELS: Record<string, string> = {
   title: "Title",
   pageLink: "Page",
   databaseRecord: "Record",
+  callout: "Callout",
 };
 
 const nestedOptions = {
@@ -70,7 +71,8 @@ const nestedOptions = {
           name === "taskList" ||
           name === "blockquote" ||
           name === "databaseRecord" ||
-          name === "table"
+          name === "table" ||
+          name === "callout"
           // name === "column"
         ) {
           return -200;

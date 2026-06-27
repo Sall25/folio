@@ -47,9 +47,7 @@
     background: var(--tt-card-bg-color);
     border: 1px solid var(--tt-border-color);
     border-radius: var(--tt-radius-md, 8px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-
-    .dark & { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }
+    box-shadow: var(--tt-shadow-elevated-sm);
   }
 
   &__option {

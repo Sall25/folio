@@ -33,7 +33,6 @@ import "./sidebar-sections.scss";
 import "./sidebar-tree.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Section, SectionMenuItem, SectionMenuSeparator } from "./section";
-import { useNavigate } from "@tanstack/react-location";
 import { useLibrary } from "../context/library-context";
 import type { LibraryTab } from "./library-palette";
 
@@ -571,7 +570,7 @@ export function SidebarTree({
         setDropTarget(null);
       }}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {visibleCategories.map((category) => (
           <TreeSection
             key={category}

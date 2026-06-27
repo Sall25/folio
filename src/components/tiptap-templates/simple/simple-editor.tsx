@@ -44,6 +44,7 @@ import { EditorContentSkeleton } from "./components/skeletons";
 import { useTemplates } from "./context/templates-context";
 import { useTemplates as useTemplatesApi } from "src/hooks/use-templates";
 import { TemplatesGallery } from "./components/template-gallery";
+import { usePageBrowserTab } from "./hooks/use-page-browser-tab";
 
 const VERSION_SIDEBAR_WIDTH = 270;
 
@@ -66,7 +67,6 @@ function SimpleEditorMain({ view }: { view: View }) {
 
   const { data: templates } = useTemplatesApi();
 
-  console.log("templates gallery:", { templatesGalleryOpen, templates });
   return (
     <>
       {view === "home" && (
@@ -195,6 +195,8 @@ function SimpleEditorInner({ view }: { view: View }) {
 }
 
 export function SimpleEditor({ view }: { view: View }) {
+  usePageBrowserTab();
+
   return (
     <TocProvider>
       <SimpleEditorInner view={view} />

@@ -72,12 +72,6 @@ export const ParagraphNode = Paragraph.extend({
             if (n.type.name === "database") hasTopLevelDatabase = true;
           });
 
-          console.log(
-            "[para-plugin]",
-            newState.doc.content.content.map((n) => n.type.name),
-            "hasDb:",
-            hasTopLevelDatabase,
-          );
           if (hasTopLevelDatabase) return null;
 
           const { doc, schema, tr } = newState;

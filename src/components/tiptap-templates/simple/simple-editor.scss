@@ -80,11 +80,12 @@ body,
 }
 
 ::-webkit-scrollbar {
-  width: 0.25rem;
+  width: 0.8rem;
+  z-index: 5000 !important;
 }
 
 * {
-  scrollbar-width: thin;
+  scrollbar-width:auto;
   scrollbar-color: var(--tt-scrollbar-color) transparent;
 }
 
@@ -145,7 +146,7 @@ body,
   font-family:  'Inter', sans-serif;
   
   $highlight-colors: purple, yellow, blue, red, green, orange;
-  $block-elements: p, h1, h2, h3, h4, h5, h6, blockquote, li, ul, ol, th, td;
+  $block-elements: p, h1, h2, h3, h4, h5, h6, blockquote, li, ul, ol, th, td, div;
 
     @each $color in $highlight-colors {
       $var: var(--tt-color-highlight-#{$color});

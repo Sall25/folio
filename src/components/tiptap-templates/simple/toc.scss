@@ -1,8 +1,8 @@
 :root{
     --tt-toc-sidebar-line-bg: var(--tt-gray-light-200);
     --tt-toc-sidebar-line-bg-active: var(--tt-gray-light-900);
-    --tt-toc-sidebar-bg: var(--tt-gray-light-50);
-    --tt-toc-sidebar-border-color: var(--tt-gray-light-a-100);
+    --tt-toc-sidebar-bg: var(--tt-card-bg-color);
+    --tt-toc-sidebar-border-color: var(--tt-border-color);
     --tt-toc-sidebar-text-color: var(--tt-gray-light-a-600);
     --tt-toc-sidebar-text-hover-color: var(--tt-gray-light-a-800);
     --tt-toc-sidebar-bg-hover-color: var(--tt-gray-light-a-100);
@@ -12,8 +12,8 @@
 .dark{
     --tt-toc-sidebar-line-bg: var(--tt-gray-dark-200);
     --tt-toc-sidebar-line-bg-active: var(--tt-gray-dark-900);
-    --tt-toc-sidebar-bg: var(--tt-gray-dark-200);
-    --tt-toc-sidebar-border-color: var(--tt-gray-dark-a-100);
+    --tt-toc-sidebar-bg: var(--tt-card-bg-color);
+    --tt-toc-sidebar-border-color: var(--tt-border-color);
     --tt-toc-sidebar-text-color: var(--tt-gray-dark-a-600);
     --tt-toc-sidebar-text-hover-color: var(--tt-gray-dark-a-800);
     --tt-toc-sidebar-bg-hover-color: var(--tt-gray-dark-a-100);

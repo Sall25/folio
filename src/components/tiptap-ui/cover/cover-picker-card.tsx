@@ -51,7 +51,14 @@ export function CoverPickerCard({
   };
 
   return (
-    <Card style={{ padding: "5px 15px", width: 460, overflow: "hidden" }}>
+    <Card
+      style={{
+        padding: "5px 15px",
+        width: 460,
+        overflow: "hidden",
+        boxShadow: "var(--tt-shadow-elevated-sm)",
+      }}
+    >
       <CoverTabs active={activeTab} onActive={setActiveTab} />
 
       <div style={{ marginTop: 4, width: "100%" }}>

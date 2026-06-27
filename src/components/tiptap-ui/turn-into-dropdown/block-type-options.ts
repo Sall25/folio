@@ -8,6 +8,7 @@ import {
   ListOrdered,
   Quote,
   Type,
+  TypeOutline,
 } from "lucide-react";
 import type { BlockTypeOption } from "./types";
 import { TodoListIcon } from "src/components/tiptap-icons";
@@ -85,5 +86,11 @@ export const DEFAULT_BLOCK_TYPE_OPTIONS: BlockTypeOption[] = [
     type: "table",
     label: "Figure",
     isActive: (editor) => editor.isActive("table"),
+  },
+  {
+    type: "callout",
+    label: "Callout",
+    isActive: (editor) => editor.isActive("callout"),
+    icon: TypeOutline,
   },
 ];

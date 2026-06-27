@@ -7,6 +7,8 @@ import type { Target } from "./types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Trash } from "lucide-react";
+import { useIconRecents } from "src/components/tiptap-templates/simple/hooks/use-icon-recents";
+import { RecentIconRow } from "src/components/tiptap-templates/simple/components/recent-icon-row";
 
 const IconPicker = lazy(() =>
   import("./icon-picker").then((m) => ({ default: m.IconPicker })),
@@ -23,6 +25,24 @@ export function IconPickerCard({
   onSelect: (name: string, color?: string, target?: Target) => void;
   onRemove?: () => void;
 }) {
+  const { recents, setTab, recordEmoji, recordIcon, recordUpload } =
+    useIconRecents();
+
+  const handleTargetChange = (t: Target) => {
+    setTab(t);
+    onTargetChange(t);
+  };
+
+  // Record into recents (by the active tab) on every pick, then hand off to the
+  // consumer. This is the single integration point — callout and cover both
+  // route through here, so both gain recents with no changes of their own.
+  const handleSelect = (name: string, color?: string) => {
+    if (target === "Emoji") recordEmoji(name);
+    else if (target === "Icons") recordIcon({ name, color });
+    else if (target === "Upload") recordUpload(name);
+    onSelect(name, color, target);
+  };
+
   return (
     <Card
       style={{
@@ -31,11 +51,18 @@ export function IconPickerCard({
         minHeight: 40,
         maxWidth: 380,
         overflow: "hidden",
+        boxShadow: "var(--tt-shadow-elevated-sm)",
       }}
     >
-      <Tabs target={target} onActive={onTargetChange} />
+      <Tabs target={target} onActive={handleTargetChange} />
 
-      {target === "Emoji" && <EmojiPicker onSelect={onSelect} />}
+      <RecentIconRow
+        target={target}
+        recents={recents}
+        onSelect={handleSelect}
+      />
+
+      {target === "Emoji" && <EmojiPicker onSelect={handleSelect} />}
       {target === "Icons" && (
         <Suspense
           fallback={
@@ -52,11 +79,11 @@ export function IconPickerCard({
             </span>
           }
         >
-          <IconPicker onSelect={onSelect} />
+          <IconPicker onSelect={handleSelect} />
         </Suspense>
       )}
       {target === "Upload" && (
-        <UploadIconTab onSelect={(url) => onSelect(url, undefined, "Upload")} />
+        <UploadIconTab onSelect={(url) => handleSelect(url)} />
       )}
 
       <Separator orientation="horizontal" style={{ height: 0.5 }} />

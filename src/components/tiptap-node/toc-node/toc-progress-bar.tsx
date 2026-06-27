@@ -14,7 +14,7 @@ export function TocProgress({ maxShowCount = 20 }: { maxShowCount?: number }) {
   const { tocContent, open, showTocContent, activeId } = useToc();
 
   const items = tocContent.slice(0, maxShowCount);
-  const activeIndex = items.findIndex((i) => i.id === activeId);
+  const activeIndex = items.findIndex((i) => i.id === activeId) ?? 0;
 
   return (
     <CardItemGroup

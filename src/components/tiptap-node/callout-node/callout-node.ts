@@ -1,18 +1,12 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { CalloutNodeView } from "./callout-node-view";
-import type { CalloutColor } from "./types";
-import { DEFAULT_EMOJI, DEFAULT_COLOR } from "./config";
+import type { CalloutAttrs } from "./types";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     callout: {
-      insertCallout: (options?: {
-        emoji?: string;
-        color?: CalloutColor;
-      }) => ReturnType;
-      setCalloutColor: (color: CalloutColor) => ReturnType;
-      setCalloutEmoji: (emoji: string) => ReturnType;
+      insertCallout: (options?: CalloutAttrs) => ReturnType;
     };
   }
 }
@@ -25,8 +19,9 @@ export const CalloutExtension = Node.create({
 
   addAttributes() {
     return {
-      emoji: { default: DEFAULT_EMOJI },
-      color: { default: DEFAULT_COLOR },
+      color: { default: null },
+      iconName: { default: "🔔" },
+      target: { default: "Emoji" },
     };
   },
 
@@ -49,26 +44,17 @@ export const CalloutExtension = Node.create({
   addCommands() {
     return {
       insertCallout:
-        (options = {}) =>
+        (options = { color: null, iconName: null, target: null }) =>
         ({ commands }) =>
           commands.insertContent({
             type: "callout",
             attrs: {
-              emoji: options.emoji ?? DEFAULT_EMOJI,
-              color: options.color ?? DEFAULT_COLOR,
+              color: options.color ?? null,
+              iconName: options.iconName ?? "🔔",
+              target: options.target ?? "Emoji",
             },
             content: [{ type: "paragraph" }],
           }),
-
-      setCalloutColor:
-        (color) =>
-        ({ commands }) =>
-          commands.updateAttributes("callout", { color }),
-
-      setCalloutEmoji:
-        (emoji) =>
-        ({ commands }) =>
-          commands.updateAttributes("callout", { emoji }),
     };
   },
 
