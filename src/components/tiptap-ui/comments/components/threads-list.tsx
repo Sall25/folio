@@ -15,7 +15,7 @@ export const ThreadsList = ({
   const { threads, selectedThread } = useThreadState();
 
   if (positionedThreads.length === 0) {
-    return <label className="label">Empty</label>;
+    return <label className="label"></label>;
   }
 
   if (!editor) return null;

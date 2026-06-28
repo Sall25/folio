@@ -12,11 +12,8 @@ import {
   type VirtualElement,
 } from "@floating-ui/dom";
 import { exitSuggestion, type SuggestionProps } from "@tiptap/suggestion";
-import emojiMartData from "@emoji-mart/data";
 import { EmojiNodeView } from "./emoji-node-view";
 import type { Editor } from "@tiptap/core";
-
-const data = emojiMartData as any;
 
 const FORBIDDEN_BLOCKS = [
   "codeBlock",
@@ -76,42 +73,79 @@ function setCachedEmojiSupport(value: boolean): void {
 }
 
 // ---------------------------------------------------------------------------
-// Emoji list — built once at module level so it's never recomputed on
-// re-renders or page switches. The emoji dataset is static.
+// Emoji dataset — deferred. @emoji-mart/data is ~567KB and was previously
+// imported at module scope, landing in the editor-create (boot) bundle even
+// though emoji are only ever SEARCHED behind an explicit ":" keystroke.
+// Existing emoji nodes render fine without it (EmojiNodeView reads attrs.src),
+// so the dataset is loaded lazily on first picker open, then cached for the
+// rest of the session. ensureEmojiData() is idempotent and de-dupes concurrent
+// calls via the shared promise.
 // ---------------------------------------------------------------------------
-const emojiList = Object.values(data.emojis).map((emoji: any) => ({
-  emoji: emoji.skins[0].native,
-  name: emoji.name,
-  id: emoji.id,
-  shortcodes: [emoji.id, ...(emoji.aliases ?? [])],
-  tags: emoji.keywords ?? [],
-  group: emoji.category ?? "",
-  emoticons: [],
-  version: emoji.version ?? 0,
-  src: toAppleEmojiUrl(emoji.skins[0].native),
-}));
+type EmojiEntry = {
+  emoji: string;
+  name: string;
+  id: string;
+  shortcodes: string[];
+  tags: string[];
+  group: string;
+  emoticons: never[];
+  version: number;
+  src: string;
+};
 
-// Pre-index shortcodes and tags for O(1) prefix lookup — also module-level
-// so indexing only happens once when the module loads, not per editor mount.
-const shortcodeIndex = new Map<string, typeof emojiList>();
-const tagIndex = new Map<string, typeof emojiList>();
+let emojiList: EmojiEntry[] = [];
+let shortcodeIndex = new Map<string, EmojiEntry[]>();
+let tagIndex = new Map<string, EmojiEntry[]>();
+let emojiDataLoaded = false;
+let emojiDataPromise: Promise<void> | null = null;
 
-for (const emoji of emojiList) {
-  for (const sc of emoji.shortcodes) {
-    if (!shortcodeIndex.has(sc)) shortcodeIndex.set(sc, []);
-    shortcodeIndex.get(sc)!.push(emoji);
+function ensureEmojiData(): Promise<void> {
+  if (emojiDataLoaded) return Promise.resolve();
+  if (!emojiDataPromise) {
+    emojiDataPromise = import("@emoji-mart/data").then((mod) => {
+      const data = ((mod as any).default ?? mod) as any;
+
+      emojiList = Object.values(data.emojis).map((emoji: any) => ({
+        emoji: emoji.skins[0].native,
+        name: emoji.name,
+        id: emoji.id,
+        shortcodes: [emoji.id, ...(emoji.aliases ?? [])],
+        tags: emoji.keywords ?? [],
+        group: emoji.category ?? "",
+        emoticons: [],
+        version: emoji.version ?? 0,
+        src: toAppleEmojiUrl(emoji.skins[0].native),
+      }));
+
+      // Pre-index shortcodes and tags for O(1) prefix lookup — built once,
+      // when the dataset first loads.
+      const sIdx = new Map<string, EmojiEntry[]>();
+      const tIdx = new Map<string, EmojiEntry[]>();
+      for (const e of emojiList) {
+        for (const sc of e.shortcodes) {
+          if (!sIdx.has(sc)) sIdx.set(sc, []);
+          sIdx.get(sc)!.push(e);
+        }
+        for (const tag of e.tags) {
+          if (!tIdx.has(tag)) tIdx.set(tag, []);
+          tIdx.get(tag)!.push(e);
+        }
+      }
+      shortcodeIndex = sIdx;
+      tagIndex = tIdx;
+      emojiDataLoaded = true;
+    });
   }
-  for (const tag of emoji.tags) {
-    if (!tagIndex.has(tag)) tagIndex.set(tag, []);
-    tagIndex.get(tag)!.push(emoji);
-  }
+  return emojiDataPromise;
 }
 
 // ---------------------------------------------------------------------------
-// Search — extracted so it's easy to test and not re-created on each
-// suggestion call.
+// Search — runs against the lazily-built indexes. Returns [] if called before
+// the dataset has loaded (shouldn't happen: callers await ensureEmojiData
+// first, but this keeps it safe).
 // ---------------------------------------------------------------------------
 function searchEmojis(query: string, limit = 20) {
+  if (!emojiDataLoaded) return [];
   if (!query) return emojiList.slice(0, limit);
   const q = query.toLowerCase();
   const seen = new Set<string>();
@@ -169,6 +203,17 @@ export const EmojiExtension = Emoji.extend({
   },
 
   onCreate() {
+    // Prefetch the emoji dataset in idle time — off the critical boot path,
+    // so it never blocks startup or first paint, but is usually ready by the
+    // time the user types ":". The dynamic import keeps the 567KB chunk out
+    // of the editor-create bundle either way.
+    const idlePrefetch = () => void ensureEmojiData();
+    if (typeof requestIdleCallback !== "undefined") {
+      requestIdleCallback(idlePrefetch, { timeout: 4000 });
+    } else {
+      setTimeout(idlePrefetch, 1200);
+    }
+
     // If we already have a cached result, skip the canvas check entirely.
     if (getCachedEmojiSupport() !== null) return;
 
@@ -208,11 +253,14 @@ export const EmojiExtension = Emoji.extend({
     ];
   },
 }).configure({
-  emojis: emojiList,
+  // Empty at config time — the real list is loaded lazily and used by the
+  // suggestion below. Keeping this empty is what gets the dataset out of boot.
+  emojis: [],
 
   suggestion: {
-    items: ({ query, editor }) => {
+    items: async ({ query, editor }) => {
       if (isInForbiddenBlock(editor as Editor)) return [];
+      await ensureEmojiData();
       return searchEmojis(query);
     },
     allowSpaces: true,

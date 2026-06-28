@@ -26,16 +26,25 @@ export type IconEntry = {
 
 export type IconName = string;
 
-export const ICON_LIST: IconEntry[] = Object.entries(LucideIcons)
-  .filter(
-    ([name, value]) =>
-      /^[A-Z]/.test(name) &&
-      !name.endsWith("Icon") &&
-      typeof value === "object",
-  )
-  .map(([name, icon]) => ({
-    name,
-    icon: icon as LucideIcon,
-    color: DEFAULT_ICON_COLOR.value,
-  }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+// Built lazily on first call, then cached — so importing this module doesn't
+// enumerate 1400 icons at load time. Only the picker calls this, and only when
+// its grid actually renders.
+let _iconList: IconEntry[] | null = null;
+
+export function getIconList(): IconEntry[] {
+  if (_iconList) return _iconList;
+  _iconList = Object.entries(LucideIcons)
+    .filter(
+      ([name, value]) =>
+        /^[A-Z]/.test(name) &&
+        !name.endsWith("Icon") &&
+        typeof value === "object",
+    )
+    .map(([name, icon]) => ({
+      name,
+      icon: icon as LucideIcon,
+      color: DEFAULT_ICON_COLOR.value,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  return _iconList;
+}

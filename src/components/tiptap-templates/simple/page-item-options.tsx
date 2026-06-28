@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
-import { Card, CardHeader } from "src/components/tiptap-ui-primitive/card";
+import { Card } from "src/components/tiptap-ui-primitive/card";
 import {
   Popover,
   PopoverContent,
@@ -9,7 +9,6 @@ import {
 import { TrashIcon } from "src/components/tiptap-icons";
 import { Ellipsis, Plus, PencilIcon } from "lucide-react";
 import type { Page } from "src/types";
-import { PageItemIcon } from "./page-item-icon";
 import { useActivePage } from "./context/active-page-context";
 import { useDeletePage } from "src/hooks/use-delete-page";
 import { useCreatePage } from "src/hooks/use-create-page";
@@ -60,17 +59,15 @@ export function PageItemOptions({
           </Button>
         </PopoverTrigger>
         <PopoverContent style={{ zIndex: 9555 }}>
-          <Card style={{ padding: "0px 5px" }}>
-            <CardHeader style={{ width: "100%" }}>
-              <Button
-                style={{ width: "100%", justifyContent: "flex-start", gap: 10 }}
-                variant="ghost"
-              >
-                <PageItemIcon cover={page.cover} />
-                <span>{page.title}</span>
-              </Button>
-            </CardHeader>
-            <ButtonGroup style={{ minWidth: 150 }} orientation="vertical">
+          <Card style={{ padding: "5px" }}>
+            <ButtonGroup
+              style={{
+                minWidth: 150,
+                width: "100%",
+                justifyContent: "flex-start",
+              }}
+              orientation="vertical"
+            >
               <Button
                 variant="ghost"
                 style={{
@@ -114,8 +111,10 @@ export function PageItemOptions({
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onOpenChange(false);
-                  setConfirmOpen(true);
+                  onOpenChange(false); // close the dropdown first
+                  // Let the popover's close commit before mounting the dialog, so the
+                  // dropdown doesn't hang open behind it.
+                  requestAnimationFrame(() => setConfirmOpen(true));
                 }}
               >
                 <TrashIcon className="tiptap-button-icon" />

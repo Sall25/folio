@@ -1,7 +1,7 @@
 import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import type { ID } from "src/types";
-import { DatabaseNodeView } from "./database-node-view";
+import { DatabaseNodeViewLazy } from "./database-node-view-lazy";
 import { Plugin } from "@tiptap/pm/state";
 
 declare module "@tiptap/core" {
@@ -53,7 +53,7 @@ export const DatabaseNode = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(DatabaseNodeView);
+    return ReactNodeViewRenderer(DatabaseNodeViewLazy);
   },
 
   addProseMirrorPlugins() {

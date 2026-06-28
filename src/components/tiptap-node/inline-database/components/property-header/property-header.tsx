@@ -42,22 +42,17 @@ import { PersonEditDisplay } from "../person-edit-display";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { IconPicker } from "src/components/tiptap-ui/cover/icon-picker.js";
-import { ICON_LIST } from "src/components/tiptap-ui/cover/data/icon-list.js";
 import { RelationEditDisplay } from "../relation-edit-display";
 import { RollupEditDisplay } from "../rollup-edit-display";
 import { useDataSource } from "../../hooks/use-data-source";
 import { PROPERTY_TYPE_META } from "src/types/property-type-meta";
 import { PropertyTypeChangePopover } from "../property-type-change-popover";
-
-// name -> Lucide component, so a stored `prop.icon` string can be rendered.
-const ICON_MAP = new Map<string, LucideIcon>(
-  (ICON_LIST ?? []).map((e) => [e.name, e.icon]),
-);
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 /**
- * Resolves a property's icon to a Lucide component and renders it.
- * Declared at module level (and rendered via createElement on a lowercase
- * binding) so the chosen component is never "created during render".
+ * Resolves a property's icon and renders it. A custom `iconName` is resolved
+ * lazily via DynamicIcon (which loads the lucide namespace on demand, out of
+ * boot); with no custom name we render the type's fallback icon directly.
  */
 function PropertyIcon({
   iconName,
@@ -69,11 +64,16 @@ function PropertyIcon({
   fallback: LucideIcon;
   color?: string;
 } & React.ComponentProps<LucideIcon>) {
-  const resolved =
-    (iconName && ICON_MAP.get(iconName)) || fallback || UltimateFallbackIcon;
-  // Pass color through lucide's own `color` prop, and only when set — passing
-  // `stroke={undefined}` would override lucide's default stroke="currentColor"
-  // and the icon would render with no stroke (invisible).
+  // Custom icon set → resolve by name on demand. DynamicIcon returns null for
+  // an unknown name, so guard with the fallback by rendering it when there's
+  // no custom name. (A bad stored name will render nothing rather than the
+  // fallback — acceptable, and avoids forcing the whole namespace here.)
+  if (iconName) {
+    return (
+      <DynamicIcon name={iconName} {...(color ? { color, ...rest } : rest)} />
+    );
+  }
+  const resolved = fallback || UltimateFallbackIcon;
   return createElement(resolved, color ? { color, ...rest } : { ...rest });
 }
 

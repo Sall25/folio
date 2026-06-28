@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useDeferredValue } from "react";
-import { ICON_COLORS, ICON_LIST, type IconName } from "./data/icon-list.js";
+import { ICON_COLORS, getIconList, type IconName } from "./data/icon-list.js";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
@@ -109,7 +109,7 @@ export function IconPicker({
 
   const filtered = useMemo(
     () =>
-      ICON_LIST.filter((e) =>
+      getIconList().filter((e) =>
         e.name.toLowerCase().includes(deferred.toLowerCase()),
       ),
     [deferred],
