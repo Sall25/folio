@@ -209,7 +209,7 @@ body,
   width: 100%;
   display: flex;
   overflow: visible;
-   overflow-y: hidden;
+   overflow-y:hidden;
   transition: right 0.2s ease;
    position: relative;
   inset: 0;
@@ -242,11 +242,12 @@ body,
   content-visibility: auto;
   flex: 1;
   min-width: 0;
-  padding-top: var(--tt-toolbar-height); // clears the fixed toolbar
   height: calc(100vh - var(--tt-toolbar-height));
   margin-right: -65px;
   overflow-y: visible;
   overflow-x: hidden;
+  margin-top: var(--tt-toolbar-height);
+  padding-top: 0;
   &::-webkit-scrollbar { width: 6px; }
   &::-webkit-scrollbar-thumb {
     background: var(--tt-border-color);
@@ -269,6 +270,9 @@ body,
   max-width: none; // let flex control width
   display: flex;
   flex-direction: column;
+
+ 
+ 
   // align-items: center;
 }
 

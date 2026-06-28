@@ -1,0 +1,126 @@
+.folio-button-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.folio-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: var(--tt-radius-sm, 6px);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+
+  &--primary {
+    background: var(--tt-brand-color-400, #3b82f6);
+    color: #fff;
+  }
+
+  &--secondary {
+    background: transparent;
+    color: var(--tt-text-primary);
+    border: 1px solid var(--tt-border-color);
+  }
+
+  &__label {
+    outline: none;
+  }
+}
+
+.folio-button__settings {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+  }
+}
+
+.folio-button-wrap:hover .folio-button__settings {
+  opacity: 0.7;
+}
+
+.folio-button__variant {
+  flex: 1;
+  padding: 5px 8px;
+  border: 1px solid var(--tt-border-color);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--tt-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+
+  &[data-active="true"] {
+    color: var(--tt-text-primary);
+    background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+  }
+}
+
+/* Append to button-node.scss */
+
+.folio-button-wrap {
+  /* let the resize strip overflow the button's rounded corner cleanly */
+  .folio-button {
+    user-select: none;
+  }
+
+  &:hover .folio-button__resize-grip {
+    opacity: 0.5;
+  }
+}
+
+.folio-button__resize {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.folio-button__resize-grip {
+  width: 3px;
+  height: 60%;
+  max-height: 18px;
+  border-radius: 2px;
+  background: var(--tt-text-primary);
+  opacity: 0;
+  transition: opacity 0.1s ease;
+  pointer-events: none;
+}
+
+.folio-button__resize:hover .folio-button__resize-grip {
+  opacity: 0.8 !important;
+}
+
+/* gear: hidden until hover, but stays while the settings popover is open */
+.folio-button__settings {
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.folio-button-wrap:hover .folio-button__settings,
+.folio-button__settings[data-open="true"] {
+  opacity: 1;
+}
+
+.folio-button__settings:hover {
+  background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent) !important;
+}

@@ -1,4 +1,5 @@
 import {
+  Box,
   Code2,
   Heading1,
   Heading2,
@@ -6,6 +7,7 @@ import {
   Image,
   List,
   ListOrdered,
+  MousePointerClick,
   Quote,
   Type,
   TypeOutline,
@@ -92,5 +94,17 @@ export const DEFAULT_BLOCK_TYPE_OPTIONS: BlockTypeOption[] = [
     label: "Callout",
     isActive: (editor) => editor.isActive("callout"),
     icon: TypeOutline,
+  },
+  {
+    type: "ctaButton",
+    label: "Button",
+    isActive: (editor) => editor.isActive("ctaButton"),
+    icon: MousePointerClick,
+  },
+  {
+    type: "container",
+    label: "Container",
+    isActive: (editor) => editor.isActive("container"),
+    icon: Box,
   },
 ];

@@ -1,4 +1,3 @@
-// page-item-icon.tsx
 
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import { FileText } from "lucide-react";

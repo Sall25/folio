@@ -48,6 +48,7 @@ export function PageBreadcrumb() {
     return chain.map((p) => ({
       id: p.id,
       title: p.title || "Untitled",
+
       // icon: <render p.<your-icon-field> here, e.g. an emoji or PageIcon />,
     }));
   }, [tree, activePageId]);

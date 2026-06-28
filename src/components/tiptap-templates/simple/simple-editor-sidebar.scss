@@ -42,7 +42,7 @@
   z-index: 10;
 
   .tiptap-card-body {
-    scrollbar-width: auto;
+    overflow-x: hidden;
   }
 
   // top-down light wash — fades out before the lower nav items
@@ -212,7 +212,7 @@
   width: 100%;
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: hidden !important;
   padding: 4px 8px 16px 10px; // ← extra bottom padding so last item isn't clipped
  
   display: flex;

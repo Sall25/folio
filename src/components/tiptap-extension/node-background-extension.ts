@@ -17,7 +17,7 @@ declare module "@tiptap/core" {
 export interface NodeBackgroundOptions {
   /**
    * Node types that should support background colors
-   * @default ["paragraph", "heading", "blockquote", "taskList", "bulletList", "orderedList", "tableCell", "tableHeader", "callout"]
+   * @default ["paragraph", "heading", "blockquote", "taskList", "bulletList", "orderedList", "tableCell", "tableHeader", "callout", "cta"]
    */
   types: string[];
   /**
@@ -61,6 +61,8 @@ export const NodeBackground = Extension.create<NodeBackgroundOptions>({
         "tableCell",
         "tableHeader",
         "callout",
+        "ctaButton",
+        "container",
       ],
       useStyle: true,
     };

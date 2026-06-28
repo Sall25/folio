@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   AtSign,
   Bookmark,
+  Box,
   Code2,
   Columns2,
   Columns3,
@@ -21,6 +22,7 @@ import {
   ListOrdered,
   Milestone,
   Minus,
+  MousePointerClick,
   NotebookTabs,
   Paperclip,
   Pilcrow,
@@ -374,6 +376,24 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     description: "Make text stand out in a box.",
     icon: TypeOutline,
     run: (e) => e.chain().focus().insertCallout().run(),
+  },
+  // ─── Button ─────────────────────────────────────────────
+  {
+    id: "button",
+    type: "command",
+    title: "Button",
+    description: "A call-to-action button.",
+    icon: MousePointerClick,
+    run: (e) => e.chain().focus().insertButton().run(),
+  },
+  // ───Container ─────────────────────────────────────────────
+  {
+    id: "container",
+    type: "command",
+    title: "Container",
+    description: "Flexible box to group blocks",
+    icon: Box,
+    run: (editor) => editor.chain().focus().insertContainer().run(),
   },
   //  ─── Database ─────────────────────────────────────────────
   {

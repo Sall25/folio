@@ -46,6 +46,8 @@ export default function ColorDropdownMenu({
     "tableCell",
     "tableHeader",
     "callout",
+    "ctaButton",
+    "container",
   ],
   hideWhenUnavailable,
   onAction,

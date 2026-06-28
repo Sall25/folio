@@ -38,6 +38,8 @@ const NODE_LABELS: Record<string, string> = {
   pageLink: "Page",
   databaseRecord: "Record",
   callout: "Callout",
+  ctaButton: "Button",
+  container: "Container",
 };
 
 const nestedOptions = {
@@ -72,7 +74,8 @@ const nestedOptions = {
           name === "blockquote" ||
           name === "databaseRecord" ||
           name === "table" ||
-          name === "callout"
+          name === "callout" ||
+          name === "container"
           // name === "column"
         ) {
           return -200;

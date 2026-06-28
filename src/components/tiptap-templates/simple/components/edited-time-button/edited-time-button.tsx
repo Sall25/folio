@@ -7,7 +7,6 @@ import {
 import type { Page } from "src/types";
 import PageActivity from "./page-activity";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Clock } from "lucide-react";
 
 // Recent → relative; older → absolute date. Mirrors useRecentPages' fallback.
 function formatRelative(ts: number): string {
@@ -67,8 +66,17 @@ export default function EditedTimeButton({
               : "transparent")
           }
         >
-          <Clock className="tiptap-button-icon" />
-          <span className="tiptap-button-text">
+          <span
+            className="tiptap-button-text"
+            style={{
+              fontSize: 14,
+              fontWeight: 400,
+              lineHeight: 1.4,
+              color: "var(--tt-text-color)",
+              fontFamily:
+                'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"',
+            }}
+          >
             {" "}
             Edited {formatRelative(editedAt)}
           </span>

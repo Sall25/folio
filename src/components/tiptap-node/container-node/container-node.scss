@@ -1,0 +1,56 @@
+.folio-container-wrap {
+  width: 100%;
+  display: flex;
+  margin: 6px 0;
+}
+
+.folio-container {
+  position: relative;
+  box-sizing: border-box;
+  min-width: 120px;
+  min-height: 48px;
+  padding: 12px;
+  border-radius: var(--tt-radius-md, 8px);
+  border: 1px solid var(--tt-border-color);
+
+  &:hover .folio-container__resize-grip {
+    opacity: 0.5;
+  }
+}
+
+.folio-container__content {
+  > :first-child {
+    margin-top: 0;
+  }
+  > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+.folio-container__resize {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.folio-container__resize-grip {
+  width: 3px;
+  height: 40px;
+  max-height: 60%;
+  border-radius: 2px;
+  background: var(--tt-text-primary);
+  opacity: 0;
+  transition: opacity 0.1s ease;
+  pointer-events: none;
+}
+
+.folio-container__resize:hover .folio-container__resize-grip {
+  opacity: 0.8 !important;
+}

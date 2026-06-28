@@ -63,10 +63,19 @@ import {
   CodeGroup,
   CodeGroupItem,
 } from "src/components/tiptap-node/code-group-node";
+import { ButtonNode } from "src/components/tiptap-node/button-node";
+import { Container } from "src/components/tiptap-node/container-node";
 
 export function useEditorExtensions(
   refsRef: React.RefObject<EditorExtensionRefs>,
 ) {
+  const handleNavigate = (href: string) => {
+    if (/^https?:\/\//i.test(href)) {
+      window.open(href, "_blank", "noopener,noreferrer");
+    } else {
+      refsRef.current?.setActivePageId(href);
+    }
+  };
   const extensions = useMemo(
     () => [
       // --- Core ---
@@ -201,6 +210,8 @@ export function useEditorExtensions(
       Tab,
       CodeGroup,
       CodeGroupItem,
+      ButtonNode,
+      Container.configure({ onNavigate: handleNavigate }),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

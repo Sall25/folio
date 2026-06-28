@@ -10,6 +10,7 @@ import {
   SquarePen,
   ArrowDown,
   ArrowUp,
+  LayoutTemplate,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -34,7 +35,6 @@ import { useCreatePage } from "src/hooks/use-create-page";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage as updatePage } from "src/api/pages";
 import { SidebarBodySkeleton } from "./components/skeletons";
-import { usePageView } from "./context/page-view-context";
 import { useActivePage } from "./context/active-page-context";
 import {
   Section,
@@ -45,6 +45,8 @@ import {
 import { ScrollFog } from "src/components/tiptap-ui-primitive/scroll-frog";
 import { useLibrary } from "./context/library-context";
 import { useLocalStorage } from "./hooks/use-local-storage";
+import { useTemplates } from "./context/templates-context";
+import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
 
 function User() {
   const { collapsed, onCollapsedChange } = useEditorLayout();
@@ -141,10 +143,10 @@ function WorkspaceHeader() {
 }
 
 function WorkSpaceFooter({
-  // onSettingsClick,
+  onOpenTemplatesGallery,
   onCreatePage,
 }: {
-  onSettingsClick?: () => void;
+  onOpenTemplatesGallery?: () => void;
   onCreatePage?: () => void;
 }) {
   return (
@@ -189,82 +191,46 @@ function WorkSpaceFooter({
           justifyContent: "flex-start",
           alignItems: "center",
           marginBottom: 5,
-          gap: 5,
+          gap: 10,
         }}
       >
         <Button
+          aria-label="Browse templates"
+          variant="ghost"
+          // data-active-state="on"
           style={{
-            minWidth: 28,
-            width: 28,
-            height: 28,
-            minHeight: 28,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "100%",
+            padding: "20.5px 10px",
+            borderRadius: "100px",
+            border: "1px solid var(--tt-border-color)",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
           }}
+          onClick={onOpenTemplatesGallery}
         >
+          <LayoutTemplate className="tiptap-button-icon" />
           <span
             className="tiptap-button-text"
-            style={{ textAlign: "center", fontSize: 13, fontWeight: 600 }}
+            style={{ whiteSpace: "nowrap", color: "var(--tt-text-color)" }}
           >
-            J
+            Browse templates
           </span>
+
+          <ShortcutBadge shortcutKeys="Ctrl+O" />
         </Button>
 
-        <CardItemGroup>
-          <span style={{ fontSize: 11.5, color: "var(--tt-text-primary)" }}>
-            Jule
-          </span>
-          <span style={{ fontSize: 10, color: "var(--tt-text-secondary)" }}>
-            Pro plan
-          </span>
-        </CardItemGroup>
-
-        <CardItemGroup
-          orientation="horizontal"
-          style={{ marginLeft: "auto", gap: 4, alignItems: "center" }}
+        <Button
+          aria-label="Create new page"
+          variant="ghost"
+          onClick={onCreatePage}
+          tooltip="Create Page"
+          style={{
+            padding: "20px 20.5px",
+            borderRadius: "100px",
+            border: "1px solid var(--tt-border-color)",
+          }}
         >
-          {/* <Button
-            variant="ghost"
-            aria-label="Settings"
-            onClick={onSettingsClick}
-            style={{
-              minWidth: 32,
-              width: 32,
-              height: 32,
-              minHeight: 32,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              borderRadius: "var(--tt-radius-md)",
-              color: "var(--tt-text-secondary)",
-            }}
-          >
-            <Settings size={16} />
-          </Button> */}
-
-          <Button
-            aria-label="Create new page"
-            onClick={onCreatePage}
-            data-active-state="on"
-            tooltip="Create Page"
-            // style={{
-            //   minWidth: 32,
-            //   width: 32,
-            //   height: 32,
-            //   minHeight: 32,
-            //   display: "flex",
-            //   justifyContent: "center",
-            //   alignItems: "center",
-            //   borderRadius: "var(--tt-radius-md)",
-            //   background: "var(--tt-brand-color-400)",
-            //   color: "#fff",
-            // }}
-          >
-            <SquarePen className="tiptap-button-icon" />
-          </Button>
-        </CardItemGroup>
+          <SquarePen className="tiptap-button-icon" />
+        </Button>
       </CardItemGroup>
     </CardFooter>
   );
@@ -529,8 +495,8 @@ export function SimpleEditorSidebar() {
   const { tree, data: pages, isPending, isLoading } = usePageTree();
   const patchPage = usePatchPage(({ id, patch }) => updatePage(id, patch));
   const createPage = useCreatePage();
-  const { setTarget } = usePageView();
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId, activePageId } = useActivePage();
+  const { onOpenChange: onTemplatesGalleryOpenChange } = useTemplates();
 
   const onCreatePage = () => {
     const newPage = makePage({
@@ -538,13 +504,14 @@ export function SimpleEditorSidebar() {
       parentId: null,
       category: "Private",
     });
-    setTarget({ pageId: newPage.id, view: "Center" });
 
     createPage
       .mutateAsync(newPage)
-      // .then((page) => setTarget({ pageId: page.id, view: "Center" }))
+      .then((newPage) => setActivePageId(newPage.id))
       .catch(() => {
-        setTarget(undefined);
+        if (activePageId) {
+          setActivePageId(activePageId);
+        }
         console.log("failed to create new page");
       });
   };
@@ -623,7 +590,12 @@ export function SimpleEditorSidebar() {
       </CardBody>
 
       {/* <Separator orientation="horizontal" style={{ height: 0.5 }} /> */}
-      {!collapsed && <WorkSpaceFooter onCreatePage={onCreatePage} />}
+      {!collapsed && (
+        <WorkSpaceFooter
+          onCreatePage={onCreatePage}
+          onOpenTemplatesGallery={() => onTemplatesGalleryOpenChange?.(true)}
+        />
+      )}
     </Card>
   );
 }

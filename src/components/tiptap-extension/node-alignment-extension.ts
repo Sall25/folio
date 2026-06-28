@@ -23,7 +23,7 @@ declare module "@tiptap/core" {
 export interface NodeAlignmentOptions {
   /**
    * Node types that should support alignment
-   * @default ["paragraph", "heading", "blockquote", "taskList", "bulletList", "orderedList", "tableCell", "tableHeader"]
+   * @default ["paragraph", "heading", "blockquote", "taskList", "bulletList", "orderedList", "tableCell", "tableHeader", "ctaButton"]
    */
   types: string[];
   /**
@@ -50,6 +50,8 @@ export const NodeAlignment = Extension.create<NodeAlignmentOptions>({
         "tableRow",
         "table",
         "figure",
+        "ctaButton",
+        "container",
       ],
       useStyle: true,
     };

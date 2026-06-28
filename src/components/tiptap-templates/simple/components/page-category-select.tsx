@@ -6,15 +6,7 @@ import {
   useCallback,
 } from "react";
 import { createPortal } from "react-dom";
-import {
-  Star,
-  Users,
-  Lock,
-  Building2,
-  Check,
-  ChevronDown,
-  LayoutGrid,
-} from "lucide-react";
+import { Star, Users, Lock, Building2, Check, ChevronDown } from "lucide-react";
 import type { PageCategory } from "src/types";
 import "./page-category-select.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -22,14 +14,16 @@ import { useActivePage } from "../context/active-page-context";
 import { Bone } from "./skeletons";
 
 // Selectable categories — mirror the sidebar sections.
-const OPTIONS: { value: PageCategory; label: string; icon: React.ReactNode }[] =
-  [
-    { value: "Favorites", label: "Favorites", icon: <Star size={15} /> },
-    { value: "Shared", label: "Shared", icon: <Users size={15} /> },
-    { value: "Private", label: "Private", icon: <Lock size={15} /> },
-    { value: "Teamspaces", label: "Teamspaces", icon: <Building2 size={15} /> },
-    { value: "Template", label: "Template", icon: <LayoutGrid size={15} /> },
-  ];
+const OPTIONS: {
+  value: Exclude<PageCategory, "Template">;
+  label: string;
+  icon: React.ReactNode;
+}[] = [
+  { value: "Favorites", label: "Favorites", icon: <Star size={15} /> },
+  { value: "Shared", label: "Shared", icon: <Users size={15} /> },
+  { value: "Private", label: "Private", icon: <Lock size={15} /> },
+  { value: "Teamspaces", label: "Teamspaces", icon: <Building2 size={15} /> },
+];
 
 const DEFAULT_CATEGORY: PageCategory = "Private";
 

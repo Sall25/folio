@@ -38,7 +38,14 @@ interface AlignmentDropdownMenuProps {
 
 export default function AlignmentDropdownMenu({
   editor: providedEditor,
-  allowedBlockTypes = ["table", "tableHeader", "tableCell", "tableRow"],
+  allowedBlockTypes = [
+    "table",
+    "tableHeader",
+    "tableCell",
+    "tableRow",
+    "ctaButton",
+    "container",
+  ],
   hideWhenUnavailable,
   onAction,
   className,

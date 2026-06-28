@@ -163,7 +163,7 @@ export function NotificationBell() {
         );
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
-          el.classList.add("notification-highlight"); // ← briefly highlight
+          el.classList.add("notification-highlight");
           setTimeout(() => el.classList.remove("notification-highlight"), 2000);
         }
       }, 300); // give page switch time to settle

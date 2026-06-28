@@ -393,6 +393,9 @@ ul[data-type="taskList"] .is-empty[data-placeholder]:has(> .ProseMirror-trailing
 .node-callout .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before{
   left: 4.3rem;
 }
+.node-container .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before{
+  left: 1rem;
+}
 
 /* =====================
    DROPCURSOR

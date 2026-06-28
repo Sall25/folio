@@ -43,7 +43,7 @@
     position: fixed; // coordinates supplied inline from the trigger's rect
     z-index: 1000; // portaled to body, above sidebar (120) and modals (101)
     min-width: 184px;
-    padding: 4px;
+    padding: 5px 10px;
     background: var(--tt-card-bg-color);
     border: 1px solid var(--tt-border-color);
     border-radius: var(--tt-radius-md, 8px);
