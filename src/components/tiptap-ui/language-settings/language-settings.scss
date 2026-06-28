@@ -1,0 +1,53 @@
+.language-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--tt-text-primary);
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+  }
+
+  &__options {
+    display: inline-flex;
+    border: 1px solid var(--tt-border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  &__option {
+    border: none;
+    background: transparent;
+    color: var(--tt-text-secondary);
+    font-size: 13px;
+    padding: 6px 14px;
+    cursor: pointer;
+
+    & + & {
+      border-left: 1px solid var(--tt-border-color);
+    }
+
+    &[data-active="true"] {
+      background: color-mix(in srgb, var(--tt-brand-color-400) 14%, transparent);
+      color: var(--tt-text-primary);
+    }
+
+    &:hover:not([data-active="true"]) {
+      background: color-mix(in srgb, var(--tt-text-primary) 5%, transparent);
+    }
+  }
+}

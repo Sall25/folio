@@ -1,0 +1,53 @@
+{
+  "actions": {
+    "new": "New",
+    "newPage": "New page",
+    "search": "Search",
+    "settings": "Settings",
+    "delete": "Delete",
+    "rename": "Rename",
+    "duplicate": "Duplicate",
+    "cancel": "Cancel",
+    "save": "Save",
+    "add": "Add",
+    "close": "Close",
+    "copy": "Copy",
+    "done": "Done"
+  },
+  "sidebar": {
+    "home": "Home",
+    "search": "Search",
+    "templates": "Templates",
+    "trash": "Trash",
+    "settings": "Settings",
+    "newPage": "New page"
+  },
+  "page": {
+    "untitled": "Untitled",
+    "newPage": "New Page",
+    "deletedPage": "Deleted Page"
+  },
+  "templates": {
+    "browse": "Browse templates",
+    "startFrom": "Start from a template",
+    "browseAll": "Browse all templates",
+    "blankPage": "Blank page"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "language": "Language",
+    "languageDescription": "Choose the language for Folio's interface.",
+    "people": "People",
+    "teamspaces": "Teamspaces"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "en": "English",
+    "fr": "Français"
+  }
+}

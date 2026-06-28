@@ -1,0 +1,53 @@
+{
+  "actions": {
+    "new": "Nouveau",
+    "newPage": "Nouvelle page",
+    "search": "Rechercher",
+    "settings": "Paramètres",
+    "delete": "Supprimer",
+    "rename": "Renommer",
+    "duplicate": "Dupliquer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "add": "Ajouter",
+    "close": "Fermer",
+    "copy": "Copier",
+    "done": "Terminé"
+  },
+  "sidebar": {
+    "home": "Accueil",
+    "search": "Rechercher",
+    "templates": "Modèles",
+    "trash": "Corbeille",
+    "settings": "Paramètres",
+    "newPage": "Nouvelle page"
+  },
+  "page": {
+    "untitled": "Sans titre",
+    "newPage": "Nouvelle page",
+    "deletedPage": "Page supprimée"
+  },
+  "templates": {
+    "browse": "Parcourir les modèles",
+    "startFrom": "Commencer à partir d'un modèle",
+    "browseAll": "Parcourir tous les modèles",
+    "blankPage": "Page vierge"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "appearance": "Apparence",
+    "language": "Langue",
+    "languageDescription": "Choisissez la langue de l'interface de Folio.",
+    "people": "Personnes",
+    "teamspaces": "Espaces d'équipe"
+  },
+  "theme": {
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
+  "language": {
+    "en": "English",
+    "fr": "Français"
+  }
+}
