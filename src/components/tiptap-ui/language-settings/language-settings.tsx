@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { SUPPORTED_LANGUAGES } from "src/i18n/config";
-import "./language-setting.scss";
+import "./language-settings.scss";
 
 export function LanguageSetting() {
   const { t, i18n } = useTranslation();

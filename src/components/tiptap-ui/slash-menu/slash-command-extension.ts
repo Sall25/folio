@@ -17,9 +17,10 @@ import {
 
 import "./slash-command-extension.scss";
 import {
-  SLASH_COMMANDS,
+  getSlashCommands,
   type SlashCommand as SlashItem,
 } from "./slash-commands";
+import i18n from "src/i18n/config";
 import type { ID, Page } from "src/types";
 
 const COLOR_TRIGGER_KEYWORDS = ["color", "highlight", "colour"];
@@ -40,7 +41,7 @@ const isInForbiddenBlock = (editor: Editor) =>
   FORBIDDEN_BLOCKS.some((block) => editor.isActive(block));
 
 interface SlashCommandOptions {
-  commands: typeof SLASH_COMMANDS;
+  commands: SlashItem[];
 }
 
 declare module "@tiptap/core" {
@@ -83,7 +84,7 @@ export const SlashCommand = Extension.create<
 
   addOptions() {
     return {
-      commands: SLASH_COMMANDS,
+      commands: getSlashCommands(i18n.t),
     };
   },
 
@@ -233,7 +234,7 @@ export const SlashCommand = Extension.create<
       startOfLine: false,
       decorationClass: "slash-suggestion",
       allowSpaces: true,
-      decorationContent: "Filter...",
+      decorationContent: i18n.t("slash.filter"),
       allowedPrefixes: null,
 
       items: ({ query, editor }) => {
@@ -241,11 +242,15 @@ export const SlashCommand = Extension.create<
           return [];
         }
 
+        // Rebuild fresh each query so a language switch re-localizes the menu
+        // (and so filtering matches the translated titles).
+        const commands = getSlashCommands(i18n.t);
+
         const q = (query || "").toLowerCase();
 
         const showColorSection =
           q.length > 0 &&
-          (this.options.commands as SlashItem[])
+          commands
             .filter(isColorItem)
             .some(
               (cmd) =>
@@ -255,7 +260,7 @@ export const SlashCommand = Extension.create<
                 ),
             );
 
-        return (this.options.commands as SlashItem[]).filter((cmd) => {
+        return commands.filter((cmd) => {
           if (isColorStructural(cmd)) return showColorSection;
 
           if (isColorItem(cmd)) {

@@ -1,4 +1,5 @@
 {
+ 
   "actions": {
     "new": "Nouveau",
     "newPage": "Nouvelle page",
@@ -12,26 +13,128 @@
     "add": "Ajouter",
     "close": "Fermer",
     "copy": "Copier",
-    "done": "Terminé"
+    "done": "Terminé",
+    "moveUp": "Déplacer vers le haut",
+    "moveDown": "Déplacer vers le bas",
+    "createPage": "Créer une page",
+    "open": "Ouvrir"
   },
+  "activity": "Activité",
+  "creadtedBy": "Créé par",
+  "editedBy": "Modifié par",
+  "edited": "Modifié",
   "sidebar": {
     "home": "Accueil",
     "search": "Rechercher",
+    "inbox": "Notifications",
+    "store": "Marché",
     "templates": "Modèles",
     "trash": "Corbeille",
     "settings": "Paramètres",
-    "newPage": "Nouvelle page"
+    "newPage": "Nouvelle page",
+    "collapse": "Réduire",
+    "expand": "Développer",
+    "library": "Bibliothèque",
+    "showcase": "Vitrine",
+    "featureOfTheWeek": "Fonctionnalité de la semaine",
+    "recents": "Récents",
+    "personalSpace": "Espace de {{name}}"
   },
-  "page": {
+    "library": {
+    "title": "Bibliothèque",
+    "createFirst": "Créer votre première page",
+    "tabs": {
+      "recents": "Récents",
+      "favorites": "Favoris",
+      "shared": "Partagés",
+      "private": "Privés",
+      "teamspaces": "Espaces d'équipe"
+    },
+    "columns": {
+      "page": "Page",
+      "createdBy": "Créé par",
+      "lastEdited": "Dernière modification"
+    },
+    "empty": {
+      "recents": "Aucune page récente",
+      "favorites": "Aucun favori pour le moment",
+      "shared": "Rien de partagé pour le moment",
+      "private": "Aucune page privée pour le moment",
+      "teamspaces": "Aucune page d'espace d'équipe pour le moment"
+    }
+  },
+   "search": {
+    "title": "Rechercher",
+    "placeholder": "Rechercher des pages...",
+    "templatePlaceholder": "Rechercher des modèles...",
+    "noResults": "Aucun résultat pour « {{query}} »",
+    "noPages": "Aucune page pour le moment",
+    "today": "Aujourd'hui",
+    "past": "Plus tôt",
+    "openPage": "Ouvrir la page",
+    "previewEmpty": "Sélectionnez un résultat pour l'aperçu.",
+    "noContent": "Aucun contenu pour le moment",
+    "hintSelect": "Sélectionner",
+    "hintOpen": "Ouvrir",
+    "hintOpenNewWindow": "Ouvrir dans une nouvelle fenêtre",
+    "filters": {
+      "titlesOnly": "Rechercher uniquement les titres",
+      "createdBy": "Créé par",
+      "teamspace": "Espace d'équipe",
+      "inPage": "Dans la page",
+      "date": "Date"
+    }
+  },
+  "showcase": {
+    "title": "Votre travail, exposé au grand jour",
+    "desc": "Le foyer de tout ce que vous créez — applications, designs, animations, films, présentations — et des événements qui les mettent en lumière."
+  },
+  "recents": {
+    "options": "Options des récents",
+    "show": "Afficher",
+    "allItems": "Tous les éléments",
+    "items_one": "{{count}} élément",
+    "items_other": "{{count}} éléments"
+  },
+  "section":{
+    "private": "Privés",
+    "shared": "Partagés",
+    "teamspaces": "Travail de Groupes",
+    "favorites": "Favoris",
+    "template": "Modèles"
+  },
+ "page": {
     "untitled": "Sans titre",
     "newPage": "Nouvelle page",
-    "deletedPage": "Page supprimée"
+    "deletedPage": "Page supprimée",
+    "locked": "Verrouillé"
   },
-  "templates": {
+   "time": {
+    "justNow": "À l'instant",
+    "minutesAgo": "il y a {{count}} min",
+    "hoursAgo": "il y a {{count}} h",
+    "yesterday": "Hier",
+    "daysAgo_one": "il y a {{count}} jour",
+    "daysAgo_other": "il y a {{count}} jours"
+  },
+   "templates": {
     "browse": "Parcourir les modèles",
     "startFrom": "Commencer à partir d'un modèle",
     "browseAll": "Parcourir tous les modèles",
-    "blankPage": "Page vierge"
+    "blankPage": "Page vierge",
+    "blankTemplate": "Modèle vierge",
+    "newTemplate": "Nouveau modèle",
+    "title": "Modèles",
+    "notUsedYet": "Pas encore utilisé",
+    "uses_one": "{{count}} utilisation",
+    "uses_other": "{{count}} utilisations",
+    "noMatch": "Aucun modèle ne correspond à « {{query}} ».",
+    "emptyHint": "Enregistrez n'importe quelle page comme modèle, ou partez de la tuile vierge.",
+    "createdBy": "Créé par",
+    "unknown": "Inconnu",
+    "usedBy": "Utilisé par",
+    "openTemplate": "Ouvrir le modèle",
+    "hoverHint": "Survolez un modèle pour voir les détails."
   },
   "settings": {
     "title": "Paramètres",
@@ -41,6 +144,27 @@
     "people": "Personnes",
     "teamspaces": "Espaces d'équipe"
   },
+   "home": {
+    "recentlyVisited": "Récemment consultés",
+    "earlier": "Plus tôt",
+    "edited": "Modifié {{time}}",
+    "emptyTitle": "Créez votre première page",
+    "emptyDesc": "Vos pages récemment ouvertes apparaîtront ici.",
+    "time": {
+      "justNow": "à l'instant",
+      "minutesAgo": "il y a {{count}} min",
+      "hoursAgo": "il y a {{count}} h",
+      "yesterday": "hier",
+      "daysAgo": "il y a {{count}} j"
+    }
+  },
+  "greeting": {
+    "morning": "Bonjour",
+    "afternoon": "Bon après-midi",
+    "evening": "Bonsoir",
+    "night": "Bonne nuit",
+    "withName": "{{greeting}}, {{name}}"
+  },
   "theme": {
     "light": "Clair",
     "dark": "Sombre",
@@ -49,5 +173,237 @@
   "language": {
     "en": "English",
     "fr": "Français"
+  },
+  "colors": {
+    "label": "Couleurs",
+    "recent": "Couleurs récentes",
+    "background": "Couleurs d'arrière-plan",
+    "highlight": "Surligner",
+    "removeHighlight": "Supprimer le surlignage",
+    "highlights": {
+      "default": "Arrière-plan par défaut",
+      "gray": "Arrière-plan gris",
+      "brown": "Arrière-plan marron",
+      "orange": "Arrière-plan orange",
+      "yellow": "Arrière-plan jaune",
+      "lime": "Arrière-plan vert citron",
+      "green": "Arrière-plan vert",
+      "mint": "Arrière-plan menthe",
+      "teal": "Arrière-plan sarcelle",
+      "cyan": "Arrière-plan cyan",
+      "blue": "Arrière-plan bleu",
+      "slate": "Arrière-plan ardoise",
+      "indigo": "Arrière-plan indigo",
+      "purple": "Arrière-plan pourpre",
+      "violet": "Arrière-plan violet",
+      "magenta": "Arrière-plan magenta",
+      "pink": "Arrière-plan rose",
+      "rose": "Arrière-plan rose pâle",
+      "red": "Arrière-plan rouge"
+    },
+    "removeColor": "Supprimer la couleur",
+    "texts": {
+      "default": "Texte par défaut",
+      "gray": "Texte gris",
+      "brown": "Texte marron",
+      "orange": "Texte orange",
+      "yellow": "Texte jaune",
+      "lime": "Texte vert citron",
+      "green": "Texte vert",
+      "mint": "Texte menthe",
+      "teal": "Texte sarcelle",
+      "cyan": "Texte cyan",
+      "blue": "Texte bleu",
+      "slate": "Texte ardoise",
+      "indigo": "Texte indigo",
+      "purple": "Texte pourpre",
+      "violet": "Texte violet",
+      "magenta": "Texte magenta",
+      "pink": "Texte rose",
+      "rose": "Texte rose pâle",
+      "red": "Texte rouge"
+    }
+  },
+  "blockMenu": {
+    "text": "Texte",
+    "turnInto": "Transformer en",
+    "comment": "Commenter",
+    "duplicateNode": "Dupliquer le nœud",
+    "copyToClipboard": "Copier dans le presse-papiers",
+    "copyAnchorLink": "Copier le lien d'ancrage",
+    "deleteNode": "Supprimer le nœud",
+    "resetFormatting": "Effacer la mise en forme"
+  },
+ "blockTypes": {
+  "paragraph": "Paragraphe",
+  "heading1": "Titre 1",
+  "heading2": "Titre 2",
+  "heading3": "Titre 3",
+  "blockquote": "Citation",
+  "codeBlock": "Bloc de code",
+  "orderedList": "Liste numérotée",
+  "bulletList": "Liste à puces",
+  "taskList": "Liste de tâches",
+  "turnIntoPage": "Transformer en page"
+  },
+  "slash": {
+    "sections": {
+      "style": "Style",
+      "insert": "Insérer",
+      "upload": "Importer"
+    },
+    "items": {
+      "text": {
+        "title": "Texte",
+        "description": "Commencez simplement à écrire en texte brut."
+      },
+      "h1": {
+        "title": "Titre 1",
+        "description": "Grand titre de section."
+      },
+      "h2": {
+        "title": "Titre 2",
+        "description": "Titre de section moyen."
+      },
+      "h3": {
+        "title": "Titre 3",
+        "description": "Petit titre de section."
+      },
+      "h4": {
+        "title": "Titre 4",
+        "description": "Titre de section plus petit."
+      },
+      "h5": {
+        "title": "Titre 5",
+        "description": "Tout petit titre de section."
+      },
+      "h6": {
+        "title": "Titre 6",
+        "description": "Le plus petit titre de section."
+      },
+      "bulletList": {
+        "title": "Liste à puces",
+        "description": "Créer une simple liste à puces."
+      },
+      "orderedList": {
+        "title": "Liste numérotée",
+        "description": "Créer une liste numérotée."
+      },
+      "taskList": {
+        "title": "Liste de tâches",
+        "description": "Suivre des tâches avec une liste de contrôle."
+      },
+      "separator": {
+        "title": "Séparateur",
+        "description": "Diviser visuellement les blocs."
+      },
+      "breadcrumb": {
+        "title": "Fil d'Ariane",
+        "description": "Afficher l'emplacement de cette page."
+      },
+      "quote": {
+        "title": "Citation",
+        "description": "Insérer une citation."
+      },
+      "codeBlock": {
+        "title": "Bloc de code",
+        "description": "Insérer un extrait de code."
+      },
+      "table": {
+        "title": "Tableau",
+        "description": "Ajouter un tableau simple."
+      },
+      "toc": {
+        "title": "Table des matières",
+        "description": "Aperçu des titres de votre page."
+      },
+      "column2": {
+        "title": "2 colonnes",
+        "description": "Deux colonnes côte à côte."
+      },
+      "column3": {
+        "title": "3 colonnes",
+        "description": "Trois colonnes côte à côte."
+      },
+      "column4": {
+        "title": "4 colonnes",
+        "description": "Quatre colonnes côte à côte."
+      },
+      "tabs": {
+        "title": "Onglets",
+        "description": "Organiser le contenu en onglets."
+      },
+      "codeGroup": {
+        "title": "Groupe de code",
+        "description": "Exemples de code par langage, en onglets."
+      },
+      "mention": {
+        "title": "Mention",
+        "description": "Lier une personne ou une page."
+      },
+      "emoji": {
+        "title": "Emoji",
+        "description": "Rechercher et insérer un emoji."
+      },
+      "mathBlock": {
+        "title": "Équation en bloc",
+        "description": "Afficher une équation autonome."
+      },
+      "mathInline": {
+        "title": "Équation en ligne",
+        "description": "Insérer des maths dans le texte."
+      },
+      "image": {
+        "title": "Image",
+        "description": "Importer ou intégrer une image."
+      },
+      "file": {
+        "title": "Fichier",
+        "description": "Importer une pièce jointe."
+      },
+      "youtube": {
+        "title": "Youtube",
+        "description": "Intégrer une vidéo YouTube."
+      },
+      "bookmark": {
+        "title": "Marque-page web",
+        "description": "Enregistrer un lien sous forme de carte."
+      },
+      "page": {
+        "title": "Page",
+        "description": "Créer une sous-page imbriquée."
+      },
+      "audio": {
+        "title": "Audio",
+        "description": "Intégrer un extrait audio."
+      },
+      "callout": {
+        "title": "Encadré",
+        "description": "Faire ressortir du texte dans une boîte."
+      },
+      "button": {
+        "title": "Bouton",
+        "description": "Un bouton d'appel à l'action."
+      },
+      "container": {
+        "title": "Conteneur",
+        "description": "Boîte flexible pour regrouper des blocs."
+      },
+      "database": {
+        "title": "Base de données en ligne",
+        "description": "Insérer un tableau, un tableau Kanban ou une liste."
+      }
+    },
+    "colors": {
+      "red": "Rouge",
+      "orange": "Orange",
+      "yellow": "Jaune",
+      "green": "Vert",
+      "blue": "Bleu",
+      "purple": "Violet"
+    },
+    "filter": "Filtrer...",
+    "commandsAria": "Commandes slash",
+    "closeAria": "Fermer (Échap)"
   }
 }

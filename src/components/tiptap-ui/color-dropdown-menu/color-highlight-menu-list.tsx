@@ -6,6 +6,7 @@ import {
   type UseColorHighlightConfig,
 } from "../color-highlight-button";
 import { useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useMenuNavigation } from "src/hooks/use-menu-navigation";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { BanIcon } from "src/components/tiptap-icons";
@@ -37,12 +38,13 @@ export function ColorHighlightMenuList({
   useColorValue = false,
   onAction,
 }: ColorHighlightMenuListProps) {
+  const { t } = useTranslation();
   const { handleRemoveHighlight } = useColorHighlight({ editor, mode: "node" });
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const items = useMemo(
-    () => [...colors, { label: "Remove highlight", value: "none" }],
-    [colors],
+    () => [...colors, { label: t("colors.removeHighlight"), value: "none" }],
+    [colors, t],
   );
 
   const { selectedIndex } = useMenuNavigation({
@@ -86,7 +88,7 @@ export function ColorHighlightMenuList({
             // tabIndex={index === selectedIndex ? 0 : -1}
             data-highlighted={selectedIndex === index}
             useColorValue={useColorValue}
-            text={color.label}
+            text={color.labelKey ? t(color.labelKey) : color.label}
             onApplied={({ color, label }) => {
               addRecentColor({
                 color,
@@ -108,7 +110,7 @@ export function ColorHighlightMenuList({
         <Button
           className="color-highlight-button"
           onClick={handleRemoveHighlight}
-          aria-label="Remove highlight"
+          aria-label={t("colors.removeHighlight")}
           tabIndex={selectedIndex === colors.length ? 0 : -1}
           type="button"
           role="menuitem"
@@ -116,7 +118,7 @@ export function ColorHighlightMenuList({
           data-highlighted={selectedIndex === colors.length}
         >
           <BanIcon className="tiptap-button-icon" />
-          <span>Remove highlight</span>
+          <span>{t("colors.removeHighlight")}</span>
         </Button>
       </DropdownMenuItem>
     </ButtonGroup>

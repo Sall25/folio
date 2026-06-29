@@ -25,6 +25,7 @@ import {
 } from "src/components/tiptap-icons";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import type { Ref } from "react";
+import { useTranslation } from "react-i18next";
 import { useEditorState } from "@tiptap/react";
 import { isAligned } from "./use-alignment-active";
 
@@ -50,6 +51,7 @@ export default function AlignmentDropdownMenu({
   onAction,
   className,
 }: AlignmentDropdownMenuProps) {
+  const { t } = useTranslation();
   const { editor } = useTiptapEditor(providedEditor);
   const { isVisible } = useAlignmentDropdown({
     editor,
@@ -90,7 +92,7 @@ export default function AlignmentDropdownMenu({
         <DropdownMenuTrigger asChild>
           <Button className={className} role="menuitem" variant="ghost">
             <AlignmentIcon className="tiptap-button-icon" />
-            <span>Alignments</span>
+            <span>{t("alignment.label")}</span>
             <Spacer orientation="horizontal" />
             <ChevronRight className="tiptap-button-icon chevron" />
           </Button>
@@ -122,7 +124,7 @@ export default function AlignmentDropdownMenu({
                     }}
                   >
                     <AlignLeftIcon className="tiptap-button-icon" />
-                    <span> Align left</span>
+                    <span>{t("alignment.left")}</span>
                   </Button>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="menu-item" asChild>
@@ -135,7 +137,7 @@ export default function AlignmentDropdownMenu({
                     }}
                   >
                     <AlignCenterIcon className="tiptap-button-icon" />
-                    <span>Align center</span>
+                    <span>{t("alignment.center")}</span>
                   </Button>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="menu-item" asChild>
@@ -148,7 +150,7 @@ export default function AlignmentDropdownMenu({
                     }}
                   >
                     <AlignRightIcon className="tiptap-button-icon" />
-                    <span> Align right</span>
+                    <span>{t("alignment.right")}</span>
                   </Button>
                 </DropdownMenuItem>
               </CardItemGroup>
@@ -166,7 +168,7 @@ export default function AlignmentDropdownMenu({
                     }}
                   >
                     <AlignTopIcon className="tiptap-button-icon" />
-                    <span>Align top</span>
+                    <span>{t("alignment.top")}</span>
                   </Button>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="menu-item" asChild>
@@ -179,7 +181,7 @@ export default function AlignmentDropdownMenu({
                     }}
                   >
                     <AlignMiddleIcon className="tiptap-button-icon" />
-                    <span>Align middle</span>
+                    <span>{t("alignment.middle")}</span>
                   </Button>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="menu-item" asChild>
@@ -192,7 +194,7 @@ export default function AlignmentDropdownMenu({
                     }}
                   >
                     <AlignBottomIcon className="tiptap-button-icon" />
-                    <span>Align bottom</span>
+                    <span>{t("alignment.bottom")}</span>
                   </Button>
                 </DropdownMenuItem>
               </CardItemGroup>

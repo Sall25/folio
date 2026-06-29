@@ -12,26 +12,142 @@
     "add": "Add",
     "close": "Close",
     "copy": "Copy",
-    "done": "Done"
+    "done": "Done",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "createPage": "Create page",
+    "open": "Ouvrir"
+  },
+  "activity": "Activity",
+  "creadtedBy": "Created by",
+  "editedBy": "Edited by",
+  "edited": "Modifié",
+  "home": {
+    "recentlyVisited": "Recently visited",
+    "earlier": "Earlier",
+    "edited": "Edited {{time}}",
+    "emptyTitle": "Start your first page",
+    "emptyDesc": "Your recently opened pages will show up here.",
+    "time": {
+      "justNow": "just now",
+      "minutesAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "yesterday": "yesterday",
+      "daysAgo": "{{count}}d ago"
+    }
   },
   "sidebar": {
     "home": "Home",
     "search": "Search",
     "templates": "Templates",
+    "inbox": "Inbox",
+    "store": "Marketplace",
     "trash": "Trash",
     "settings": "Settings",
-    "newPage": "New page"
+    "newPage": "New page",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "library": "Library",
+    "showcase": "Showcase",
+    "featureOfTheWeek": "Feature of the week",
+    "recents": "Recents",
+    "personalSpace": "{{name}}'s space"
+  },
+  "library": {
+    "title": "Library",
+    "createFirst": "Create your first page",
+    "tabs": {
+      "recents": "Recents",
+      "favorites": "Favorites",
+      "shared": "Shared",
+      "private": "Private",
+      "teamspaces": "Teamspaces"
+    },
+    "columns": {
+      "page": "Page",
+      "createdBy": "Created by",
+      "lastEdited": "Last edited time"
+    },
+    "empty": {
+      "recents": "No recent pages",
+      "favorites": "No favorites yet",
+      "shared": "Nothing shared yet",
+      "private": "No private pages yet",
+      "teamspaces": "No teamspace pages yet"
+    }
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search pages...",
+    "templatePlaceholder": "Search templates...",
+    "noResults": "No results for \"{{query}}\"",
+    "noPages": "No pages yet",
+    "today": "Today",
+    "past": "Past",
+    "openPage": "Open page",
+    "previewEmpty": "Select a result to preview it here.",
+    "noContent": "No content yet",
+    "hintSelect": "Select",
+    "hintOpen": "Open",
+    "hintOpenNewWindow": "Open in a new window",
+    "filters": {
+      "titlesOnly": "Only search titles",
+      "createdBy": "Created by",
+      "teamspace": "Teamspace",
+      "inPage": "In page",
+      "date": "Date"
+    }
+  },
+  "showcase": {
+    "title": "Your work, out in the open",
+    "desc": "Home for the things you build — apps, designs, animations, films, pitches — and the events that put them on stage."
+  },
+  "recents": {
+    "options": "Recents options",
+    "show": "Show",
+    "allItems": "All items",
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items"
+  },
+  "section":{
+    "private": "Private",
+    "shared": "Shared",
+    "teamspaces": "Teamspaces",
+    "favorites": "Favorites",
+    "template": "Modèles"
   },
   "page": {
     "untitled": "Untitled",
     "newPage": "New Page",
-    "deletedPage": "Deleted Page"
+    "deletedPage": "Deleted Page",
+    "locked": "locked"
   },
-  "templates": {
+ "templates": {
     "browse": "Browse templates",
     "startFrom": "Start from a template",
     "browseAll": "Browse all templates",
-    "blankPage": "Blank page"
+    "blankPage": "Blank page",
+    "blankTemplate": "Blank template",
+    "newTemplate": "New Template",
+    "title": "Templates",
+    "notUsedYet": "Not used yet",
+    "uses_one": "{{count}} use",
+    "uses_other": "{{count}} uses",
+    "noMatch": "No templates match \"{{query}}\".",
+    "emptyHint": "Save any page as a template, or start one from the blank tile.",
+    "createdBy": "Created by",
+    "unknown": "Unknown",
+    "usedBy": "Used by",
+    "openTemplate": "Open template",
+    "hoverHint": "Hover a template to see details."
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}min ago",
+    "hoursAgo": "{{count}}h ago",
+    "yesterday": "Yesterday",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago"
   },
   "settings": {
     "title": "Settings",
@@ -41,6 +157,13 @@
     "people": "People",
     "teamspaces": "Teamspaces"
   },
+  "greeting": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening",
+    "night": "Good night",
+    "withName": "{{greeting}}, {{name}}"
+  },
   "theme": {
     "light": "Light",
     "dark": "Dark",
@@ -49,5 +172,246 @@
   "language": {
     "en": "English",
     "fr": "Français"
+  },
+   "colors": {
+    "label": "Colors",
+    "recent": "Recent colors",
+    "background": "Background colors",
+    "highlight": "Highlight",
+    "removeHighlight": "Remove highlight",
+    "highlights": {
+      "default": "Default background",
+      "gray": "Gray background",
+      "brown": "Brown background",
+      "orange": "Orange background",
+      "yellow": "Yellow background",
+      "lime": "Lime background",
+      "green": "Green background",
+      "mint": "Mint background",
+      "teal": "Teal background",
+      "cyan": "Cyan background",
+      "blue": "Blue background",
+      "slate": "Slate background",
+      "indigo": "Indigo background",
+      "purple": "Purple background",
+      "violet": "Violet background",
+      "magenta": "Magenta background",
+      "pink": "Pink background",
+      "rose": "Rose background",
+      "red": "Red background"
+    },
+    "removeColor": "Remove color",
+    "texts": {
+      "default": "Default text",
+      "gray": "Gray text",
+      "brown": "Brown text",
+      "orange": "Orange text",
+      "yellow": "Yellow text",
+      "lime": "Lime text",
+      "green": "Green text",
+      "mint": "Mint text",
+      "teal": "Teal text",
+      "cyan": "Cyan text",
+      "blue": "Blue text",
+      "slate": "Slate text",
+      "indigo": "Indigo text",
+      "purple": "Purple text",
+      "violet": "Violet text",
+      "magenta": "Magenta text",
+      "pink": "Pink text",
+      "rose": "Rose text",
+      "red": "Red text"
+    }
+  },
+  "blockMenu": {
+    "text": "Text",
+    "turnInto": "Turn into",
+    "comment": "Comment",
+    "duplicateNode": "Duplicate node",
+    "copyToClipboard": "Copy to clipboard",
+    "copyAnchorLink": "Copy anchor link",
+    "deleteNode": "Delete node",
+    "resetFormatting": "Reset Formatting"
+  },
+   "blockTypes": {
+    "paragraph": "Paragraphe",
+    "heading1": "Titre 1",
+    "heading2": "Titre 2",
+    "heading3": "Titre 3",
+    "blockquote": "Citation",
+    "codeBlock": "Bloc de code",
+    "orderedList": "Liste numérotée",
+    "bulletList": "Liste à puces",
+    "taskList": "Liste de tâches",
+    "turnIntoPage": "Transformer en page"
+  },
+  "alignment": {
+    "label": "Alignements",
+    "left": "Aligner à gauche",
+    "center": "Aligner au centre",
+    "right": "Aligner à droite",
+    "top": "Aligner en haut",
+    "middle": "Aligner au milieu",
+    "bottom": "Aligner en bas"
+  },
+  "slash": {
+    "sections": {
+      "style": "Style",
+      "insert": "Insert",
+      "upload": "Upload"
+    },
+    "items": {
+      "text": {
+        "title": "Text",
+        "description": "Just start writing with plain text."
+      },
+      "h1": {
+        "title": "Heading 1",
+        "description": "Big section heading."
+      },
+      "h2": {
+        "title": "Heading 2",
+        "description": "Medium section heading."
+      },
+      "h3": {
+        "title": "Heading 3",
+        "description": "Small section heading."
+      },
+      "h4": {
+        "title": "Heading 4",
+        "description": "Smaller section heading."
+      },
+      "h5": {
+        "title": "Heading 5",
+        "description": "Tiny section heading."
+      },
+      "h6": {
+        "title": "Heading 6",
+        "description": "Smallest section heading."
+      },
+      "bulletList": {
+        "title": "Bullet List",
+        "description": "Create a simple bullet list."
+      },
+      "orderedList": {
+        "title": "Numbered List",
+        "description": "Create a list with numbering."
+      },
+      "taskList": {
+        "title": "To-do List",
+        "description": "Track tasks with a checklist."
+      },
+      "separator": {
+        "title": "Separator",
+        "description": "Visually divide blocks."
+      },
+      "breadcrumb": {
+        "title": "Breadcrumb",
+        "description": "Show this page's location."
+      },
+      "quote": {
+        "title": "Blockquote",
+        "description": "Capture a quote."
+      },
+      "codeBlock": {
+        "title": "Code block",
+        "description": "Capture a code snippet."
+      },
+      "table": {
+        "title": "Table",
+        "description": "Add a simple table."
+      },
+      "toc": {
+        "title": "Table of Contents",
+        "description": "Outline of your page's headings."
+      },
+      "column2": {
+        "title": "Columns 2",
+        "description": "Two columns side by side."
+      },
+      "column3": {
+        "title": "Columns 3",
+        "description": "Three columns side by side."
+      },
+      "column4": {
+        "title": "Columns 4",
+        "description": "Four columns side by side."
+      },
+      "tabs": {
+        "title": "Tabs",
+        "description": "Organize content in Tabs"
+      },
+      "codeGroup": {
+        "title": "Code Group",
+        "description": "Tabbed code samples by language."
+      },
+      "mention": {
+        "title": "Mention",
+        "description": "Link to a person or page."
+      },
+      "emoji": {
+        "title": "Emoji",
+        "description": "Search and insert an emoji."
+      },
+      "mathBlock": {
+        "title": "Block equation",
+        "description": "Display a standalone equation."
+      },
+      "mathInline": {
+        "title": "Inline equation",
+        "description": "Insert math inside text."
+      },
+      "image": {
+        "title": "Image",
+        "description": "Upload or embed an image."
+      },
+      "file": {
+        "title": "File",
+        "description": "Upload a file attachment."
+      },
+      "youtube": {
+        "title": "Youtube",
+        "description": "Embed a YouTube video."
+      },
+      "bookmark": {
+        "title": "Web bookmark",
+        "description": "Save a link as a visual card."
+      },
+      "page": {
+        "title": "Page",
+        "description": "Create a nested sub-page."
+      },
+      "audio": {
+        "title": "Audio",
+        "description": "Embed an audio clip."
+      },
+      "callout": {
+        "title": "Callout",
+        "description": "Make text stand out in a box."
+      },
+      "button": {
+        "title": "Button",
+        "description": "A call-to-action button."
+      },
+      "container": {
+        "title": "Container",
+        "description": "Flexible box to group blocks"
+      },
+      "database": {
+        "title": "Inline Database",
+        "description": "Insert a table, board, or list."
+      }
+    },
+     "colors": {
+      "red": "Red",
+      "orange": "Orange",
+      "yellow": "Yellow",
+      "green": "Green",
+      "blue": "Blue",
+      "purple": "Purple"
+    },
+    "filter": "Filter...",
+    "commandsAria": "Slash commands",
+    "closeAria": "Close (Esc)"
   }
 }

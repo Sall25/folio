@@ -11,6 +11,7 @@ import {
   ArrowDown,
   ArrowUp,
   LayoutTemplate,
+  LayoutGrid,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -24,6 +25,7 @@ import {
 import "./simple-editor-sidebar.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-location";
 import { useEditorLayout } from "./context/editor-layout-context";
 import { useSearch } from "./context/search-context";
@@ -49,6 +51,7 @@ import { useTemplates } from "./context/templates-context";
 import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
 
 function User() {
+  const { t } = useTranslation();
   const { collapsed, onCollapsedChange } = useEditorLayout();
 
   const onToggle = useCallback(
@@ -86,11 +89,15 @@ function User() {
             'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif',
         }}
       >
-        Souleymane Sall's space
+        {t("sidebar.personalSpace", { name: "Souleymane Sall" })}
       </span>
       <Spacer orientation="horizontal" />
 
-      <Button variant="ghost" tooltip="Collapse" onClick={onToggle}>
+      <Button
+        variant="ghost"
+        tooltip={t("sidebar.collapse")}
+        onClick={onToggle}
+      >
         <PanelLeft
           className="tiptap-button-icon"
           // fill="var(--tt-brand-color-400)"
@@ -102,6 +109,7 @@ function User() {
 }
 
 function WorkspaceHeader() {
+  const { t } = useTranslation();
   const { collapsed, onCollapsedChange } = useEditorLayout();
   const [, setHide] = useState(true);
 
@@ -129,7 +137,7 @@ function WorkspaceHeader() {
         <Button
           variant="ghost"
           onClick={onToggle}
-          tooltip={"Expand"}
+          tooltip={t("sidebar.expand")}
           style={{ justifyContent: "flex-start" }}
         >
           <PanelRight
@@ -142,13 +150,9 @@ function WorkspaceHeader() {
   );
 }
 
-function WorkSpaceFooter({
-  onOpenTemplatesGallery,
-  onCreatePage,
-}: {
-  onOpenTemplatesGallery?: () => void;
-  onCreatePage?: () => void;
-}) {
+function WorkSpaceFooter({ onCreatePage }: { onCreatePage?: () => void }) {
+  const { t } = useTranslation();
+
   return (
     <CardFooter
       style={{
@@ -195,41 +199,22 @@ function WorkSpaceFooter({
         }}
       >
         <Button
-          aria-label="Browse templates"
-          variant="ghost"
-          // data-active-state="on"
-          style={{
-            padding: "20.5px 10px",
-            borderRadius: "100px",
-            border: "1px solid var(--tt-border-color)",
-            whiteSpace: "nowrap",
-            flexShrink: 0,
-          }}
-          onClick={onOpenTemplatesGallery}
-        >
-          <LayoutTemplate className="tiptap-button-icon" />
-          <span
-            className="tiptap-button-text"
-            style={{ whiteSpace: "nowrap", color: "var(--tt-text-color)" }}
-          >
-            Browse templates
-          </span>
-
-          <ShortcutBadge shortcutKeys="Ctrl+O" />
-        </Button>
-
-        <Button
-          aria-label="Create new page"
+          aria-label={t("actions.createPage")}
           variant="ghost"
           onClick={onCreatePage}
-          tooltip="Create Page"
           style={{
-            padding: "20px 20.5px",
+            minHeight: 40,
+            height: 40,
+            padding: "10px 20px",
+            // padding: "20px 20.5px",
             borderRadius: "100px",
             border: "1px solid var(--tt-border-color)",
+            width: "100%",
           }}
         >
           <SquarePen className="tiptap-button-icon" />
+          <span className="tiptap-button-text">{t("actions.createPage")}</span>
+          <ShortcutBadge shortcutKeys="Ctrl+O" />
         </Button>
       </CardItemGroup>
     </CardFooter>
@@ -237,6 +222,7 @@ function WorkSpaceFooter({
 }
 
 function NavItems() {
+  const { t } = useTranslation();
   const { collapsed } = useEditorLayout();
   const navigate = useNavigate();
 
@@ -276,7 +262,9 @@ function NavItems() {
         >
           <Home size={32} strokeWidth={3} className="tiptap-button-icon" />
           {/* <Spacer orientation="horizontal" size={1} /> */}
-          {!collapsed && <span className="tiptap-button-text">Home</span>}
+          {!collapsed && (
+            <span className="tiptap-button-text">{t("sidebar.home")}</span>
+          )}
         </Button>
         <Spacer orientation="horizontal" size={2.5} />
         <ButtonGroup orientation="horizontal" style={{ maxWidth: "90px" }}>
@@ -285,7 +273,7 @@ function NavItems() {
             // data-active-state={libraryOpen ? "on" : "off"}
             onClick={handleLibraryClick}
             style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
-            tooltip="Library"
+            tooltip={t("sidebar.library")}
           >
             <LibraryBig
               size={32}
@@ -296,6 +284,7 @@ function NavItems() {
           <Button
             variant="ghost"
             onClick={handleHomeClick}
+            tooltip={t("sidebar.inbox")}
             style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
           >
             <Inbox size={32} strokeWidth={1.8} className="tiptap-button-icon" />
@@ -306,6 +295,7 @@ function NavItems() {
           <Button
             variant="ghost"
             style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
+            tooltip={t("sidebar.store")}
           >
             <Store size={32} strokeWidth={1.8} className="tiptap-button-icon" />
             <Spacer orientation="horizontal" size={1} />
@@ -320,6 +310,7 @@ function NavItems() {
         <Button
           variant="ghost"
           onClick={() => onOpenChange?.(true)}
+          tooltip={t("sidebar.search")}
           style={{
             fontWeight: 400,
             color: "var(--tt-text-color)",
@@ -388,14 +379,16 @@ function NavItems() {
 
 // ── ShowcaseSection: feature-of-the-week, collapsible, empty for now ──────────
 function ShowcaseSection() {
+  const { t } = useTranslation();
+
   return (
     <Section
-      label="Showcase"
+      label={t("sidebar.showcase")}
       defaultCollapsed={false}
       badge={
         <span className="sidebar-section__badge">
           <Sparkles size={11} />
-          Feature of the week
+          {t("sidebar.featureOfTheWeek")}
         </span>
       }
     >
@@ -403,11 +396,10 @@ function ShowcaseSection() {
         <Sparkles size={16} className="sidebar-showcase-empty__icon" />
         <div className="sidebar-showcase-empty__text">
           <span className="sidebar-showcase-empty__title">
-            Your work, out in the open
+            {t("showcase.title")}
           </span>
           <span className="sidebar-showcase-empty__desc">
-            Home for the things you build — apps, designs, animations, films,
-            pitches — and the events that put them on stage.
+            {t("showcase.desc")}
           </span>
         </div>
       </div>
@@ -424,6 +416,7 @@ function RecentSection({
   onMoveUp?: () => void;
   onMoveDown?: () => void;
 }) {
+  const { t } = useTranslation();
   const { data: recentPages } = useRecentPages();
   const [limit, setLimit] = useLocalStorage<number | "all">(
     "folio:recents:limit",
@@ -440,24 +433,24 @@ function RecentSection({
 
   return (
     <Section
-      label="Recents"
+      label={t("sidebar.recents")}
       defaultCollapsed={false}
       persistKey="folio:recents:collapsed"
-      menuLabel="Recents options"
+      menuLabel={t("recents.options")}
       menu={
         <>
-          <SectionMenuLabel>Show</SectionMenuLabel>
+          <SectionMenuLabel>{t("recents.show")}</SectionMenuLabel>
           {RECENT_LIMIT_OPTIONS.map((n) => (
             <SectionMenuItem
               key={n}
-              label={`${n} items`}
+              label={t("recents.items", { count: n })}
               selected={limit === n}
               closeOnClick={false}
               onClick={() => setLimit(n)}
             />
           ))}
           <SectionMenuItem
-            label="All items"
+            label={t("recents.allItems")}
             selected={limit === "all"}
             closeOnClick={false}
             onClick={() => setLimit("all")}
@@ -465,13 +458,13 @@ function RecentSection({
           <SectionMenuSeparator />
           <SectionMenuItem
             icon={<ArrowUp size={14} />}
-            label="Move up"
+            label={t("actions.moveUp")}
             onClick={onMoveUp}
             disabled={!onMoveUp}
           />
           <SectionMenuItem
             icon={<ArrowDown size={14} />}
-            label="Move down"
+            label={t("actions.moveDown")}
             onClick={onMoveDown}
             disabled={!onMoveDown}
           />
@@ -489,8 +482,27 @@ function RecentSection({
   );
 }
 
+function Templates({
+  onOpenTemplatesGallery,
+}: {
+  onOpenTemplatesGallery?: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Button
+      variant="ghost"
+      style={{ width: "100%", justifyContent: "flex-start" }}
+      onClick={onOpenTemplatesGallery}
+    >
+      <LayoutGrid className="tiptap-button-icon" />
+      <span className="tiptap-button-text">{t("sidebar.templates")}</span>
+    </Button>
+  );
+}
+
 // ── main component: lens + tree + mutation hooks ─────────────────────────────
 export function SimpleEditorSidebar() {
+  const { t } = useTranslation();
   const { collapsed, sidebarWidth } = useEditorLayout();
   const { tree, data: pages, isPending, isLoading } = usePageTree();
   const patchPage = usePatchPage(({ id, patch }) => updatePage(id, patch));
@@ -500,7 +512,7 @@ export function SimpleEditorSidebar() {
 
   const onCreatePage = () => {
     const newPage = makePage({
-      title: "New Page",
+      title: t("page.newPage"),
       parentId: null,
       category: "Private",
     });
@@ -573,7 +585,7 @@ export function SimpleEditorSidebar() {
                 }}
                 onAddPageToSection={(category) => {
                   const p = makePage({
-                    title: "New Page",
+                    title: t("page.newPage"),
                     parentId: null,
                     category,
                   });
@@ -581,21 +593,20 @@ export function SimpleEditorSidebar() {
                     .mutateAsync(p)
                     .then((page) => setActivePageId(page.id));
                 }}
-                onRenameSection={() => {}}
-                onDeleteSection={() => {}}
-                onAddSection={() => {}}
               />
+              <Spacer orientation="vertical" size={10} />
+              <Templates
+                onOpenTemplatesGallery={() =>
+                  onTemplatesGalleryOpenChange?.(true)
+                }
+              />
+              <Spacer orientation="vertical" size={25} />
             </>
           ))}
       </CardBody>
 
       {/* <Separator orientation="horizontal" style={{ height: 0.5 }} /> */}
-      {!collapsed && (
-        <WorkSpaceFooter
-          onCreatePage={onCreatePage}
-          onOpenTemplatesGallery={() => onTemplatesGalleryOpenChange?.(true)}
-        />
-      )}
+      {!collapsed && <WorkSpaceFooter onCreatePage={onCreatePage} />}
     </Card>
   );
 }

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { type Editor } from "@tiptap/react";
 import { useHotkeys } from "react-hotkeys-hook";
+import { useTranslation } from "react-i18next";
 
 // --- Hooks ---
 import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
@@ -22,114 +23,133 @@ export const COLOR_HIGHLIGHT_SHORTCUT_KEY = "mod+shift+h";
 export const HIGHLIGHT_COLORS = [
   {
     label: "Default background",
+    labelKey: "colors.highlights.default",
     value: "var(--tt-bg-color)",
     colorValue: "#ffffff",
     border: "var(--tt-bg-color-contrast)",
   },
   {
     label: "Gray background",
+    labelKey: "colors.highlights.gray",
     value: "var(--tt-color-highlight-gray)",
     colorValue: "#f8f8f7",
     border: "var(--tt-color-highlight-gray-contrast)",
   },
   {
     label: "Brown background",
+    labelKey: "colors.highlights.brown",
     value: "var(--tt-color-highlight-brown)",
     colorValue: "#f4eeee",
     border: "var(--tt-color-highlight-brown-contrast)",
   },
   {
     label: "Orange background",
+    labelKey: "colors.highlights.orange",
     value: "var(--tt-color-highlight-orange)",
     colorValue: "#fbecdd",
     border: "var(--tt-color-highlight-orange-contrast)",
   },
   {
     label: "Yellow background",
+    labelKey: "colors.highlights.yellow",
     value: "var(--tt-color-highlight-yellow)",
     colorValue: "#fef9c3",
     border: "var(--tt-color-highlight-yellow-contrast)",
   },
   {
     label: "Lime background",
+    labelKey: "colors.highlights.lime",
     value: "var(--tt-color-highlight-lime)",
     colorValue: "#ecfccb",
     border: "var(--tt-color-highlight-lime-contrast)",
   },
   {
     label: "Green background",
+    labelKey: "colors.highlights.green",
     value: "var(--tt-color-highlight-green)",
     colorValue: "#dcfce7",
     border: "var(--tt-color-highlight-green-contrast)",
   },
   {
     label: "Mint background",
+    labelKey: "colors.highlights.mint",
     value: "var(--tt-color-highlight-mint)",
     colorValue: "#d1faec",
     border: "var(--tt-color-highlight-mint-contrast)",
   },
   {
     label: "Teal background",
+    labelKey: "colors.highlights.teal",
     value: "var(--tt-color-highlight-teal)",
     colorValue: "#cdf3f0",
     border: "var(--tt-color-highlight-teal-contrast)",
   },
   {
     label: "Cyan background",
+    labelKey: "colors.highlights.cyan",
     value: "var(--tt-color-highlight-cyan)",
     colorValue: "#d7f0fa",
     border: "var(--tt-color-highlight-cyan-contrast)",
   },
   {
     label: "Blue background",
+    labelKey: "colors.highlights.blue",
     value: "var(--tt-color-highlight-blue)",
     colorValue: "#e0f2fe",
     border: "var(--tt-color-highlight-blue-contrast)",
   },
   {
     label: "Slate background",
+    labelKey: "colors.highlights.slate",
     value: "var(--tt-color-highlight-slate)",
     colorValue: "#e7ebf0",
     border: "var(--tt-color-highlight-slate-contrast)",
   },
   {
     label: "Indigo background",
+    labelKey: "colors.highlights.indigo",
     value: "var(--tt-color-highlight-indigo)",
     colorValue: "#e6e7fb",
     border: "var(--tt-color-highlight-indigo-contrast)",
   },
   {
     label: "Purple background",
+    labelKey: "colors.highlights.purple",
     value: "var(--tt-color-highlight-purple)",
     colorValue: "#f3e8ff",
     border: "var(--tt-color-highlight-purple-contrast)",
   },
   {
     label: "Violet background",
+    labelKey: "colors.highlights.violet",
     value: "var(--tt-color-highlight-violet)",
     colorValue: "#eee6fb",
     border: "var(--tt-color-highlight-violet-contrast)",
   },
   {
     label: "Magenta background",
+    labelKey: "colors.highlights.magenta",
     value: "var(--tt-color-highlight-magenta)",
     colorValue: "#f9e4f7",
     border: "var(--tt-color-highlight-magenta-contrast)",
   },
   {
     label: "Pink background",
+    labelKey: "colors.highlights.pink",
     value: "var(--tt-color-highlight-pink)",
     colorValue: "#fcf1f6",
     border: "var(--tt-color-highlight-pink-contrast)",
   },
   {
     label: "Rose background",
+    labelKey: "colors.highlights.rose",
     value: "var(--tt-color-highlight-rose)",
     colorValue: "#ffe4ec",
     border: "var(--tt-color-highlight-rose-contrast)",
   },
   {
     label: "Red background",
+    labelKey: "colors.highlights.red",
     value: "var(--tt-color-highlight-red)",
     colorValue: "#ffe4e6",
     border: "var(--tt-color-highlight-red-contrast)",
@@ -331,6 +351,7 @@ export function useColorHighlight(config: UseColorHighlightConfig) {
     onApplied,
   } = config;
 
+  const { t } = useTranslation();
   const { editor } = useTiptapEditor(providedEditor);
   const isMobile = useIsBreakpoint();
   const [isVisible, setIsVisible] = useState<boolean>(true);
@@ -401,10 +422,10 @@ export function useColorHighlight(config: UseColorHighlightConfig) {
   const handleRemoveHighlight = useCallback(() => {
     const success = removeHighlight(editor, mode);
     if (success) {
-      onApplied?.({ color: "", label: "Remove highlight", mode });
+      onApplied?.({ color: "", label: t("colors.removeHighlight"), mode });
     }
     return success;
-  }, [editor, onApplied, mode]);
+  }, [editor, onApplied, mode, t]);
 
   useHotkeys(
     COLOR_HIGHLIGHT_SHORTCUT_KEY,
@@ -425,7 +446,7 @@ export function useColorHighlight(config: UseColorHighlightConfig) {
     handleColorHighlight,
     handleRemoveHighlight,
     canColorHighlight: canColorHighlightState,
-    label: label || `Highlight`,
+    label: label || t("colors.highlight"),
     shortcutKeys: COLOR_HIGHLIGHT_SHORTCUT_KEY,
     Icon: HighlighterIcon,
     mode,

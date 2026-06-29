@@ -7,24 +7,9 @@ import {
 import type { Page } from "src/types";
 import PageActivity from "./page-activity";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-
-// Recent → relative; older → absolute date. Mirrors useRecentPages' fallback.
-function formatRelative(ts: number): string {
-  const diff = Date.now() - ts;
-  const sec = Math.floor(diff / 1000);
-  if (sec < 60) return "Just now";
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const day = Math.floor(hr / 24);
-  if (day === 1) return "Yesterday";
-  if (day < 7) return `${day}d ago`;
-  return new Date(ts).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-}
+import { useTranslation } from "react-i18next";
+import { formatRelativeTime } from "src/utils/format-relative";
+import i18n from "src/i18n/config";
 
 // Re-render on an interval so "1m ago" advances on its own, no reload needed.
 function useNow(intervalMs = 30000) {
@@ -49,6 +34,7 @@ export default function EditedTimeButton({
 }: EditedTimeButtonProps) {
   useNow();
   const editedAt = page.updatedAt ?? page.createdAt;
+  const { t } = useTranslation();
 
   return (
     <Popover>
@@ -78,7 +64,7 @@ export default function EditedTimeButton({
             }}
           >
             {" "}
-            Edited {formatRelative(editedAt)}
+            {t("edited")} {formatRelativeTime(editedAt, t, i18n.language)}
           </span>
         </Button>
       </PopoverTrigger>

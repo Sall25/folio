@@ -23,6 +23,7 @@ import "./color-dropdown-menu.scss";
 import { useHoverMenu } from "./useHoverMenu";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { useRef, type Ref } from "react";
+import { useTranslation } from "react-i18next";
 import { useColorDropdownContext } from "./use-color-dropdown-context";
 
 interface ColorDropdownMenuProps {
@@ -53,6 +54,7 @@ export default function ColorDropdownMenu({
   onAction,
   className,
 }: ColorDropdownMenuProps) {
+  const { t } = useTranslation();
   const { editor } = useTiptapEditor(providedEditor);
   const { isVisible } = useColorDropdown({
     editor,
@@ -82,7 +84,7 @@ export default function ColorDropdownMenu({
         <DropdownMenuTrigger ref={triggerRef} asChild>
           <Button className={className} role="menuitem" variant="ghost">
             <PaintBucket className="tiptap-button-icon" />
-            <span>Colors</span>
+            <span>{t("colors.label")}</span>
             <Spacer orientation="horizontal" />
             <ChevronRight className="tiptap-button-icon chevron" />
           </Button>
@@ -110,7 +112,7 @@ export default function ColorDropdownMenu({
                 <>
                   <CardItemGroup>
                     <DropdownMenuItem>
-                      <CardGroupLabel>Recent colors</CardGroupLabel>
+                      <CardGroupLabel>{t("colors.recent")}</CardGroupLabel>
                     </DropdownMenuItem>
                     <ColorRecentMenuList editor={editor} />
                   </CardItemGroup>
@@ -120,7 +122,7 @@ export default function ColorDropdownMenu({
               )}
 
               <CardItemGroup>
-                <CardGroupLabel>Colors</CardGroupLabel>
+                <CardGroupLabel>{t("colors.label")}</CardGroupLabel>
                 <ColorTextMenuList
                   editor={editor}
                   onAction={() => {
@@ -133,7 +135,7 @@ export default function ColorDropdownMenu({
             <Separator orientation="horizontal" />
 
             <CardItemGroup style={{ width: "100%" }}>
-              <CardGroupLabel>Background colors</CardGroupLabel>
+              <CardGroupLabel>{t("colors.background")}</CardGroupLabel>
               <ColorHighlightMenuList
                 editor={editor}
                 onAction={() => {

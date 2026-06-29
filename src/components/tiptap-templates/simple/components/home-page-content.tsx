@@ -1,4 +1,5 @@
 import type { Page, PageCover } from "src/types";
+import type { TFunction } from "i18next";
 import { useRecentPages } from "src/hooks/use-pages";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { useActivePage } from "../context/active-page-context";
@@ -6,6 +7,7 @@ import { useTemplates } from "../context/templates-context";
 import { makePage } from "src/utils/make-page";
 import { PageItemIcon } from "../page-item-icon";
 import { Plus, LayoutGrid } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { List, ListItem } from "src/components/tiptap-ui-primitive/list/list";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { Greeting } from "src/components/tiptap-ui-primitive/greeting/greeting";
@@ -31,31 +33,32 @@ function coverBackground(cover: PageCover | undefined): string {
   return "var(--tt-hover-bg-color, rgba(0,0,0,0.04))";
 }
 
-function formatRelative(ts: number): string {
+function formatRelative(ts: number, t: TFunction, locale?: string): string {
   const diff = Date.now() - ts;
   const sec = Math.floor(diff / 1000);
-  if (sec < 60) return "just now";
+  if (sec < 60) return t("home.time.justNow");
   const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}m ago`;
+  if (min < 60) return t("home.time.minutesAgo", { count: min });
   const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
+  if (hr < 24) return t("home.time.hoursAgo", { count: hr });
   const day = Math.floor(hr / 24);
-  if (day === 1) return "yesterday";
-  if (day < 7) return `${day}d ago`;
-  return new Date(ts).toLocaleDateString(undefined, {
+  if (day === 1) return t("home.time.yesterday");
+  if (day < 7) return t("home.time.daysAgo", { count: day });
+  return new Date(ts).toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
   });
 }
 
-const todayLabel = () =>
-  new Date().toLocaleDateString(undefined, {
+const todayLabel = (locale?: string) =>
+  new Date().toLocaleDateString(locale, {
     weekday: "long",
     month: "long",
     day: "numeric",
   });
 
 export function HomePageContent({ userName }: { userName?: string }) {
+  const { t, i18n } = useTranslation();
   const { data, isPending } = useRecentPages();
   const { setActivePageId } = useActivePage();
   const createPage = useCreatePage();
@@ -67,7 +70,7 @@ export function HomePageContent({ userName }: { userName?: string }) {
 
   const newPage = () => {
     const page = makePage({
-      title: "New Page",
+      title: t("page.newPage"),
       parentId: null,
       category: "Private",
     });
@@ -97,7 +100,7 @@ export function HomePageContent({ userName }: { userName?: string }) {
       >
         <Greeting name={userName} />
         <div style={{ fontSize: 13, color: "var(--tt-theme-muted)" }}>
-          {todayLabel()}
+          {todayLabel(i18n.language)}
         </div>
       </div>
 
@@ -108,17 +111,17 @@ export function HomePageContent({ userName }: { userName?: string }) {
         <ButtonGroup orientation="horizontal" style={{ gap: 8 }}>
           <Button data-active-state="on" variant="ghost" onClick={newPage}>
             <Plus className="tiptap-button-icon" />
-            <span className="tiptap-button-text">New page</span>
+            <span className="tiptap-button-text">{t("actions.newPage")}</span>
           </Button>
           <Button variant="ghost" onClick={() => openTemplates?.(true)}>
             <LayoutGrid className="tiptap-button-icon" />
-            <span className="tiptap-button-text">Templates</span>
+            <span className="tiptap-button-text">{t("sidebar.templates")}</span>
           </Button>
         </ButtonGroup>
       </div>
 
       {/* recently visited */}
-      <SectionLabel>Recently visited</SectionLabel>
+      <SectionLabel>{t("home.recentlyVisited")}</SectionLabel>
       {isPending ? (
         <CardGridSkeleton />
       ) : visited.length === 0 ? (
@@ -138,7 +141,7 @@ export function HomePageContent({ userName }: { userName?: string }) {
       {/* earlier */}
       {earlier.length > 0 && (
         <>
-          <SectionLabel>Earlier</SectionLabel>
+          <SectionLabel>{t("home.earlier")}</SectionLabel>
           <List showLines spacing="compact">
             {earlier.map((page, i) => (
               <ListItem
@@ -165,12 +168,16 @@ export function HomePageContent({ userName }: { userName?: string }) {
                       fontFamily: "inherit",
                     }}
                   >
-                    {page.title || "Untitled"}
+                    {page.title || t("page.untitled")}
                   </span>
                   <span
                     style={{ fontSize: 12, color: "var(--tt-text-secondary)" }}
                   >
-                    {formatRelative(page.updatedAt ?? page.createdAt)}
+                    {formatRelative(
+                      page.updatedAt ?? page.createdAt,
+                      t,
+                      i18n.language,
+                    )}
                   </span>
                 </div>
               </ListItem>
@@ -198,6 +205,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 function RecentCard({ page, onOpen }: { page: Page; onOpen: () => void }) {
+  const { t, i18n } = useTranslation();
   return (
     <Board onClick={onOpen}>
       <BoardCover
@@ -220,7 +228,7 @@ function RecentCard({ page, onOpen }: { page: Page; onOpen: () => void }) {
             fontFamily: "inherit",
           }}
         >
-          {page.title || "Untitled"}
+          {page.title || t("page.untitled")}
         </div>
         <span
           style={{
@@ -243,7 +251,13 @@ function RecentCard({ page, onOpen }: { page: Page; onOpen: () => void }) {
             fontFamily: "inherit",
           }}
         >
-          Edited {formatRelative(page.updatedAt ?? page.createdAt)}
+          {t("home.edited", {
+            time: formatRelative(
+              page.updatedAt ?? page.createdAt,
+              t,
+              i18n.language,
+            ),
+          })}
         </div>
       </BoardContent>
     </Board>
@@ -305,6 +319,7 @@ function RecentCard({ page, onOpen }: { page: Page; onOpen: () => void }) {
 }
 
 function EmptyState({ onNewPage }: { onNewPage: () => void }) {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -322,7 +337,7 @@ function EmptyState({ onNewPage }: { onNewPage: () => void }) {
           marginBottom: 4,
         }}
       >
-        Start your first page
+        {t("home.emptyTitle")}
       </div>
       <div
         style={{
@@ -331,11 +346,11 @@ function EmptyState({ onNewPage }: { onNewPage: () => void }) {
           marginBottom: 14,
         }}
       >
-        Your recently opened pages will show up here.
+        {t("home.emptyDesc")}
       </div>
       <Button variant="ghost" onClick={onNewPage}>
         <Plus className="tiptap-button-icon" />
-        <span className="tiptap-button-text">New page</span>
+        <span className="tiptap-button-text">{t("actions.newPage")}</span>
       </Button>
     </div>
   );

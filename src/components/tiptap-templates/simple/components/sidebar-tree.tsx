@@ -35,6 +35,7 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Section, SectionMenuItem, SectionMenuSeparator } from "./section";
 import { useLibrary } from "../context/library-context";
 import type { LibraryTab } from "./library-palette";
+import { useTranslation } from "react-i18next";
 
 const SECTION_CATEGORIES: PageCategory[] = [
   "Private",
@@ -284,6 +285,17 @@ function SectionEmpty({
 // The reusable Section is dnd-agnostic; this wrapper owns the droppables and
 // passes their refs + active state down. Header/body droppable ids are
 // unchanged, so collision detection and onDragOver/End keep working as-is.
+/**
+ * "Favorites" | "Shared" | "Private" | "Template" | "Teamspaces"
+ */
+const CATEGORY_TRANSLATION_MAP: Record<PageCategory, string> = {
+  Favorites: "section.favorites",
+  Shared: "section.shared",
+  Private: "section.private",
+  Template: "section.template",
+  Teamspaces: "section.teamspaces",
+};
+
 function TreeSection({
   category,
   topLevel,
@@ -326,10 +338,11 @@ function TreeSection({
   const handleLibraryClick = (tab: LibraryTab) => {
     setActiveTab(tab);
   };
+  const { t } = useTranslation();
 
   return (
     <Section
-      label={category}
+      label={t(CATEGORY_TRANSLATION_MAP[category]) ?? category}
       collapsed={collapsed}
       onToggleCollapse={onToggleCollapse}
       headerRef={setHeaderRef}

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import "./search-palette.scss";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { useSearch } from "../context/search-context";
@@ -33,7 +34,7 @@ type IconName =
 
 interface FilterDef {
   id: string;
-  label: string;
+  label: string; // i18n key, resolved with t() at render
   lead?: string;
   icon?: IconName;
   toggle?: boolean;
@@ -46,11 +47,16 @@ interface Match {
 }
 
 const FILTERS: FilterDef[] = [
-  { id: "titles", label: "Only search titles", lead: "Aa", toggle: true },
-  { id: "created", label: "Created by", icon: "user" },
-  { id: "teamspace", label: "Teamspace", icon: "layers" },
-  { id: "page", label: "In page", icon: "doc" },
-  { id: "date", label: "Date", icon: "calendar" },
+  {
+    id: "titles",
+    label: "search.filters.titlesOnly",
+    lead: "Aa",
+    toggle: true,
+  },
+  { id: "created", label: "search.filters.createdBy", icon: "user" },
+  { id: "teamspace", label: "search.filters.teamspace", icon: "layers" },
+  { id: "page", label: "search.filters.inPage", icon: "doc" },
+  { id: "date", label: "search.filters.date", icon: "calendar" },
 ];
 
 // ---- helpers ----
@@ -67,11 +73,14 @@ function isToday(dateStr: number | null | undefined): boolean {
   );
 }
 
-function shortDate(dateStr: number | null | undefined): string | null {
+function shortDate(
+  dateStr: number | null | undefined,
+  locale?: string,
+): string | null {
   if (!dateStr) return null;
   const d = new Date(Number(dateStr));
   if (isNaN(d.getTime())) return null;
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return d.toLocaleDateString(locale, { month: "short", day: "numeric" });
 }
 
 function fuzzyMatch(query: string, text: string): number[] | null {
@@ -209,12 +218,13 @@ function Highlight({
 
 // Lightweight content preview — walks the doc into simple blocks (no editor).
 function PreviewBlocks({ content }: { content: JSONContent }) {
+  const { t } = useTranslation();
   const blocks = (content?.content ?? [])
     .filter((n) => n.type !== "title")
     .slice(0, 25);
 
   if (blocks.length === 0) {
-    return <div className="sp-preview__empty">No content yet</div>;
+    return <div className="sp-preview__empty">{t("search.noContent")}</div>;
   }
 
   return (
@@ -321,6 +331,7 @@ function PreviewBlocks({ content }: { content: JSONContent }) {
 }
 
 export default function SearchPalette() {
+  const { t, i18n } = useTranslation();
   const { data: pages } = usePages();
   const { setActivePageId } = useActivePage();
   const { onOpenChange } = useSearch();
@@ -349,13 +360,15 @@ export default function SearchPalette() {
       const when = p.updatedAt ?? p.createdAt;
       return {
         page: p,
-        title: p.title || "Untitled",
-        location: parent ? parent.title || "Untitled" : (p.category ?? null),
+        title: p.title || t("page.untitled"),
+        location: parent
+          ? parent.title || t("page.untitled")
+          : (p.category ?? null),
         group: isToday(when) ? "today" : "past",
-        date: shortDate(when),
+        date: shortDate(when, i18n.language),
       };
     });
-  }, [pages]);
+  }, [pages, t, i18n.language]);
 
   const results = useMemo<Match[]>(() => {
     const q = query.trim();
@@ -395,11 +408,11 @@ export default function SearchPalette() {
         : undefined;
     while (cur && !seen.has(cur.id)) {
       seen.add(cur.id);
-      chain.push(cur.title || "Untitled");
+      chain.push(cur.title || t("page.untitled"));
       cur = cur.parentId != null ? byId.get(cur.parentId) : undefined;
     }
     return chain.reverse().join("  /  ");
-  }, [selectedPage, byId]);
+  }, [selectedPage, byId, t]);
 
   useEffect(() => {
     listRef.current
@@ -477,7 +490,7 @@ export default function SearchPalette() {
       <div
         className="sp"
         role="dialog"
-        aria-label="Search"
+        aria-label={t("search.title")}
         onClick={(e) => e.stopPropagation()}
         style={{ width: 1200, maxWidth: "99vw" }}
       >
@@ -489,7 +502,7 @@ export default function SearchPalette() {
             <input
               ref={inputRef}
               className="sp-search__input"
-              placeholder="Search pages..."
+              placeholder={t("search.placeholder")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={onKeyDown}
@@ -511,7 +524,7 @@ export default function SearchPalette() {
                 ) : f.icon ? (
                   <Icon name={f.icon} size={13} />
                 ) : null}
-                <span>{f.label}</span>
+                <span>{t(f.label)}</span>
                 {!f.toggle && (
                   <span className="sp-pill__chev">
                     <Icon name="chevron" size={13} />
@@ -527,18 +540,18 @@ export default function SearchPalette() {
           <div className="sp-results" ref={listRef} style={{ flex: 1 }}>
             {groups.order.length === 0 && (
               <div className="sp-empty">
-                {query ? `No results for "${query}"` : "No pages yet"}
+                {query ? t("search.noResults", { query }) : t("search.noPages")}
               </div>
             )}
             {groups.today.length > 0 && (
               <>
-                <div className="sp-section">Today</div>
+                <div className="sp-section">{t("search.today")}</div>
                 {groups.today.map(renderRow)}
               </>
             )}
             {groups.past.length > 0 && (
               <>
-                <div className="sp-section">Past</div>
+                <div className="sp-section">{t("search.past")}</div>
                 {groups.past.map(renderRow)}
               </>
             )}
@@ -567,7 +580,7 @@ export default function SearchPalette() {
                 >
                   <button
                     type="button"
-                    aria-label="Open page"
+                    aria-label={t("search.openPage")}
                     onClick={() => open(selectedPage)}
                     style={{
                       position: "absolute",
@@ -622,7 +635,7 @@ export default function SearchPalette() {
                       lineHeight: 1.25,
                     }}
                   >
-                    {selectedPage.title || "Untitled"}
+                    {selectedPage.title || t("page.untitled")}
                   </div>
 
                   <PreviewBlocks content={selectedPage.content} />
@@ -637,7 +650,7 @@ export default function SearchPalette() {
                   lineHeight: 1.5,
                 }}
               >
-                Select a result to preview it here.
+                {t("search.previewEmpty")}
               </div>
             )}
           </div>
@@ -646,14 +659,14 @@ export default function SearchPalette() {
 
         <div className="sp-footer">
           <span className="sp-hint">
-            <Icon name="updown" size={13} /> Select
+            <Icon name="updown" size={13} /> {t("search.hintSelect")}
           </span>
           <span className="sp-hint">
-            <Icon name="enter" size={13} /> Open
+            <Icon name="enter" size={13} /> {t("search.hintOpen")}
           </span>
           <span className="sp-hint">
             <kbd className="sp-kbd">⌘</kbd>
-            <Icon name="enter" size={13} /> Open in a new window
+            <Icon name="enter" size={13} /> {t("search.hintOpenNewWindow")}
           </span>
         </div>
       </div>

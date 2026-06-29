@@ -1,54 +1,227 @@
-
-
 .tiptap.ProseMirror {
-  /* Base styles for all headings */
-h1, h2, h3, h4, h5, h6 {
-  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
-  color: var(--tt-paragraph-text-color);
-  margin-top: 0;
-  margin-bottom: 0;
-  font-style: normal;
-  padding-top: 0px;
+
+  /* ==============================
+     Typography
+  =============================== */
+
+  font-family:
+    ui-sans-serif,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI Variable Display",
+    "Segoe UI",
+    Helvetica,
+    Arial,
+    sans-serif;
+
+  font-size: 16px;
   line-height: 1.5;
-  // padding-inline: 8px;
-  // padding-bottom: 0px;
-   
-}
+  color: var(--tt-paragraph-text-color);
+  font-feature-settings: "tnum", "cv05", "cv11";
 
-h1 {
-  font-size: 40px;
-  //font-size: 1em;
-  font-weight: 700;
-  // line-height: 1.2; /* Computed as 48px */
-  margin-top: 1.875rem;       // margin-top = font-size (Notion's rhythm rule)
-  margin-top: 1.8rem;
-}
+  /* ==============================
+     Every block
+  =============================== */
 
-/* Note: h2 was not explicitly found, typically falls between h1 and h3 */
-h2 {
-  font-size: 30px; 
-  font-weight: 700;
-  // line-height: 1.2;
-  margin-top: 1.5rem;
-}
+  > * {
+    margin: 0;
+  }
 
-h3 {
-  font-size: 24px;
-  font-weight: 700;
-  // line-height: 1.2; /* Computed as 31.2px */
-  margin-top: 1.25rem;
-}
+  > * + * {
+    margin-top: 0.18em;
+  }
 
-h4 {
-  font-size: 1.125rem;
-   font-weight: 600;
-  margin-top: 1.125rem;
-}
+  /* ==============================
+     Paragraphs
+  =============================== */
 
-h5, h6 {
-  font-size: 1rem;
-   font-weight: 600;
-  margin-top: 1rem;
-}
+  p {
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    margin: 0;
+  }
 
- }
+  /* ==============================
+     Headings
+  =============================== */
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--tt-paragraph-text-color);
+    font-style: normal;
+    letter-spacing: -0.02em;
+    margin-bottom: 0;
+  }
+
+  h1 {
+    font-size: 2.5rem;       // 40px
+    font-weight: 700;
+    line-height: 1.2;
+
+    margin-top: 1.7em;
+    margin-bottom: 0.2em;
+  }
+
+  h2 {
+    font-size: 1.875rem;     // 30px
+    font-weight: 700;
+    line-height: 1.25;
+
+    margin-top: 1.45em;
+    margin-bottom: 0.18em;
+  }
+
+  h3 {
+    font-size: 1.4rem;       
+    font-weight: 500;
+    line-height: 1.3;
+
+    margin-top: 1.25em;
+    margin-bottom: 0.15em;
+  }
+
+  h4 {
+    font-size: 1.25rem;      // 20px
+    font-weight: 500;
+    line-height: 1.35;
+
+    margin-top: 1.1em;
+    margin-bottom: 0.12em;
+  }
+
+  h5 {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.45;
+
+    margin-top: 0.95em;
+  }
+
+  h6 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.45;
+    opacity: .75;
+
+    margin-top: 0.85em;
+  }
+
+  /* ==============================
+     Lists
+  =============================== */
+
+  ul,
+  ol {
+    padding-left: 1.5em;
+    margin: 0.25em 0;
+  }
+
+  li {
+    line-height: 1.6;
+    margin: 0.1em 0;
+  }
+
+  li > p {
+    margin: 0;
+  }
+
+  /* ==============================
+     Blockquote
+  =============================== */
+
+  blockquote {
+    border-left: 3px solid rgba(128,128,128,.35);
+    padding-left: 1em;
+    margin: .5em 0;
+    color: rgba(128,128,128,.9);
+  }
+
+  /* ==============================
+     Horizontal rule
+  =============================== */
+
+  hr {
+    border: none;
+    border-top: 1px solid rgba(128,128,128,.25);
+    margin: 1.4em 0;
+  }
+
+  /* ==============================
+     Inline code
+  =============================== */
+
+  code {
+    font-family:
+      "SFMono-Regular",
+      Consolas,
+      monospace;
+
+    font-size: .9em;
+
+    padding: .15em .35em;
+
+    border-radius: 4px;
+  }
+
+  /* ==============================
+     Code block
+  =============================== */
+
+  pre {
+    font-family:
+      "SFMono-Regular",
+      Consolas,
+      monospace;
+
+    font-size: .9rem;
+    line-height: 1.6;
+
+    padding: 1rem;
+    border-radius: 8px;
+
+    overflow-x: auto;
+
+    margin: .75em 0;
+  }
+
+  pre code {
+    padding: 0;
+    background: transparent;
+  }
+
+  /* ==============================
+     Images
+  =============================== */
+
+  img {
+    display: block;
+    max-width: 100%;
+    border-radius: 8px;
+    margin: .5em 0;
+  }
+
+  /* ==============================
+     Tables
+  =============================== */
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: .75em 0;
+  }
+
+  td,
+  th {
+    border: 1px solid rgba(128,128,128,.2);
+    padding: .55rem .75rem;
+  }
+
+  th {
+    font-weight: 600;
+  }
+}

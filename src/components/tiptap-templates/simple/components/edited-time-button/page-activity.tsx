@@ -1,25 +1,8 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "src/i18n/config";
 import type { Page } from "src/types";
-
-// Recent → relative ("Just now", "3m ago", "2h ago", "Yesterday"),
-// older → absolute date ("Mar 29"). updatedAt can be null → caller falls back.
-function formatRelative(ts: number): string {
-  const diff = Date.now() - ts;
-  const sec = Math.floor(diff / 1000);
-  if (sec < 0) return "Just now";
-  if (sec < 60) return "Just now";
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const day = Math.floor(hr / 24);
-  if (day === 1) return "Yesterday";
-  if (day < 7) return `${day}d ago`;
-  return new Date(ts).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-}
+import { formatRelativeTime } from "src/utils/format-relative";
 
 interface PageActivityProps {
   page: Page;
@@ -30,8 +13,8 @@ interface PageActivityProps {
 export default function PageActivity({ page, authorName }: PageActivityProps) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-
   const editedAt = page.updatedAt ?? page.createdAt;
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!open) return;
@@ -66,19 +49,19 @@ export default function PageActivity({ page, authorName }: PageActivityProps) {
           borderBottom: "1px solid var(--tt-border-color)",
         }}
       >
-        Activity
+        {t("activity")}
       </div>
 
       <div style={{ padding: "8px 14px 10px" }}>
         <ActivityRow
-          label="Edited by"
+          label={t("editedBy")}
           name={authorName}
-          time={formatRelative(editedAt)}
+          time={formatRelativeTime(editedAt, t, i18n.language)}
         />
         <ActivityRow
-          label="Created by"
+          label={t("createdBy")}
           name={authorName}
-          time={formatRelative(page.createdAt)}
+          time={formatRelativeTime(page.createdAt, t, i18n.language)}
         />
       </div>
     </div>

@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Page, PageCover, ID } from "src/types";
-import {FileText, Plus } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { PageItemIcon } from "../../page-item-icon";
 import { useActivePage } from "../../context/active-page-context";
 import { makePage } from "src/utils/make-page";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { useTranslation } from "react-i18next";
 
 // ── People metadata (display contract) ──────────────────────────────────────
 // Page carries no author/usage data, so the parent supplies this from the real
@@ -103,10 +104,12 @@ function AvatarStack({
   count: number;
   max?: number;
 }) {
+  const { t } = useTranslation();
+
   if (count <= 0) {
     return (
       <span style={{ fontSize: 12, color: "var(--tt-text-color)" }}>
-        Not used yet
+        {t("templates.notUsedYet")}
       </span>
     );
   }
@@ -143,7 +146,7 @@ function AvatarStack({
         )}
       </div>
       <span style={{ fontSize: 12, color: "var(--tt-text-color)" }}>
-        {count} {count === 1 ? "use" : "uses"}
+        {t("templates.uses", { count })}
       </span>
     </div>
   );
@@ -161,6 +164,7 @@ export function TemplatesGallery({
   const { setActivePageId } = useActivePage();
   const [query, setQuery] = useState("");
   const [hoveredId, setHoveredId] = useState<ID | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!open) return;
@@ -175,12 +179,12 @@ export function TemplatesGallery({
 
   const q = query.trim().toLowerCase();
   const filtered = q
-    ? templates.filter((t) => (t.title || "").toLowerCase().includes(q))
+    ? templates.filter((tpl) => (tpl.title || "").toLowerCase().includes(q))
     : templates;
 
   // Detail panel reflects the hovered card, falling back to the first result.
   const preview =
-    filtered.find((t) => t.id === hoveredId) ?? filtered[0] ?? null;
+    filtered.find((tpl) => tpl.id === hoveredId) ?? filtered[0] ?? null;
   const meta =
     preview && getTemplateMeta ? getTemplateMeta(preview) : undefined;
   const usedBy = meta?.usedBy ?? [];
@@ -193,7 +197,7 @@ export function TemplatesGallery({
 
   const createBlankTemplate = () => {
     const template = makePage({
-      title: "New Template",
+      title: t("templates.newTemplate"),
       parentId: null,
       category: "Template",
     });
@@ -221,7 +225,7 @@ export function TemplatesGallery({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Templates"
+        aria-label={t("templates.title")}
         onClick={(e) => e.stopPropagation()}
         style={{
           width: 900,
@@ -255,7 +259,7 @@ export function TemplatesGallery({
               color: "var(--tt-text-color)",
             }}
           >
-            Templates
+            {t("templates.title")}
           </h2>
           <Spacer orientation="horizontal" />
           {/* <button
@@ -310,7 +314,7 @@ export function TemplatesGallery({
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search templates"
+                placeholder={t("search.templatePlaceholder")}
               />
             </div>
 
@@ -325,7 +329,7 @@ export function TemplatesGallery({
                     lineHeight: 1.5,
                   }}
                 >
-                  No templates match "{query}".
+                  {t("templates.noMatch", { query })}
                 </div>
               ) : (
                 <div
@@ -391,7 +395,7 @@ export function TemplatesGallery({
                             color: "var(--tt-text-color)",
                           }}
                         >
-                          Blank template
+                          {t("templates.blankTemplate")}
                         </span>
                       </div>
                     </button>
@@ -443,7 +447,7 @@ export function TemplatesGallery({
                             whiteSpace: "nowrap",
                           }}
                         >
-                          {template.title || "Untitled"}
+                          {template.title || t("page.untitled")}
                         </span>
                       </div>
                     </button>
@@ -460,7 +464,7 @@ export function TemplatesGallery({
                     lineHeight: 1.5,
                   }}
                 >
-                  Save any page as a template, or start one from the blank tile.
+                  {t("templates.emptyHint")}
                 </div>
               )}
             </div>
@@ -504,7 +508,7 @@ export function TemplatesGallery({
                         color: "var(--tt-text-color)",
                       }}
                     >
-                      {preview.title || "Untitled"}
+                      {preview.title || t("page.untitled")}
                     </span>
                   </div>
 
@@ -519,7 +523,7 @@ export function TemplatesGallery({
                         marginBottom: 8,
                       }}
                     >
-                      Created by
+                      {t("templates.createdBy")}
                     </div>
                     {meta?.createdBy ? (
                       <div
@@ -546,7 +550,7 @@ export function TemplatesGallery({
                           color: "var(--tt-text-color)",
                         }}
                       >
-                        Unknown
+                        {t("templates.unknown")}
                       </span>
                     )}
                   </div>
@@ -562,7 +566,7 @@ export function TemplatesGallery({
                         marginBottom: 8,
                       }}
                     >
-                      Used by
+                      {t("templates.usedBy")}
                     </div>
                     <AvatarStack people={usedBy} count={usedCount} />
                   </div>
@@ -582,7 +586,7 @@ export function TemplatesGallery({
                       cursor: "pointer",
                     }}
                   >
-                    Open template
+                    {t("templates.openTemplate")}
                   </button>
                 </div>
               </div>
@@ -595,7 +599,7 @@ export function TemplatesGallery({
                   lineHeight: 1.5,
                 }}
               >
-                Hover a template to see details.
+                {t("templates.hoverHint")}
               </div>
             )}
           </div>

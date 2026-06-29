@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Sun, Sunset, Moon, CloudMoon } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface GreetingConfig {
-  text: string;
+  textKey: string;
   icon: LucideIcon;
   color: string;
 }
@@ -11,12 +12,12 @@ interface GreetingConfig {
 function getGreeting(): GreetingConfig {
   const hour = new Date().getHours();
   if (hour >= 5 && hour < 12)
-    return { text: "Good morning", icon: Sun, color: "#f59e0b" }; // amber
+    return { textKey: "greeting.morning", icon: Sun, color: "#f59e0b" }; // amber
   if (hour >= 12 && hour < 18)
-    return { text: "Good afternoon", icon: Sunset, color: "#f97316" }; // orange
+    return { textKey: "greeting.afternoon", icon: Sunset, color: "#f97316" }; // orange
   if (hour >= 18 && hour < 22)
-    return { text: "Good evening", icon: CloudMoon, color: "#818cf8" }; // indigo
-  return { text: "Good night", icon: Moon, color: "#6366f1" }; // purple
+    return { textKey: "greeting.evening", icon: CloudMoon, color: "#818cf8" }; // indigo
+  return { textKey: "greeting.night", icon: Moon, color: "#6366f1" }; // purple
 }
 
 interface GreetingProps {
@@ -26,6 +27,7 @@ interface GreetingProps {
 }
 
 export function Greeting({ name, className, iconSize = 28 }: GreetingProps) {
+  const { t } = useTranslation();
   const [greeting, setGreeting] = useState(getGreeting);
 
   useEffect(() => {
@@ -43,6 +45,7 @@ export function Greeting({ name, className, iconSize = 28 }: GreetingProps) {
   }, []);
 
   const Icon = greeting.icon;
+  const text = t(greeting.textKey);
 
   return (
     <span
@@ -62,8 +65,7 @@ export function Greeting({ name, className, iconSize = 28 }: GreetingProps) {
         fill={greeting.color}
         style={{ color: greeting.color }}
       />
-      {greeting.text}
-      {name ? `, ${name}` : ""}
+      {name ? t("greeting.withName", { greeting: text, name }) : text}
     </span>
   );
 }

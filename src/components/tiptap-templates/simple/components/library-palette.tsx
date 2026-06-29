@@ -18,30 +18,14 @@ import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import "./library-palette.scss";
 import { useChildPages, usePages } from "src/hooks/use-pages";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { makePage } from "src/utils/make-page";
 import { useLibrary } from "../context/library-context";
-
+import { formatRelativeTime } from "src/utils/format-relative";
 export type LibraryTab = Exclude<PageCategory, "Template"> | "Recents";
-
-function formatRelativeTime(dateStr: number | null | undefined): string {
-  if (!dateStr) return "—";
-  const date = new Date(Number(dateStr));
-  if (isNaN(date.getTime())) return "—";
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "Just now";
-  if (diffMin < 60) return `${diffMin}min ago`;
-  const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `${diffH}h ago`;
-  const diffD = Math.floor(diffH / 24);
-  if (diffD === 1) return "Yesterday";
-  if (diffD < 7) return `${diffD} days ago`;
-  return date.toLocaleDateString();
-}
 
 function Tabs({
   active,
@@ -50,12 +34,13 @@ function Tabs({
   active: LibraryTab;
   onChange: (t: LibraryTab) => void;
 }) {
+  const { t } = useTranslation();
   const tabs: { id: LibraryTab; label: string; Icon: typeof Clock1 }[] = [
-    { id: "Recents", label: "Recents", Icon: Clock1 },
-    { id: "Favorites", label: "Favorites", Icon: Star },
-    { id: "Shared", label: "Shared", Icon: Users },
-    { id: "Private", label: "Private", Icon: Lock },
-    { id: "Teamspaces", label: "Teamspaces", Icon: Users2 },
+    { id: "Recents", label: t("library.tabs.recents"), Icon: Clock1 },
+    { id: "Favorites", label: t("library.tabs.favorites"), Icon: Star },
+    { id: "Shared", label: t("library.tabs.shared"), Icon: Users },
+    { id: "Private", label: t("library.tabs.private"), Icon: Lock },
+    { id: "Teamspaces", label: t("library.tabs.teamspaces"), Icon: Users2 },
   ];
 
   return (
@@ -109,6 +94,7 @@ const dataStyle: React.CSSProperties = {
 };
 
 function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
+  const { t, i18n } = useTranslation();
   const [show, setShow] = useState(false);
   const [expanded, setExpanded] = useState<Set<ID>>(new Set());
   const { setActivePageId } = useActivePage();
@@ -182,7 +168,7 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
                 color: "var(--tt-text-color)",
               }}
             >
-              {page.title || "Untitled"}
+              {page.title || t("page.untitled")}
             </span>
 
             <Spacer orientation="horizontal" />
@@ -198,14 +184,14 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
                 onClick={() => navigate(page.id)}
               >
                 <PanelRight className="tiptap-button-icon" />
-                <span className="tiptap-button-text">Open</span>
+                <span className="tiptap-button-text">{t("actions.open")}</span>
               </Button>
             )}
           </CardItemGroup>
           {page.settings?.locked && (
             <Badge data-style="gray">
               <Lock className="tiptap-badge-icon" />
-              <span className="tiptap-badge-text">Locked</span>
+              <span className="tiptap-badge-text">{t("page.locked")}</span>
             </Badge>
           )}
         </CardItemGroup>
@@ -218,7 +204,11 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
 
       <div key={`${page.id}-date`} style={cellStyle}>
         <span style={dataStyle}>
-          {formatRelativeTime(page.updatedAt ?? page.createdAt)}
+          {formatRelativeTime(
+            page.updatedAt ?? page.createdAt,
+            t,
+            i18n.language,
+          )}
         </span>
       </div>
 
@@ -231,6 +221,7 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
 }
 
 function RecentGrid({ rows }: { rows: Page[] }) {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -242,19 +233,25 @@ function RecentGrid({ rows }: { rows: Page[] }) {
       <div style={headerStyle}>
         <Button variant="ghost">
           <FileText className="tiptap-button-icon" />
-          <span className="tiptap-button-text">Page</span>
+          <span className="tiptap-button-text">
+            {t("library.columns.page")}
+          </span>
         </Button>
       </div>
       <div style={headerStyle}>
         <Button variant="ghost">
           <CircleUser className="tiptap-button-icon" />
-          <span className="tiptap-button-text">Created by</span>
+          <span className="tiptap-button-text">
+            {t("library.columns.createdBy")}
+          </span>
         </Button>
       </div>
       <div style={headerStyle}>
         <Button variant="ghost">
           <Clock className="tiptap-button-icon" />
-          <span className="tiptap-button-text">Last edited time</span>
+          <span className="tiptap-button-text">
+            {t("library.columns.lastEdited")}
+          </span>
         </Button>
       </div>
 
@@ -267,16 +264,17 @@ function RecentGrid({ rows }: { rows: Page[] }) {
   );
 }
 
-// Per-tab empty copy.
+// Per-tab empty copy (i18n keys, resolved with t() at render).
 const TAB_EMPTY: Record<LibraryTab, string> = {
-  Recents: "No recent pages",
-  Favorites: "No favorites yet",
-  Shared: "Nothing shared yet",
-  Private: "No private pages yet",
-  Teamspaces: "No teamspace pages yet",
+  Recents: "library.empty.recents",
+  Favorites: "library.empty.favorites",
+  Shared: "library.empty.shared",
+  Private: "library.empty.private",
+  Teamspaces: "library.empty.teamspaces",
 };
 
 export function LibraryPalette({ onClose }: { onClose?: () => void }) {
+  const { t } = useTranslation();
   const { data: pages } = usePages();
   const createPage = useCreatePage();
   const { setActivePageId } = useActivePage();
@@ -341,7 +339,7 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
           style={{ width: "100%", alignItems: "center" }}
           orientation="horizontal"
         >
-          <span className="library">Library</span>
+          <span className="library">{t("library.title")}</span>
           <Spacer orientation="horizontal" />
           <Button
             style={{
@@ -350,7 +348,10 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
               borderRadius: "var(--tt-radius-sm)",
             }}
             onClick={() => {
-              const page = makePage({ title: "New Page", parentId: null });
+              const page = makePage({
+                title: t("page.newPage"),
+                parentId: null,
+              });
               createPage
                 .mutateAsync(page)
                 .then(() => setActivePageId(page.id))
@@ -361,7 +362,7 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
               className="tiptap-button-text"
               style={{ whiteSpace: "nowrap" }}
             >
-              New Page
+              {t("actions.newPage")}
             </span>
           </Button>
         </CardItemGroup>
@@ -376,13 +377,13 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
         ) : (
           <div className="library-empty">
             <FileText size={32} className="library-empty__icon" />
-            <p className="library-empty__text">{TAB_EMPTY[tab]}</p>
+            <p className="library-empty__text">{t(TAB_EMPTY[tab])}</p>
             {tab === "Recents" && pages.length === 0 && (
               <button
                 className="library-palette-content__new-btn"
                 onClick={() => {
                   const page = makePage({
-                    title: "New Page",
+                    title: t("page.newPage"),
                     parentId: null,
                   });
                   createPage
@@ -391,7 +392,7 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
                     .catch(() => console.log("Failed to create page"));
                 }}
               >
-                Create your first page
+                {t("library.createFirst")}
               </button>
             )}
           </div>

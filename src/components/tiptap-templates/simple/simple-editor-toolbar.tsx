@@ -21,6 +21,8 @@ import { Breadcrumbs } from "./breadcrumbs";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import EditedTimeButton from "./components/edited-time-button/edited-time-button";
+import { LanguageSetting } from "src/components/tiptap-ui/language-settings";
+import { useTranslation } from "react-i18next";
 
 // ============================================================
 // Types
@@ -62,7 +64,7 @@ export const MainToolbarContent = ({
 }: MainToolbarProps) => {
   const { activePage, activePageId } = useActivePage();
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
-
+  const { t } = useTranslation();
   return (
     <>
       <ToolbarGroup>
@@ -70,7 +72,7 @@ export const MainToolbarContent = ({
           <Button variant="ghost">
             <Home className="tiptap-button-icon" strokeWidth={2} />
             <span className="tiptap-button-text" style={{ fontWeight: "bold" }}>
-              Home
+              {t("sidebar.home")}
             </span>
           </Button>
         )}
@@ -78,7 +80,7 @@ export const MainToolbarContent = ({
           <Button variant="ghost">
             <LibraryBig className="tiptap-button-icon" strokeWidth={2} />
             <span className="tiptap-button-text" style={{ fontWeight: "bold" }}>
-              Library
+              {t("sidebar.library")}
             </span>
           </Button>
         )}
@@ -107,6 +109,7 @@ export const MainToolbarContent = ({
             <Separator orientation="vertical" />
           </>
         )}
+        <LanguageSetting />
         <ThemeToggle />
         <NotificationBell />
         <MorePopover onTriggerVersionHistory={onTriggerVersionHistory} />

@@ -1,5 +1,6 @@
 import type { SuggestionProps } from "@tiptap/suggestion";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardGroupLabel } from "src/components/tiptap-ui-primitive/card";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
@@ -20,6 +21,7 @@ type Props = SuggestionProps<SlashItem> & {
 
 export default function SlashList(props: Props) {
   const { items = [], onClickItem, onClose, editor } = props;
+  const { t } = useTranslation();
   const createPage = useCreatePage();
   const { activePageId, activePage, setActivePageId } = useActivePage();
   const isSelectable = (item: SlashItem) => item.type === "command";
@@ -40,10 +42,10 @@ export default function SlashList(props: Props) {
     autoSelectFirstItem: true,
     onSelect: (item) => {
       onClickItem?.(item);
-      if (item.title === "Page") {
+      if (item.id === "page-1") {
         const parentId = activePageId;
         if (parentId === null || !activePage) return;
-        const page = makeChildPage(activePage, "New Page");
+        const page = makeChildPage(activePage, t("page.newPage"));
         createPage.mutateAsync(page).then((newPage) => {
           editor.storage.pageLink.pages = [
             ...editor.storage.pageLink.pages,
@@ -122,7 +124,7 @@ export default function SlashList(props: Props) {
       tabIndex={0}
       className="slash-menu"
       role="listbox"
-      aria-label="Slash commands"
+      aria-label={t("slash.commandsAria")}
       data-slash-menu-open={menuVisible}
     >
       <div className="slash-menu__scroll" ref={scrollRef}>
@@ -209,14 +211,14 @@ export default function SlashList(props: Props) {
         <Button
           type="button"
           className="slash-menu__close"
-          aria-label="Close (Esc)"
+          aria-label={t("slash.closeAria")}
           onMouseDown={(e) => {
             // preventDefault keeps editor focus so onClose can exit cleanly
             e.preventDefault();
             onClose?.();
           }}
         >
-          <span className="tiptap-button-text">Close</span>
+          <span className="tiptap-button-text">{t("actions.close")}</span>
           <Badge>Esc</Badge>
           {/* <kbd className="slash-menu__kbd">Esc</kbd> */}
         </Button>

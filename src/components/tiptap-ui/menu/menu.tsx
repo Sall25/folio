@@ -17,6 +17,7 @@ import { DeleteNodeButton } from "src/components/tiptap-ui/delete-node-button";
 import "./menu.scss";
 import { DropdownMenuItem } from "src/components/tiptap-ui-primitive/dropdown-menu";
 import { CommentButton } from "../comment-button";
+import { useTranslation } from "react-i18next";
 
 export function Menu({
   title,
@@ -27,6 +28,7 @@ export function Menu({
   editor: Editor;
   onAction?: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Card className="menu">
       <CardGroupLabel className="title">{title}</CardGroupLabel>
@@ -52,7 +54,7 @@ export function Menu({
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <ResetFormattingButton
-            text="Reset formatting"
+            text={t("blockMenu.resetFormatting")} //"Reset formatting"
             hideWhenUnavailable={true}
             editor={editor}
             onResetAllFormatting={onAction}
@@ -73,21 +75,21 @@ export function Menu({
       <Separator orientation="horizontal" />
       <CardItemGroup className="group" orientation="vertical">
         <DuplicateButton
-          text="Duplicate node"
+          text={t("blockMenu.duplicateNode")}
           showShortcut={true}
           hideWhenUnavailable={false}
           editor={editor}
           onDuplicated={onAction}
         />
         <CopyToClipboardButton
-          text={"Copy to clipboard"}
+          text={t("blockMenu.copyToClipboard")}
           showShortcut={true}
           hideWhenUnavailable={true}
           editor={editor}
           onCopied={onAction}
         />
         <CopyAnchorLinkButton
-          text={"Copy anchor link"}
+          text={t("blockMenu.copyAnchorLink")}
           showShortcut={true}
           hideWhenUnavailable={false}
           editor={editor}
@@ -100,7 +102,7 @@ export function Menu({
         <DeleteNodeButton
           showTooltip={false}
           showShortcut={true}
-          text="Delete node"
+          text={t("blockMenu.deleteNode")}
           onDeleted={onAction}
         />
       </CardItemGroup>

@@ -59,14 +59,15 @@
   align-items: flex-start;
 }
 .toc-progress-line{
-  height: 0.2rem;
+  height: 0.1rem;
   border-radius: 2px;
   background: var(--tt-scrollbar-color);
 
-  transition: background 0.2s ease;
+  transition: background 0.15s ease, height 0.15s ease;
 
   &.active{
     background: var(--tt-toc-sidebar-line-bg-active);
+    height: 0.2rem;
   }
 }
 
