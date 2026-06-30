@@ -11,6 +11,7 @@ import {
   ArrowDown,
   ArrowUp,
   LayoutTemplate,
+  Settings,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -47,6 +48,7 @@ import { ScrollFog } from "src/components/tiptap-ui-primitive/scroll-frog";
 import { useLibrary } from "./context/library-context";
 import { useLocalStorage } from "./hooks/use-local-storage";
 import { useTemplates } from "./context/templates-context";
+import { useWorkspaceSettings } from "./context/workspace-settings-context";
 import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
 import type { Teamspace } from "src/types";
 
@@ -455,6 +457,7 @@ export function SimpleEditorSidebar() {
   const createPage = useCreatePage();
   const { setActivePageId, activePageId } = useActivePage();
   const { onOpenChange: onTemplatesGalleryOpenChange } = useTemplates();
+  const { openTo } = useWorkspaceSettings();
 
   const onCreatePage = () => {
     const newPage = makePage({
@@ -558,6 +561,22 @@ export function SimpleEditorSidebar() {
                 onDeleteSection={() => {}}
                 onAddSection={() => {}}
               />
+
+              <Spacer orientation="vertical" size={8} />
+              <Button
+                variant="ghost"
+                onClick={() => openTo("teamspaces")}
+                aria-label="Open workspace settings"
+                style={{
+                  justifyContent: "flex-start",
+                  width: "100%",
+                  gap: 8,
+                  color: "var(--tt-text-color)",
+                }}
+              >
+                <Settings className="tiptap-button-icon" size={16} />
+                <span className="tiptap-button-text">Workspace settings</span>
+              </Button>
             </>
           ))}
       </CardBody>

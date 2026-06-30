@@ -29,7 +29,7 @@ import {
   type TeamspaceAccess,
 } from "src/types";
 import { memberCount, type Group, type Person } from "src/types";
-import "./teamspaces-settings-content.scss";
+import "./teamspace-settings-content.scss";
 
 const ACCESS_LABEL: Record<TeamspaceAccess, string> = {
   open: "Open",

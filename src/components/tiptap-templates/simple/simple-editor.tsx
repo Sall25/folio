@@ -44,6 +44,7 @@ import { EditorContentSkeleton } from "./components/skeletons";
 import { useTemplates } from "./context/templates-context";
 import { useTemplates as useTemplatesApi } from "src/hooks/use-templates";
 import { TemplatesGallery } from "./components/template-gallery";
+import { WorkspaceSettings } from "./components/workspace-settings";
 import { usePageBrowserTab } from "./hooks/use-page-browser-tab";
 
 const VERSION_SIDEBAR_WIDTH = 270;
@@ -144,6 +145,9 @@ function SimpleEditorMain({ view }: { view: View }) {
           })}
         />
       )}
+
+      {/* Renders null until opened via the WorkspaceSettings context. */}
+      <WorkspaceSettings />
     </>
   );
 }
