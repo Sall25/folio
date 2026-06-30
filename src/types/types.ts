@@ -578,6 +578,12 @@ export type Page = {
   sourceId: ID | null;
   /** Cell values keyed by propertyId — null when not a database row. */
   values: Record<ID, CellValue> | null;
+  /**
+   * Teamspace this page belongs to. Authoritative on TOP-LEVEL pages
+   * (parentId === null); null = a private/personal root. On nested pages this
+   * is NOT the source of truth — derive with teamspaceIdOfPage().
+   */
+  teamspaceId: ID | null;
 };
 
 /** Derived tree shape — built at read time from parentId, never stored. */

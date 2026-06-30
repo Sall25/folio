@@ -27,7 +27,14 @@ import {
   type DragOverEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import type { PageCategory, PageTreeNode, ID } from "src/types";
+import type {
+  PageCategory,
+  PageTreeNode,
+  ID,
+  Teamspace,
+  Page,
+} from "src/types";
+import type { PageSections } from "src/hooks/use-pages";
 import { PageItem } from "../page-item";
 import "./sidebar-sections.scss";
 import "./sidebar-tree.scss";
@@ -36,18 +43,37 @@ import { Section, SectionMenuItem, SectionMenuSeparator } from "./section";
 import { useLibrary } from "../context/library-context";
 import type { LibraryTab } from "./library-palette";
 
-const SECTION_CATEGORIES: PageCategory[] = [
-  "Private",
-  "Favorites",
-  "Shared",
-  "Teamspaces",
-];
+// Category sections that remain (Teamspaces is retired — teamspaceId drives those).
+const CATEGORY_SECTIONS: PageCategory[] = ["Favorites", "Shared", "Private"];
+
 type DropZone = "before" | "after" | "inside";
 
-// CHANGED: pageId number → ID
+// A move destination identity — exactly one of category/teamspace location.
+export type SectionRef =
+  | { kind: "category"; category: PageCategory }
+  | { kind: "teamspace"; teamspaceId: ID };
+
+// A rendered section: a category bucket or a single teamspace.
+type SectionDesc =
+  | {
+      kind: "category";
+      key: string;
+      category: PageCategory;
+      label: string;
+      roots: PageTreeNode[];
+    }
+  | {
+      kind: "teamspace";
+      key: string;
+      teamspaceId: ID;
+      label: string;
+      icon: string | null;
+      roots: PageTreeNode[];
+    };
+
 type DropTarget =
   | { kind: "page"; pageId: ID; zone: DropZone }
-  | { kind: "section"; category: PageCategory }
+  | { kind: "section"; sectionKey: string }
   | null;
 
 // Section containers use prefixed ids; page rows use bare page ids.
@@ -55,10 +81,6 @@ const isSectionId = (id: string | number) =>
   typeof id === "string" &&
   (id.startsWith("section:") || id.startsWith("section-header:"));
 
-// A page row droppable is nested inside the section-body droppable, so the
-// section always intersects too. Prefer the row when the pointer is over one —
-// that's what unlocks before/after/inside (nesting). Fall back to the section
-// only when no row is under the pointer (empty space / headers).
 const treeCollisionDetection: CollisionDetection = (args) => {
   const pointer = pointerWithin(args);
   const collisions = pointer.length ? pointer : rectIntersection(args);
@@ -66,22 +88,49 @@ const treeCollisionDetection: CollisionDetection = (args) => {
   return pageHit ? [pageHit] : collisions;
 };
 
-// CHANGED: consumes the derived tree, grouped by category, instead of flat Page[]
+// The section key a top-level page belongs to (teamspace if set, else category).
+const keyOfRoot = (p: Page): string =>
+  p.teamspaceId != null ? `ts:${p.teamspaceId}` : `cat:${p.category}`;
+
+// The move-identity for a section / a top-level sibling. Category moves also
+// null the teamspaceId (pulling the page out of any teamspace); teamspace moves
+// set teamspaceId and leave category untouched (ignored for teamspace roots).
+const identityOfSection = (
+  s: SectionDesc,
+): { category?: PageCategory; teamspaceId?: ID | null } =>
+  s.kind === "category"
+    ? { category: s.category, teamspaceId: null }
+    : { teamspaceId: s.teamspaceId };
+
+const identityOfRoot = (
+  p: Page,
+): { category?: PageCategory; teamspaceId?: ID | null } =>
+  p.teamspaceId != null
+    ? { teamspaceId: p.teamspaceId }
+    : { category: p.category, teamspaceId: null };
+
+const refOfSection = (s: SectionDesc): SectionRef =>
+  s.kind === "category"
+    ? { kind: "category", category: s.category }
+    : { kind: "teamspace", teamspaceId: s.teamspaceId };
+
 export interface SidebarTreeProps {
-  tree: Record<PageCategory, PageTreeNode[]>;
+  tree: PageSections;
+  /** Teamspaces to show as sections — already membership-filtered + ordered. */
+  teamspaces: Teamspace[];
   onMovePage: (args: {
     pageId: ID;
     newParentId: ID | null;
     category?: PageCategory;
+    teamspaceId?: ID | null;
   }) => void;
-  onAddPageToSection?: (category: PageCategory) => void;
+  onAddPageToSection?: (target: SectionRef) => void;
   onAddSection?: () => void;
   onRenameSection?: (category: PageCategory) => void;
   onDeleteSection?: (category: PageCategory) => void;
   onHideSection?: (category: PageCategory) => void;
 }
 
-// CHANGED: walks PageTreeNode.children, collects string ids
 function collectSubtreeIds(
   node: PageTreeNode,
   acc: Set<ID> = new Set(),
@@ -92,7 +141,6 @@ function collectSubtreeIds(
 }
 
 // ── Recursive tree row ─────────────────────────────────────────────────────
-// CHANGED: takes a PageTreeNode (page + children) instead of a Page with .children
 function TreeRow({
   node,
   depth,
@@ -117,9 +165,7 @@ function TreeRow({
     attributes,
     listeners,
     setNodeRef: setDragRef,
-  } = useDraggable({
-    id: page.id, // already a string ID — dnd-kit accepts string ids
-  });
+  } = useDraggable({ id: page.id });
   const { setNodeRef: setDropRef } = useDroppable({ id: page.id });
 
   const setRefs = useCallback(
@@ -240,38 +286,46 @@ const EMPTY_META: Record<
     title: "Nothing shared yet",
     hint: "Pages shared with you appear here.",
   },
-  Teamspaces: {
-    Icon: UsersRound,
-    title: "No teamspaces yet",
-    hint: "Collaborate with your team here.",
-  },
 };
 
 function SectionEmpty({
-  category,
+  section,
   onAddPage,
 }: {
-  category: PageCategory;
-  onAddPage?: (c: PageCategory) => void;
+  section: SectionDesc;
+  onAddPage?: (target: SectionRef) => void;
 }) {
-  const meta = EMPTY_META[category] ?? {
-    Icon: FileText,
-    title: "No pages yet",
-    hint: "Add a page to get started.",
-  };
-  const { Icon } = meta;
+  let Icon: typeof FileText;
+  let title: string;
+  let hint: string;
+
+  if (section.kind === "category") {
+    const meta = EMPTY_META[section.category] ?? {
+      Icon: FileText,
+      title: "No pages yet",
+      hint: "Add a page to get started.",
+    };
+    Icon = meta.Icon;
+    title = meta.title;
+    hint = meta.hint;
+  } else {
+    Icon = UsersRound;
+    title = `No pages in ${section.label}`;
+    hint = "Add a page to this teamspace.";
+  }
+
   return (
     <button
       className="sidebar-section__empty"
-      onClick={() => onAddPage?.(category)}
+      onClick={() => onAddPage?.(refOfSection(section))}
       type="button"
     >
       <span className="sidebar-section__empty-icon">
         <Icon size={20} />
       </span>
       <span className="sidebar-section__empty-text">
-        <span className="sidebar-section__empty-title">{meta.title}</span>
-        <span className="sidebar-section__empty-hint">{meta.hint}</span>
+        <span className="sidebar-section__empty-title">{title}</span>
+        <span className="sidebar-section__empty-hint">{hint}</span>
       </span>
       <span className="sidebar-section__empty-add">
         <Plus size={14} />
@@ -281,12 +335,8 @@ function SectionEmpty({
 }
 
 // ── TreeSection: wires dnd-kit droppables into the reusable Section ──────────
-// The reusable Section is dnd-agnostic; this wrapper owns the droppables and
-// passes their refs + active state down. Header/body droppable ids are
-// unchanged, so collision detection and onDragOver/End keep working as-is.
 function TreeSection({
-  category,
-  topLevel,
+  section,
   expandedIds,
   onToggleExpand,
   dropTarget,
@@ -298,28 +348,27 @@ function TreeSection({
   onDelete,
   onHide,
 }: {
-  category: PageCategory;
-  topLevel: PageTreeNode[];
+  section: SectionDesc;
   expandedIds: Set<ID>;
   onToggleExpand: (id: ID) => void;
   dropTarget: DropTarget;
   activeId: ID | null;
   collapsed: boolean;
   onToggleCollapse: () => void;
-  onAddPage?: (c: PageCategory) => void;
+  onAddPage?: (target: SectionRef) => void;
   onRename?: (c: PageCategory) => void;
   onDelete?: (c: PageCategory) => void;
-  onHide?: (c: PageCategory) => void;
+  onHide: (section: SectionDesc) => void;
 }) {
   const { setNodeRef: setBodyRef } = useDroppable({
-    id: `section:${category}`,
+    id: `section:${section.key}`,
   });
   const { setNodeRef: setHeaderRef } = useDroppable({
-    id: `section-header:${category}`,
+    id: `section-header:${section.key}`,
   });
 
   const isSectionDrop =
-    dropTarget?.kind === "section" && dropTarget.category === category;
+    dropTarget?.kind === "section" && dropTarget.sectionKey === section.key;
 
   const { setActiveTab } = useLibrary();
 
@@ -327,45 +376,59 @@ function TreeSection({
     setActiveTab(tab);
   };
 
+  const isCategory = section.kind === "category";
+
   return (
     <Section
-      label={category}
+      label={section.label}
       collapsed={collapsed}
       onToggleCollapse={onToggleCollapse}
       headerRef={setHeaderRef}
       bodyRef={setBodyRef}
       dropActive={isSectionDrop}
-      onAddClick={() => onAddPage?.(category)}
-      addLabel={`New page in ${category}`}
-      menuLabel={`${category} options`}
-      hasLibrary={true}
+      onAddClick={() => onAddPage?.(refOfSection(section))}
+      addLabel={`New page in ${section.label}`}
+      menuLabel={`${section.label} options`}
+      hasLibrary={isCategory}
       onLibraryClick={() => {
-        if (category === "Template") return;
-        handleLibraryClick(category);
+        if (section.kind === "category" && section.category !== "Template")
+          handleLibraryClick(section.category);
       }}
       menu={
-        <>
-          <SectionMenuItem
-            icon={<Pencil size={14} />}
-            label="Rename"
-            onClick={() => onRename?.(category)}
-          />
+        isCategory ? (
+          <>
+            <SectionMenuItem
+              icon={<Pencil size={14} />}
+              label="Rename"
+              onClick={() =>
+                onRename?.((section as { category: PageCategory }).category)
+              }
+            />
+            <SectionMenuItem
+              icon={<EyeOff size={14} />}
+              label="Hide section"
+              onClick={() => onHide(section)}
+            />
+            <SectionMenuSeparator />
+            <SectionMenuItem
+              danger
+              icon={<Trash2 size={14} />}
+              label="Delete"
+              onClick={() =>
+                onDelete?.((section as { category: PageCategory }).category)
+              }
+            />
+          </>
+        ) : (
           <SectionMenuItem
             icon={<EyeOff size={14} />}
             label="Hide section"
-            onClick={() => onHide?.(category)}
+            onClick={() => onHide(section)}
           />
-          <SectionMenuSeparator />
-          <SectionMenuItem
-            danger
-            icon={<Trash2 size={14} />}
-            label="Delete"
-            onClick={() => onDelete?.(category)}
-          />
-        </>
+        )
       }
     >
-      {topLevel.map((node) => (
+      {section.roots.map((node) => (
         <TreeRow
           key={node.page.id}
           node={node}
@@ -376,8 +439,8 @@ function TreeSection({
           activeId={activeId}
         />
       ))}
-      {topLevel.length === 0 && (
-        <SectionEmpty category={category} onAddPage={onAddPage} />
+      {section.roots.length === 0 && (
+        <SectionEmpty section={section} onAddPage={onAddPage} />
       )}
     </Section>
   );
@@ -385,6 +448,7 @@ function TreeSection({
 
 export function SidebarTree({
   tree,
+  teamspaces,
   onMovePage,
   onAddPageToSection,
   onAddSection,
@@ -392,18 +456,53 @@ export function SidebarTree({
   onDeleteSection,
   onHideSection,
 }: SidebarTreeProps) {
-  // CHANGED: all Set<number> → Set<ID>, activeId ID | null
+  // Compose the ordered section list: Favorites, teamspaces…, Shared, Private.
+  const sections = useMemo<SectionDesc[]>(() => {
+    const cat = (category: PageCategory): SectionDesc => ({
+      kind: "category",
+      key: `cat:${category}`,
+      category,
+      label: category,
+      roots: tree.byCategory[category] ?? [],
+    });
+    const ts = (t: Teamspace): SectionDesc => ({
+      kind: "teamspace",
+      key: `ts:${t.id}`,
+      teamspaceId: t.id,
+      label: t.name,
+      icon: t.icon,
+      roots: tree.byTeamspace[t.id] ?? [],
+    });
+    return [
+      cat("Favorites"),
+      ...teamspaces.map(ts),
+      cat("Shared"),
+      cat("Private"),
+    ];
+  }, [tree, teamspaces]);
+
+  const sectionByKey = useMemo(() => {
+    const m = new Map<string, SectionDesc>();
+    for (const s of sections) m.set(s.key, s);
+    return m;
+  }, [sections]);
+
   const [activeId, setActiveId] = useState<ID | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget>(null);
   const [expandedIds, setExpandedIds] = useState<Set<ID>>(new Set());
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
-    () =>
-      new Set(SECTION_CATEGORIES.filter((c) => (tree[c]?.length ?? 0) === 0)),
+    () => {
+      const keys = new Set<string>();
+      for (const c of CATEGORY_SECTIONS)
+        if ((tree.byCategory[c]?.length ?? 0) === 0) keys.add(`cat:${c}`);
+      for (const t of teamspaces)
+        if ((tree.byTeamspace[t.id]?.length ?? 0) === 0) keys.add(`ts:${t.id}`);
+      return keys;
+    },
   );
 
-  // CHANGED: build the flat node lookup from the tree (keyed by string ID).
-  // We index every node in every category so drop-target resolution is O(1).
+  // Flat node lookup across every section → O(1) drop-target resolution.
   const nodeById = useMemo(() => {
     const m = new Map<ID, PageTreeNode>();
     const walk = (nodes: PageTreeNode[]) => {
@@ -412,16 +511,14 @@ export function SidebarTree({
         if (n.children.length) walk(n.children);
       }
     };
-    for (const cat of SECTION_CATEGORIES) walk(tree[cat] ?? []);
+    for (const s of sections) walk(s.roots);
     return m;
-  }, [tree]);
+  }, [sections]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
   );
 
-  // CHANGED: e.active.id is string | number from dnd-kit; ours are strings, so
-  // String() (not Number()) — and since we set them as strings, it's a no-op cast.
   const onDragStart = (e: DragStartEvent) => {
     setActiveId(String(e.active.id));
   };
@@ -437,19 +534,18 @@ export function SidebarTree({
     if (typeof overId === "string" && overId.startsWith("section:")) {
       setDropTarget({
         kind: "section",
-        category: overId.slice("section:".length) as PageCategory,
+        sectionKey: overId.slice("section:".length),
       });
       return;
     }
     if (typeof overId === "string" && overId.startsWith("section-header:")) {
       setDropTarget({
         kind: "section",
-        category: overId.slice("section-header:".length) as PageCategory,
+        sectionKey: overId.slice("section-header:".length),
       });
       return;
     }
 
-    // CHANGED: ids are strings — no Number() coercion
     const overPageId = String(overId);
     const activePageId = String(active.id);
 
@@ -459,7 +555,10 @@ export function SidebarTree({
       if (subtree.has(overPageId)) {
         const overNode = nodeById.get(overPageId);
         if (overNode && overNode.page.parentId == null) {
-          setDropTarget({ kind: "section", category: overNode.page.category });
+          setDropTarget({
+            kind: "section",
+            sectionKey: keyOfRoot(overNode.page),
+          });
         } else {
           setDropTarget(null);
         }
@@ -485,17 +584,23 @@ export function SidebarTree({
 
   const onDragEnd = (e: DragEndEvent) => {
     const target = dropTarget;
-    const pageId = String(e.active.id); // CHANGED: String, not Number
+    const pageId = String(e.active.id);
     setActiveId(null);
     setDropTarget(null);
     if (!target) return;
 
     if (target.kind === "section") {
-      onMovePage({ pageId, newParentId: null, category: target.category });
+      const section = sectionByKey.get(target.sectionKey);
+      if (!section) return;
+      onMovePage({
+        pageId,
+        newParentId: null,
+        ...identityOfSection(section),
+      });
       setCollapsedSections((s) => {
-        if (!s.has(target.category)) return s;
+        if (!s.has(section.key)) return s;
         const n = new Set(s);
-        n.delete(target.category);
+        n.delete(section.key);
         return n;
       });
       return;
@@ -510,7 +615,7 @@ export function SidebarTree({
         onMovePage({
           pageId,
           newParentId: null,
-          category: overPage.category,
+          ...identityOfRoot(overPage),
         });
       }
       return;
@@ -524,7 +629,7 @@ export function SidebarTree({
       onMovePage({
         pageId,
         newParentId: overPage.parentId ?? null,
-        ...(isTopLevel ? { category: overPage.category } : {}),
+        ...(isTopLevel ? identityOfRoot(overPage) : {}),
       });
     }
   };
@@ -537,26 +642,26 @@ export function SidebarTree({
       return n;
     });
 
-  const onToggleCollapse = (category: string) =>
+  const onToggleCollapse = (key: string) =>
     setCollapsedSections((s) => {
       const n = new Set(s);
-      if (n.has(category)) n.delete(category);
-      else n.add(category);
+      if (n.has(key)) n.delete(key);
+      else n.add(key);
       return n;
     });
 
-  const handleHide = (c: PageCategory) => {
+  const handleHide = (section: SectionDesc) => {
     setHidden((s) => {
       const n = new Set(s);
-      if (n.has(c)) n.delete(c);
-      else n.add(c);
+      if (n.has(section.key)) n.delete(section.key);
+      else n.add(section.key);
       return n;
     });
-    onHideSection?.(c);
+    if (section.kind === "category") onHideSection?.(section.category);
   };
 
   const activeNode = activeId != null ? nodeById.get(activeId) : null;
-  const visibleCategories = SECTION_CATEGORIES.filter((c) => !hidden.has(c));
+  const visibleSections = sections.filter((s) => !hidden.has(s.key));
 
   return (
     <DndContext
@@ -571,17 +676,16 @@ export function SidebarTree({
       }}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {visibleCategories.map((category) => (
+        {visibleSections.map((section) => (
           <TreeSection
-            key={category}
-            category={category}
-            topLevel={tree[category] ?? []}
+            key={section.key}
+            section={section}
             expandedIds={expandedIds}
             onToggleExpand={onToggleExpand}
             dropTarget={dropTarget}
             activeId={activeId}
-            collapsed={collapsedSections.has(category)}
-            onToggleCollapse={() => onToggleCollapse(category)}
+            collapsed={collapsedSections.has(section.key)}
+            onToggleCollapse={() => onToggleCollapse(section.key)}
             onAddPage={onAddPageToSection}
             onRename={onRenameSection}
             onDelete={onDeleteSection}

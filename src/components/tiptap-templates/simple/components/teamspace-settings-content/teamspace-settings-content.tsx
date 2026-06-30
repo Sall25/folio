@@ -18,17 +18,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { usePeople } from "../../use-people";
-import { useGroups } from "../../use-groups";
-import { useTeamspaces } from "../../use-teamspaces";
+import { usePeople } from "src/hooks/use-people";
+import { useGroups } from "src/hooks/use-groups";
+import { useManageTeamspaces } from "src/hooks/use-teamspaces";
 import {
   attachedGroups,
   directMembers,
   effectiveMemberCount,
   type Teamspace,
   type TeamspaceAccess,
-} from "../../types";
-import { memberCount, type Group, type Person } from "../../types";
+} from "src/types";
+import { memberCount, type Group, type Person } from "src/types";
 import "./teamspaces-settings-content.scss";
 
 const ACCESS_LABEL: Record<TeamspaceAccess, string> = {
@@ -451,8 +451,8 @@ function TeamspaceRow({
 }
 
 export function TeamspacesSettingsContent() {
-  const { people } = usePeople();
-  const { groups } = useGroups();
+  const { data: people = [] } = usePeople();
+  const { data: groups = [] } = useGroups();
   const {
     teamspaces,
     addTeamspaceAsync,
@@ -463,13 +463,17 @@ export function TeamspacesSettingsContent() {
     removeMemberAsync,
     attachGroupAsync,
     detachGroupAsync,
-  } = useTeamspaces();
+  } = useManageTeamspaces();
 
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
-  const filtered = !q
-    ? teamspaces
-    : teamspaces.filter((t) => t.name.toLowerCase().includes(q));
+  const filtered = (
+    !q
+      ? teamspaces
+      : (teamspaces as Teamspace[]).filter((t) =>
+          t.name.toLowerCase().includes(q),
+        )
+  ) as Teamspace[];
 
   return (
     <div className="teamspaces-settings">
@@ -506,8 +510,8 @@ export function TeamspacesSettingsContent() {
             <TeamspaceRow
               key={t.id}
               ts={t}
-              people={people}
-              groups={groups}
+              people={people as Person[]}
+              groups={groups as Group[]}
               onRename={renameTeamspaceAsync}
               onSetAccess={setAccessAsync}
               onDelete={deleteTeamspaceAsync}

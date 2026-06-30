@@ -3,12 +3,14 @@ import { createTeamspace } from "../api/teamspaces";
 import type { Teamspace } from "../types";
 import { queryKeys } from "../lib/queryKeys";
 
+/**
+ * Optimistic create — mirrors useDeleteTeamspace's cache choreography.
+ * Caller passes a fully-formed Teamspace (see makeTeamspace in use-teamspaces).
+ */
 export function useCreateTeamspace() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (teamspace: Teamspace) => {
-      return createTeamspace(teamspace);
-    },
+    mutationFn: (teamspace: Teamspace) => createTeamspace(teamspace),
     onMutate: async (teamspace: Teamspace) => {
       await qc.cancelQueries({ queryKey: queryKeys.teamspaces.all });
 
@@ -18,7 +20,7 @@ export function useCreateTeamspace() {
 
       qc.setQueriesData<Teamspace[]>(
         { queryKey: queryKeys.teamspaces.lists() },
-        (teamspaces) => (teamspaces ? [...teamspaces, teamspace] : teamspaces),
+        (teamspaces) => [...(teamspaces ?? []), teamspace],
       );
 
       return { previousTeamspaceList };

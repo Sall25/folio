@@ -30,6 +30,7 @@ import { useSearch } from "./context/search-context";
 import { PageItem } from "./page-item";
 import { SidebarTree } from "./components/sidebar-tree";
 import { usePageTree, useRecentPages } from "src/hooks/use-pages";
+import { useTeamspaces } from "src/hooks/use-teamspaces";
 import { makePage } from "src/utils/make-page";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { usePatchPage } from "src/hooks/use-patch-page";
@@ -47,6 +48,7 @@ import { useLibrary } from "./context/library-context";
 import { useLocalStorage } from "./hooks/use-local-storage";
 import { useTemplates } from "./context/templates-context";
 import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
+import type { Teamspace } from "src/types";
 
 function User() {
   const { collapsed, onCollapsedChange } = useEditorLayout();
@@ -334,54 +336,6 @@ function NavItems() {
           {/* {!collapsed && <span className="tiptap-button-text">Search</span>} */}
         </Button>
       </ButtonGroup>
-
-      {/* <ButtonGroup className="sidebar-nav-item" orientation="vertical">
-        <Button
-          variant="ghost"
-          onClick={() => {
-            onTemplatesGalleryOpenChange?.(true);
-          }}
-          style={{
-            fontWeight: 400,
-            color: "var(--tt-text-color)",
-            minHeight: 32,
-            height: 32,
-          }}
-          data-active-state={templatesGalleryOpen ? "on" : "off"}
-        >
-          <LayoutGrid size={32} className="tiptap-button-icon" />
-          <Spacer orientation="horizontal" size={1} />
-          {!collapsed && <span className="tiptap-button-text">Templates</span>}
-        </Button>
-
-        <Button
-          variant="ghost"
-          onClick={handleHomeClick}
-          style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
-        >
-          <Inbox size={32} strokeWidth={1.8} className="tiptap-button-icon" />
-          <Spacer orientation="horizontal" size={1} />
-          {!collapsed && <span className="tiptap-button-text">Inbox</span>}
-        </Button>
-      </ButtonGroup>
-
-    
-      <ButtonGroup className="sidebar-nav-item" orientation="vertical">
-        <Button
-          variant="ghost"
-          onClick={handleHomeClick}
-          style={{
-            fontWeight: 400,
-            color: "var(--tt-text-color)",
-            minHeight: 32,
-            height: 32,
-          }}
-        >
-          <Home size={32} strokeWidth={1.8} className="tiptap-button-icon" />
-          <Spacer orientation="horizontal" size={1} />
-          {!collapsed && <span className="tiptap-button-text">Home</span>}
-        </Button>
-      </ButtonGroup> */}
     </CardItemGroup>
   );
 }
@@ -493,6 +447,10 @@ function RecentSection({
 export function SimpleEditorSidebar() {
   const { collapsed, sidebarWidth } = useEditorLayout();
   const { tree, data: pages, isPending, isLoading } = usePageTree();
+  // No current-user concept yet, so show ALL teamspaces as sections. When a
+  // session/current-person lands, filter with isTeamspaceMember(ts, me, groups)
+  // from src/types/page-teamspaces.
+  const { data: teamspaces = [] } = useTeamspaces();
   const patchPage = usePatchPage(({ id, patch }) => updatePage(id, patch));
   const createPage = useCreatePage();
   const { setActivePageId, activePageId } = useActivePage();
@@ -561,22 +519,37 @@ export function SimpleEditorSidebar() {
               <Spacer orientation="vertical" size={10} />
               <SidebarTree
                 tree={tree}
-                onMovePage={({ pageId, newParentId, category }) => {
-                  // optimistic move — patch parentId (+ category on cross-section drop)
+                teamspaces={teamspaces as Teamspace[]}
+                onMovePage={({
+                  pageId,
+                  newParentId,
+                  category,
+                  teamspaceId,
+                }) => {
+                  // optimistic move — patch parentId, plus the destination's
+                  // location identity (category OR teamspaceId) when it changed.
+                  // teamspaceId uses !== undefined because null is a real value
+                  // (it means "pull this page out of any teamspace").
                   patchPage.mutate({
                     id: pageId,
                     patch: {
                       parentId: newParentId,
-                      ...(category ? { category } : {}),
+                      ...(category !== undefined ? { category } : {}),
+                      ...(teamspaceId !== undefined ? { teamspaceId } : {}),
                     },
                   });
                 }}
-                onAddPageToSection={(category) => {
-                  const p = makePage({
+                onAddPageToSection={(target) => {
+                  const base = makePage({
                     title: "New Page",
                     parentId: null,
-                    category,
+                    category:
+                      target.kind === "category" ? target.category : "Private",
                   });
+                  const p =
+                    target.kind === "teamspace"
+                      ? { ...base, teamspaceId: target.teamspaceId }
+                      : base;
                   createPage
                     .mutateAsync(p)
                     .then((page) => setActivePageId(page.id));

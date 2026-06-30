@@ -28,6 +28,7 @@ export function makePage(opts: {
     updatedAt: null,
     sourceId: null, // not a database row
     values: null, // ditto
+    teamspaceId: null,
   };
 }
 
