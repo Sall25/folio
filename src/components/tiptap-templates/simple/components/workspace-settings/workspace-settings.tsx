@@ -1,18 +1,15 @@
-// Mount once near the editor root (alongside TemplatesGallery). Consumes the
-// WorkspaceSettings context and renders the modal + the active content pane.
-//
 import { WorkspaceSettingsModal } from "./workspace-settings-modal";
 import { TeamspacesSettingsContent } from "../teamspace-settings-content";
-import { useWorkspaceSettings } from "../../context/workspace-settings-context";
+import { PeopleSettingsContent } from "../people-settings-content";
+import { useWorkspaceSettings as useWorkspaceSettingsModal } from "../../context/workspace-settings-context";
 
-// activeId → content pane. Only teamspaces is wired here; plug the others in as
-// they land on this branch (PeopleSettingsContent, LanguageSetting, etc.).
+// activeId → content pane. Plug the rest in as they land on this branch.
 function SettingsPane({ activeId }: { activeId: string }) {
   switch (activeId) {
     case "teamspaces":
       return <TeamspacesSettingsContent />;
-    // case "people":
-    //   return <PeopleSettingsContent />;
+    case "people":
+      return <PeopleSettingsContent />;
     // case "language":
     //   return <LanguageSetting />; // lives on feat/languages — wire after merge
     default:
@@ -32,7 +29,8 @@ function SettingsPane({ activeId }: { activeId: string }) {
 }
 
 export function WorkspaceSettings() {
-  const { open, onOpenChange, activeId, setActiveId } = useWorkspaceSettings();
+  const { open, onOpenChange, activeId, setActiveId } =
+    useWorkspaceSettingsModal();
 
   return (
     <WorkspaceSettingsModal
