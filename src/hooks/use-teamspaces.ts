@@ -6,10 +6,14 @@ import {
   fetchTeamspace,
   patchTeamspace,
 } from "../api/teamspaces";
+import { patchPage } from "../api/pages";
 import { usePeopleBase } from "./use-people";
 import { usePatchTeamspace } from "./use-patch-teamspace";
+import { usePatchPage } from "./use-patch-page";
 import { useDeleteTeamspace } from "./use-delete-teamspace";
 import { useCreateTeamspace } from "./use-create-teamspace";
+import { useCreatePage } from "./use-create-page";
+import { buildTeamspacePair } from "./use-create-teamspace-with-page";
 
 function useTeamspacesBase<T>(select?: (teamspaces: Teamspace[]) => T) {
   return useQuery({
@@ -73,44 +77,68 @@ export function useTeamspaceOwners(teamspaceId: ID | null) {
 // Admin adapter — re-exposes the fat (id, x) => Promise API the settings screen
 // calls, on top of the granular query + mutation hooks. Member/group ops read
 // the current list to append/filter the right array, then PATCH it.
+//
+// Display fields (name, icon) now live on the PAGE, not the record — the two
+// share an id — so creating a teamspace creates a page + record pair, and
+// renaming patches the page title, not the record.
 // ─────────────────────────────────────────────────────────────────────────────
-
-// NOTE: swap crypto.randomUUID() for your own id helper if you have one, and
-// tune the defaults (access "open", empty owners) to taste.
-function makeTeamspace(args: { name: string }): Teamspace {
-  return {
-    id: crypto.randomUUID(),
-    name: args.name,
-    icon: null,
-    description: null,
-    access: "open",
-    memberIds: [],
-    groupIds: [],
-    ownerIds: [],
-    createdAt: Date.now(),
-  };
-}
 
 export function useManageTeamspaces() {
   const { data: teamspaces = [] } = useTeamspacesBase();
 
   const patch = usePatchTeamspace(({ id, patch }) => patchTeamspace(id, patch));
+  const patchPageMut = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const del = useDeleteTeamspace();
-  const create = useCreateTeamspace();
+  const createRecord = useCreateTeamspace();
+  const createPageMut = useCreatePage();
 
   const byId = (id: ID) => (teamspaces as Teamspace[]).find((t) => t.id === id);
 
   return {
     teamspaces,
 
-    addTeamspaceAsync: (args: { name: string }) =>
-      create.mutateAsync(makeTeamspace(args)),
+    // Create the PAIR (page + record, shared id). Record-only creation would
+    // orphan the teamspace — it'd show in settings but never in the sidebar,
+    // since the sidebar renders teamspace-PAGES.
+    addTeamspaceAsync: async (args: {
+      name: string;
+      iconName?: string | null;
+      iconColor?: string | null;
+      description?: string | null;
+      access?: TeamspaceAccess;
+    }) => {
+      const { page, record } = buildTeamspacePair({
+        name: args.name,
+        iconName: args.iconName ?? null,
+        iconColor: args.iconColor ?? null,
+        description: args.description ?? null,
+        access: args.access ?? "open",
+      });
+      // Record first, then page — roll the record back if the page write fails
+      // so a failure never leaves an orphan record.
+      await createRecord.mutateAsync(record);
+      try {
+        await createPageMut.mutateAsync(page);
+      } catch (err) {
+        try {
+          await del.mutateAsync(record.id);
+        } catch {
+          /* best-effort rollback */
+        }
+        throw err;
+      }
+      return { page, teamspace: record };
+    },
 
+    // Name lives on the page — rename patches the page title (same id).
     renameTeamspaceAsync: (id: ID, name: string) =>
-      patch.mutateAsync({ id, patch: { name } }),
+      patchPageMut.mutateAsync({ id, patch: { title: name } }),
 
     setAccessAsync: (id: ID, access: TeamspaceAccess) =>
       patch.mutateAsync({ id, patch: { access } }),
+
+    setDescriptionAsync: (id: ID, description: string | null) =>
+      patch.mutateAsync({ id, patch: { description } }),
 
     deleteTeamspaceAsync: (id: ID) => del.mutateAsync(id),
 

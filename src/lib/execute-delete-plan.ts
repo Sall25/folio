@@ -5,6 +5,7 @@ import { deleteThread } from "../api/threads";
 import { deleteComment } from "../api/comments";
 import { deleteVersion } from "../api/versions";
 import { deleteDataSource, patchDataSource } from "../api/data-sources";
+import { deleteTeamspace } from "../api/teamspaces";
 
 export async function executeDeletePlan(
   plan: DeletePlan,
@@ -39,10 +40,12 @@ export async function executeDeletePlan(
       }),
   );
 
-  // 3. delete entities, leaves → up
+  // 3. delete entities, leaves → up. Teamspace records are joined to pages by
+  //    shared id; deleting them alongside the pages keeps the pair consistent.
   await Promise.all([...plan.commentIds].map((id) => deleteComment(id)));
   await Promise.all([...plan.threadIds].map((id) => deleteThread(id)));
   await Promise.all([...plan.versionIds].map((id) => deleteVersion(id)));
+  await Promise.all([...plan.teamspaceIds].map((id) => deleteTeamspace(id)));
   await Promise.all([...plan.pageIds].map((id) => deletePage(id)));
   await Promise.all([...plan.sourceIds].map((id) => deleteDataSource(id)));
 }

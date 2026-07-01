@@ -8,8 +8,6 @@ import {
   PanelLeft,
   PanelRight,
   SquarePen,
-  ArrowDown,
-  ArrowUp,
   LayoutTemplate,
   Settings,
 } from "lucide-react";
@@ -28,29 +26,23 @@ import { useCallback, useState } from "react";
 import { useNavigate } from "@tanstack/react-location";
 import { useEditorLayout } from "./context/editor-layout-context";
 import { useSearch } from "./context/search-context";
-import { PageItem } from "./page-item";
 import { SidebarTree } from "./components/sidebar-tree";
-import { usePageTree, useRecentPages } from "src/hooks/use-pages";
+import { usePageTree } from "src/hooks/use-pages";
 import { useTeamspaces } from "src/hooks/use-teamspaces";
+import { useGroups } from "src/hooks/use-groups";
 import { makePage } from "src/utils/make-page";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage as updatePage } from "src/api/pages";
 import { SidebarBodySkeleton } from "./components/skeletons";
 import { useActivePage } from "./context/active-page-context";
-import {
-  Section,
-  SectionMenuItem,
-  SectionMenuLabel,
-  SectionMenuSeparator,
-} from "./components/section";
+import { Section } from "./components/section";
 import { ScrollFog } from "src/components/tiptap-ui-primitive/scroll-frog";
-import { useLibrary } from "./context/library-context";
-import { useLocalStorage } from "./hooks/use-local-storage";
 import { useTemplates } from "./context/templates-context";
-import { useWorkspaceSettings } from "./context/workspace-settings-context";
+import { useWorkspaceSettings as useWorkspaceSettingsModal } from "./context/workspace-settings-context";
+import { CreateTeamspaceModal } from "./components/create-teamspace-modal";
 import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
-import type { Teamspace } from "src/types";
+import type { Group, Teamspace } from "src/types";
 
 function User() {
   const { collapsed, onCollapsedChange } = useEditorLayout();
@@ -371,93 +363,19 @@ function ShowcaseSection() {
   );
 }
 
-// ── RecentSection: persisted limit + collapse ────────────────────────────────
-const RECENT_LIMIT_OPTIONS = [5, 10, 20] as const;
-function RecentSection({
-  onMoveUp,
-  onMoveDown,
-}: {
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-}) {
-  const { data: recentPages } = useRecentPages();
-  const [limit, setLimit] = useLocalStorage<number | "all">(
-    "folio:recents:limit",
-    10,
-  );
-
-  const { setActiveTab } = useLibrary();
-  if (!recentPages || recentPages.length === 0) return null;
-
-  const handleLibraryClick = () => {
-    setActiveTab("Recents");
-  };
-  const visible = limit === "all" ? recentPages : recentPages.slice(0, limit);
-
-  return (
-    <Section
-      label="Recents"
-      defaultCollapsed={false}
-      persistKey="folio:recents:collapsed"
-      menuLabel="Recents options"
-      menu={
-        <>
-          <SectionMenuLabel>Show</SectionMenuLabel>
-          {RECENT_LIMIT_OPTIONS.map((n) => (
-            <SectionMenuItem
-              key={n}
-              label={`${n} items`}
-              selected={limit === n}
-              closeOnClick={false}
-              onClick={() => setLimit(n)}
-            />
-          ))}
-          <SectionMenuItem
-            label="All items"
-            selected={limit === "all"}
-            closeOnClick={false}
-            onClick={() => setLimit("all")}
-          />
-          <SectionMenuSeparator />
-          <SectionMenuItem
-            icon={<ArrowUp size={14} />}
-            label="Move up"
-            onClick={onMoveUp}
-            disabled={!onMoveUp}
-          />
-          <SectionMenuItem
-            icon={<ArrowDown size={14} />}
-            label="Move down"
-            onClick={onMoveDown}
-            disabled={!onMoveDown}
-          />
-        </>
-      }
-      hasLibrary={true}
-      onLibraryClick={handleLibraryClick}
-    >
-      <CardItemGroup style={{ gap: 2.8 }}>
-        {visible.map((page) => (
-          <PageItem key={page.id} page={page} />
-        ))}
-      </CardItemGroup>
-    </Section>
-  );
-}
-
 // ── main component: lens + tree + mutation hooks ─────────────────────────────
 export function SimpleEditorSidebar() {
   const { collapsed, sidebarWidth } = useEditorLayout();
   const { tree, data: pages, isPending, isLoading } = usePageTree();
-  // No current-user concept yet, so show ALL teamspaces as sections. When a
-  // session/current-person lands, filter with isTeamspaceMember(ts, me, groups)
-  // from src/types/page-teamspaces.
+  // Joined to teamspace-pages by id, only to show a member count in the row.
   const { data: teamspaces = [] } = useTeamspaces();
+  const { data: groups = [] } = useGroups();
   const patchPage = usePatchPage(({ id, patch }) => updatePage(id, patch));
   const createPage = useCreatePage();
   const { setActivePageId, activePageId } = useActivePage();
   const { onOpenChange: onTemplatesGalleryOpenChange } = useTemplates();
-  const { openTo } = useWorkspaceSettings();
+  const { openTo } = useWorkspaceSettingsModal();
+  const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
 
   const onCreatePage = () => {
     const newPage = makePage({
@@ -518,48 +436,39 @@ export function SimpleEditorSidebar() {
               <ShowcaseSection />
               <Spacer orientation="vertical" size={15} />
 
-              {pages.length > 0 && <RecentSection />}
-              <Spacer orientation="vertical" size={10} />
               <SidebarTree
                 tree={tree}
                 teamspaces={teamspaces as Teamspace[]}
-                onMovePage={({
-                  pageId,
-                  newParentId,
-                  category,
-                  teamspaceId,
-                }) => {
-                  // optimistic move — patch parentId, plus the destination's
-                  // location identity (category OR teamspaceId) when it changed.
-                  // teamspaceId uses !== undefined because null is a real value
-                  // (it means "pull this page out of any teamspace").
+                groups={groups as Group[]}
+                onMovePage={({ pageId, newParentId, category }) => {
+                  // optimistic move — patch parentId (+ category on cross-section drop)
                   patchPage.mutate({
                     id: pageId,
                     patch: {
                       parentId: newParentId,
-                      ...(category !== undefined ? { category } : {}),
-                      ...(teamspaceId !== undefined ? { teamspaceId } : {}),
+                      ...(category ? { category } : {}),
                     },
                   });
                 }}
-                onAddPageToSection={(target) => {
-                  const base = makePage({
+                onAddPageToSection={(category) => {
+                  // A teamspace is created through its own modal (it must create
+                  // a page + a Teamspace record sharing one id), not as a plain
+                  // page. Every other section creates a page directly.
+                  if (category === "Teamspaces") {
+                    setCreateTeamspaceOpen(true);
+                    return;
+                  }
+                  const p = makePage({
                     title: "New Page",
                     parentId: null,
-                    category:
-                      target.kind === "category" ? target.category : "Private",
+                    category,
                   });
-                  const p =
-                    target.kind === "teamspace"
-                      ? { ...base, teamspaceId: target.teamspaceId }
-                      : base;
                   createPage
                     .mutateAsync(p)
                     .then((page) => setActivePageId(page.id));
                 }}
                 onRenameSection={() => {}}
                 onDeleteSection={() => {}}
-                onAddSection={() => {}}
               />
 
               <Spacer orientation="vertical" size={8} />
@@ -586,6 +495,13 @@ export function SimpleEditorSidebar() {
         <WorkSpaceFooter
           onCreatePage={onCreatePage}
           onOpenTemplatesGallery={() => onTemplatesGalleryOpenChange?.(true)}
+        />
+      )}
+
+      {createTeamspaceOpen && (
+        <CreateTeamspaceModal
+          onClose={() => setCreateTeamspaceOpen(false)}
+          onCreated={(pageId) => setActivePageId(pageId)}
         />
       )}
     </Card>

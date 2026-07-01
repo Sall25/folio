@@ -578,12 +578,6 @@ export type Page = {
   sourceId: ID | null;
   /** Cell values keyed by propertyId — null when not a database row. */
   values: Record<ID, CellValue> | null;
-  /**
-   * Teamspace this page belongs to. Authoritative on TOP-LEVEL pages
-   * (parentId === null); null = a private/personal root. On nested pages this
-   * is NOT the source of truth — derive with teamspaceIdOfPage().
-   */
-  teamspaceId: ID | null;
 };
 
 /** Derived tree shape — built at read time from parentId, never stored. */
@@ -672,11 +666,14 @@ export type TeamspaceAccess = "open" | "closed" | "private";
 // open    — any workspace member can join/see it
 // closed  — visible to all, join by request/invite
 // private — only members/attached-group members can see it
-
 export interface Teamspace {
+  /**
+   * Shared id: this IS the teamspace page's id. That identity is the link
+   * between record and page — there is no separate pageId. Display fields
+   * (name, icon) live on the page (title, cover.iconName), not here, to avoid
+   * two sources of truth that can drift on rename.
+   */
   id: ID;
-  name: string;
-  icon: string | null;
   description: string | null;
   access: TeamspaceAccess;
   /** People directly in the teamspace. */

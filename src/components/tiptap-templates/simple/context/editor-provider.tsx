@@ -21,6 +21,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { stripPropertyPanels } from "../hooks/use-record-property-panel";
 import { useDataSources } from "src/hooks/use-data-sources";
 import type { DataSource, ID } from "src/types";
+import { contentForEditor } from "src/lib/build-initial-content";
 
 interface StructuredPageGuardStorage {
   isStructuredActivePage: () => boolean;
@@ -289,7 +290,8 @@ export function EditorProvider({ children }: { children: ReactNode }) {
         content = { ...content, content: nodes.slice(0, dbIndex + 1) };
       }
 
-      editor.commands.setContent(content, { emitUpdate: false });
+      const editorContent = contentForEditor(content, page.title);
+      editor.commands.setContent(editorContent, { emitUpdate: false });
       captureBaseline();
     });
 

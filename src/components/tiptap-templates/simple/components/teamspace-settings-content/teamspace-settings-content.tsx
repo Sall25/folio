@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Check,
   ChevronRight,
-  Hash,
   MoreHorizontal,
   Plus,
   Search,
@@ -21,10 +20,13 @@ import {
 import { usePeople } from "src/hooks/use-people";
 import { useGroups } from "src/hooks/use-groups";
 import { useManageTeamspaces } from "src/hooks/use-teamspaces";
+import { usePagesByCategory } from "src/hooks/use-pages";
+import { PageItemIcon } from "../../page-item-icon";
 import {
   attachedGroups,
   directMembers,
   effectiveMemberCount,
+  type Page,
   type Teamspace,
   type TeamspaceAccess,
 } from "src/types";
@@ -36,6 +38,11 @@ const ACCESS_LABEL: Record<TeamspaceAccess, string> = {
   closed: "Closed",
   private: "Private",
 };
+
+// name/icon live on the PAGE now (joined to the record by shared id). These
+// helpers read display fields off the page, with safe fallbacks if the page
+// isn't loaded yet (or is briefly missing during an optimistic create).
+const nameOf = (page: Page | undefined) => page?.title || "Untitled";
 
 function Avatar({ person, size = 22 }: { person: Person; size?: number }) {
   const initial = (person.name || "?").trim().charAt(0).toUpperCase();
@@ -251,6 +258,7 @@ function GroupPicker({
 
 function TeamspaceRow({
   ts,
+  page,
   people,
   groups,
   onRename,
@@ -262,6 +270,7 @@ function TeamspaceRow({
   onDetachGroup,
 }: {
   ts: Teamspace;
+  page: Page | undefined;
   people: Person[];
   groups: Group[];
   onRename: (id: string, name: string) => void;
@@ -275,15 +284,16 @@ function TeamspaceRow({
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
-  const [draft, setDraft] = useState(ts.name);
+  const name = nameOf(page);
+  const [draft, setDraft] = useState(name);
 
   const members = directMembers(ts, people);
   const attached = attachedGroups(ts, groups);
 
   const commit = () => {
-    const name = draft.trim();
-    if (name && name !== ts.name) onRename(ts.id, name);
-    else setDraft(ts.name);
+    const next = draft.trim();
+    if (next && next !== name) onRename(ts.id, next);
+    else setDraft(name);
     setRenaming(false);
   };
 
@@ -307,7 +317,12 @@ function TeamspaceRow({
 
         <div className="ts-row__name-cell">
           <span className="ts-row__icon">
-            {ts.icon ? ts.icon : <Hash size={15} />}
+            {page ? (
+              <PageItemIcon
+                cover={page.cover}
+                styles={{ width: 15, height: 15, fontSize: 15 }}
+              />
+            ) : null}
           </span>
           {renaming ? (
             <input
@@ -319,13 +334,13 @@ function TeamspaceRow({
               onKeyDown={(e) => {
                 if (e.key === "Enter") commit();
                 if (e.key === "Escape") {
-                  setDraft(ts.name);
+                  setDraft(name);
                   setRenaming(false);
                 }
               }}
             />
           ) : (
-            <span className="ts-row__name">{ts.name}</span>
+            <span className="ts-row__name">{name}</span>
           )}
         </div>
 
@@ -354,6 +369,7 @@ function TeamspaceRow({
                 style={{ justifyContent: "flex-start", width: "100%" }}
                 onClick={() => {
                   setMenuOpen(false);
+                  setDraft(name);
                   setRenaming(true);
                 }}
               >
@@ -453,6 +469,9 @@ function TeamspaceRow({
 export function TeamspacesSettingsContent() {
   const { data: people = [] } = usePeople();
   const { data: groups = [] } = useGroups();
+  // Teamspace PAGES (roots with category "Teamspaces") — joined to records by
+  // shared id to resolve each teamspace's display name + icon.
+  const { data: teamspacePages = [] } = usePagesByCategory("Teamspaces");
   const {
     teamspaces,
     addTeamspaceAsync,
@@ -465,13 +484,19 @@ export function TeamspacesSettingsContent() {
     detachGroupAsync,
   } = useManageTeamspaces();
 
+  const pagesById = useMemo(() => {
+    const m = new Map<string, Page>();
+    for (const p of teamspacePages as Page[]) m.set(p.id, p);
+    return m;
+  }, [teamspacePages]);
+
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const filtered = (
     !q
       ? teamspaces
       : (teamspaces as Teamspace[]).filter((t) =>
-          t.name.toLowerCase().includes(q),
+          nameOf(pagesById.get(t.id)).toLowerCase().includes(q),
         )
   ) as Teamspace[];
 
@@ -510,6 +535,7 @@ export function TeamspacesSettingsContent() {
             <TeamspaceRow
               key={t.id}
               ts={t}
+              page={pagesById.get(t.id)}
               people={people as Person[]}
               groups={groups as Group[]}
               onRename={renameTeamspaceAsync}

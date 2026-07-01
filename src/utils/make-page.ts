@@ -9,9 +9,10 @@ export function makePage(opts: {
   parentId?: ID | null;
   category?: PageCategory;
 }): Page {
+  const title = opts.title ?? "";
   return {
     id: newId(),
-    title: opts.title ?? "",
+    title,
     parentId: opts.parentId ?? null,
     category: opts.category ?? "Private",
     settings: { width: "medium", text: "normal", locked: false },
@@ -23,12 +24,22 @@ export function makePage(opts: {
       gradient: null,
       positionY: null,
     },
-    content: { type: "doc", content: [{ type: "title", content: [] }] },
+    // Seed the title node WITH the title text (empty inline content when blank —
+    // an empty text node is invalid in ProseMirror), so a new page renders its
+    // name instead of the grey placeholder. Matches databasePageContent below.
+    content: {
+      type: "doc",
+      content: [
+        {
+          type: "title",
+          content: title ? [{ type: "text", text: title }] : [],
+        },
+      ],
+    },
     createdAt: Date.now(),
     updatedAt: null,
     sourceId: null, // not a database row
     values: null, // ditto
-    teamspaceId: null,
   };
 }
 
