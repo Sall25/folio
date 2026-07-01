@@ -1,5 +1,12 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { DataSource, Page, Thread, Comment, Version } from "../types";
+import type {
+  DataSource,
+  Page,
+  Thread,
+  Comment,
+  Version,
+  Teamspace,
+} from "../types";
 import type { DeletePlan } from "./cascade";
 import { queryKeys } from "./queryKeys";
 
@@ -18,6 +25,9 @@ export function snapshotForPlan(qc: QueryClient) {
     }),
     versions: qc.getQueriesData<Version[]>({
       queryKey: queryKeys.versions.lists(),
+    }),
+    teamspaces: qc.getQueriesData<Teamspace[]>({
+      queryKey: queryKeys.teamspaces.lists(),
     }),
   };
 }
@@ -67,6 +77,11 @@ export function applyPlanOptimistic(qc: QueryClient, plan: DeletePlan) {
   qc.setQueriesData<Version[]>({ queryKey: queryKeys.versions.lists() }, (l) =>
     (l ?? []).filter((v) => !plan.versionIds.has(v.id)),
   );
+  // teamspace records joined to any deleted page by shared id
+  qc.setQueriesData<Teamspace[]>(
+    { queryKey: queryKeys.teamspaces.lists() },
+    (l) => (l ?? []).filter((t) => !plan.teamspaceIds.has(t.id)),
+  );
 }
 
 // restore all snapshots (rollback)
@@ -79,6 +94,7 @@ export function rollbackPlan(
   snap.threads.forEach(([key, data]) => qc.setQueryData(key, data));
   snap.comments.forEach(([key, data]) => qc.setQueryData(key, data));
   snap.versions.forEach(([key, data]) => qc.setQueryData(key, data));
+  snap.teamspaces.forEach(([key, data]) => qc.setQueryData(key, data));
 }
 
 // drop detail entries for everything deleted (onSuccess)
@@ -98,6 +114,9 @@ export function removeDeletedDetails(qc: QueryClient, plan: DeletePlan) {
   plan.versionIds.forEach((id) =>
     qc.removeQueries({ queryKey: queryKeys.versions.detail(id) }),
   );
+  plan.teamspaceIds.forEach((id) =>
+    qc.removeQueries({ queryKey: queryKeys.teamspaces.detail(id) }),
+  );
 }
 
 // the namespaces every plan touches — for cancel + invalidate
@@ -107,4 +126,5 @@ export const PLAN_NAMESPACES = [
   queryKeys.threads.all,
   queryKeys.comments.all,
   queryKeys.versions.all,
+  queryKeys.teamspaces.all,
 ] as const;

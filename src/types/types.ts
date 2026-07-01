@@ -666,11 +666,14 @@ export type TeamspaceAccess = "open" | "closed" | "private";
 // open    — any workspace member can join/see it
 // closed  — visible to all, join by request/invite
 // private — only members/attached-group members can see it
-
 export interface Teamspace {
+  /**
+   * Shared id: this IS the teamspace page's id. That identity is the link
+   * between record and page — there is no separate pageId. Display fields
+   * (name, icon) live on the page (title, cover.iconName), not here, to avoid
+   * two sources of truth that can drift on rename.
+   */
   id: ID;
-  name: string;
-  icon: string | null;
   description: string | null;
   access: TeamspaceAccess;
   /** People directly in the teamspace. */

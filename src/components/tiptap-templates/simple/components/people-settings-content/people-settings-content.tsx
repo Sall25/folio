@@ -18,17 +18,21 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { usePeople } from "src/hooks/use-people";
-import { useGroups } from "src/hooks/use-groups";
+import { useManageGroups } from "src/hooks/use-groups";
 import { useTeamspaces } from "src/hooks/use-teamspaces";
-import { teamspacesOfGroup, type Teamspace, membersOf, type Group, type Person } from "src/types";
-import { useWorkspaceSettings } from "../../use-workspace-settings";
-
-import "./people-settings-content.scss";
-import { useCreateGroup } from "src/hooks/use-create-group";
-import { usePatchGroup } from "src/hooks/use-patch-group";
-import { patchGroup } from "src/api/groups";
-import { useDeleteGroup } from "src/hooks/use-delete-group";
 import { useCreateTeamspace } from "src/hooks/use-create-teamspace";
+import {
+  teamspacesOfGroup,
+  membersOf,
+  isMember,
+  isGuest,
+  type Teamspace,
+  type Group,
+  type Person,
+  type ID,
+} from "src/types";
+import { useWorkspaceSettings } from "src/hooks/use-workspace-settings";
+import "./people-settings-content.scss";
 
 type Tab = "members" | "guests" | "groups";
 
@@ -320,22 +324,24 @@ function GroupRow({
 }
 
 export function PeopleSettingsContent() {
-  const { people, members, guests } = usePeople();
-  const addGroup = useCreateGroup()
-  const mutateGroup = usePatchGroup(({id, patch})=>patchGroup(id, patch))
-  const deleteGroup = useDeleteGroup()
-  const {data: teamspaces} = useTeamspaces()
-  const addTreamspace = useCreateTeamspace()
+  const { data: people = [] } = usePeople();
+  const { data: teamspaces = [] } = useTeamspaces();
+  const {
+    groups,
+    addGroupAsync,
+    renameGroupAsync,
+    deleteGroupAsync,
+    addMemberAsync,
+    removeMemberAsync,
+  } = useManageGroups();
+  const createTeamspace = useCreateTeamspace();
 
-  // const {
-  //   groups,
-  //   addGroupAsync,
-  //   renameGroupAsync,
-  //   deleteGroupAsync,
-  //   addMemberAsync,
-  //   removeMemberAsync,
-  // } = useGroups();
-  //const { teamspaces, createFromGroupAsync } = useTeamspaces();
+  // Derived role buckets. isMember = owner|member; isGuest = guest.
+  const members = useMemo(
+    () => (people as Person[]).filter(isMember),
+    [people],
+  );
+  const guests = useMemo(() => (people as Person[]).filter(isGuest), [people]);
 
   const [tab, setTab] = useState<Tab>("members");
   const [query, setQuery] = useState("");
@@ -355,11 +361,29 @@ export function PeopleSettingsContent() {
             p.name.toLowerCase().includes(q) ||
             p.email.toLowerCase().includes(q),
         );
-  const filteredGroups = !q
-    ? groups
-    : groups.filter((g) => g.name.toLowerCase().includes(q));
+  const filteredGroups = (
+    !q
+      ? groups
+      : (groups as Group[]).filter((g) => g.name.toLowerCase().includes(q))
+  ) as Group[];
 
   const copyInvite = () => navigator.clipboard?.writeText(inviteUrl);
+
+  // Create a teamspace seeded with this group attached (members gain access
+  // via the attached group — effective membership stays live).
+  const createFromGroupAsync = (groupId: ID, name: string) =>
+    createTeamspace.mutateAsync({
+      id: crypto.randomUUID(),
+      name,
+      icon: null,
+      description: null,
+      access: "open",
+      memberIds: [],
+      groupIds: [groupId],
+      ownerIds: [],
+      // eslint-disable-next-line react-hooks/purity
+      createdAt: Date.now(),
+    });
 
   return (
     <div className="people-settings">
@@ -425,7 +449,8 @@ export function PeopleSettingsContent() {
             className={`ps-tab${tab === "groups" ? " is-active" : ""}`}
             onClick={() => setTab("groups")}
           >
-            Groups <span className="ps-tab__count">{groups.length}</span>
+            Groups{" "}
+            <span className="ps-tab__count">{(groups as Group[]).length}</span>
           </button>
         </div>
 
@@ -468,15 +493,15 @@ export function PeopleSettingsContent() {
             <GroupRow
               key={g.id}
               group={g}
-              people={people}
-              teamspaces={teamspaces}
+              people={people as Person[]}
+              teamspaces={teamspaces as Teamspace[]}
               onRename={renameGroupAsync}
               onDelete={deleteGroupAsync}
               onAddMember={addMemberAsync}
               onRemoveMember={removeMemberAsync}
               onCreateTeamspace={(id) => {
-                const g = groups.find((x) => x.id === id);
-                createFromGroupAsync(id, g?.name ?? "New teamspace");
+                const grp = (groups as Group[]).find((x) => x.id === id);
+                createFromGroupAsync(id, grp?.name ?? "New teamspace");
               }}
             />
           ))}

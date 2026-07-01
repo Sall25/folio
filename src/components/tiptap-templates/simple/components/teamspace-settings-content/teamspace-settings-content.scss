@@ -1,0 +1,447 @@
+
+.teamspaces-settings {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+// ── Toolbar: search + create ────────────────────────────────────────────────
+.ts-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ts-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md);
+  background: var(--tt-card-bg-color);
+
+  &:focus-within {
+    border-color: color-mix(in srgb, var(--tt-text-primary) 22%, transparent);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--tt-text-primary);
+    font-size: 13px;
+
+    &::placeholder {
+      color: color-mix(in srgb, var(--tt-text-primary) 40%, transparent);
+    }
+  }
+}
+
+// ── Table ───────────────────────────────────────────────────────────────────
+.ts-table {
+  display: flex;
+  flex-direction: column;
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md);
+  overflow: hidden;
+}
+
+.ts-table__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 0.5px solid var(--tt-border-color);
+  background: color-mix(in srgb, var(--tt-text-primary) 3%, transparent);
+
+  .ts-col {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
+  }
+
+  // widths mirror the data row below
+  .ts-col:nth-child(2) {
+    flex: 1;
+    min-width: 0;
+  }
+  .ts-col:nth-child(3) {
+    width: 110px;
+    flex-shrink: 0;
+  }
+  .ts-col:nth-child(4) {
+    width: 90px;
+    flex-shrink: 0;
+  }
+}
+
+.ts-col--expand {
+  width: 24px;
+  flex-shrink: 0;
+}
+.ts-col--menu {
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.ts-empty {
+  padding: 28px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
+}
+
+// ── Data row ────────────────────────────────────────────────────────────────
+.ts-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 0.5px solid
+    color-mix(in srgb, var(--tt-border-color) 60%, transparent);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
+
+    .ts-row__menu {
+      opacity: 1;
+    }
+  }
+}
+
+.ts-row__expand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
+  cursor: pointer;
+  border-radius: var(--tt-radius-sm);
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+    color: var(--tt-text-primary);
+  }
+}
+
+.ts-row__name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ts-row__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--tt-text-primary) 65%, transparent);
+}
+
+.ts-row__name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--tt-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ts-row__rename {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--tt-text-primary);
+  background: transparent;
+  border: 0.5px solid
+    color-mix(in srgb, var(--tt-text-primary) 22%, transparent);
+  border-radius: var(--tt-radius-sm);
+  padding: 2px 6px;
+  outline: none;
+
+  &:focus {
+    border-color: var(--tt-brand-color-400);
+  }
+}
+
+.ts-row__access {
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.ts-row__members {
+  width: 90px;
+  flex-shrink: 0;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--tt-text-primary) 60%, transparent);
+}
+
+.ts-row__menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
+  cursor: pointer;
+  border-radius: var(--tt-radius-sm);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+    color: var(--tt-text-primary);
+  }
+}
+
+// ── Access pill (AccessSelect trigger) ──────────────────────────────────────
+.ts-access {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12.5px;
+  color: var(--tt-text-primary);
+  background: transparent;
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: 999px;
+  padding: 2px 10px;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+  }
+}
+
+// ── Expanded detail panel ───────────────────────────────────────────────────
+.ts-detail {
+  padding: 10px 10px 14px 42px;
+  border-bottom: 0.5px solid
+    color-mix(in srgb, var(--tt-border-color) 60%, transparent);
+  background: color-mix(in srgb, var(--tt-text-primary) 2%, transparent);
+}
+
+.ts-detail__section {
+  & + & {
+    margin-top: 14px;
+  }
+}
+
+.ts-detail__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+  margin-bottom: 6px;
+}
+
+.ts-detail__empty {
+  display: block;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+  padding: 2px 0 4px;
+}
+
+.ts-detail__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+
+  &:hover .ts-detail__remove {
+    opacity: 1;
+  }
+}
+
+.ts-detail__group-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--tt-text-primary) 60%, transparent);
+}
+
+.ts-detail__name {
+  font-size: 13px;
+  color: var(--tt-text-primary);
+  flex-shrink: 0;
+}
+
+.ts-detail__sub {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ts-detail__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+  cursor: pointer;
+  border-radius: var(--tt-radius-sm);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+    color: var(--tt-danger-color, #e5484d);
+  }
+}
+
+// ── Add affordances (MemberPicker / GroupPicker triggers) ───────────────────
+.ts-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--tt-text-primary) 60%, transparent);
+  background: transparent;
+  border: none;
+  padding: 4px 6px;
+  border-radius: var(--tt-radius-sm);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+    color: var(--tt-text-primary);
+  }
+}
+
+// ── Picker popover (shared by member + group pickers) ───────────────────────
+.ts-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 2px 6px;
+  border-bottom: 0.5px solid
+    color-mix(in srgb, var(--tt-border-color) 70%, transparent);
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--tt-text-primary);
+    font-size: 13px;
+
+    &::placeholder {
+      color: color-mix(in srgb, var(--tt-text-primary) 40%, transparent);
+    }
+  }
+}
+
+.ts-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 240px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
+.ts-picker-empty {
+  display: block;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+  padding: 8px 6px;
+}
+
+.ts-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 5px 6px;
+  border-radius: var(--tt-radius-sm);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+  }
+}
+
+.ts-picker-row__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--tt-text-primary) 60%, transparent);
+}
+
+.ts-picker-row__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.ts-picker-row__name {
+  font-size: 13px;
+  color: var(--tt-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ts-picker-row__sub {
+  font-size: 11.5px;
+  color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Avatars (component sets width/height/font-size inline) ───────────────────
+.ts-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.ts-avatar--initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--tt-text-primary) 10%, transparent);
+  color: var(--tt-text-primary);
+  font-weight: 600;
+}

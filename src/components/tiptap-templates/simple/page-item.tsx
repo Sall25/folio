@@ -14,19 +14,29 @@ import { patchPage } from "src/api/pages";
 import { useActivePage } from "./context/active-page-context";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { makeChildPage } from "src/utils/make-page";
+import { Chevron } from "src/components/tiptap-ui-primitive/chevron";
 
 interface PageItemProps {
   page: Page;
   depth?: number;
   disableActive?: boolean;
-  showIcon?: boolean;
+  /** Optional second line under the title (e.g. a teamspace member count). */
+  subtitle?: string;
+  /** Every row is collapsible now — this just drives the caret's rotation. */
+  expanded?: boolean;
+  onToggleExpand?: (id: ID) => void;
+  /** Flat contexts (e.g. Recents) have no hierarchy — hide the chevron there. */
+  showChevron?: boolean;
 }
 
 export function PageItem({
   page,
   depth = 0,
   disableActive = false,
-  showIcon = true,
+  subtitle,
+  expanded = false,
+  onToggleExpand,
+  showChevron = true,
 }: PageItemProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(page.title);
@@ -54,7 +64,6 @@ export function PageItem({
   const commit = async () => {
     const trimmed = draft.trim();
     if (trimmed && trimmed !== page.title) {
-      // optimistic title patch via your hook
       await mutateAsyncRef.current({ id: page.id, patch: { title: trimmed } });
     } else {
       setDraft(page.title);
@@ -70,7 +79,6 @@ export function PageItem({
     }
   };
 
-  // ── the switching logic you wanted here ──────────────────────────────────
   const onSelect = (pageId: ID) => {
     setActivePageId(pageId);
   };
@@ -86,22 +94,35 @@ export function PageItem({
         onMouseOver={() => setShouldShow(true)}
         onMouseLeave={() => setShouldShow(false)}
       >
-        {showIcon && (
-          <PageItemIcon
-            cover={page.cover}
-            styles={{
-              width: 16,
-              height: 16,
-              opacity: 1,
-              fontSize: 16.8,
-              color: "inherit",
-              // padding: 4,
-              // borderRadius: 5,
-              // background: "var(--tt-button-active-bg-color)",
-            }}
-          />
+        {/* Every page is collapsible/expandable in tree contexts — chevron
+            renders leftmost, before the icon. Flat lists (Recents) pass
+            showChevron={false} since there's no hierarchy to expand. */}
+        {showChevron && (
+          <>
+            <Chevron
+              expanded={expanded}
+              size="small"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleExpand?.(page.id);
+              }}
+            />
+            <Spacer orientation="horizontal" size={0.4} />
+          </>
         )}
-        <Spacer orientation="horizontal" size={1.2} />
+
+        <PageItemIcon
+          cover={page.cover}
+          styles={{
+            width: 15,
+            height: 15,
+            opacity: 1,
+            fontSize: 15,
+            color: "inherit",
+          }}
+        />
+        <Spacer orientation="horizontal" size={1} />
 
         {editing ? (
           <TextareaAutosize
@@ -115,13 +136,36 @@ export function PageItem({
             onKeyDown={handleKeyDown}
             onClick={(e) => e.stopPropagation()}
           />
-        ) : (
+        ) : subtitle ? (
           <span
-            className="page-item-title"
-            style={{ paddingLeft: !showIcon ? 15 : 0 }}
+            className="page-item-text"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              flex: 1,
+              minWidth: 0,
+            }}
           >
-            {title}
+            <span className="page-item-title" style={{ flex: "0 0 auto" }}>
+              {title}
+            </span>
+            <span
+              className="page-item-subtitle"
+              style={{
+                fontSize: 11,
+                lineHeight: 1.2,
+                color:
+                  "color-mix(in srgb, var(--tt-text-primary) 50%, transparent)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {subtitle}
+            </span>
           </span>
+        ) : (
+          <span className="page-item-title">{title}</span>
         )}
 
         <CardItemGroup
@@ -146,9 +190,9 @@ export function PageItem({
             tooltip="New page"
             onClick={async (e) => {
               e.stopPropagation();
-              const child = makeChildPage(page, "New Page"); // your makePage seeded with parentId
+              const child = makeChildPage(page, "New Page");
               createPage.mutate(child);
-              setActivePageId(child.id); // client id known up front — activate immediately
+              setActivePageId(child.id);
             }}
           >
             <Plus size={12} className="tiptap-button-icon" />

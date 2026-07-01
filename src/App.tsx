@@ -10,6 +10,7 @@ import { PageViewProvider } from "./components/tiptap-templates/simple/context/p
 import { SearchProvider } from "./components/tiptap-templates/simple/context/search-provider";
 import { LibraryProvider } from "./components/tiptap-templates/simple/context/library-provider";
 import { TemplatesProvider } from "./components/tiptap-templates/simple/context/templates-provider";
+import { WorkspaceSettingsProvider } from "./components/tiptap-templates/simple/context/workspace-settings-provider";
 
 const client = new QueryClient();
 
@@ -23,10 +24,12 @@ function App() {
               <Router location={location} routes={routes}>
                 <LibraryProvider>
                   <ActivePageProvider>
-                    <EditorProvider>
-                      <SimpleEditorSidebar />
-                      <Outlet />
-                    </EditorProvider>
+                    <WorkspaceSettingsProvider>
+                      <EditorProvider>
+                        <SimpleEditorSidebar />
+                        <Outlet />
+                      </EditorProvider>
+                    </WorkspaceSettingsProvider>
                   </ActivePageProvider>
                 </LibraryProvider>
               </Router>

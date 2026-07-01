@@ -1,0 +1,99 @@
+.chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 20px;
+  height: 20px;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
+
+  border-radius: var(--tt-radius-sm);
+
+  cursor: pointer;
+
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 180ms ease;
+  }
+
+  &[data-expanded="true"] {
+    color: var(--tt-text-primary);
+
+    svg {
+      transform: rotate(90deg);
+    }
+  }
+
+  // ── variants ────────────────────────────────────────────────────────────
+  // ghost: transparent at rest, tinted on hover/active (default, matches Button)
+  &[data-variant="ghost"] {
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+      color: var(--tt-text-primary);
+    }
+
+    &:active:not(:disabled) {
+      background: color-mix(in srgb, var(--tt-text-primary) 13%, transparent);
+    }
+  }
+
+  // subtle: a faint permanent tint, slightly deeper on hover — for chevrons
+  // sitting on their own (not inside a row that already has hover feedback)
+  &[data-variant="subtle"] {
+    background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--tt-text-primary) 9%, transparent);
+      color: var(--tt-text-primary);
+    }
+
+    &:active:not(:disabled) {
+      background: color-mix(in srgb, var(--tt-text-primary) 14%, transparent);
+    }
+  }
+
+  // ── sizes ───────────────────────────────────────────────────────────────
+  &[data-size="small"] {
+    width: 16px;
+    height: 16px;
+
+    svg {
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  &[data-size="large"] {
+    width: 24px;
+    height: 24px;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  // ── states ──────────────────────────────────────────────────────────────
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--tt-brand-color-400) 55%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: transparent !important;
+  }
+}

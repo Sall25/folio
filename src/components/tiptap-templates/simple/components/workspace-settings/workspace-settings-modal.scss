@@ -1,9 +1,19 @@
+:root {
+  --background-drop: rgba(216, 211, 211, 0.3);
+}
+.dark {
+  --background-drop: rgba(15, 15, 15, 0.258);
+}
+
 // Backdrop — follows the PageCreateModal pattern (fade, dim).
 .ws-settings__backdrop {
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: var(--background-drop, rgba(15, 15, 15, 0.4));
+  background: var(--background-drop);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+ 
   animation: ws-backdrop-in 120ms ease;
 }
 
@@ -12,14 +22,20 @@
   to { opacity: 1; }
 }
 
+.ws-settings {
+  z-index: 701; 
+}
+.ws-settings__backdrop {
+  z-index: 700;
+}
+
 // Dialog — centered two-pane shell.
 .ws-settings {
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: 201;
-  width: min(1000px, 92vw);
-  height: min(640px, 86vh);
+  width: min(1300px, 100vw);
+  height: min(800px, 90vh);
   transform: translate(-50%, -50%);
   display: flex;
   overflow: hidden;

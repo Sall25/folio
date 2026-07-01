@@ -14,14 +14,16 @@ import { fetchThreadsByPage } from "../api/threads";
 import { fetchVersionsByPage } from "../api/versions";
 import { fetchDataSources } from "../api/data-sources";
 import { fetchCommentsByThread } from "../api/comments";
+import { fetchTeamspaces } from "../api/teamspaces";
 
 export function useDeletePage() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: ID) => {
-      const [allPages, allSources] = await Promise.all([
+      const [allPages, allSources, teamspaces] = await Promise.all([
         fetchPages(),
         fetchDataSources(),
+        fetchTeamspaces(),
       ]);
       const prelim = gatherDeleteCascade(
         { pageRoots: [id], sourceRoots: [] },
@@ -44,7 +46,7 @@ export function useDeletePage() {
 
       const plan = gatherDeleteCascade(
         { pageRoots: [id], sourceRoots: [] },
-        { allPages, allSources, threads, comments, versions },
+        { allPages, allSources, threads, comments, versions, teamspaces },
       );
       await executeDeletePlan(plan, allSources, allPages);
     },
@@ -60,9 +62,10 @@ export function useDeletePage() {
       const threads = snap.threads.flatMap(([, t]) => t ?? []);
       const comments = snap.comments.flatMap(([, c]) => c ?? []);
       const versions = snap.versions.flatMap(([, v]) => v ?? []);
+      const teamspaces = snap.teamspaces.flatMap(([, t]) => t ?? []);
       const plan = gatherDeleteCascade(
         { pageRoots: [id], sourceRoots: [] },
-        { allPages, allSources, threads, comments, versions },
+        { allPages, allSources, threads, comments, versions, teamspaces },
       );
 
       applyPlanOptimistic(qc, plan);

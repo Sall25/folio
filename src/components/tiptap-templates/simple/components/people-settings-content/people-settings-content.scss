@@ -1,459 +1,570 @@
+
 .people-settings {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  width: 100%;
 }
 
-// ── Invite link ───────────────────────────────────────────────────────
+// ── Invite link ─────────────────────────────────────────────────────────────
 .ps-invite {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 0.5px solid var(--tt-border-color);
+}
 
-  &__head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-  }
-  &__title {
-    font-size: 14px;
-    font-weight: 600;
+.ps-invite__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ps-invite__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tt-text-primary);
+}
+
+.ps-invite__desc {
+  margin-top: 3px;
+  max-width: 520px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
+}
+
+.ps-invite__link-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ps-invite__url {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--tt-text-primary) 70%, transparent);
+  background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ps-invite__regen {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+
+  &:hover {
     color: var(--tt-text-primary);
   }
-  &__desc {
-    font-size: 12px;
-    color: var(--tt-text-secondary);
-    max-width: 460px;
-    margin-top: 2px;
-  }
-  &__link-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  &__url {
-    flex: 1;
-    min-width: 0;
-    padding: 7px 10px;
-    border: 1px solid var(--tt-border-color);
-    border-radius: var(--tt-radius-sm);
-    font-size: 13px;
-    color: var(--tt-text-secondary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
 }
 
-// Toggle switch
+// ── Toggle switch ───────────────────────────────────────────────────────────
 .ps-switch {
+  position: relative;
   flex-shrink: 0;
-  width: 34px;
+  width: 36px;
   height: 20px;
-  padding: 2px;
+  padding: 0;
   border: none;
   border-radius: 999px;
-  background: var(--tt-border-color);
+  background: color-mix(in srgb, var(--tt-text-primary) 18%, transparent);
   cursor: pointer;
   transition: background 0.15s ease;
 
-  &__knob {
-    display: block;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-    transition: transform 0.15s ease;
-  }
   &.is-on {
-    background: var(--tt-brand-color-400);
-  }
-  &.is-on .ps-switch__knob {
-    transform: translateX(14px);
+    background: var(--tt-brand-color-500, var(--tt-brand-color-400));
   }
 }
 
-// ── Toolbar: tabs + search + create ────────────────────────────────────
+.ps-switch__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+
+  .ps-switch.is-on & {
+    transform: translateX(16px);
+  }
+}
+
+// ── Toolbar: tabs + search + create ─────────────────────────────────────────
 .ps-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .ps-tabs {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
+
 .ps-tab {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 4px;
+  padding: 5px 12px;
   border: none;
   background: transparent;
-  font-family: inherit;
-  font-size: 14px;
-  color: var(--tt-text-secondary);
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: color-mix(in srgb, var(--tt-text-primary) 60%, transparent);
   cursor: pointer;
-  border-bottom: 2px solid transparent;
 
-  &__count {
-    font-size: 12px;
-    color: var(--tt-text-secondary);
-  }
   &:hover {
-    color: var(--tt-text-primary);
+    background: color-mix(in srgb, var(--tt-text-primary) 5%, transparent);
   }
+
   &.is-active {
+    background: color-mix(in srgb, var(--tt-text-primary) 9%, transparent);
     color: var(--tt-text-primary);
-    font-weight: 600;
-    border-bottom-color: var(--tt-text-primary);
+    font-weight: 500;
   }
+}
+
+.ps-tab__count {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--tt-text-primary) 45%, transparent);
 }
 
 .ps-search {
-  flex: 1;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 8px;
-  border-radius: var(--tt-radius-sm);
-  background: var(--tt-bg-subtle, rgba(0, 0, 0, 0.04));
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md);
+  background: var(--tt-card-bg-color);
+
+  &:focus-within {
+    border-color: color-mix(in srgb, var(--tt-text-primary) 22%, transparent);
+  }
 
   input {
+    flex: 1;
+    min-width: 0;
     border: none;
     outline: none;
     background: transparent;
-    width: 100%;
-    font-size: 13px;
-    font-family: inherit;
     color: var(--tt-text-primary);
+    font-size: 13px;
+
+    &::placeholder {
+      color: color-mix(in srgb, var(--tt-text-primary) 40%, transparent);
+    }
   }
 }
 
-// ── People list ────────────────────────────────────────────────────────
+// ── People list ─────────────────────────────────────────────────────────────
 .ps-people-list {
   display: flex;
   flex-direction: column;
 }
+
 .ps-person-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 4px;
-  border-bottom: 1px solid var(--tt-border-color);
+  padding: 7px 8px;
+  border-radius: var(--tt-radius-sm);
 
-  &__text {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    flex: 1;
-  }
-  &__name {
-    font-size: 14px;
-    color: var(--tt-text-primary);
-  }
-  &__email {
-    font-size: 12px;
-    color: var(--tt-text-secondary);
-  }
-  &__role {
-    font-size: 12px;
-    color: var(--tt-text-secondary);
-    text-transform: capitalize;
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
   }
 }
 
-.ps-avatar {
-  border-radius: 50%;
-  object-fit: cover;
+.ps-person-row__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.ps-person-row__name {
+  font-size: 13.5px;
+  color: var(--tt-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ps-person-row__email {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ps-person-row__role {
   flex-shrink: 0;
-
-  &--initial {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--tt-brand-color-400);
-    color: #fff;
-    font-weight: 600;
-  }
+  font-size: 12px;
+  text-transform: capitalize;
+  color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
 }
 
-// ── Groups table ───────────────────────────────────────────────────────
+// ── Groups table ────────────────────────────────────────────────────────────
 .ps-groups {
   display: flex;
   flex-direction: column;
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md);
+  overflow: hidden;
 }
+
 .ps-groups__head {
-  display: grid;
-  grid-template-columns: 1fr 120px 120px 32px;
+  display: flex;
   align-items: center;
-  padding: 6px 4px;
-  border-bottom: 1px solid var(--tt-border-color);
-}
-.ps-groups__col {
-  font-size: 12px;
-  color: var(--tt-text-secondary);
-  &--name {
-    padding-left: 26px;
-  }
-}
+  gap: 8px;
+  padding: 8px 10px 8px 42px; // 42 = row padding-left(10) + expand(24) + gap(8)
+  border-bottom: 0.5px solid var(--tt-border-color);
+  background: color-mix(in srgb, var(--tt-text-primary) 3%, transparent);
 
-.ps-group-row {
-  display: grid;
-  grid-template-columns: 1fr 120px 120px 32px;
-  align-items: center;
-  padding: 8px 4px;
-  border-bottom: 1px solid var(--tt-border-color);
+  .ps-groups__col {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
+  }
 
-  &__expand {
-    grid-column: 1;
-    width: 0; // sits inside the name cell visually via negative flow
-  }
-}
-
-// place expand + name in one visual cell
-.ps-group-row {
-  &__expand {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    border: none;
-    background: transparent;
-    color: var(--tt-text-secondary);
-    cursor: pointer;
-    border-radius: var(--tt-radius-sm);
-    &:hover {
-      background: var(--tt-bg-hover, rgba(0, 0, 0, 0.06));
-    }
-  }
-  &__name-cell {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-  }
-  &__icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    font-size: 15px;
+  .ps-groups__col:nth-child(2) {
+    width: 100px;
     flex-shrink: 0;
-    color: var(--tt-text-secondary);
   }
-  &__name {
-    font-size: 14px;
-    color: var(--tt-text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .ps-groups__col:nth-child(3) {
+    width: 90px;
+    flex-shrink: 0;
   }
-  &__rename {
-    border: 1px solid var(--tt-brand-color-400);
-    outline: none;
-    background: transparent;
-    border-radius: var(--tt-radius-sm);
-    font-size: 14px;
-    font-family: inherit;
-    color: var(--tt-text-primary);
-    padding: 1px 6px;
+}
+
+.ps-groups__col--name {
+  flex: 1;
+  min-width: 0;
+}
+.ps-groups__col--menu {
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.ps-group-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 0.5px solid
+    color-mix(in srgb, var(--tt-border-color) 60%, transparent);
+
+  &:last-child {
+    border-bottom: none;
   }
-  &__teamspaces,
-  &__members {
-    font-size: 13px;
-    color: var(--tt-text-secondary);
-  }
-  &__menu {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    border: none;
-    background: transparent;
-    color: var(--tt-text-secondary);
-    border-radius: var(--tt-radius-sm);
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.1s ease;
-    &:hover {
-      background: var(--tt-bg-hover, rgba(0, 0, 0, 0.06));
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
+
+    .ps-group-row__menu {
+      opacity: 1;
     }
   }
-  &:hover &__menu {
+}
+
+.ps-group-row__expand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
+  cursor: pointer;
+  border-radius: var(--tt-radius-sm);
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+    color: var(--tt-text-primary);
+  }
+}
+
+.ps-group-row__name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ps-group-row__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--tt-text-primary) 65%, transparent);
+}
+
+.ps-group-row__name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--tt-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ps-group-row__rename {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--tt-text-primary);
+  background: transparent;
+  border: 0.5px solid
+    color-mix(in srgb, var(--tt-text-primary) 22%, transparent);
+  border-radius: var(--tt-radius-sm);
+  padding: 2px 6px;
+  outline: none;
+
+  &:focus {
+    border-color: var(--tt-brand-color-400);
+  }
+}
+
+.ps-group-row__teamspaces {
+  width: 100px;
+  flex-shrink: 0;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--tt-text-primary) 60%, transparent);
+}
+
+.ps-group-row__members {
+  width: 90px;
+  flex-shrink: 0;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--tt-text-primary) 60%, transparent);
+}
+
+.ps-group-row__menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
+  cursor: pointer;
+  border-radius: var(--tt-radius-sm);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+    color: var(--tt-text-primary);
+  }
+}
+
+// ── Expanded group members ──────────────────────────────────────────────────
+.ps-group-members {
+  padding: 8px 10px 12px 42px;
+  background: color-mix(in srgb, var(--tt-text-primary) 2%, transparent);
+  border-bottom: 0.5px solid
+    color-mix(in srgb, var(--tt-border-color) 60%, transparent);
+}
+
+.ps-group-members__empty {
+  display: block;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+  padding: 2px 0 4px;
+}
+
+.ps-group-members__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+
+  &:hover .ps-group-members__remove {
     opacity: 1;
   }
 }
 
-// Restore the name cell to span correctly: expand + name share column 1.
-.ps-group-row {
-  grid-template-columns: 20px 1fr 120px 120px 32px;
-}
-.ps-groups__head {
-  grid-template-columns: 20px 1fr 120px 120px 32px;
-}
-.ps-groups__col--name {
-  padding-left: 0;
+.ps-group-members__name {
+  font-size: 13px;
+  color: var(--tt-text-primary);
+  flex-shrink: 0;
 }
 
-.ps-group-members {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 6px 4px 10px 46px;
-  border-bottom: 1px solid var(--tt-border-color);
-
-  &__empty {
-    font-size: 12px;
-    color: var(--tt-text-secondary);
-  }
-  &__row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 3px 0;
-  }
-  &__name {
-    font-size: 13px;
-    color: var(--tt-text-primary);
-  }
-  &__email {
-    font-size: 12px;
-    color: var(--tt-text-secondary);
-  }
-}
-
-// Regenerate-link affordance under the invite row
-.ps-invite__regen {
-  align-self: flex-start;
-  border: none;
-  background: transparent;
-  padding: 0;
+.ps-group-members__email {
+  flex: 1;
+  min-width: 0;
   font-size: 12px;
-  color: var(--tt-text-secondary);
-  text-decoration: underline;
-  cursor: pointer;
-
-  &:hover {
-    color: var(--tt-text-primary);
-  }
+  color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-// ── Member picker ──────────────────────────────────────────────────────
-.ps-group-members__row {
-  // make room for the remove X on hover without reflow
-  position: relative;
-}
 .ps-group-members__remove {
-  margin-left: auto;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  padding: 0;
   border: none;
   background: transparent;
-  color: var(--tt-text-secondary);
-  border-radius: var(--tt-radius-sm);
+  color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
   cursor: pointer;
+  border-radius: var(--tt-radius-sm);
   opacity: 0;
-  transition: opacity 0.1s ease;
+  transition: opacity 0.12s ease;
+
   &:hover {
-    background: var(--tt-bg-hover, rgba(0, 0, 0, 0.06));
-    color: var(--tt-text-primary);
+    background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+    color: var(--tt-danger-color, #e5484d);
   }
 }
-.ps-group-members__row:hover .ps-group-members__remove {
-  opacity: 1;
-}
 
+// ── Add affordance (MemberPicker trigger) ───────────────────────────────────
 .ps-add-members {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 4px;
-  padding: 4px 6px;
-  border: none;
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--tt-text-primary) 60%, transparent);
   background: transparent;
+  border: none;
+  padding: 4px 6px;
   border-radius: var(--tt-radius-sm);
-  font-size: 13px;
-  font-family: inherit;
-  color: var(--tt-text-secondary);
   cursor: pointer;
+
   &:hover {
-    background: var(--tt-bg-hover, rgba(0, 0, 0, 0.06));
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
     color: var(--tt-text-primary);
   }
 }
 
+// ── Picker popover ──────────────────────────────────────────────────────────
 .ps-picker-search {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 6px;
-  margin: 2px 0 6px;
-  border-radius: var(--tt-radius-sm);
-  background: var(--tt-bg-subtle, rgba(0, 0, 0, 0.04));
+  padding: 4px 2px 6px;
+  border-bottom: 0.5px solid
+    color-mix(in srgb, var(--tt-border-color) 70%, transparent);
+
   input {
+    flex: 1;
+    min-width: 0;
     border: none;
     outline: none;
     background: transparent;
-    width: 100%;
-    font-size: 13px;
-    font-family: inherit;
     color: var(--tt-text-primary);
+    font-size: 13px;
+
+    &::placeholder {
+      color: color-mix(in srgb, var(--tt-text-primary) 40%, transparent);
+    }
   }
 }
+
 .ps-picker-list {
   display: flex;
   flex-direction: column;
-  max-height: 260px;
+  gap: 1px;
+  max-height: 240px;
   overflow-y: auto;
-  scrollbar-width: thin;
+  margin-top: 4px;
 }
+
 .ps-picker-empty {
-  font-size: 12px;
-  color: var(--tt-text-secondary);
-  padding: 4px 6px;
+  display: block;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+  padding: 8px 6px;
 }
+
 .ps-picker-row {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 5px 6px;
+  text-align: left;
   border: none;
   background: transparent;
+  padding: 5px 6px;
   border-radius: var(--tt-radius-sm);
-  text-align: left;
   cursor: pointer;
+
   &:hover {
-    background: var(--tt-bg-hover, rgba(0, 0, 0, 0.06));
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
   }
-  &__text {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    flex: 1;
-  }
-  &__name {
-    font-size: 13px;
-    color: var(--tt-text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  &__email {
-    font-size: 11px;
-    color: var(--tt-text-secondary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+}
+
+.ps-picker-row__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.ps-picker-row__name {
+  font-size: 13px;
+  color: var(--tt-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ps-picker-row__email {
+  font-size: 11.5px;
+  color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Avatars (component sets width/height/font-size inline) ───────────────────
+.ps-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.ps-avatar--initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--tt-text-primary) 10%, transparent);
+  color: var(--tt-text-primary);
+  font-weight: 600;
 }

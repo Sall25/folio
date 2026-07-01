@@ -1,7 +1,11 @@
-import { useState, useMemo, useCallback, type CSSProperties } from "react";
 import {
-  ChevronRight,
-  ChevronDown,
+  useState,
+  useMemo,
+  useCallback,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import {
   Plus,
   Pencil,
   Trash2,
@@ -27,39 +31,59 @@ import {
   type DragOverEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import type { PageCategory, PageTreeNode, ID } from "src/types";
+import type {
+  PageCategory,
+  PageTreeNode,
+  ID,
+  Teamspace,
+  Group,
+} from "src/types";
+import { effectiveMemberCount } from "src/types";
 import { PageItem } from "../page-item";
 import "./sidebar-sections.scss";
 import "./sidebar-tree.scss";
-import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Section, SectionMenuItem, SectionMenuSeparator } from "./section";
+import {
+  Section,
+  SectionMenuItem,
+  SectionMenuLabel,
+  SectionMenuSeparator,
+} from "./section";
 import { useLibrary } from "../context/library-context";
 import type { LibraryTab } from "./library-palette";
 import { useTranslation } from "react-i18next";
+import {
+  applySectionSort,
+  buildCategoryByPageId,
+  DEFAULT_SECTION_ORDER,
+  getSortMode,
+  reorderList,
+  reorderScope,
+  scopeKeyForChildren,
+  scopeKeyForRoots,
+  useCustomOrder,
+  useSectionOrder,
+  useSectionSortModes,
+  type SortMode,
+} from "../hooks/use-sidebar-order";
 
-const SECTION_CATEGORIES: PageCategory[] = [
-  "Private",
-  "Favorites",
-  "Shared",
-  "Teamspaces",
-];
 type DropZone = "before" | "after" | "inside";
 
-// CHANGED: pageId number → ID
 type DropTarget =
   | { kind: "page"; pageId: ID; zone: DropZone }
   | { kind: "section"; category: PageCategory }
+  | {
+      kind: "section-reorder";
+      category: PageCategory;
+      zone: "before" | "after";
+    }
   | null;
 
-// Section containers use prefixed ids; page rows use bare page ids.
+const SECTION_DRAG_PREFIX = "section-drag:";
+
 const isSectionId = (id: string | number) =>
   typeof id === "string" &&
   (id.startsWith("section:") || id.startsWith("section-header:"));
 
-// A page row droppable is nested inside the section-body droppable, so the
-// section always intersects too. Prefer the row when the pointer is over one —
-// that's what unlocks before/after/inside (nesting). Fall back to the section
-// only when no row is under the pointer (empty space / headers).
 const treeCollisionDetection: CollisionDetection = (args) => {
   const pointer = pointerWithin(args);
   const collisions = pointer.length ? pointer : rectIntersection(args);
@@ -67,22 +91,22 @@ const treeCollisionDetection: CollisionDetection = (args) => {
   return pageHit ? [pageHit] : collisions;
 };
 
-// CHANGED: consumes the derived tree, grouped by category, instead of flat Page[]
 export interface SidebarTreeProps {
   tree: Record<PageCategory, PageTreeNode[]>;
+  /** Teamspace records, joined to teamspace-pages by id to show a member count. */
+  teamspaces: Teamspace[];
+  groups: Group[];
   onMovePage: (args: {
     pageId: ID;
     newParentId: ID | null;
     category?: PageCategory;
   }) => void;
   onAddPageToSection?: (category: PageCategory) => void;
-  onAddSection?: () => void;
   onRenameSection?: (category: PageCategory) => void;
   onDeleteSection?: (category: PageCategory) => void;
   onHideSection?: (category: PageCategory) => void;
 }
 
-// CHANGED: walks PageTreeNode.children, collects string ids
 function collectSubtreeIds(
   node: PageTreeNode,
   acc: Set<ID> = new Set(),
@@ -93,7 +117,6 @@ function collectSubtreeIds(
 }
 
 // ── Recursive tree row ─────────────────────────────────────────────────────
-// CHANGED: takes a PageTreeNode (page + children) instead of a Page with .children
 function TreeRow({
   node,
   depth,
@@ -101,6 +124,7 @@ function TreeRow({
   onToggleExpand,
   dropTarget,
   activeId,
+  subtitleByPageId,
 }: {
   node: PageTreeNode;
   depth: number;
@@ -108,19 +132,17 @@ function TreeRow({
   onToggleExpand: (id: ID) => void;
   dropTarget: DropTarget;
   activeId: ID | null;
+  subtitleByPageId: Map<ID, string>;
 }) {
   const page = node.page;
   const hasChildren = node.children.length > 0;
   const isExpanded = expandedIds.has(page.id);
-  const [shouldShow, setShouldShow] = useState(true);
 
   const {
     attributes,
     listeners,
     setNodeRef: setDragRef,
-  } = useDraggable({
-    id: page.id, // already a string ID — dnd-kit accepts string ids
-  });
+  } = useDraggable({ id: page.id });
   const { setNodeRef: setDropRef } = useDroppable({ id: page.id });
 
   const setRefs = useCallback(
@@ -140,7 +162,7 @@ function TreeRow({
 
   const rowStyle: CSSProperties = {
     paddingLeft: depth * 14,
-    opacity: isDragging ? 0.4 : 1,
+    opacity: isDragging ? 0.3 : 1,
     position: "relative",
   };
 
@@ -158,8 +180,6 @@ function TreeRow({
         style={rowStyle}
         {...attributes}
         {...listeners}
-        onMouseOver={() => setShouldShow(false)}
-        onMouseLeave={() => setShouldShow(true)}
       >
         {zone === "before" && (
           <div className="sidebar-tree__line sidebar-tree__line--top" />
@@ -168,54 +188,48 @@ function TreeRow({
           <div className="sidebar-tree__line sidebar-tree__line--bottom" />
         )}
 
-        <Button
-          className="sidebar-tree__caret"
-          variant="ghost"
-          style={{
-            position: "absolute",
-            left: depth * 14 + 6,
-            top: "50%",
-            transform: "translateY(-50%)",
-            padding: 0,
-            margin: 0,
-            minWidth: 18,
-            width: 18,
-            height: 18,
-            background: "transparent",
-            zIndex: 10,
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleExpand(page.id);
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          aria-label={isExpanded ? "Collapse" : "Expand"}
-        >
-          {isExpanded ? (
-            <ChevronDown className="tiptap-button-icon" size={14} />
-          ) : (
-            <ChevronRight className="tiptap-button-icon" size={14} />
-          )}
-        </Button>
-
         <div className="sidebar-tree__item">
-          <PageItem page={page} showIcon={hasChildren ? shouldShow : true} />
+          <PageItem
+            page={page}
+            depth={0}
+            subtitle={subtitleByPageId.get(page.id)}
+            expanded={isExpanded}
+            onToggleExpand={onToggleExpand}
+          />
         </div>
       </div>
 
-      {hasChildren && isExpanded && (
+      {isExpanded && (
         <div className="sidebar-tree__children">
-          {node.children.map((child) => (
-            <TreeRow
-              key={child.page.id}
-              node={child}
-              depth={depth + 1}
-              expandedIds={expandedIds}
-              onToggleExpand={onToggleExpand}
-              dropTarget={dropTarget}
-              activeId={activeId}
-            />
-          ))}
+          {hasChildren ? (
+            node.children.map((child) => (
+              <TreeRow
+                key={child.page.id}
+                node={child}
+                depth={depth + 1}
+                expandedIds={expandedIds}
+                onToggleExpand={onToggleExpand}
+                dropTarget={dropTarget}
+                activeId={activeId}
+                subtitleByPageId={subtitleByPageId}
+              />
+            ))
+          ) : (
+            <div
+              className="sidebar-tree__empty-leaf"
+              style={{
+                paddingLeft: (depth + 1) * 14 + 6,
+                paddingTop: 3,
+                paddingBottom: 3,
+                fontSize: 12.5,
+                color:
+                  "color-mix(in srgb, var(--tt-text-primary) 42%, transparent)",
+                userSelect: "none",
+              }}
+            >
+              No pages inside
+            </div>
+          )}
         </div>
       )}
     </>
@@ -309,6 +323,9 @@ function TreeSection({
   onRename,
   onDelete,
   onHide,
+  subtitleByPageId,
+  sortMode,
+  onSetSortMode,
 }: {
   category: PageCategory;
   topLevel: PageTreeNode[];
@@ -322,6 +339,9 @@ function TreeSection({
   onRename?: (c: PageCategory) => void;
   onDelete?: (c: PageCategory) => void;
   onHide?: (c: PageCategory) => void;
+  subtitleByPageId: Map<ID, string>;
+  sortMode: SortMode;
+  onSetSortMode: (mode: SortMode) => void;
 }) {
   const { setNodeRef: setBodyRef } = useDroppable({
     id: `section:${category}`,
@@ -358,6 +378,20 @@ function TreeSection({
       }}
       menu={
         <>
+          <SectionMenuLabel>Order by</SectionMenuLabel>
+          <SectionMenuItem
+            label="Recent"
+            selected={sortMode === "recent"}
+            closeOnClick={false}
+            onClick={() => onSetSortMode("recent")}
+          />
+          <SectionMenuItem
+            label="Custom (drag to arrange)"
+            selected={sortMode === "custom"}
+            closeOnClick={false}
+            onClick={() => onSetSortMode("custom")}
+          />
+          <SectionMenuSeparator />
           <SectionMenuItem
             icon={<Pencil size={14} />}
             label="Rename"
@@ -387,6 +421,7 @@ function TreeSection({
           onToggleExpand={onToggleExpand}
           dropTarget={dropTarget}
           activeId={activeId}
+          subtitleByPageId={subtitleByPageId}
         />
       ))}
       {topLevel.length === 0 && (
@@ -396,27 +431,150 @@ function TreeSection({
   );
 }
 
+// ── SectionDragWrapper: the whole section is the drag source ────────────────
+// Same pattern as TreeRow: grab anywhere, drag only activates past a few
+// pixels of pointer movement (PointerSensor's activationConstraint), so
+// ordinary clicks on buttons inside the section still work untouched.
+// width: "100%" is explicit here — without it this wrapper can starve
+// Section's internal layout down to near-zero width, which is what caused
+// the section label to wrap one letter per line during drag.
+function SectionDragWrapper({
+  category,
+  dropTarget,
+  activeId,
+  children,
+}: {
+  category: PageCategory;
+  dropTarget: DropTarget;
+  activeId: ID | null;
+  children: ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef } = useDraggable({
+    id: `${SECTION_DRAG_PREFIX}${category}`,
+  });
+
+  const isDragging = activeId === `${SECTION_DRAG_PREFIX}${category}`;
+  const zone =
+    dropTarget?.kind === "section-reorder" && dropTarget.category === category
+      ? dropTarget.zone
+      : null;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        position: "relative",
+        width: "100%",
+        opacity: isDragging ? 0.4 : 1,
+      }}
+      {...attributes}
+      {...listeners}
+    >
+      {zone === "before" && (
+        <div
+          style={{
+            position: "absolute",
+            top: -5,
+            left: 4,
+            right: 4,
+            height: 2,
+            borderRadius: 2,
+            background: "var(--tt-brand-color-400)",
+          }}
+        />
+      )}
+
+      {children}
+
+      {zone === "after" && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: -5,
+            left: 4,
+            right: 4,
+            height: 2,
+            borderRadius: 2,
+            background: "var(--tt-brand-color-400)",
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 export function SidebarTree({
   tree,
+  teamspaces,
+  groups,
   onMovePage,
   onAddPageToSection,
-  onAddSection,
   onRenameSection,
   onDeleteSection,
   onHideSection,
 }: SidebarTreeProps) {
-  // CHANGED: all Set<number> → Set<ID>, activeId ID | null
+  // Join teamspace records to their pages by id → "N members" per teamspace-page.
+  // Only teamspace-pages land in this map; everything else has no subtitle.
+  const subtitleByPageId = useMemo(() => {
+    const m = new Map<ID, string>();
+    for (const ts of teamspaces) {
+      const n = effectiveMemberCount(ts, groups);
+      m.set(ts.id, `${n} member${n === 1 ? "" : "s"}`);
+    }
+    return m;
+  }, [teamspaces, groups]);
+
+  // Sort mode is set once per section and governs every depth beneath it.
+  // Custom order is a map of scopeKey → ordered ids, one scope per set of
+  // siblings (a section's top-level pages, or any page's children).
+  const [sortModeByCategory, setSortModeByCategory] = useSectionSortModes();
+  const [customOrder, setCustomOrder] = useCustomOrder();
+  // Display order of the sections themselves — the set is still fixed and
+  // closed, only their sequence is user-configurable.
+  const [sectionOrder, setSectionOrder] = useSectionOrder();
+
+  const setSortModeForCategory = useCallback(
+    (category: PageCategory, mode: SortMode) => {
+      setSortModeByCategory((prev) => ({ ...prev, [category]: mode }));
+    },
+    [setSortModeByCategory],
+  );
+
+  // category is root-membership only (order-independent) — walk the raw tree.
+  const categoryByPageId = useMemo(() => buildCategoryByPageId(tree), [tree]);
+
+  // The tree actually rendered — each section's own sort mode applied
+  // recursively to its whole subtree. Computed over the FULL fixed category
+  // set regardless of display order or hidden state (data must stay ready
+  // in case a hidden section is unhidden later).
+  const sortedTree = useMemo(() => {
+    const result = {} as Record<PageCategory, PageTreeNode[]>;
+    for (const category of DEFAULT_SECTION_ORDER) {
+      const mode = getSortMode(sortModeByCategory, category);
+      result[category] = applySectionSort(
+        tree[category] ?? [],
+        category,
+        mode,
+        customOrder,
+      );
+    }
+    return result;
+  }, [tree, sortModeByCategory, customOrder]);
+
   const [activeId, setActiveId] = useState<ID | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget>(null);
   const [expandedIds, setExpandedIds] = useState<Set<ID>>(new Set());
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
     () =>
-      new Set(SECTION_CATEGORIES.filter((c) => (tree[c]?.length ?? 0) === 0)),
+      new Set(
+        DEFAULT_SECTION_ORDER.filter((c) => (tree[c]?.length ?? 0) === 0),
+      ),
   );
 
-  // CHANGED: build the flat node lookup from the tree (keyed by string ID).
-  // We index every node in every category so drop-target resolution is O(1).
+  // Built from the SORTED tree — reorder math needs the currently displayed
+  // order, not raw tree order, so untouched siblings don't silently reshuffle
+  // the first time a section switches into custom mode.
   const nodeById = useMemo(() => {
     const m = new Map<ID, PageTreeNode>();
     const walk = (nodes: PageTreeNode[]) => {
@@ -425,16 +583,14 @@ export function SidebarTree({
         if (n.children.length) walk(n.children);
       }
     };
-    for (const cat of SECTION_CATEGORIES) walk(tree[cat] ?? []);
+    for (const cat of DEFAULT_SECTION_ORDER) walk(sortedTree[cat] ?? []);
     return m;
-  }, [tree]);
+  }, [sortedTree]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
   );
 
-  // CHANGED: e.active.id is string | number from dnd-kit; ours are strings, so
-  // String() (not Number()) — and since we set them as strings, it's a no-op cast.
   const onDragStart = (e: DragStartEvent) => {
     setActiveId(String(e.active.id));
   };
@@ -445,8 +601,38 @@ export function SidebarTree({
       setDropTarget(null);
       return;
     }
+    const activeIdStr = String(active.id);
     const overId = over.id;
 
+    // ── Section reorder (dragging a section's grip handle) ─────────────────
+    if (activeIdStr.startsWith(SECTION_DRAG_PREFIX)) {
+      let hitCategory: PageCategory | null = null;
+      if (typeof overId === "string" && overId.startsWith("section:")) {
+        hitCategory = overId.slice("section:".length) as PageCategory;
+      } else if (
+        typeof overId === "string" &&
+        overId.startsWith("section-header:")
+      ) {
+        hitCategory = overId.slice("section-header:".length) as PageCategory;
+      } else {
+        hitCategory = categoryByPageId.get(String(overId)) ?? null;
+      }
+      if (!hitCategory) {
+        setDropTarget(null);
+        return;
+      }
+      const rect = over.rect;
+      const pointerY =
+        (activatorEvent as PointerEvent | undefined)?.clientY != null
+          ? (activatorEvent as PointerEvent).clientY + e.delta.y
+          : rect.top + rect.height / 2;
+      const zone: "before" | "after" =
+        pointerY - rect.top < rect.height / 2 ? "before" : "after";
+      setDropTarget({ kind: "section-reorder", category: hitCategory, zone });
+      return;
+    }
+
+    // ── Page drag (unchanged) ────────────────────────────────────────────
     if (typeof overId === "string" && overId.startsWith("section:")) {
       setDropTarget({
         kind: "section",
@@ -462,9 +648,8 @@ export function SidebarTree({
       return;
     }
 
-    // CHANGED: ids are strings — no Number() coercion
     const overPageId = String(overId);
-    const activePageId = String(active.id);
+    const activePageId = activeIdStr;
 
     const activeNode = nodeById.get(activePageId);
     if (activeNode) {
@@ -496,15 +681,65 @@ export function SidebarTree({
     setDropTarget({ kind: "page", pageId: overPageId, zone });
   };
 
+  // Persist a custom-order position for the destination scope, IF that
+  // scope's section is currently in "custom" mode. In "recent" mode this is
+  // a no-op — order is computed from updatedAt, not draggable.
+  const persistOrderIfCustom = useCallback(
+    (
+      newParentId: ID | null,
+      destCategory: PageCategory,
+      movedId: ID,
+      targetId: ID | null,
+      position: "before" | "after" | "end",
+    ) => {
+      const mode = getSortMode(sortModeByCategory, destCategory);
+      if (mode !== "custom") return;
+
+      const scopeKey =
+        newParentId == null
+          ? scopeKeyForRoots(destCategory)
+          : scopeKeyForChildren(newParentId);
+
+      const currentSiblings =
+        newParentId == null
+          ? (sortedTree[destCategory] ?? [])
+          : (nodeById.get(newParentId)?.children ?? []);
+      const currentIds = currentSiblings.map((n) => n.page.id);
+
+      const newOrder = reorderScope(currentIds, movedId, targetId, position);
+      setCustomOrder((prev) => ({ ...prev, [scopeKey]: newOrder }));
+    },
+    [sortModeByCategory, sortedTree, nodeById, setCustomOrder],
+  );
+
   const onDragEnd = (e: DragEndEvent) => {
+    const activeIdStr = String(e.active.id);
     const target = dropTarget;
-    const pageId = String(e.active.id); // CHANGED: String, not Number
     setActiveId(null);
     setDropTarget(null);
     if (!target) return;
 
+    // ── Section reorder ──────────────────────────────────────────────────
+    if (activeIdStr.startsWith(SECTION_DRAG_PREFIX)) {
+      if (target.kind !== "section-reorder") return;
+      const movedCategory = activeIdStr.slice(
+        SECTION_DRAG_PREFIX.length,
+      ) as PageCategory;
+      if (movedCategory === target.category) return;
+      setSectionOrder((prev) =>
+        reorderList(prev, movedCategory, target.category, target.zone),
+      );
+      return;
+    }
+
+    // ── Page drag (unchanged) ────────────────────────────────────────────
+    if (target.kind === "section-reorder") return; // narrowing guard only
+
+    const pageId = activeIdStr;
+
     if (target.kind === "section") {
       onMovePage({ pageId, newParentId: null, category: target.category });
+      persistOrderIfCustom(null, target.category, pageId, null, "end");
       setCollapsedSections((s) => {
         if (!s.has(target.category)) return s;
         const n = new Set(s);
@@ -531,6 +766,10 @@ export function SidebarTree({
 
     if (target.zone === "inside") {
       onMovePage({ pageId, newParentId: target.pageId });
+      const destCategory = categoryByPageId.get(target.pageId);
+      if (destCategory) {
+        persistOrderIfCustom(target.pageId, destCategory, pageId, null, "end");
+      }
       setExpandedIds((s) => new Set(s).add(target.pageId));
     } else {
       const isTopLevel = overPage.parentId == null;
@@ -539,6 +778,18 @@ export function SidebarTree({
         newParentId: overPage.parentId ?? null,
         ...(isTopLevel ? { category: overPage.category } : {}),
       });
+      const destCategory = isTopLevel
+        ? overPage.category
+        : categoryByPageId.get(overPage.parentId!);
+      if (destCategory) {
+        persistOrderIfCustom(
+          overPage.parentId ?? null,
+          destCategory,
+          pageId,
+          overPage.id,
+          target.zone,
+        );
+      }
     }
   };
 
@@ -569,7 +820,8 @@ export function SidebarTree({
   };
 
   const activeNode = activeId != null ? nodeById.get(activeId) : null;
-  const visibleCategories = SECTION_CATEGORIES.filter((c) => !hidden.has(c));
+  const isDraggingSection = activeId?.startsWith(SECTION_DRAG_PREFIX) ?? false;
+  const visibleCategories = sectionOrder.filter((c) => !hidden.has(c));
 
   return (
     <DndContext
@@ -585,36 +837,52 @@ export function SidebarTree({
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {visibleCategories.map((category) => (
-          <TreeSection
+          <SectionDragWrapper
             key={category}
             category={category}
-            topLevel={tree[category] ?? []}
-            expandedIds={expandedIds}
-            onToggleExpand={onToggleExpand}
             dropTarget={dropTarget}
             activeId={activeId}
-            collapsed={collapsedSections.has(category)}
-            onToggleCollapse={() => onToggleCollapse(category)}
-            onAddPage={onAddPageToSection}
-            onRename={onRenameSection}
-            onDelete={onDeleteSection}
-            onHide={handleHide}
-          />
+          >
+            <TreeSection
+              category={category}
+              topLevel={sortedTree[category] ?? []}
+              expandedIds={expandedIds}
+              onToggleExpand={onToggleExpand}
+              dropTarget={dropTarget}
+              activeId={activeId}
+              collapsed={collapsedSections.has(category)}
+              onToggleCollapse={() => onToggleCollapse(category)}
+              onAddPage={onAddPageToSection}
+              onRename={onRenameSection}
+              onDelete={onDeleteSection}
+              onHide={handleHide}
+              subtitleByPageId={subtitleByPageId}
+              sortMode={getSortMode(sortModeByCategory, category)}
+              onSetSortMode={(mode) => setSortModeForCategory(category, mode)}
+            />
+          </SectionDragWrapper>
         ))}
-
-        {onAddSection && (
-          <button className="sidebar-add-section" onClick={onAddSection}>
-            <span className="sidebar-section__lead">
-              <Plus size={14} />
-            </span>
-            Add section
-          </button>
-        )}
       </div>
 
       <DragOverlay>
-        {activeNode ? (
-          <div className="sidebar-drag-overlay">
+        {isDraggingSection && activeId ? (
+          <div
+            style={{
+              padding: "6px 12px",
+              borderRadius: "var(--tt-radius-md)",
+              background: "var(--tt-card-bg-color)",
+              border: "0.5px solid var(--tt-border-color)",
+              boxShadow: "0 6px 20px rgba(0,0,0,0.18)",
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--tt-text-primary)",
+              opacity: 0.7,
+            }}
+          >
+            {activeId.slice(SECTION_DRAG_PREFIX.length)}
+          </div>
+        ) : activeNode ? (
+          <div className="sidebar-drag-overlay" style={{ opacity: 0.7 }}>
             <PageItem page={activeNode.page} />
           </div>
         ) : null}

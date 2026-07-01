@@ -8,10 +8,8 @@ import {
   PanelLeft,
   PanelRight,
   SquarePen,
-  ArrowDown,
-  ArrowUp,
-  LayoutTemplate,
-  LayoutGrid,
+  //  LayoutTemplate,
+  Settings,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -29,26 +27,23 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-location";
 import { useEditorLayout } from "./context/editor-layout-context";
 import { useSearch } from "./context/search-context";
-import { PageItem } from "./page-item";
 import { SidebarTree } from "./components/sidebar-tree";
-import { usePageTree, useRecentPages } from "src/hooks/use-pages";
+import { usePageTree } from "src/hooks/use-pages";
+import { useTeamspaces } from "src/hooks/use-teamspaces";
+import { useGroups } from "src/hooks/use-groups";
 import { makePage } from "src/utils/make-page";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage as updatePage } from "src/api/pages";
 import { SidebarBodySkeleton } from "./components/skeletons";
 import { useActivePage } from "./context/active-page-context";
-import {
-  Section,
-  SectionMenuItem,
-  SectionMenuLabel,
-  SectionMenuSeparator,
-} from "./components/section";
+import { Section } from "./components/section";
 import { ScrollFog } from "src/components/tiptap-ui-primitive/scroll-frog";
-import { useLibrary } from "./context/library-context";
-import { useLocalStorage } from "./hooks/use-local-storage";
 import { useTemplates } from "./context/templates-context";
+import { useWorkspaceSettings as useWorkspaceSettingsModal } from "./context/workspace-settings-context";
+import { CreateTeamspaceModal } from "./components/create-teamspace-modal";
 import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
+import type { Group, Teamspace } from "src/types";
 
 function User() {
   const { t } = useTranslation();
@@ -325,54 +320,6 @@ function NavItems() {
           {/* {!collapsed && <span className="tiptap-button-text">Search</span>} */}
         </Button>
       </ButtonGroup>
-
-      {/* <ButtonGroup className="sidebar-nav-item" orientation="vertical">
-        <Button
-          variant="ghost"
-          onClick={() => {
-            onTemplatesGalleryOpenChange?.(true);
-          }}
-          style={{
-            fontWeight: 400,
-            color: "var(--tt-text-color)",
-            minHeight: 32,
-            height: 32,
-          }}
-          data-active-state={templatesGalleryOpen ? "on" : "off"}
-        >
-          <LayoutGrid size={32} className="tiptap-button-icon" />
-          <Spacer orientation="horizontal" size={1} />
-          {!collapsed && <span className="tiptap-button-text">Templates</span>}
-        </Button>
-
-        <Button
-          variant="ghost"
-          onClick={handleHomeClick}
-          style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
-        >
-          <Inbox size={32} strokeWidth={1.8} className="tiptap-button-icon" />
-          <Spacer orientation="horizontal" size={1} />
-          {!collapsed && <span className="tiptap-button-text">Inbox</span>}
-        </Button>
-      </ButtonGroup>
-
-    
-      <ButtonGroup className="sidebar-nav-item" orientation="vertical">
-        <Button
-          variant="ghost"
-          onClick={handleHomeClick}
-          style={{
-            fontWeight: 400,
-            color: "var(--tt-text-color)",
-            minHeight: 32,
-            height: 32,
-          }}
-        >
-          <Home size={32} strokeWidth={1.8} className="tiptap-button-icon" />
-          <Spacer orientation="horizontal" size={1} />
-          {!collapsed && <span className="tiptap-button-text">Home</span>}
-        </Button>
-      </ButtonGroup> */}
     </CardItemGroup>
   );
 }
@@ -407,108 +354,20 @@ function ShowcaseSection() {
   );
 }
 
-// ── RecentSection: persisted limit + collapse ────────────────────────────────
-const RECENT_LIMIT_OPTIONS = [5, 10, 20] as const;
-function RecentSection({
-  onMoveUp,
-  onMoveDown,
-}: {
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-}) {
-  const { t } = useTranslation();
-  const { data: recentPages } = useRecentPages();
-  const [limit, setLimit] = useLocalStorage<number | "all">(
-    "folio:recents:limit",
-    10,
-  );
-
-  const { setActiveTab } = useLibrary();
-  if (!recentPages || recentPages.length === 0) return null;
-
-  const handleLibraryClick = () => {
-    setActiveTab("Recents");
-  };
-  const visible = limit === "all" ? recentPages : recentPages.slice(0, limit);
-
-  return (
-    <Section
-      label={t("sidebar.recents")}
-      defaultCollapsed={false}
-      persistKey="folio:recents:collapsed"
-      menuLabel={t("recents.options")}
-      menu={
-        <>
-          <SectionMenuLabel>{t("recents.show")}</SectionMenuLabel>
-          {RECENT_LIMIT_OPTIONS.map((n) => (
-            <SectionMenuItem
-              key={n}
-              label={t("recents.items", { count: n })}
-              selected={limit === n}
-              closeOnClick={false}
-              onClick={() => setLimit(n)}
-            />
-          ))}
-          <SectionMenuItem
-            label={t("recents.allItems")}
-            selected={limit === "all"}
-            closeOnClick={false}
-            onClick={() => setLimit("all")}
-          />
-          <SectionMenuSeparator />
-          <SectionMenuItem
-            icon={<ArrowUp size={14} />}
-            label={t("actions.moveUp")}
-            onClick={onMoveUp}
-            disabled={!onMoveUp}
-          />
-          <SectionMenuItem
-            icon={<ArrowDown size={14} />}
-            label={t("actions.moveDown")}
-            onClick={onMoveDown}
-            disabled={!onMoveDown}
-          />
-        </>
-      }
-      hasLibrary={true}
-      onLibraryClick={handleLibraryClick}
-    >
-      <CardItemGroup style={{ gap: 2.8 }}>
-        {visible.map((page) => (
-          <PageItem key={page.id} page={page} />
-        ))}
-      </CardItemGroup>
-    </Section>
-  );
-}
-
-function Templates({
-  onOpenTemplatesGallery,
-}: {
-  onOpenTemplatesGallery?: () => void;
-}) {
-  const { t } = useTranslation();
-  return (
-    <Button
-      variant="ghost"
-      style={{ width: "100%", justifyContent: "flex-start" }}
-      onClick={onOpenTemplatesGallery}
-    >
-      <LayoutGrid className="tiptap-button-icon" />
-      <span className="tiptap-button-text">{t("sidebar.templates")}</span>
-    </Button>
-  );
-}
-
 // ── main component: lens + tree + mutation hooks ─────────────────────────────
 export function SimpleEditorSidebar() {
   const { t } = useTranslation();
   const { collapsed, sidebarWidth } = useEditorLayout();
   const { tree, data: pages, isPending, isLoading } = usePageTree();
+  // Joined to teamspace-pages by id, only to show a member count in the row.
+  const { data: teamspaces = [] } = useTeamspaces();
+  const { data: groups = [] } = useGroups();
   const patchPage = usePatchPage(({ id, patch }) => updatePage(id, patch));
   const createPage = useCreatePage();
   const { setActivePageId, activePageId } = useActivePage();
-  const { onOpenChange: onTemplatesGalleryOpenChange } = useTemplates();
+  //  const { onOpenChange: onTemplatesGalleryOpenChange } = useTemplates();
+  const { openTo } = useWorkspaceSettingsModal();
+  const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
 
   const onCreatePage = () => {
     const newPage = makePage({
@@ -569,10 +428,10 @@ export function SimpleEditorSidebar() {
               <ShowcaseSection />
               <Spacer orientation="vertical" size={15} />
 
-              {pages.length > 0 && <RecentSection />}
-              <Spacer orientation="vertical" size={10} />
               <SidebarTree
                 tree={tree}
+                teamspaces={teamspaces as Teamspace[]}
+                groups={groups as Group[]}
                 onMovePage={({ pageId, newParentId, category }) => {
                   // optimistic move — patch parentId (+ category on cross-section drop)
                   patchPage.mutate({
@@ -584,6 +443,13 @@ export function SimpleEditorSidebar() {
                   });
                 }}
                 onAddPageToSection={(category) => {
+                  // A teamspace is created through its own modal (it must create
+                  // a page + a Teamspace record sharing one id), not as a plain
+                  // page. Every other section creates a page directly.
+                  if (category === "Teamspaces") {
+                    setCreateTeamspaceOpen(true);
+                    return;
+                  }
                   const p = makePage({
                     title: t("page.newPage"),
                     parentId: null,
@@ -593,13 +459,32 @@ export function SimpleEditorSidebar() {
                     .mutateAsync(p)
                     .then((page) => setActivePageId(page.id));
                 }}
+                onRenameSection={() => {}}
+                onDeleteSection={() => {}}
               />
+
+              <Spacer orientation="vertical" size={8} />
+              <Button
+                variant="ghost"
+                onClick={() => openTo("teamspaces")}
+                aria-label="Open workspace settings"
+                style={{
+                  justifyContent: "flex-start",
+                  width: "100%",
+                  gap: 8,
+                  color: "var(--tt-text-color)",
+                }}
+              >
+                <Settings className="tiptap-button-icon" size={16} />
+                <span className="tiptap-button-text">Workspace settings</span>
+              </Button>
+
               <Spacer orientation="vertical" size={10} />
-              <Templates
+              {/* <Templ
                 onOpenTemplatesGallery={() =>
                   onTemplatesGalleryOpenChange?.(true)
                 }
-              />
+              /> */}
               <Spacer orientation="vertical" size={25} />
             </>
           ))}
@@ -607,6 +492,13 @@ export function SimpleEditorSidebar() {
 
       {/* <Separator orientation="horizontal" style={{ height: 0.5 }} /> */}
       {!collapsed && <WorkSpaceFooter onCreatePage={onCreatePage} />}
+
+      {createTeamspaceOpen && (
+        <CreateTeamspaceModal
+          onClose={() => setCreateTeamspaceOpen(false)}
+          onCreated={(pageId) => setActivePageId(pageId)}
+        />
+      )}
     </Card>
   );
 }

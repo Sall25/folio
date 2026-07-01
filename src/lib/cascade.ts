@@ -1,4 +1,11 @@
-import type { DataSource, Page, Thread, Comment, Version, ID } from "../types";
+import type {
+  DataSource,
+  Page,
+  Thread,
+  Version,
+  Teamspace,
+  ID,
+} from "../types";
 
 // ─── pure piece 1: subtree ──────────────────────────────────────────────────
 export function collectSubtree(pages: Page[], rootId: ID): Set<ID> {
@@ -104,6 +111,22 @@ export function gatherPageDependents(
   return { threadIds, commentIds, versionIds };
 }
 
+// ─── pure piece 5: teamspace records joined to deleted pages by shared id ────
+// A teamspace IS a page (category "Teamspaces") whose Teamspace record shares
+// its id. So once the final page set is known, the teamspace records to delete
+// are simply the records whose id is in that set — a pure intersection, no
+// extra fetch or graph walk needed.
+export function gatherTeamspaceRecords(
+  pageIds: Set<ID>,
+  teamspaces: Teamspace[],
+): Set<ID> {
+  const ids = new Set<ID>();
+  for (const ts of teamspaces) {
+    if (pageIds.has(ts.id)) ids.add(ts.id);
+  }
+  return ids;
+}
+
 // ─── THE COMPOSITION: chain the pieces into one complete plan ────────────────
 export type DeletePlan = {
   pageIds: Set<ID>;
@@ -111,6 +134,7 @@ export type DeletePlan = {
   threadIds: Set<ID>;
   commentIds: Set<ID>;
   versionIds: Set<ID>;
+  teamspaceIds: Set<ID>;
   propsToRemove: Map<ID, Set<ID>>; // sourceId → property ids to strip
 };
 
@@ -119,12 +143,22 @@ export function gatherDeleteCascade(
   data: {
     allPages: Page[];
     allSources: DataSource[];
-    threads: Comment["threadId"] extends never ? never : Thread[]; // (just Thread[])
+    threads: Thread[];
     comments: { id: ID; threadId: ID }[];
     versions: Version[];
+    // Optional so existing callers that don't pass it still compile — teamspace
+    // sweep just yields an empty set when omitted.
+    teamspaces?: Teamspace[];
   },
 ): DeletePlan {
-  const { allPages, allSources, threads, comments, versions } = data;
+  const {
+    allPages,
+    allSources,
+    threads,
+    comments,
+    versions,
+    teamspaces = [],
+  } = data;
 
   // 1. start with the seeded sources, plus expand seeded page roots into subtrees
   const sourceIds = new Set<ID>(seed.sourceRoots);
@@ -159,12 +193,16 @@ export function gatherDeleteCascade(
     versions,
   );
 
+  // 6. teamspace records joined to any deleted page by shared id
+  const teamspaceIds = gatherTeamspaceRecords(pageIds, teamspaces);
+
   return {
     pageIds,
     sourceIds,
     threadIds,
     commentIds,
     versionIds,
+    teamspaceIds,
     propsToRemove,
   };
 }
