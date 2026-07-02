@@ -7,15 +7,16 @@ import {
   Sparkles,
   PanelLeft,
   PanelRight,
-  SquarePen,
+  //  SquarePen,
   //  LayoutTemplate,
   Settings,
+  LayoutTemplate,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
   CardBody,
-  CardFooter,
+  //CardFooter,
   CardHeader,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
@@ -41,17 +42,23 @@ import { Section } from "./components/section";
 import { ScrollFog } from "src/components/tiptap-ui-primitive/scroll-frog";
 import { useWorkspaceSettings as useWorkspaceSettingsModal } from "./context/workspace-settings-context";
 import { CreateTeamspaceModal } from "./components/create-teamspace-modal";
-import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
 import type { Group, Teamspace } from "src/types";
+import { useCurrentPerson } from "src/hooks/use-session";
+import { useTemplates } from "./context/templates-context";
+import { SidebarResizeHandle } from "./components/sidebar-resize-handle";
 
 function User() {
   const { t } = useTranslation();
   const { collapsed, onCollapsedChange } = useEditorLayout();
+  const { person } = useCurrentPerson();
 
   const onToggle = useCallback(
     () => onCollapsedChange(!collapsed),
     [onCollapsedChange, collapsed],
   );
+
+  const name = person?.name ?? "";
+  const initial = name ? name.charAt(0).toUpperCase() : "?";
 
   return (
     <ButtonGroup
@@ -71,7 +78,7 @@ function User() {
         className="name-initial"
         data-highlighted={true}
       >
-        <span className="tiptap-button-icon">S</span>
+        <span className="tiptap-button-icon">{initial}</span>
       </Button>
       <Spacer orientation="horizontal" size={5} />
       <span
@@ -83,7 +90,7 @@ function User() {
             'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif',
         }}
       >
-        {t("sidebar.personalSpace", { name: "Souleymane Sall" })}
+        {t("sidebar.personalSpace", { name })}
       </span>
       <Spacer orientation="horizontal" />
 
@@ -144,76 +151,74 @@ function WorkspaceHeader() {
   );
 }
 
-function WorkSpaceFooter({ onCreatePage }: { onCreatePage?: () => void }) {
-  const { t } = useTranslation();
+// function WorkSpaceFooter({ onCreatePage }: { onCreatePage?: () => void }) {
+//   const { t } = useTranslation();
 
-  return (
-    <CardFooter
-      style={{
-        position: "sticky",
-        bottom: 0,
-        zIndex: 5,
-        minHeight: 50,
-        display: "flex",
-        justifyContent: "flex-start",
-        alignItems: "center",
-        width: "100%",
-        padding: "0 15px",
-        borderTop: "0.5px solid var(--tt-border-color)",
-        // translucent sidebar bg + blur = the frost. Opaque bg kills the effect.
-        background:
-          "color-mix(in srgb, var(--sidebar-bg-color) 70%, transparent)",
-        backdropFilter: "blur(12px) saturate(1.4)",
-        WebkitBackdropFilter: "blur(12px) saturate(1.4)",
-      }}
-    >
-      {/* the fog: fades scrolling list into the sidebar bg, just above the bar */}
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: "100%",
-          height: 36,
-          pointerEvents: "none",
-          background:
-            "linear-gradient(to top, var(--sidebar-bg-color), transparent)",
-        }}
-      />
+//   return (
+//     <CardFooter
+//       style={{
+//         position: "sticky",
+//         bottom: 0,
+//         zIndex: 5,
+//         minHeight: 50,
+//         display: "flex",
+//         justifyContent: "flex-start",
+//         alignItems: "center",
+//         width: "100%",
+//         padding: "0 15px",
+//         borderTop: "0.5px solid var(--tt-border-color)",
+//         // translucent sidebar bg + blur = the frost. Opaque bg kills the effect.
+//         background:
+//           "color-mix(in srgb, var(--sidebar-bg-color) 70%, transparent)",
+//         backdropFilter: "blur(12px) saturate(1.4)",
+//         WebkitBackdropFilter: "blur(12px) saturate(1.4)",
+//       }}
+//     >
+//       {/* the fog: fades scrolling list into the sidebar bg, just above the bar */}
+//       <div
+//         aria-hidden
+//         style={{
+//           position: "absolute",
+//           left: 0,
+//           right: 0,
+//           bottom: "100%",
+//           height: 36,
+//           pointerEvents: "none",
+//           background:
+//             "linear-gradient(to top, var(--sidebar-bg-color), transparent)",
+//         }}
+//       />
 
-      <CardItemGroup
-        orientation="horizontal"
-        style={{
-          width: "100%",
-          justifyContent: "center",
-          alignItems: "center",
-          marginBottom: 5,
-          gap: 10,
-        }}
-      >
-        <Button
-          aria-label={t("actions.createPage")}
-          // variant="ghost"
-          onClick={onCreatePage}
-          style={{
-            minHeight: 40,
-            height: 50,
-            padding: "10px 20px",
-            // padding: "20px 20.5px",
-            borderRadius: "100px",
-            border: "1px solid var(--tt-border-color)",
-            width: "20%",
-          }}
-        >
-          <SquarePen className="tiptap-button-icon" />
-          {/* <span className="tiptap-button-text">{t("actions.createPage")}</span>
-          <ShortcutBadge shortcutKeys="Ctrl+O" /> */}
-        </Button>
-      </CardItemGroup>
-    </CardFooter>
-  );
-}
+//       <CardItemGroup
+//         orientation="horizontal"
+//         style={{
+//           width: "100%",
+//           justifyContent: "center",
+//           alignItems: "center",
+//           marginBottom: 5,
+//           gap: 10,
+//         }}
+//       >
+//         <Button
+//           aria-label={t("actions.createPage")}
+//           // variant="ghost"
+//           onClick={onCreatePage}
+//           style={{
+//             minHeight: 40,
+//             height: 50,
+//             padding: "10px 20px",
+//             // padding: "20px 20.5px",
+//             borderRadius: "100px",
+//             border: "1px solid var(--tt-border-color)",
+//             width: "20%",
+//           }}
+//         >
+//           <SquarePen className="tiptap-button-icon" />
+//         </Button>
+//       </CardItemGroup>
+//     </CardFooter>
+//   );
+// }
 
 function NavItems() {
   const { t } = useTranslation();
@@ -353,38 +358,70 @@ function ShowcaseSection() {
   );
 }
 
+function TemplatesModalTrigger() {
+  const { onOpenChange } = useTemplates();
+  const { t } = useTranslation();
+  return (
+    <Button
+      variant="ghost"
+      onClick={() => onOpenChange?.(true)}
+      style={{ width: "100%", justifyContent: "flex-start" }}
+    >
+      <LayoutTemplate className="tiptap-button-icon" />
+      <span className="tiptap-button-text">{t("templates.browse")}</span>
+    </Button>
+  );
+}
+
+function LibraryPaletteTrigger() {
+  const navigate = useNavigate();
+  const handleLibraryClick = () => {
+    navigate({ to: "/library/Recents" });
+  };
+
+  return (
+    <Button
+      onClick={handleLibraryClick}
+      variant="ghost"
+      style={{ width: "100%", justifyContent: "flex-start" }}
+    >
+      <LibraryBig className="tiptap-button-icon" />
+      <span>Library</span>
+    </Button>
+  );
+}
 // ── main component: lens + tree + mutation hooks ─────────────────────────────
 export function SimpleEditorSidebar() {
   const { t } = useTranslation();
-  const { collapsed, sidebarWidth } = useEditorLayout();
+  const { collapsed, sidebarWidth, isResizingSidebar } = useEditorLayout();
   const { tree, data: pages, isPending, isLoading } = usePageTree();
   // Joined to teamspace-pages by id, only to show a member count in the row.
   const { data: teamspaces = [] } = useTeamspaces();
   const { data: groups = [] } = useGroups();
   const patchPage = usePatchPage(({ id, patch }) => updatePage(id, patch));
   const createPage = useCreatePage();
-  const { setActivePageId, activePageId } = useActivePage();
+  const { setActivePageId /*, activePageId*/ } = useActivePage();
   //  const { onOpenChange: onTemplatesGalleryOpenChange } = useTemplates();
   const { openTo } = useWorkspaceSettingsModal();
   const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
 
-  const onCreatePage = () => {
-    const newPage = makePage({
-      title: t("page.newPage"),
-      parentId: null,
-      category: "Private",
-    });
+  // const onCreatePage = () => {
+  //   const newPage = makePage({
+  //     title: t("page.newPage"),
+  //     parentId: null,
+  //     category: "Private",
+  //   });
 
-    createPage
-      .mutateAsync(newPage)
-      .then((newPage) => setActivePageId(newPage.id))
-      .catch(() => {
-        if (activePageId) {
-          setActivePageId(activePageId);
-        }
-        console.log("failed to create new page");
-      });
-  };
+  //   createPage
+  //     .mutateAsync(newPage)
+  //     .then((newPage) => setActivePageId(newPage.id))
+  //     .catch(() => {
+  //       if (activePageId) {
+  //         setActivePageId(activePageId);
+  //       }
+  //       console.log("failed to create new page");
+  //     });
+  // };
 
   if (isPending || !pages) return null;
 
@@ -399,7 +436,8 @@ export function SimpleEditorSidebar() {
         width: sidebarWidth,
         // boxShadow: "none",
         //width: collapsed ? 52 : 290,
-        transition: "width 0.2s ease",
+        ["--sidebar-width" as string]: `${sidebarWidth}px`,
+        transition: isResizingSidebar ? "none" : "width 0.2s ease",
         height: "100vh",
         overflow: "hidden",
         display: "flex",
@@ -414,7 +452,7 @@ export function SimpleEditorSidebar() {
         </CardItemGroup>
       </CardHeader>
 
-      <CardBody style={{ width: "100%", padding: "0 12px" }}>
+      <CardBody style={{ width: "100%", padding: "0 8px" }}>
         {/* <Spacer orientation="vertical" size={20} /> */}
         {!collapsed &&
           (isPending || isLoading || !pages ? (
@@ -462,7 +500,7 @@ export function SimpleEditorSidebar() {
                 onDeleteSection={() => {}}
               />
 
-              <Spacer orientation="vertical" size={8} />
+              <Spacer orientation="vertical" size={12} />
               <Button
                 variant="ghost"
                 onClick={() => openTo("teamspaces")}
@@ -477,20 +515,17 @@ export function SimpleEditorSidebar() {
                 <Settings className="tiptap-button-icon" size={16} />
                 <span className="tiptap-button-text">Workspace settings</span>
               </Button>
-
-              <Spacer orientation="vertical" size={10} />
-              {/* <Templ
-                onOpenTemplatesGallery={() =>
-                  onTemplatesGalleryOpenChange?.(true)
-                }
-              /> */}
+              <Spacer orientation="vertical" size={4} />
+              <TemplatesModalTrigger />
+              <Spacer orientation="vertical" size={4} />
+              <LibraryPaletteTrigger />
               <Spacer orientation="vertical" size={25} />
             </>
           ))}
       </CardBody>
 
       {/* <Separator orientation="horizontal" style={{ height: 0.5 }} /> */}
-      {!collapsed && <WorkSpaceFooter onCreatePage={onCreatePage} />}
+      {/* {!collapsed && <WorkSpaceFooter onCreatePage={onCreatePage} />} */}
 
       {createTeamspaceOpen && (
         <CreateTeamspaceModal
@@ -498,6 +533,7 @@ export function SimpleEditorSidebar() {
           onCreated={(pageId) => setActivePageId(pageId)}
         />
       )}
+      <SidebarResizeHandle />
     </Card>
   );
 }

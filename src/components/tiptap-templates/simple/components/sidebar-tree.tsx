@@ -5,17 +5,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  EyeOff,
-  Lock,
-  Star,
-  Users,
-  UsersRound,
-  FileText,
-} from "lucide-react";
+import { Plus, Pencil, Trash2, EyeOff } from "lucide-react";
 import {
   DndContext,
   PointerSensor,
@@ -236,61 +226,23 @@ function TreeRow({
   );
 }
 
-const EMPTY_META: Record<
-  string,
-  { Icon: typeof FileText; title: string; hint: string }
-> = {
-  Private: {
-    Icon: Lock,
-    title: "No private pages yet",
-    hint: "Pages only you can see live here.",
-  },
-  Favorites: {
-    Icon: Star,
-    title: "No favorites yet",
-    hint: "Star a page to keep it handy.",
-  },
-  Shared: {
-    Icon: Users,
-    title: "Nothing shared yet",
-    hint: "Pages shared with you appear here.",
-  },
-  Teamspaces: {
-    Icon: UsersRound,
-    title: "No teamspaces yet",
-    hint: "Collaborate with your team here.",
-  },
-};
-
-function SectionEmpty({
+// ── SectionAddPageButton: persistent "+ Add page" affordance ────────────────
+// Always rendered beneath a section's page list, empty or not.
+function SectionAddPageButton({
   category,
   onAddPage,
 }: {
   category: PageCategory;
   onAddPage?: (c: PageCategory) => void;
 }) {
-  const meta = EMPTY_META[category] ?? {
-    Icon: FileText,
-    title: "No pages yet",
-    hint: "Add a page to get started.",
-  };
-  const { Icon } = meta;
   return (
     <button
-      className="sidebar-section__empty"
+      className="sidebar-section__add-page"
       onClick={() => onAddPage?.(category)}
       type="button"
     >
-      <span className="sidebar-section__empty-icon">
-        <Icon size={20} />
-      </span>
-      <span className="sidebar-section__empty-text">
-        <span className="sidebar-section__empty-title">{meta.title}</span>
-        <span className="sidebar-section__empty-hint">{meta.hint}</span>
-      </span>
-      <span className="sidebar-section__empty-add">
-        <Plus size={14} />
-      </span>
+      <Plus size={14} />
+      <span>Add page</span>
     </button>
   );
 }
@@ -424,9 +376,7 @@ function TreeSection({
           subtitleByPageId={subtitleByPageId}
         />
       ))}
-      {topLevel.length === 0 && (
-        <SectionEmpty category={category} onAddPage={onAddPage} />
-      )}
+      <SectionAddPageButton category={category} onAddPage={onAddPage} />
     </Section>
   );
 }

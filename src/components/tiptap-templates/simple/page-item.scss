@@ -24,7 +24,7 @@
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 2.5px 15px;
+  padding: 2.5px 5px;
   opacity:1;
   font-weight: 500;
   overflow: hidden;
@@ -72,6 +72,13 @@
     opacity: 1;
     pointer-events: auto;
   }
+
+  &:hover{
+    .page-item-title{
+      // was 130px at the fixed 290px sidebar → same 160px offset, now live
+      max-width: calc(var(--sidebar-width, 290px) - 160px);
+    }
+  }
 }
 
 .page-item-title {
@@ -82,7 +89,8 @@
   
   // color: inherit;
   opacity: 1;
-  max-width: 160px;
+  // was 175px at the fixed 290px sidebar → same 115px offset, now live
+  max-width: calc(var(--sidebar-width, 290px) - 115px);
   flex: 1;           
   min-width: 0;     
   overflow: hidden;

@@ -1,0 +1,32 @@
+// Right-edge grab strip. 8px hit area, 2px visible line that fades in on
+// hover and stays lit while dragging.
+.sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -4px; // straddle the edge: half inside, half outside
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  touch-action: none; // required for pointer-capture drags on touch devices
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 3px;
+    width: 2px;
+    height: 100%;
+    background: var(--tt-brand-color-400);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  &:hover::after {
+    opacity: 0.6;
+  }
+
+  &--active::after {
+    opacity: 1;
+  }
+}

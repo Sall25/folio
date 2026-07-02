@@ -14,6 +14,9 @@ interface EditorLayoutContextValue {
   editorLeft: number;
   paddingLeft: number;
   translateX: number;
+  isResizingSidebar: boolean;
+  setSidebarWidth: (w: number) => void;
+  onSidebarResizingChange: (resizing: boolean) => void;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
