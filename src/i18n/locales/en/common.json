@@ -21,7 +21,7 @@
   "activity": "Activity",
   "creadtedBy": "Created by",
   "editedBy": "Edited by",
-  "edited": "Modifié",
+  "edited": "Edited",
   "home": {
     "recentlyVisited": "Recently visited",
     "earlier": "Earlier",
@@ -36,6 +36,7 @@
       "daysAgo": "{{count}}d ago"
     }
   },
+  
   "sidebar": {
     "home": "Home",
     "search": "Search",
@@ -149,13 +150,101 @@
     "daysAgo_one": "{{count}} day ago",
     "daysAgo_other": "{{count}} days ago"
   },
+  "people": {
+    "inviteLink": "Invite link",
+    "inviteLinkDesc": "Enable a secret link for Workspace Owners and Membership Admins to invite new members.",
+    "copyLink": "Copy link",
+    "generateNewLink": "You can also generate a new link",
+    "searchPlaceholder": "Type to search...",
+    "searchPeoplePlaceholder": "Search people…",
+    "addMembers": "Add members",
+    "noPeople": "No people",
+    "noMembersYet": "No members yet",
+    "none": "None",
+    "newGroup": "New group",
+    "createGroup": "Create a group",
+    "createTeamspaceFromGroup": "Create teamspace from group",
+    "newTeamspace": "New teamspace",
+    "removePerson": "Remove {{name}}",
+    "memberCount_one": "{{count}} member",
+    "memberCount_other": "{{count}} members",
+    "tabs": {
+      "members": "Members",
+      "guests": "Guests",
+      "groups": "Groups"
+    },
+    "columns": {
+      "group": "Group",
+      "teamspaces": "Teamspaces",
+      "members": "Members"
+    },
+    "roles": {
+      "owner": "Owner",
+      "member": "Member",
+      "guest": "Guest"
+    }
+  },
+  "teamspaces": {
+    "searchPlaceholder": "Search teamspaces...",
+    "createTeamspace": "Create teamspace",
+    "empty": "No teamspaces yet",
+    "untitled": "Untitled",
+    "members": "Members",
+    "groups": "Groups",
+    "noDirectMembers": "No direct members",
+    "noAttachedGroups": "No attached groups",
+    "addMembers": "Add members",
+    "attachGroup": "Attach group",
+    "noPeople": "No people",
+    "noGroups": "No groups",
+    "searchPeoplePlaceholder": "Search people…",
+    "searchGroupsPlaceholder": "Search groups…",
+    "removePerson": "Remove {{name}}",
+    "detachGroup": "Detach {{name}}",
+    "memberCount_one": "{{count}} member",
+    "memberCount_other": "{{count}} members",
+    "access": {
+      "open": "Open",
+      "closed": "Closed",
+      "private": "Private"
+    },
+    "columns": {
+      "teamspace": "Teamspace",
+      "access": "Access",
+      "members": "Members"
+    }
+  },
   "settings": {
     "title": "Settings",
     "appearance": "Appearance",
     "language": "Language",
     "languageDescription": "Choose the language for Folio's interface.",
     "people": "People",
-    "teamspaces": "Teamspaces"
+    "teamspaces": "Teamspaces",
+    "notBuilt": "This section isn’t built yet.",
+    "modalAria": "Workspace settings",
+    "closeAria": "Close",
+    "getUnlimitedAi": "Get unlimited AI",
+    "nav": {
+      "account": "Account",
+      "workspace": "Workspace"
+    },
+    "items": {
+      "myAccount": "My account",
+      "mySettings": "My settings",
+      "myNotifications": "My notifications",
+      "myConnections": "My connections",
+      "language": "Language & region",
+      "settings": "Settings",
+      "teamspaces": "Teamspaces",
+      "people": "People",
+      "sites": "Sites",
+      "security": "Security",
+      "identity": "Identity & provisioning",
+      "connections": "Connections",
+      "import": "Import",
+      "billing": "Billing"
+    }
   },
   "greeting": {
     "morning": "Good morning",
@@ -171,7 +260,9 @@
   },
   "language": {
     "en": "English",
-    "fr": "Français"
+    "fr": "Français",
+    "title": "Language",
+    "description": "Change the language used across the interface."
   },
    "colors": {
     "label": "Colors",

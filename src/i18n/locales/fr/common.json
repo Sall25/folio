@@ -136,13 +136,101 @@
     "openTemplate": "Ouvrir le modèle",
     "hoverHint": "Survolez un modèle pour voir les détails."
   },
+  "people": {
+    "inviteLink": "Lien d’invitation",
+    "inviteLinkDesc": "Activez un lien secret permettant aux propriétaires de l’espace de travail et aux administrateurs des membres d’inviter de nouveaux membres.",
+    "copyLink": "Copier le lien",
+    "generateNewLink": "Vous pouvez aussi générer un nouveau lien",
+    "searchPlaceholder": "Saisissez pour rechercher...",
+    "searchPeoplePlaceholder": "Rechercher des personnes…",
+    "addMembers": "Ajouter des membres",
+    "noPeople": "Aucune personne",
+    "noMembersYet": "Aucun membre pour l’instant",
+    "none": "Aucun",
+    "newGroup": "Nouveau groupe",
+    "createGroup": "Créer un groupe",
+    "createTeamspaceFromGroup": "Créer un espace d’équipe à partir du groupe",
+    "newTeamspace": "Nouvel espace d’équipe",
+    "removePerson": "Retirer {{name}}",
+    "memberCount_one": "{{count}} membre",
+    "memberCount_other": "{{count}} membres",
+    "tabs": {
+      "members": "Membres",
+      "guests": "Invités",
+      "groups": "Groupes"
+    },
+    "columns": {
+      "group": "Groupe",
+      "teamspaces": "Espaces d’équipe",
+      "members": "Membres"
+    },
+    "roles": {
+      "owner": "Propriétaire",
+      "member": "Membre",
+      "guest": "Invité"
+    }
+  },
+  "teamspaces": {
+    "searchPlaceholder": "Rechercher des espaces d’équipe...",
+    "createTeamspace": "Créer un espace d’équipe",
+    "empty": "Aucun espace d’équipe pour l’instant",
+    "untitled": "Sans titre",
+    "members": "Membres",
+    "groups": "Groupes",
+    "noDirectMembers": "Aucun membre direct",
+    "noAttachedGroups": "Aucun groupe rattaché",
+    "addMembers": "Ajouter des membres",
+    "attachGroup": "Rattacher un groupe",
+    "noPeople": "Aucune personne",
+    "noGroups": "Aucun groupe",
+    "searchPeoplePlaceholder": "Rechercher des personnes…",
+    "searchGroupsPlaceholder": "Rechercher des groupes…",
+    "removePerson": "Retirer {{name}}",
+    "detachGroup": "Détacher {{name}}",
+    "memberCount_one": "{{count}} membre",
+    "memberCount_other": "{{count}} membres",
+    "access": {
+      "open": "Ouvert",
+      "closed": "Fermé",
+      "private": "Privé"
+    },
+    "columns": {
+      "teamspace": "Espace d’équipe",
+      "access": "Accès",
+      "members": "Membres"
+    }
+  },
   "settings": {
     "title": "Paramètres",
     "appearance": "Apparence",
     "language": "Langue",
     "languageDescription": "Choisissez la langue de l'interface de Folio.",
     "people": "Personnes",
-    "teamspaces": "Espaces d'équipe"
+    "teamspaces": "Espaces d'équipe",
+    "notBuilt": "Cette section n’est pas encore disponible.",
+    "modalAria": "Paramètres de l’espace de travail",
+    "closeAria": "Fermer",
+    "getUnlimitedAi": "Passer à l’IA illimitée",
+    "nav": {
+      "account": "Compte",
+      "workspace": "Espace de travail"
+    },
+    "items": {
+      "myAccount": "Mon compte",
+      "mySettings": "Mes paramètres",
+      "myNotifications": "Mes notifications",
+      "myConnections": "Mes connexions",
+      "language": "Langue et région",
+      "settings": "Paramètres",
+      "teamspaces": "Espaces d’équipe",
+      "people": "Membres",
+      "sites": "Sites",
+      "security": "Sécurité",
+      "identity": "Identité et provisionnement",
+      "connections": "Connexions",
+      "import": "Importer",
+      "billing": "Facturation"
+    }
   },
    "home": {
     "recentlyVisited": "Récemment consultés",
@@ -170,10 +258,13 @@
     "dark": "Sombre",
     "system": "Système"
   },
-  "language": {
+ "language": {
+    "title": "Langue",
+    "description": "Changez la langue utilisée dans toute l'interface.",
     "en": "English",
     "fr": "Français"
   },
+
   "colors": {
     "label": "Couleurs",
     "recent": "Couleurs récentes",

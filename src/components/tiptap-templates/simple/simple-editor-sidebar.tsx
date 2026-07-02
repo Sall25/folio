@@ -39,7 +39,6 @@ import { SidebarBodySkeleton } from "./components/skeletons";
 import { useActivePage } from "./context/active-page-context";
 import { Section } from "./components/section";
 import { ScrollFog } from "src/components/tiptap-ui-primitive/scroll-frog";
-import { useTemplates } from "./context/templates-context";
 import { useWorkspaceSettings as useWorkspaceSettingsModal } from "./context/workspace-settings-context";
 import { CreateTeamspaceModal } from "./components/create-teamspace-modal";
 import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
@@ -187,7 +186,7 @@ function WorkSpaceFooter({ onCreatePage }: { onCreatePage?: () => void }) {
         orientation="horizontal"
         style={{
           width: "100%",
-          justifyContent: "flex-start",
+          justifyContent: "center",
           alignItems: "center",
           marginBottom: 5,
           gap: 10,
@@ -195,21 +194,21 @@ function WorkSpaceFooter({ onCreatePage }: { onCreatePage?: () => void }) {
       >
         <Button
           aria-label={t("actions.createPage")}
-          variant="ghost"
+          // variant="ghost"
           onClick={onCreatePage}
           style={{
             minHeight: 40,
-            height: 40,
+            height: 50,
             padding: "10px 20px",
             // padding: "20px 20.5px",
             borderRadius: "100px",
             border: "1px solid var(--tt-border-color)",
-            width: "100%",
+            width: "20%",
           }}
         >
           <SquarePen className="tiptap-button-icon" />
-          <span className="tiptap-button-text">{t("actions.createPage")}</span>
-          <ShortcutBadge shortcutKeys="Ctrl+O" />
+          {/* <span className="tiptap-button-text">{t("actions.createPage")}</span>
+          <ShortcutBadge shortcutKeys="Ctrl+O" /> */}
         </Button>
       </CardItemGroup>
     </CardFooter>

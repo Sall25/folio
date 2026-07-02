@@ -3,9 +3,12 @@ import type { Page } from "../types";
 import { createPage } from "../api/pages";
 import { queryKeys } from "../lib/queryKeys";
 
+export const createPageMutationKey = ["pages", "create"] as const;
+
 export function useCreatePage() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: createPageMutationKey,
     mutationFn: (page: Page) => {
       return createPage(page);
     },

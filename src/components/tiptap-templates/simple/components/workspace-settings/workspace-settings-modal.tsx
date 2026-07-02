@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Bell,
   CreditCard,
@@ -22,63 +23,105 @@ import "./workspace-settings-modal.scss";
 
 export interface SettingsNavItem {
   id: string;
-  label: string;
+  /** i18n key — resolved with t() at render, not a literal label. */
+  labelKey: string;
   icon: ReactNode;
 }
 
 export interface SettingsNavSection {
-  /** undefined = no section label (e.g. the account block) */
-  label?: string;
+  /** i18n key for the section heading; undefined = no label (e.g. account block) */
+  labelKey?: string;
   items: SettingsNavItem[];
 }
 
+// Static data (module-level) holds KEYS, not labels — t() can't run here.
 const NAV: SettingsNavSection[] = [
   {
-    label: "Account",
+    labelKey: "settings.nav.account",
     items: [
-      { id: "my-account", label: "My account", icon: <UserCircle size={16} /> },
+      {
+        id: "my-account",
+        labelKey: "settings.items.myAccount",
+        icon: <UserCircle size={16} />,
+      },
       {
         id: "my-settings",
-        label: "My settings",
+        labelKey: "settings.items.mySettings",
         icon: <Settings2 size={16} />,
       },
       {
         id: "my-notifications",
-        label: "My notifications",
+        labelKey: "settings.items.myNotifications",
         icon: <Bell size={16} />,
       },
       {
         id: "my-connections",
-        label: "My connections",
+        labelKey: "settings.items.myConnections",
         icon: <Link2 size={16} />,
       },
-      { id: "language", label: "Language & region", icon: <Globe size={16} /> },
+      {
+        id: "language",
+        labelKey: "settings.items.language",
+        icon: <Globe size={16} />,
+      },
     ],
   },
   {
-    label: "Workspace",
+    labelKey: "settings.nav.workspace",
     items: [
-      { id: "settings", label: "Settings", icon: <Settings size={16} /> },
-      { id: "teamspaces", label: "Teamspaces", icon: <LayoutGrid size={16} /> },
-      { id: "people", label: "People", icon: <Users size={16} /> },
-      { id: "sites", label: "Sites", icon: <Monitor size={16} /> },
-      { id: "security", label: "Security", icon: <Shield size={16} /> },
+      {
+        id: "settings",
+        labelKey: "settings.items.settings",
+        icon: <Settings size={16} />,
+      },
+      {
+        id: "teamspaces",
+        labelKey: "settings.items.teamspaces",
+        icon: <LayoutGrid size={16} />,
+      },
+      {
+        id: "people",
+        labelKey: "settings.items.people",
+        icon: <Users size={16} />,
+      },
+      {
+        id: "sites",
+        labelKey: "settings.items.sites",
+        icon: <Monitor size={16} />,
+      },
+      {
+        id: "security",
+        labelKey: "settings.items.security",
+        icon: <Shield size={16} />,
+      },
       {
         id: "identity",
-        label: "Identity & provisioning",
+        labelKey: "settings.items.identity",
         icon: <Fingerprint size={16} />,
       },
-      { id: "connections", label: "Connections", icon: <Link2 size={16} /> },
-      { id: "import", label: "Import", icon: <Download size={16} /> },
-      { id: "billing", label: "Billing", icon: <CreditCard size={16} /> },
+      {
+        id: "connections",
+        labelKey: "settings.items.connections",
+        icon: <Link2 size={16} />,
+      },
+      {
+        id: "import",
+        labelKey: "settings.items.import",
+        icon: <Download size={16} />,
+      },
+      {
+        id: "billing",
+        labelKey: "settings.items.billing",
+        icon: <CreditCard size={16} />,
+      },
     ],
   },
 ];
 
-function findLabel(id: string): string {
+function findLabelKey(id: string): string {
   for (const s of NAV) {
     const it = s.items.find((i) => i.id === id);
-    if (it) return it.label;
+    if (it) return it.labelKey;
   }
   return "";
 }
@@ -109,6 +152,7 @@ export function WorkspaceSettingsModal({
   children,
   account = { name: "Workspace", email: "" },
 }: WorkspaceSettingsModalProps) {
+  const { t } = useTranslation();
   const [internalActive, setInternalActive] = useState("people");
   const active = activeId ?? internalActive;
 
@@ -130,6 +174,7 @@ export function WorkspaceSettingsModal({
   if (!open) return null;
 
   const initial = (account.name || "?").trim().charAt(0).toUpperCase();
+  const activeLabelKey = findLabelKey(active);
 
   return (
     <>
@@ -139,7 +184,7 @@ export function WorkspaceSettingsModal({
         className="ws-settings"
         role="dialog"
         aria-modal="true"
-        aria-label="Workspace settings"
+        aria-label={t("settings.modalAria")}
       >
         {/* ── Left nav ──────────────────────────────────────────────── */}
         <aside className="ws-settings__nav">
@@ -170,11 +215,11 @@ export function WorkspaceSettingsModal({
             {NAV.map((section, i) => (
               <div
                 className="ws-settings__nav-section"
-                key={section.label ?? i}
+                key={section.labelKey ?? i}
               >
-                {section.label && (
+                {section.labelKey && (
                   <span className="ws-settings__nav-label">
-                    {section.label}
+                    {t(section.labelKey)}
                   </span>
                 )}
                 {section.items.map((item) => (
@@ -185,7 +230,9 @@ export function WorkspaceSettingsModal({
                     onClick={() => select(item.id)}
                   >
                     <span className="ws-nav-item__icon">{item.icon}</span>
-                    <span className="ws-nav-item__label">{item.label}</span>
+                    <span className="ws-nav-item__label">
+                      {t(item.labelKey)}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -199,7 +246,9 @@ export function WorkspaceSettingsModal({
               style={{ justifyContent: "flex-start", width: "100%", gap: 8 }}
             >
               <Sparkles className="tiptap-button-icon" size={16} />
-              <span className="tiptap-button-text">Get unlimited AI</span>
+              <span className="tiptap-button-text">
+                {t("settings.getUnlimitedAi")}
+              </span>
             </Button>
           </div>
         </aside>
@@ -207,7 +256,9 @@ export function WorkspaceSettingsModal({
         {/* ── Content pane ──────────────────────────────────────────── */}
         <section className="ws-settings__content">
           <header className="ws-settings__header">
-            <h1 className="ws-settings__title">{title ?? findLabel(active)}</h1>
+            <h1 className="ws-settings__title">
+              {title ?? (activeLabelKey ? t(activeLabelKey) : "")}
+            </h1>
             <div className="ws-settings__header-action">{headerAction}</div>
           </header>
 
@@ -217,7 +268,7 @@ export function WorkspaceSettingsModal({
         <button
           type="button"
           className="ws-settings__close"
-          aria-label="Close"
+          aria-label={t("settings.closeAria")}
           onClick={onClose}
         >
           <X size={18} />

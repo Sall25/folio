@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 //import { useNavigate } from "@tanstack/react-location";
+import { useIsMutating } from "@tanstack/react-query";
 
 // --- Providers ---
 import { ToastProvider } from "src/components/tiptap-ui/copy-toast";
@@ -11,6 +12,7 @@ import { TocProvider } from "src/components/tiptap-node/toc-node/toc-provider";
 // --- Hooks ---
 import { useIsBreakpoint } from "src/hooks/use-is-breakpoint";
 import { useWindowSize } from "src/hooks/use-window-size";
+import { createPageMutationKey } from "src/hooks/use-create-page";
 
 // --- Local ---
 import { SimpleEditorToolbar, type MobileView } from "./simple-editor-toolbar";
@@ -159,6 +161,13 @@ function SimpleEditorInner({ view }: { view: View }) {
   const { height } = useWindowSize();
   const { isLoading } = useActivePage();
 
+  // A page create is in flight (sidebar "+", or "add page to section").
+  // Covers the window where activePageId hasn't moved yet (setActivePageId
+  // only fires in .then()) as well as the moment right after it moves but
+  // usePage(newId) hasn't resolved.
+  const isCreatingPage =
+    useIsMutating({ mutationKey: createPageMutationKey }) > 0;
+
   // `activePage` is assumed to be exposed by useActivePage (the same active
   // page that feeds SimpleEditorContentProps). If it actually comes from a
   // route param or a different field, point `activePageId` below at that.
@@ -187,7 +196,7 @@ function SimpleEditorInner({ view }: { view: View }) {
             onTriggerVersionHistory={() => onVersionHistoryOpenChanged(true)}
           />
           <SimpleEditorMain view={view} />
-          {isLoading && (
+          {(isLoading || isCreatingPage) && (
             <div className="editor-skeleton-overlay">
               <EditorContentSkeleton />
             </div>

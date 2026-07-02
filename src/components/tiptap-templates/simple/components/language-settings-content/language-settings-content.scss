@@ -1,0 +1,95 @@
+
+.language-settings {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.ls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 12px 0;
+}
+
+.ls-row__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ls-row__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tt-text-primary);
+}
+
+.ls-row__desc {
+  margin-top: 2px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
+}
+
+// ── select trigger ──────────────────────────────────────────────────────────
+.ls-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-width: 150px;
+  padding: 7px 10px;
+  background: var(--tt-card-bg-color);
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 3%, transparent);
+  }
+}
+
+.ls-select__value {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  font-size: 13.5px;
+  color: var(--tt-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ls-select__chevron {
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+}
+
+// ── options ─────────────────────────────────────────────────────────────────
+.ls-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 7px 9px;
+  border-radius: var(--tt-radius-sm);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+  }
+
+  &.is-active {
+    background: color-mix(in srgb, var(--tt-brand-color-400) 12%, transparent);
+  }
+}
+
+.ls-option__label {
+  font-size: 13.5px;
+  color: var(--tt-text-primary);
+}

@@ -21,7 +21,6 @@ import { Breadcrumbs } from "./breadcrumbs";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import EditedTimeButton from "./components/edited-time-button/edited-time-button";
-import { LanguageSetting } from "src/components/tiptap-ui/language-settings";
 import { useTranslation } from "react-i18next";
 
 // ============================================================
@@ -109,7 +108,7 @@ export const MainToolbarContent = ({
             <Separator orientation="vertical" />
           </>
         )}
-        <LanguageSetting />
+
         <ThemeToggle />
         <NotificationBell />
         <MorePopover onTriggerVersionHistory={onTriggerVersionHistory} />

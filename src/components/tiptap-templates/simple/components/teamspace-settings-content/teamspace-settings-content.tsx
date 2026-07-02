@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Check,
   ChevronRight,
@@ -22,6 +23,7 @@ import { useGroups } from "src/hooks/use-groups";
 import { useManageTeamspaces } from "src/hooks/use-teamspaces";
 import { usePagesByCategory } from "src/hooks/use-pages";
 import { PageItemIcon } from "../../page-item-icon";
+import { CreateTeamspaceModal } from "../create-teamspace-modal";
 import {
   attachedGroups,
   directMembers,
@@ -33,16 +35,11 @@ import {
 import { memberCount, type Group, type Person } from "src/types";
 import "./teamspace-settings-content.scss";
 
-const ACCESS_LABEL: Record<TeamspaceAccess, string> = {
-  open: "Open",
-  closed: "Closed",
-  private: "Private",
-};
-
-// name/icon live on the PAGE now (joined to the record by shared id). These
-// helpers read display fields off the page, with safe fallbacks if the page
-// isn't loaded yet (or is briefly missing during an optimistic create).
-const nameOf = (page: Page | undefined) => page?.title || "Untitled";
+// name/icon live on the PAGE now (joined to the record by shared id). Reads the
+// display name off the page, with a safe fallback if the page isn't loaded yet
+// (or is briefly missing during an optimistic create).
+const nameOf = (page: Page | undefined, fallback: string) =>
+  page?.title || fallback;
 
 function Avatar({ person, size = 22 }: { person: Person; size?: number }) {
   const initial = (person.name || "?").trim().charAt(0).toUpperCase();
@@ -70,17 +67,20 @@ function AccessSelect({
   value: TeamspaceAccess;
   onChange: (a: TeamspaceAccess) => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const accessLabel = (a: TeamspaceAccess) => t(`teamspaces.access.${a}`);
+  const options: TeamspaceAccess[] = ["open", "closed", "private"];
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button type="button" className="ts-access">
-          {ACCESS_LABEL[value]}
+          {accessLabel(value)}
         </button>
       </PopoverTrigger>
       <PopoverContent side="bottom" align="start">
         <Card style={{ padding: 4, minWidth: 160 }}>
-          {(Object.keys(ACCESS_LABEL) as TeamspaceAccess[]).map((a) => (
+          {options.map((a) => (
             <Button
               key={a}
               variant="ghost"
@@ -90,7 +90,7 @@ function AccessSelect({
                 setOpen(false);
               }}
             >
-              <span className="tiptap-button-text">{ACCESS_LABEL[a]}</span>
+              <span className="tiptap-button-text">{accessLabel(a)}</span>
             </Button>
           ))}
         </Card>
@@ -111,6 +111,7 @@ function MemberPicker({
   onAdd: (id: string, personId: string) => void;
   onRemove: (id: string, personId: string) => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
@@ -128,7 +129,7 @@ function MemberPicker({
       <PopoverTrigger asChild>
         <button type="button" className="ts-add">
           <UserPlus size={14} />
-          <span>Add members</span>
+          <span>{t("teamspaces.addMembers")}</span>
         </button>
       </PopoverTrigger>
       <PopoverContent side="bottom" align="start">
@@ -139,12 +140,14 @@ function MemberPicker({
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search people…"
+              placeholder={t("teamspaces.searchPeoplePlaceholder")}
             />
           </div>
           <div className="ts-picker-list">
             {candidates.length === 0 ? (
-              <span className="ts-picker-empty">No people</span>
+              <span className="ts-picker-empty">
+                {t("teamspaces.noPeople")}
+              </span>
             ) : (
               candidates.map((p) => {
                 const selected = ts.memberIds.includes(p.id);
@@ -189,6 +192,7 @@ function GroupPicker({
   onAttach: (id: string, groupId: string) => void;
   onDetach: (id: string, groupId: string) => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
@@ -203,7 +207,7 @@ function GroupPicker({
       <PopoverTrigger asChild>
         <button type="button" className="ts-add">
           <Plus size={14} />
-          <span>Attach group</span>
+          <span>{t("teamspaces.attachGroup")}</span>
         </button>
       </PopoverTrigger>
       <PopoverContent side="bottom" align="start">
@@ -214,12 +218,14 @@ function GroupPicker({
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search groups…"
+              placeholder={t("teamspaces.searchGroupsPlaceholder")}
             />
           </div>
           <div className="ts-picker-list">
             {candidates.length === 0 ? (
-              <span className="ts-picker-empty">No groups</span>
+              <span className="ts-picker-empty">
+                {t("teamspaces.noGroups")}
+              </span>
             ) : (
               candidates.map((g) => {
                 const selected = ts.groupIds.includes(g.id);
@@ -236,7 +242,9 @@ function GroupPicker({
                     <span className="ts-picker-row__text">
                       <span className="ts-picker-row__name">{g.name}</span>
                       <span className="ts-picker-row__sub">
-                        {memberCount(g)} member{memberCount(g) === 1 ? "" : "s"}
+                        {t("teamspaces.memberCount", {
+                          count: memberCount(g),
+                        })}
                       </span>
                     </span>
                     {selected && (
@@ -281,10 +289,11 @@ function TeamspaceRow({
   onAttachGroup: (id: string, groupId: string) => void;
   onDetachGroup: (id: string, groupId: string) => void;
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
-  const name = nameOf(page);
+  const name = nameOf(page, t("teamspaces.untitled"));
   const [draft, setDraft] = useState(name);
 
   const members = directMembers(ts, people);
@@ -304,7 +313,7 @@ function TeamspaceRow({
           type="button"
           className="ts-row__expand"
           onClick={() => setExpanded((v) => !v)}
-          aria-label={expanded ? "Collapse" : "Expand"}
+          aria-label={expanded ? t("actions.collapse") : t("actions.expand")}
         >
           <ChevronRight
             size={14}
@@ -352,13 +361,18 @@ function TeamspaceRow({
         </span>
 
         <span className="ts-row__members">
-          {effectiveMemberCount(ts, groups)} member
-          {effectiveMemberCount(ts, groups) === 1 ? "" : "s"}
+          {t("teamspaces.memberCount", {
+            count: effectiveMemberCount(ts, groups),
+          })}
         </span>
 
         <Popover open={menuOpen} onOpenChange={setMenuOpen}>
           <PopoverTrigger asChild>
-            <button type="button" className="ts-row__menu" aria-label="More">
+            <button
+              type="button"
+              className="ts-row__menu"
+              aria-label={t("actions.more")}
+            >
               <MoreHorizontal size={16} />
             </button>
           </PopoverTrigger>
@@ -373,7 +387,9 @@ function TeamspaceRow({
                   setRenaming(true);
                 }}
               >
-                <span className="tiptap-button-text">Rename</span>
+                <span className="tiptap-button-text">
+                  {t("actions.rename")}
+                </span>
               </Button>
               <Button
                 variant="ghost"
@@ -388,7 +404,9 @@ function TeamspaceRow({
                 }}
               >
                 <Trash2 className="tiptap-button-icon" size={14} />
-                <span className="tiptap-button-text">Delete</span>
+                <span className="tiptap-button-text">
+                  {t("actions.delete")}
+                </span>
               </Button>
             </Card>
           </PopoverContent>
@@ -399,9 +417,11 @@ function TeamspaceRow({
         <div className="ts-detail">
           {/* Direct members */}
           <div className="ts-detail__section">
-            <div className="ts-detail__label">Members</div>
+            <div className="ts-detail__label">{t("teamspaces.members")}</div>
             {members.length === 0 ? (
-              <span className="ts-detail__empty">No direct members</span>
+              <span className="ts-detail__empty">
+                {t("teamspaces.noDirectMembers")}
+              </span>
             ) : (
               members.map((m) => (
                 <div className="ts-detail__row" key={m.id}>
@@ -411,7 +431,7 @@ function TeamspaceRow({
                   <button
                     type="button"
                     className="ts-detail__remove"
-                    aria-label={`Remove ${m.name}`}
+                    aria-label={t("teamspaces.removePerson", { name: m.name })}
                     onClick={() => onRemoveMember(ts.id, m.id)}
                   >
                     <X size={13} />
@@ -429,9 +449,11 @@ function TeamspaceRow({
 
           {/* Attached groups */}
           <div className="ts-detail__section">
-            <div className="ts-detail__label">Groups</div>
+            <div className="ts-detail__label">{t("teamspaces.groups")}</div>
             {attached.length === 0 ? (
-              <span className="ts-detail__empty">No attached groups</span>
+              <span className="ts-detail__empty">
+                {t("teamspaces.noAttachedGroups")}
+              </span>
             ) : (
               attached.map((g) => (
                 <div className="ts-detail__row" key={g.id}>
@@ -440,12 +462,12 @@ function TeamspaceRow({
                   </span>
                   <span className="ts-detail__name">{g.name}</span>
                   <span className="ts-detail__sub">
-                    {memberCount(g)} member{memberCount(g) === 1 ? "" : "s"}
+                    {t("teamspaces.memberCount", { count: memberCount(g) })}
                   </span>
                   <button
                     type="button"
                     className="ts-detail__remove"
-                    aria-label={`Detach ${g.name}`}
+                    aria-label={t("teamspaces.detachGroup", { name: g.name })}
                     onClick={() => onDetachGroup(ts.id, g.id)}
                   >
                     <X size={13} />
@@ -467,6 +489,7 @@ function TeamspaceRow({
 }
 
 export function TeamspacesSettingsContent() {
+  const { t } = useTranslation();
   const { data: people = [] } = usePeople();
   const { data: groups = [] } = useGroups();
   // Teamspace PAGES (roots with category "Teamspaces") — joined to records by
@@ -474,7 +497,6 @@ export function TeamspacesSettingsContent() {
   const { data: teamspacePages = [] } = usePagesByCategory("Teamspaces");
   const {
     teamspaces,
-    addTeamspaceAsync,
     renameTeamspaceAsync,
     setAccessAsync,
     deleteTeamspaceAsync,
@@ -484,6 +506,10 @@ export function TeamspacesSettingsContent() {
     detachGroupAsync,
   } = useManageTeamspaces();
 
+  // "Create teamspace" opens the full modal (name/icon/description/permission)
+  // — the same one the sidebar uses — instead of dropping a blank record.
+  const [createOpen, setCreateOpen] = useState(false);
+
   const pagesById = useMemo(() => {
     const m = new Map<string, Page>();
     for (const p of teamspacePages as Page[]) m.set(p.id, p);
@@ -492,11 +518,12 @@ export function TeamspacesSettingsContent() {
 
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
+  const untitled = t("teamspaces.untitled");
   const filtered = (
     !q
       ? teamspaces
-      : (teamspaces as Teamspace[]).filter((t) =>
-          nameOf(pagesById.get(t.id)).toLowerCase().includes(q),
+      : (teamspaces as Teamspace[]).filter((ts) =>
+          nameOf(pagesById.get(ts.id), untitled).toLowerCase().includes(q),
         )
   ) as Teamspace[];
 
@@ -508,34 +535,33 @@ export function TeamspacesSettingsContent() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search teamspaces..."
+            placeholder={t("teamspaces.searchPlaceholder")}
           />
         </div>
-        <Button
-          onClick={() => addTeamspaceAsync({ name: "New teamspace" })}
-          style={{ flexShrink: 0 }}
-        >
+        <Button onClick={() => setCreateOpen(true)} style={{ flexShrink: 0 }}>
           <Plus className="tiptap-button-icon" size={14} />
-          <span className="tiptap-button-text">Create teamspace</span>
+          <span className="tiptap-button-text">
+            {t("teamspaces.createTeamspace")}
+          </span>
         </Button>
       </div>
 
       <div className="ts-table">
         <div className="ts-table__head">
           <span className="ts-col ts-col--expand" />
-          <span className="ts-col">Teamspace</span>
-          <span className="ts-col">Access</span>
-          <span className="ts-col">Members</span>
+          <span className="ts-col">{t("teamspaces.columns.teamspace")}</span>
+          <span className="ts-col">{t("teamspaces.columns.access")}</span>
+          <span className="ts-col">{t("teamspaces.columns.members")}</span>
           <span className="ts-col ts-col--menu" />
         </div>
         {filtered.length === 0 ? (
-          <div className="ts-empty">No teamspaces yet</div>
+          <div className="ts-empty">{t("teamspaces.empty")}</div>
         ) : (
-          filtered.map((t) => (
+          filtered.map((ts) => (
             <TeamspaceRow
-              key={t.id}
-              ts={t}
-              page={pagesById.get(t.id)}
+              key={ts.id}
+              ts={ts}
+              page={pagesById.get(ts.id)}
               people={people as Person[]}
               groups={groups as Group[]}
               onRename={renameTeamspaceAsync}
@@ -549,6 +575,10 @@ export function TeamspacesSettingsContent() {
           ))
         )}
       </div>
+
+      {createOpen && (
+        <CreateTeamspaceModal onClose={() => setCreateOpen(false)} />
+      )}
     </div>
   );
 }

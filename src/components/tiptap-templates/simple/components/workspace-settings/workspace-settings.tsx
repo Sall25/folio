@@ -2,6 +2,7 @@ import { WorkspaceSettingsModal } from "./workspace-settings-modal";
 import { TeamspacesSettingsContent } from "../teamspace-settings-content";
 import { PeopleSettingsContent } from "../people-settings-content";
 import { useWorkspaceSettings as useWorkspaceSettingsModal } from "../../context/workspace-settings-context";
+import { LanguageSetting } from "src/components/tiptap-ui/language-settings";
 
 // activeId → content pane. Plug the rest in as they land on this branch.
 function SettingsPane({ activeId }: { activeId: string }) {
@@ -10,8 +11,8 @@ function SettingsPane({ activeId }: { activeId: string }) {
       return <TeamspacesSettingsContent />;
     case "people":
       return <PeopleSettingsContent />;
-    // case "language":
-    //   return <LanguageSetting />; // lives on feat/languages — wire after merge
+    case "language":
+      return <LanguageSetting />;
     default:
       return (
         <div

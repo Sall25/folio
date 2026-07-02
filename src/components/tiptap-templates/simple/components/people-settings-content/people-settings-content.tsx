@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Check,
   ChevronRight,
@@ -21,6 +22,9 @@ import { usePeople } from "src/hooks/use-people";
 import { useManageGroups } from "src/hooks/use-groups";
 import { useTeamspaces } from "src/hooks/use-teamspaces";
 import { useCreateTeamspace } from "src/hooks/use-create-teamspace";
+import { useCreatePage } from "src/hooks/use-create-page";
+import { useDeleteTeamspace } from "src/hooks/use-delete-teamspace";
+import { buildTeamspacePair } from "src/hooks/use-create-teamspace-with-page";
 import {
   teamspacesOfGroup,
   membersOf,
@@ -56,6 +60,7 @@ function Avatar({ person, size = 24 }: { person: Person; size?: number }) {
 }
 
 function PersonRow({ person }: { person: Person }) {
+  const { t } = useTranslation();
   return (
     <div className="ps-person-row">
       <Avatar person={person} />
@@ -63,7 +68,9 @@ function PersonRow({ person }: { person: Person }) {
         <span className="ps-person-row__name">{person.name}</span>
         <span className="ps-person-row__email">{person.email}</span>
       </div>
-      <span className="ps-person-row__role">{person.role}</span>
+      <span className="ps-person-row__role">
+        {t(`people.roles.${person.role}`, person.role)}
+      </span>
     </div>
   );
 }
@@ -79,6 +86,7 @@ function MemberPicker({
   onAddMember: (groupId: string, personId: string) => void;
   onRemoveMember: (groupId: string, personId: string) => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -100,7 +108,7 @@ function MemberPicker({
       <PopoverTrigger asChild>
         <button type="button" className="ps-add-members">
           <UserPlus size={14} />
-          <span>Add members</span>
+          <span>{t("people.addMembers")}</span>
         </button>
       </PopoverTrigger>
       <PopoverContent side="bottom" align="start">
@@ -111,12 +119,12 @@ function MemberPicker({
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search people…"
+              placeholder={t("people.searchPeoplePlaceholder")}
             />
           </div>
           <div className="ps-picker-list">
             {candidates.length === 0 ? (
-              <span className="ps-picker-empty">No people</span>
+              <span className="ps-picker-empty">{t("people.noPeople")}</span>
             ) : (
               candidates.map((p) => {
                 const selected = group.memberIds.includes(p.id);
@@ -168,6 +176,7 @@ function GroupRow({
   onAddMember: (groupId: string, personId: string) => void;
   onRemoveMember: (groupId: string, personId: string) => void;
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
@@ -182,6 +191,8 @@ function GroupRow({
     setRenaming(false);
   };
 
+  const teamspaceCount = teamspacesOfGroup(group.id, teamspaces).length;
+
   return (
     <>
       <div className="ps-group-row">
@@ -189,7 +200,7 @@ function GroupRow({
           type="button"
           className="ps-group-row__expand"
           onClick={() => setExpanded((v) => !v)}
-          aria-label={expanded ? "Collapse" : "Expand"}
+          aria-label={expanded ? t("actions.collapse") : t("actions.expand")}
         >
           <ChevronRight
             size={14}
@@ -225,15 +236,11 @@ function GroupRow({
         </div>
 
         <span className="ps-group-row__teamspaces">
-          {(() => {
-            const n = teamspacesOfGroup(group.id, teamspaces).length;
-            return n === 0 ? "None" : String(n);
-          })()}
+          {teamspaceCount === 0 ? t("people.none") : String(teamspaceCount)}
         </span>
 
         <span className="ps-group-row__members">
-          {group.memberIds.length} member
-          {group.memberIds.length === 1 ? "" : "s"}
+          {t("people.memberCount", { count: group.memberIds.length })}
         </span>
 
         <Popover open={menuOpen} onOpenChange={setMenuOpen}>
@@ -241,7 +248,7 @@ function GroupRow({
             <button
               type="button"
               className="ps-group-row__menu"
-              aria-label="More"
+              aria-label={t("actions.more")}
             >
               <MoreHorizontal size={16} />
             </button>
@@ -256,7 +263,9 @@ function GroupRow({
                   setRenaming(true);
                 }}
               >
-                <span className="tiptap-button-text">Rename</span>
+                <span className="tiptap-button-text">
+                  {t("actions.rename")}
+                </span>
               </Button>
               <Button
                 variant="ghost"
@@ -267,7 +276,7 @@ function GroupRow({
                 }}
               >
                 <span className="tiptap-button-text">
-                  Create teamspace from group
+                  {t("people.createTeamspaceFromGroup")}
                 </span>
               </Button>
               <Button
@@ -283,7 +292,9 @@ function GroupRow({
                 }}
               >
                 <Trash2 className="tiptap-button-icon" size={14} />
-                <span className="tiptap-button-text">Delete</span>
+                <span className="tiptap-button-text">
+                  {t("actions.delete")}
+                </span>
               </Button>
             </Card>
           </PopoverContent>
@@ -293,7 +304,9 @@ function GroupRow({
       {expanded && (
         <div className="ps-group-members">
           {members.length === 0 ? (
-            <span className="ps-group-members__empty">No members yet</span>
+            <span className="ps-group-members__empty">
+              {t("people.noMembersYet")}
+            </span>
           ) : (
             members.map((m) => (
               <div className="ps-group-members__row" key={m.id}>
@@ -303,7 +316,7 @@ function GroupRow({
                 <button
                   type="button"
                   className="ps-group-members__remove"
-                  aria-label={`Remove ${m.name}`}
+                  aria-label={t("people.removePerson", { name: m.name })}
                   onClick={() => onRemoveMember(group.id, m.id)}
                 >
                   <X size={13} />
@@ -324,6 +337,7 @@ function GroupRow({
 }
 
 export function PeopleSettingsContent() {
+  const { t } = useTranslation();
   const { data: people = [] } = usePeople();
   const { data: teamspaces = [] } = useTeamspaces();
   const {
@@ -334,7 +348,12 @@ export function PeopleSettingsContent() {
     addMemberAsync,
     removeMemberAsync,
   } = useManageGroups();
-  const createTeamspace = useCreateTeamspace();
+
+  // Pair-create pieces: a teamspace is a page + record (shared id). Creating a
+  // record alone would orphan it (shows in settings, never in the sidebar).
+  const createRecord = useCreateTeamspace();
+  const createPageMut = useCreatePage();
+  const deleteRecord = useDeleteTeamspace();
 
   // Derived role buckets. isMember = owner|member; isGuest = guest.
   const members = useMemo(
@@ -369,21 +388,31 @@ export function PeopleSettingsContent() {
 
   const copyInvite = () => navigator.clipboard?.writeText(inviteUrl);
 
-  // Create a teamspace seeded with this group attached (members gain access
-  // via the attached group — effective membership stays live).
-  const createFromGroupAsync = (groupId: ID, name: string) =>
-    createTeamspace.mutateAsync({
-      id: crypto.randomUUID(),
+  // Create a teamspace (page + record, shared id) seeded with this group
+  // attached — the group's members gain access via effective membership. The
+  // name lives on the PAGE (title); the record carries groupIds. Record first,
+  // then page, rolling the record back if the page write fails.
+  const createFromGroupAsync = async (name: string, groupId: ID) => {
+    const { page, record } = buildTeamspacePair({
       name,
-      icon: null,
+      iconName: null,
+      iconColor: null,
       description: null,
       access: "open",
-      memberIds: [],
-      groupIds: [groupId],
-      ownerIds: [],
-      // eslint-disable-next-line react-hooks/purity
-      createdAt: Date.now(),
     });
+    const seeded: Teamspace = { ...record, groupIds: [groupId] };
+    await createRecord.mutateAsync(seeded);
+    try {
+      await createPageMut.mutateAsync(page);
+    } catch (err) {
+      try {
+        await deleteRecord.mutateAsync(seeded.id);
+      } catch {
+        /* best-effort rollback */
+      }
+      throw err;
+    }
+  };
 
   return (
     <div className="people-settings">
@@ -391,16 +420,14 @@ export function PeopleSettingsContent() {
       <div className="ps-invite">
         <div className="ps-invite__head">
           <div>
-            <div className="ps-invite__title">Invite link</div>
-            <div className="ps-invite__desc">
-              Enable a secret link for Workspace Owners and Membership Admins to
-              invite new members.
-            </div>
+            <div className="ps-invite__title">{t("people.inviteLink")}</div>
+            <div className="ps-invite__desc">{t("people.inviteLinkDesc")}</div>
           </div>
           <button
             type="button"
             role="switch"
             aria-checked={inviteEnabled}
+            aria-label={t("people.inviteLink")}
             className={`ps-switch${inviteEnabled ? " is-on" : ""}`}
             onClick={() => setInviteEnabledAsync(!inviteEnabled)}
           >
@@ -413,7 +440,9 @@ export function PeopleSettingsContent() {
             <div className="ps-invite__link-row">
               <div className="ps-invite__url">{inviteUrl}</div>
               <Button variant="ghost" onClick={copyInvite}>
-                <span className="tiptap-button-text">Copy link</span>
+                <span className="tiptap-button-text">
+                  {t("people.copyLink")}
+                </span>
               </Button>
             </div>
             <button
@@ -421,7 +450,7 @@ export function PeopleSettingsContent() {
               className="ps-invite__regen"
               onClick={() => regenerateInviteAsync()}
             >
-              You can also generate a new link
+              {t("people.generateNewLink")}
             </button>
           </>
         )}
@@ -435,21 +464,23 @@ export function PeopleSettingsContent() {
             className={`ps-tab${tab === "members" ? " is-active" : ""}`}
             onClick={() => setTab("members")}
           >
-            Members <span className="ps-tab__count">{members.length}</span>
+            {t("people.tabs.members")}{" "}
+            <span className="ps-tab__count">{members.length}</span>
           </button>
           <button
             type="button"
             className={`ps-tab${tab === "guests" ? " is-active" : ""}`}
             onClick={() => setTab("guests")}
           >
-            Guests <span className="ps-tab__count">{guests.length}</span>
+            {t("people.tabs.guests")}{" "}
+            <span className="ps-tab__count">{guests.length}</span>
           </button>
           <button
             type="button"
             className={`ps-tab${tab === "groups" ? " is-active" : ""}`}
             onClick={() => setTab("groups")}
           >
-            Groups{" "}
+            {t("people.tabs.groups")}{" "}
             <span className="ps-tab__count">{(groups as Group[]).length}</span>
           </button>
         </div>
@@ -459,17 +490,19 @@ export function PeopleSettingsContent() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Type to search..."
+            placeholder={t("people.searchPlaceholder")}
           />
         </div>
 
         {tab === "groups" && (
           <Button
-            onClick={() => addGroupAsync({ name: "New group" })}
+            onClick={() => addGroupAsync({ name: t("people.newGroup") })}
             style={{ flexShrink: 0 }}
           >
             <Plus className="tiptap-button-icon" size={14} />
-            <span className="tiptap-button-text">Create a group</span>
+            <span className="tiptap-button-text">
+              {t("people.createGroup")}
+            </span>
           </Button>
         )}
       </div>
@@ -484,9 +517,15 @@ export function PeopleSettingsContent() {
       ) : (
         <div className="ps-groups">
           <div className="ps-groups__head">
-            <span className="ps-groups__col ps-groups__col--name">Group</span>
-            <span className="ps-groups__col">Teamspaces</span>
-            <span className="ps-groups__col">Members</span>
+            <span className="ps-groups__col ps-groups__col--name">
+              {t("people.columns.group")}
+            </span>
+            <span className="ps-groups__col">
+              {t("people.columns.teamspaces")}
+            </span>
+            <span className="ps-groups__col">
+              {t("people.columns.members")}
+            </span>
             <span className="ps-groups__col ps-groups__col--menu" />
           </div>
           {filteredGroups.map((g) => (
@@ -501,7 +540,7 @@ export function PeopleSettingsContent() {
               onRemoveMember={removeMemberAsync}
               onCreateTeamspace={(id) => {
                 const grp = (groups as Group[]).find((x) => x.id === id);
-                createFromGroupAsync(id, grp?.name ?? "New teamspace");
+                createFromGroupAsync(grp?.name ?? t("people.newTeamspace"), id);
               }}
             />
           ))}
