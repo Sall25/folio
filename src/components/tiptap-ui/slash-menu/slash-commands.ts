@@ -4,6 +4,7 @@ import type { TFunction } from "i18next";
 import {
   AtSign,
   Bookmark,
+  BookMarked,
   Box,
   Code2,
   Columns2,
@@ -380,6 +381,14 @@ export function getSlashCommands(t: TFunction): SlashCommand[] {
       description: t("slash.items.callout.description"),
       icon: TypeOutline,
       run: (e) => e.chain().focus().insertCallout().run(),
+    },
+    // ─── Appendix ─────────────────────────────────────────────
+    {
+      id: "appendix",
+      type: "command",
+      title: t("slash.appendix"),
+      icon: BookMarked,
+      run: (e) => e.chain().focus().insertAppendix().run(),
     },
     // ─── Button ─────────────────────────────────────────────
     {

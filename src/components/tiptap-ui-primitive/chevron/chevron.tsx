@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
-import { ChevronRight } from "lucide-react";
 
 import { cn } from "src/lib/tiptap-utils";
+import { TriangleChevronIcon } from "src/components/tiptap-icons";
 
 import "./chevron.scss";
 
@@ -39,7 +39,7 @@ export const Chevron = forwardRef<HTMLButtonElement, ChevronProps>(
         aria-label={ariaLabel ?? (expanded ? "Collapse" : "Expand")}
         {...props}
       >
-        <ChevronRight strokeWidth={2} />
+        <TriangleChevronIcon />
       </button>
     );
   },

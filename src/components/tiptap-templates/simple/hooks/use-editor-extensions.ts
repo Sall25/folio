@@ -65,6 +65,12 @@ import {
 } from "src/components/tiptap-node/code-group-node";
 import { ButtonNode } from "src/components/tiptap-node/button-node";
 import { Container } from "src/components/tiptap-node/container-node";
+import {
+  Appendix,
+  AppendixContent,
+  AppendixSummary,
+  toLetters,
+} from "src/components/tiptap-node/appendix-node";
 
 export function useEditorExtensions(
   refsRef: React.RefObject<EditorExtensionRefs>,
@@ -101,7 +107,20 @@ export function useEditorExtensions(
       Highlight.configure({ multicolor: true }),
       Placeholder.configure({
         includeChildren: true,
-        placeholder: ({ editor, node }) => {
+        placeholder: ({ editor, node, pos }) => {
+          if (node.type.name === "appendixSummary") return "Untitled";
+
+          // Paragraphs inside an appendix body get their own quiet prompt
+          // instead of the generic one. Walk ancestors from the node's position.
+          if (node.type.name === "paragraph") {
+            const $pos = editor.state.doc.resolve(pos);
+            for (let d = $pos.depth; d > 0; d--) {
+              if ($pos.node(d).type.name === "appendixContent") {
+                return "Appendix content...";
+              }
+            }
+          }
+
           if (node.type.name === "title") return "New Page";
           if (["tableCell", "tableHeader", "table"].includes(node.type.name))
             return "";
@@ -117,7 +136,6 @@ export function useEditorExtensions(
           return "Write, type '/' from commands...";
         },
       }),
-
       // --- Lists ---
       BulletList,
       OrderedList,
@@ -153,8 +171,26 @@ export function useEditorExtensions(
 
       // --- TOC ---
       TableOfContents.configure({
-        onUpdate: (content) => refsRef.current?.setTocContent(content),
-        anchorTypes: ["heading", "title"],
+        anchorTypes: ["heading", "title", "appendixSummary"],
+        onUpdate: (content) => {
+          // Appendix summaries carry no `level` attr, and their "Appendix X: "
+          // prefix is a decoration the extension can't see — patch both here.
+          // Counting in content order matches the numbering plugin, since both
+          // follow document order.
+          let appendixIndex = 0;
+          const mapped = content.map((item) => {
+            if (item.node.type.name !== "appendixSummary") return item;
+            appendixIndex += 1;
+            const letter = toLetters(appendixIndex);
+            return {
+              ...item,
+              level: 2,
+              originalLevel: 2,
+              textContent: `Appendix ${letter}: ${item.textContent}`,
+            };
+          });
+          refsRef.current?.setTocContent(mapped);
+        },
       }),
       TocNode.configure({ topOffset: 80, maxShowCount: 20, showTitle: true }),
 
@@ -212,6 +248,9 @@ export function useEditorExtensions(
       CodeGroupItem,
       ButtonNode,
       Container.configure({ onNavigate: handleNavigate }),
+      Appendix,
+      AppendixSummary,
+      AppendixContent,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
