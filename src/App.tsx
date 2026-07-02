@@ -11,32 +11,34 @@ import { SearchProvider } from "./components/tiptap-templates/simple/context/sea
 import { LibraryProvider } from "./components/tiptap-templates/simple/context/library-provider";
 import { TemplatesProvider } from "./components/tiptap-templates/simple/context/templates-provider";
 import { WorkspaceSettingsProvider } from "./components/tiptap-templates/simple/context/workspace-settings-provider";
-
+import { AuthGate } from "./components/tiptap-templates/simple/components/auth-gate";
 const client = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={client}>
-      <EditorLayoutProvider>
-        <SearchProvider>
-          <TemplatesProvider>
-            <PageViewProvider>
-              <Router location={location} routes={routes}>
-                <LibraryProvider>
-                  <ActivePageProvider>
-                    <WorkspaceSettingsProvider>
-                      <EditorProvider>
-                        <SimpleEditorSidebar />
-                        <Outlet />
-                      </EditorProvider>
-                    </WorkspaceSettingsProvider>
-                  </ActivePageProvider>
-                </LibraryProvider>
-              </Router>
-            </PageViewProvider>
-          </TemplatesProvider>
-        </SearchProvider>
-      </EditorLayoutProvider>
+      <AuthGate>
+        <EditorLayoutProvider>
+          <SearchProvider>
+            <TemplatesProvider>
+              <PageViewProvider>
+                <Router location={location} routes={routes}>
+                  <LibraryProvider>
+                    <ActivePageProvider>
+                      <WorkspaceSettingsProvider>
+                        <EditorProvider>
+                          <SimpleEditorSidebar />
+                          <Outlet />
+                        </EditorProvider>
+                      </WorkspaceSettingsProvider>
+                    </ActivePageProvider>
+                  </LibraryProvider>
+                </Router>
+              </PageViewProvider>
+            </TemplatesProvider>
+          </SearchProvider>
+        </EditorLayoutProvider>
+      </AuthGate>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

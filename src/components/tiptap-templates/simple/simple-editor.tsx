@@ -48,6 +48,7 @@ import { useTemplates as useTemplatesApi } from "src/hooks/use-templates";
 import { TemplatesGallery } from "./components/template-gallery";
 import { WorkspaceSettings } from "./components/workspace-settings";
 import { usePageBrowserTab } from "./hooks/use-page-browser-tab";
+import { useCurrentPerson } from "src/hooks/use-session";
 
 const VERSION_SIDEBAR_WIDTH = 270;
 
@@ -69,6 +70,7 @@ function SimpleEditorMain({ view }: { view: View }) {
   } = useTemplates();
 
   const { data: templates } = useTemplatesApi();
+  const { person: currentPerson } = useCurrentPerson();
 
   return (
     <>
@@ -134,14 +136,19 @@ function SimpleEditorMain({ view }: { view: View }) {
       )}
 
       {open && <SearchPalette />}
-
       {templatesGalleryOpen && (
         <TemplatesGallery
           templates={templates ?? []}
           open={templatesGalleryOpen}
           onClose={() => onTemplatesGalleryOpenChange?.(false)}
           getTemplateMeta={() => ({
-            createdBy: { name: "Souleymane Sall", avatarUrl: null },
+            createdBy: {
+              name: currentPerson?.name ?? "",
+              avatarUrl: currentPerson?.avatarUrl ?? null,
+            },
+            // usedBy/usedCount aren't backed by real usage data yet — that needs
+            // its own tracking (who's opened/used a template), separate from
+            // "who am I." Left as placeholders until that exists.
             usedBy: [{ name: "Jule" }, { name: "Amadou" }],
             usedCount: 12,
           })}

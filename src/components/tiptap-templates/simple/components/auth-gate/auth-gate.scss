@@ -1,0 +1,23 @@
+.auth-gate-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100vh;
+
+  &__ring {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid
+      color-mix(in srgb, var(--tt-text-primary) 15%, transparent);
+    border-top-color: color-mix(in srgb, var(--tt-text-primary) 60%, transparent);
+    animation: auth-gate-spin 0.7s linear infinite;
+  }
+}
+
+@keyframes auth-gate-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

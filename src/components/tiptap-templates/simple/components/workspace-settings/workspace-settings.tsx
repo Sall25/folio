@@ -3,6 +3,7 @@ import { TeamspacesSettingsContent } from "../teamspace-settings-content";
 import { PeopleSettingsContent } from "../people-settings-content";
 import { useWorkspaceSettings as useWorkspaceSettingsModal } from "../../context/workspace-settings-context";
 import { LanguageSetting } from "src/components/tiptap-ui/language-settings";
+import { useCurrentPerson } from "src/hooks/use-session";
 
 // activeId → content pane. Plug the rest in as they land on this branch.
 function SettingsPane({ activeId }: { activeId: string }) {
@@ -32,6 +33,7 @@ function SettingsPane({ activeId }: { activeId: string }) {
 export function WorkspaceSettings() {
   const { open, onOpenChange, activeId, setActiveId } =
     useWorkspaceSettingsModal();
+  const { person } = useCurrentPerson();
 
   return (
     <WorkspaceSettingsModal
@@ -39,8 +41,7 @@ export function WorkspaceSettings() {
       onClose={() => onOpenChange(false)}
       activeId={activeId}
       onSelect={setActiveId}
-      // TODO: wire to the real current user once a session concept exists.
-      account={{ name: "Souleymane Sall", email: "" }}
+      account={{ name: person?.name ?? "", email: person?.email ?? "" }}
     >
       <SettingsPane activeId={activeId} />
     </WorkspaceSettingsModal>
