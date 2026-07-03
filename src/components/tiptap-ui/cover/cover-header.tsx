@@ -17,6 +17,7 @@ import GradientCover from "./gradient-cover";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
+import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 
 function IconButton({
   open,
@@ -166,6 +167,7 @@ export function CoverHeader({
   const { activePageId } = useActivePage();
   const { data: activePage } = usePage(providedPage ? null : activePageId);
   const page = providedPage ?? activePage;
+  const { target: viewTarget } = usePageView();
 
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const mutateAsyncRef = useRef(mutateAsync);
@@ -197,7 +199,10 @@ export function CoverHeader({
       <div
         style={{
           width: `calc(100vw)`,
-          marginLeft,
+          marginLeft:
+            viewTarget?.view === "Center" || viewTarget?.view === "Peek"
+              ? 0
+              : marginLeft,
           transition: "margin-left 0.2s ease, width 0.2s ease",
         }}
       >
@@ -215,7 +220,12 @@ export function CoverHeader({
       <div
         style={{
           width: `calc(100vw)`,
-          marginLeft: page.settings.width === "medium" ? 280 : marginLeft,
+          marginLeft:
+            viewTarget?.view === "Center" || viewTarget?.view === "Peek"
+              ? 0
+              : page.settings.width === "medium"
+                ? 280
+                : marginLeft,
           transition: "margin-left 0.2s ease, width 0.2s ease",
         }}
       >
@@ -225,8 +235,8 @@ export function CoverHeader({
             onOpenChange={setIconPickerOpen}
             target={target}
             onTargetChange={setTarget}
-            paddingLeft={paddingLeft}
-            translateX={translateX}
+            paddingLeft={viewTarget?.view === "Peek" ? 0 : paddingLeft}
+            translateX={viewTarget?.view === "Peek" ? 0 : translateX}
             hasThreads={hasThreads}
             page={page}
           />

@@ -32,6 +32,7 @@ import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import { usePageView } from "./context/page-view-context";
 import { usePage } from "src/hooks/use-pages";
+import { useEditorLayout } from "./context/editor-layout-context";
 //import { RecordPropertyPanel } from "./record-property-panel";
 
 const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
@@ -216,7 +217,6 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
   useRecordPropertyPanel(editor, page ?? null);
 
   const { editor: mainEditor } = useCurrentEditor();
-
   return (
     <Card
       className="page-peek"
@@ -242,10 +242,15 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
             variant="ghost"
             onClick={() => {
               if (page) {
+                // Close the peek and navigate to the record as a full page.
+                // Do NOT manually setContent the main editor here: the record
+                // is its own Page, and the main editor's load effect (keyed on
+                // activePageId) will load its content correctly on its own.
+                // Manually stuffing page.content into the main editor while it
+                // still belongs to the PARENT page caused the parent to be
+                // saved with the record's content (content/id mismatch at
+                // autosave time).
                 setViewTarget(undefined);
-                mainEditor?.commands.setContent(page.content, {
-                  emitUpdate: false,
-                });
                 setActivePageId(page.id);
               }
             }}
@@ -268,6 +273,7 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
           translateX={0}
           hasThreads={false}
           providedPage={page}
+          marginLeft={0}
         />
         {/* <RecordPropertyPanel page={page} editor={mainEditor} /> */}
         <div>
