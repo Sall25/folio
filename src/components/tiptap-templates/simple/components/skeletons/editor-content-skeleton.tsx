@@ -2,7 +2,7 @@ import { Bone } from "../../../../tiptap-ui-primitive/bone/bone";
 import "./editor-content-skeleton.scss";
 
 export const EditorContentSkeleton: React.FC = () => (
-  <div className="es-content" role="presentation">
+  <>
     {/* Cover band — full bleed across the content area */}
     <Bone width="100%" height={220} className="es-cover" />
 
@@ -36,5 +36,5 @@ export const EditorContentSkeleton: React.FC = () => (
         <Bone width="55%" height={15} />
       </div>
     </div>
-  </div>
+  </>
 );

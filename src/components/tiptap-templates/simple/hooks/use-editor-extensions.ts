@@ -52,7 +52,6 @@ import { CalloutExtension } from "src/components/tiptap-node/callout-node";
 import { AudioExtension } from "src/components/tiptap-node/audio-node";
 import { YoutubeExtension } from "src/components/tiptap-node/video-node";
 import { BookmarkNode } from "src/components/tiptap-node/bookmark-node/bookmark-node-extension";
-import { PageBreadcrumb } from "src/components/tiptap-ui/page-breadcrumb/page-breadcrumb";
 import { RecordPropertyPanelNode } from "../record-property-panel-node";
 import { MathInlineNode } from "src/components/tiptap-node/math-inline-node";
 import { MathBlockNode } from "src/components/tiptap-node/math-block-node";
@@ -93,6 +92,7 @@ export function useEditorExtensions(
         orderedList: false,
         link: { openOnClick: false, enableClickSelection: true },
         codeBlock: false,
+        undoRedo: false,
       }),
       CodeBlockNode,
       Typography,
@@ -189,7 +189,7 @@ export function useEditorExtensions(
               textContent: `Appendix ${letter}: ${item.textContent}`,
             };
           });
-          refsRef.current?.setTocContent(mapped);
+          queueMicrotask(() => refsRef.current?.setTocContent(mapped));
         },
       }),
       TocNode.configure({ topOffset: 80, maxShowCount: 20, showTitle: true }),
@@ -237,7 +237,6 @@ export function useEditorExtensions(
       AudioExtension,
       YoutubeExtension,
       BookmarkNode,
-      PageBreadcrumb,
       RecordPropertyPanelNode,
       MathInlineNode,
       MathBlockNode,

@@ -5,7 +5,7 @@
 :root {
   --background-drop: rgba(216, 211, 211, 0.3);
 
-  --sp-surface: #ffffffe2;
+  --sp-surface: #fffffff8;
   --sp-text: #37352f;
   --sp-text-muted: rgba(55, 53, 47, 0.45);
   --sp-text-soft: rgba(55, 53, 47, 0.85);
@@ -23,7 +23,7 @@
 .dark {
   --background-drop: rgba(15, 15, 15, 0.258);
 
-  --sp-surface: #252525e2; // #252525
+  --sp-surface: #252525f8; // #252525
   --sp-text: rgba(255, 255, 255, 0.9);
   --sp-text-muted: rgba(255, 255, 255, 0.4);
   --sp-text-soft: rgba(255, 255, 255, 0.7);

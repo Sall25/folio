@@ -1,0 +1,16 @@
+// Positioning-only wrapper. The visual (cover, title, body bones) comes from
+// EditorContentSkeleton rendered inside — this just overlays it in the right
+// place over the content area, matching the real editor shell's geometry.
+.editor-skeleton-full {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: var(--tt-bg-primary, transparent);
+  overflow: hidden;
+  pointer-events: none;
+  transition: margin-left 0.2s ease, width 0.2s ease;
+  transform: translateX(var(--x, 0));
+  left: 0;
+  right: 0;
+  bottom: 0;
+}

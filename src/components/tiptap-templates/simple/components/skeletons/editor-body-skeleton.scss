@@ -1,0 +1,159 @@
+// Content-aware skeleton. Inherits width/centering from .simple-editor-content;
+// only defines per-node internal shapes + spacing here. Pulse is applied to
+// bones via the shared keyframes (remove the `> * animation` fallbacks if the
+// Bone primitive already animates).
+
+.ebs-root {
+  margin-top: 50px;
+  .ebs-node {
+    margin-bottom: 14px;
+  }
+}
+
+.ebs-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ebs-title {
+  margin-bottom: 20px;
+}
+
+.ebs-heading {
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+.ebs-image,
+.ebs-bookmark {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ebs-callout {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
+
+  &__icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  &__body {
+    flex: 1;
+  }
+}
+
+.ebs-blockquote {
+  padding-left: 16px;
+  border-left: 3px solid
+    color-mix(in srgb, var(--tt-text-primary) 12%, transparent);
+}
+
+.ebs-codeblock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--tt-text-primary) 5%, transparent);
+}
+
+.ebs-hr {
+  margin: 8px 0;
+}
+
+.ebs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  &__marker {
+    flex-shrink: 0;
+  }
+}
+
+.ebs-task__check {
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.ebs-table {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+  border-radius: 6px;
+  padding: 4px;
+
+  &__row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+  &__cell {
+    border-radius: 3px;
+  }
+}
+
+.ebs-columns {
+  display: flex;
+  gap: 24px;
+
+  &__col {
+    flex: 1;
+  }
+}
+
+.ebs-database {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  &__row {
+    border-radius: 4px;
+  }
+}
+
+.ebs-toc {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 4px;
+}
+
+.ebs-pagelink {
+  border-radius: 6px;
+}
+
+// Shared pulse for all bones inside the skeleton (fallback if Bone doesn't
+// animate itself — delete this block if it does, to avoid double animation).
+.ebs-root [class*="bone"],
+.ebs-lines > *,
+.ebs-codeblock > *,
+.ebs-toc > * {
+  animation: ebs-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ebs-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}

@@ -17,6 +17,8 @@ import type { Target } from "src/components/tiptap-ui/cover/types";
 import { useActivePage } from "./context/active-page-context";
 import { useEditorLayout } from "./context/editor-layout-context";
 import { useRecordPropertyPanel } from "./hooks/use-record-property-panel";
+import { useEditorSync } from "./context/editor-sync-context";
+import { EditorBodySkeleton } from "./components/skeletons";
 
 // ============================================================
 // Memoized leaves
@@ -46,8 +48,21 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
   const { editor } = useCurrentEditor();
   const { activePage } = useActivePage();
   const { collapsed } = useEditorLayout();
+  const { isSyncing } = useEditorSync();
 
   useRecordPropertyPanel(editor, activePage ?? null);
+
+  if (isSyncing || !editor) {
+    return (
+      <EditorBodySkeleton
+        content={activePage?.content}
+        size={activePage?.settings.width}
+        text={activePage?.settings.text}
+        collapsed={collapsed}
+        hasThreads={hasThreads}
+      />
+    );
+  }
 
   return (
     <EditorContent

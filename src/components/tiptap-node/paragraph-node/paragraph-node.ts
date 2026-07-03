@@ -1,5 +1,6 @@
 import Paragraph from "@tiptap/extension-paragraph";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { ySyncPluginKey } from "y-prosemirror";
 
 const ensureTrailingParagraphKey = new PluginKey("EnsureTrailingParagraph");
 
@@ -61,6 +62,18 @@ export const ParagraphNode = Paragraph.extend({
         appendTransaction(transactions, _oldState, newState) {
           const docChanged = transactions.some((tr) => tr.docChanged);
           if (!docChanged) return null;
+
+          // CRITICAL for collaboration: never append in response to a Yjs
+          // sync transaction. The sync that hydrates the doc from Hocuspocus
+          // on every mount carries ySyncPlugin meta; appending a paragraph
+          // in reaction to it writes that paragraph back into the shared Yjs
+          // doc, and since it fires on every mount, empty trailing paragraphs
+          // accumulate and get persisted — one more per page switch. Only run
+          // on genuine local edits (real user typing).
+          const isSyncOrigin = transactions.some(
+            (tr) => tr.getMeta(ySyncPluginKey) !== undefined,
+          );
+          if (isSyncOrigin) return null;
 
           // Structured (database) pages are title + database node only — no
           // free-text body. Detect this locally from the doc itself (a

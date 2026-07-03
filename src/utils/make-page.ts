@@ -30,10 +30,8 @@ export function makePage(opts: {
     content: {
       type: "doc",
       content: [
-        {
-          type: "title",
-          content: title ? [{ type: "text", text: title }] : [],
-        },
+        { type: "title", content: [] }, // empty title — shows "New Page" placeholder
+        { type: "paragraph", content: [] }, // empty body paragraph
       ],
     },
     createdAt: Date.now(),

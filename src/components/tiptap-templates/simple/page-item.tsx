@@ -101,7 +101,7 @@ export function PageItem({
           <>
             <Chevron
               expanded={expanded}
-              size="large"
+              size="default"
               variant="ghost"
               onClick={(e) => {
                 e.stopPropagation();

@@ -42,7 +42,7 @@ import SearchPalette from "./components/search-palette";
 import { LibraryPalette } from "./components/library-palette";
 import { usePageView } from "./context/page-view-context";
 import { PageCenterView } from "./page-center-view";
-import { EditorContentSkeleton } from "./components/skeletons";
+import { EditorContentSkeletonFull } from "./components/skeletons";
 import { useTemplates } from "./context/templates-context";
 import { useTemplates as useTemplatesApi } from "src/hooks/use-templates";
 import { TemplatesGallery } from "./components/template-gallery";
@@ -205,7 +205,7 @@ function SimpleEditorInner({ view }: { view: View }) {
           <SimpleEditorMain view={view} />
           {(isLoading || isCreatingPage) && (
             <div className="editor-skeleton-overlay">
-              <EditorContentSkeleton />
+              <EditorContentSkeletonFull />
             </div>
           )}
         </ToastProvider>
