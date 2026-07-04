@@ -1,5 +1,5 @@
 import type { JSONContent, NodeViewProps } from "@tiptap/core";
-import { NodeViewWrapper } from "@tiptap/react";
+import { NodeViewWrapper, NodeViewContent } from "@tiptap/react";
 import React, {
   useRef,
   useEffect,
@@ -48,7 +48,6 @@ import { PropertyHeader } from "../components/property-header";
 import { DatabaseCalculations } from "../components/database-calculations";
 import { ResizableNodeProvider } from "../../figure-node";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
-import { Cell } from "../components/cells/cell";
 import { DataSourcePicker } from "./data-source-picker";
 import { DatabaseBoardNodeView } from "./database-board-node-view";
 import { DatabaseGalleryNodeView } from "./database-gallery-node-view";
@@ -60,9 +59,9 @@ import type {
   DatabaseView,
   DatabaseProperty,
   PropertyConfig,
-  CellValue,
 } from "src/types";
 import "./database-table-node-view.scss";
+import "./database-node.scss";
 import { useDebouncedCallback } from "use-debounce";
 import {
   Grid,
@@ -84,14 +83,15 @@ import {
 } from "@dnd-kit/sortable";
 
 import { chunk } from "lodash";
-import { groupRecords } from "../utils/group-records";
 import { recordMatchesFilters } from "../utils/apply-filters";
 import { sortRecords } from "../utils/apply-sorts";
-import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { DatabaseLoadingSkeleton } from "../components/database-loading-skeleton";
+import { usePublishDatabaseData } from "../hooks/use-database-bridge-data";
+import type { DatabaseBridgeData } from "../utils/database-bridge";
+import { useDatabaseSeed, insertRecordNode } from "../hooks/use-database-seed";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -126,10 +126,6 @@ export function DatabaseNodeView({
 
   const { setTarget } = usePageView();
 
-  // Notion-style lock: structure/layout/view-config is frozen, but cell
-  // values and add/delete record stay editable. This protects a shared or
-  // published database from accidental restructuring while still letting
-  // people fill in data.
   const locked = !!attrs.locked;
 
   const onUpdateTitle = (title: string) =>
@@ -186,7 +182,6 @@ export function DatabaseNodeView({
 
   const handleTitleChange = (title: string) => {
     if (isLinked) {
-      // linked view → independent label, never rename the source
       updateAttributes({ ...attrs, title });
       return;
     }
@@ -213,25 +208,21 @@ export function DatabaseNodeView({
     return sortRecords(filtered, activeView?.sorts ?? []);
   }, [resolvedRecords, activeView?.filters, activeView?.sorts]);
 
-  // Mirror this node's views into the source-level catalog (source.savedViews)
-  // so any node on this source can open one with its filters/sorts intact.
-  // registerViewsAsync no-ops when nothing changed, so this stays cheap.
   useEffect(() => {
     if (!source) return;
     registerViewsAsync(attrs.views);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attrs.views, source?.id, registerViewsAsync]);
 
-  const [dragX, setDragX] = useState(0);
-  const [overId, setOverId] = useState<string | null>(null);
+  const [, /*dragX*/ setDragX] = useState(0);
+  const [, /*overId*/ setOverId] = useState<string | null>(null);
   const [hovered, setHovered] = useState(false);
 
   const dbPageId = source?.pageId ?? attrs.pageId ?? null;
   const { data: dbPage } = usePage(dbPageId);
   const tableRef = useRef<HTMLDivElement>(null);
-  const [activeColId, setActiveColId] = useState<string | null>(null);
+  const [, /*activeColId*/ setActiveColId] = useState<string | null>(null);
 
-  // Live resize → local draft only (no network per tick). Disabled when locked.
   useEffect(() => {
     const el = tableRef.current;
     if (!el) return;
@@ -247,9 +238,6 @@ export function DatabaseNodeView({
     return () => el.removeEventListener("column:resize", handler);
   }, [locked]);
 
-  // Activate the view named in the URL hash (#view=<id>). Views are
-  // source-owned and load async, so run once they're available rather than
-  // on mount.
   const hashActivatedRef = useRef(false);
   useEffect(() => {
     if (hashActivatedRef.current || db.views?.length === 0) return;
@@ -263,13 +251,96 @@ export function DatabaseNodeView({
     ) {
       db.setActiveView(viewId);
     }
-    // run once, after the source's views have loaded
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [db.views?.length]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
+
+  // ── Column layout (computed early so context + header + grid all share it) ─
+  const hidden = new Set(activeView?.hiddenProperties ?? []);
+  const visibleProperties = (source?.properties ?? []).filter(
+    (p) => !hidden.has(p.id),
+  );
+
+  const widthFor = (p: DatabaseProperty) => draftWidths[p.id] ?? p.width ?? 160;
+
+  // Header grid: property columns + a trailing 1fr for the actions (+/...) cell.
+  const gridTemplateColumns =
+    visibleProperties.map((p) => `${widthFor(p)}px`).join(" ") + " 1fr";
+
+  // BODY grid: EXACTLY one column per property. Records render as
+  // display:contents, so the grid flows all cells continuously — it can only
+  // keep rows intact if column count === cells-per-record (= property count).
+  // A trailing 1fr would add an extra column with no matching cell, drifting
+  // every subsequent record diagonally.
+  const bodyGridTemplateColumns = visibleProperties
+    .map((p) => `${widthFor(p)}px`)
+    .join(" ");
+
+  // ── Context for the cell/record NodeViews ──────────────────────────────────
+  const recordsById = useMemo(
+    () => new Map((source ? resolvedRecords : []).map((r) => [r.id, r])),
+    [resolvedRecords, source],
+  );
+
+  const columnWidthByProp = useMemo(() => {
+    const out: Record<string, number> = {};
+    (source?.properties ?? []).forEach((p) => {
+      out[p.id] = draftWidths[p.id] ?? p.width ?? 160;
+    });
+    return out;
+  }, [source?.properties, draftWidths]);
+
+  const columnValuesByProp = useMemo(() => {
+    const out: Record<string, unknown[]> = {};
+    (source?.properties ?? []).forEach((p) => {
+      out[p.id] = sortedRecords.map((r) => r.values?.[p.id] ?? null);
+    });
+    return out;
+  }, [source?.properties, sortedRecords]);
+
+  const bridgeData: DatabaseBridgeData = useMemo(
+    () => ({
+      sourceId: attrs.sourceId ?? null,
+      properties: source?.properties ?? [],
+      view: activeView,
+      locked,
+      templateId: attrs.templateId,
+      recordsById,
+      columnWidthByProp,
+      setCellValue: (recordId, propertyId, value) =>
+        setCellValue(recordId, propertyId, value as never),
+      columnValuesByProp:
+        columnValuesByProp as DatabaseBridgeData["columnValuesByProp"],
+    }),
+    [
+      attrs.sourceId,
+      attrs.templateId,
+      source?.properties,
+      activeView,
+      locked,
+      recordsById,
+      columnWidthByProp,
+      columnValuesByProp,
+      setCellValue,
+    ],
+  );
+
+  usePublishDatabaseData(editor, attrs.id ?? null, bridgeData);
+
+  // ── Seed record/cell nodes once, at creation (or first open of an existing
+  // database with no rows yet). No runtime reconciler — the node tree is
+  // authored, then kept in sync by targeted insert/delete on row ops. ───────
+  useDatabaseSeed({
+    editor,
+    databaseId: attrs.id ?? null,
+    sourceId: attrs.sourceId ?? null,
+    records: resolvedRecords,
+    properties: source?.properties ?? [],
+    ready: !isLoading && !!source,
+  });
 
   const onDragEnd = (e: DragEndEvent) => {
     if (locked) return;
@@ -289,7 +360,7 @@ export function DatabaseNodeView({
     db.reorderProperties([...reordered, ...hiddenIds]);
   };
 
-  // ── No source yet  picker ────────────────────────────────────────────────
+  // ── No source yet → picker ────────────────────────────────────────────────
   if (!attrs.sourceId) {
     return (
       <NodeViewWrapper as="div" data-type="database" contentEditable={false}>
@@ -301,9 +372,6 @@ export function DatabaseNodeView({
               pageId: pageId ?? attrs.pageId ?? null,
               isLinked: !!isLinked,
               title: "",
-              // If the user picked a saved view, open ONLY that view — its
-              // filters, sorts and layout — instead of keeping the node's
-              // default starter Table view alongside it.
               ...(savedView
                 ? {
                     views: [savedView],
@@ -316,9 +384,9 @@ export function DatabaseNodeView({
       </NodeViewWrapper>
     );
   }
-if (isLoading || !source) {
-  return <DatabaseLoadingSkeleton />;
-}
+  if (isLoading || !source) {
+    return <DatabaseLoadingSkeleton />;
+  }
 
   const onUpdateView = (patch: Partial<DatabaseView>) => {
     if (!activeView) return;
@@ -327,7 +395,19 @@ if (isLoading || !source) {
 
   const newRecord = () => {
     addRecordAsync({ title: "" })
-      .then((page) => setTarget({ pageId: page.id, view: "Peek" }))
+      .then((page) => {
+        // Keep the node tree in sync: insert the matching record node.
+        if (editor && attrs.id && attrs.sourceId) {
+          insertRecordNode(
+            editor,
+            attrs.id,
+            attrs.sourceId,
+            page,
+            source?.properties ?? [],
+          );
+        }
+        setTarget({ pageId: page.id, view: "Peek" });
+      })
       .catch(() => console.log("Failed to create page"));
   };
 
@@ -343,8 +423,6 @@ if (isLoading || !source) {
     navigator.clipboard.writeText(url);
   };
 
-  // Ellipsis menu — Lock + Copy link (always available; lock itself is not
-  // a structural edit, and copy link is read-only).
   const optionsMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -391,7 +469,6 @@ if (isLoading || !source) {
     </DropdownMenu>
   );
 
-  // ── Shared chrome ───────────────────────────────────────────────────────
   const chrome = (body: React.ReactNode) => (
     <NodeViewWrapper
       className="db-node"
@@ -416,8 +493,6 @@ if (isLoading || !source) {
             </div>
           )}
           <div style={{ maxWidth: "var(--db-editor-width)", paddingRight: 20 }}>
-            {/* Toolbar holds view tabs / add-view / view config — locked when
-                the database is locked (structure + view config are frozen). */}
             <DatabaseToolbar
               properties={source.properties}
               attrs={attrs}
@@ -438,9 +513,6 @@ if (isLoading || !source) {
             }
             locked={locked}
           />
-          {/* Filter / sort chips are view config → frozen when locked.
-              They still RENDER (so a shared viewer sees what's applied) but
-              editing is disabled via the locked prop. */}
           <CardItemGroup orientation="horizontal">
             <FilterRuleChips
               properties={source.properties}
@@ -468,7 +540,7 @@ if (isLoading || !source) {
     </NodeViewWrapper>
   );
 
-  // ── Non-table views ──────────────────────────────────────────────────────
+  // ── Non-table views (unchanged — still imperative) ────────────────────────
   if (activeView?.type === "board")
     return chrome(
       <DatabaseBoardNodeView
@@ -505,52 +577,7 @@ if (isLoading || !source) {
       />,
     );
 
-  // ── Table view ─────────────────────────────────────────────────────────
-  const hidden = new Set(activeView?.hiddenProperties ?? []);
-  const visibleProperties = source.properties.filter((p) => !hidden.has(p.id));
-
-  const groupProp = activeView?.groupByPropertyId
-    ? source.properties.find((p) => p.id === activeView.groupByPropertyId)
-    : undefined;
-  const collapsedGroups = new Set(activeView?.collapsedGroups ?? []);
-  const ungrouped = !groupProp;
-
-  // resolvedRecords + sortedRecords are memoized at the top of the component.
-  // Only grouping (cheap, and dependent on render-local groupProp) is done here.
-  const groups = groupRecords(sortedRecords, groupProp);
-
-  const toggleCollapse = (key: string) => {
-    const next = collapsedGroups.has(key)
-      ? [...collapsedGroups].filter((k) => k !== key)
-      : [...collapsedGroups, key];
-    onUpdateView({ collapsedGroups: next });
-  };
-
-  const widthFor = (p: DatabaseProperty) => draftWidths[p.id] ?? p.width ?? 160;
-  const activeIndex = activeColId
-    ? visibleProperties.findIndex((p) => p.id === activeColId)
-    : -1;
-  const overIndex = overId
-    ? visibleProperties.findIndex((p) => p.id === overId)
-    : -1;
-
-  const activeWidth =
-    activeIndex >= 0 ? widthFor(visibleProperties[activeIndex]) : 0;
-
-  const shiftFor = (i: number): number => {
-    if (activeIndex < 0 || overIndex < 0 || i === activeIndex) return 0;
-    if (activeIndex < overIndex && i > activeIndex && i <= overIndex) {
-      return -activeWidth;
-    }
-    if (activeIndex > overIndex && i >= overIndex && i < activeIndex) {
-      return activeWidth;
-    }
-    return 0;
-  };
-
-  const gridTemplateColumns =
-    visibleProperties.map((p) => `${widthFor(p)}px`).join(" ") + " 1fr";
-
+  // ── Table view (NODE-RENDERED body) ───────────────────────────────────────
   const frozenId = activeView?.frozenPropertyId ?? null;
   const freezeIndex = frozenId
     ? visibleProperties.findIndex((p) => p.id === frozenId)
@@ -575,6 +602,7 @@ if (isLoading || !source) {
       borderRight: isBoundary ? "2px solid var(--tt-border-color)" : undefined,
     };
   };
+
   const addProperty = (type: PropertyType) => {
     if (locked) return;
     updatePropertiesAsync([
@@ -619,11 +647,14 @@ if (isLoading || !source) {
       className="db-table"
       data-type="database-table"
       data-locked={locked ? "true" : "false"}
-      contentEditable={false}
     >
-      <div className="db-header-row" style={{ gridTemplateColumns }}>
+      {/* Header row — stays imperative (it's schema, not record data). */}
+      <div
+        className="db-header-row"
+        contentEditable={false}
+        style={{ gridTemplateColumns }}
+      >
         <DndContext
-          // locked → no sensors → drag never activates (reorder frozen)
           sensors={locked ? [] : sensors}
           collisionDetection={closestCenter}
           onDragStart={(e) => setActiveColId(String(e.active.id))}
@@ -662,7 +693,6 @@ if (isLoading || !source) {
           </SortableContext>
         </DndContext>
 
-        {/* Add-property cell — hidden when locked (no schema changes). */}
         <CardItemGroup orientation="horizontal" className="db-header-cell ">
           {!locked && (
             <Popover>
@@ -727,124 +757,21 @@ if (isLoading || !source) {
         </CardItemGroup>
       </div>
 
-      <div className="db-grid" style={{ display: "grid", gridTemplateColumns }}>
-        {groups.map((group) => {
-          const isCollapsed = !ungrouped && collapsedGroups.has(group.key);
-          return (
-            <React.Fragment key={group.key}>
-              {!ungrouped && (
-                <div
-                  className="db-group-header"
-                  style={{
-                    gridColumn: "1 / -1",
-                    position: "sticky",
-                    left: 0,
-                    zIndex: 4,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    width: "var(--db-editor-width)",
-                    background: "var(--tt-bg-color)",
-                    borderBottom: "1px solid var(--tt-border-color)",
-                    padding: "4px 6px",
-                    cursor: "pointer",
-                    userSelect: "none",
-                  }}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => toggleCollapse(group.key)}
-                >
-                  {isCollapsed ? (
-                    <ChevronRight className="tiptap-button-icon" size={14} />
-                  ) : (
-                    <ChevronDown className="tiptap-button-icon" size={14} />
-                  )}
-                  <span
-                    className="tiptap-button-text"
-                    style={{ fontWeight: 500 }}
-                  >
-                    {group.label}
-                  </span>
-                  <Badge data-style="gray" size="small">
-                    <span>{group.records.length}</span>
-                  </Badge>
-                </div>
-              )}
-
-              {!isCollapsed &&
-                group.records.map((record) => (
-                  <div
-                    key={record.id}
-                    className="db-row"
-                    style={{ display: "contents" }}
-                  >
-                    {visibleProperties.map((prop, i) => {
-                      const shift = shiftFor(i);
-                      return (
-                        <div
-                          key={`${record.id}:${prop.id}`}
-                          data-row-id={record.id}
-                          className="db-td"
-                          style={{
-                            borderRight: "1px solid var(--tt-border-color)",
-                            borderBottom: "1px solid var(--tt-border-color)",
-                            // display + overflow intentionally come from .db-td
-                            // (and the .db-row:has(.db-cell[data-wrap]) wrap
-                            // override). Setting them inline blocks the
-                            // height/centering/wrap CSS and collapses the rows.
-                            ...stickyStyle(i),
-                            transform:
-                              activeColId === prop.id
-                                ? `translate3d(${dragX}px,0,0)`
-                                : shift
-                                  ? `translate3d(${shift}px,0,0)`
-                                  : undefined,
-                            transition:
-                              activeColId === prop.id
-                                ? undefined
-                                : "transform 0.15s ease",
-                            ...(activeColId === prop.id && {
-                              background: "var(--tt-bg-color)",
-                              zIndex: 3,
-                            }),
-                          }}
-                        >
-                          {/* Cells stay editable when locked — only structure
-                              is frozen, not data (Notion behavior). */}
-                          <Cell
-                            property={prop}
-                            value={
-                              (record.values?.[prop.id] ??
-                                null) as CellValue | null
-                            }
-                            record={record}
-                            templateId={attrs.templateId}
-                            columnValues={sortedRecords.map(
-                              (r) => (r.values[prop.id] ?? null) as CellValue,
-                            )}
-                            onChange={(v) =>
-                              setCellValue(record.id, prop.id, v)
-                            }
-                            unwrapped={db.isUnwrapped(
-                              db.activeView.id,
-                              prop.id,
-                            )}
-                            view={db.activeView}
-                            properties={source.properties}
-                          />
-                        </div>
-                      );
-                    })}
-                    <div className="db-header-cell--actions" />
-                  </div>
-                ))}
-            </React.Fragment>
-          );
-        })}
+      {/* Body — ProseMirror renders databaseRecord > databaseCell here, in
+            document order (the reconciler keeps that = sorted order). */}
+      <div
+        className="db-node-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: bodyGridTemplateColumns,
+        }}
+      >
+        <NodeViewContent as="div" className="db-node-grid__body" />
       </div>
 
-      {/* New record stays available when locked (adding data is allowed).
-          Visibility driven by React hover state — no CSS class needed. */}
+      {/* New record — unchanged. */}
       <div
+        contentEditable={false}
         style={{
           opacity: hovered ? 1 : 0,
           pointerEvents: hovered ? "auto" : "none",
@@ -865,11 +792,13 @@ if (isLoading || !source) {
         </Button>
       </div>
 
-      <DatabaseCalculations
-        properties={visibleProperties}
-        records={sortedRecords}
-        gridTemplateColumns={gridTemplateColumns}
-      />
+      <div contentEditable={false}>
+        <DatabaseCalculations
+          properties={visibleProperties}
+          records={sortedRecords}
+          gridTemplateColumns={gridTemplateColumns}
+        />
+      </div>
     </NodeViewWrapper>,
   );
 }

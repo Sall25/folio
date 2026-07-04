@@ -1,0 +1,118 @@
+// Node-rendered database grid (Approach 1) — SUBGRID variant.
+//
+// The database node is the outer CSS grid (columns set inline, one per
+// property). Each databaseRecord is a REAL grid row that spans all columns and
+// re-exposes them to its cells via `grid-template-columns: subgrid`. This
+// gives each record an actual box (so it can be dragged / hovered / carry a
+// drag handle) while its cells still align to the outer columns.
+//
+// The Tiptap wrappers BETWEEN the outer grid and each record still need to be
+// display:contents so the record itself becomes a direct grid item of
+// .db-node-grid (only direct children can span/subgrid the parent's columns).
+
+.db-node-grid {
+  // Flatten the wrappers between the grid and the RECORD, so the record is a
+  // direct grid child. NOTE: we do NOT flatten the record or its cells now.
+  .db-node-grid__body,
+  .db-node-grid__body > [data-node-view-content-react],
+  .db-node-grid__body > [data-node-view-content-react] > [data-node-view-wrapper] {
+    display: contents;
+  }
+
+  // The record's grid BOX lives on the Tiptap renderer div (.node-databaseRecord)
+  // — that's the element with real geometry, so it's the drag-handle target.
+  // A real grid row spanning all columns, subgridding them for its cells.
+  .react-renderer.node-databaseRecord {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: stretch;
+  }
+
+  // ── Selection ─────────────────────────────────────────────────────────────
+  // When a RECORD is selected, PM adds .ProseMirror-selectednode to its
+  // renderer box. Tint the whole row with the editor's selection color, and
+  // suppress the default outline. The tint sits on the cells (which paint the
+  // row background) so it reads as one continuous highlighted row.
+  .react-renderer.node-databaseRecord.ProseMirror-selectednode {
+    outline: none;
+
+    .db-node-cell {
+      background: var(--tt-selection-color);
+    }
+  }
+
+  // Suppress PM's default outline on selected CELLS (we highlight at the row
+  // level, not per cell — avoids a boxed outline inside the row).
+  .react-renderer.node-databaseCell.ProseMirror-selectednode {
+    outline: none;
+  }
+
+  // The inner record wrapper flattens so its cells reach the subgrid on
+  // .node-databaseRecord above.
+  .db-record {
+    display: contents;
+  }
+
+  // Inside the record, flatten the cell-level wrappers so each .db-node-cell is
+  // a direct grid item of the subgrid (aligns to the parent columns).
+  .db-record__cells,
+  .db-record__cells > [data-node-view-content-react],
+  .db-record__cells > [data-node-view-content-react] > [data-node-view-wrapper],
+  .react-renderer.node-databaseCell {
+    display: contents;
+  }
+
+  // The grid item (my wrapper). Renamed from .db-cell to avoid colliding with
+  // the Cell component's own .db-cell class.
+  .db-node-cell {
+    width: auto;
+    min-width: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 34px;
+    height: auto;
+    padding: 0 8px;
+    border-right: 1px solid var(--tt-border-color);
+    border-bottom: 1px solid var(--tt-border-color);
+    background: var(--tt-bg-color);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .db-node-cell--atom {
+    justify-content: stretch;
+    > * {
+      width: 100%;
+    }
+  }
+
+  .db-node-cell__content {
+    width: 100%;
+    outline: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    p {
+      margin: 0;
+      line-height: 1.5;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .db-node-cell[data-wrap="true"] {
+    white-space: normal;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    align-items: flex-start;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+}

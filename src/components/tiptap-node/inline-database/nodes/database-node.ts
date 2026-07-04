@@ -1,27 +1,51 @@
+// database-nodes.ts
+//
+// 3-node tree so rows and cells are real ProseMirror nodes ("channels"), while
+// the DataSource stays the single source of truth for values and row existence:
+//
+//   database         content: "databaseRecord*"
+//     databaseRecord content: "databaseCell*"   attrs: { recordId, sourceId, databaseId }
+//       databaseCell content: "inline*"         attrs: { recordId, propertyId, databaseId }
+//
+// Cross-NodeView data (properties, records, setCellValue, column widths) is
+// shared via editor storage (the databaseBridge), NOT React context — context
+// can't cross the NodeView boundary. databaseId on record/cell nodes tells them
+// which database entry to read from the bridge.
+
 import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import type { ID } from "src/types";
-import { DatabaseNodeViewLazy } from "./database-node-view-lazy";
 import { Plugin } from "@tiptap/pm/state";
+import { DatabaseNodeViewLazy } from "./database-node-view-lazy";
+import { DatabaseRecordNodeViewLazy } from "./database-record-node-view-lazy";
+import { DatabaseCellNodeViewLazy } from "./database-cell-node-view-lazy";
+import {
+  createDatabaseStorage,
+  type DatabaseStorage,
+} from "../utils/database-bridge";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     database: {
-      /** Insert an atom database node referencing an existing data source. */
       insertDatabaseWithSource: (sourceId: ID, pageId?: ID) => ReturnType;
       insertDatabaseNode: () => ReturnType;
     };
   }
 }
 
-export const DatabaseNode = Node.create({
+export const DatabaseNode = Node.create<unknown, DatabaseStorage>({
   name: "database",
   group: "block",
-  atom: true,
-  content: "block*",
+  content: "databaseRecord*",
   selectable: false,
   draggable: true,
   isolating: true,
+
+  addStorage() {
+    // The bridge storage lives here so all database/record/cell NodeViews can
+    // reach it via editor.storage.databaseBridge.
+    return createDatabaseStorage();
+  },
 
   addAttributes() {
     return {
@@ -49,6 +73,7 @@ export const DatabaseNode = Node.create({
     return [
       "div",
       mergeAttributes(HTMLAttributes, { "data-type": "database" }),
+      0,
     ];
   },
 
@@ -61,16 +86,21 @@ export const DatabaseNode = Node.create({
       new Plugin({
         props: {
           handleDOMEvents: {
-            mousedown: (view, event) => {
+            mousedown: (_view, event) => {
               const target = event.target as HTMLElement;
-              // let real editable controls through
+              // Editable controls always pass through.
               if (target.closest("input, textarea, [contenteditable='true']")) {
                 return false;
               }
-              // swallow clicks inside the database chrome so PM never selects
+              // Clicks on real cell nodes pass through (focus/select the cell).
+              if (target.closest('[data-type="database-cell"]')) {
+                return false;
+              }
+              // Everything else inside the database chrome is swallowed so PM
+              // doesn't do weird selection on the container/toolbar/headers.
               if (target.closest('[data-type="database"]')) {
                 event.preventDefault();
-                return true; // tell PM we handled it
+                return true;
               }
               return false;
             },
@@ -115,7 +145,7 @@ export const DatabaseNode = Node.create({
             type: "database",
             attrs: {
               id: crypto.randomUUID(),
-              sourceId: null, // ← no source → picker shows
+              sourceId: null,
               pageId: null,
               title: "Untitled",
               views: [
@@ -136,3 +166,73 @@ export const DatabaseNode = Node.create({
     };
   },
 });
+
+export const DatabaseRecordNode = Node.create({
+  name: "databaseRecord",
+  content: "databaseCell*",
+  isolating: true,
+  selectable: true,
+  draggable: false,
+
+  addAttributes() {
+    return {
+      recordId: { default: null },
+      sourceId: { default: null },
+      databaseId: { default: null },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: 'div[data-type="database-record"]' }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "div",
+      mergeAttributes(HTMLAttributes, { "data-type": "database-record" }),
+      0,
+    ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(DatabaseRecordNodeViewLazy);
+  },
+});
+
+export const DatabaseCellNode = Node.create({
+  name: "databaseCell",
+  content: "inline*",
+  isolating: true,
+  selectable: true,
+  draggable: false,
+
+  addAttributes() {
+    return {
+      recordId: { default: null },
+      propertyId: { default: null },
+      databaseId: { default: null },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: 'div[data-type="database-cell"]' }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "div",
+      mergeAttributes(HTMLAttributes, { "data-type": "database-cell" }),
+      0,
+    ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(DatabaseCellNodeViewLazy);
+  },
+});
+
+export const DatabaseNodes = [
+  DatabaseNode,
+  DatabaseRecordNode,
+  DatabaseCellNode,
+];

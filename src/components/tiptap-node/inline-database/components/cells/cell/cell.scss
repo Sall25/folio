@@ -1,25 +1,25 @@
 .db-cell {
-  width: 100%;
-  // overflow: visible;
-  overflow-x: hidden;
-  min-width: min-content;
+//   width: 100%;
+//   // overflow: visible;
+//   overflow-x: hidden;
+//   min-width: min-content;
   height: auto;
   min-height: 34px;
-  display: flex !important;
-  justify-content: flex-start;
-  padding-left: 8px;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  align-items: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
-  font-size: inherit;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 1.5;
-  background-color: var(--tt-bg-color);
+//   display: flex !important;
+//   justify-content: flex-start;
+//   padding-left: 8px;
+//   padding-top: 0 !important;
+//   padding-bottom: 0 !important;
+//   align-items: center;
+//   white-space: nowrap;
+//   overflow: hidden;
+//   text-overflow: ellipsis;
+//   font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+//   font-size: inherit;
+//   font-weight: 400;
+//   font-size: 14px;
+//   line-height: 1.5;
+//   background-color: var(--tt-bg-color);
   
 
   // --- Wrap mode -------------------------------------------------------

@@ -1,10 +1,11 @@
-
 .db-table {
   overflow-x: scroll;
-  max-width: var(--db-editor-width);   /* bound the scroller so it overflows */
+  max-width: var(--db-editor-width); /* bound the scroller so it overflows */
   scrollbar-width: thin;
   scrollbar-color: var(--tt-scrollbar-color) transparent;
-   &:not(:hover) {
+  margin-top: 4px;
+
+  &:not(:hover) {
     scrollbar-width: none;
     &::-webkit-scrollbar {
       display: none;
@@ -13,83 +14,23 @@
   &:hover {
     scrollbar-width: thin;
   }
-
 }
 
-.db-grid {
-  display: grid !important;
-  grid-template-columns: var(--db-grid-columns);
-  width: max-content;
-  min-width: 100%;
- 
-}
+// Header row — columns come from the INLINE style (gridTemplateColumns), NOT
+// from --db-grid-columns (which is never defined). Do not set
+// grid-template-columns here or it will override the inline value with nothing.
 .db-header-row {
   display: grid;
-  grid-template-columns: var(--db-grid-columns);
   border-bottom: 1px solid var(--tt-border-color);
-  width: max-content;     /* was: max-width: var(--db-editor-width) */
+  width: max-content;
   min-width: 100%;
 }
-.db-th{
+
+.db-th {
   border: none;
 }
-.db-td {
-  height: 34px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  border-right: 1px solid var(--tt-border-color);
-}
 
-/* The ProseMirror paragraph inside empty cells */
-.db-td p {
-  margin: 0 !important;
-  line-height: 34px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-
-.db-row:hover .db-td{
-  background-color: transparent !important;
-}
-
-
-// ====================================================================
-// Wrap mode — when a row contains any wrapping cell, the row and every
-// cell in it must become content-driven instead of locked at 34px.
-//
-// The grid already makes all cells in a row share the same height (grid
-// rows size to their tallest item), so the fix is just: stop forcing
-// 34px, stop clipping, and let the paragraph wrap.
-// ====================================================================
-.db-row:has(.db-cell[data-wrap="true"]) {
-  height: auto;
-  min-height: 34px;
- 
-  // Cells: drop the fixed height + overflow clip, top-align content.
-  .db-td {
-    height: auto;
-    min-height: 34px;
-    overflow: visible;
-    align-items: flex-start;
-  }
-
-  // The ProseMirror paragraph carries its own nowrap + 34px line-height;
-  // override both so text actually flows onto multiple lines.
-  .db-td p {
-    line-height: 1.5;
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    padding: 7px 0;
-  }
-}
-
-.title-input{
+.title-input {
   caret-color: var(--tt-cursor-color);
   min-width: 160px;
   font-size: 17px;
@@ -97,22 +38,24 @@
   font-weight: 600;
   border: none;
   color: var(--tt-paragraph-text-color);
-
   outline: none;
 }
 
-.db-header-cell{
-  &__actions{
+.db-header-cell {
+  &__actions {
     border-bottom: 1px solid var(--tt-border-color);
   }
 }
 
-/* top level — not inside .db-table or any other selector */
+.db-header-cell--actions {
+  border-bottom: 1px solid var(--tt-border-color);
+}
+
+/* hover-reveal chrome — unchanged */
 .db-node .db-hover-reveal {
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.12s ease;
- 
 }
 .db-node:hover .db-hover-reveal,
 .db-node:focus-within .db-hover-reveal {
@@ -120,10 +63,13 @@
   visibility: visible;
 }
 
-.db-table{
- margin-top: 4px;
-}
-
-.db-header-cell--actions{
-  border-bottom: 1px solid var(--tt-border-color);
-}
+/* ──────────────────────────────────────────────────────────────────────────
+   REMOVED (dead rules from the old imperative DOM — caused the collapse):
+   - .db-grid { grid-template-columns: var(--db-grid-columns) }  ← var never
+     defined, made the grid invalid → rows invisible. Node grid is now the
+     standalone .db-node-grid (see database-nodes.scss).
+   - .db-td, .db-td p, .db-row rules — targeted old cell DOM that no longer
+     exists (cells are .db-cell nodes now, styled in database-nodes.scss).
+   - .db-row:has(...) wrap-mode block — will be reintroduced against .db-cell
+     later if/when wrap mode is re-added to the node grid.
+   ────────────────────────────────────────────────────────────────────────── */

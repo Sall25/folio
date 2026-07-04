@@ -1,0 +1,44 @@
+
+.db-title-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+
+  &__icon {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 17px;
+    height: 17px;
+    user-select: none;
+  }
+
+  // The editable text. Grows to fill, ellipsis when not editing, and stays a
+  // clean inline editing surface (no outline box).
+  &__text {
+    flex: 1 1 auto;
+    min-width: 0;
+    outline: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--tt-text-primary);
+
+    // Empty-title placeholder — ProseMirror leaves an empty content span; show
+    // a muted "Untitled" hint via :empty. (Only shows when truly empty.)
+    &:empty::before {
+      content: "Untitled";
+      color: var(--tt-text-muted, color-mix(in srgb, var(--tt-text-primary) 40%, transparent));
+      pointer-events: none;
+    }
+  }
+
+  &__open {
+    flex-shrink: 0;
+  }
+}

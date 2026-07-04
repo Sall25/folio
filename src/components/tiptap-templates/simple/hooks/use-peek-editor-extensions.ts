@@ -33,7 +33,11 @@ import { SlashCommand } from "src/components/tiptap-ui/slash-menu";
 import { MentionExtension } from "src/components/tiptap-ui/mention-menu";
 import { EmojiExtension } from "src/components/tiptap-ui/emoji-menu";
 import { handleImageUpload, MAX_FILE_SIZE } from "src/lib/tiptap-utils";
-import { DatabaseNode } from "src/components/tiptap-node/inline-database";
+import {
+  DatabaseCellNode,
+  DatabaseRecordNode,
+  DatabaseNode,
+} from "src/components/tiptap-node/inline-database/nodes/database-node";
 import { AudioExtension } from "src/components/tiptap-node/audio-node";
 import { RecordPropertyPanelNode } from "../record-property-panel-node";
 import type { ID } from "src/types";
@@ -106,6 +110,8 @@ export function usePeekEditorExtensions(onNavigate?: (pageId: ID) => void) {
       PageLinkNode.configure({
         onNavigate: (pageId) => onNavigate?.(pageId),
       }),
+      DatabaseCellNode,
+      DatabaseRecordNode,
       DatabaseNode,
       CalloutExtension,
       AudioExtension,
