@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PanelRightOpen } from "lucide-react";
 import { NodeViewContent } from "@tiptap/react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -10,15 +10,15 @@ import type { DatabaseView, ID } from "src/types";
 import "./database-title-content-cell.scss";
 
 /**
- * Option A title cell: the editable text IS the node's inline content
- * (NodeViewContent) — native, collaborative, ProseMirror-owned. The icon and
- * "Open" button are static chrome rendered AROUND that content span. This is
- * NOT the old TitleCell/TitleCellDisplay (which owned their own text via a
- * popover + draft state); here the text is ProseMirror's, so there is no
- * popover editor — you type directly inline.
+ * Option A title cell (Notion-style). The editable text IS the node's inline
+ * content (NodeViewContent) — native, collaborative, ProseMirror-owned. The
+ * icon and "Open" button are chrome around it.
  *
- * Page-link behavior (icon from linked page cover, Open routing) is preserved,
- * mirroring the old TitleCell.onOpen logic.
+ * Notion behavior:
+ *   - resting/hover: icon + text + Open (Open fades in on hover)
+ *   - EDITING (focus inside the text): chrome hidden, just the text + cursor
+ *
+ * The editing state is tracked via focus/blur on the content wrapper.
  */
 export function DatabaseTitleContentCell({
   pageId,
@@ -26,14 +26,14 @@ export function DatabaseTitleContentCell({
   view,
   readonly,
 }: {
-  /** The row-page id (records are pages). */
   pageId: ID | null;
-  /** Parent database templateId — title uses it for the template icon. */
   templateId?: ID;
   view?: DatabaseView;
   readonly?: boolean;
 }) {
   const [hover, setHover] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const { data: linkedPage } = usePage(pageId ?? null);
   const { data: templatePage } = usePage(templateId ?? null);
@@ -42,6 +42,24 @@ export function DatabaseTitleContentCell({
 
   const icon = templatePage?.cover ?? linkedPage?.cover ?? null;
   const hasPage = pageId != null;
+
+  // Track whether the cursor/focus is inside this cell's editable text. When it
+  // is, we're "editing" → hide the chrome (icon/Open), like Notion.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const onFocusIn = () => setEditing(true);
+    const onFocusOut = (e: FocusEvent) => {
+      // Only leave editing if focus moved OUTSIDE this cell.
+      if (!root.contains(e.relatedTarget as Node)) setEditing(false);
+    };
+    root.addEventListener("focusin", onFocusIn);
+    root.addEventListener("focusout", onFocusOut);
+    return () => {
+      root.removeEventListener("focusin", onFocusIn);
+      root.removeEventListener("focusout", onFocusOut);
+    };
+  }, []);
 
   const onOpen = () => {
     if (!pageId || !view) return;
@@ -59,41 +77,36 @@ export function DatabaseTitleContentCell({
     }
   };
 
+  // Chrome is visible only when NOT editing.
+  const showChrome = !editing;
+
   return (
     <div
+      ref={rootRef}
       className="db-title-content"
+      data-editing={editing ? "true" : "false"}
       onMouseOver={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      {icon && (
+      {showChrome && icon && (
         <span className="db-title-content__icon" contentEditable={false}>
           <PageItemIcon cover={icon} styles={{ width: 17, height: 17 }} />
         </span>
       )}
 
-      {/* The editable text — ProseMirror owns this. */}
+      {/* The editable text — ProseMirror owns this. Always present (it's the
+          node content); chrome comes and goes around it. */}
       <NodeViewContent
         as={"span" as unknown as "div"}
         className="db-title-content__text"
       />
 
-      {hasPage && !readonly && (
+      {showChrome && hasPage && !readonly && (
         <Button
           contentEditable={false}
           className="db-title-content__open"
           style={{
-            minHeight: 24,
-            height: 24,
-            fontSize: 14,
-            minWidth: 68,
-            alignItems: "center",
-            borderRadius: "var(--tt-radius-sm)",
-            background: "var(--tt-bg-color)",
-            cursor: "pointer",
-            border: "1px solid var(--tt-border-color)",
             opacity: hover ? 1 : 0,
-            transition: "opacity 0.15s ease",
-            flexShrink: 0,
           }}
           onMouseDown={(e) => {
             // Don't steal selection/focus from the editor on press.

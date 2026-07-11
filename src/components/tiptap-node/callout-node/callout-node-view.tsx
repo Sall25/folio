@@ -59,9 +59,9 @@ export function CalloutNodeView({ node, updateAttributes }: NodeViewProps) {
                 {attrs.target === "Icons" && attrs.iconName && (
                   <DynamicIcon
                     name={attrs.iconName}
-                    stroke={attrs.color}
                     size={22}
-                    strokeWidth={2}
+                    weight={500}
+                    style={{ color: attrs.color }}
                   />
                 )}
                 {attrs.target === "Upload" && attrs.iconName && (

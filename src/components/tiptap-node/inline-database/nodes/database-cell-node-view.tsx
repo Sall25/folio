@@ -40,7 +40,6 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
   const propType = property?.config.type;
   const isContent = !!propType && CONTENT_TYPES.has(propType);
   const isTitle = propType === "title";
-  const width = (propertyId && data?.columnWidthByProp[propertyId]) || 160;
 
   // Write-through for CONTENT cells: node content is authoritative; mirror its
   // plain text into the DataSource on edit (debounced).
@@ -67,7 +66,6 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
         as="div"
         data-type="database-cell"
         className="db-node-cell"
-        style={{ width }}
       >
         {/* keep a content hole so PM has somewhere to put inline content */}
         {isContent ? <NodeViewContent as="div" /> : null}
@@ -83,7 +81,6 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
         data-type="database-cell"
         data-cell-kind="content"
         className="db-node-cell db-node-cell--content db-node-cell--title"
-        style={{ width }}
       >
         <DatabaseTitleContentCell
           pageId={recordId}
@@ -103,7 +100,6 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
         data-type="database-cell"
         data-cell-kind="content"
         className="db-node-cell db-node-cell--content"
-        style={{ width }}
       >
         <NodeViewContent as="div" className="db-node-cell__content" />
       </NodeViewWrapper>
@@ -121,7 +117,6 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
       data-cell-kind="atom"
       className="db-node-cell db-node-cell--atom"
       contentEditable={false}
-      style={{ width }}
     >
       {record && (
         <Cell

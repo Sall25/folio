@@ -1,5 +1,3 @@
-// database-nodes.ts
-//
 // 3-node tree so rows and cells are real ProseMirror nodes ("channels"), while
 // the DataSource stays the single source of truth for values and row existence:
 //
@@ -88,21 +86,26 @@ export const DatabaseNode = Node.create<unknown, DatabaseStorage>({
           handleDOMEvents: {
             mousedown: (_view, event) => {
               const target = event.target as HTMLElement;
+              // TEMP: plugin disabled for diagnosis — always pass clicks
+              // through so we can tell whether THIS plugin is what blocks cell
+              // editing. If cells become editable now, the swallow logic below
+              // (restored after) is the culprit.
+              void target;
+              return false;
+              /* eslint-disable no-unreachable */
               // Editable controls always pass through.
               if (target.closest("input, textarea, [contenteditable='true']")) {
                 return false;
               }
-              // Clicks on real cell nodes pass through (focus/select the cell).
               if (target.closest('[data-type="database-cell"]')) {
                 return false;
               }
-              // Everything else inside the database chrome is swallowed so PM
-              // doesn't do weird selection on the container/toolbar/headers.
               if (target.closest('[data-type="database"]')) {
                 event.preventDefault();
                 return true;
               }
               return false;
+              /* eslint-enable no-unreachable */
             },
           },
         },

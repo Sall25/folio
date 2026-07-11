@@ -1,24 +1,3 @@
-import {
-  Type,
-  User,
-  Calendar,
-  Hash,
-  CheckSquare,
-  UserCheck,
-  Clock,
-  Edit3,
-  CaseSensitive,
-  CircleChevronDown,
-  Loader,
-  ArrowUpDown,
-  ArrowLeftRight,
-  Link,
-  Phone,
-  Mail,
-  Sigma,
-  List,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import type {
   PropertyType,
   PropertyTypeMeta,
@@ -27,29 +6,30 @@ import type {
 import { OPERATORS_FOR_TYPE } from "./filter-types";
 
 // ─── icons ────────────────────────────────────────────────────────────────────
-// PropertyTypeMeta.icon is a lucide icon name string (e.g. "Hash").
-// PROPERTY_TYPE_ICONS maps PropertyType → actual LucideIcon component for rendering.
+// PropertyTypeMeta.icon and PROPERTY_TYPE_ICONS are now Material Symbols name
+// strings (ligatures) rendered by DynamicIcon via the Material Symbols font —
+// no bundled icon components.
 
-export const PROPERTY_TYPE_ICONS: Record<PropertyType, LucideIcon> = {
-  title: CaseSensitive,
-  text: Type,
-  number: Hash,
-  checkbox: CheckSquare,
-  select: CircleChevronDown,
-  multi_select: List,
-  status: Loader,
-  date: Calendar,
-  person: User,
-  formula: Sigma,
-  relation: ArrowLeftRight,
-  rollup: ArrowUpDown,
-  url: Link,
-  phone: Phone,
-  email: Mail,
-  created_time: Clock,
-  created_by: UserCheck,
-  edited_time: Clock,
-  edited_by: Edit3,
+export const PROPERTY_TYPE_ICONS: Record<PropertyType, string> = {
+  title: "title",
+  text: "notes",
+  number: "tag",
+  checkbox: "check_box",
+  select: "expand_circle_down",
+  multi_select: "list",
+  status: "progress_activity",
+  date: "calendar_today",
+  person: "person",
+  formula: "functions",
+  relation: "sync_alt",
+  rollup: "swap_vert",
+  url: "link",
+  phone: "call",
+  email: "mail",
+  created_time: "schedule",
+  created_by: "person_add",
+  edited_time: "schedule",
+  edited_by: "edit",
 };
 
 // ─── default configs ──────────────────────────────────────────────────────────
@@ -130,7 +110,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "title",
     label: "Title",
-    icon: "CaseSensitive",
+    icon: "title",
     defaultConfig: DEFAULT_CONFIGS.title,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.title,
@@ -138,7 +118,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "text",
     label: "Text",
-    icon: "Type",
+    icon: "notes",
     defaultConfig: DEFAULT_CONFIGS.text,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.text,
@@ -146,7 +126,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "number",
     label: "Number",
-    icon: "Hash",
+    icon: "tag",
     defaultConfig: DEFAULT_CONFIGS.number,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.number,
@@ -154,7 +134,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "select",
     label: "Select",
-    icon: "CircleChevronDown",
+    icon: "expand_circle_down",
     defaultConfig: DEFAULT_CONFIGS.select,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.select,
@@ -162,7 +142,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "multi_select",
     label: "Multi-select",
-    icon: "CircleChevronDown",
+    icon: "list",
     defaultConfig: DEFAULT_CONFIGS.multi_select,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.multi_select,
@@ -170,7 +150,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "status",
     label: "Status",
-    icon: "Loader",
+    icon: "progress_activity",
     defaultConfig: DEFAULT_CONFIGS.status,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.status,
@@ -178,7 +158,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "checkbox",
     label: "Checkbox",
-    icon: "CheckSquare",
+    icon: "check_box",
     defaultConfig: DEFAULT_CONFIGS.checkbox,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.checkbox,
@@ -186,7 +166,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "date",
     label: "Date",
-    icon: "Calendar",
+    icon: "calendar_today",
     defaultConfig: DEFAULT_CONFIGS.date,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.date,
@@ -194,7 +174,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "person",
     label: "Person",
-    icon: "User",
+    icon: "person",
     defaultConfig: DEFAULT_CONFIGS.person,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.person,
@@ -202,7 +182,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "url",
     label: "URL",
-    icon: "Link",
+    icon: "link",
     defaultConfig: DEFAULT_CONFIGS.url,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.url,
@@ -210,7 +190,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "email",
     label: "Email",
-    icon: "Mail",
+    icon: "mail",
     defaultConfig: DEFAULT_CONFIGS.email,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.email,
@@ -218,7 +198,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "phone",
     label: "Phone",
-    icon: "Phone",
+    icon: "call",
     defaultConfig: DEFAULT_CONFIGS.phone,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.phone,
@@ -226,7 +206,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "formula",
     label: "Formula",
-    icon: "Sigma",
+    icon: "functions",
     defaultConfig: DEFAULT_CONFIGS.formula,
     readOnly: true,
     filterOperators: OPERATORS_FOR_TYPE.formula,
@@ -234,7 +214,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "relation",
     label: "Relation",
-    icon: "ArrowUpRight",
+    icon: "sync_alt",
     defaultConfig: DEFAULT_CONFIGS.relation,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.relation,
@@ -242,7 +222,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "rollup",
     label: "Rollup",
-    icon: "ArrowUpDown",
+    icon: "swap_vert",
     defaultConfig: DEFAULT_CONFIGS.rollup,
     readOnly: true,
     filterOperators: OPERATORS_FOR_TYPE.rollup,
@@ -250,7 +230,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "created_time",
     label: "Created time",
-    icon: "Clock",
+    icon: "schedule",
     defaultConfig: DEFAULT_CONFIGS.created_time,
     readOnly: true,
     filterOperators: OPERATORS_FOR_TYPE.created_time,
@@ -258,7 +238,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "created_by",
     label: "Created by",
-    icon: "UserCheck",
+    icon: "person_add",
     defaultConfig: DEFAULT_CONFIGS.created_by,
     readOnly: true,
     filterOperators: OPERATORS_FOR_TYPE.created_by,
@@ -266,7 +246,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "edited_time",
     label: "Last edited time",
-    icon: "Clock",
+    icon: "schedule",
     defaultConfig: DEFAULT_CONFIGS.edited_time,
     readOnly: true,
     filterOperators: OPERATORS_FOR_TYPE.edited_time,
@@ -274,7 +254,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "edited_by",
     label: "Last edited by",
-    icon: "Edit3",
+    icon: "edit",
     defaultConfig: DEFAULT_CONFIGS.edited_by,
     readOnly: true,
     filterOperators: OPERATORS_FOR_TYPE.edited_by,

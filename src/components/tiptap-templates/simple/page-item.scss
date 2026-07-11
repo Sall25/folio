@@ -29,6 +29,9 @@
   font-weight: 500;
   overflow: hidden;
   text-overflow: clip;
+
+  //  min-height: 27px;
+    height: 28.5px;
   
  // min-width: 200px;
   &:hover {
@@ -73,10 +76,12 @@
     pointer-events: auto;
   }
 
+  max-width: calc(var(--sidebar-width, 290px) - 10px);
+
   &:hover{
     .page-item-title{
-      // was 130px at the fixed 290px sidebar → same 160px offset, now live
-      max-width: calc(var(--sidebar-width, 290px) - 160px);
+      // was 130px at the fixed 290px sidebar → same 168px offset, now live
+      max-width: calc(var(--sidebar-width, 290px) - 124px);
     }
   }
 }
@@ -89,8 +94,9 @@
   
   // color: inherit;
   opacity: 1;
-  // was 175px at the fixed 290px sidebar → same 115px offset, now live
-  max-width: calc(var(--sidebar-width, 290px) - 115px);
+  // was 175px at the fixed 290px sidebar → same 120px offset, now live
+   max-width: calc(var(--sidebar-width, 290px) - 120px);
+
   flex: 1;           
   min-width: 0;     
   overflow: hidden;

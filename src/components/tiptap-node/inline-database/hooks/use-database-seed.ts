@@ -1,3 +1,5 @@
+// use-database-seed.ts
+//
 // Replaces the runtime reconciler with the simpler "seed at creation" model:
 //
 //   - SEED ONCE: when the source has loaded and the database node has zero
@@ -150,4 +152,169 @@ export function removeRecordNode(
   tr.setMeta("addToHistory", false);
   tr.delete(fromPos, toPos);
   editor.view.dispatch(tr);
+}
+
+// ── Property add: insert a cell node for the new property into EVERY record ──
+// Mirrors insertRecordNode but at the cell level. When a property is added,
+// existing record nodes are short one cell; this appends a matching cell to
+// each. Skips records that already have a cell for this property (idempotent).
+export function insertCellForProperty(
+  editor: Editor,
+  databaseId: ID,
+  propertyId: ID,
+): void {
+  const info = findDatabaseNode(editor.state.doc, databaseId);
+  if (!info) return;
+
+  const cellType = editor.schema.nodes.databaseCell;
+  if (!cellType) return;
+
+  const tr = editor.state.tr;
+  tr.setMeta("addToHistory", false);
+  let modified = false;
+
+  // Walk record nodes; for each, if it lacks a cell for propertyId, append one
+  // before the record's close. Recompute positions via mapping after each edit.
+  const recordPositions: { recordId: string; pos: number }[] = [];
+  let childPos = info.pos + 1;
+  info.node.forEach((rec) => {
+    if (rec.type.name === "databaseRecord") {
+      recordPositions.push({
+        recordId: (rec.attrs.recordId as string) ?? "",
+        pos: childPos,
+      });
+    }
+    childPos += rec.nodeSize;
+  });
+
+  for (const { recordId, pos } of recordPositions) {
+    const mappedPos = tr.mapping.map(pos);
+    const recNode = tr.doc.nodeAt(mappedPos);
+    if (!recNode || recNode.type.name !== "databaseRecord") continue;
+
+    // Already has a cell for this property?
+    let has = false;
+    recNode.forEach((c) => {
+      if (c.type.name === "databaseCell" && c.attrs.propertyId === propertyId) {
+        has = true;
+      }
+    });
+    if (has) continue;
+
+    const insertAt = mappedPos + recNode.nodeSize - 1; // before record close
+    tr.insert(insertAt, cellType.create({ recordId, propertyId, databaseId }));
+    modified = true;
+  }
+
+  if (modified) editor.view.dispatch(tr);
+}
+
+// ── Property remove: delete the cell node for that property from EVERY record ─
+export function removeCellForProperty(
+  editor: Editor,
+  databaseId: ID,
+  propertyId: ID,
+): void {
+  const info = findDatabaseNode(editor.state.doc, databaseId);
+  if (!info) return;
+
+  const tr = editor.state.tr;
+  tr.setMeta("addToHistory", false);
+
+  // Collect all cell ranges (across all records) matching propertyId, then
+  // delete back-to-front so positions stay valid.
+  const ranges: { from: number; to: number }[] = [];
+  let recPos = info.pos + 1;
+  info.node.forEach((rec) => {
+    if (rec.type.name === "databaseRecord") {
+      let cellPos = recPos + 1;
+      rec.forEach((c) => {
+        if (
+          c.type.name === "databaseCell" &&
+          c.attrs.propertyId === propertyId
+        ) {
+          ranges.push({ from: cellPos, to: cellPos + c.nodeSize });
+        }
+        cellPos += c.nodeSize;
+      });
+    }
+    recPos += rec.nodeSize;
+  });
+
+  if (ranges.length === 0) return;
+  ranges
+    .sort((a, b) => b.from - a.from)
+    .forEach(({ from, to }) => tr.delete(from, to));
+  editor.view.dispatch(tr);
+}
+
+// ── Reactive cell-sync: keep each record's cells matching current properties ──
+// Property mutations (add / delete / etc.) originate in components the table
+// view doesn't own (PropertyHeader, settings panels), so wiring each mutation
+// site is fragile and misses cases. Instead this effect watches the property
+// set and reconciles the CELL nodes to match — insert cells for properties
+// that gained one, remove cells for properties that no longer exist. Rows
+// (record nodes) are handled separately; this only touches cells WITHIN
+// existing records, so there's no row-level dual-authority concern.
+//
+// Cheap: property changes are rare and this only acts on a real diff.
+export function useDatabaseCellSync({
+  editor,
+  databaseId,
+  properties,
+  ready,
+}: {
+  editor: Editor | null;
+  databaseId: string | null;
+  properties: DatabaseProperty[];
+  ready: boolean;
+}) {
+  // Track the property-id set we last reconciled to, so we only act on change.
+  const lastIdsRef = useRef<string>("");
+
+  useEffect(() => {
+    if (!editor || editor.isDestroyed || !ready || !databaseId) return;
+
+    const info = findDatabaseNode(editor.state.doc, databaseId);
+    if (!info) return;
+
+    const wantIds = properties.map((p) => p.id);
+    const wantKey = wantIds.join("|");
+
+    // Collect the union of propertyIds currently present across record cells.
+    const haveIds = new Set<string>();
+    info.node.forEach((rec) => {
+      if (rec.type.name !== "databaseRecord") return;
+      rec.forEach((c) => {
+        if (c.type.name === "databaseCell" && c.attrs.propertyId) {
+          haveIds.add(c.attrs.propertyId as string);
+        }
+      });
+    });
+
+    const haveKey = [...haveIds].sort().join("|");
+    // Nothing changed since last run AND cells already match → skip.
+    if (
+      wantKey === lastIdsRef.current &&
+      haveKey === [...wantIds].sort().join("|")
+    ) {
+      return;
+    }
+
+    // Insert cells for properties present in the source but missing from cells.
+    for (const pid of wantIds) {
+      if (!haveIds.has(pid)) {
+        insertCellForProperty(editor, databaseId, pid);
+      }
+    }
+    // Remove cells for properties no longer in the source.
+    for (const pid of haveIds) {
+      if (!wantIds.includes(pid)) {
+        removeCellForProperty(editor, databaseId, pid);
+      }
+    }
+
+    lastIdsRef.current = wantKey;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, databaseId, ready, properties]);
 }

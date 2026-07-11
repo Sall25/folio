@@ -2,7 +2,8 @@ import "dotenv/config";
 import { Server } from "@hocuspocus/server";
 import { SQLite } from "@hocuspocus/extension-sqlite";
 import { TiptapTransformer } from "@hocuspocus/transformer";
-import { jwtVerify, createRemoteJWKSet } from "jose";
+import { jwtVerify, createLocalJWKSet } from "jose";
+
 import { seedExtensions } from "./seed-schema";
 
 // This is a SEPARATE Node process from your Vite app — run it with
@@ -20,15 +21,26 @@ if (!SUPABASE_URL) {
   throw new Error("Missing SUPABASE_URL env var.");
 }
 
-// Verify session tokens LOCALLY against Supabase's published PUBLIC keys
-// (JWKS). The project signs tokens with an asymmetric ES256 key, so the
-// server only needs the public half — it can verify but never sign. No
-// per-connection network round-trip to Supabase (jose fetches the JWKS once
-// and caches it, only re-fetching when it sees an unknown key id), which is
-// what cut the page-switch delay. No sensitive secret in .env.
-const JWKS = createRemoteJWKSet(
-  new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`),
-);
+// Supabase's public verification key, fetched once from
+// https://<project>.supabase.co/auth/v1/.well-known/jwks.json
+// Verifying locally means no network call per connection — and no dependency
+// on Node being able to reach Supabase at all. If Supabase rotates its signing
+// key, re-fetch that URL and replace this block.
+const JWKS = createLocalJWKSet({
+  keys: [
+    {
+      alg: "ES256",
+      crv: "P-256",
+      ext: true,
+      key_ops: ["verify"],
+      kid: "58ebce08-95f2-4bdc-a370-e46ff68c848a",
+      kty: "EC",
+      use: "sig",
+      x: "-Q5NAOi-BDytVNIIe1w3YEA-rakEY-X3G96oTnneLWE",
+      y: "GnR3vNxlPGOXwTJzlqCrDtuhTXrRW4w122qPuq7uAoY",
+    },
+  ],
+});
 
 // ── Minimal shapes needed here — kept local rather than importing your
 // full types.ts, since this is a separate Node process/package. If this
@@ -88,6 +100,8 @@ const server = new Server<AuthContext>({
   // TitleNode see it, it's already correct — no transitional empty state to
   // trigger duplicate-title / empty-paragraph insertion.
   async onLoadDocument({ documentName, document }) {
+    const t0 = Date.now();
+
     // Already has content (seeded before, or has real edits) — never touch.
     if (!document.isEmpty("default")) return;
 
@@ -112,9 +126,11 @@ const server = new Server<AuthContext>({
       // Leave the doc empty rather than crash the load — better a blank page
       // than a dead connection. Surfaces loudly in logs for investigation.
     }
+    console.log(`[load] ${documentName} took ${Date.now() - t0}ms`);
   },
 
   async onAuthenticate({ token, documentName }) {
+    const t0 = Date.now();
     if (!token) {
       throw new Error("Not authenticated.");
     }
@@ -166,6 +182,8 @@ const server = new Server<AuthContext>({
     if (!memberIds.includes(personId)) {
       throw new Error("Not a member of this teamspace.");
     }
+
+    console.log(`[auth] ${documentName} took ${Date.now() - t0}ms`);
 
     // Available in other hooks (onChange, onStoreDocument, etc.) via
     // `context.personId` — e.g. to attribute changes or log activity.

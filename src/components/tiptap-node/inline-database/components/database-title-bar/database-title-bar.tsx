@@ -30,6 +30,16 @@ export function DatabaseTitleBar({
   const [draft, setDraft] = useState(title);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Keep draft in sync with external title changes while NOT editing, without
+  // an effect: adopt the new title during render when it diverges and we're
+  // not actively editing. (This is the recommended pattern over a setState-in-
+  // effect, which React flags as cascading renders.)
+  const [prevTitle, setPrevTitle] = useState(title);
+  if (title !== prevTitle) {
+    setPrevTitle(title);
+    if (!editing) setDraft(title);
+  }
+
   function commit() {
     setEditing(false);
     const trimmed = draft.trim();
@@ -47,6 +57,9 @@ export function DatabaseTitleBar({
           className="db-title-bar__input"
           value={draft}
           autoFocus
+          // Size the input to its content so a short title doesn't balloon to
+          // a wide box. +1 for the caret; clamped so it never gets tiny.
+          size={Math.max(draft.length + 1, 4)}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={commit}
           onKeyDown={(e) => {
@@ -60,7 +73,6 @@ export function DatabaseTitleBar({
       ) : (
         <button
           className="db-title-bar__title"
-          // locked → plain label, no rename on click
           onClick={
             locked
               ? undefined

@@ -42,10 +42,50 @@
     }
   }
 
-  // Suppress PM's default outline on selected CELLS (we highlight at the row
-  // level, not per cell — avoids a boxed outline inside the row).
+  // ── Selected CELL (Notion style) ──────────────────────────────────────────
+  // A single selected cell gets a ring + a small corner handle dot (bottom
+  // right), like Notion. PM marks the cell renderer with .ProseMirror-
+  // selectednode. We suppress the default outline and draw our own inset ring
+  // so it hugs the cell without shifting layout.
   .react-renderer.node-databaseCell.ProseMirror-selectednode {
     outline: none;
+
+    .db-node-cell {
+      position: relative;
+      // Inset ring via box-shadow so it doesn't affect layout/size.
+      box-shadow: inset 0 0 0 2px var(--tt-selection-color);
+      border-radius: 2px;
+    }
+
+    // Corner handle dot, bottom-right.
+    .db-node-cell::after {
+      content: "";
+      position: absolute;
+      right: -3px;
+      bottom: -3px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--tt-selection-color);
+      border: 1.5px solid var(--tt-bg-color);
+      pointer-events: none;
+      z-index: 2;
+    }
+  }
+
+  // ── Editing a content cell (title/text) ───────────────────────────────────
+  // When the cursor is inside a title/text cell, give it a subtle filled
+  // background + soft border (Notion's edit-mode look). Keyed off the title
+  // component's data-editing, and off focus-within for plain text cells.
+  .db-node-cell--content:focus-within,
+  .db-node-cell--content:has([data-editing="true"]) {
+    background: color-mix(
+      in srgb,
+      var(--tt-text-primary) 4%,
+      var(--tt-bg-color)
+    );
+    box-shadow: inset 0 0 0 1px var(--tt-border-color);
+    border-radius: 3px;
   }
 
   // The inner record wrapper flattens so its cells reach the subgrid on

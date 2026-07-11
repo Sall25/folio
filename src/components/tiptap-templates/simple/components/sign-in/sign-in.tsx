@@ -6,6 +6,7 @@ type Status = "idle" | "sending" | "sent" | "error";
 
 export function SignIn() {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -19,10 +20,8 @@ export function SignIn() {
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        // Where Supabase redirects after the person clicks the email link.
-        // Must match a Redirect URL you've allow-listed in
-        // Authentication > URL Configuration in the Supabase dashboard.
         emailRedirectTo: window.location.origin,
+        data: { name: name.trim() }, // matches raw_user_meta_data->>'name'
       },
     });
 
@@ -72,6 +71,16 @@ export function SignIn() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoFocus
+            required
+            disabled={status === "sending"}
+          />
+
+          <input
+            type="text"
+            className="sign-in__input"
+            placeholder="Your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             required
             disabled={status === "sending"}
           />

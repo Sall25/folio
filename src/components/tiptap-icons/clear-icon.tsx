@@ -1,6 +1,3 @@
-/**
- */
-
 import { memo } from "react";
 
 type SvgProps = React.ComponentPropsWithoutRef<"svg">;

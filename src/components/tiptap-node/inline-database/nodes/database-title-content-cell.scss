@@ -1,3 +1,9 @@
+// Three states:
+//   1. resting/hover — icon + text + Open (Open fades in on hover)
+//   2. editing (focus in text) — chrome hidden, subtle filled background,
+//      soft border; just text + cursor
+//   3. selected (NodeSelection) — blue ring + corner handle dot (styled at the
+//      grid-cell level in database-nodes.scss, since PM marks the cell wrapper)
 
 .db-title-content {
   display: flex;
@@ -5,6 +11,8 @@
   gap: 6px;
   width: 100%;
   min-width: 0;
+  height: 100%;
+  border-radius: var(--tt-radius-sm, 4px);
 
   &__icon {
     flex-shrink: 0;
@@ -16,8 +24,6 @@
     user-select: none;
   }
 
-  // The editable text. Grows to fill, ellipsis when not editing, and stays a
-  // clean inline editing surface (no outline box).
   &__text {
     flex: 1 1 auto;
     min-width: 0;
@@ -26,19 +32,47 @@
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: 14px;
+    font-weight: 500; // Notion titles are semi-bold
     line-height: 1.5;
     color: var(--tt-text-primary);
 
-    // Empty-title placeholder — ProseMirror leaves an empty content span; show
-    // a muted "Untitled" hint via :empty. (Only shows when truly empty.)
     &:empty::before {
       content: "Untitled";
-      color: var(--tt-text-muted, color-mix(in srgb, var(--tt-text-primary) 40%, transparent));
+      color: var(
+        --tt-text-muted,
+        color-mix(in srgb, var(--tt-text-primary) 40%, transparent)
+      );
       pointer-events: none;
     }
   }
 
   &__open {
     flex-shrink: 0;
+    min-height: 24px;
+    height: 24px;
+    font-size: 12px;
+    min-width: 0;
+    align-items: center;
+    gap: 3px;
+    padding: 0 8px;
+    border-radius: var(--tt-radius-sm, 4px);
+    background: var(--tt-bg-color);
+    cursor: pointer;
+    border: 1px solid var(--tt-border-color);
+    transition: opacity 0.15s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+  }
+
+  // ── Editing: chrome hidden, cell gets a subtle fill + soft border ─────────
+  // When editing, the text should be allowed to wrap/scroll naturally rather
+  // than ellipsis-truncate (you're typing into it).
+  &[data-editing="true"] {
+    .db-title-content__text {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+    }
   }
 }

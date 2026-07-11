@@ -1,6 +1,4 @@
-
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
-import { FileText } from "lucide-react";
 import type { Page } from "src/types";
 import type { CSSProperties } from "react";
 
@@ -29,24 +27,28 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
       <span className="page-icon" style={{ ...styles }} aria-hidden="true">
         {hasIcon ? (
           <DynamicIcon
-            stroke={
-              !cover.color || cover.color === "var(--tt-text-color)"
-                ? "var(--tt-text-primary)"
-                : cover.color
-            }
+            style={{
+              color:
+                !cover.color || cover.color === "var(--tt-text-color)"
+                  ? "var(--tt-text-primary)"
+                  : cover.color,
+            }}
             name={cover.iconName!}
             size={20}
-            strokeWidth={2}
+            weight={400}
           />
         ) : (
-          <FileText
-            stroke={
-              !cover.color || cover.color === "var(--tt-text-color)"
-                ? "var(--tt-text-primary)"
-                : cover.color
-            }
+          <DynamicIcon
+            name="description"
             size={20}
-            strokeWidth={1.5}
+            weight={400}
+            filled={false}
+            style={{
+              color:
+                !cover.color || cover.color === "var(--tt-text-color)"
+                  ? "var(--tt-text-color)"
+                  : cover.color,
+            }}
           />
         )}
       </span>
@@ -55,7 +57,7 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
 
   return (
     <span className="page-icon" style={{ ...styles }} aria-hidden="true">
-      <FileText size={18} strokeWidth={1.5} />
+      <DynamicIcon name="description" size={18} weight={400} filled={false} />
     </span>
   );
 }

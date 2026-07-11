@@ -73,6 +73,7 @@ export interface UseDataSourceReturn {
 
   // ── Saved-view catalog (bookkeeping for "start from") ───────────────────
   registerViewsAsync: (entries: SavedView[]) => Promise<void>;
+  unregisterViewsAsync: (entries: ID[]) => Promise<void>;
 
   resolvedRecords: Page[];
 }
@@ -339,6 +340,28 @@ export function useDataSource(
     [mutateSource],
   );
 
+  // Counterpart to registerViewsAsync — prune saved views whose ids are no
+  // longer present on the node (e.g. a view was deleted). No-op guarded so it
+  // only writes when something actually changed.
+  const unregisterViewsAsync = useCallback(
+    async (viewIds: ID[]) => {
+      const src = sourceRef.current;
+      if (!src || viewIds.length === 0) return;
+
+      const existing = src.savedViews ?? [];
+      const removeSet = new Set(viewIds);
+      const next = existing.filter((e) => !removeSet.has(e.id));
+
+      if (next.length === existing.length) return; // nothing removed
+
+      await mutateSource.mutateAsync({
+        id: src.id,
+        patch: { savedViews: next },
+      });
+    },
+    [mutateSource],
+  );
+
   const resolvedRecords = useMemo(
     () => (source ? resolveRecordFormulas(rows, source.properties) : []),
     [rows, source],
@@ -363,5 +386,6 @@ export function useDataSource(
     deleteViewAsync,
     duplicateViewAsync,
     registerViewsAsync,
+    unregisterViewsAsync,
   };
 }

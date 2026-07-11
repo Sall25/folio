@@ -151,75 +151,6 @@ function WorkspaceHeader() {
   );
 }
 
-// function WorkSpaceFooter({ onCreatePage }: { onCreatePage?: () => void }) {
-//   const { t } = useTranslation();
-
-//   return (
-//     <CardFooter
-//       style={{
-//         position: "sticky",
-//         bottom: 0,
-//         zIndex: 5,
-//         minHeight: 50,
-//         display: "flex",
-//         justifyContent: "flex-start",
-//         alignItems: "center",
-//         width: "100%",
-//         padding: "0 15px",
-//         borderTop: "0.5px solid var(--tt-border-color)",
-//         // translucent sidebar bg + blur = the frost. Opaque bg kills the effect.
-//         background:
-//           "color-mix(in srgb, var(--sidebar-bg-color) 70%, transparent)",
-//         backdropFilter: "blur(12px) saturate(1.4)",
-//         WebkitBackdropFilter: "blur(12px) saturate(1.4)",
-//       }}
-//     >
-//       {/* the fog: fades scrolling list into the sidebar bg, just above the bar */}
-//       <div
-//         aria-hidden
-//         style={{
-//           position: "absolute",
-//           left: 0,
-//           right: 0,
-//           bottom: "100%",
-//           height: 36,
-//           pointerEvents: "none",
-//           background:
-//             "linear-gradient(to top, var(--sidebar-bg-color), transparent)",
-//         }}
-//       />
-
-//       <CardItemGroup
-//         orientation="horizontal"
-//         style={{
-//           width: "100%",
-//           justifyContent: "center",
-//           alignItems: "center",
-//           marginBottom: 5,
-//           gap: 10,
-//         }}
-//       >
-//         <Button
-//           aria-label={t("actions.createPage")}
-//           // variant="ghost"
-//           onClick={onCreatePage}
-//           style={{
-//             minHeight: 40,
-//             height: 50,
-//             padding: "10px 20px",
-//             // padding: "20px 20.5px",
-//             borderRadius: "100px",
-//             border: "1px solid var(--tt-border-color)",
-//             width: "20%",
-//           }}
-//         >
-//           <SquarePen className="tiptap-button-icon" />
-//         </Button>
-//       </CardItemGroup>
-//     </CardFooter>
-//   );
-// }
-
 function NavItems() {
   const { t } = useTranslation();
   const { collapsed } = useEditorLayout();
@@ -365,9 +296,10 @@ function TemplatesModalTrigger() {
     <Button
       variant="ghost"
       onClick={() => onOpenChange?.(true)}
-      style={{ width: "100%", justifyContent: "flex-start" }}
+      style={{ width: "100%", justifyContent: "flex-start", fontWeight: 550 }}
     >
       <LayoutTemplate className="tiptap-button-icon" />
+      <Spacer size={3} />
       <span className="tiptap-button-text">{t("templates.browse")}</span>
     </Button>
   );
@@ -386,6 +318,7 @@ function LibraryPaletteTrigger() {
       style={{ width: "100%", justifyContent: "flex-start" }}
     >
       <LibraryBig className="tiptap-button-icon" />
+      <Spacer size={3} />
       <span>Library</span>
     </Button>
   );
@@ -452,7 +385,15 @@ export function SimpleEditorSidebar() {
         </CardItemGroup>
       </CardHeader>
 
-      <CardBody style={{ width: "100%", padding: "0 8px" }}>
+      <CardBody
+        style={{
+          width: "100%",
+          paddingTop: 0,
+          paddingBottom: 0,
+          paddingLeft: 10,
+          paddingRight: 5,
+        }}
+      >
         {/* <Spacer orientation="vertical" size={20} /> */}
         {!collapsed &&
           (isPending || isLoading || !pages ? (
