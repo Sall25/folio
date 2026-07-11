@@ -100,9 +100,9 @@ function IconButton({
             {cover.target === "Icons" && cover.iconName && (
               <DynamicIcon
                 name={cover.iconName}
-                stroke={iconColor}
                 size={95}
-                strokeWidth={2}
+                weight={500}
+                style={{ color: iconColor }}
               />
             )}
             {cover.target === "Upload" && cover.iconName && (

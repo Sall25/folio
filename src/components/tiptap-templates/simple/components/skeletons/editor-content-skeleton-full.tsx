@@ -11,9 +11,8 @@ import "./editor-content-skeleton-full.scss";
  * Shown during the collab-sync gap on page switch.
  */
 export function EditorContentSkeletonFull() {
-
   return (
-    <div className="es-content" role="presentation">
+    <div className="editor-skeleton-full" role="presentation">
       <EditorContentSkeleton />
     </div>
   );

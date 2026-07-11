@@ -19,7 +19,6 @@ import { SimpleEditorToolbar, type MobileView } from "./simple-editor-toolbar";
 import { SimpleEditorContent } from "./simple-editor-content";
 import { VersionHistorySidebar } from "src/components/tiptap-ui/version-history/version-history-sidebar";
 import { HomePageContent } from "./components";
-import { useActivePage } from "./context/active-page-context";
 import { PagePeekView } from "./page-peek-view";
 import { useEditorLayout } from "./context/editor-layout-context";
 
@@ -166,7 +165,6 @@ function SimpleEditorInner({ view }: { view: View }) {
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const isMobile = useIsBreakpoint();
   const { height } = useWindowSize();
-  const { isLoading } = useActivePage();
 
   // A page create is in flight (sidebar "+", or "add page to section").
   // Covers the window where activePageId hasn't moved yet (setActivePageId
@@ -203,7 +201,7 @@ function SimpleEditorInner({ view }: { view: View }) {
             onTriggerVersionHistory={() => onVersionHistoryOpenChanged(true)}
           />
           <SimpleEditorMain view={view} />
-          {(isLoading || isCreatingPage) && (
+          {isCreatingPage && (
             <div className="editor-skeleton-overlay">
               <EditorContentSkeletonFull />
             </div>

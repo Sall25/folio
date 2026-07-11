@@ -226,6 +226,13 @@ function TreeRow({
   );
 }
 
+const SECTION_ADD_LABEL: Record<string, string> = {
+  private: "New private page",
+  shared: "Start collaborating",
+  teamspaces: "Create a teamspace",
+  favorites: "Star a page to pin it here",
+};
+
 // ── SectionAddPageButton: persistent "+ Add page" affordance ────────────────
 // Always rendered beneath a section's page list, empty or not.
 function SectionAddPageButton({
@@ -242,7 +249,8 @@ function SectionAddPageButton({
       type="button"
     >
       <Plus size={14} />
-      <span>Add page</span>
+      <span>{SECTION_ADD_LABEL[(category as string).toLowerCase()]}</span>
+     
     </button>
   );
 }

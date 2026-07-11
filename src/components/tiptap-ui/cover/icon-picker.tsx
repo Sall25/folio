@@ -7,7 +7,7 @@ import {
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer/spacer.js";
-import type { LucideIcon } from "lucide-react";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import {
   Popover,
   PopoverContent,
@@ -17,9 +17,8 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface IconPopoverProps {
-  Icon: LucideIcon;
-  color: string;
   name: string;
+  color: string;
   onSelect: (name: string, color?: string) => void;
 }
 
@@ -31,25 +30,17 @@ const colorRows = Array.from(
   (_, i) => ICON_COLORS.slice(i * COLORS_PER_ROW, (i + 1) * COLORS_PER_ROW),
 );
 
-function IconPopover({ Icon, color, name, onSelect }: IconPopoverProps) {
+function IconPopover({ name, color, onSelect }: IconPopoverProps) {
   const [open, setOpen] = useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          // style={{ minWidth: 46, width: 46 }}
-          tooltip={name}
-        >
-          <Icon
+        <Button variant="ghost" tooltip={name}>
+          <DynamicIcon
             className="tiptap-button-icon"
-            style={{
-              width: 22,
-              height: 22,
-            }}
+            name={name}
             size={22}
-            strokeWidth={2}
-            stroke={color}
+            style={{ color }}
           />
         </Button>
       </PopoverTrigger>
@@ -72,15 +63,11 @@ function IconPopover({ Icon, color, name, onSelect }: IconPopoverProps) {
                         onSelect(name, c.value);
                       }}
                     >
-                      <Icon
+                      <DynamicIcon
                         className="tiptap-button-icon"
-                        size={24}
-                        strokeWidth={2}
-                        stroke={c.value}
-                        style={{
-                          width: 22,
-                          height: 22,
-                        }}
+                        name={name}
+                        size={22}
+                        style={{ color: c.value }}
                       />
                     </Button>
                   ))}
@@ -203,12 +190,11 @@ export function IconPicker({
                     justifyContent: "space-between",
                   }}
                 >
-                  {row.map(({ name, icon: Icon, color }) => (
+                  {row.map(({ name, color }) => (
                     <IconPopover
                       key={name}
-                      Icon={Icon}
-                      color={color}
                       name={name}
+                      color={color}
                       onSelect={onSelect}
                     />
                   ))}

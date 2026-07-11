@@ -21,6 +21,7 @@ import {
 import { readStorage, writeStorage } from "src/lib/local-storage";
 
 import "./section.scss";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 
 // ── menu close context ───────────────────────────────────────────────────────
 // Lets SectionMenuItem close the popover after a click without the consumer
@@ -256,15 +257,15 @@ export function Section({
           <span
             className="sidebar-section__chevron"
             style={{
-              marginTop: 5,
+              marginTop: 2,
               opacity: hover ? 1 : 0,
               transition: "opacity 0.15s ease",
             }}
           >
             {isCollapsed ? (
-              <ChevronRight size={14} />
+              <ChevronRight size={12} />
             ) : (
-              <ChevronDown size={14} />
+              <ChevronDown size={12} />
             )}
           </span>
         )}
@@ -277,35 +278,38 @@ export function Section({
             onClick={(e) => e.stopPropagation()}
           >
             {hasLibrary && (
-              <button
+              <Button
+                variant="ghost"
                 type="button"
                 className="sidebar-section__action-btn"
                 aria-label={"View Library"}
                 onClick={onLibraryClick}
               >
-                <LibraryBig size={15} />
-              </button>
+                <LibraryBig className="tiptap-button-icon" size={15} />
+              </Button>
             )}
             {onAddClick && (
-              <button
+              <Button
+                variant="ghost"
                 type="button"
                 className="sidebar-section__action-btn"
                 aria-label={addLabel}
                 onClick={onAddClick}
               >
-                <Plus size={15} />
-              </button>
+                <Plus className="tiptap-button-icon" size={15} />
+              </Button>
             )}
             {hasMenu && (
-              <button
+              <Button
+                variant="ghost"
                 type="button"
                 ref={moreBtnRef}
                 className="sidebar-section__action-btn"
                 aria-label={menuLabel}
                 onClick={() => setMenuOpen((v) => !v)}
               >
-                <MoreHorizontal size={15} />
-              </button>
+                <MoreHorizontal className="tiptap-button-icon" size={15} />
+              </Button>
             )}
           </div>
         )}

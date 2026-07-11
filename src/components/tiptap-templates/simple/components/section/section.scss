@@ -1,4 +1,13 @@
-
+.sidebar-section__header{
+  padding: 4px 3px;
+  font-size: 14px;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  -webkit-font-smoothing: auto;
+ 
+}
+.sidebar-section__label{
+  font-size: 13px;
+}
 .sidebar-section-menu__caption {
   padding: 6px 10px 2px;
   font-size: 10.5px;

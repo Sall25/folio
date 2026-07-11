@@ -6,7 +6,7 @@ import { UploadIconTab } from "./upload-icon-tab";
 import type { Target } from "./types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import { Trash } from "lucide-react";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import { useIconRecents } from "src/components/tiptap-templates/simple/hooks/use-icon-recents";
 import { RecentIconRow } from "src/components/tiptap-templates/simple/components/recent-icon-row";
 
@@ -105,7 +105,12 @@ export function IconPickerCard({
               color: "var(--tt-danger-color, #e03e3e)",
             }}
           >
-            <Trash className="tiptap-button-icon" stroke="#e03e3e" />
+            <DynamicIcon
+              className="tiptap-button-icon"
+              name="delete"
+              size={18}
+              style={{ color: "#e03e3e" }}
+            />
             <span className="tiptap-button-text">Remove icon</span>
           </Button>
         </CardFooter>
