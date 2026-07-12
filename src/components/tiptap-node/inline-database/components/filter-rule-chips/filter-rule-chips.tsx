@@ -43,6 +43,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "src/components/tiptap-ui-primitive/dropdown-menu";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 function makeFilterRule(property: DatabaseProperty): FilterRule {
   const type = property.config.type;
@@ -305,7 +306,8 @@ function FilterChip({
   locked?: boolean;
 }) {
   const property = properties.find((p) => p.id === rule.propertyId);
-  const Icon = property ? PROPERTY_TYPE_ICONS[property.config.type] : null;
+  // Material Symbols name string now, not an icon component.
+  const iconName = property ? PROPERTY_TYPE_ICONS[property.config.type] : null;
   const operators = OPERATORS_FOR_TYPE[rule.propertyType] as FilterOperator[];
   const needsValue = !NO_VALUE_OPERATORS.has(rule.operator);
   const propLabel = property?.name ?? "Property";
@@ -319,14 +321,17 @@ function FilterChip({
         height: 24,
         minHeight: 24,
         color: "var(--tt-brand-color-400)",
-        fontSize: 12,
+        fontSize: 14,
         cursor: locked ? "default" : undefined,
       }}
     >
-      {Icon && (
-        <Icon
+      {iconName && (
+        <DynamicIcon
+          name={iconName}
+          size={20}
+          filled={false}
           className="tiptap-button-icon"
-          style={{ color: "inherit", width: 12.5 }}
+          style={{ color: "inherit" }}
         />
       )}
       <span className="tiptap-button-text db-filter-chip__prop">
@@ -384,7 +389,14 @@ function FilterChip({
                         padding: "3px 5px",
                       }}
                     >
-                      {Icon && <Icon className="tiptap-button-icon" />}
+                      {iconName && (
+                        <DynamicIcon
+                          name={iconName}
+                          size={20}
+                          filled={false}
+                          className="tiptap-button-icon"
+                        />
+                      )}
                       <span className="tiptap-button-text">{propLabel}</span>
                       <Spacer orientation="horizontal" />
                       <ChevronDown className="tiptap-button-icon-sub" />
@@ -401,8 +413,8 @@ function FilterChip({
                       <CardItemGroup
                         style={{ width: "100%", justifyContent: "flex-start" }}
                       >
-                        {properties.map((p) => {
-                          const PIcon = PROPERTY_TYPE_ICONS[p.config.type];
+                       {properties.map((p) => {
+                          const pIconName = PROPERTY_TYPE_ICONS[p.config.type];
                           return (
                             <DropdownMenuItem key={p.id} asChild>
                               <Button
@@ -410,7 +422,12 @@ function FilterChip({
                                 onClick={() => onPropertyChange(p.id)}
                                 style={{ justifyContent: "flex-start" }}
                               >
-                                <PIcon className="tiptap-button-icon" />
+                                <DynamicIcon
+                                  name={pIconName}
+                                  size={20}
+                                  filled={false}
+                                  className="tiptap-button-icon"
+                                />
                                 <span>{p.name}</span>
                               </Button>
                             </DropdownMenuItem>

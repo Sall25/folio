@@ -6,46 +6,58 @@
 // gives each record an actual box (so it can be dragged / hovered / carry a
 // drag handle) while its cells still align to the outer columns.
 //
-// The Tiptap wrappers BETWEEN the outer grid and each record still need to be
-// display:contents so the record itself becomes a direct grid item of
-// .db-node-grid (only direct children can span/subgrid the parent's columns).
+// The Tiptap wrappers BETWEEN the outer grid and each record are display:contents
+// so the record itself becomes a direct grid item of .db-node-grid (only direct
+// children can span/subgrid the parent's columns).
+//
+// CHANGED: the renderer div (.react-renderer.node-databaseRecord) is now
+// flattened too, and the row box lives on .db-record — the element the record's
+// NodeView actually renders. That's what lets the view control the row:
+// display:none when filtered out, `order` for the view's sort. Previously the
+// box was on the renderer div, which no component renders and therefore can't
+// style.
 
 .db-node-grid {
-  // Flatten the wrappers between the grid and the RECORD, so the record is a
-  // direct grid child. NOTE: we do NOT flatten the record or its cells now.
+  // Flatten every wrapper between the grid and the record's own element, so
+  // .db-record becomes the direct grid child.
   .db-node-grid__body,
   .db-node-grid__body > [data-node-view-content-react],
-  .db-node-grid__body > [data-node-view-content-react] > [data-node-view-wrapper] {
+  .db-node-grid__body > [data-node-view-content-react] > [data-node-view-wrapper],
+  .react-renderer.node-databaseRecord {
     display: contents;
   }
 
-  // The record's grid BOX lives on the Tiptap renderer div (.node-databaseRecord)
-  // — that's the element with real geometry, so it's the drag-handle target.
-  // A real grid row spanning all columns, subgridding them for its cells.
- .react-renderer.node-databaseRecord {
+  // The record's grid BOX — a real grid row spanning all columns, subgridding
+  // them for its cells. This is the element DatabaseRecordNodeView renders, so
+  // it can set display:none (filtered out) and `order` (view sort) on it.
+  .db-record {
     display: grid;
     grid-column: 1 / -1;
     grid-template-columns: subgrid;
     align-items: stretch;
 
-    // The row itself paints its background and bottom border, so it reads as a
+    // The row paints its own background and bottom border, so it reads as one
     // continuous row across the FULL table width. The cells only draw their
-    // vertical separators. Without this the row ends at the last property
+    // vertical separators. Without this the row ended at the last property
     // column, leaving the trailing area (where the header's +/… sit) blank.
     background: var(--tt-bg-color);
     border-bottom: 1px solid var(--tt-border-color);
   }
 
   // ── Selection ─────────────────────────────────────────────────────────────
-  // When a RECORD is selected, PM adds .ProseMirror-selectednode to its
-  // renderer box. Tint the whole row with the editor's selection color, and
-  // suppress the default outline. The tint sits on the cells (which paint the
-  // row background) so it reads as one continuous highlighted row.
+  // PM adds .ProseMirror-selectednode to the RENDERER div — which is now
+  // display:contents — so the tint has to be applied to the .db-record inside
+  // it. The row carries the tint (it paints the background now) and the cells
+  // go transparent so it reads as one continuous highlighted row.
   .react-renderer.node-databaseRecord.ProseMirror-selectednode {
     outline: none;
 
-    .db-node-cell {
+    .db-record {
       background: var(--tt-selection-color);
+    }
+
+    .db-node-cell {
+      background: transparent;
     }
   }
 
@@ -80,10 +92,9 @@
     }
   }
 
-  // ── Editing a content cell (title/text) ───────────────────────────────────
-  // When the cursor is inside a title/text cell, give it a subtle filled
-  // background + soft border (Notion's edit-mode look). Keyed off the title
-  // component's data-editing, and off focus-within for plain text cells.
+  // ── Editing a content cell (text) ─────────────────────────────────────────
+  // When the cursor is inside a text cell, give it a subtle filled background +
+  // soft border (Notion's edit-mode look).
   .db-node-cell--content:focus-within,
   .db-node-cell--content:has([data-editing="true"]) {
     background: color-mix(
@@ -95,14 +106,8 @@
     border-radius: 3px;
   }
 
-  // The inner record wrapper flattens so its cells reach the subgrid on
-  // .node-databaseRecord above.
-  .db-record {
-    display: contents;
-  }
-
   // Inside the record, flatten the cell-level wrappers so each .db-node-cell is
-  // a direct grid item of the subgrid (aligns to the parent columns).
+  // a direct grid item of the record's subgrid (aligns to the parent columns).
   .db-record__cells,
   .db-record__cells > [data-node-view-content-react],
   .db-record__cells > [data-node-view-content-react] > [data-node-view-wrapper],
@@ -123,7 +128,8 @@
     height: auto;
     padding: 0 8px;
     border-right: 1px solid var(--tt-border-color);
-    // border-bottom: 1px solid var(--tt-border-color);
+    // border-bottom: the ROW draws it now (.db-record), so it spans the full
+    // table width instead of stopping at the last property column.
     background: var(--tt-bg-color);
     overflow: hidden;
     white-space: nowrap;

@@ -34,6 +34,14 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
 
   const data = useDatabaseBridgeData(editor, databaseId);
 
+  // Hiding a property is a VIEW concern, not a schema one: the cell node must
+  // stay in the shared document (another view — or another client — may still
+  // show that column) and simply not render here. Deleting the node would
+  // corrupt every other view of the same database.
+  const isHidden = !!(
+    propertyId && data?.view?.hiddenProperties?.includes(propertyId)
+  );
+
   const property = useMemo(
     () => data?.properties.find((p) => p.id === propertyId) ?? null,
     [data?.properties, propertyId],
@@ -67,6 +75,7 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
         as="div"
         data-type="database-cell"
         className="db-node-cell"
+        style={isHidden ? { display: "none" } : undefined}
       >
         {/* keep a content hole so PM has somewhere to put inline content */}
         {isContent ? <NodeViewContent as="div" /> : null}
@@ -82,6 +91,7 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
         data-type="database-cell"
         data-cell-kind="content"
         className="db-node-cell db-node-cell--content"
+        style={isHidden ? { display: "none" } : undefined}
       >
         <NodeViewContent as="div" className="db-node-cell__content" />
       </NodeViewWrapper>
@@ -99,6 +109,7 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
       data-cell-kind="atom"
       className="db-node-cell db-node-cell--atom"
       contentEditable={false}
+      style={isHidden ? { display: "none" } : undefined}
     >
       {record && (
         <Cell

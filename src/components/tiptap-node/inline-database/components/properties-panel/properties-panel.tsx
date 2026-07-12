@@ -16,6 +16,7 @@ import {
 } from "src/components/tiptap-ui-primitive/grid";
 import "./properties-panel.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 export function PropertiesPanel({
   properties,
@@ -53,7 +54,7 @@ export function PropertiesPanel({
   const hiddenProperties = properties.filter((p) => hidden.has(p.id));
 
   const renderRow = (p: (typeof properties)[0]) => {
-    const Icon = PROPERTY_TYPE_ICONS[p.config.type];
+    const iconName = PROPERTY_TYPE_ICONS[p.config.type];
     const isTitle = p.config.type === "title";
     const isVisible = !hidden.has(p.id);
 
@@ -66,7 +67,12 @@ export function PropertiesPanel({
         </GridCell>
         <GridCell>
           <Button variant="ghost" style={{ background: "transparent" }}>
-            <Icon size={13} className="tiptap-button-icon" />
+            <DynamicIcon
+              name={iconName}
+              size={20}
+              filled={false}
+              className="tiptap-button-icon"
+            />
             <span className="tiptap-button-text">{p.name}</span>
           </Button>
         </GridCell>

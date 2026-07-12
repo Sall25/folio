@@ -1,17 +1,3 @@
-// use-database-seed.ts
-//
-// Replaces the runtime reconciler with the simpler "seed at creation" model:
-//
-//   - SEED ONCE: when the source has loaded and the database node has zero
-//     record children (a freshly-created or pre-migration database), insert
-//     the full record/cell tree in one transaction. Guard is the doc itself
-//     (child count), so it's idempotent and self-healing — never re-seeds once
-//     children exist, auto-seeds any database that somehow has none.
-//
-//   - ROW ADD / DELETE: targeted helpers the "New"/delete flows call to insert
-//     or remove a single record node, keeping the tree in sync without a
-//     general reconciler.
-
 import { useEffect, useRef } from "react";
 import type { Editor } from "@tiptap/react";
 import type { Node as PMNode } from "@tiptap/pm/model";
@@ -248,16 +234,83 @@ export function removeCellForProperty(
   editor.view.dispatch(tr);
 }
 
+// ── Cell ORDER: match each record's cells to the schema's property order ──────
+// Reordering a column calls reorderProperties → updatePropertiesAsync, which
+// rewrites source.properties itself. That's a SCHEMA change, shared by every
+// view and every client — so the document's cell order is genuinely stale, not
+// merely being viewed differently. (Contrast hiding, which is per-view and must
+// NOT touch the document.) The header re-renders from source.properties
+// immediately; without this the cells keep their original order and the columns
+// desync.
+//
+// Each record's children are rewritten wholesale in the target order rather than
+// computing a move sequence — simpler, and far less prone to position math bugs.
+// No-ops per record when the order already matches, so it's safe to call every
+// reconciliation.
+export function reorderCellsToProperties(
+  editor: Editor,
+  databaseId: ID,
+  propertyIds: ID[],
+): void {
+  const info = findDatabaseNode(editor.state.doc, databaseId);
+  if (!info) return;
+
+  const tr = editor.state.tr;
+  tr.setMeta("addToHistory", false);
+  let modified = false;
+
+  const recordPositions: number[] = [];
+  let childPos = info.pos + 1;
+  info.node.forEach((rec) => {
+    if (rec.type.name === "databaseRecord") recordPositions.push(childPos);
+    childPos += rec.nodeSize;
+  });
+
+  // Back-to-front so earlier positions stay valid as we rewrite.
+  for (const pos of [...recordPositions].reverse()) {
+    const recNode = tr.doc.nodeAt(pos);
+    if (!recNode || recNode.type.name !== "databaseRecord") continue;
+
+    const cellsByProp = new Map<string, PMNode>();
+    const currentIds: string[] = [];
+    recNode.forEach((c) => {
+      if (c.type.name === "databaseCell" && c.attrs.propertyId) {
+        const pid = c.attrs.propertyId as string;
+        cellsByProp.set(pid, c);
+        currentIds.push(pid);
+      }
+    });
+
+    const ordered = propertyIds
+      .map((pid) => cellsByProp.get(pid))
+      .filter((c): c is PMNode => !!c);
+
+    // Any cell whose property isn't in propertyIds would be dropped by the
+    // rewrite below. That's removeCellForProperty's job, not ours — bail rather
+    // than silently destroy data we don't own.
+    if (ordered.length !== currentIds.length) continue;
+
+    const wantIds = ordered.map((c) => c.attrs.propertyId as string);
+    if (currentIds.join("|") === wantIds.join("|")) continue; // already correct
+
+    tr.replaceWith(pos + 1, pos + recNode.nodeSize - 1, ordered);
+    modified = true;
+  }
+
+  if (modified) editor.view.dispatch(tr);
+}
+
 // ── Reactive cell-sync: keep each record's cells matching current properties ──
-// Property mutations (add / delete / etc.) originate in components the table
+// Property mutations (add / delete / reorder) originate in components the table
 // view doesn't own (PropertyHeader, settings panels), so wiring each mutation
 // site is fragile and misses cases. Instead this effect watches the property
-// set and reconciles the CELL nodes to match — insert cells for properties
-// that gained one, remove cells for properties that no longer exist. Rows
-// (record nodes) are handled separately; this only touches cells WITHIN
-// existing records, so there's no row-level dual-authority concern.
+// set and reconciles the CELL nodes to match — insert cells for properties that
+// gained one, remove cells for properties that no longer exist, and reorder the
+// rest to the schema's order. Rows (record nodes) are handled separately; this
+// only touches cells WITHIN existing records, so there's no row-level
+// dual-authority concern.
 //
-// Cheap: property changes are rare and this only acts on a real diff.
+// Cheap: property changes are rare and every pass no-ops on a real diff.
 export function useDatabaseCellSync({
   editor,
   databaseId,
@@ -269,7 +322,8 @@ export function useDatabaseCellSync({
   properties: DatabaseProperty[];
   ready: boolean;
 }) {
-  // Track the property-id set we last reconciled to, so we only act on change.
+  // The ORDERED property-id join we last reconciled to. Ordered on purpose: a
+  // pure reorder changes this key, so it can't be mistaken for "no change".
   const lastIdsRef = useRef<string>("");
 
   useEffect(() => {
@@ -292,12 +346,14 @@ export function useDatabaseCellSync({
       });
     });
 
-    const haveKey = [...haveIds].sort().join("|");
-    // Nothing changed since last run AND cells already match → skip.
-    if (
-      wantKey === lastIdsRef.current &&
-      haveKey === [...wantIds].sort().join("|")
-    ) {
+    const setsMatch =
+      [...haveIds].sort().join("|") === [...wantIds].sort().join("|");
+
+    // Same property SET as last run and the cells already hold it → no
+    // insert/remove needed. The ORDER may still be stale (e.g. another client
+    // reordered), so the reorder pass still runs before we bail.
+    if (wantKey === lastIdsRef.current && setsMatch) {
+      reorderCellsToProperties(editor, databaseId, wantIds);
       return;
     }
 
@@ -313,6 +369,9 @@ export function useDatabaseCellSync({
         removeCellForProperty(editor, databaseId, pid);
       }
     }
+
+    // Then put what's left in the schema's order.
+    reorderCellsToProperties(editor, databaseId, wantIds);
 
     lastIdsRef.current = wantKey;
     // eslint-disable-next-line react-hooks/exhaustive-deps

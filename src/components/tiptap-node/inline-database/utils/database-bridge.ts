@@ -23,8 +23,11 @@ export interface DatabaseBridgeData {
   templateId?: ID;
   recordsById: Map<ID, Page>;
   columnWidthByProp: Record<ID, number>;
-  // Kept as functions — they close over the live DataSource hooks in the
-  // database NodeView. Not serialized; storage just holds the references.
+  // Records after the active view's filters and sorts have been applied, in
+  // display order. Record NodeViews read this to decide whether they render at
+  // all (absent → filtered out) and where (index → CSS order). Filtering and
+  // sorting are per-VIEW, so the record nodes themselves never move.
+  sortedRecordIds: ID[];
   setCellValue: (recordId: ID, propertyId: ID, value: CellValue | null) => void;
   columnValuesByProp: Record<ID, CellValue[]>;
 }
@@ -64,6 +67,7 @@ export function publishDatabaseData(
   data: DatabaseBridgeData,
 ): void {
   const storage = getStorage(editor);
+
   if (!storage) return;
   let entry = storage.entries.get(databaseId);
   if (!entry) {
@@ -80,7 +84,9 @@ export function publishDatabaseData(
 export function removeDatabaseData(editor: Editor, databaseId: string): void {
   const storage = getStorage(editor);
   if (!storage) return;
-  storage.entries.delete(databaseId);
+  const entry = storage.entries.get(databaseId);
+  if (!entry) return;
+  entry.data = null;
 }
 
 /** Read current data for a database id (no subscription). */
@@ -99,6 +105,7 @@ export function subscribeDatabaseData(
   listener: () => void,
 ): () => void {
   const storage = getStorage(editor);
+  console.log("[bridge] SUBSCRIBE", databaseId, "storage?", !!storage);
   if (!storage) return () => {};
   let entry = storage.entries.get(databaseId);
   if (!entry) {
@@ -109,6 +116,7 @@ export function subscribeDatabaseData(
     storage.entries.set(databaseId, entry);
   }
   entry.listeners.add(listener);
+  console.log("[bridge] SUBSCRIBED, listeners now:", entry.listeners.size);
   return () => {
     const e = storage.entries.get(databaseId);
     e?.listeners.delete(listener);

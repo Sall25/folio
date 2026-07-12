@@ -98,13 +98,21 @@ export function DatabaseNodeView({
 
   // ── Filtered + sorted records ─────────────────────────────────────────────
   const sortedRecords = useMemo(() => {
+    // The title's value lives on page.title, not in values[], so filters and
+    // sorts need the property list to know which id is the title.
+    const props = source?.properties ?? [];
     const filtered = activeView?.filters?.length
       ? resolvedRecords.filter((r) =>
-          recordMatchesFilters(r, activeView.filters),
+          recordMatchesFilters(r, activeView.filters, props),
         )
       : resolvedRecords;
-    return sortRecords(filtered, activeView?.sorts ?? []);
-  }, [resolvedRecords, activeView?.filters, activeView?.sorts]);
+    return sortRecords(filtered, activeView?.sorts ?? [], props);
+  }, [
+    resolvedRecords,
+    activeView?.filters,
+    activeView?.sorts,
+    source?.properties,
+  ]);
 
   // Register present views (existing effect)
   useEffect(() => {

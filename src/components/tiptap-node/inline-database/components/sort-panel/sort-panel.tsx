@@ -10,6 +10,7 @@ import type { DatabaseProperty, DatabaseView, SortRule } from "src/types";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import type { UseDatabaseReturn } from "../../hooks/use-database";
 import "./sort-panel.scss";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 export function SortPanel({
   properties,
@@ -74,7 +75,8 @@ export function SortPanel({
             </span>
           ) : (
             filtered.map((p) => {
-              const Icon = PROPERTY_TYPE_ICONS[p.config.type];
+              // Material Symbols name string now, not an icon component.
+              const iconName = PROPERTY_TYPE_ICONS[p.config.type];
               return (
                 <Button
                   key={p.id}
@@ -86,7 +88,14 @@ export function SortPanel({
                   }}
                   onClick={() => addSortFor(p)}
                 >
-                  {Icon && <Icon className="tiptap-button-icon" />}
+                  {iconName && (
+                    <DynamicIcon
+                      name={iconName}
+                      size={20}
+                      filled={false}
+                      className="tiptap-button-icon"
+                    />
+                  )}
                   <span className="tiptap-button-text">{p.name}</span>
                 </Button>
               );

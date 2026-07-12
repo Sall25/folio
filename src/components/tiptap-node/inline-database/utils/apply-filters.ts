@@ -1,17 +1,35 @@
-import type { Page } from "src/types";
 import type {
   FilterGroup,
   FilterRule,
   FilterOperator,
 } from "src/types/filter-types";
 import { NO_VALUE_OPERATORS } from "src/types/filter-types";
+import type { Page, DatabaseProperty } from "src/types";
 
-export function getCellValue(record: Page, propertyId: string): unknown {
+/**
+ * A record's value for a property.
+ *
+ * The TITLE property is special: its value is the page's own title, not an
+ * entry in values[]. (The title cell is an atom that reads page.title — see the
+ * title-as-atom change.) Reading values[titlePropId] returns null, which is why
+ * sorting and filtering by Name silently did nothing.
+ */
+export function getCellValue(
+  record: Page,
+  propertyId: string,
+  properties?: DatabaseProperty[],
+): unknown {
+  const prop = properties?.find((p) => p.id === propertyId);
+  if (prop?.config.type === "title") return record.title ?? "";
   return record.values?.[propertyId] ?? null;
 }
 
-function matchesRule(record: Page, rule: FilterRule): boolean {
-  const value = getCellValue(record, rule.propertyId);
+function matchesRule(
+  record: Page,
+  rule: FilterRule,
+  properties?: DatabaseProperty[],
+): boolean {
+  const value = getCellValue(record, rule.propertyId, properties);
 
   const op: FilterOperator = rule.operator;
 
@@ -170,21 +188,23 @@ function matchesRule(record: Page, rule: FilterRule): boolean {
   }
 }
 
-function matchesGroup(record: Page, group: FilterGroup): boolean {
+function matchesGroup(
+  record: Page,
+  group: FilterGroup,
+  properties?: DatabaseProperty[],
+): boolean {
   const rules = group.rules as FilterRule[];
   if (rules.length === 0) return true;
   if (group.operator === "and")
-    return rules.every((r) => matchesRule(record, r));
-  return rules.some((r) => matchesRule(record, r));
+    return rules.every((r) => matchesRule(record, r, properties));
+  return rules.some((r) => matchesRule(record, r, properties));
 }
 
-/**
- * Returns true if the record should be shown given the view's filters.
- */
 export function recordMatchesFilters(
   record: Page,
   filters: FilterGroup[],
+  properties?: DatabaseProperty[],
 ): boolean {
   if (!filters || filters.length === 0) return true;
-  return filters.every((group) => matchesGroup(record, group));
+  return filters.every((group) => matchesGroup(record, group, properties));
 }
