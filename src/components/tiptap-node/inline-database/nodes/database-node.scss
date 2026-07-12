@@ -22,11 +22,18 @@
   // The record's grid BOX lives on the Tiptap renderer div (.node-databaseRecord)
   // — that's the element with real geometry, so it's the drag-handle target.
   // A real grid row spanning all columns, subgridding them for its cells.
-  .react-renderer.node-databaseRecord {
+ .react-renderer.node-databaseRecord {
     display: grid;
     grid-column: 1 / -1;
     grid-template-columns: subgrid;
     align-items: stretch;
+
+    // The row itself paints its background and bottom border, so it reads as a
+    // continuous row across the FULL table width. The cells only draw their
+    // vertical separators. Without this the row ends at the last property
+    // column, leaving the trailing area (where the header's +/… sit) blank.
+    background: var(--tt-bg-color);
+    border-bottom: 1px solid var(--tt-border-color);
   }
 
   // ── Selection ─────────────────────────────────────────────────────────────
@@ -116,7 +123,7 @@
     height: auto;
     padding: 0 8px;
     border-right: 1px solid var(--tt-border-color);
-    border-bottom: 1px solid var(--tt-border-color);
+    // border-bottom: 1px solid var(--tt-border-color);
     background: var(--tt-bg-color);
     overflow: hidden;
     white-space: nowrap;

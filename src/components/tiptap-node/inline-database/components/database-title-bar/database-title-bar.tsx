@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Ellipsis, Eye, EyeOff } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Ellipsis, Eye, EyeOff, Plus } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import "./database-title-bar.scss";
 import {
@@ -7,16 +7,32 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { Card } from "src/components/tiptap-ui-primitive/card";
+import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
+import { ViewIcon } from "../database-toolbar/view-icon";
+import type { DatabaseView } from "src/types";
+
+const VIEW_TYPES: { type: DatabaseView["type"]; label: string }[] = [
+  { type: "table", label: "Table" },
+  { type: "board", label: "Board" },
+  { type: "list", label: "List" },
+  { type: "gallery", label: "Gallery" },
+  { type: "calendar", label: "Calendar" },
+  { type: "timeline", label: "Timeline" },
+];
 
 interface DatabaseTitleBarProps {
   title: string;
   hideTitle?: boolean;
   onTitleChange: (title: string) => void;
   onHideTitleChange: (hide: boolean) => void;
-  /** When locked, the title is read-only and the options menu (hide title)
-      is removed — title/visibility are layout config, frozen when locked. */
+  /** When locked, the title is read-only and both the options menu (hide
+      title) and the add-view "+" are removed — title/visibility and view
+      structure are config, frozen when locked. */
   locked?: boolean;
+  /** Create a view. Same path DatabaseViewTabs' "+" uses (db.addView), so both
+      entry points build views identically. Omit to hide the "+" — e.g. in the
+      multi-view layout, where the tabs already carry their own add-view. */
+  onAddView?: (type: DatabaseView["type"], label: string) => void;
 }
 
 export function DatabaseTitleBar({
@@ -25,25 +41,35 @@ export function DatabaseTitleBar({
   onTitleChange,
   onHideTitleChange,
   locked = false,
+  onAddView,
 }: DatabaseTitleBarProps) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(title);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
-  // Keep draft in sync with external title changes while NOT editing, without
-  // an effect: adopt the new title during render when it diverges and we're
-  // not actively editing. (This is the recommended pattern over a setState-in-
-  // effect, which React flags as cascading renders.)
-  const [prevTitle, setPrevTitle] = useState(title);
-  if (title !== prevTitle) {
-    setPrevTitle(title);
-    if (!editing) setDraft(title);
-  }
+  // ONE element, always mounted, deliberately UNCONTROLLED — no `value` prop,
+  // no onChange→state. A controlled input is rewritten by React on every
+  // keystroke, which is what forced the caret to the end and made typing feel
+  // laggy. Here the DOM owns the text, so the caret stays where you put it.
+  //
+  // An <input> (not a contentEditable div) matters because this lives inside a
+  // ProseMirror NodeView: PM fights a bare contentEditable for selection, but
+  // treats form controls as editing islands and leaves them alone.
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    if (document.activeElement === el) return; // never yank the caret mid-edit
+    if (el.value !== title) el.value = title;
+  }, [title]);
 
   function commit() {
-    setEditing(false);
-    const trimmed = draft.trim();
-    if (trimmed && trimmed !== title) onTitleChange(trimmed);
+    const el = inputRef.current;
+    if (!el) return;
+    const next = el.value.trim();
+    if (next && next !== title) {
+      onTitleChange(next);
+    } else {
+      el.value = title; // empty or unchanged → snap back
+    }
   }
 
   return (
@@ -51,41 +77,31 @@ export function DatabaseTitleBar({
       className="db-title-bar"
       style={{ display: hideTitle ? "none" : "flex" }}
     >
-      {editing && !locked ? (
-        <input
-          ref={inputRef}
-          className="db-title-bar__input"
-          value={draft}
-          autoFocus
-          // Size the input to its content so a short title doesn't balloon to
-          // a wide box. +1 for the caret; clamped so it never gets tiny.
-          size={Math.max(draft.length + 1, 4)}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") commit();
-            if (e.key === "Escape") {
-              setDraft(title);
-              setEditing(false);
-            }
-          }}
-        />
-      ) : (
-        <button
-          className="db-title-bar__title"
-          onClick={
-            locked
-              ? undefined
-              : () => {
-                  setDraft(title);
-                  setEditing(true);
-                }
+      <input
+        ref={inputRef}
+        className="db-title-bar__title"
+        defaultValue={title}
+        placeholder="Untitled database"
+        readOnly={locked}
+        spellCheck={false}
+        autoComplete="off"
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            e.currentTarget.blur(); // blur commits
           }
-          style={locked ? { cursor: "default" } : undefined}
-        >
-          {title || "Untitled database"}
-        </button>
-      )}
+          if (e.key === "Escape") {
+            e.preventDefault();
+            e.currentTarget.value = title;
+            e.currentTarget.blur();
+          }
+        }}
+        // Inside a ProseMirror NodeView: keep PM's global handlers from
+        // reinterpreting clicks/keys that belong to this field.
+        onMouseDown={(e) => e.stopPropagation()}
+        onKeyDownCapture={(e) => e.stopPropagation()}
+      />
 
       {/* Options (hide title) is layout config — omitted when locked. */}
       {!locked && (
@@ -113,6 +129,44 @@ export function DatabaseTitleBar({
                 )}
                 <span className="tiptap-button-text">Hide Title</span>
               </Button>
+            </Card>
+          </PopoverContent>
+        </Popover>
+      )}
+
+      {/* Add view — only rendered when the tabs aren't (single-view layout),
+          so there's never a second add-view button competing with theirs.
+          Frozen when locked: adding a view is structural config. */}
+      {!locked && onAddView && (
+        <Popover open={addOpen} onOpenChange={setAddOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              className="db-title-bar__add-view"
+              aria-label="Add view"
+              tooltip="Add view"
+            >
+              <Plus size={14} className="tiptap-button-icon" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent side="bottom" align="start" className="db-panel">
+            <Card style={{ padding: "5px 10px", minWidth: 160 }}>
+              <CardItemGroup>
+                {VIEW_TYPES.map(({ type, label }) => (
+                  <Button
+                    key={type}
+                    variant="ghost"
+                    style={{ justifyContent: "flex-start", width: "100%" }}
+                    onClick={() => {
+                      onAddView(type, label);
+                      setAddOpen(false);
+                    }}
+                  >
+                    <ViewIcon view={{ type } as DatabaseView} />
+                    <span className="tiptap-button-text">{label}</span>
+                  </Button>
+                ))}
+              </CardItemGroup>
             </Card>
           </PopoverContent>
         </Popover>

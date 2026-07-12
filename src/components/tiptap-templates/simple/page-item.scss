@@ -29,6 +29,11 @@
   font-weight: 500;
   overflow: hidden;
   text-overflow: clip;
+  color: #5f5e59;
+
+  .dark & {
+    color: #bcbab6;
+  }
 
   //  min-height: 27px;
     height: 28.5px;
@@ -46,11 +51,13 @@
   &.active {
     background: var(--page-item-active-bg-color);
     color: var(--tt-text-primary);
-    font-weight: 600;
-   
+    font-weight: 500;
+    .dark & {
+      color: var(--white);
+    }
     opacity: 1;
     min-height: 27px;
-    height: 30px;
+    height: 29px;
 
     .page-icon {
       opacity: 1;
@@ -90,7 +97,9 @@
   font-size: 14px;
   
   font-weight: inherit;
-  color: #5f5e59;
+  // color: #5f5e59;
+
+  color: inherit;
   
   // color: inherit;
   opacity: 1;

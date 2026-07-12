@@ -3,6 +3,7 @@
   flex-direction: column;
   gap: 2px;
   padding: 8px 0 16px 0;
+  padding-left: 0;
   width: 100%;
 }
 
@@ -10,9 +11,9 @@
   display: grid;
   grid-template-columns: 160px 1fr;
   align-items: center;
-  min-height: 32px;
+  min-height: 34px;
   border-radius: var(--tt-radius-sm);
-  padding: 0 4px;
+  padding: 0;
   transition: background 0.1s ease;
 
   &:hover {
@@ -24,15 +25,17 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-  color: var(--tt-text-secondary);
+  font-size: 14px;
+  line-height: 1.4;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  -webkit-font-smoothing: auto;
+  color: var(--tt-text-primary);
   padding: 4px 8px 4px 4px;
   user-select: none;
 }
 
 .record-prop-panel__label-icon {
   flex-shrink: 0;
-  opacity: 0.6;
 }
 
 .record-prop-panel__value-wrapper {

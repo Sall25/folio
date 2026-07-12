@@ -36,13 +36,14 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
             name={cover.iconName!}
             size={20}
             weight={400}
+            filled={true}
           />
         ) : (
           <DynamicIcon
             name="description"
             size={20}
             weight={400}
-            filled={false}
+            filled={true}
             style={{
               color:
                 !cover.color || cover.color === "var(--tt-text-color)"
@@ -57,7 +58,15 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
 
   return (
     <span className="page-icon" style={{ ...styles }} aria-hidden="true">
-      <DynamicIcon name="description" size={18} weight={400} filled={false} />
+      <DynamicIcon
+        name="description"
+        size={20}
+        weight={400}
+        filled={true}
+        style={{
+          color: "var(--tt-text-color)",
+        }}
+      />
     </span>
   );
 }

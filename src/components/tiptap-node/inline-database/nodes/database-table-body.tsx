@@ -17,6 +17,10 @@ import type {
 
 type PropertyType = PropertyConfig["type"];
 
+/** How many rows to draw when the table has no records. The first one carries
+    the "New page" affordance; the rest are pure ghosts. */
+const EMPTY_PLACEHOLDER_ROWS = 3;
+
 interface Props {
   tableRef: React.RefObject<HTMLDivElement | null>;
   locked: boolean;
@@ -59,6 +63,22 @@ export function DatabaseTableBody({
   onCommitColumnWidth,
   onNewRecord,
 }: Props) {
+  // An empty database renders as a bare header — it doesn't read as a table at
+  // all. These rows give it shape. They are PURELY presentational: no records
+  // back them, ProseMirror doesn't own them (contentEditable={false}), and they
+  // vanish the moment a real record lands.
+  //
+  // The first row's first cell carries the "New page" action, so the primary
+  // call to action sits exactly where the first record's title will appear. The
+  // standalone button below is redundant while empty, so it's hidden — as is the
+  // calculations footer, which has nothing to count.
+  const isEmpty = sortedRecords.length === 0;
+
+  // The body grid has exactly one track per property (no trailing 1fr — that's
+  // header-only). The placeholder rows add their own trailing track so they
+  // reach the table's right edge.
+  const placeholderGridTemplateColumns = `${bodyGridTemplateColumns} 1fr`;
+
   return (
     <NodeViewWrapper
       as="div"
@@ -85,43 +105,90 @@ export function DatabaseTableBody({
         className="db-node-grid"
         style={{
           display: "grid",
-          gridTemplateColumns: bodyGridTemplateColumns,
+          gridTemplateColumns: `${bodyGridTemplateColumns} 1fr`,
         }}
       >
         <NodeViewContent as="div" className="db-node-grid__body" />
       </div>
 
-      {/* New record */}
-      <div
-        contentEditable={false}
-        style={{
-          opacity: hovered ? 1 : 0,
-          pointerEvents: hovered ? "auto" : "none",
-          transition: "opacity 0.2s ease",
-        }}
-      >
-        <Button
-          variant="ghost"
-          style={{
-            justifyContent: "flex-start",
-            borderRadius: "var(--tt-radius-sm)",
-            fontSize: 12,
-          }}
-          onClick={onNewRecord}
-        >
-          <Plus className="tiptap-button-icon" />
-          <span className="tiptap-button-text">New</span>
-        </Button>
-      </div>
+      {/* Empty state — ghost rows, with "New page" living in the first cell. */}
+      {isEmpty && (
+        <div className="db-table__placeholder" contentEditable={false}>
+          {Array.from({ length: EMPTY_PLACEHOLDER_ROWS }).map((_, row) => (
+            <div
+              key={row}
+              className="db-table__placeholder-row"
+              style={{
+                display: "grid",
+                gridTemplateColumns: placeholderGridTemplateColumns,
+              }}
+            >
+              {visibleProperties.map((prop, col) =>
+                row === 0 && col === 0 ? (
+                  <div key={prop.id} className="db-table__placeholder-cell">
+                    <Button
+                      variant="ghost"
+                      className="db-table__placeholder-new"
+                      style={{
+                        justifyContent: "flex-start",
+                        width: "100%",
+                        height: "100%",
+                        borderRadius: 0,
+                        color: "var(--tt-text-secondary)",
+                        fontSize: 13,
+                      }}
+                      onClick={onNewRecord}
+                    >
+                      <Plus className="tiptap-button-icon" />
+                      <span className="tiptap-button-text">New page</span>
+                    </Button>
+                  </div>
+                ) : (
+                  <div key={prop.id} className="db-table__placeholder-cell" />
+                ),
+              )}
+              {/* Trailing cell fills to the table's right edge. */}
+              <div className="db-table__placeholder-cell db-table__placeholder-cell--trailing" />
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* Calculations footer */}
-      <div contentEditable={false}>
-        <DatabaseCalculations
-          properties={visibleProperties}
-          records={sortedRecords}
-          gridTemplateColumns={gridTemplateColumns}
-        />
-      </div>
+      {/* New record — redundant while empty (the first ghost cell carries it). */}
+      {!isEmpty && (
+        <div
+          contentEditable={false}
+          style={{
+            opacity: 1,
+            pointerEvents: "auto",
+          }}
+        >
+          <Button
+            variant="ghost"
+            style={{
+              justifyContent: "flex-start",
+              borderRadius: "var(--tt-radius-sm)",
+              color: "var(--tt-text-secondary)",
+              fontSize: 13,
+            }}
+            onClick={onNewRecord}
+          >
+            <Plus className="tiptap-button-icon" />
+            <span className="tiptap-button-text">New page</span>
+          </Button>
+        </div>
+      )}
+
+      {/* Calculations footer — nothing to compute over an empty table. */}
+      {!isEmpty && (
+        <div contentEditable={false}>
+          <DatabaseCalculations
+            properties={visibleProperties}
+            records={sortedRecords}
+            gridTemplateColumns={gridTemplateColumns}
+          />
+        </div>
+      )}
     </NodeViewWrapper>
   );
 }

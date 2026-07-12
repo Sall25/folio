@@ -16,6 +16,28 @@
   }
 }
 
+.db-table {
+  &__placeholder-row {
+    min-height: 34px;
+  }
+
+  &__placeholder-cell {
+    border-bottom: 1px solid var(--tt-border-color);
+    border-right: 1px solid var(--tt-border-color);
+    display: flex;
+    align-items: center;
+
+    &--trailing {
+      border-right: none;
+    }
+  }
+
+  // The button fills its cell so the whole first cell is the hit target.
+  &__placeholder-new {
+    background: transparent;
+  }
+}
+
 // Header row — columns come from the INLINE style (gridTemplateColumns), NOT
 // from --db-grid-columns (which is never defined). Do not set
 // grid-template-columns here or it will override the inline value with nothing.

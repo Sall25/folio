@@ -11,7 +11,7 @@ import { OPERATORS_FOR_TYPE } from "./filter-types";
 // no bundled icon components.
 
 export const PROPERTY_TYPE_ICONS: Record<PropertyType, string> = {
-  title: "title",
+  title: "match_case",
   text: "notes",
   number: "tag",
   checkbox: "check_box",
@@ -110,7 +110,7 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
   {
     type: "title",
     label: "Title",
-    icon: "title",
+    icon: "match_case",
     defaultConfig: DEFAULT_CONFIGS.title,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.title,

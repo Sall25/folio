@@ -8,6 +8,7 @@ import { useDataSource } from "src/hooks/use-data-sources";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage as patchPageApi } from "src/api/pages";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import { SelectCellDisplay } from "src/components/tiptap-node/inline-database/primitives/select-cell-display";
 import { StatusCellDisplay } from "src/components/tiptap-node/inline-database/primitives/status-cell-display";
 import { CheckboxCellDisplay } from "src/components/tiptap-node/inline-database/primitives/checkbox-cell-display";
@@ -57,7 +58,9 @@ function PropertyRow({
   value: CellValue;
   onChange: (v: CellValue) => void;
 }) {
-  const Icon = PROPERTY_TYPE_ICONS[prop.config.type];
+  // PROPERTY_TYPE_ICONS holds Material Symbols NAME STRINGS now — not icon
+  // components — so it's rendered through DynamicIcon rather than as <Icon />.
+  const iconName = PROPERTY_TYPE_ICONS[prop.config.type];
 
   const rendered = (() => {
     switch (prop.config.type) {
@@ -101,6 +104,11 @@ function PropertyRow({
             onChange={onChange}
           />
         );
+
+      // Plain-text-ish values. `text` was missing entirely, so text properties
+      // fell through to `default: null` and the whole row was dropped — which
+      // is why they never appeared in the panel at all.
+      case "text":
       case "number":
       case "url":
       case "email":
@@ -110,6 +118,7 @@ function PropertyRow({
             {(value as CellValueMap["phone"]) ?? "—"}
           </span>
         );
+
       default:
         return null;
     }
@@ -120,7 +129,12 @@ function PropertyRow({
   return (
     <div className="record-prop-panel__row">
       <div className="record-prop-panel__label">
-        <Icon size={13} className="record-prop-panel__label-icon" />
+        <DynamicIcon
+          name={iconName}
+          size={20}
+          filled={false}
+          className="record-prop-panel__label-icon"
+        />
         <span>{prop.name}</span>
       </div>
       <div className="record-prop-panel__value-wrapper">{rendered}</div>

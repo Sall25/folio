@@ -3,27 +3,29 @@ import { NodeViewWrapper, NodeViewContent } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/core";
 import { useDatabaseBridgeData } from "../hooks/use-database-bridge-data";
 import { Cell } from "../components/cells/cell";
-import { DatabaseTitleContentCell } from "./database-title-content-cell";
 import { useDebouncedCallback } from "use-debounce";
 import type { CellValue, ID } from "src/types";
 
-// Content-type cells hold native editable ProseMirror inline content.
-const CONTENT_TYPES = new Set(["title", "text"]);
+// Only TEXT cells hold native editable ProseMirror inline content.
+//
+// TITLE is deliberately NOT here. A record's title lives on page.title — the
+// sidebar, peek view, breadcrumbs and search all read it there. Making the
+// title a content cell meant its text was ALSO stored in the node's inline
+// content and mirrored into values[], i.e. three copies of one string with no
+// working sync between them: typing in the cell wrote to values[] (which
+// nothing reads), and renaming the page never reached the cell. Title is now an
+// atom cell that reads page.title directly — one source of truth, no mirroring.
+const CONTENT_TYPES = new Set(["text"]);
 
 /**
  * databaseCell NodeView. ONE node type for all property types. Reads its
  * database's data from the editor-storage bridge (React context can't cross
  * the NodeView boundary), keyed by node.attrs.databaseId.
  *
- *   - TITLE cell: icon + "Open" chrome wrapping the NodeViewContent text span
- *     (Option A) — native/collaborative inline editing with the display
- *     affordances around it.
- *   - TEXT cell: bare NodeViewContent — native editable inline text.
- *   - ATOM cell: the existing <Cell> widget, value to/from the DataSource.
- *
- * For content cells (title/text) the node content is authoritative; its plain
- * textContent is mirrored to the DataSource on edit (debounced) so filters/
- * sorts/other views stay correct.
+ *   - TEXT cell: bare NodeViewContent — native editable inline text, mirrored
+ *     to the DataSource on edit (debounced) so filters/sorts stay correct.
+ *   - ATOM cell (everything else, including TITLE): the <Cell> widget, value
+ *     to/from the DataSource — or, for title, to/from page.title.
  */
 export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
   const recordId = node.attrs.recordId as ID | null;
@@ -39,7 +41,6 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
 
   const propType = property?.config.type;
   const isContent = !!propType && CONTENT_TYPES.has(propType);
-  const isTitle = propType === "title";
 
   // Write-through for CONTENT cells: node content is authoritative; mirror its
   // plain text into the DataSource on edit (debounced).
@@ -73,25 +74,6 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
     );
   }
 
-  // ── TITLE cell: chrome (icon + Open) around the editable content span ──────
-  if (isTitle) {
-    return (
-      <NodeViewWrapper
-        as="div"
-        data-type="database-cell"
-        data-cell-kind="content"
-        className="db-node-cell db-node-cell--content db-node-cell--title"
-      >
-        <DatabaseTitleContentCell
-          pageId={recordId}
-          templateId={data.templateId}
-          view={data.view}
-          readonly={data.locked}
-        />
-      </NodeViewWrapper>
-    );
-  }
-
   // ── TEXT cell: bare native editable content ───────────────────────────────
   if (isContent) {
     return (
@@ -106,7 +88,7 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
     );
   }
 
-  // ── ATOM cell: value widget ───────────────────────────────────────────────
+  // ── ATOM cell: value widget (title included) ──────────────────────────────
   const record = data.recordsById.get(recordId) ?? null;
   const value = record?.values?.[propertyId] ?? null;
 

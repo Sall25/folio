@@ -335,6 +335,19 @@ export function DatabaseNodeView({
               />
             </div>
           )}
+          {attrs.views.length > 1 && (
+            <DatabaseTitleBar
+              hideTitle={attrs.hideTitle}
+              title={resolvedTitle}
+              onTitleChange={handleTitleChange}
+              onHideTitleChange={(hide) =>
+                locked
+                  ? undefined
+                  : updateAttributes({ ...attrs, hideTitle: hide })
+              }
+              locked={locked}
+            />
+          )}
           <div style={{ maxWidth: "var(--db-editor-width)", paddingRight: 20 }}>
             <DatabaseToolbar
               properties={source.properties}
@@ -343,19 +356,17 @@ export function DatabaseNodeView({
               onUpdateAttributes={updateAttributes}
               locked={locked}
               hovered={hovered}
+              title={resolvedTitle}
+              hideTitle={attrs.hideTitle}
+              onTitleChange={handleTitleChange}
+              onHideTitleChange={(hide) =>
+                locked
+                  ? undefined
+                  : updateAttributes({ ...attrs, hideTitle: hide })
+              }
             />
           </div>
-          <DatabaseTitleBar
-            hideTitle={attrs.hideTitle}
-            title={resolvedTitle}
-            onTitleChange={handleTitleChange}
-            onHideTitleChange={(hide) =>
-              locked
-                ? undefined
-                : updateAttributes({ ...attrs, hideTitle: hide })
-            }
-            locked={locked}
-          />
+
           <CardItemGroup orientation="horizontal">
             <FilterRuleChips
               properties={source.properties}

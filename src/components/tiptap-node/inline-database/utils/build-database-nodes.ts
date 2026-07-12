@@ -23,6 +23,7 @@ export function buildCellNode(
   const isContent = CONTENT_TYPES.has(property.config.type);
   const text =
     isContent && value != null && String(value).length > 0 ? String(value) : "";
+  console.log("[buildCell]", property.config.type, { value, text });
 
   return {
     type: "databaseCell",
@@ -32,6 +33,7 @@ export function buildCellNode(
   };
 }
 
+// One record node (a row) with a cell per property.
 // One record node (a row) with a cell per property.
 export function buildRecordNode(
   record: Page,
@@ -43,7 +45,15 @@ export function buildRecordNode(
     type: "databaseRecord",
     attrs: { recordId: record.id, sourceId, databaseId },
     content: properties.map((prop) =>
-      buildCellNode(record.id, databaseId, prop, record.values?.[prop.id]),
+      buildCellNode(
+        record.id,
+        databaseId,
+        prop,
+        // The title property's value IS the page's title — it lives on the Page
+        // record itself, not in values[]. Reading values[titlePropId] gets null
+        // and seeds an empty cell, which is why titles rendered blank.
+        prop.config.type === "title" ? record.title : record.values?.[prop.id],
+      ),
     ),
   };
 }

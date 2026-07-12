@@ -67,7 +67,7 @@ export function Cell({
     case "title":
       return (
         <TitleCell
-          value={typeof value === "string" ? value : ""}
+          value={record.title ?? ""}
           recordId={record.id}
           pageId={record.id}
           templateId={templateId}
