@@ -135,7 +135,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.4;
   }
 
   .db-node-cell--atom {
@@ -152,7 +152,7 @@
     text-overflow: ellipsis;
     p {
       margin: 0;
-      line-height: 1.5;
+      line-height: 1.4;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -165,7 +165,8 @@
     overflow-wrap: anywhere;
     word-break: break-word;
     align-items: flex-start;
-    padding-top: 6px;
-    padding-bottom: 6px;
+    padding: 0;
+    // padding-top: 6px;
+    // padding-bottom: 6px;
   }
 }

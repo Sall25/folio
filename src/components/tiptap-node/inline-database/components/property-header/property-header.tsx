@@ -140,7 +140,7 @@ export function PropertyHeader({
       style={{
         width: "100%",
         borderRadius: "var(--tt-radius-sm)",
-        gap: 4,
+        gap: 8,
         display: "flex",
         alignItems: "center",
         padding: "0 0.5rem",

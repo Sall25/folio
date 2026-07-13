@@ -1,15 +1,3 @@
-// 3-node tree so rows and cells are real ProseMirror nodes ("channels"), while
-// the DataSource stays the single source of truth for values and row existence:
-//
-//   database         content: "databaseRecord*"
-//     databaseRecord content: "databaseCell*"   attrs: { recordId, sourceId, databaseId }
-//       databaseCell content: "inline*"         attrs: { recordId, propertyId, databaseId }
-//
-// Cross-NodeView data (properties, records, setCellValue, column widths) is
-// shared via editor storage (the databaseBridge), NOT React context — context
-// can't cross the NodeView boundary. databaseId on record/cell nodes tells them
-// which database entry to read from the bridge.
-
 import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import type { ID } from "src/types";

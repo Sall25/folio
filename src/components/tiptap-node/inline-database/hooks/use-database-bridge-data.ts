@@ -52,7 +52,6 @@ export function usePublishDatabaseData(
   useEffect(() => {
     if (!editor || !databaseId) return;
     publishDatabaseData(editor, databaseId, data);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, databaseId, data]);
 
   // Remove the entry ONLY on true unmount of the database node (or when the

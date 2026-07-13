@@ -1,14 +1,3 @@
-// Column layout for the table: which properties are visible, their widths
-// (with a live "draft" width during resize), and the grid-template-columns
-// strings for the header (trailing 1fr for the actions cell) and the body
-// (exactly one column per property — no trailing 1fr, or records rendered as
-// display:contents would drift diagonally).
-//
-// Also wires the live resize: a `column:resize` CustomEvent (dispatched by the
-// column resizer while dragging) updates the draft width so both grids track
-// the drag in real time. commitColumnWidth persists the final width to the
-// source and clears the draft.
-
 import { useEffect, useRef, useState, type RefObject } from "react";
 import type { DatabaseProperty, DatabaseView, DataSource } from "src/types";
 

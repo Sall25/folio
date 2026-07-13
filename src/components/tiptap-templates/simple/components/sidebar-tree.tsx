@@ -250,7 +250,6 @@ function SectionAddPageButton({
     >
       <Plus size={14} />
       <span>{SECTION_ADD_LABEL[(category as string).toLowerCase()]}</span>
-     
     </button>
   );
 }
@@ -793,7 +792,7 @@ export function SidebarTree({
         setDropTarget(null);
       }}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {visibleCategories.map((category) => (
           <SectionDragWrapper
             key={category}

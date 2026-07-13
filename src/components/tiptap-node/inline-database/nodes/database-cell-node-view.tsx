@@ -9,23 +9,25 @@ import type { CellValue, ID } from "src/types";
 // Only TEXT cells hold native editable ProseMirror inline content.
 //
 // TITLE is deliberately NOT here. A record's title lives on page.title — the
-// sidebar, peek view, breadcrumbs and search all read it there. Making the
-// title a content cell meant its text was ALSO stored in the node's inline
-// content and mirrored into values[], i.e. three copies of one string with no
-// working sync between them: typing in the cell wrote to values[] (which
-// nothing reads), and renaming the page never reached the cell. Title is now an
-// atom cell that reads page.title directly — one source of truth, no mirroring.
+// sidebar, peek view, breadcrumbs and search all read it there. Title is an atom
+// cell that reads page.title directly, so there's one source of truth.
 const CONTENT_TYPES = new Set(["text"]);
 
 /**
  * databaseCell NodeView. ONE node type for all property types. Reads its
- * database's data from the editor-storage bridge (React context can't cross
- * the NodeView boundary), keyed by node.attrs.databaseId.
+ * database's data from the editor-storage bridge (React context can't cross the
+ * NodeView boundary), keyed by node.attrs.databaseId.
  *
- *   - TEXT cell: bare NodeViewContent — native editable inline text, mirrored
- *     to the DataSource on edit (debounced) so filters/sorts stay correct.
- *   - ATOM cell (everything else, including TITLE): the <Cell> widget, value
- *     to/from the DataSource — or, for title, to/from page.title.
+ * HIDING and FREEZING are VIEW concerns — per-view, not schema. Another client,
+ * or another view of the same database, may show a column this view hides, or
+ * freeze a different one. So the cell node always STAYS in the shared document
+ * and the view decides only how it renders:
+ *
+ *   - hidden  → display:none (node untouched, just not painted)
+ *   - frozen  → position:sticky at the offset the header computed
+ *
+ * (Contrast column REORDER, which really does rewrite source.properties — a
+ * schema change — and therefore does move the cell nodes. See use-database-seed.)
  */
 export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
   const recordId = node.attrs.recordId as ID | null;
@@ -34,14 +36,6 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
 
   const data = useDatabaseBridgeData(editor, databaseId);
 
-  // Hiding a property is a VIEW concern, not a schema one: the cell node must
-  // stay in the shared document (another view — or another client — may still
-  // show that column) and simply not render here. Deleting the node would
-  // corrupt every other view of the same database.
-  const isHidden = !!(
-    propertyId && data?.view?.hiddenProperties?.includes(propertyId)
-  );
-
   const property = useMemo(
     () => data?.properties.find((p) => p.id === propertyId) ?? null,
     [data?.properties, propertyId],
@@ -49,6 +43,29 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
 
   const propType = property?.config.type;
   const isContent = !!propType && CONTENT_TYPES.has(propType);
+
+  // View-driven presentation.
+  const isHidden = !!(
+    propertyId && data?.view?.hiddenProperties?.includes(propertyId)
+  );
+  const sticky = propertyId ? data?.stickyByProp?.[propertyId] : undefined;
+
+  const viewStyle = useMemo(() => {
+    const style: React.CSSProperties = {};
+    if (isHidden) style.display = "none";
+    if (sticky) {
+      style.position = "sticky";
+      style.left = sticky.left;
+      // Below the header (z 8) so a sticky header cell still wins over a sticky
+      // body cell where they overlap.
+      style.zIndex = 4;
+      style.background = "var(--tt-bg-color)";
+      if (sticky.isBoundary) {
+        style.borderRight = "2px solid var(--tt-border-color)";
+      }
+    }
+    return style;
+  }, [isHidden, sticky]);
 
   // Write-through for CONTENT cells: node content is authoritative; mirror its
   // plain text into the DataSource on edit (debounced).
@@ -75,7 +92,7 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
         as="div"
         data-type="database-cell"
         className="db-node-cell"
-        style={isHidden ? { display: "none" } : undefined}
+        style={viewStyle}
       >
         {/* keep a content hole so PM has somewhere to put inline content */}
         {isContent ? <NodeViewContent as="div" /> : null}
@@ -91,7 +108,7 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
         data-type="database-cell"
         data-cell-kind="content"
         className="db-node-cell db-node-cell--content"
-        style={isHidden ? { display: "none" } : undefined}
+        style={viewStyle}
       >
         <NodeViewContent as="div" className="db-node-cell__content" />
       </NodeViewWrapper>
@@ -109,7 +126,7 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
       data-cell-kind="atom"
       className="db-node-cell db-node-cell--atom"
       contentEditable={false}
-      style={isHidden ? { display: "none" } : undefined}
+      style={viewStyle}
     >
       {record && (
         <Cell

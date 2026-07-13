@@ -49,7 +49,7 @@ interface Props {
 export function DatabaseTableBody({
   tableRef,
   locked,
-  hovered,
+  // hovered,
   visibleProperties,
   allProperties,
   activeView,

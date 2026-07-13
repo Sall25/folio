@@ -58,7 +58,14 @@ export function TitleCellDisplay({
           <div className="db-cell-title">
             {icon && (
               <span className="db-cell-title__icon">
-                <PageItemIcon cover={icon} styles={{ width: 17, height: 17 }} />
+                <PageItemIcon
+                  cover={icon}
+                  styles={{
+                    // width: 17,
+                    // height: 17,
+                    color: "var(--tt-text-secondary)",
+                  }}
+                />
               </span>
             )}
             <span className="db-cell-title__text">{value || "Untitled"}</span>

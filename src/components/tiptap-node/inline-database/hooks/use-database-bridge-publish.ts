@@ -1,8 +1,8 @@
 // Builds the per-database "bridge" payload the cell/record NodeViews read
-// (properties, records-by-id, column widths, column values, setCellValue) and
-// publishes it into editor storage so those NodeViews — which live outside
-// this React tree and can't receive context — can access it, keyed by the
-// database node id.
+// (properties, records-by-id, column widths, column values, sticky geometry,
+// setCellValue) and publishes it into editor storage so those NodeViews — which
+// live outside this React tree and can't receive context — can access it, keyed
+// by the database node id.
 
 import { useMemo } from "react";
 import type { Editor } from "@tiptap/react";
@@ -69,6 +69,33 @@ export function useDatabaseBridgePublish({
     [sortedRecords],
   );
 
+  // Sticky geometry for frozen columns — the same accumulation the header does
+  // (DatabaseTableHeader.stickyStyle), computed once here so every cell doesn't
+  // recompute it. Freezing is a VIEW concern, so the cells don't move in the
+  // document; they just render sticky at the right offset.
+  const stickyByProp = useMemo(() => {
+    const out: Record<string, { left: number; isBoundary: boolean }> = {};
+
+    const hidden = new Set(activeView?.hiddenProperties ?? []);
+    const visible = properties.filter((p) => !hidden.has(p.id));
+
+    const frozenId =
+      (activeView as { frozenPropertyId?: string } | undefined)
+        ?.frozenPropertyId ?? null;
+    const freezeIndex = frozenId
+      ? visible.findIndex((p) => p.id === frozenId)
+      : -1;
+    if (freezeIndex < 0) return out;
+
+    let acc = 0;
+    visible.forEach((p, i) => {
+      if (i > freezeIndex) return;
+      out[p.id] = { left: acc, isBoundary: i === freezeIndex };
+      acc += columnWidthByProp[p.id] ?? 160;
+    });
+    return out;
+  }, [properties, activeView, columnWidthByProp]);
+
   const bridgeData: DatabaseBridgeData = useMemo(
     () => ({
       sourceId: attrs.sourceId ?? null,
@@ -79,6 +106,7 @@ export function useDatabaseBridgePublish({
       recordsById,
       columnWidthByProp,
       sortedRecordIds,
+      stickyByProp,
       setCellValue: (recordId, propertyId, value) =>
         setCellValue(recordId, propertyId, value as never),
       columnValuesByProp:
@@ -93,10 +121,12 @@ export function useDatabaseBridgePublish({
       recordsById,
       columnWidthByProp,
       sortedRecordIds,
+      stickyByProp,
       columnValuesByProp,
       setCellValue,
     ],
   );
+
   usePublishDatabaseData(editor, attrs.id ?? null, bridgeData);
 
   return { recordsById };

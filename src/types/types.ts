@@ -284,9 +284,9 @@ export type CellValueMap = {
   formula: string | number | boolean | null; // computed, read-only
   relation: RelationValue[];
   rollup: string | number | null; // computed, read-only
-  created_time: string | null; // ISO string, read-only
+  created_time: CreatedAt | null; // read-only
   created_by: ID | null; // read-only
-  edited_time: string | null; // ISO string, read-only
+  edited_time: UpdatedAt | null; // read-only
   edited_by: ID | null; // read-only
   url: string;
   email: string;

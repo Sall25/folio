@@ -219,12 +219,22 @@ export function Cell({
 
     case "created_time":
       return (
-        <CreatedTimeCell value={v} config={config} onChange={change} readonly />
+        <CreatedTimeCell
+          value={record.createdAt as CellValue<"created_time"> | null}
+          config={config}
+          onChange={change}
+          readonly
+        />
       );
 
     case "edited_time":
       return (
-        <EditedTimeCell value={v} config={config} onChange={change} readonly />
+        <EditedTimeCell
+          value={record.updatedAt as CellValue<"edited_time"> | null}
+          config={config}
+          onChange={change}
+          readonly
+        />
       );
 
     // case "created_by":

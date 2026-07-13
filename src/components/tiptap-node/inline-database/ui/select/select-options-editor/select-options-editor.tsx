@@ -13,7 +13,7 @@ import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { SortDropdown } from "src/components/tiptap-ui/sort-dropdown";
 import { HIGHLIGHT_COLORS } from "src/components/tiptap-ui/color-highlight-button";
-import type { SelectOption } from "src/components/tiptap-node/database-node/select-property-node/select-property-node";
+import type { SelectOption } from "src/types";
 import type { SortType } from "../../../../../tiptap-ui/sort-dropdown/sort-dropdown";
 import "./select-options-editor.scss";
 import {

@@ -1,11 +1,12 @@
 import type { SelectOption } from "src/types";
-import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
+import { pillClass } from "../utils/pill-colors";
+import "./select-cell-display.scss";
 
 interface SelectCellDisplayProps {
   value: SelectOption | null;
@@ -14,6 +15,13 @@ interface SelectCellDisplayProps {
   readonly?: boolean;
 }
 
+/**
+ * The pill's colour is a CLASS, not an inline background. option.color holds a
+ * colour NAME ("blue"), and the class derives both the tint and the label colour
+ * from --tt-color-text-blue — so it stays legible in dark mode, which an inline
+ * highlight-token background did not. normalizeColor() accepts the legacy var
+ * strings too, so existing options render correctly without a data migration.
+ */
 export function SelectCellDisplay({
   value,
   options,
@@ -22,31 +30,22 @@ export function SelectCellDisplay({
 }: SelectCellDisplayProps) {
   const displayed = value ?? null;
 
-  const trigger = (
-    <Button
-      variant="ghost"
-      style={{
-        background: displayed ? displayed.color : "transparent",
-        minHeight: 18,
-        height: 20,
-        padding: "2px 4px",
-        justifyContent: "center",
-        alignItems: "center",
-        borderRadius: "var(--tt-radius-sm)",
-        color: "var(--tt-theme-text)",
-        minWidth: !displayed ? 100 : "fit-content",
-        // width: "100%",
-
-        // margin: "5px 3px",
-      }}
+  const trigger = displayed ? (
+    <button
+      type="button"
+      className={pillClass("select-badge", displayed.color)}
+      contentEditable={false}
     >
-      <span
-        className="tiptap-button-text"
-        style={{ textAlign: "center", width: "fit-content" }}
-      >
-        {displayed ? displayed.label : ""}
-      </span>
-    </Button>
+      <span className="select-badge__label">{displayed.label}</span>
+    </button>
+  ) : (
+    <button
+      type="button"
+      className="select-badge select-badge--empty"
+      contentEditable={false}
+    >
+      <span className="select-badge__label">Empty</span>
+    </button>
   );
 
   if (readonly || !onChange) return trigger;
@@ -54,41 +53,35 @@ export function SelectCellDisplay({
   return (
     <Popover>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent sideOffset={-4}>
+      <PopoverContent side="bottom" align="start" className="select-dropdown">
         <Card
           style={{
-            minWidth: 100,
-            padding: "5px 10px",
-            borderRadius: "var(--tt-radius-sm)",
-            boxShadow: "var(--tt-shadow-elevated-sm)",
+            minWidth: 180,
+            padding: "6px",
+            borderRadius: "var(--tt-radius-lg)",
+            boxShadow: "var(--tt-shadow-elevated-md)",
           }}
         >
           <CardItemGroup
-            style={{
-              width: "100%",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-            }}
+            orientation="vertical"
+            style={{ width: "100%", gap: 2, alignItems: "stretch" }}
           >
+            {(options ?? []).length === 0 && (
+              <span className="select-dropdown__empty">
+                No options yet — add some in the property's settings.
+              </span>
+            )}
             {(options ?? []).map((option) => (
-              <Button
+              <button
                 key={option.id}
-                variant="ghost"
-                style={{
-                  background: option.color,
-                  minHeight: 18,
-                  height: 20,
-                  fontFamily:
-                    'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif',
-                  fontSize: 14,
-                  fontWeight: 400,
-                  lineHeight: 1.5,
-                }}
+                type="button"
+                className="select-dropdown__option"
                 onClick={() => onChange(option)}
               >
-                <span className="tiptap-button-text">{option.label}</span>
-              </Button>
+                <span className={pillClass("select-badge", option.color)}>
+                  <span className="select-badge__label">{option.label}</span>
+                </span>
+              </button>
             ))}
           </CardItemGroup>
         </Card>

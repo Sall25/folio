@@ -52,7 +52,12 @@ import {
   insertRecordNode,
 } from "../hooks/use-database-seed";
 
-import type { DatabaseAttrs, DatabaseView, PropertyConfig } from "src/types";
+import {
+  DEFAULT_CONFIGS,
+  type DatabaseAttrs,
+  type DatabaseView,
+  type PropertyConfig,
+} from "src/types";
 import "./database-table-node-view.scss";
 import "./database-node.scss";
 
@@ -256,7 +261,7 @@ export function DatabaseNodeView({
       {
         id: crypto.randomUUID(),
         name: type.charAt(0).toUpperCase() + type.slice(1),
-        config: { type } as PropertyConfig,
+        config: DEFAULT_CONFIGS[type],
         width: 160,
       },
     ]);

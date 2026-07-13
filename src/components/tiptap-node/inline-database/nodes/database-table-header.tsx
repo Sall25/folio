@@ -41,6 +41,7 @@ import { ResizableNodeProvider } from "../../figure-node";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import type { DatabaseProperty, DatabaseView, PropertyConfig } from "src/types";
 import type { TableView } from "src/types";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -191,9 +192,9 @@ export function DatabaseTableHeader({
               <Card
                 style={{
                   maxHeight: 300,
-                  overflow: "scroll",
+                  // overflow: "scroll",
                   minWidth: 300,
-                  padding: "10px 5px",
+                  // padding: "10px 5px",
                 }}
               >
                 <CardHeader>
@@ -204,7 +205,8 @@ export function DatabaseTableHeader({
                     {chunk(allPropertyTypes, 3).map((row, i) => (
                       <GridRow key={i}>
                         {row.map((t) => {
-                          const Icon = PROPERTY_TYPE_ICONS[t];
+                          // Material Symbols name string now, not an icon component.
+                          const iconName = PROPERTY_TYPE_ICONS[t];
                           return (
                             <GridCell key={t} style={{ padding: "5px 10px" }}>
                               <Button
@@ -216,7 +218,12 @@ export function DatabaseTableHeader({
                                 }}
                                 onClick={() => onAddProperty(t)}
                               >
-                                <Icon className="tiptap-button-icon" />
+                                <DynamicIcon
+                                  name={iconName}
+                                  size={20}
+                                  filled={false}
+                                  className="tiptap-button-icon"
+                                />
                                 <span className="tiptap-button-text">{t}</span>
                               </Button>
                             </GridCell>

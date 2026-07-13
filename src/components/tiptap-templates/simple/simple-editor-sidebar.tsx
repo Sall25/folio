@@ -5,12 +5,11 @@ import {
   Store,
   LibraryBig,
   Sparkles,
-  PanelLeft,
   PanelRight,
-  //  SquarePen,
-  //  LayoutTemplate,
   Settings,
   LayoutTemplate,
+  ChevronsLeft,
+  PenBox,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -50,6 +49,7 @@ import { SidebarResizeHandle } from "./components/sidebar-resize-handle";
 function User() {
   const { t } = useTranslation();
   const { collapsed, onCollapsedChange } = useEditorLayout();
+  const [hovered, setHovered] = useState(false);
   const { person } = useCurrentPerson();
 
   const onToggle = useCallback(
@@ -60,19 +60,48 @@ function User() {
   const name = person?.name ?? "";
   const initial = name ? name.charAt(0).toUpperCase() : "?";
 
+  const { activePageId, setActivePageId } = useActivePage();
+  const createPage = useCreatePage();
+
+  const onCreatePage = () => {
+    const newPage = makePage({
+      title: t("page.newPage"),
+      parentId: null,
+      category: "Private",
+    });
+
+    createPage
+      .mutateAsync(newPage)
+      .then((newPage) => setActivePageId(newPage.id))
+      .catch(() => {
+        if (activePageId) {
+          setActivePageId(activePageId);
+        }
+        console.log("failed to create new page");
+      });
+  };
+
   return (
     <ButtonGroup
       orientation="horizontal"
-      style={{ width: "100%", justifyContent: "flex-start" }}
+      style={{
+        width: "100%",
+        justifyContent: "flex-start",
+        cursor: "pointer",
+        backgroundColor: hovered
+          ? "var(--tt-button-hover-bg-color) !important"
+          : "transparent",
+        transition: "background-color 0.15s ease",
+      }}
+      onMouseOver={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      {/**
-       */}
       <Button
         style={{
-          minWidth: 22,
-          width: 22,
-          minHeight: 22,
-          height: 22,
+          minWidth: 20,
+          width: 20,
+          minHeight: 20,
+          height: 20,
           borderRadius: "var(--tt-radius-sm)",
         }}
         className="name-initial"
@@ -88,18 +117,35 @@ function User() {
           fontWeight: 600,
           fontFamily:
             'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif',
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          maxWidth: hovered ? 150 : "fit-content",
+          transition: "max-width 0.15s ease",
         }}
       >
         {t("sidebar.personalSpace", { name })}
       </span>
+      {hovered && (
+        <>
+          <Spacer size={1} orientation="horizontal" />
+          <Button
+            variant="ghost"
+            tooltip={t("sidebar.collapse")}
+            onClick={onToggle}
+          >
+            <ChevronsLeft className="tiptap-button-icon" />
+          </Button>
+        </>
+      )}
       <Spacer orientation="horizontal" />
 
       <Button
         variant="ghost"
-        tooltip={t("sidebar.collapse")}
-        onClick={onToggle}
+        // tooltip={t("sidebar.collapse")}
+        onClick={onCreatePage}
       >
-        <PanelLeft
+        <PenBox
           className="tiptap-button-icon"
           // fill="var(--tt-brand-color-400)"
         />
@@ -337,24 +383,6 @@ export function SimpleEditorSidebar() {
   //  const { onOpenChange: onTemplatesGalleryOpenChange } = useTemplates();
   const { openTo } = useWorkspaceSettingsModal();
   const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
-
-  // const onCreatePage = () => {
-  //   const newPage = makePage({
-  //     title: t("page.newPage"),
-  //     parentId: null,
-  //     category: "Private",
-  //   });
-
-  //   createPage
-  //     .mutateAsync(newPage)
-  //     .then((newPage) => setActivePageId(newPage.id))
-  //     .catch(() => {
-  //       if (activePageId) {
-  //         setActivePageId(activePageId);
-  //       }
-  //       console.log("failed to create new page");
-  //     });
-  // };
 
   if (isPending || !pages) return null;
 
