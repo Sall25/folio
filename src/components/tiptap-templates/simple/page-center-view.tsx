@@ -1,19 +1,14 @@
 import { usePeekEditorExtensions } from "./hooks/use-peek-editor-extensions";
 import { useActivePage } from "./context/active-page-context";
 import type { Page } from "src/types";
-import {
-  Editor,
-  useCurrentEditor,
-  useEditor,
-  type JSONContent,
-} from "@tiptap/react";
+import { Editor, useEditor, type JSONContent } from "@tiptap/react";
 import {
   Card,
   CardBody,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { X, Expand, Ellipsis } from "lucide-react";
+import { Ellipsis, Maximize2 } from "lucide-react";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { EditorContent } from "@tiptap/react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -175,8 +170,6 @@ export function PageCenterView({
     autofocus: "start",
   });
 
-  const { editor: mainEditor } = useCurrentEditor();
-
   // Show the blank/template chooser while the body is empty and not dismissed.
   const [templateDismissed, setTemplateDismissed] = useState(false);
   const [bodyEmpty, setBodyEmpty] = useState(true);
@@ -317,30 +310,25 @@ export function PageCenterView({
           orientation="horizontal"
           style={{ width: "100%", justifyContent: "flex-start" }}
         >
+          <Spacer orientation="horizontal" />
           <CardItemGroup orientation="horizontal">
-            <Button variant="ghost" onClick={onClose} aria-label="Close">
-              <X className="tiptap-button-icon" />
+            <Button variant="ghost" aria-label="More options">
+              <Ellipsis className="tiptap-button-icon" />
             </Button>
             <Button
               variant="ghost"
               onClick={() => {
                 if (page) {
                   setViewTarget(undefined);
-                  mainEditor?.commands.setContent(page.content, {
-                    emitUpdate: false,
-                  });
+                  // NO setContent — the editor is bound to the CURRENT page's Y.Doc, so this
+                  // wrote the record's body into the parent's document (and persisted it).
+                  // Changing the active page remounts the editor against the record's own doc.
                   setActivePageId(page.id);
                 }
               }}
               aria-label="Open full page"
             >
-              <Expand className="tiptap-button-icon" />
-            </Button>
-          </CardItemGroup>
-          <Spacer orientation="horizontal" />
-          <CardItemGroup orientation="horizontal">
-            <Button variant="ghost" aria-label="More options">
-              <Ellipsis className="tiptap-button-icon" />
+              <Maximize2 className="tiptap-button-icon" />
             </Button>
           </CardItemGroup>
         </CardItemGroup>

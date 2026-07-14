@@ -384,7 +384,7 @@ export function SimpleEditorSidebar() {
   const { openTo } = useWorkspaceSettingsModal();
   const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
 
-  if (isPending || !pages) return null;
+  // if (isPending || !pages) return null;
 
   return (
     <Card
@@ -423,74 +423,72 @@ export function SimpleEditorSidebar() {
         }}
       >
         {/* <Spacer orientation="vertical" size={20} /> */}
-        {!collapsed &&
-          (isPending || isLoading || !pages ? (
-            <SidebarBodySkeleton />
-          ) : (
-            <>
-              <ScrollFog edge="top" color="var(--sidebar-fog-color)" />
-              <Spacer orientation="vertical" size={15} />
+        {!collapsed && (
+          <>
+            <ScrollFog edge="top" color="var(--sidebar-fog-color)" />
+            <Spacer orientation="vertical" size={15} />
 
-              <ShowcaseSection />
-              <Spacer orientation="vertical" size={15} />
+            <ShowcaseSection />
+            <Spacer orientation="vertical" size={15} />
 
-              <SidebarTree
-                tree={tree}
-                teamspaces={teamspaces as Teamspace[]}
-                groups={groups as Group[]}
-                onMovePage={({ pageId, newParentId, category }) => {
-                  // optimistic move — patch parentId (+ category on cross-section drop)
-                  patchPage.mutate({
-                    id: pageId,
-                    patch: {
-                      parentId: newParentId,
-                      ...(category ? { category } : {}),
-                    },
-                  });
-                }}
-                onAddPageToSection={(category) => {
-                  // A teamspace is created through its own modal (it must create
-                  // a page + a Teamspace record sharing one id), not as a plain
-                  // page. Every other section creates a page directly.
-                  if (category === "Teamspaces") {
-                    setCreateTeamspaceOpen(true);
-                    return;
-                  }
-                  const p = makePage({
-                    title: t("page.newPage"),
-                    parentId: null,
-                    category,
-                  });
-                  createPage
-                    .mutateAsync(p)
-                    .then((page) => setActivePageId(page.id));
-                }}
-                onRenameSection={() => {}}
-                onDeleteSection={() => {}}
-              />
+            <SidebarTree
+              tree={tree}
+              teamspaces={teamspaces as Teamspace[]}
+              groups={groups as Group[]}
+              onMovePage={({ pageId, newParentId, category }) => {
+                // optimistic move — patch parentId (+ category on cross-section drop)
+                patchPage.mutate({
+                  id: pageId,
+                  patch: {
+                    parentId: newParentId,
+                    ...(category ? { category } : {}),
+                  },
+                });
+              }}
+              onAddPageToSection={(category) => {
+                // A teamspace is created through its own modal (it must create
+                // a page + a Teamspace record sharing one id), not as a plain
+                // page. Every other section creates a page directly.
+                if (category === "Teamspaces") {
+                  setCreateTeamspaceOpen(true);
+                  return;
+                }
+                const p = makePage({
+                  title: t("page.newPage"),
+                  parentId: null,
+                  category,
+                });
+                createPage
+                  .mutateAsync(p)
+                  .then((page) => setActivePageId(page.id));
+              }}
+              onRenameSection={() => {}}
+              onDeleteSection={() => {}}
+              isLoading={isPending || isLoading}
+            />
 
-              <Spacer orientation="vertical" size={12} />
-              <Button
-                variant="ghost"
-                onClick={() => openTo("teamspaces")}
-                aria-label="Open workspace settings"
-                style={{
-                  justifyContent: "flex-start",
-                  width: "100%",
-                  gap: 8,
-                  color: "var(--tt-text-color)",
-                }}
-              >
-                <Settings className="tiptap-button-icon" size={16} />
-                <span className="tiptap-button-text">Workspace settings</span>
-              </Button>
-              <Spacer orientation="vertical" size={4} />
-              <TemplatesModalTrigger />
-              <Spacer orientation="vertical" size={4} />
-              <LibraryPaletteTrigger />
-              <Spacer orientation="vertical" size={25} />
-            </>
-          ))}
+            <Spacer orientation="vertical" size={12} />
+            <Button
+              variant="ghost"
+              onClick={() => openTo("teamspaces")}
+              aria-label="Open workspace settings"
+              style={{
+                justifyContent: "flex-start",
+                width: "100%",
+                gap: 8,
+                color: "var(--tt-text-color)",
+              }}
+            >
+              <Settings className="tiptap-button-icon" size={16} />
+              <span className="tiptap-button-text">Workspace settings</span>
+            </Button>
+            <Spacer orientation="vertical" size={4} />
+            <TemplatesModalTrigger />
+            <Spacer orientation="vertical" size={4} />
+            <LibraryPaletteTrigger />
+            <Spacer orientation="vertical" size={25} />
+          </>
+        )}
       </CardBody>
 
       {/* <Separator orientation="horizontal" style={{ height: 0.5 }} /> */}

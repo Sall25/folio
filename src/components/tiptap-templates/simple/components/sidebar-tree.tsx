@@ -55,6 +55,8 @@ import {
   useSectionSortModes,
   type SortMode,
 } from "../hooks/use-sidebar-order";
+import { SidebarTreeSkeleton } from "./skeletons/sidebar-tree-skeleton";
+import { PageRowSkeleton } from "./skeletons";
 
 type DropZone = "before" | "after" | "inside";
 
@@ -95,6 +97,7 @@ export interface SidebarTreeProps {
   onRenameSection?: (category: PageCategory) => void;
   onDeleteSection?: (category: PageCategory) => void;
   onHideSection?: (category: PageCategory) => void;
+  isLoading?: boolean;
 }
 
 function collectSubtreeIds(
@@ -285,6 +288,7 @@ function TreeSection({
   subtitleByPageId,
   sortMode,
   onSetSortMode,
+  isLoading,
 }: {
   category: PageCategory;
   topLevel: PageTreeNode[];
@@ -301,6 +305,7 @@ function TreeSection({
   subtitleByPageId: Map<ID, string>;
   sortMode: SortMode;
   onSetSortMode: (mode: SortMode) => void;
+  isLoading?: boolean;
 }) {
   const { setNodeRef: setBodyRef } = useDroppable({
     id: `section:${category}`,
@@ -371,19 +376,26 @@ function TreeSection({
         </>
       }
     >
-      {topLevel.map((node) => (
-        <TreeRow
-          key={node.page.id}
-          node={node}
-          depth={0}
-          expandedIds={expandedIds}
-          onToggleExpand={onToggleExpand}
-          dropTarget={dropTarget}
-          activeId={activeId}
-          subtitleByPageId={subtitleByPageId}
-        />
-      ))}
-      <SectionAddPageButton category={category} onAddPage={onAddPage} />
+      {isLoading
+        ? Array.from({ length: 4 }).map((_, i) => (
+            <PageRowSkeleton key={i} index={i} />
+          ))
+        : topLevel.map((node) => (
+            <TreeRow
+              key={node.page.id}
+              node={node}
+              depth={0}
+              expandedIds={expandedIds}
+              onToggleExpand={onToggleExpand}
+              dropTarget={dropTarget}
+              activeId={activeId}
+              subtitleByPageId={subtitleByPageId}
+            />
+          ))}
+
+     {!isLoading && (
+        <SectionAddPageButton category={category} onAddPage={onAddPage} />
+      )}
     </Section>
   );
 }
@@ -469,6 +481,7 @@ export function SidebarTree({
   onRenameSection,
   onDeleteSection,
   onHideSection,
+  isLoading,
 }: SidebarTreeProps) {
   // Join teamspace records to their pages by id → "N members" per teamspace-page.
   // Only teamspace-pages land in this map; everything else has no subtitle.
@@ -522,11 +535,16 @@ export function SidebarTree({
   const [dropTarget, setDropTarget] = useState<DropTarget>(null);
   const [expandedIds, setExpandedIds] = useState<Set<ID>>(new Set());
   const [hidden, setHidden] = useState<Set<string>>(new Set());
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
+ const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
     () =>
-      new Set(
-        DEFAULT_SECTION_ORDER.filter((c) => (tree[c]?.length ?? 0) === 0),
-      ),
+      // While loading, `tree` is empty — collapsing every section on that basis
+      // would hide the skeleton rows entirely. Only auto-collapse empty sections
+      // once we actually know they're empty.
+      isLoading
+        ? new Set<string>()
+        : new Set(
+            DEFAULT_SECTION_ORDER.filter((c) => (tree[c]?.length ?? 0) === 0),
+          ),
   );
 
   // Built from the SORTED tree — reorder math needs the currently displayed
@@ -816,6 +834,7 @@ export function SidebarTree({
               subtitleByPageId={subtitleByPageId}
               sortMode={getSortMode(sortModeByCategory, category)}
               onSetSortMode={(mode) => setSortModeForCategory(category, mode)}
+              isLoading={isLoading}
             />
           </SectionDragWrapper>
         ))}

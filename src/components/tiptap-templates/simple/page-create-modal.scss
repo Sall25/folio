@@ -29,11 +29,11 @@
 
   // Center it
   top: calc( 50% + 15px);
-  left: 50%;
+  left: calc(50% + 100px);
   transform: translate(-50%, -50%);
 
   // Sizing
-  width: min(900px, 92vw);
+  width: min(1000px, 96vw);
   max-height: min(90vh, 960px);
   min-height: 600px;
   height: auto;
