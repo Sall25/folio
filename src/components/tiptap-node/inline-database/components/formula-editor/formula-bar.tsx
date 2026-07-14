@@ -18,6 +18,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { formulaLanguage } from "./formula-language";
 import { formulaCompletions } from "./formula-completions";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import type { DatabaseProperty } from "src/types/types";
 import "./formula-bar.scss";
@@ -76,11 +77,15 @@ class PropPillWidget extends WidgetType {
     span.className = "formula-prop-pill";
     span.setAttribute("contenteditable", "false");
 
-    const Icon = PROPERTY_TYPE_ICONS[this.prop.config.type];
     this.root = createRoot(span);
     this.root.render(
       <>
-        <Icon size={12} className="formula-prop-pill__icon" />
+        <DynamicIcon
+          name={PROPERTY_TYPE_ICONS[this.prop.config.type]}
+          size={12}
+          filled={false}
+          className="formula-prop-pill__icon"
+        />
         <span className="formula-prop-pill__name">{this.prop.name}</span>
       </>,
     );
@@ -244,9 +249,9 @@ const FormulaBar = forwardRef<FormulaBarHandle, FormulaBarProps>(
                 cursor: "default",
                 userSelect: "none",
               },
+              // Material glyph: `size` (→ font-size) scales it; width/height are
+              // dead. Only keep opacity + flex-shrink so it never squishes.
               ".formula-prop-pill__icon": {
-                width: "12px",
-                height: "12px",
                 opacity: "0.8",
                 flexShrink: "0",
               },

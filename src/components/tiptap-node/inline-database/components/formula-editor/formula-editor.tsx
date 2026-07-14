@@ -1,5 +1,5 @@
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import { useState, useRef, useMemo } from "react";
-import { TriangleAlert } from "lucide-react";
 import type { DatabaseProperty, ID, ConfigOf } from "src/types";
 import { useDatabaseContext } from "../../nodes/database-context";
 import { useDataSource } from "../../hooks/use-data-source";
@@ -14,11 +14,7 @@ import {
   CardHeader,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
-import {
-  Grid,
-  GridCell,
-  GridRow,
-} from "src/components/tiptap-ui-primitive/grid";
+import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { usePagesBase } from "src/hooks/use-pages";
 
 interface FormulaEditorProps {
@@ -93,34 +89,37 @@ export default function FormulaEditor({
           />
           {error && (
             <div className="formula-error" role="alert">
-              <TriangleAlert size={13} className="formula-error__icon" />
+              <DynamicIcon
+                name="warning"
+                size={13}
+                filled={false}
+                className="formula-error__icon"
+              />
               <span>{error}</span>
             </div>
           )}
         </CardItemGroup>
       </CardHeader>
       <CardBody style={{ width: "100%", padding: "6px 10px" }}>
-        <Grid columns="1fr 3fr" gap={5}>
-          <GridRow>
-            <GridCell style={{ alignItems: "baseline" }}>
-              <PropertiesPanel
-                properties={properties}
-                selectedPropertyId={selectedProperty?.id}
-                onSelectProperty={setSelectedProperty}
-                onInsertProperty={(prop) =>
-                  handleInsertSnippet(`prop("${prop.name}")`)
-                }
-              />
-            </GridCell>
-            <GridCell style={{ alignItems: "baseline" }}>
-              <PropertyDetail
-                property={selectedProperty}
-                properties={properties}
-                onInsertSnippet={handleInsertSnippet}
-              />
-            </GridCell>
-          </GridRow>
-        </Grid>
+        {/* Stacked, full width: properties flow into a multi-column grid on
+            top, the selected property's detail/examples sit below with room
+            for long formula strings. Replaces the old cramped 1fr/3fr split. */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <PropertiesPanel
+            properties={properties}
+            selectedPropertyId={selectedProperty?.id}
+            onSelectProperty={setSelectedProperty}
+            onInsertProperty={(prop) =>
+              handleInsertSnippet(`prop("${prop.name}")`)
+            }
+          />
+          <Separator style={{ height: 0.5 }} orientation="horizontal" />
+          <PropertyDetail
+            property={selectedProperty}
+            properties={properties}
+            onInsertSnippet={handleInsertSnippet}
+          />
+        </div>
       </CardBody>
     </Card>
   );
