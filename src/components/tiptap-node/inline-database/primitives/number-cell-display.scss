@@ -1,9 +1,15 @@
 .num-cell {
-  &__display, &__num { font-variant-numeric: tabular-nums; font-size: 0.875rem; }
+  display: flex;
+  align-items: center;
+  width: 100%;
+  // bar/ring push the number to the right; a plain number sits left.
+  justify-content: flex-start;
+
+  &__display, &__num { font-variant-numeric: tabular-nums; font-size: 14px; }
   &__input {
     background: none; border: none; outline: none;
-    font-size: 0.875rem; color: inherit; width: 120px; text-align: right;
-    caret-color: var(--tt-cursor-color); font-variant-numeric: tabular-nums;
+    font-size: 14px; color: inherit; width: 120px; text-align: right;
+    caret-color: currentColor; font-variant-numeric: tabular-nums;
     &::-webkit-outer-spin-button, &::-webkit-inner-spin-button { -webkit-appearance: none; }
     -moz-appearance: textfield;
   }
@@ -17,4 +23,35 @@
     -webkit-mask: radial-gradient(circle 5px at center, transparent 99%, #000 100%);
   }
 }
+
+.num-cell--right {
+  justify-content: flex-end;
+}
+
 .cell__stub { font-size: 0.875rem; color: var(--tt-paragraph-text-color); }
+
+.num-cell__input {
+  // Align the input's text exactly where the display had it, or the number
+  // visibly jumps sideways the moment the editor opens. type="number" right-
+  // aligns by default in some browsers, which is what caused the shift.
+  width: 100%;
+  text-align: left;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--tt-text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 0;
+
+  // Kill the spinner arrows — they steal width and shift the text again.
+  appearance: textfield;
+  -moz-appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+}

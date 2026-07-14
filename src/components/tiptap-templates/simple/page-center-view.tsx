@@ -353,6 +353,7 @@ export function PageCenterView({
             translateX={0}
             hasThreads={false}
             providedPage={page}
+            marginLeft={0}
           />
           <div>
             <EditorContent editor={editor} className="page-create-content" />

@@ -13,6 +13,13 @@ export function RecordPropertyPanelView({ node }: NodeViewProps) {
     <NodeViewWrapper
       className="record-property-panel-node"
       contentEditable={false}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onMouseDown={(e: any) => {
+        // The panel's cells own their own clicks — popover triggers bind on
+        // pointerdown, and ProseMirror suppresses that inside a
+        // contentEditable=false region, so the editors never open.
+        e.stopPropagation();
+      }}
     >
       <RecordPropertyPanel page={page} />
     </NodeViewWrapper>

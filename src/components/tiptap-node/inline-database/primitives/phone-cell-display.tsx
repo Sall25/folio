@@ -1,25 +1,30 @@
 import { useState } from "react";
-import { ExternalLink, Pencil } from "lucide-react";
+import { Pencil, Phone } from "lucide-react";
 import { CellEditorPopover } from "./cell-editor-popover";
 import { AutoTextarea } from "./auto-textarea";
-import "./url-cell-display.scss";
+import "./phone-cell-display.scss";
 
-function toHref(url: string): string {
-  if (!url) return "";
-  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
-}
-
-export interface UrlCellDisplayProps {
+export interface PhoneCellDisplayProps {
   value: string;
   onChange: (value: string) => void;
   readonly?: boolean;
 }
 
-export function UrlCellDisplay({
+/**
+ * Phone cell — a tel: link with the same click-vs-edit split as email and url:
+ * clicking the number dials it, clicking the space beside it (marked by the
+ * pencil) opens the editor.
+ *
+ * The number is stored and displayed EXACTLY as typed. No auto-formatting:
+ * phone numbers are internationally messy (+221 77 123 4567, (555) 123-4567,
+ * 07700 900123), and any formatter mangles some region's convention. Notion
+ * takes the same position.
+ */
+export function PhoneCellDisplay({
   value,
   onChange,
   readonly,
-}: UrlCellDisplayProps) {
+}: PhoneCellDisplayProps) {
   const [draft, setDraft] = useState(value);
 
   // Adopt external changes while idle (popover closed).
@@ -29,26 +34,22 @@ export function UrlCellDisplay({
     setDraft(value);
   }
 
-  // The link stops propagation, so clicking the URL itself opens it. That means
-  // a click can only reach the EDITOR via the space beside the link — which is
-  // invisible dead space unless it's signposted. Hence the pencil: it marks the
-  // one spot that edits rather than navigates.
   const link = value ? (
     <a
-      href={toHref(value)}
-      className="db-cell-link db-cell-link--url"
+      // Strip spaces and punctuation for the href only — the DISPLAY keeps the
+      // user's formatting. tel: is whitespace-sensitive in some dialers.
+      href={`tel:${value.replace(/[^\d+]/g, "")}`}
+      className="db-cell-phone__link"
       onClick={(e) => e.stopPropagation()}
-      target="_blank"
-      rel="noopener noreferrer"
     >
-      <ExternalLink size={11} />
-      <span className="db-cell-link__text">{value}</span>
+      <Phone size={11} />
+      <span className="db-cell-phone__text">{value}</span>
     </a>
   ) : (
-    <span className="db-cell-link__empty" />
+    <span className="db-cell-phone__empty" />
   );
 
-  if (readonly) return <div className="db-td--url">{link}</div>;
+  if (readonly) return <div className="db-td--phone">{link}</div>;
 
   const commit = (close: () => void) => {
     const next = draft.trim();
@@ -59,7 +60,7 @@ export function UrlCellDisplay({
   return (
     <CellEditorPopover
       trigger={
-        <div className="db-td--url">
+        <div className="db-td--phone">
           {link}
           <span className="db-cell-edit-hint" aria-hidden="true">
             <Pencil size={12} />
@@ -69,10 +70,10 @@ export function UrlCellDisplay({
     >
       {(close) => (
         <AutoTextarea
-          className="db-cell-link__field"
+          className="db-cell-phone__field"
           value={draft}
           maxRows={1}
-          placeholder="https://example.com"
+          placeholder="+221 77 123 4567"
           onChange={setDraft}
           onBlur={() => commit(close)}
           onKeyDown={(e) => {

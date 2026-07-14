@@ -28,6 +28,7 @@ import "./cell.scss";
 import { evaluateFormula } from "../../formula-editor/formula-evaluator";
 import { RelationCell } from "../relation-cell";
 import { RollupCell } from "../rollup-cell";
+import { PhoneCell } from "../phone-cell";
 
 export function Cell({
   property,
@@ -234,6 +235,15 @@ export function Cell({
           config={config}
           onChange={change}
           readonly
+        />
+      );
+    case "phone":
+      return (
+        <PhoneCell
+          value={v}
+          config={config}
+          onChange={change}
+          readonly={readonly}
         />
       );
 

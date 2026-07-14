@@ -45,6 +45,7 @@
   border-radius: var(--tt-radius-lg);
   background: var(--tt-card-bg-color);
   box-shadow: var(--tt-shadow-elevated-md);
+  z-index: 9999;
 
   &__search {
     padding: 8px;

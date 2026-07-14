@@ -1,39 +1,55 @@
+// The display and the field must share IDENTICAL metrics — same font, size,
+// weight, line-height, and zero padding on both — or the text visibly shifts the
+// moment the editor opens. The horizontal inset comes from the editor box
+// (.db-cell-editor__box), which matches the cell's own padding, so neither
+// element adds any of its own.
+
 .db-cell-text {
-  // plain-text display in the cell — single line, ellipsis
+  // Plain-text display in the cell — single line, ellipsis.
   &__display {
     display: block;
     width: 100%;
     min-width: 0;
+    margin: 0;
+    // padding: 0 8px;
+    font-family: inherit;
     font-size: 14px;
     font-weight: 400;
-    line-height: 1.5;
+    line-height: 34px;
     color: var(--tt-theme-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 
     &--empty {
-      color: var(--tt-text-tertiary, var(--tt-text-color));
+      color: color-mix(in srgb, var(--tt-text-primary) 40%, transparent);
     }
   }
 
-  // textarea inside the popover editor — wraps, grows, borderless
+  // The textarea inside the popover editor. A BARE textarea, so this class lands
+  // on the element itself — the TextareaAutosize primitive put it on a wrapper,
+  // leaving the real textarea with its own padding (hence the shift) and a
+  // character counter in the corner.
   &__field {
+    display: block;
     width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
     border: none;
     outline: none;
     background: transparent;
     resize: none;
-    margin: 0;
-    padding: 0;
+    overflow-y: hidden; // JS flips this to auto past maxRows
+    font-family: inherit;
     font-size: 14px;
     font-weight: 400;
     line-height: 1.5;
     color: var(--tt-paragraph-text-color, var(--tt-theme-text));
-    caret-color: var(--tt-brand-color-400);
+    caret-color: currentColor;
 
     &::placeholder {
-      color: var(--tt-text-tertiary, var(--tt-text-color));
+      color: color-mix(in srgb, var(--tt-text-primary) 40%, transparent);
     }
   }
 }

@@ -1,14 +1,6 @@
-import { ArrowUp } from "lucide-react";
 import { useState } from "react";
-import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "src/components/tiptap-ui-primitive/popover";
-import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import type { NumberFormat, DecimalPlaces, NumberShowAs } from "src/types";
+import { CellEditorPopover } from "./cell-editor-popover";
 import "./number-cell-display.scss";
 
 function formatNumber(
@@ -101,6 +93,14 @@ export interface NumberCellDisplayProps {
   readonly?: boolean;
 }
 
+/**
+ * Number cell. Uses the shared CellEditorPopover so it edits exactly like title
+ * and text: click the cell → a bordered box opens OVER it (escaping the column's
+ * overflow) → blur or Enter commits, Escape cancels.
+ *
+ * It used to own a bespoke Popover that dropped BELOW the cell and needed an
+ * explicit submit button, which made it the odd one out.
+ */
 export function NumberCellDisplay({
   value,
   onChange,
@@ -112,22 +112,34 @@ export function NumberCellDisplay({
   max = 0,
   readonly,
 }: NumberCellDisplayProps) {
-  const [open, setOpen] = useState(false);
-  const [input, setInput] = useState(value !== null ? String(value) : "");
+  const [draft, setDraft] = useState(value !== null ? String(value) : "");
+
+  // Adopt external changes while idle — same pattern as the title/text cells.
+  const [prev, setPrev] = useState(value);
+  if (value !== prev) {
+    setPrev(value);
+    setDraft(value !== null ? String(value) : "");
+  }
 
   const display = formatNumber(value, format, prefix, suffix, decimalPlaces);
 
   const fraction =
     max > 0 && value !== null ? Math.min(Math.max(value / max, 0), 1) : 0;
 
-  function save() {
-    const parsed = input === "" ? null : Number(input);
-    if (input !== "" && isNaN(parsed!)) return;
-    onChange(parsed);
-    setOpen(false);
-  }
-
   const hasValue = value !== null;
+
+  const commit = (close: () => void) => {
+    const trimmed = draft.trim();
+    const parsed = trimmed === "" ? null : Number(trimmed);
+    // Reject garbage rather than writing NaN into the record.
+    if (trimmed !== "" && Number.isNaN(parsed)) {
+      setDraft(value !== null ? String(value) : "");
+      close();
+      return;
+    }
+    if (parsed !== value) onChange(parsed);
+    close();
+  };
 
   const content =
     showAs === "bar" && hasValue ? (
@@ -152,60 +164,35 @@ export function NumberCellDisplay({
       <span className="num-cell__display">{display}</span>
     );
 
-  if (readonly) return <div className="num-cell">{content}</div>;
+  const alignClass = showAs === "number" ? "" : " num-cell--right";
+
+  if (readonly) return <div className={`num-cell${alignClass}`}>{content}</div>;
 
   return (
-    <Popover
-      open={open}
-      onOpenChange={(v) => {
-        setOpen(v);
-        if (v) setInput(value !== null ? String(value) : "");
-      }}
+    <CellEditorPopover
+      trigger={<div className={`num-cell${alignClass}`}>{content}</div>}
     >
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          style={{
-            background: "transparent",
-            width: "100%",
-            justifyContent: showAs === "number" ? "flex-start" : "flex-end",
+      {(close) => (
+        <input
+          type="number"
+          className="num-cell__input"
+          placeholder="0"
+          value={draft}
+          autoFocus
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={() => commit(close)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commit(close);
+            }
+            if (e.key === "Escape") {
+              setDraft(value !== null ? String(value) : "");
+              close();
+            }
           }}
-        >
-          {content}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent side="bottom" align="start">
-        <Card style={{ padding: "5px 10px" }}>
-          <CardItemGroup orientation="horizontal">
-            <input
-              type="number"
-              className="num-cell__input"
-              placeholder="0"
-              value={input}
-              autoFocus
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") save();
-                if (e.key === "Escape") setOpen(false);
-              }}
-            />
-            <Spacer />
-            <Button
-              variant="ghost"
-              style={{
-                background: "var(--tt-brand-color-400)",
-                borderRadius: "var(--tt-radius-xl)",
-              }}
-              onClick={save}
-            >
-              <ArrowUp
-                className="tiptap-button-icon"
-                style={{ color: "white" }}
-              />
-            </Button>
-          </CardItemGroup>
-        </Card>
-      </PopoverContent>
-    </Popover>
+        />
+      )}
+    </CellEditorPopover>
   );
 }

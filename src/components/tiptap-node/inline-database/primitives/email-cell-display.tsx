@@ -1,15 +1,8 @@
-import { ArrowUp } from "lucide-react";
 import { useState } from "react";
-import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "src/components/tiptap-ui-primitive/popover";
-import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
+import { CellEditorPopover } from "./cell-editor-popover";
+import { AutoTextarea } from "./auto-textarea";
 import "./email-cell-display.scss";
+import { Pencil } from "lucide-react";
 
 export interface EmailCellDisplayProps {
   value: string;
@@ -22,9 +15,19 @@ export function EmailCellDisplay({
   onChange,
   readonly,
 }: EmailCellDisplayProps) {
-  const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value);
 
+  // Adopt external changes while idle (popover closed).
+  const [prev, setPrev] = useState(value);
+  if (value !== prev) {
+    setPrev(value);
+    setDraft(value);
+  }
+
+  // The link stops propagation so clicking the address itself opens the mail
+  // client, while clicking anywhere else in the cell opens the editor. That's
+  // Notion's behaviour, and it's why the trigger isn't simply "the whole cell
+  // opens the editor".
   const link = value ? (
     <a
       href={`mailto:${value}`}
@@ -37,70 +40,51 @@ export function EmailCellDisplay({
     <span className="db-cell-email__empty" />
   );
 
+  const display = (
+    <div className="db-td--email">
+      {link}
+      {/* The click zone, made visible. The link stops propagation (so clicking
+          the address opens the mail client), which means this is the ONLY place
+          a click reaches the editor — worth signposting rather than leaving as
+          invisible dead space. */}
+      {!readonly && (
+        <span className="db-cell-edit-hint" aria-hidden="true">
+          <Pencil size={12} />
+        </span>
+      )}
+    </div>
+  );
   if (readonly) return <div className="db-td--email">{link}</div>;
 
-  function save() {
+  const commit = (close: () => void) => {
     const next = draft.trim();
     if (next !== value) onChange(next);
-    setOpen(false);
-  }
+    close();
+  };
 
   return (
-    <Popover
-      open={open}
-      onOpenChange={(v) => {
-        setOpen(v);
-        if (v) setDraft(value);
-      }}
-    >
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          style={{
-            background: "transparent",
-            width: "100%",
-            justifyContent: "flex-start",
+    <CellEditorPopover trigger={display}>
+      {(close) => (
+        <AutoTextarea
+          className="db-cell-email__field"
+          value={draft}
+          maxRows={1}
+          placeholder="example@email.com"
+          onChange={setDraft}
+          onBlur={() => commit(close)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commit(close);
+            }
+            if (e.key === "Escape") {
+              e.preventDefault();
+              setDraft(value);
+              close();
+            }
           }}
-        >
-          {link}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent side="bottom" align="start">
-        <Card style={{ padding: "5px 10px" }}>
-          <CardItemGroup orientation="horizontal">
-            <TextareaAutosize
-              cols={40}
-              maxRows={1}
-              placeholder="example@email.com"
-              value={draft}
-              autoFocus
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  save();
-                }
-                if (e.key === "Escape") setOpen(false);
-              }}
-            />
-            <Spacer />
-            <Button
-              variant="ghost"
-              style={{
-                background: "var(--tt-brand-color-400)",
-                borderRadius: "var(--tt-radius-xl)",
-              }}
-              disabled={!draft.trim()}
-              onClick={save}
-            >
-              <ArrowUp
-                className="tiptap-button-icon"
-                style={{ color: "white" }}
-              />
-            </Button>
-          </CardItemGroup>
-        </Card>
-      </PopoverContent>
-    </Popover>
+        />
+      )}
+    </CellEditorPopover>
   );
 }

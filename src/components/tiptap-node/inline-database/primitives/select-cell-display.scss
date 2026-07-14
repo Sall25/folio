@@ -36,6 +36,7 @@
 // ── Dropdown ────────────────────────────────────────────────────────────────
 
 .select-dropdown {
+  z-index: 9999;
   &__option {
     display: flex;
     align-items: center;
