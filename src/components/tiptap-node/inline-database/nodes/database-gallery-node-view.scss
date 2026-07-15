@@ -1,41 +1,54 @@
 .db-gallery {
   width: 100%;
-  overflow-x: scroll;
-  scrollbar-width: thin;
-  scrollbar-color: var(--tt-scrollbar-color) transparent;
-  max-width: var(--db-editor-width);   /* bound the scroller so it overflows */
-  
- 
-  &:not(:hover) {
-    scrollbar-width: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-  &:hover {
-    scrollbar-width: thin;
-  }
+  max-width: var(--db-editor-width);
+
+  // Gallery is a wrapping grid — unlike the board it does NOT scroll
+  // horizontally; it reflows into fewer columns as it narrows. Declaring the
+  // container here is what makes the @container query below actually resolve.
+  container-type: inline-size;
+
 
   &__body {
     display: grid;
-    // Fixed columns-per-row driven by card size (large=3, medium=4, small=5).
-    // Cards fill their 1fr share evenly — no stretch-to-fill-the-row.
-    grid-template-columns: repeat(var(--db-gallery-cols, 4), 1fr);
+    // Fixed columns-per-row by card size (large=3, medium=4, small=5), cards
+    // share the row evenly. minmax(0, 1fr) — NOT 1fr — is the fix: 1fr floors a
+    // track at its content's min-content, so a long unbreakable URL/email would
+    // force the track (and the whole grid) wider than the editor and turn it
+    // into a sideways scroller. minmax(0, …) lets the track shrink instead.
+    grid-template-columns: repeat(var(--db-gallery-cols, 4), minmax(0, 1fr));
     gap: 12px;
-    padding: 4px 0;
-     width: max-content;
-  min-width: 100%;
- 
-    // Below a cramped width, drop to 2 columns so cards don't get too narrow.
+    padding: 4px 10px;
+    width: 100%;
+
+    // Narrow width → drop to 2 columns so cards don't get too thin.
     @container (max-width: 640px) {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
   &__card {
     border-radius: var(--tt-radius-xs);
-    min-width: 0; // allow the card to shrink within its track (prevents overflow)
-    img { max-width: 100%; display: block; }
-    // BoardCard provides the inner styling; this just sizes the slot
+    min-width: 0; // shrink within the track
+    overflow: hidden; // clip long unbroken content (and round the bled cover)
+    img {
+      max-width: 100%;
+      display: block;
+    }
+    &__props{
+      padding: 5px;
+    }
+    // BoardCard provides the inner styling; this just sizes the slot.
   }
+}
+
+.db-board-card__props {
+  padding: 5px 10px;
+}
+
+.db-board-card__title {
+  padding: 10px 8px !important;
+ }
+
+.status-badge{
+  padding: 5px 10px;
 }

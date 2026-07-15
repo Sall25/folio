@@ -32,7 +32,6 @@
   line-height: 34px; // row height — centres the single line in the cell
   color: var(--tt-text-primary);
   text-decoration: none;
-  text-decoration-color: var(--tt-border-color);
 
   &:hover {
     text-decoration: underline;
@@ -49,6 +48,11 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    color: var(--tt-text-primary);
+    text-decoration-color: var(--tt-gray-light-a-600);
+    .dark & {
+      text-decoration-color: rgba(143, 142, 142, 0.462) !important;
+    }
   }
 
   // Empty cell — holds the row's height so the cell doesn't collapse.

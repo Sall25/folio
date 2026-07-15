@@ -76,6 +76,13 @@ export function Cell({
           readonly={readonly}
           unwrapped={unwrapped}
           view={view}
+          openVariant={
+            view?.type === "list" ||
+            view?.type === "board" ||
+            view?.type === "gallery"
+              ? "edit"
+              : "open"
+          }
         />
       );
 

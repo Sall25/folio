@@ -5,20 +5,27 @@
   &__body {
     display: flex;
     flex-direction: column;
-    /* The scroll lives here: when a row's content is wider than the viewport,
-       this scrolls horizontally instead of the cells crushing into each other. */
+    // Wide lists scroll horizontally instead of crushing the columns.
     overflow-x: auto;
     overflow-y: hidden;
   }
 }
 
-/* The group must be able to grow to its widest row so its header border and
-   background span the full (scrollable) content width, not just the viewport. */
+// The group IS the grid that owns the shared column tracks. Its
+// grid-template-columns is set inline (per list) from the visible-property
+// count: `minmax(220px, 1fr) repeat(N, max-content)`. Every row subgrids onto
+// these tracks, so property N lines up straight down the whole group — a grid
+// with invisible lines. column-gap here is the (invisible) gutter; subgrids
+// inherit it.
 .db-list-group {
-  min-width: max-content;
+  display: grid;
+  align-content: start;
+  column-gap: 24px;
+  min-width: 0;
 }
 
 .db-list-group__header {
+  grid-column: 1 / -1; // span every column
   display: flex;
   align-items: center;
   gap: 5px;
@@ -27,46 +34,36 @@
 }
 
 .db-list-row {
-  display: flex;
+  grid-column: 1 / -1; // occupy one full row of the group grid
+  display: grid;
+  grid-template-columns: subgrid; // inherit the group's tracks + gutter
   align-items: center;
-  gap: 12px;
   height: 34px;
-  padding: 0;
-  margin: 0;
+  min-width: 0;
+  border-radius: var(--tt-radius-sm);
+  transition: background 80ms ease;
 
-  /* Fit content. When content is narrower than the body the row still fills
-     it (flex stretch), so short rows span full width and the title can grow.
-     When content is wider, this forces the row past the body width and the
-     body's overflow-x kicks in. This REPLACES width/max-width: 100%. */
-  min-width: max-content;
+  &:hover {
+    background: var(--tt-button-hover-bg-color);
+  }
 
   &__title {
-    /* Grows to eat spare space when the row fills the viewport; capped so a
-       long title can't blow out the row's content width. Truncates as before. */
-    flex: 1 1 200px;
-    min-width: 160px;
-    max-width: 400px;
-    margin: 0;
+    grid-column: 1;
+    min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   &__props {
-    display: flex;
+    grid-column: 2 / -1; // spans every property column
+    display: grid;
+    grid-template-columns: subgrid; // each cell drops into its own column
     align-items: center;
-    gap: 8px;
+    min-width: 0;
 
-    /* The actual fix: props take their content width and DON'T shrink, so the
-       pills stop collapsing on top of one another. No min-width: 0, no
-       overflow: hidden — those were what let them pile up. */
-    flex: 0 0 auto;
-    white-space: nowrap;
-
-    /* Belt-and-suspenders: individual cells never shrink below their content. */
+    // Cells hug their column and truncate rather than push the grid wider.
     > * {
-      flex: 0 0 auto;
-      min-width: 0; /* keeps any internal text truncation inside a cell working */
+      min-width: 0;
+      overflow: hidden;
     }
   }
 }

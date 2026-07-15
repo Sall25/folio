@@ -3,11 +3,13 @@
 @use "../utils/pill-colors" as pill;
 
 .status-badge {
+  
   @include pill.pill-base;
   cursor: pointer;
   transition: filter var(--tt-transition-duration-short)
     var(--tt-transition-easing-default);
-
+  padding: 0;
+  
   &:hover {
     filter: brightness(1.08);
   }

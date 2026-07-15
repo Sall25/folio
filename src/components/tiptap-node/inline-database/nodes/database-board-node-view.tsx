@@ -2,7 +2,6 @@
 import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { useDataSource } from "../hooks/use-data-source";
 import { SelectCellDisplay } from "../primitives/select-cell-display";
 import { StatusCellDisplay } from "../primitives/status-cell-display";
@@ -93,7 +92,6 @@ export function DatabaseBoardNodeView({
   attrs: DatabaseAttrs;
   source: DataSource;
 }) {
-  const { activePage } = useActivePage();
   const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
     attrs.sourceId,
   );

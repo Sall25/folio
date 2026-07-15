@@ -24,6 +24,7 @@ export function TitleCell({
   readonly,
   unwrapped,
   view,
+  openVariant,
 }: {
   value: string;
   recordId: ID;
@@ -33,6 +34,7 @@ export function TitleCell({
   onChange: (value: string) => void;
   readonly?: boolean;
   unwrapped?: boolean;
+  openVariant?: "open" | "edit";
 }) {
   const { data: linkedPage } = usePage(pageId ?? null);
   const { data: templatePage } = usePage(templateId ?? null);
@@ -89,6 +91,7 @@ export function TitleCell({
           }
         }}
         readonly={readonly}
+        openVariant={openVariant}
       />
     </div>
   );

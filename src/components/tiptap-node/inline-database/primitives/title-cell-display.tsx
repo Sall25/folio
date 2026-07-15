@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PanelRightOpen } from "lucide-react";
+import { PanelRightOpen, Pencil } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 import type { PageCover } from "src/types";
@@ -17,6 +17,12 @@ export interface TitleCellDisplayProps {
   onOpen?: () => void;
   readonly?: boolean;
   maxRows?: number;
+  /**
+   * Which affordance the hover button shows. List view uses a pencil (Notion's
+   * inline-edit affordance); everywhere else keeps the open-in-panel icon.
+   * The caller (TitleCell) sets this from the view type.
+   */
+  openVariant?: "open" | "edit";
 }
 
 export function TitleCellDisplay({
@@ -27,6 +33,7 @@ export function TitleCellDisplay({
   onOpen,
   readonly,
   maxRows = 8,
+  openVariant = "open",
 }: TitleCellDisplayProps) {
   const [hover, setHover] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -114,7 +121,7 @@ export function TitleCellDisplay({
               minHeight: 24,
               height: 24,
               fontSize: 14,
-              minWidth: 68,
+              minWidth: openVariant === "edit" ? "fit-content" : 68,
               alignItems: "center",
               borderRadius: "var(--tt-radius-sm)",
               background: "var(--tt-bg-color)",
@@ -129,8 +136,14 @@ export function TitleCellDisplay({
               onOpen();
             }}
           >
-            <PanelRightOpen className="tiptap-button-icon" size={12} />
-            <span className="tiptap-button-text">Open</span>
+            {openVariant === "edit" ? (
+              <Pencil className="tiptap-button-icon" size={12} />
+            ) : (
+              <PanelRightOpen className="tiptap-button-icon" size={12} />
+            )}
+            {openVariant === "open" && (
+              <span className="tiptap-button-text">Open</span>
+            )}
           </Button>
         </>
       )}

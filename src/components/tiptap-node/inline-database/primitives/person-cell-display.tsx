@@ -102,8 +102,9 @@ export function PersonCellDisplay({
             background: "transparent",
             width: "100%",
             justifyContent: "flex-start",
-            minHeight: 28,
+            minHeight: 32,
             flexWrap: "wrap",
+            padding: 0,
             gap: 4,
           }}
         >

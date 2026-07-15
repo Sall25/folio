@@ -41,7 +41,7 @@ export function UrlCellDisplay({
       target="_blank"
       rel="noopener noreferrer"
     >
-      <ExternalLink size={11} />
+      <ExternalLink stroke="var(--tt-text-primary)" size={11} />
       <span className="db-cell-link__text">{value}</span>
     </a>
   ) : (

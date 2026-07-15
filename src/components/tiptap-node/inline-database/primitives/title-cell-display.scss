@@ -1,8 +1,13 @@
+.db-board-card__title {
+    padding: 5px 0px !important;
+}
 .node-titleCell {
-  margin: 0;
+  
+  margin: auto 5px;
 }
 
 .db-cell-title {
+  
   display: flex;
   align-items: center;
   width: 100%;
