@@ -66,17 +66,8 @@ export function DatabaseViewTabs({
               <Button
                 variant="ghost"
                 key={view.id}
+                className="db-view-tab"
                 data-active-state="on"
-                style={{
-                  borderRadius: "var(--tt-radius-xl)",
-                  color: "var(--tt-text-primary)",
-                  fontSize: 14,
-                  lineHeight: 1.5,
-                  fontWeight: 500,
-                  fontFamily: "inherit",
-                  minWidth: 32,
-                  minHeight: 26,
-                }}
               >
                 <ViewIcon view={view} />
                 <span className="tiptap-button-text">{view.name}</span>
@@ -104,19 +95,11 @@ export function DatabaseViewTabs({
           <Button
             variant="ghost"
             key={view.id}
+            className="db-view-tab"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               db.setActiveView(view.id);
-            }}
-            style={{
-              borderRadius: "var(--tt-radius-xl)",
-              fontSize: 14,
-              lineHeight: 1.5,
-              fontWeight: 500,
-              fontFamily: "inherit",
-              minWidth: 32,
-              minHeight: 26,
             }}
           >
             <ViewIcon view={view} />
@@ -152,7 +135,12 @@ export function DatabaseViewTabs({
                     <Button
                       key={type}
                       variant="ghost"
-                      style={{ justifyContent: "flex-start", width: "100%" }}
+                      style={{
+                        justifyContent: "flex-start",
+                        width: "100%",
+                        backgroundColor: "transparent",
+                        borderRadius: 0,
+                      }}
                       onClick={() => {
                         db.addView(type, label);
                         setOpen(false);

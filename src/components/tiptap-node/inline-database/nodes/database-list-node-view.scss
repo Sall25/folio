@@ -1,7 +1,21 @@
 .db-list {
   width: 100%;
- 
-  &__body { display: flex; flex-direction: column; }
+  min-width: 0;
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    /* The scroll lives here: when a row's content is wider than the viewport,
+       this scrolls horizontally instead of the cells crushing into each other. */
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+}
+
+/* The group must be able to grow to its widest row so its header border and
+   background span the full (scrollable) content width, not just the viewport. */
+.db-list-group {
+  min-width: max-content;
 }
 
 .db-list-group__header {
@@ -12,34 +26,6 @@
   border-bottom: 1px solid var(--tt-border-color);
 }
 
-// .db-list-row {
-//   display: flex;
-//   align-items: center;
-//   gap: 12px;
-//   height: 34px;
-//   padding: 0;
-//   margin: 0;
-//   max-width: var(--db-editor-width);
-//   // border-bottom: 1px solid var(--tt-border-color);
-
-//   &__title { flex: 1; min-width: 0; margin: 0; }
-
-//   &__props {
-//     display: flex;
-//     align-items: center;
-//     gap: 8px;
-//     flex-shrink: 1;
-//   }
-
-//   // &__open {
-//   //   opacity: 0;
-//   //   min-height: 22px;
-//   //   height: 22px;
-//   //   flex-shrink: 0;
-//   // }
-
-//   &:hover &__open { opacity: 1; }
-// }
 .db-list-row {
   display: flex;
   align-items: center;
@@ -47,22 +33,40 @@
   height: 34px;
   padding: 0;
   margin: 0;
-  width: 100%;          /* fill the container… */
-  max-width: 100%;      /* …and never exceed it (was --db-editor-width) */
-  min-width: 0;         /* allow the row itself to shrink in a flex parent */
+
+  /* Fit content. When content is narrower than the body the row still fills
+     it (flex stretch), so short rows span full width and the title can grow.
+     When content is wider, this forces the row past the body width and the
+     body's overflow-x kicks in. This REPLACES width/max-width: 100%. */
+  min-width: max-content;
 
   &__title {
-    flex: 1 1 auto;
-    min-width: 0;       /* you had this — keeps the title truncating */
+    /* Grows to eat spare space when the row fills the viewport; capped so a
+       long title can't blow out the row's content width. Truncates as before. */
+    flex: 1 1 200px;
+    min-width: 160px;
+    max-width: 400px;
     margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__props {
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-shrink: 1;
-    min-width: 0;       /* THE missing piece — lets the pills compress */
-    overflow: hidden;   /* clip overflow within the props block, not the row */
+
+    /* The actual fix: props take their content width and DON'T shrink, so the
+       pills stop collapsing on top of one another. No min-width: 0, no
+       overflow: hidden — those were what let them pile up. */
+    flex: 0 0 auto;
+    white-space: nowrap;
+
+    /* Belt-and-suspenders: individual cells never shrink below their content. */
+    > * {
+      flex: 0 0 auto;
+      min-width: 0; /* keeps any internal text truncation inside a cell working */
+    }
   }
 }

@@ -12,6 +12,11 @@ import {
 
 export * from "./cover-placeholder";
 
+// Notion parity: a freshly created list view shows only the first few
+// properties; the rest start hidden (the user can unhide them). The title is
+// rendered on its own line, so it is never part of the count or the hidden set.
+const DEFAULT_LIST_VISIBLE_PROPS = 3;
+
 export function makeId(): string {
   return crypto.randomUUID();
 }
@@ -132,8 +137,13 @@ export function makeCellNode(prop: DatabaseProperty): JSONContent {
   return {};
 }
 
-// properties is optional — only needed for board to auto-pick groupByPropertyId.
-// Status is preferred over select, matching Notion's behavior.
+// properties is optional — only needed for board to auto-pick groupByPropertyId
+// and for calendar/timeline to auto-pick their date property, and now for the
+// list view to seed its default hidden set. Status is preferred over select,
+// matching Notion's behavior.
+//
+// NOTE: callers that create real views (see addView) MUST pass `properties`,
+// or these auto-picked defaults silently fall back to empty.
 export function makeDefaultView(
   type: DatabaseView["type"],
   name: string,
@@ -173,8 +183,22 @@ export function makeDefaultView(
       } satisfies BoardView;
     }
 
-    case "list":
-      return { ...base, type: "list", visibleProperties: [] };
+    case "list": {
+      // Show the first few non-title properties; hide the rest. The renderer
+      // reads `hiddenProperties`, so that's the field that has to be seeded
+      // (not `visibleProperties`). Empty when there are ≤3 non-title props.
+      const hiddenProperties = properties
+        .filter((p) => p.config.type !== "title")
+        .slice(DEFAULT_LIST_VISIBLE_PROPS)
+        .map((p) => p.id);
+
+      return {
+        ...base,
+        type: "list",
+        visibleProperties: [],
+        hiddenProperties,
+      };
+    }
 
     case "gallery":
       return {
