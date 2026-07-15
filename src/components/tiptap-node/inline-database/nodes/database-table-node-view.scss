@@ -4,16 +4,18 @@
   scrollbar-width: thin;
   scrollbar-color: var(--tt-scrollbar-color) transparent;
   margin-top: 4px;
+  scrollbar-width: auto;
 
-  &:not(:hover) {
-    scrollbar-width: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-  &:hover {
-    scrollbar-width: thin;
-  }
+
+  // &:not(:hover) {
+  //   scrollbar-width: none;
+  //   &::-webkit-scrollbar {
+  //     display: none;
+  //   }
+  // }
+  // &:hover {
+  //   scrollbar-width: thin;
+  // }
 }
 
 .db-table {

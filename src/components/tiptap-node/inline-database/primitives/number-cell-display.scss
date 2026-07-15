@@ -2,11 +2,13 @@
   display: flex;
   align-items: center;
   width: 100%;
+  min-width: 100px;
   // bar/ring push the number to the right; a plain number sits left.
   justify-content: flex-start;
 
   &__display, &__num { font-variant-numeric: tabular-nums; font-size: 14px; }
   &__input {
+    min-width: 100px;
     background: none; border: none; outline: none;
     font-size: 14px; color: inherit; width: 120px; text-align: right;
     caret-color: currentColor; font-variant-numeric: tabular-nums;
@@ -35,6 +37,7 @@
   // visibly jumps sideways the moment the editor opens. type="number" right-
   // aligns by default in some browsers, which is what caused the shift.
   width: 100%;
+  min-width: 100px;
   text-align: left;
   border: none;
   outline: none;
@@ -53,5 +56,11 @@
   &::-webkit-inner-spin-button {
     appearance: none;
     margin: 0;
+  }
+}
+
+.db-cell-editor{
+  &__display{
+    min-height: 34px;
   }
 }

@@ -8,6 +8,7 @@
   cursor: pointer;
   transition: filter var(--tt-transition-duration-short)
     var(--tt-transition-easing-default);
+    margin: auto 5px;
 
   &:hover {
     // Lifts on any fill, light or dark — no second token needed.
