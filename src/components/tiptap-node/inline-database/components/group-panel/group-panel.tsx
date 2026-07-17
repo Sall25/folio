@@ -19,6 +19,7 @@ import type { UseDatabaseReturn } from "../../hooks/use-database";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import "./group-panel.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 export function GroupPanel({
   properties,
@@ -95,7 +96,8 @@ export function GroupPanel({
 
             {/* Groupable properties */}
             {groupableProperties.map((p) => {
-              const Icon = PROPERTY_TYPE_ICONS[p.config.type];
+              // Material Symbols name string now, not an icon component.
+              const iconName = PROPERTY_TYPE_ICONS[p.config.type];
               const isActive = groupByPropertyId === p.id;
               return (
                 <Button
@@ -106,9 +108,14 @@ export function GroupPanel({
                   onClick={() => setGroup(p.id)}
                 >
                   {isActive ? (
-                    <Check size={13} className="tiptap-button-icon" />
+                    <Check size={18} className="tiptap-button-icon" />
                   ) : (
-                    <Icon size={13} className="tiptap-button-icon" />
+                    <DynamicIcon
+                      name={iconName}
+                      size={20}
+                      filled={false}
+                      className="tiptap-button-icon"
+                    />
                   )}
                   <span className="tiptap-button-text">{p.name}</span>
                 </Button>

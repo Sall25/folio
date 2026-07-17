@@ -28,6 +28,7 @@ import "./cell.scss";
 import { evaluateFormula } from "../../formula-editor/formula-evaluator";
 import { RelationCell } from "../relation-cell";
 import { RollupCell } from "../rollup-cell";
+import { PhoneCell } from "../phone-cell";
 
 export function Cell({
   property,
@@ -67,7 +68,7 @@ export function Cell({
     case "title":
       return (
         <TitleCell
-          value={typeof value === "string" ? value : ""}
+          value={record.title ?? ""}
           recordId={record.id}
           pageId={record.id}
           templateId={templateId}
@@ -75,6 +76,13 @@ export function Cell({
           readonly={readonly}
           unwrapped={unwrapped}
           view={view}
+          openVariant={
+            view?.type === "list" ||
+            view?.type === "board" ||
+            view?.type === "gallery"
+              ? "edit"
+              : "open"
+          }
         />
       );
 
@@ -219,12 +227,31 @@ export function Cell({
 
     case "created_time":
       return (
-        <CreatedTimeCell value={v} config={config} onChange={change} readonly />
+        <CreatedTimeCell
+          value={record.createdAt as CellValue<"created_time"> | null}
+          config={config}
+          onChange={change}
+          readonly
+        />
       );
 
     case "edited_time":
       return (
-        <EditedTimeCell value={v} config={config} onChange={change} readonly />
+        <EditedTimeCell
+          value={record.updatedAt as CellValue<"edited_time"> | null}
+          config={config}
+          onChange={change}
+          readonly
+        />
+      );
+    case "phone":
+      return (
+        <PhoneCell
+          value={v}
+          config={config}
+          onChange={change}
+          readonly={readonly}
+        />
       );
 
     // case "created_by":

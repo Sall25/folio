@@ -1,14 +1,7 @@
-import { ArrowUp, ExternalLink } from "lucide-react";
 import { useState } from "react";
-import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "src/components/tiptap-ui-primitive/popover";
-import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
+import { ExternalLink, Pencil } from "lucide-react";
+import { CellEditorPopover } from "./cell-editor-popover";
+import { AutoTextarea } from "./auto-textarea";
 import "./url-cell-display.scss";
 
 function toHref(url: string): string {
@@ -27,9 +20,19 @@ export function UrlCellDisplay({
   onChange,
   readonly,
 }: UrlCellDisplayProps) {
-  const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value);
 
+  // Adopt external changes while idle (popover closed).
+  const [prev, setPrev] = useState(value);
+  if (value !== prev) {
+    setPrev(value);
+    setDraft(value);
+  }
+
+  // The link stops propagation, so clicking the URL itself opens it. That means
+  // a click can only reach the EDITOR via the space beside the link — which is
+  // invisible dead space unless it's signposted. Hence the pencil: it marks the
+  // one spot that edits rather than navigates.
   const link = value ? (
     <a
       href={toHref(value)}
@@ -38,8 +41,8 @@ export function UrlCellDisplay({
       target="_blank"
       rel="noopener noreferrer"
     >
-      <ExternalLink size={11} />
-      {value}
+      <ExternalLink stroke="var(--tt-text-primary)" size={11} />
+      <span className="db-cell-link__text">{value}</span>
     </a>
   ) : (
     <span className="db-cell-link__empty" />
@@ -47,68 +50,44 @@ export function UrlCellDisplay({
 
   if (readonly) return <div className="db-td--url">{link}</div>;
 
-  function save() {
+  const commit = (close: () => void) => {
     const next = draft.trim();
     if (next !== value) onChange(next);
-    setOpen(false);
-  }
+    close();
+  };
 
   return (
-    <Popover
-      open={open}
-      onOpenChange={(v) => {
-        setOpen(v);
-        if (v) setDraft(value);
-      }}
-    >
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          style={{
-            background: "transparent",
-            width: "100%",
-            justifyContent: "flex-start",
-          }}
-        >
+    <CellEditorPopover
+      trigger={
+        <div className="db-td--url">
           {link}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent side="bottom" align="start">
-        <Card style={{ padding: "5px 10px" }}>
-          <CardItemGroup orientation="horizontal">
-            <TextareaAutosize
-              cols={40}
-              maxRows={1}
-              placeholder="https://example.com"
-              value={draft}
-              autoFocus
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  save();
-                }
-                if (e.key === "Escape") setOpen(false);
-              }}
-            />
-            <Spacer />
-            <Button
-              variant="ghost"
-              style={{
-                background: "var(--tt-brand-color-400)",
-                borderRadius: "var(--tt-radius-xl)",
-              }}
-              disabled={!draft.trim()}
-              onClick={save}
-            >
-              <ArrowUp
-                className="tiptap-button-icon"
-                style={{ color: "white" }}
-              />
-            </Button>
-          </CardItemGroup>
-        </Card>
-      </PopoverContent>
-    </Popover>
+          <span className="db-cell-edit-hint" aria-hidden="true">
+            <Pencil size={12} />
+          </span>
+        </div>
+      }
+    >
+      {(close) => (
+        <AutoTextarea
+          className="db-cell-link__field"
+          value={draft}
+          maxRows={1}
+          placeholder="https://example.com"
+          onChange={setDraft}
+          onBlur={() => commit(close)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commit(close);
+            }
+            if (e.key === "Escape") {
+              e.preventDefault();
+              setDraft(value);
+              close();
+            }
+          }}
+        />
+      )}
+    </CellEditorPopover>
   );
 }

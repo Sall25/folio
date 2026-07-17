@@ -36,7 +36,7 @@ export function PageItem({
   subtitle,
   expanded = false,
   onToggleExpand,
-  showChevron = true,
+  // showChevron = true,
 }: PageItemProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(page.title);
@@ -97,7 +97,7 @@ export function PageItem({
         {/* Every page is collapsible/expandable in tree contexts — chevron
             renders leftmost, before the icon. Flat lists (Recents) pass
             showChevron={false} since there's no hierarchy to expand. */}
-        {showChevron && (
+        {/* {showChevron && (
           <>
             <Chevron
               expanded={expanded}
@@ -110,18 +110,31 @@ export function PageItem({
             />
             <Spacer orientation="horizontal" size={0.4} />
           </>
+        )} */}
+
+        {shouldShow ? (
+          <Chevron
+            expanded={expanded}
+            size="small"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleExpand?.(page.id);
+            }}
+          />
+        ) : (
+          <PageItemIcon
+            cover={page.cover}
+            styles={{
+              width: 15,
+              height: 15,
+              opacity: 1,
+              fontSize: 15,
+              color: "inherit",
+            }}
+          />
         )}
 
-        <PageItemIcon
-          cover={page.cover}
-          styles={{
-            width: 15,
-            height: 15,
-            opacity: 1,
-            fontSize: 15,
-            color: "inherit",
-          }}
-        />
         <Spacer orientation="horizontal" size={1} />
 
         {editing ? (
@@ -167,6 +180,8 @@ export function PageItem({
         ) : (
           <span className="page-item-title">{title}</span>
         )}
+
+        {/* <Spacer orientation="horizontal" /> */}
 
         <CardItemGroup
           orientation="horizontal"

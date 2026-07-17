@@ -1,27 +1,116 @@
+// Display and field share IDENTICAL metrics — same font, size, weight, zero
+// padding — so the text doesn't shift when the editor opens. The one deliberate
+// difference is line-height: the DISPLAY uses the row height (centring a single
+// line in the cell), the FIELD uses normal leading (a 34px line-height in a
+// textarea would space wrapped lines absurdly, and the auto-grow measures
+// against it).
+
 .db-td--url {
   display: flex;
   align-items: center;
-  padding: 0 8px;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
 }
 
-.db-cell-link--url {
+.db-cell-link {
+  // NOT width:100% — the link must leave room beside it. It stops propagation,
+  // so a click on the link navigates; the space to its right is the ONLY place a
+  // click reaches the editor. `flex: 0 1 auto` lets it take just its text and
+  // shrink (with ellipsis) rather than fill the cell.
+  flex: 0 1 auto;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--tt-brand-color-400);
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 34px; // row height — centres the single line in the cell
+  color: var(--tt-text-primary);
   text-decoration: none;
-  font-size: 0.875rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 
   &:hover {
     text-decoration: underline;
   }
+
+  // The external-link glyph must not shrink away when the URL is long.
+  svg {
+    flex-shrink: 0;
+  }
+
+  // The text is what ellipsizes — not the whole link, or the icon would be cut.
+  &__text {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--tt-text-primary);
+    text-decoration-color: var(--tt-gray-light-a-600);
+    .dark & {
+      text-decoration-color: rgba(143, 142, 142, 0.462) !important;
+    }
+  }
+
+  // Empty cell — holds the row's height so the cell doesn't collapse.
+  &__empty {
+    display: block;
+    flex: 1 1 auto;
+    height: 34px;
+  }
+
+  &__field {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    resize: none;
+    overflow-y: hidden;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--tt-text-primary);
+    caret-color: currentColor;
+
+    &::placeholder {
+      color: color-mix(in srgb, var(--tt-text-primary) 40%, transparent);
+    }
+  }
 }
 
-.db-cell-link__empty {
-  display: block;
-  min-height: 1em;
-  width: 100%;
+// The edit affordance. `margin-left: auto` pins it to the cell's right edge,
+// which also GUARANTEES the click gap exists — even when the URL is long enough
+// to fill the column, since the link shrinks and this doesn't (flex: 0 0 auto).
+.db-cell-edit-hint {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  border-radius: var(--tt-radius-xs);
+  color: color-mix(in srgb, var(--tt-text-primary) 45%, transparent);
+  opacity: 0;
+  transition: opacity var(--tt-transition-duration-short)
+    var(--tt-transition-easing-default);
+
+  &:hover {
+    background: var(--tt-button-hover-bg-color);
+    color: var(--tt-text-primary);
+  }
+}
+
+// Revealed on hover of the CELL, not the icon — the hit area is the whole gap;
+// the icon just marks it.
+.db-node-cell:hover .db-cell-edit-hint {
+  opacity: 1;
 }

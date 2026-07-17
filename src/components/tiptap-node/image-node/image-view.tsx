@@ -2,6 +2,7 @@ import type { NodeViewProps } from "@tiptap/core";
 import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
 import type { ImageOptions } from "./image";
 import { useEffect, useRef, useState } from "react";
+import { ImageNodeSkeleton } from "./image-node-skeleton";
 import "./image-node.scss";
 
 type Align = "left" | "center" | "right";
@@ -11,6 +12,19 @@ function ImageViewInner(props: NodeViewProps) {
   const [hovered, setHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
 
+  const src: string | null = props.node.attrs.src ?? null;
+
+  // Bytes not in yet → show the skeleton instead of a zero-height <img>.
+  // Reset during render (not in an effect) when the src changes, so swapping
+  // the image shows its skeleton again rather than holding the old one's
+  // "loaded" state. This is React's documented pattern for derived resets.
+  const [loaded, setLoaded] = useState(false);
+  const [prevSrc, setPrevSrc] = useState(src);
+  if (src !== prevSrc) {
+    setPrevSrc(src);
+    setLoaded(false);
+  }
+
   const resize = props.extension.options.resize as ImageOptions["resize"];
   const minWidth = typeof resize === "object" ? (resize.minWidth ?? 60) : 60;
 
@@ -18,6 +32,14 @@ function ImageViewInner(props: NodeViewProps) {
   const widthPreset: WidthPreset | null = props.node.attrs.widthPreset ?? null;
   const showCaption: boolean = props.node.attrs.showCaption ?? false;
   const currentWidth: number | null = props.node.attrs.width ?? null;
+
+  // Natural dimensions, captured once on the image's first successful load and
+  // persisted to the node. With them, every later load reserves the exact box
+  // up front and the document never reflows when the image paints.
+  const naturalWidth: number | null = props.node.attrs.naturalWidth ?? null;
+  const naturalHeight: number | null = props.node.attrs.naturalHeight ?? null;
+  const aspectRatio =
+    naturalWidth && naturalHeight ? naturalWidth / naturalHeight : null;
 
   const isVisible = hovered; //|| props.selected || isResizing;
 
@@ -93,12 +115,30 @@ function ImageViewInner(props: NodeViewProps) {
     transition: "background 0.1s",
   };
 
+  const handleLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    setLoaded(true);
+
+    // Persist the real dimensions the first time we learn them, so the next
+    // load of this node can reserve the correct box before any bytes arrive.
+    if (
+      img.naturalWidth &&
+      img.naturalHeight &&
+      (naturalWidth !== img.naturalWidth || naturalHeight !== img.naturalHeight)
+    ) {
+      props.updateAttributes({
+        naturalWidth: img.naturalWidth,
+        naturalHeight: img.naturalHeight,
+      });
+    }
+  };
+
   return (
     <NodeViewWrapper
       as="div"
       data-image-wrapper
       style={{
-        display: "block", // ← add this
+        display: "block",
         width:
           widthPreset ?? (currentWidth ? `${currentWidth}px` : "fit-content"),
         height: "fit-content",
@@ -123,17 +163,25 @@ function ImageViewInner(props: NodeViewProps) {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column" }}>
+        {/* Skeleton occupies the node's box until the bytes land. The <img> is
+            always mounted (so it can actually load) but stays out of layout
+            until it's ready — swapping display avoids a second request. */}
+        {!loaded && src && <ImageNodeSkeleton aspectRatio={aspectRatio} />}
+
         <img
           src={props.node.attrs.src}
           alt={props.node.attrs.alt ?? ""}
           title={props.node.attrs.title ?? undefined}
+          onLoad={handleLoad}
+          onError={() => setLoaded(true)}
           style={{
-            display: "block",
+            display: loaded ? "block" : "none",
             width: "100%",
             height: "auto",
             borderRadius: 4,
           }}
         />
+
         {showCaption && (
           <div
             ref={captionRef}

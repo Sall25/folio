@@ -17,7 +17,7 @@ import GradientCover from "./gradient-cover";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
-import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
+import { CoverHeaderSkeleton } from "src/components/tiptap-templates/simple/components/skeletons";
 
 function IconButton({
   open,
@@ -100,9 +100,9 @@ function IconButton({
             {cover.target === "Icons" && cover.iconName && (
               <DynamicIcon
                 name={cover.iconName}
-                stroke={iconColor}
                 size={95}
-                strokeWidth={2}
+                weight={500}
+                style={{ color: iconColor }}
               />
             )}
             {cover.target === "Upload" && cover.iconName && (
@@ -167,7 +167,18 @@ export function CoverHeader({
   const { activePageId } = useActivePage();
   const { data: activePage } = usePage(providedPage ? null : activePageId);
   const page = providedPage ?? activePage;
-  const { target: viewTarget } = usePageView();
+
+  // Am I rendering inside a panel (peek / center), or in the main editor?
+  //
+  // This used to be read from usePageView()'s `target` — but that is GLOBAL
+  // state, true whenever a panel is open ANYWHERE. So the moment a peek opened
+  // beside it, the MAIN editor's cover header also saw "a panel is open", zeroed
+  // its margin/padding, and its icon visibly shifted left.
+  //
+  // The panels are precisely the instances that pass `providedPage`; the main
+  // editor reads the active page from context instead. That's the real test, and
+  // unlike the view target it's local to this instance.
+  const isPanel = !!providedPage;
 
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const mutateAsyncRef = useRef(mutateAsync);
@@ -180,7 +191,16 @@ export function CoverHeader({
     });
   }, [page]);
 
-  if (!page) return null;
+  // Was `return null`, which is why the title and body jumped down the moment a
+  // cover appeared. Reserve the space instead.
+  if (!page) {
+    return (
+      <CoverHeaderSkeleton
+        paddingLeft={isPanel ? 0 : paddingLeft}
+        marginLeft={isPanel ? 0 : marginLeft}
+      />
+    );
+  }
 
   const hasIcon = !!page.cover.iconName;
   const hasCoverImage = !!page.cover.coverImage;
@@ -199,10 +219,7 @@ export function CoverHeader({
       <div
         style={{
           width: `calc(100vw)`,
-          marginLeft:
-            viewTarget?.view === "Center" || viewTarget?.view === "Peek"
-              ? 0
-              : marginLeft,
+          marginLeft: isPanel ? 0 : marginLeft,
           transition: "margin-left 0.2s ease, width 0.2s ease",
         }}
       >
@@ -220,12 +237,11 @@ export function CoverHeader({
       <div
         style={{
           width: `calc(100vw)`,
-          marginLeft:
-            viewTarget?.view === "Center" || viewTarget?.view === "Peek"
-              ? 0
-              : page.settings.width === "medium"
-                ? 280
-                : marginLeft,
+          marginLeft: isPanel
+            ? 0
+            : page.settings.width === "medium"
+              ? 280
+              : marginLeft,
           transition: "margin-left 0.2s ease, width 0.2s ease",
         }}
       >
@@ -235,8 +251,8 @@ export function CoverHeader({
             onOpenChange={setIconPickerOpen}
             target={target}
             onTargetChange={setTarget}
-            paddingLeft={viewTarget?.view === "Peek" ? 0 : paddingLeft}
-            translateX={viewTarget?.view === "Peek" ? 0 : translateX}
+            paddingLeft={isPanel ? 0 : paddingLeft}
+            translateX={isPanel ? 0 : translateX}
             hasThreads={hasThreads}
             page={page}
           />

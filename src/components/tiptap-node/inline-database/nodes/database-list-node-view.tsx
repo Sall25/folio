@@ -93,6 +93,11 @@ export function DatabaseListNodeView({
     (p) => p.config.type !== "title" && !hidden.has(p.id),
   );
 
+  // Shared grid tracks: title column (flexes, truncates) + one max-content
+  // column per visible property. Every row subgrids onto these, so the
+  // columns line up straight down the list.
+  const gridTemplateColumns = `minmax(220px, 1fr) repeat(${inlineProperties.length}, max-content)`;
+
   const groupProp = activeView?.groupByPropertyId
     ? source.properties.find((p) => p.id === activeView.groupByPropertyId)
     : undefined;
@@ -121,7 +126,11 @@ export function DatabaseListNodeView({
         {groups.map((group) => {
           const isCollapsed = !ungrouped && collapsed.has(group.key);
           return (
-            <div key={group.key} className="db-list-group">
+            <div
+              key={group.key}
+              className="db-list-group"
+              style={{ gridTemplateColumns }}
+            >
               {!ungrouped && (
                 <div className="db-list-group__header">
                   <Button

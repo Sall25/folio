@@ -1,3 +1,54 @@
+@use "../utils/pill-colors.scss" as pill;
+
+@include pill.pill-tint-variants(".db-board-col");
+
+// Colored column: faint wash on the column, stronger header, cards raised above it.
+.db-board-col[data-colored="true"] {
+  color: var(--tt-text-color);                                   // kill inherited pill ink
+  border-radius: var(--tt-radius-lg) !important;
+  background: color-mix(in srgb, var(--col-ink) 8%, transparent) !important;
+  padding: 10px;
+    
+  .db-board-card__title{
+    padding: 0 !important;
+  }
+
+  .db-board-col-header {
+    background: color-mix(in srgb, var(--col-ink) 14%, transparent);
+    border-bottom: none !important;
+    // border-bottom-color: color-mix(in srgb, var(--col-ink) 30%, var(--tt-border-color));
+    // border-radius: var(--tt-radius-md) var(--tt-radius-md) 0 0;
+    // margin-bottom: 0;
+  }
+
+  // Card sits LIGHTER/stronger than the column → reads as a raised surface (Notion).
+  .db-board-card {
+    background: color-mix(in srgb, var(--col-ink) 16%, var(--tt-bg-color));
+    border-radius: var(--tt-radius-lg) !important;
+    border: none !important;
+    border-color: none !important; //color-mix(in srgb, var(--col-ink) 24%, var(--tt-border-color)) !important;
+
+  }
+
+   .tiptap-card-item-group{
+      background: transparent !important;
+    }
+    .db-cell-editor{
+      &__display{
+       .db-title-cell{
+          margin: 0 !important;
+        }
+      }
+      
+    }
+}
+
+// Uncolored "No <prop>" column → neutral elevated card.
+.db-board-col:not([data-colored="true"]) .db-board-card {
+  background: var(--tt-gray-light-100);
+  .dark & { background: var(--tt-gray-dark-100); }
+}
+
 .node-database > [data-node-view-wrapper] {
   // (intentionally empty — overflow lives on .db-board)
 }
@@ -41,16 +92,9 @@
   padding: 0;
   margin: 0;
 
+  scrollbar-width: auto;
 
-  &:not(:hover) {
-    scrollbar-width: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-  &:hover {
-    scrollbar-width: thin;
-  }
+ 
 
   .db-board-card {
     padding: 5px 10px !important;
@@ -58,14 +102,16 @@
     // min-width: fit-content;
   }
 }
-
 .db-board-col {
   display: flex;
   flex-direction: column;     // header → cards → footer stack within a column
   flex: 0 0 auto;             // honor inline colWidth, don't shrink
   gap: 8px;
   flex-shrink: 0;
+  // e.g. ~28% of the editor width, clamped so it never gets tiny or huge
+  width: clamp(200px, calc(var(--db-editor-width) * 0.24), 300px);
 }
+
 
 // ── Column header ───────────────────────────────────────────────────────────
 .db-board-col-header {
@@ -76,7 +122,7 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--tt-text-color);
-  border-bottom: 0.5px solid var(--tt-border-color);
+  border-bottom: none;
   margin-bottom: 4px;
 }
 
@@ -88,10 +134,21 @@
 }
 
 .db-board-col-header__label {
-  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+
+  // neutral grey pill — same recipe your select/status "gray" pill uses
+  background: color-mix(in srgb, var(--tt-color-text-gray) 18%, transparent);
+  color: var(--tt-color-text-gray);
 }
 
 // ── Column footer ───────────────────────────────────────────────────────────
@@ -118,4 +175,18 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.db-board-col[data-colored="true"] {
+  border-radius: var(--tt-radius-md);
+  // faint column wash — the option color at low alpha over the surface
+  background: color-mix(in srgb, var(--col-color) 8%, transparent);
+
+  .db-board-col-header {
+    // a touch stronger so the header reads as the group
+    background: color-mix(in srgb, var(--col-color) 14%, transparent);
+    border-bottom-color: color-mix(in srgb, var(--col-color) 30%, var(--tt-border-color));
+    border-radius: var(--tt-radius-md) var(--tt-radius-md) 0 0;
+    margin-bottom: 0;
+  }
 }

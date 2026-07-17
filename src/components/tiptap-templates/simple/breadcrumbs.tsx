@@ -7,9 +7,22 @@ import { useActivePage } from "src/components/tiptap-templates/simple/context/ac
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 import "./breadcrumbs.scss";
 import { Bone } from "./components/skeletons";
+import {
+  Card,
+  CardBody,
+  CardGroupLabel,
+  CardHeader,
+} from "src/components/tiptap-ui-primitive/card";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 
 // how many crumbs before we collapse the middle
 const MAX_VISIBLE = 4;
+
+// Hover-intent: how long the pointer must linger on a crumb before its
+// dropdown opens. Cancelled if the pointer leaves first, so brushing past a
+// crumb no longer pops the menu.
+const OPEN_DELAY = 250;
+const CLOSE_DELAY = 120;
 
 function Sep() {
   return (
@@ -19,7 +32,13 @@ function Sep() {
   );
 }
 
-export function Breadcrumbs({ pageId }: { pageId: ID | null }) {
+export function Breadcrumbs({
+  pageId,
+  showDropdown,
+}: {
+  pageId: ID | null;
+  showDropdown?: boolean;
+}) {
   const { data: chain, isPending } = useBreadcrumbs(pageId);
   const { setActivePageId } = useActivePage();
 
@@ -48,6 +67,7 @@ export function Breadcrumbs({ pageId }: { pageId: ID | null }) {
               isLast={isLast}
               onClick={isLast ? undefined : () => setActivePageId(page.id)}
               onNavigate={setActivePageId}
+              showDropdown={showDropdown}
             />
             {/* separator + optional ellipsis */}
             {!isLast && <Sep />}
@@ -74,26 +94,44 @@ function Crumb({
   isLast,
   onClick,
   onNavigate,
+  showDropdown = true,
 }: {
   page: Page;
   isLast: boolean;
   onClick?: () => void;
   onNavigate: (id: ID) => void;
+  showDropdown?: boolean;
 }) {
   const label = page.title || "Untitled";
   const wrapRef = useRef<HTMLSpanElement>(null);
   const [open, setOpen] = useState(false);
+  const openTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
 
-  const openNow = () => {
+  const clearTimers = () => {
+    if (openTimer.current) clearTimeout(openTimer.current);
     if (closeTimer.current) clearTimeout(closeTimer.current);
-    setOpen(true);
   };
+
+  // Delay opening: only fire if the pointer actually lingers. A quick brush-by
+  // leaves before OPEN_DELAY elapses, and closeSoon() clears the pending open.
+  const openNow = () => {
+    clearTimers();
+    openTimer.current = setTimeout(() => setOpen(true), OPEN_DELAY);
+  };
+
   const closeSoon = () => {
-    closeTimer.current = setTimeout(() => setOpen(false), 120);
+    clearTimers(); // cancel any pending open so a brush-past never triggers it
+    closeTimer.current = setTimeout(() => setOpen(false), CLOSE_DELAY);
   };
+
+  // Clean up any in-flight timer if the crumb unmounts (e.g. navigation)
+  // before it fires, avoiding a setState on an unmounted component.
+  useEffect(() => () => clearTimers(), []);
 
   const content = (
     <>
@@ -128,12 +166,14 @@ function Crumb({
       onMouseLeave={closeSoon}
     >
       {crumbEl}
-      {open && (
+      {open && showDropdown && (
         <CrumbDropdown
           category={page.category}
           currentId={page.id}
           anchorRef={wrapRef}
-          onHoverEnter={openNow}
+          // Moving onto the open dropdown: just cancel the pending close,
+          // don't re-arm the open delay (it's already open).
+          onHoverEnter={clearTimers}
           onHoverLeave={closeSoon}
           requestClose={() => setOpen(false)}
           onPick={(id) => {
@@ -189,28 +229,32 @@ function CrumbDropdown({
   if (!pos) return null;
 
   return createPortal(
-    <div
+    <Card
       className="breadcrumbs__dropdown"
       style={{ position: "fixed", top: pos.top, left: pos.left }}
       onMouseEnter={onHoverEnter}
       onMouseLeave={onHoverLeave}
     >
-      <div className="breadcrumbs__dropdown-search">
+      <CardHeader>
+        <CardGroupLabel>{category.toLocaleLowerCase()}</CardGroupLabel>
+      </CardHeader>
+      {/* <div className="breadcrumbs__dropdown-search">
         <input
           ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={`Search ${category.toLowerCase()}…`}
         />
-      </div>
+      </div> */}
 
-      <div className="breadcrumbs__dropdown-list">
+      <CardBody className="breadcrumbs__dropdown-list">
         {list.length === 0 ? (
           <div className="breadcrumbs__dropdown-empty">No pages</div>
         ) : (
           list.map((p) => (
-            <button
+            <Button
               key={p.id}
+              variant="ghost"
               type="button"
               onClick={() => onPick(p.id)}
               className={`breadcrumbs__dropdown-item${
@@ -221,12 +265,14 @@ function CrumbDropdown({
                 cover={p.cover}
                 styles={{ width: 16, height: 16 }}
               />
-              <span>{p.title || "Untitled"}</span>
-            </button>
+              <span className="tiptap-button-text">
+                {p.title || "Untitled"}
+              </span>
+            </Button>
           ))
         )}
-      </div>
-    </div>,
+      </CardBody>
+    </Card>,
     document.body,
   );
 }

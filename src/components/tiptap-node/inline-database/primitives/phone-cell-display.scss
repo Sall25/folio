@@ -1,0 +1,90 @@
+// Mirrors the url/email cells: display and field share identical metrics so the
+// text doesn't shift when the editor opens, and the link leaves a click gap at
+// the right (pinned by .db-cell-edit-hint's margin-left: auto) which is the only
+// place a click reaches the editor rather than the dialer.
+
+.db-td--phone {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  color: var(--tt-text-primary);
+  text-decoration-color: var(--tt-gray-light-a-600);
+  .dark & {
+    text-decoration-color: rgba(143, 142, 142, 0.462) !important;
+  }
+}
+
+.db-cell-phone {
+   color: var(--tt-text-primary);
+    text-decoration-color: var(--tt-gray-light-a-600);
+    .dark & {
+      text-decoration-color: rgba(143, 142, 142, 0.462) !important;
+    }
+  &__link {
+    // Takes only its text and shrinks with ellipsis — never fills the cell, or
+    // there'd be nowhere left to click that isn't the link.
+    flex: 0 1 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 34px; // row height — centres the single line in the cell
+    color: var(--tt-text-primary);
+    text-decoration: none;
+    text-decoration-color: var(--tt-border-color);
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    svg {
+      flex-shrink: 0;
+    }
+  }
+
+  // The text ellipsizes, not the whole link — otherwise the icon gets cut off.
+  &__text {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  // Empty cell — holds the row's height so the cell doesn't collapse.
+  &__empty {
+    display: block;
+    flex: 1 1 auto;
+    height: 34px;
+  }
+
+  &__field {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    resize: none;
+    overflow-y: hidden;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--tt-text-primary);
+    caret-color: currentColor;
+
+    &::placeholder {
+      color: color-mix(in srgb, var(--tt-text-primary) 40%, transparent);
+    }
+  }
+}

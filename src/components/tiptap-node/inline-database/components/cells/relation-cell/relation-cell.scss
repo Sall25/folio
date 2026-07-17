@@ -17,6 +17,7 @@
   overflow: hidden;       // clips the label tail AND the X within the chip box
   flex-shrink: 1;  // a single wide chip yields to the cell width
   cursor: pointer;
+  margin: auto 5px;
 
   &__label {
     min-width: 0;
@@ -24,6 +25,17 @@
     text-overflow: ellipsis;
     text-decoration: underline;
     text-decoration-color: var(--tt-border-color);
+     // Notion-style page-link underline: follows the text (clips with the
+    // ellipsis), subtle by default, darkens when the row is hovered.
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    text-decoration-color: var(--tt-border-color);
+    transition: text-decoration-color 100ms ease;
+
+    .db-relation-chip:hover & {
+      text-decoration-color: var(--tt-theme-text);
+    }
   }
 
   // X sits in the reserved right padding, absolutely positioned → no reflow.

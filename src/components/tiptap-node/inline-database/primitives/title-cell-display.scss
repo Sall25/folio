@@ -1,33 +1,54 @@
+.db-board-card__title {
+    padding: 5px 0px !important;
+}
 .node-titleCell {
-  margin: 0;
+  
+  margin: auto 5px;
 }
 
 .db-cell-title {
-  display: flex;
+   display: flex;
   align-items: center;
   width: 100%;
   min-width: 0;
   height: 100%;
   padding: 0;
   gap: 6px;
+  margin: auto 5px;
   cursor: text;
 
   &__icon {
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
+    align-self: anchor-center;
   }
 
   // plain-text display in the cell — single line, ellipsis
   &__text {
     flex: 1 1 auto;
     min-width: 0;
-    font-weight: 500;
-    font-size: 14px;
+    font-weight: 400;
+    font-size: 15px;
+    // line-height: 34px;
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+    -webkit-font-smoothing: auto;
     color: var(--tt-theme-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+    // Notion-style page-link underline: follows the text (clips with the
+    // ellipsis), subtle by default, darkens when the row is hovered.
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    text-decoration-color: var(--tt-border-color);
+    transition: text-decoration-color 100ms ease;
+
+    .db-cell-title:hover & {
+      text-decoration-color: var(--tt-theme-text);
+    }
   }
 
   // the textarea inside the popover editor — wraps, grows, borderless
@@ -130,5 +151,12 @@
 
   &:active {
     cursor: grabbing;
+  }
+}
+
+.open-button{
+  background-color: var(--tt-gray-light-100);
+  .dark & {
+    background-color: var(--tt-gray-dark-300);
   }
 }

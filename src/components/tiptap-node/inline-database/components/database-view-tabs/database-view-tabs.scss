@@ -1,57 +1,93 @@
 .db-view-tabs {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   overflow-x: auto;
   max-width: 500px;
   margin-top: 8px;
+  // The thin rule the whole row sits on; the active tab's underline merges
+  // with it — the Notion collection-tab look.
+  border-bottom: 1px solid var(--tt-border-color);
+  border-radius: 0;
   scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-.db-view-tab {
+// Base tab. Targets every tab trigger in the row regardless of nesting —
+// inactive buttons, the locked active button, and the active view's
+// ViewPopover trigger. Popover *content* buttons are portaled out of this
+// container, so they're unaffected.
+.db-view-tabs button {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 10px 8px;
-  border-radius: var(--tt-radius-lg);
+  gap: 6px;
+  padding: 6px 8px;
   border: none;
+  border-bottom: 2px solid transparent; // reserve the underline's space
+  margin-bottom: -1px; // overlap the row's 1px rule
+  border-radius: 0;
   background: transparent;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--tt-text-color);
-  white-space: nowrap;
-  transition: background 100ms ease, color 100ms ease;
+  font-size: 14px;
+  font-weight: 500;
   line-height: 1.5;
+  font-family: inherit;
+  white-space: nowrap;
+  color: var(--tt-text-secondary, #9b9a97); // inactive = muted
+  transition:
+    color 100ms ease,
+    border-color 100ms ease,
+    background 100ms ease;
+
+  .tiptap-button-text {
+    font: inherit;
+    color: inherit;
+  }
+
+  .tiptap-button-icon,
+  svg {
+    opacity: 0.75;
+    flex-shrink: 0;
+  }
 
   &:hover {
-    background: var(--tt-button-hover-bg-color);
-    color: var(--tt-theme-text);
+    color: var(--tt-text-primary, var(--tt-theme-text));
   }
 
-  &--active {
-    background: var(--tt-button-hover-bg-color);
-    color: var(--tt-theme-text);
-    font-weight: 500;
-  }
+  // Active view: primary text + the underline, flush with the row rule.
+  // Driven by data-active-state="on" so it also catches the ViewPopover
+  // trigger (higher specificity than the base, so no !important needed).
+  &[data-active-state="on"] {
+    color: var(--tt-text-primary, var(--tt-theme-text));
+    border-bottom-color: currentColor;
+    border-radius: 0 !important;
+    background-color: transparent !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 
-  &--add {
-    color: var(--tt-theme-text);
-    padding: 3px 6px;
-    min-width: unset;
-
-    &:hover {
-      color: var(--tt-text-color);
+    .tiptap-button-icon,
+    svg {
+      opacity: 1;
     }
   }
+}
 
-  // override button defaults when used as a <button> element
-  &__name {
-    font-size: 14px;
-    line-height: 1.5;
-    font-family: inherit;
-    font-weight: 500;
-    color: inherit;
+// The "+" is not a real tab — small muted icon button, no underline, no
+// reserved underline space. Extra specificity (button.db-view-tab--add) so it
+// overrides the base .db-view-tabs button rule cleanly.
+.db-view-tabs button.db-view-tab--add {
+  gap: 0;
+  padding: 4px 6px;
+  min-width: unset;
+  border-bottom: none;
+  margin-bottom: 0;
+  border-radius: var(--tt-radius-md, 6px);
+  color: var(--tt-text-secondary, #9b9a97);
+
+  &:hover {
+    color: var(--tt-text-primary, var(--tt-theme-text));
+    background: var(--tt-button-hover-bg-color);
   }
 }

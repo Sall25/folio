@@ -1,0 +1,193 @@
+// Node-rendered database grid (Approach 1) — SUBGRID variant.
+//
+// The database node is the outer CSS grid (columns set inline, one per
+// property). Each databaseRecord is a REAL grid row that spans all columns and
+// re-exposes them to its cells via `grid-template-columns: subgrid`. This
+// gives each record an actual box (so it can be dragged / hovered / carry a
+// drag handle) while its cells still align to the outer columns.
+//
+// The Tiptap wrappers BETWEEN the outer grid and each record are display:contents
+// so the record itself becomes a direct grid item of .db-node-grid (only direct
+// children can span/subgrid the parent's columns).
+//
+// CHANGED: the renderer div (.react-renderer.node-databaseRecord) is now
+// flattened too, and the row box lives on .db-record — the element the record's
+// NodeView actually renders. That's what lets the view control the row:
+// display:none when filtered out, `order` for the view's sort. Previously the
+// box was on the renderer div, which no component renders and therefore can't
+// style.
+
+.db-node-grid {
+  // Flatten every wrapper between the grid and the record's own element, so
+  // .db-record becomes the direct grid child.
+  .db-node-grid__body,
+  .db-node-grid__body > [data-node-view-content-react],
+  .db-node-grid__body > [data-node-view-content-react] > [data-node-view-wrapper],
+  .react-renderer.node-databaseRecord {
+    display: contents;
+  }
+
+  // The record's grid BOX — a real grid row spanning all columns, subgridding
+  // them for its cells. This is the element DatabaseRecordNodeView renders, so
+  // it can set display:none (filtered out) and `order` (view sort) on it.
+  .db-record {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: stretch;
+
+    // The row paints its own background and bottom border, so it reads as one
+    // continuous row across the FULL table width. The cells only draw their
+    // vertical separators. Without this the row ended at the last property
+    // column, leaving the trailing area (where the header's +/… sit) blank.
+    background: var(--tt-bg-color);
+    border-bottom: 1px solid var(--tt-border-color);
+  }
+
+  // ── Selection ─────────────────────────────────────────────────────────────
+  // PM adds .ProseMirror-selectednode to the RENDERER div — which is now
+  // display:contents — so the tint has to be applied to the .db-record inside
+  // it. The row carries the tint (it paints the background now) and the cells
+  // go transparent so it reads as one continuous highlighted row.
+  .react-renderer.node-databaseRecord.ProseMirror-selectednode {
+    outline: none;
+
+    .db-record {
+      background: var(--tt-selection-color);
+    }
+
+    .db-node-cell {
+      background: transparent;
+    }
+  }
+
+  // ── Selected CELL (Notion style) ──────────────────────────────────────────
+  // A single selected cell gets a ring + a small corner handle dot (bottom
+  // right), like Notion. PM marks the cell renderer with .ProseMirror-
+  // selectednode. We suppress the default outline and draw our own inset ring
+  // so it hugs the cell without shifting layout.
+  .react-renderer.node-databaseCell.ProseMirror-selectednode {
+    outline: none;
+
+    .db-node-cell {
+      position: relative;
+      // Inset ring via box-shadow so it doesn't affect layout/size.
+      box-shadow: inset 0 0 0 2px var(--tt-selection-color);
+      border-radius: 2px;
+    }
+
+    // Corner handle dot, bottom-right.
+    .db-node-cell::after {
+      content: "";
+      position: absolute;
+      right: -3px;
+      bottom: -3px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--tt-selection-color);
+      border: 1.5px solid var(--tt-bg-color);
+      pointer-events: none;
+      z-index: 2;
+    }
+  }
+
+  // ── Editing a content cell (text) ─────────────────────────────────────────
+  // When the cursor is inside a text cell, give it a subtle filled background +
+  // soft border (Notion's edit-mode look).
+  .db-node-cell--content:focus-within,
+  .db-node-cell--content:has([data-editing="true"]) {
+    background: color-mix(
+      in srgb,
+      var(--tt-text-primary) 4%,
+      var(--tt-bg-color)
+    );
+    box-shadow: inset 0 0 0 1px var(--tt-border-color);
+    border-radius: 3px;
+  }
+
+  // Inside the record, flatten the cell-level wrappers so each .db-node-cell is
+  // a direct grid item of the record's subgrid (aligns to the parent columns).
+  .db-record__cells,
+  .db-record__cells > [data-node-view-content-react],
+  .db-record__cells > [data-node-view-content-react] > [data-node-view-wrapper],
+  .react-renderer.node-databaseCell {
+    display: contents;
+  }
+
+  // The grid item (my wrapper). Renamed from .db-cell to avoid colliding with
+  // the Cell component's own .db-cell class.
+  .db-node-cell {
+    width: auto;
+    min-width: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 34px;
+    height: auto;
+    padding: 0 8px;
+    border-right: 1px solid var(--tt-border-color);
+    // border-bottom: the ROW draws it now (.db-record), so it spans the full
+    // table width instead of stopping at the last property column.
+    background: var(--tt-bg-color);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .db-node-cell--atom {
+    justify-content: stretch;
+    > * {
+      width: 100%;
+    }
+  }
+
+  .db-node-cell__content {
+    width: 100%;
+    outline: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    p {
+      margin: 0;
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .db-cell[data-wrap="true"] {
+  align-items: flex-start;
+  height: auto;
+  overflow: visible;
+  white-space: normal;
+  padding: 4px 5px;   // was `auto 5px` — auto is invalid for padding, gets dropped
+
+  .db-cell-editor__display {
+    height: auto;
+    align-items: flex-start;
+  }
+
+  // the text run itself — where the ellipsis is
+  .db-cell-text__display,
+  .db-cell-title__text {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .tiptap-button {
+    height: auto;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin: 5px 0;
+    padding: 0 !important;
+  }
+}
+
+}

@@ -2,7 +2,6 @@
 import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { useDataSource } from "../hooks/use-data-source";
 import { SelectCellDisplay } from "../primitives/select-cell-display";
 import { StatusCellDisplay } from "../primitives/status-cell-display";
@@ -29,6 +28,7 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { BoardColumn } from "../primitives/board-column";
+import { pillClass } from "../utils/pill-colors";
 
 const NONE_COLUMN_ID = "__none__";
 
@@ -93,7 +93,6 @@ export function DatabaseBoardNodeView({
   attrs: DatabaseAttrs;
   source: DataSource;
 }) {
-  const { activePage } = useActivePage();
   const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
     attrs.sourceId,
   );
@@ -196,8 +195,19 @@ export function DatabaseBoardNodeView({
           return (
             <div
               key={col.id}
-              className="db-board-col"
-              style={{ width: colWidth }}
+              className={
+                col.color
+                  ? pillClass("db-board-col", col.color)
+                  : "db-board-col"
+              }
+              style={{
+                ...(col.color
+                  ? {
+                      ["--col-color" as string]: `var(--tt-color-text-${col.color})`,
+                    }
+                  : {}),
+              }}
+              data-colored={col.color ? "true" : undefined}
             >
               <div className="db-board-col-header">
                 {col.id === NONE_COLUMN_ID ? (

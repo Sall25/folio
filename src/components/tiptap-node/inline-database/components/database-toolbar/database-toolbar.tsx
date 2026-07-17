@@ -39,6 +39,7 @@ import { useDataSource } from "../../hooks/use-data-source";
 import { usePages } from "src/hooks/use-pages";
 import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { makeRowTemplate } from "src/utils/make-row-template";
+import { DatabaseTitleBar } from "../database-title-bar";
 
 interface DatabaseToolbarProps {
   attrs: DatabaseAttrs;
@@ -51,6 +52,14 @@ interface DatabaseToolbarProps {
   /** Hover-reveal: when false the control cluster + add-view "+" are hidden
       (kept in layout) until the database node is hovered. */
   hovered?: boolean;
+
+  title: string;
+
+  hideTitle?: boolean;
+
+  onTitleChange: (title: string) => void;
+
+  onHideTitleChange: (hide: boolean) => void;
 }
 
 function getActiveView(attrs: DatabaseAttrs): DatabaseView | undefined {
@@ -68,6 +77,10 @@ export function DatabaseToolbar({
   onUpdateAttributes,
   locked = false,
   hovered = false,
+  title,
+  hideTitle,
+  onTitleChange,
+  onHideTitleChange,
 }: DatabaseToolbarProps) {
   const activeView = getActiveView(attrs);
   const filters = activeView?.filters ?? [];
@@ -92,9 +105,11 @@ export function DatabaseToolbar({
     [setTemplateOpen],
   );
 
+  const isSingleView = attrs.views.length <= 1;
+
   // Keep the controls visible while one of their popovers is open, so they
   // don't disappear out from under the user when the mouse leaves the node.
-  const showControls = hovered || viewOptionsOpen || templateOpen;
+  const showControls = /* hovered*/ !locked || viewOptionsOpen || templateOpen;
 
   const revealStyle: React.CSSProperties = {
     opacity: showControls ? 1 : 0,
@@ -119,18 +134,28 @@ export function DatabaseToolbar({
       }}
     >
       <CardItemGroup orientation="horizontal">
-        {/* View tabs: add/rename/delete view is view-config → frozen when locked.
-            Passing locked lets the tabs disable the + and rename affordances
-            while still allowing view SWITCHING (reading). The tab itself stays
-            visible always; `hovered` only governs the add-view "+". */}
-        <DatabaseViewTabs
-          attrs={attrs}
-          db={db}
-          onRename={() => onViewOptionsOpenChange(true)}
-          onUpdateAttributes={onUpdateAttributes}
-          locked={locked}
-          hovered={hovered}
-        />
+        {/* One view → no tabs to switch between, so the title takes this slot
+            and the database gets a single compact header row. More than one →
+            tabs live here and the title bar sits on its own row above. */}
+        {isSingleView ? (
+          <DatabaseTitleBar
+            title={title}
+            hideTitle={hideTitle}
+            onTitleChange={onTitleChange}
+            onHideTitleChange={onHideTitleChange}
+            locked={locked}
+            onAddView={(type, label) => db.addView(type, label)}
+          />
+        ) : (
+          <DatabaseViewTabs
+            attrs={attrs}
+            db={db}
+            onRename={() => onViewOptionsOpenChange(true)}
+            onUpdateAttributes={onUpdateAttributes}
+            locked={locked}
+            hovered={hovered}
+          />
+        )}
         <Spacer orientation="horizontal" />
 
         {/* Hover-revealed control cluster — search / filter / sort / group /

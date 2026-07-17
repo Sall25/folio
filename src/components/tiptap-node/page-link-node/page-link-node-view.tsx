@@ -104,7 +104,7 @@ export function PageLinkNodeView({ node }: NodeViewProps) {
       onMouseLeave={handleMouseLeave}
     >
       <div ref={linkRef} className="page-link-node" onClick={handleClick}>
-        <PageItemIcon  cover={page.cover} />
+        <PageItemIcon cover={page.cover} />
         <span style={{ color: page.cover.color ?? undefined }}>
           {page.title || "New Page"}
         </span>
@@ -126,7 +126,7 @@ export function PageLinkNodeView({ node }: NodeViewProps) {
             <div className="page-link-preview__icon">
               <PageItemIcon cover={page.cover} styles={{ fontSize: 32 }} />
             </div>
-            <Breadcrumbs pageId={pageId} />
+            <Breadcrumbs pageId={pageId} showDropdown={false} />
             <p className="page-link-preview__title">
               {page.title || "New Page"}
             </p>

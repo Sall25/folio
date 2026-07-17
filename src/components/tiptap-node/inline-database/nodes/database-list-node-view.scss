@@ -1,10 +1,31 @@
 .db-list {
   width: 100%;
- 
-  &__body { display: flex; flex-direction: column; }
+  min-width: 0;
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    // Wide lists scroll horizontally instead of crushing the columns.
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+}
+
+// The group IS the grid that owns the shared column tracks. Its
+// grid-template-columns is set inline (per list) from the visible-property
+// count: `minmax(220px, 1fr) repeat(N, max-content)`. Every row subgrids onto
+// these tracks, so property N lines up straight down the whole group — a grid
+// with invisible lines. column-gap here is the (invisible) gutter; subgrids
+// inherit it.
+.db-list-group {
+  display: grid;
+  align-content: start;
+  column-gap: 24px;
+  min-width: 0;
 }
 
 .db-list-group__header {
+  grid-column: 1 / -1; // span every column
   display: flex;
   align-items: center;
   gap: 5px;
@@ -12,57 +33,37 @@
   border-bottom: 1px solid var(--tt-border-color);
 }
 
-// .db-list-row {
-//   display: flex;
-//   align-items: center;
-//   gap: 12px;
-//   height: 34px;
-//   padding: 0;
-//   margin: 0;
-//   max-width: var(--db-editor-width);
-//   // border-bottom: 1px solid var(--tt-border-color);
-
-//   &__title { flex: 1; min-width: 0; margin: 0; }
-
-//   &__props {
-//     display: flex;
-//     align-items: center;
-//     gap: 8px;
-//     flex-shrink: 1;
-//   }
-
-//   // &__open {
-//   //   opacity: 0;
-//   //   min-height: 22px;
-//   //   height: 22px;
-//   //   flex-shrink: 0;
-//   // }
-
-//   &:hover &__open { opacity: 1; }
-// }
 .db-list-row {
-  display: flex;
+  grid-column: 1 / -1; // occupy one full row of the group grid
+  display: grid;
+  grid-template-columns: subgrid; // inherit the group's tracks + gutter
   align-items: center;
-  gap: 12px;
   height: 34px;
-  padding: 0;
-  margin: 0;
-  width: 100%;          /* fill the container… */
-  max-width: 100%;      /* …and never exceed it (was --db-editor-width) */
-  min-width: 0;         /* allow the row itself to shrink in a flex parent */
+  min-width: 0;
+  border-radius: var(--tt-radius-sm);
+  transition: background 80ms ease;
+
+  &:hover {
+    background: var(--tt-button-hover-bg-color);
+  }
 
   &__title {
-    flex: 1 1 auto;
-    min-width: 0;       /* you had this — keeps the title truncating */
-    margin: 0;
+    grid-column: 1;
+    min-width: 0;
+    overflow: hidden;
   }
 
   &__props {
-    display: flex;
+    grid-column: 2 / -1; // spans every property column
+    display: grid;
+    grid-template-columns: subgrid; // each cell drops into its own column
     align-items: center;
-    gap: 8px;
-    flex-shrink: 1;
-    min-width: 0;       /* THE missing piece — lets the pills compress */
-    overflow: hidden;   /* clip overflow within the props block, not the row */
+    min-width: 0;
+
+    // Cells hug their column and truncate rather than push the grid wider.
+    > * {
+      min-width: 0;
+      overflow: hidden;
+    }
   }
 }

@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "src/components/tiptap-ui-primitive/dropdown-menu";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 function SortChip({
   sort,
@@ -39,7 +40,8 @@ function SortChip({
   locked: boolean;
 }) {
   const property = properties.find((p) => p.id === sort.propertyId);
-  const Icon = property ? PROPERTY_TYPE_ICONS[property.config.type] : null;
+  // Material Symbols name string now, not an icon component.
+  const iconName = property ? PROPERTY_TYPE_ICONS[property.config.type] : null;
   const DirIcon = sort.direction === "asc" ? ArrowUp : ArrowDown;
 
   const chipButton = (
@@ -55,15 +57,18 @@ function SortChip({
         cursor: locked ? "default" : undefined,
       }}
     >
-      {Icon && (
-        <Icon
+      {iconName && (
+        <DynamicIcon
+          name={iconName}
+          size={20}
+          filled={false}
           className="tiptap-button-icon"
-          style={{ color: "inherit", width: 12.5 }}
+          style={{ color: "inherit" }}
         />
       )}
       <span className="tiptap-button-text">{property?.name ?? "Property"}</span>
       <DirIcon
-        size={11}
+        size={20}
         className="tiptap-button-icon-sub"
         style={{ color: "inherit" }}
       />
@@ -108,8 +113,13 @@ function SortChip({
                         border: "1px solid var(--tt-border-color)",
                       }}
                     >
-                      {Icon && (
-                        <Icon size={13} className="tiptap-button-icon" />
+                      {iconName && (
+                        <DynamicIcon
+                          name={iconName}
+                          size={20}
+                          filled={false}
+                          className="tiptap-button-icon"
+                        />
                       )}
                       <span className="tiptap-button-text">
                         {property?.name}
@@ -126,7 +136,7 @@ function SortChip({
                       }}
                     >
                       {properties.map((p) => {
-                        const PIcon = PROPERTY_TYPE_ICONS[p.config.type];
+                        const pIconName = PROPERTY_TYPE_ICONS[p.config.type];
                         return (
                           <DropdownMenuItem key={p.id} asChild>
                             <Button
@@ -140,7 +150,12 @@ function SortChip({
                               }
                               onClick={() => onUpdate({ propertyId: p.id })}
                             >
-                              <PIcon size={13} className="tiptap-button-icon" />
+                              <DynamicIcon
+                                name={pIconName}
+                                size={20}
+                                filled={false}
+                                className="tiptap-button-icon"
+                              />
                               <span className="tiptap-button-text">
                                 {p.name}
                               </span>

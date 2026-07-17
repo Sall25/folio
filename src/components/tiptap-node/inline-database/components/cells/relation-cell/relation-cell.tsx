@@ -29,6 +29,14 @@ function relationRecordIds(raw: unknown): ID[] {
     .filter((x): x is string => !!x);
 }
 
+// A row IS a page, so its display name is page.title — the single source of
+// truth after the title-cell fix. Reading the title out of
+// values[titlePropId] (as this cell used to) yields null, which is why every
+// chip and picker row showed "Untitled".
+function rowLabel(row: { title?: string | null }): string {
+  return (typeof row.title === "string" && row.title.trim()) || "Untitled";
+}
+
 /**
  * Relation cell.
  *
@@ -49,7 +57,9 @@ export function RelationCell({
   unwrapped,
   recordId,
 }: CellProps<"relation"> & { recordId?: ID }) {
-  const { source: target } = useDataSource(config.targetSourceId || null);
+  // Called for its side effect: ensures the target source is loaded. Its
+  // schema is no longer read here (titles come off the rows directly).
+  useDataSource(config.targetSourceId || null);
   const { setTarget } = usePageView();
   const { data: targetRows } = useRows(config.targetSourceId || "");
   const rows = useMemo(() => targetRows ?? [], [targetRows]);
@@ -73,18 +83,11 @@ export function RelationCell({
     return relationRecordIds(value);
   }, [isMirror, rows, config.mirrorPropertyId, recordId, value]);
 
-  const titleProp = useMemo(
-    () => target?.properties.find((p) => p.config.type === "title"),
-    [target?.properties],
-  );
-
   const rowById = (id: string) => rows.find((r) => r.id === id);
 
   const labelOf = (id: string): string => {
     const row = rowById(id);
-    if (!row) return "Untitled";
-    const t = titleProp ? row.values?.[titleProp.id] : null;
-    return (typeof t === "string" && t.trim()) || "Untitled";
+    return row ? rowLabel(row) : "Untitled";
   };
 
   // a linked id IS the page id (row = page) — cover comes straight off the row
@@ -93,12 +96,8 @@ export function RelationCell({
   const candidates = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return rows;
-    return rows.filter((r) => {
-      const t = titleProp ? r.values?.[titleProp.id] : null;
-      const label = (typeof t === "string" && t) || "Untitled";
-      return label.toLowerCase().includes(q);
-    });
-  }, [rows, titleProp, query]);
+    return rows.filter((r) => rowLabel(r).toLowerCase().includes(q));
+  }, [rows, query]);
 
   const commit = (next: string[]) =>
     onChange?.(next as unknown as CellValue<"relation"> | null);
@@ -229,8 +228,7 @@ export function RelationCell({
             ) : (
               candidates.map((row) => {
                 const selected = ids.includes(row.id);
-                const t = titleProp ? row.values?.[titleProp.id] : null;
-                const label = (typeof t === "string" && t.trim()) || "Untitled";
+                const label = rowLabel(row);
                 const cover = coverOf(row.id);
                 return (
                   <Button

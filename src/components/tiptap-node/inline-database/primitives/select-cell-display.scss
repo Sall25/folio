@@ -1,0 +1,74 @@
+// Select / multi-select pill. Shape and colour vocabulary are shared with the
+// status badge — see _pill-colors.scss.
+
+@use "../utils/pill-colors.scss" as pill;
+
+.select-badge {
+  @include pill.pill-base;
+  cursor: pointer;
+  transition: filter var(--tt-transition-duration-short)
+    var(--tt-transition-easing-default);
+    margin: auto 5px;
+
+  &:hover {
+    // Lifts on any fill, light or dark — no second token needed.
+    filter: brightness(1.08);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--tt-selection-color);
+  }
+
+  &__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // Unset cell — a quiet placeholder, not a coloured pill.
+  &--empty {
+    background: transparent;
+    color: color-mix(in srgb, var(--tt-text-primary) 40%, transparent);
+  }
+}
+
+@include pill.pill-color-variants(".select-badge");
+
+// ── Dropdown ────────────────────────────────────────────────────────────────
+
+.select-dropdown {
+  z-index: 9999;
+  &__option {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 4px 6px;
+    border: none;
+    border-radius: var(--tt-radius-sm);
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    transition: background var(--tt-transition-duration-short)
+      var(--tt-transition-easing-default);
+
+    &:hover,
+    &:focus-visible {
+      outline: none;
+      background: var(--tt-button-hover-bg-color);
+    }
+
+    // In the list the pill is a label, not a control — the row owns the click.
+    .select-badge {
+      cursor: inherit;
+      pointer-events: none;
+    }
+  }
+
+  &__empty {
+    display: block;
+    padding: 8px 6px;
+    color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+}

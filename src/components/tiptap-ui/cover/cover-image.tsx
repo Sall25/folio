@@ -3,6 +3,7 @@ import type { Page } from "src/types";
 import CoverControlsGroup from "./cover-controls";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
+import { Bone } from "src/components/tiptap-ui-primitive/bone";
 
 export default function CoverImage({
   page,
@@ -11,8 +12,8 @@ export default function CoverImage({
   page: Page;
   onRemoveCoverAsync: () => Promise<void>;
 }) {
-  const {mutateAsync} = usePatchPage(({id, patch})=>patchPage(id, patch))
-  const mutateAsyncRef = useRef(mutateAsync)
+  const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
+  const mutateAsyncRef = useRef(mutateAsync);
   const [btnPosition, setBtnPosition] = useState({ top: 0, right: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const [hovering, setHovering] = useState(false);
@@ -23,7 +24,24 @@ export default function CoverImage({
   const [localPositionY, setLocalPositionY] = useState<number | null>(null);
 
   const coverImage = pendingCoverImage ?? page.cover.coverImage;
-  const positionY = localPositionY ?? (page.cover)?.positionY ?? 50;
+  const positionY = localPositionY ?? page.cover?.positionY ?? 50;
+
+  // The <img> renders immediately but paints nothing until its bytes arrive —
+  // 260px of blank while a full-width photo downloads. A bone fills the band in
+  // the meantime. The image is always MOUNTED (so it actually loads); it's just
+  // held at opacity 0 until it's ready, then faded in — swapping it out entirely
+  // would restart the download.
+  const [loaded, setLoaded] = useState(false);
+
+  // Reset when the URL changes, so picking a new cover shows the skeleton again
+  // rather than holding the previous image's loaded state. Render-time adjust,
+  // not an effect — this is derived state, and setState-in-effect would cost an
+  // extra render pass.
+  const [prevSrc, setPrevSrc] = useState(coverImage);
+  if (coverImage !== prevSrc) {
+    setPrevSrc(coverImage);
+    setLoaded(false);
+  }
 
   const onCoverImageChange = useCallback((url: string) => {
     setPendingCoverImage(url);
@@ -34,10 +52,10 @@ export default function CoverImage({
   }, []);
 
   const handlePositionDragEnd = useCallback(async () => {
-    const y = localPositionY ?? (page.cover)?.positionY ?? 50;
+    const y = localPositionY ?? page.cover?.positionY ?? 50;
     await mutateAsyncRef.current({
       id: page.id,
-      patch: {cover: { ...page.cover, positionY: y }}
+      patch: { cover: { ...page.cover, positionY: y } },
     });
     setLocalPositionY(null);
   }, [page, localPositionY]);
@@ -73,10 +91,24 @@ export default function CoverImage({
         flexShrink: 0,
       }}
     >
+      {!loaded && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+          }}
+        >
+          <Bone width="100%" height="100%" />
+        </div>
+      )}
+
       <img
         src={coverImage ?? ""}
         alt="cover"
         draggable={false}
+        onLoad={() => setLoaded(true)}
+        // A broken URL must not leave the bone shimmering forever.
+        onError={() => setLoaded(true)}
         style={{
           position: "absolute",
           top: 0,
@@ -87,6 +119,8 @@ export default function CoverImage({
           objectPosition: `center ${positionY}%`,
           display: "block",
           userSelect: "none",
+          opacity: loaded ? 1 : 0,
+          transition: "opacity 0.2s ease",
         }}
       />
 

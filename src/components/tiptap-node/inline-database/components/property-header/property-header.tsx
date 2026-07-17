@@ -1,9 +1,4 @@
-import { createElement, useEffect, useState, type CSSProperties } from "react";
-import {
-  Check,
-  Type as UltimateFallbackIcon,
-  type LucideIcon,
-} from "lucide-react";
+import { useEffect, useState, type CSSProperties } from "react";
 import {
   DEFAULT_CONFIGS,
   type DatabaseProperty,
@@ -54,27 +49,34 @@ import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
  * lazily via DynamicIcon (which loads the lucide namespace on demand, out of
  * boot); with no custom name we render the type's fallback icon directly.
  */
+
+const ULTIMATE_FALLBACK_ICON = "category"; // Material Symbols name
+
+/**
+ * Resolves a property's icon and renders it. A custom `iconName` (a Material
+ * Symbols ligature) wins when set; otherwise the property type's fallback name
+ * is used. A bad/unknown custom name renders a blank glyph rather than the
+ * fallback — acceptable, and the font handles it without forcing anything.
+ */
 function PropertyIcon({
   iconName,
   fallback,
   color,
+  style,
   ...rest
 }: {
   iconName?: string;
-  fallback: LucideIcon;
+  fallback: string; // Material Symbols name for this property type
   color?: string;
-} & React.ComponentProps<LucideIcon>) {
-  // Custom icon set → resolve by name on demand. DynamicIcon returns null for
-  // an unknown name, so guard with the fallback by rendering it when there's
-  // no custom name. (A bad stored name will render nothing rather than the
-  // fallback — acceptable, and avoids forcing the whole namespace here.)
-  if (iconName) {
-    return (
-      <DynamicIcon name={iconName} {...(color ? { color, ...rest } : rest)} />
-    );
-  }
-  const resolved = fallback || UltimateFallbackIcon;
-  return createElement(resolved, color ? { color, ...rest } : { ...rest });
+} & Omit<React.ComponentProps<typeof DynamicIcon>, "name">) {
+  const name = iconName || fallback || ULTIMATE_FALLBACK_ICON;
+  return (
+    <DynamicIcon
+      name={name}
+      style={color ? { color, ...style } : style}
+      {...rest}
+    />
+  );
 }
 
 export function PropertyHeader({
@@ -103,7 +105,8 @@ export function PropertyHeader({
   const { changePropertyTypeAsync } = useDataSource(source?.id);
 
   // The type's default icon — used as fallback when no custom icon is set.
-  const TypeIcon = PROPERTY_TYPE_ICONS[prop.config.type];
+
+  const typeIconName = PROPERTY_TYPE_ICONS[prop.config.type];
 
   const { nodeRef, handleResizeStart, isResizing } = useResizableNode();
   const [name, setName] = useState(prop.name);
@@ -137,6 +140,10 @@ export function PropertyHeader({
       style={{
         width: "100%",
         borderRadius: "var(--tt-radius-sm)",
+        gap: 8,
+        display: "flex",
+        alignItems: "center",
+        padding: "0 0.5rem",
         justifyContent: "flex-start",
         overflow: "hidden",
         background: "transparent !important",
@@ -149,10 +156,11 @@ export function PropertyHeader({
     >
       <PropertyIcon
         iconName={prop.icon}
-        fallback={TypeIcon}
+        fallback={typeIconName}
         color={prop.iconColor}
         className="tiptap-button-icon"
-        style={{ width: 16, height: 16 }}
+        filled={false}
+        size={22}
       />
       <span className="tiptap-button-text">{prop.name}</span>
     </Button>
@@ -206,12 +214,26 @@ export function PropertyHeader({
                     {/* Icon button → icon picker popover */}
                     <Popover open={iconOpen} onOpenChange={setIconOpen}>
                       <PopoverTrigger asChild>
-                        <Button variant="ghost" tooltip="Change icon">
+                        <Button
+                          variant="ghost"
+                          tooltip="Change icon"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
                           <PropertyIcon
                             iconName={prop.icon}
-                            fallback={TypeIcon}
+                            fallback={typeIconName}
                             color={prop.iconColor}
                             className="tiptap-button-icon"
+                            filled={false}
+                            size={22}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
                           />
                         </Button>
                       </PopoverTrigger>
@@ -258,7 +280,7 @@ export function PropertyHeader({
                     >
                       {PROPERTY_TYPE_META.filter((m) => m.type !== "title").map(
                         (m) => {
-                          const Icon = PROPERTY_TYPE_ICONS[m.type];
+                          const iconName = PROPERTY_TYPE_ICONS[m.type];
                           return (
                             <Button
                               key={m.type}
@@ -276,12 +298,17 @@ export function PropertyHeader({
                                 gap: 8,
                               }}
                             >
-                              <Icon className="tiptap-button-icon" size={14} />
+                              <DynamicIcon
+                                name={iconName}
+                                className="tiptap-button-icon"
+                                size={14}
+                              />
                               <span className="tiptap-button-text">
                                 {m.label}
                               </span>
                               {prop.config.type === m.type && (
-                                <Check
+                                <DynamicIcon
+                                  name="check"
                                   size={14}
                                   style={{
                                     marginLeft: "auto",

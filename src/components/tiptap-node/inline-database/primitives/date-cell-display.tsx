@@ -79,8 +79,9 @@ export function DateCellDisplay({
         fontSize: 14,
         fontWeight: 400,
         lineHeight: 1.5,
-        color: "var(--tt-theme-primary)",
+        color: "var(--tt-text-cell)",
         minWidth: 100,
+        padding: 0,
       }}
     >
       <span className="tiptap-button-text">

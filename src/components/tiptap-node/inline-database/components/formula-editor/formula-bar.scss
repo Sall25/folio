@@ -96,8 +96,7 @@
   user-select: none;
 
   &__icon {
-    width: 12px;
-    height: 12px;
+    // Material glyph: `size` (→ font-size) scales it; width/height are dead.
     opacity: 0.8;
     flex-shrink: 0;
   }

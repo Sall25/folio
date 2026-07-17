@@ -1,15 +1,110 @@
+// Display and field must share IDENTICAL metrics — same font, size, weight, and
+// zero padding — or the text visibly shifts the moment the editor opens. The
+// horizontal inset comes from the editor box (.db-cell-editor__box), which
+// matches the cell's own padding, so neither element adds any of its own.
+//
+// The one deliberate difference: the DISPLAY uses the row height as its
+// line-height (vertically centring a single line in the cell), while the FIELD
+// uses normal leading — a 34px line-height in a textarea would space wrapped
+// lines absurdly, and the auto-grow measures against it.
+
 .db-td--email {
   display: flex;
   align-items: center;
-  padding: 0 8px;
+  width: 100%;
+  min-width: 0;
+  // The link must NOT fill the cell, or there's nowhere to click that isn't the
+  // link — and since the link stops propagation, the editor could never open.
+  // The gap to its right is the trigger's hit area.
+  gap: 8px;
 }
 
-.db-cell-email__link {
-  color: var(--link-text-color);
-  text-decoration: underline;
-  font-size: inherit;
-  
-  &:hover {
-    opacity: 0.8;
+.db-cell-email {
+  &__link {
+    margin: 0;
+    padding: 0;
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+    flex: 0 1 auto;
+    font-family: inherit;
+    font-size: 14px !important;
+    font-weight: 400;
+    line-height: 34px; // row height — centres the single line in the cell
+    color: var(--tt-text-primary) !important;
+    // text-decoration: none !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-decoration-color: var(--tt-gray-light-a-600);
+
+    .dark & {
+      text-decoration-color: rgba(143, 142, 142, 0.462) !important;
+    }
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
+
+  // Empty cell — holds the row's height so the cell doesn't collapse.
+  &__empty {
+    display: block;
+    width: 100%;
+    height: 34px;
+  }
+
+  &__field {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    resize: none;
+    overflow-y: hidden;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--tt-text-primary);
+    caret-color: currentColor;
+
+    &::placeholder {
+      color: color-mix(in srgb, var(--tt-text-primary) 40%, transparent);
+    }
+  }
+}
+
+
+// The edit affordance in a link cell's trailing click zone. Reveals on hover of
+// the cell; it's the one spot where a click opens the editor rather than
+// following the link.
+.db-cell-edit-hint {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: auto;          // push to the right edge
+  border-radius: var(--tt-radius-xs);
+  color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity var(--tt-transition-duration-short)
+    var(--tt-transition-easing-default);
+}
+
+// Reveal on hover of the whole cell, not just the icon — the hit area is the
+// gap, and the icon merely marks it.
+.db-node-cell:hover .db-cell-edit-hint {
+  opacity: 1;
+}
+
+.db-cell-edit-hint:hover {
+  background: var(--tt-button-hover-bg-color);
+  color: var(--tt-text-primary);
 }

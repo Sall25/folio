@@ -28,12 +28,12 @@
   z-index: 101;
 
   // Center it
-  top: 50%;
-  left: 50%;
+  top: calc( 50% + 15px);
+  left: calc(50% + 100px);
   transform: translate(-50%, -50%);
 
   // Sizing
-  width: min(860px, 92vw);
+  width: min(1100px, 98vw);
   max-height: min(90vh, 960px);
   min-height: 600px;
   height: auto;
@@ -67,19 +67,19 @@
   flex: 1;
 
   // Custom scrollbar to match dark theme
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  scrollbar-width:auto;
+  // scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-  }
+  // &::-webkit-scrollbar {
+  //   width: 4px;
+  // }
+  // &::-webkit-scrollbar-track {
+  //   background: transparent;
+  // }
+  // &::-webkit-scrollbar-thumb {
+  //   background: rgba(255, 255, 255, 0.1);
+  //   border-radius: 2px;
+  // }
 }
 
 .page-create-content {

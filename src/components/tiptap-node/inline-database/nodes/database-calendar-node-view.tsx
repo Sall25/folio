@@ -63,8 +63,6 @@ export function DatabaseCalendarNodeView({
     return source.properties.find((p) => p.config.type === "date");
   }, [source.properties, activeView?.datePropertyId]);
 
-  const titleProp = source.properties.find((p) => p.config.type === "title");
-
   const cardProps = useMemo(() => {
     const hidden = new Set(activeView?.hiddenProperties ?? []);
     return source.properties.filter(
@@ -213,9 +211,9 @@ export function DatabaseCalendarNodeView({
                     {visible.map((id) => {
                       const rec = resolvedRecords.find((r) => r.id === id);
                       if (!rec) return null;
-                      const title =
-                        (titleProp && (rec.values?.[titleProp.id] as string)) ||
-                        "Untitled";
+                      // Title lives on page.title, not values[titlePropId]
+                      // (which is null) — the recurring source-of-truth fix.
+                      const title = rec.title?.trim() || "Untitled";
                       return (
                         <CalendarChip
                           key={id}

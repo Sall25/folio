@@ -1,81 +1,37 @@
-import { createElement, useEffect, useState } from "react";
-import { createRoot } from "react-dom/client";
+import {  useEffect, useState } from "react";
 import { useBrowserTab, type BrowserTabIcon } from "./use-browser-tab";
 import { useActivePage } from "../context/active-page-context";
-import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
-// Render the app's DynamicIcon offscreen and serialize its SVG to a favicon
-// data-URL. Reuses the same resolver PageItemIcon uses, so the tab icon matches
-// the in-app icon. Handles DynamicIcon loading lazily (observer + fallback).
-async function lucideToFaviconHref(
+// Draw the Material Symbols glyph to a canvas and export it as a favicon
+// data-URL. The font renders the ligature as a glyph, so we paint text, not SVG.
+async function materialIconToFaviconHref(
   name: string,
   color: string,
   size = 64,
 ): Promise<string | null> {
   if (typeof document === "undefined") return null;
 
-  const host = document.createElement("div");
-  host.setAttribute("aria-hidden", "true");
-  Object.assign(host.style, {
-    position: "fixed",
-    left: "-9999px",
-    top: "0",
-    width: `${size}px`,
-    height: `${size}px`,
-    pointerEvents: "none",
-  });
-  document.body.appendChild(host);
-  const root = createRoot(host);
-
-  const svg = await new Promise<SVGElement | null>((resolve) => {
-    let settled = false;
-    const done = (el: SVGElement | null) => {
-      if (!settled) {
-        settled = true;
-        resolve(el);
-      }
-    };
-    const read = () => {
-      const el = host.querySelector("svg");
-      if (el) {
-        done(el as unknown as SVGElement);
-        return true;
-      }
-      return false;
-    };
-
-    const obs = new MutationObserver(() => {
-      if (read()) obs.disconnect();
-    });
-    obs.observe(host, { childList: true, subtree: true });
-
-    root.render(
-      createElement(DynamicIcon, { name, size, stroke: color, strokeWidth: 2 }),
-    );
-
-    requestAnimationFrame(() => {
-      if (read()) obs.disconnect();
-    });
-    setTimeout(() => {
-      obs.disconnect();
-      done(host.querySelector("svg") as unknown as SVGElement | null);
-    }, 1500);
-  });
-
-  let href: string | null = null;
-  if (svg) {
-    svg.setAttribute("width", String(size));
-    svg.setAttribute("height", String(size));
-    if (!svg.getAttribute("xmlns"))
-      svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-    href = `data:image/svg+xml;utf8,${encodeURIComponent(
-      new XMLSerializer().serializeToString(svg),
-    )}`;
+  // The font must be loaded before we paint, or canvas draws tofu/nothing.
+  try {
+    await document.fonts.load(`${size}px "Material Symbols Rounded"`);
+    await document.fonts.ready;
+  } catch {
+    return null;
   }
 
-  root.unmount();
-  host.remove();
-  return href;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  ctx.font = `${size}px "Material Symbols Rounded"`;
+  ctx.fillStyle = color;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(name, size / 2, size / 2);
+
+  return canvas.toDataURL("image/png");
 }
 
 /**
@@ -109,7 +65,7 @@ export function usePageBrowserTab(appName: string | null = "Folio") {
         : "#5b5b5b";
 
     let cancelled = false;
-    lucideToFaviconHref(iconName, resolvedColor).then((href) => {
+   materialIconToFaviconHref(iconName, resolvedColor).then((href) => {
       if (!cancelled && href) setResolved({ name: iconName, href });
     });
     return () => {

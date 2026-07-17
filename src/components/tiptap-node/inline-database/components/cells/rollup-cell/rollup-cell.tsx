@@ -6,7 +6,7 @@ import type {
   Page,
 } from "src/types";
 import { computeRollup } from "src/lib/compute-rollup";
-import { usePages } from "src/hooks/use-pages";
+import { useRows } from "src/hooks/use-pages";
 
 function formatRollup(
   value: string | number | null,
@@ -47,14 +47,20 @@ export function RollupCell({
       : null;
 
   const { source: targetSource } = useDataSource(targetSourceId || null);
-  const { data: pages } = usePages();
+
+  // The linked ids point at TARGET-database rows, and computeRollup reads each
+  // linked row's values[targetPropertyId]. usePages() didn't supply those rows
+  // with values, so every aggregation except `count` (which only needs
+  // ids.length) came back empty. Load the target source's rows explicitly —
+  // the same set the relation cell resolves against.
+  const { data: targetRows } = useRows(targetSourceId || "");
 
   const value = computeRollup({
     record: { values: record.values! },
     properties,
     targetSource,
     config,
-    pages: pages ?? [],
+    pages: targetRows ?? [],
   });
 
   return (

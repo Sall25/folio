@@ -74,8 +74,15 @@ export function MultiSelectCellDisplay({
   return (
     <Popover>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent>
-        <Card style={{ minWidth: 100, padding: "10px 15px" }}>
+      <PopoverContent side="bottom" align="start" style={{ zIndex: "9999" }}>
+        <Card
+          style={{
+            minWidth: 180,
+            padding: "6px",
+            borderRadius: "var(--tt-radius-lg)",
+            boxShadow: "var(--tt-shadow-elevated-md)",
+          }}
+        >
           <CardItemGroup
             style={{
               width: "100%",

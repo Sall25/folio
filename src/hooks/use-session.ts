@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "src/api/supabase-client";
@@ -9,8 +9,6 @@ export const queryKeys = {
   currentPerson: ["currentPerson"] as const,
 };
 
-// Supabase row shape (snake_case) — kept private to this file, mapped to the
-// real domain `Person` type (camelCase) before anything else touches it.
 interface PeopleRow {
   id: string;
   name: string;
@@ -32,41 +30,36 @@ function toPerson(row: PeopleRow): Person {
 }
 
 /**
- * Tracks the raw Supabase auth session (token, expiry, etc). Most UI code
- * should use `useCurrentPerson` below instead — this is the lower-level
- * primitive it's built on.
+ * The Supabase auth session, held in ONE shared query-cache entry rather than
+ * per-component state. Every caller reads the same resolved session, so
+ * getSession() runs once for the app instead of once per consumer.
  */
 export function useSession() {
   const queryClient = useQueryClient();
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  const { data: session, isLoading: loading } = useQuery({
+    queryKey: queryKeys.session,
+    queryFn: async (): Promise<Session | null> =>
+      (await supabase.auth.getSession()).data.session,
+    staleTime: Infinity,
+  });
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
-
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, newSession) => {
-        setSession(newSession);
+        queryClient.setQueryData(queryKeys.session, newSession);
         queryClient.invalidateQueries({ queryKey: queryKeys.currentPerson });
       },
     );
-
     return () => listener.subscription.unsubscribe();
   }, [queryClient]);
 
-  return { session, loading };
+  return { session: session ?? null, loading };
 }
 
 /**
  * The domain-level "who am I" — resolves the auth session to the real
- * `Person` record. This is what replaces the hardcoded
- * `{ name: "Souleymane Sall", email: "" }` placeholder in
- * WorkspaceSettings, the sidebar account button, and (once wired) the
- * teamspace membership filter that was left as
- * "No current-user concept yet" in simple-editor-sidebar.tsx.
+ * `Person` record.
  */
 export function useCurrentPerson() {
   const { session, loading: sessionLoading } = useSession();

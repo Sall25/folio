@@ -19,6 +19,7 @@ import {
 import type { UseDatabaseReturn } from "../../hooks/use-database";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import "./filter-panel.scss";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 // ── makeFilterRule ─────────────────────────────────────────────────────────
 
@@ -172,7 +173,9 @@ export function FilterPanel({
             <span className="db-panel__empty">No properties found</span>
           ) : (
             filtered.map((p) => {
-              const Icon = PROPERTY_TYPE_ICONS[p.config.type];
+              // PROPERTY_TYPE_ICONS holds Material Symbols name strings now,
+              // not icon components — render through DynamicIcon.
+              const iconName = PROPERTY_TYPE_ICONS[p.config.type];
               return (
                 <Button
                   key={p.id}
@@ -184,7 +187,14 @@ export function FilterPanel({
                   }}
                   onClick={() => addRuleFor(p)}
                 >
-                  {Icon && <Icon className="tiptap-button-icon" />}
+                  {iconName && (
+                    <DynamicIcon
+                      name={iconName}
+                      size={20}
+                      filled={false}
+                      className="tiptap-button-icon"
+                    />
+                  )}
                   <span className="tiptap-button-text">{p.name}</span>
                 </Button>
               );

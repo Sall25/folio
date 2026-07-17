@@ -1,0 +1,34 @@
+// Geometry copied from .page-item and .page-item-tree deliberately. A skeleton
+// whose rows are a different height than the real ones produces a visible jolt
+// at exactly the moment you're trying to hide one — so the row height (28.5px),
+// the left padding (6px, matching depth 0), the icon size (15px) and the gap all
+// mirror the real thing.
+
+.sidebar-tree-skeleton {
+  display: flex;
+  flex-direction: column;
+  // Matches SidebarTree's own section gap.
+  gap: 8px;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__rows {
+    display: flex;
+    flex-direction: column;
+    // .page-item-tree's gap.
+    gap: 2.5px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    // .page-item: padding: 2.5px 5px, plus depth-0's 6px left offset.
+    gap: 8px;
+    height: 28.5px;
+    padding: 2.5px 5px 2.5px 6px;
+    width: 100%;
+  }
+}

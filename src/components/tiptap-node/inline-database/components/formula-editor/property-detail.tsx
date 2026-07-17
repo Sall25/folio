@@ -6,7 +6,7 @@ import {
 } from "src/components/tiptap-ui-primitive/card";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Copy } from "lucide-react";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 
 // ─── formula return types ─────────────────────────────────────────────────────
@@ -130,10 +130,14 @@ function getSnippets(prop: DatabaseProperty): string[] {
 // inserted. Names that don't resolve to a current property stay as plain text.
 
 function PropPill({ property }: { property: DatabaseProperty }) {
-  const Icon = PROPERTY_TYPE_ICONS[property.config.type];
   return (
     <span className="formula-prop-pill">
-      <Icon size={12} className="formula-prop-pill__icon" />
+      <DynamicIcon
+        name={PROPERTY_TYPE_ICONS[property.config.type]}
+        size={12}
+        filled={false}
+        className="formula-prop-pill__icon"
+      />
       <span className="formula-prop-pill__name">{property.name}</span>
     </span>
   );
@@ -214,6 +218,7 @@ export default function PropertyDetail({
           <Button
             key={snippet}
             variant="ghost"
+            style={{ gap: 6 }}
             // Preserve editor focus through the click (mousedown would
             // otherwise blur the editor and skip the focus-gated insert).
             onMouseDown={(e) => e.preventDefault()}
@@ -226,7 +231,7 @@ export default function PropertyDetail({
             >
               {renderSnippet(snippet, resolveList)}
             </code>
-            <Copy className="tiptap-button-icon" />
+            <DynamicIcon name="content_copy" size={14} filled={false} />
           </Button>
         ))}
       </CardItemGroup>

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { usePage } from "src/hooks/use-pages";
 import type { JSONContent } from "@tiptap/core";
 import { TitleCellDisplay } from "../../../primitives/title-cell-display";
@@ -8,15 +7,24 @@ import { useActivePage } from "src/components/tiptap-templates/simple/context/ac
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 
+/**
+ * The title cell is an ATOM: page.title is the single source of truth.
+ *
+ * It used to be a content cell, which meant the same string existed in three
+ * places — page.title, the databaseCell node's inline content, and
+ * values[titlePropId] — with no working sync between them. Typing in the cell
+ * wrote to values[] (which nothing reads); renaming the page never reached the
+ * cell. Now the cell simply READS page.title and WRITES page.title. No copies,
+ * nothing to keep in sync, and a rename anywhere shows up everywhere.
+ */
 export function TitleCell({
   value,
-  // recordId,
   pageId,
   templateId,
-  onChange,
   readonly,
   unwrapped,
   view,
+  openVariant,
 }: {
   value: string;
   recordId: ID;
@@ -26,6 +34,7 @@ export function TitleCell({
   onChange: (value: string) => void;
   readonly?: boolean;
   unwrapped?: boolean;
+  openVariant?: "open" | "edit";
 }) {
   const { data: linkedPage } = usePage(pageId ?? null);
   const { data: templatePage } = usePage(templateId ?? null);
@@ -36,35 +45,28 @@ export function TitleCell({
   const icon = templatePage?.cover ?? linkedPage?.cover ?? null;
 
   function handleChange(next: string) {
-    //  registry value
-    onChange(next);
-    //  linked page title + its content's title node
-    if (linkedPage) {
-      const content = linkedPage.content as JSONContent;
-      const updatedContent: JSONContent = content.content?.length
-        ? {
-            ...content,
-            content: content.content.map((n, i) =>
-              i !== 0 ? n : { ...n, content: [{ type: "text", text: next }] },
-            ),
-          }
-        : content;
-      mutatePage.mutate({
-        id: linkedPage.id,
-        patch: { title: next, content: updatedContent },
-      });
-    }
-  }
-
-  // inside TitleCell, after linkedPage is computed:
-  useEffect(() => {
     if (!linkedPage) return;
-    // page→cell: if the page title diverged from the cell value, sync it back
-    if (linkedPage.title !== value) {
-      onChange(linkedPage.title);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [linkedPage?.title]);
+
+    // The page's title also appears as the first node of its content (the
+    // editor's TitleNode), so both are patched together — the same thing the
+    // sidebar's rename does.
+    const content = linkedPage.content as JSONContent;
+    const updatedContent: JSONContent = content?.content?.length
+      ? {
+          ...content,
+          content: content.content.map((n, i) =>
+            i !== 0
+              ? n
+              : { ...n, content: next ? [{ type: "text", text: next }] : [] },
+          ),
+        }
+      : content;
+
+    mutatePage.mutate({
+      id: linkedPage.id,
+      patch: { title: next, content: updatedContent },
+    });
+  }
 
   return (
     <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
@@ -82,18 +84,14 @@ export function TitleCell({
             setTarget({ pageId, view: "Center" });
           } else if (view.openPageIn === "Full") {
             setActivePageId(pageId);
+          } else if (view.type === "gallery" || view.type === "board") {
+            setTarget({ pageId, view: "Center" });
           } else {
-            if (view.type === "list") {
-              setTarget({ pageId, view: "Peek" });
-            } else if (view.type === "gallery" || view.type == "board") {
-              setTarget({ pageId, view: "Center" });
-            }
-            {
-              setTarget({ pageId, view: "Peek" });
-            }
+            setTarget({ pageId, view: "Peek" });
           }
         }}
         readonly={readonly}
+        openVariant={openVariant}
       />
     </div>
   );

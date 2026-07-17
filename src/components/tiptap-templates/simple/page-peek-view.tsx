@@ -3,7 +3,6 @@ import { useActivePage } from "./context/active-page-context";
 import type { Page } from "src/types";
 import {
   Editor,
-  useCurrentEditor,
   useEditor,
   type JSONContent,
 } from "@tiptap/react";
@@ -13,7 +12,7 @@ import {
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { ChevronsRight, Ellipsis, Expand } from "lucide-react";
+import { ChevronsRight, Ellipsis, Maximize2 } from "lucide-react";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { EditorContent } from "@tiptap/react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -32,8 +31,6 @@ import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import { usePageView } from "./context/page-view-context";
 import { usePage } from "src/hooks/use-pages";
-import { useEditorLayout } from "./context/editor-layout-context";
-//import { RecordPropertyPanel } from "./record-property-panel";
 
 const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
   open,
@@ -216,7 +213,6 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
 
   useRecordPropertyPanel(editor, page ?? null);
 
-  const { editor: mainEditor } = useCurrentEditor();
   return (
     <Card
       className="page-peek"
@@ -238,7 +234,14 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
           <Button variant="ghost" onClick={onClose}>
             <ChevronsRight className="tiptap-button-icon" />
           </Button>
-          <Button
+         
+        </CardItemGroup>
+        <Spacer orientation="horizontal" />
+        <CardItemGroup orientation="horizontal">
+          <Button variant="ghost">
+            <Ellipsis className="tiptap-button-icon" />
+          </Button>
+           <Button
             variant="ghost"
             onClick={() => {
               if (page) {
@@ -255,13 +258,7 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
               }
             }}
           >
-            <Expand className="tiptap-button-icon" />
-          </Button>
-        </CardItemGroup>
-        <Spacer orientation="horizontal" />
-        <CardItemGroup orientation="horizontal">
-          <Button variant="ghost">
-            <Ellipsis className="tiptap-button-icon" />
+            <Maximize2 className="tiptap-button-icon" />
           </Button>
         </CardItemGroup>
       </CardItemGroup>

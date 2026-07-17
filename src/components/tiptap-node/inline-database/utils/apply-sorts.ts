@@ -1,4 +1,4 @@
-import type { DataSourceRecord, SortRule } from "../types/types";
+import type { Page, DatabaseProperty, SortRule } from "src/types";
 import { getCellValue } from "./apply-filters";
 
 function compareValues(
@@ -31,36 +31,23 @@ function compareValues(
 }
 
 /**
- * Returns a NEW sorted array (does not mutate). Use in the table render —
- * sort source.records before mapping. Reuses the same compareValues as
- * getSortOrder so the two stay consistent.
+ * Returns a NEW sorted array (does not mutate). Records ARE Pages — the old
+ * DataSourceRecord type was a leftover from when records lived inside the
+ * DataSource.
  */
 export function sortRecords(
-  records: DataSourceRecord[],
+  records: Page[],
   sorts: SortRule[],
-): DataSourceRecord[] {
+  properties?: DatabaseProperty[],
+): Page[] {
   if (!sorts || sorts.length === 0) return records;
   return [...records].sort((a, b) => {
     for (const sort of sorts) {
-      const av = getCellValue(a, sort.propertyId);
-      const bv = getCellValue(b, sort.propertyId);
+      const av = getCellValue(a, sort.propertyId, properties);
+      const bv = getCellValue(b, sort.propertyId, properties);
       const cmp = compareValues(av, bv, sort.direction);
       if (cmp !== 0) return cmp;
     }
     return 0;
   });
-}
-
-/**
- * Returns the CSS `order` value for this record given the active sorts.
- * Call in DatabaseRecordNodeView and apply to the NodeViewWrapper style.
- */
-export function getSortOrder(
-  record: DataSourceRecord,
-  allRecords: DataSourceRecord[],
-  sorts: SortRule[],
-): number {
-  if (!sorts || sorts.length === 0) return 0;
-  const sorted = sortRecords(allRecords, sorts);
-  return sorted.findIndex((r) => r.id === record.id);
 }

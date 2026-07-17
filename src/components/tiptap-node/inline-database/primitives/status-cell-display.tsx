@@ -6,6 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
+import "./status-cell-display.scss";
 
 interface StatusCellDisplayProps {
   value: string | null; // StatusItem.id
@@ -23,10 +24,11 @@ export function StatusCellDisplay({
   const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const allItems = groups.flatMap((g) => g.items);
-  const selectedItem = allItems.find((item) => item.id === value) ?? null;
+  const allItems = (groups ?? []).flatMap((g) => g.items);
+  const selectedItem =
+    (allItems ?? []).find((item) => item.id === value) ?? null;
 
-  const filteredGroups = groups
+  const filteredGroups = (groups ?? [])
     .map((g) => ({
       ...g,
       items: g.items.filter((item) =>

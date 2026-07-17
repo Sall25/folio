@@ -7,7 +7,7 @@
   color: var(--tt-text-secondary, rgba(0, 0, 0, 0.55));
 
   &__sep {
-    flex: none;
+    flex: none; // never shrink the separator
     color: var(--tt-text-tertiary, rgba(0, 0, 0, 0.3));
     user-select: none;
   }
@@ -16,110 +16,6 @@
     position: relative;
     display: inline-flex;
     min-width: 0;
-  }
-
-  &__dropdown {
-    position: fixed;
-    z-index: 1000;
-    min-width: 240px;
-    max-width: 300px;
-    background: var(--tt-card-bg-color);
-    border: 0.5px solid var(--tt-border-color);
-    border-radius: var(--tt-radius-lg, 10px);
-    box-shadow: var(--tt-shadow-elevated-sm);
-    overflow: hidden;
-    transform-origin: top left;
-    animation: breadcrumbs-dropdown-in 0.12s ease-out;
-    font-family: inherit;
-
-    // respect reduced-motion preferences
-    @media (prefers-reduced-motion: reduce) {
-      animation: none;
-    }
-
-    &-search {
-      padding: 8px;
-      border-bottom: 0.5px solid var(--tt-border-color);
-
-      input {
-        width: 100%;
-        border: none;
-        outline: none;
-        background: transparent;
-        color: var(--tt-text-color);
-        font-size: 13px;
-        font-family: inherit;
-
-        &::placeholder {
-          color: var(--tt-text-tertiary, rgba(0, 0, 0, 0.3));
-        }
-      }
-    }
-
-    &-list {
-      max-height: 280px;
-      overflow-y: auto;
-      padding: 4px;
-    }
-
-    &-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      padding: 6px 8px;
-      border: none;
-      border-radius: var(--tt-radius-md, 6px);
-      background: transparent;
-      color: var(--tt-text-color);
-      font-size: 13px;
-      font-family: inherit;
-      text-align: left;
-      cursor: pointer;
-      transition: background 0.12s ease;
-
-      &:hover,
-      &--current {
-        background: var(--tt-bg-subtle, rgba(0, 0, 0, 0.05));
-      }
-
-      span {
-        min-width: 0;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-      }
-    }
-
-    &-empty {
-      padding: 12px 10px;
-      font-size: 12px;
-      color: var(--tt-text-tertiary, rgba(0, 0, 0, 0.3));
-    }
-  }
-
-  @keyframes breadcrumbs-dropdown-in {
-    from {
-      opacity: 0;
-      transform: translateY(-4px) scale(0.98);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  .dark &__dropdown {
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
-
-    .breadcrumbs__dropdown-item:hover,
-    .breadcrumbs__dropdown-item--current {
-      background: var(--tt-bg-subtle, rgba(255, 255, 255, 0.06));
-    }
-    .breadcrumbs__dropdown-search input::placeholder,
-    .breadcrumbs__dropdown-empty {
-      color: var(--tt-text-tertiary, rgba(255, 255, 255, 0.3));
-    }
   }
 
   &__crumb {
@@ -136,13 +32,14 @@
     letter-spacing: -0.01em;
     font-size: 14.5px !important;
     color: var(--tt-text-primary);
-
     cursor: default;
     font-family: inherit;
 
     &--link {
       cursor: pointer;
-      transition: background 0.12s ease, color 0.12s ease;
+      transition:
+        background 0.12s ease,
+        color 0.12s ease;
 
       &:hover {
         background: var(--tt-bg-subtle, rgba(0, 0, 0, 0.04));
@@ -166,11 +63,6 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-  }
-
-  &__sep {
-    flex: none; // never shrink the chevron
-    color: var(--tt-text-tertiary, rgba(0, 0, 0, 0.3));
   }
 
   &__ellipsis {
@@ -206,4 +98,108 @@
       color: var(--tt-text-tertiary, rgba(255, 255, 255, 0.3));
     }
   }
+}
+
+// ── Dropdown ────────────────────────────────────────────────────────────────
+//
+// TOP LEVEL, NOT nested under .breadcrumbs — and that's the whole bug that made
+// this look nothing like the design. CrumbDropdown renders through createPortal
+// to document.body, so it is NOT a descendant of .breadcrumbs in the DOM. Nested
+// under it, every rule compiled to `.breadcrumbs .breadcrumbs__dropdown …` and
+// matched nothing: what you saw was the bare Card and Button primitives with
+// their own defaults (hence the saturated blue "active" row — that's Button's
+// state style, not this one).
+
+.breadcrumbs__dropdown {
+  position: fixed;
+  z-index: 1000;
+  min-width: 260px;
+  max-width: 300px;
+  padding: 0;
+  background: var(--tt-gray-light-50);
+  .dark & {
+    background: var(--tt-gray-dark-100);
+  }
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md, 10px);
+  box-shadow: none;
+  overflow: hidden;
+  transform-origin: top left;
+  animation: breadcrumbs-dropdown-in 0.15s var(--tt-transition-easing-default);
+  font-family: inherit;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+
+  // The section label ("private"). Small, muted, uppercase — a quiet header, not
+  // a title competing with the rows beneath it.
+  .tiptap-card-group-label {
+    padding: 8px 10px 4px;
+    color: color-mix(in srgb, var(--tt-text-primary) 45%, transparent);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+}
+
+.breadcrumbs__dropdown-list {
+  // Was declared twice (280px then 150px) — the second won, which is why the
+  // list was so cramped.
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--tt-scrollbar-color) transparent;
+}
+
+.breadcrumbs__dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 28px; // Notion's row height
+  min-height: 28px;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--tt-radius-sm, 6px);
+  background: transparent !important; // beat Button's own background
+  color: var(--tt-text-primary);
+  font-size: 13.5px;
+  font-weight: 400;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: var(--tt-button-hover-bg-color) !important;
+  }
+
+  // The current page. A quiet grey tint and a heavier label — NOT a saturated
+  // accent fill, which is what Button's active state was giving it.
+  &--current {
+    background: var(--tt-button-hover-bg-color) !important;
+    font-weight: 500;
+  }
+
+  .tiptap-button-text,
+  span {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+.breadcrumbs__dropdown-empty {
+  padding: 12px 10px;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--tt-text-primary) 40%, transparent);
+}
+
+@keyframes breadcrumbs-dropdown-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
