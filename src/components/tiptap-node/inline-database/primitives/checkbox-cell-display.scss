@@ -6,29 +6,23 @@
 }
 
 .db-checkbox {
-  // width: 16px !important;
-  // height: 16px !important;
-  
   width: 18px !important;
   height: 16.5px !important;
   min-width: 18px !important;
   min-height: 16.5px !important;
   border: 1.5px solid var(--tt-checklist-border-color);
-  border-radius: 1px;
-  line-height:34px;
-  margin-top: 8px;
-
-   
+  border-radius: 3px;      // 1px is nearly square-sharp; 3px reads as a checkbox
+  line-height: 1;          // ← was 34px
   background: transparent !important;
   display: flex;
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer;
-  transition: background var(--tt-transition-duration-short),
-              border-color var(--tt-transition-duration-short);
   flex-shrink: 0;
-  margin: auto 5px !important;
- 
+  margin: 0 5px;           // ← single margin, no !important auto
+}
+
+.db-checkbox {
 
   &:hover {
     border-color: var(--tt-brand-color-400);
@@ -46,7 +40,6 @@
   svg {
     stroke: white;
     color: white;
-    
   }
 
   .dark & {
@@ -54,4 +47,9 @@
     border-color: var(--tt-brand-color-400);
   }
 }
+}
+
+.db-node-cell {
+  align-items: center;      // vertical center in the 34px row
+  justify-content: center;  // add if you want it horizontally centered in the column
 }

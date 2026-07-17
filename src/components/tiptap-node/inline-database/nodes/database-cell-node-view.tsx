@@ -68,6 +68,13 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
     return style;
   }, [isHidden, sticky]);
 
+  // derive wrap from the view/property — pick whichever your model uses
+  const unwrapped = !!(
+    propertyId &&
+    data?.view?.type === "table" &&
+    data?.view?.unwrappedProperties?.includes(propertyId)
+  );
+
   // Data not published yet, or unresolvable cell → empty grid cell. No content
   // hole: nothing in this node is ProseMirror-owned anymore.
   if (!data || !property || !recordId || !propertyId) {
@@ -105,6 +112,7 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
           templateId={data.templateId}
           readonly={data.locked}
           onChange={(v) => data.setCellValue(recordId, propertyId, v)}
+          unwrapped={unwrapped}
         />
       )}
     </NodeViewWrapper>

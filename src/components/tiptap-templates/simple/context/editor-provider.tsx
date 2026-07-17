@@ -22,6 +22,8 @@ import type { DataSource, Page } from "src/types";
 import { useCollabDoc } from "../hooks/use-collab-doc";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { EditorSyncContext } from "./editor-sync-context"; // adjust path
+import { useCreatePage } from "src/hooks/use-create-page";
+import { makePage } from "src/utils/make-page";
 
 // Exactly the array type useEditorExtensions produces — derived so it can't
 // drift from the real return, whatever member types are in it (one of them
@@ -121,7 +123,7 @@ function EditorInstance({
   ydoc,
   provider,
   baseExtensions,
-  // refsRef,
+  refsRef,
   children,
 }: EditorInstanceProps) {
   const { person } = useCurrentPerson();
@@ -181,6 +183,21 @@ function EditorInstance({
     // No `content` — Collaboration reads initial content from the Y.Doc,
     // which useCollabDoc has already seeded (or is genuinely empty/new).
   });
+
+  const { mutateAsync: createPage } = useCreatePage();
+
+  useEffect(() => {
+    if (!editor) return;
+    editor.commands.syncSlashCommandCtx({
+      activePageId: page.id,
+      setActivePageId: (id) => refsRef.current?.setActivePageId(id),
+      addPageAsync: ({ title, parentId }) => {
+        const newPage = makePage({ title, parentId });
+        return createPage(newPage);
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, page.id, createPage]);
 
   // Baseline capture for db-page structure guard — same trailing-paragraph
   // strip as before, just running once against the live (already-synced)

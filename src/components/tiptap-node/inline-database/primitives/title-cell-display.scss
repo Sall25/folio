@@ -7,14 +7,14 @@
 }
 
 .db-cell-title {
-  
-  display: flex;
+   display: flex;
   align-items: center;
   width: 100%;
   min-width: 0;
   height: 100%;
   padding: 0;
   gap: 6px;
+  margin: auto 5px;
   cursor: text;
 
   &__icon {
@@ -151,5 +151,12 @@
 
   &:active {
     cursor: grabbing;
+  }
+}
+
+.open-button{
+  background-color: var(--tt-gray-light-100);
+  .dark & {
+    background-color: var(--tt-gray-dark-300);
   }
 }

@@ -377,8 +377,34 @@ th .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::bef
 /* Suppress placeholder inside list items and blockquote */
 li .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before,
 blockquote .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before {
-  left: 1rem;
+  left: 1.2rem;
 }
+
+.callout-root:not(.callout-root--no-icon)
+  > .callout-content
+  > div
+  > .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before {
+  left: 2.3rem;
+}
+
+.callout-root--no-icon
+  > .callout-content
+  > div
+  > .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before {
+  left: 1.6rem;
+}
+
+.callout-content p.is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before {
+  left: 1.3rem !important;
+  padding-left: 1px;
+}
+
+/* make the list the positioning context so the p's placeholder measures
+   from the li/marker, not the callout's left edge */
+.callout-content :is(ol, ul) {
+  position: relative;
+}
+
 
 ul[data-type="taskList"] .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before {
   left: 1.9rem;
@@ -390,8 +416,18 @@ ul[data-type="taskList"] .is-empty[data-placeholder]:has(> .ProseMirror-trailing
   height: 28px;
   padding: 2px 0;
 }
-.node-callout .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before{
+/* icon present → clear the icon slot */
+.node-callout
+  .callout-root:not(.callout-root--no-icon)
+  .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before {
   left: 4.3rem;
+}
+
+/* icon removed → sit at the content's left padding, next to the cursor */
+.node-callout
+  .callout-root--no-icon
+  .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before {
+  left: 1.110rem;
 }
 .node-container .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before{
   left: 1rem;

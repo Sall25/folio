@@ -30,8 +30,11 @@ Box Model: box-sizing: border-box
   color: inherit;
   box-sizing: border-box;
   font-weight: 600;
+  
   &:hover{
     background-color: var(--page-link-node-hover-bg-color);
+    width: 100%;
+    border: none;
   }
 
 }
@@ -45,6 +48,10 @@ Box Model: box-sizing: border-box
   background-color: var(--tt-card-bg-color);
   border: 1px solid var(--tt-border-color);
   border-radius: 5px;
+
+  .dark & {
+     background-color: var(--tt-gray-dark-100);
+  }
   
   &__icon {
     margin-bottom: 6px;

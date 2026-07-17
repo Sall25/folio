@@ -34,6 +34,28 @@ $pill-tint: 18%;
   }
 }
 
+// TINT-only: faint background from the colour token, NO text colour.
+// Same token/loop shape as pill-color-variants — just the fill, weaker, no ink.
+@mixin pill-tint-variants($base) {
+  @each $c in $pill-colors {
+    #{$base}--#{$c} {
+      background: color-mix(
+        in srgb,
+        var(--tt-color-text-#{$c}) 8%,
+        transparent
+      );
+    }
+  }
+}
+
+@mixin pill-tint-variants($base) {
+  @each $c in $pill-colors {
+    #{$base}--#{$c} {
+      --col-ink: var(--tt-color-text-#{$c});          // expose the token
+      background: color-mix(in srgb, var(--col-ink) 8%, transparent);
+    }
+  }
+}
 // The shape of a pill, without any colour. Colour comes from the variants above.
 @mixin pill-base {
   display: inline-flex;

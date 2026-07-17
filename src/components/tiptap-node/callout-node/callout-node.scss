@@ -296,3 +296,68 @@
   color: var(--tt-gray-light-a-800);
   .dark & { color: var(--tt-gray-dark-a-800); }
 }
+
+
+// ── Hover options (⋯) ─────────────────────────────────────────────────────────
+// The only entry point once the icon is removed — hence always present (not
+// gated on showIcon), revealed on callout hover.
+
+.callout-options-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: var(--tt-radius-sm);
+  color: var(--tt-theme-text);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0;
+  transition:
+    opacity var(--tt-transition-duration-short),
+    background var(--tt-transition-duration-short);
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+    .dark & { background: rgba(255, 255, 255, 0.08); }
+  }
+}
+
+.callout-root:hover .callout-options-btn { opacity: 0.6; }
+.callout-options-btn:hover { opacity: 1; }
+
+.callout-options-menu {
+  min-width: 160px;
+  background: var(--tt-bg-color);
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-lg);
+  box-shadow: var(--tt-shadow-elevated-md);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.callout-options-item {
+  text-align: left;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  border-radius: var(--tt-radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--tt-theme-text);
+  cursor: pointer;
+  transition: background var(--tt-transition-duration-short);
+
+  &:hover {
+    background: var(--tt-gray-light-a-100);
+    .dark & { background: var(--tt-gray-dark-a-100); }
+  }
+}

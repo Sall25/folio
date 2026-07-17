@@ -159,14 +159,35 @@
     }
   }
 
-  .db-node-cell[data-wrap="true"] {
+  .db-cell[data-wrap="true"] {
+  align-items: flex-start;
+  height: auto;
+  overflow: visible;
+  white-space: normal;
+  padding: 4px 5px;   // was `auto 5px` — auto is invalid for padding, gets dropped
+
+  .db-cell-editor__display {
+    height: auto;
+    align-items: flex-start;
+  }
+
+  // the text run itself — where the ellipsis is
+  .db-cell-text__display,
+  .db-cell-title__text {
     white-space: normal;
+    overflow: visible;
     text-overflow: clip;
     overflow-wrap: anywhere;
     word-break: break-word;
-    align-items: flex-start;
-    padding: 0;
-    // padding-top: 6px;
-    // padding-bottom: 6px;
   }
+
+  .tiptap-button {
+    height: auto;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin: 5px 0;
+    padding: 0 !important;
+  }
+}
+
 }

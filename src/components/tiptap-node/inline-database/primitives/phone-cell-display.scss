@@ -9,9 +9,19 @@
   gap: 6px;
   width: 100%;
   min-width: 0;
+  color: var(--tt-text-primary);
+  text-decoration-color: var(--tt-gray-light-a-600);
+  .dark & {
+    text-decoration-color: rgba(143, 142, 142, 0.462) !important;
+  }
 }
 
 .db-cell-phone {
+   color: var(--tt-text-primary);
+    text-decoration-color: var(--tt-gray-light-a-600);
+    .dark & {
+      text-decoration-color: rgba(143, 142, 142, 0.462) !important;
+    }
   &__link {
     // Takes only its text and shrinks with ellipsis — never fills the cell, or
     // there'd be nowhere left to click that isn't the link.

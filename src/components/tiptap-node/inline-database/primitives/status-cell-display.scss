@@ -8,7 +8,8 @@
   cursor: pointer;
   transition: filter var(--tt-transition-duration-short)
     var(--tt-transition-easing-default);
-  padding: 0;
+  padding: 2px 5px !important;
+  margin: auto 5px;
   
   &:hover {
     filter: brightness(1.08);

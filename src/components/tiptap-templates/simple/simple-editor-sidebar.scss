@@ -40,6 +40,8 @@
   box-shadow: none;
   padding: 0;
   z-index: 10;
+  transition: width 200ms ease;
+  overflow: hidden;
 
   .tiptap-card-body {
     overflow-x: hidden;
@@ -299,6 +301,10 @@
 
 // ── Collapsed state ──
 .sidebar--collapsed {
+  background: transparent;
+  border: none;
+  position: relative;
+ 
   .sidebar-nav {
      padding: 1.5px 6px;
     display: flex;
@@ -327,6 +333,23 @@
   .sidebar-user-avatar {
     margin: 0 auto;
   }
+}
+
+
+
+.tiptap-button-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+
+    transition:
+        opacity 120ms ease,
+        transform 120ms ease;
+}
+
+.sidebar--collapsed .tiptap-button-text {
+    opacity: 0;
+    transform: translateX(-8px);
 }
 
 // ── Page item tree ──

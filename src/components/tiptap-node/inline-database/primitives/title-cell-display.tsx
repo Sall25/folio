@@ -66,6 +66,7 @@ export function TitleCellDisplay({
         width: "100%",
         alignItems: "center",
         background: "var(--tt-bg-color)",
+        position: "relative",
       }}
     >
       <CellEditorPopover
@@ -115,11 +116,12 @@ export function TitleCellDisplay({
           button disappeared. */}
       {showOpenButton && (
         <>
-          <Spacer size={10} orientation="horizontal" />
+          <Spacer size={5} orientation="horizontal" />
           <Button
+            className="open-button"
             style={{
-              minHeight: 24,
-              height: 24,
+              minHeight: 20,
+              height: "20px !important",
               fontSize: 14,
               minWidth: openVariant === "edit" ? "fit-content" : 68,
               alignItems: "center",
@@ -130,6 +132,8 @@ export function TitleCellDisplay({
               opacity: hover ? 1 : 0,
               transition: "opacity 0.15s ease",
               flexShrink: 0,
+              position: "absolute",
+              right: 0,
             }}
             onClick={(e) => {
               e.stopPropagation();

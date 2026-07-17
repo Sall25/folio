@@ -5,11 +5,11 @@ import {
   Store,
   LibraryBig,
   Sparkles,
-  PanelRight,
   Settings,
   LayoutTemplate,
   ChevronsLeft,
   PenBox,
+  Menu,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -35,7 +35,6 @@ import { makePage } from "src/utils/make-page";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage as updatePage } from "src/api/pages";
-import { SidebarBodySkeleton } from "./components/skeletons";
 import { useActivePage } from "./context/active-page-context";
 import { Section } from "./components/section";
 import { ScrollFog } from "src/components/tiptap-ui-primitive/scroll-frog";
@@ -155,15 +154,30 @@ function User() {
   );
 }
 
-function WorkspaceHeader() {
+function Expand() {
   const { t } = useTranslation();
   const { collapsed, onCollapsedChange } = useEditorLayout();
-  const [, setHide] = useState(true);
 
   const onToggle = useCallback(
     () => onCollapsedChange(!collapsed),
     [onCollapsedChange, collapsed],
   );
+  return (
+    <Button onClick={onToggle} variant="ghost" tooltip={t("sidebar.expand")}>
+      <Menu className="tiptap-button-icon" />
+    </Button>
+  );
+}
+
+function WorkspaceHeader() {
+  // const { t } = useTranslation();
+  const { collapsed, onCollapsedChange } = useEditorLayout();
+  const [, setHide] = useState(true);
+
+  // const onToggle = useCallback(
+  //   () => onCollapsedChange(!collapsed),
+  //   [onCollapsedChange, collapsed],
+  // );
   return (
     <CardItemGroup
       orientation={collapsed ? "vertical" : "horizontal"}
@@ -178,7 +192,7 @@ function WorkspaceHeader() {
       {/* {!collapsed && <Logo collapsed={collapsed} />} */}
       {!collapsed && <User />}
 
-      <Spacer orientation="horizontal" />
+      {/* <Spacer orientation="horizontal" />
 
       {collapsed && (
         <Button
@@ -192,7 +206,7 @@ function WorkspaceHeader() {
             className="tiptap-button-icon"
           />
         </Button>
-      )}
+      )} */}
     </CardItemGroup>
   );
 }
@@ -405,25 +419,30 @@ export function SimpleEditorSidebar() {
         flexDirection: "column",
       }}
     >
-      <CardHeader style={{ border: "none" }}>
-        <CardItemGroup orientation="vertical" style={{ width: "100%" }}>
-          <WorkspaceHeader />
-          <Spacer orientation="vertical" size={4} />
-          <NavItems />
-        </CardItemGroup>
-      </CardHeader>
+      {!collapsed && (
+        <CardHeader
+          className="sidebar-header-content"
+          style={{ border: "none" }}
+        >
+          <CardItemGroup orientation="vertical" style={{ width: "100%" }}>
+            <WorkspaceHeader />
+            <Spacer orientation="vertical" size={4} />
+            <NavItems />
+          </CardItemGroup>
+        </CardHeader>
+      )}
 
-      <CardBody
-        style={{
-          width: "100%",
-          paddingTop: 0,
-          paddingBottom: 0,
-          paddingLeft: 10,
-          paddingRight: 5,
-        }}
-      >
-        {/* <Spacer orientation="vertical" size={20} /> */}
-        {!collapsed && (
+      {!collapsed && (
+        <CardBody
+          className="sidebar-body-content"
+          style={{
+            width: "100%",
+            paddingTop: 0,
+            paddingBottom: 0,
+            paddingLeft: 10,
+            paddingRight: 5,
+          }}
+        >
           <>
             <ScrollFog edge="top" color="var(--sidebar-fog-color)" />
             <Spacer orientation="vertical" size={15} />
@@ -488,8 +507,8 @@ export function SimpleEditorSidebar() {
             <LibraryPaletteTrigger />
             <Spacer orientation="vertical" size={25} />
           </>
-        )}
-      </CardBody>
+        </CardBody>
+      )}
 
       {/* <Separator orientation="horizontal" style={{ height: 0.5 }} /> */}
       {/* {!collapsed && <WorkSpaceFooter onCreatePage={onCreatePage} />} */}

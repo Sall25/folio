@@ -15,13 +15,34 @@ import { NotificationBell } from "src/components/tiptap-ui/notification";
 import { MorePopover } from "./more-popover";
 import { useActivePage } from "./context/active-page-context";
 import type { View } from "src/types";
-import { Home, LibraryBig } from "lucide-react";
+import { Home, LibraryBig, Menu } from "lucide-react";
 import { PageCategorySelect } from "./components/page-category-select";
 import { Breadcrumbs } from "./breadcrumbs";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import EditedTimeButton from "./components/edited-time-button/edited-time-button";
 import { useTranslation } from "react-i18next";
+import { useEditorLayout } from "./context/editor-layout-context";
+import { useCallback } from "react";
+
+function Expand() {
+  //const { t } = useTranslation();
+  const { collapsed, onCollapsedChange } = useEditorLayout();
+
+  const onToggle = useCallback(
+    () => onCollapsedChange(!collapsed),
+    [onCollapsedChange, collapsed],
+  );
+  return (
+    <Button
+      onClick={onToggle}
+      variant="ghost"
+      //tooltip={t("sidebar.expand")}
+    >
+      <Menu className="tiptap-button-icon" />
+    </Button>
+  );
+}
 
 // ============================================================
 // Types
@@ -64,9 +85,12 @@ export const MainToolbarContent = ({
   const { activePage, activePageId } = useActivePage();
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const { t } = useTranslation();
+  const { collapsed } = useEditorLayout();
   return (
     <>
       <ToolbarGroup>
+        {collapsed && <Expand />}
+        {collapsed && <Spacer orientation="horizontal" size={5} />}
         {view === "home" && (
           <Button variant="ghost">
             <Home className="tiptap-button-icon" strokeWidth={2} />
@@ -152,28 +176,32 @@ export const SimpleEditorToolbar = ({
   versionSidebarWidth,
   onTriggerVersionHistory,
   view,
-}: SimpleEditorToolbarProps) => (
-  <Toolbar
-    ref={toolbarRef}
-    style={
-      {
-        "--sidebar-width": `${sidebarWidth}px`,
-        "--version-sidebar-width": `${versionSidebarWidth ?? 0}px`,
-        ...(isMobile ? { bottom: `calc(100% - ${height - rectY}px)` } : {}),
-      } as React.CSSProperties
-    }
-  >
-    {mobileView === "main" ? (
-      <MainToolbarContent
-        view={view}
-        isMobile={isMobile}
-        onTriggerVersionHistory={onTriggerVersionHistory}
-      />
-    ) : (
-      <MobileToolbarContent
-        type={mobileView === "highlighter" ? "highlighter" : "link"}
-        onBack={() => onMobileViewChange("main")}
-      />
-    )}
-  </Toolbar>
-);
+}: SimpleEditorToolbarProps) => {
+  const { collapsed } = useEditorLayout();
+  return (
+    <Toolbar
+      ref={toolbarRef}
+      style={
+        {
+          "--sidebar-width": `${sidebarWidth}px`,
+          "--version-sidebar-width": `${versionSidebarWidth ?? 0}px`,
+          padding: collapsed ? "10px 0px !important" : 10,
+          ...(isMobile ? { bottom: `calc(100% - ${height - rectY}px)` } : {}),
+        } as React.CSSProperties
+      }
+    >
+      {mobileView === "main" ? (
+        <MainToolbarContent
+          view={view}
+          isMobile={isMobile}
+          onTriggerVersionHistory={onTriggerVersionHistory}
+        />
+      ) : (
+        <MobileToolbarContent
+          type={mobileView === "highlighter" ? "highlighter" : "link"}
+          onBack={() => onMobileViewChange("main")}
+        />
+      )}
+    </Toolbar>
+  );
+};
