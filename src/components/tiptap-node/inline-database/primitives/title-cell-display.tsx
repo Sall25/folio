@@ -116,7 +116,6 @@ export function TitleCellDisplay({
           button disappeared. */}
       {showOpenButton && (
         <>
-          <Spacer size={5} orientation="horizontal" />
           <Button
             className="open-button"
             style={{

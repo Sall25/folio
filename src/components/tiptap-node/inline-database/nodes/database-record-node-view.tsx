@@ -1,7 +1,14 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { NodeViewWrapper, NodeViewContent } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/core";
 import { useDatabaseBridgeData } from "../hooks/use-database-bridge-data";
+import {
+  recordSelection,
+  useRecordRowState,
+} from "../utils/record-selection-store";
+import { useRowAnchor } from "../hooks/use-row-anchor";
+import { beginRowDragSelect } from "../utils/row-drag-select";
 
 /**
  * databaseRecord NodeView — one row.
@@ -19,9 +26,13 @@ import { useDatabaseBridgeData } from "../hooks/use-database-bridge-data";
  *   - filtered out → display:none (the node is untouched, just not painted)
  *   - sort order   → CSS `order`, from the record's index in sortedRecords
  *
- * Reordering the actual record nodes would impose one viewer's sort on everyone,
- * which is exactly the bug this avoids. (Contrast column REORDER, which really is
- * a schema change and does move the cell nodes — see use-database-seed.ts.)
+ * SELECTION checkbox: PORTALED to document.body and pinned with position:fixed.
+ * It cannot live in the row: the row's ancestors clip it
+ * (.simple-editor-main overflow-x:hidden, plus the paint containment implied by
+ * content-visibility:auto on .tiptap.ProseMirror), and reserving in-grid gutter
+ * padding would shift every %/fr column track out of sync with the header.
+ * Only the hovered row (published by the drag handle) and selected rows mount a
+ * portal, so this is at most `selected + 1` extra nodes.
  */
 export default function DatabaseRecordNodeView({
   node,
@@ -31,12 +42,10 @@ export default function DatabaseRecordNodeView({
   const databaseId = node.attrs.databaseId as string | null;
 
   const data = useDatabaseBridgeData(editor, databaseId);
+  const { isSelected, isHovered } = useRecordRowState(databaseId, recordId);
 
-  console.log("[record]", { recordId, databaseId, hasData: !!data });
+  const [wrapperEl, setWrapperEl] = useState<HTMLElement | null>(null);
 
-  // sortedRecords is already filtered AND sorted by DatabaseNodeView, so a
-  // record's presence gives visibility and its index gives order — one lookup
-  // covers both.
   const { isFilteredOut, order } = useMemo(() => {
     if (!data || !recordId) {
       return { isFilteredOut: false, order: undefined as number | undefined };
@@ -48,17 +57,75 @@ export default function DatabaseRecordNodeView({
     };
   }, [data, recordId]);
 
+  const [pointerOnCheckbox, setPointerOnCheckbox] = useState(false);
+
+  const showCheckbox =
+    !!recordId &&
+    !!databaseId &&
+    !isFilteredOut &&
+    (isHovered || isSelected || pointerOnCheckbox);
+
+  const anchor = useRowAnchor(wrapperEl, showCheckbox);
+
   return (
     <NodeViewWrapper
       as="div"
+      ref={setWrapperEl}
       data-type="database-record"
       data-record-id={recordId ?? undefined}
+      data-selected={isSelected || undefined}
+      data-hovered={isHovered || undefined}
       className="db-record"
       style={{
         display: isFilteredOut ? "none" : undefined,
         gridRow: order !== undefined ? order + 1 : undefined,
       }}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onPointerDown={(e: any) => {
+        if (!databaseId || !recordId) return;
+
+        const target = e.target as HTMLElement;
+
+        // Don't hijack real editing: presses inside a cell's editable content,
+        // or on an interactive control, behave normally.
+        const inEditable = target.closest(
+          '[contenteditable="true"], input, textarea, button, a, [role="button"]',
+        );
+
+        // Once a selection exists, dragging across rows extends it (Notion
+        // behavior) — that takes priority over placing a caret.
+        const hasSelection = recordSelection.get(databaseId).length > 0;
+
+        if (inEditable && !hasSelection) return;
+
+        beginRowDragSelect(databaseId, recordId, wrapperEl, e);
+      }}
     >
+      {showCheckbox &&
+        anchor &&
+        createPortal(
+          <span
+            className="db-record__select"
+            contentEditable={false}
+            onPointerEnter={() => setPointerOnCheckbox(true)}
+            onPointerLeave={() => setPointerOnCheckbox(false)}
+            style={{ top: anchor.top + 17, left: anchor.left - 16 }}
+          >
+            <input
+              type="checkbox"
+              checked={isSelected}
+              aria-label="Select record"
+              draggable={false}
+              onPointerDown={(e) => {
+                console.log("[dragselect] input pointerdown");
+                beginRowDragSelect(databaseId!, recordId!, wrapperEl, e);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onChange={() => {}}
+            />
+          </span>,
+          document.body,
+        )}
       <NodeViewContent as="div" className="db-record__cells" />
     </NodeViewWrapper>
   );

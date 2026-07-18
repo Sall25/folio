@@ -23,23 +23,15 @@
   .db-node-grid__body,
   .db-node-grid__body > [data-node-view-content-react],
   .db-node-grid__body > [data-node-view-content-react] > [data-node-view-wrapper],
-  .react-renderer.node-databaseRecord {
+  .db-record{
     display: contents;
   }
 
-  // The record's grid BOX — a real grid row spanning all columns, subgridding
-  // them for its cells. This is the element DatabaseRecordNodeView renders, so
-  // it can set display:none (filtered out) and `order` (view sort) on it.
-  .db-record {
+  .react-renderer.node-databaseRecord{
     display: grid;
     grid-column: 1 / -1;
     grid-template-columns: subgrid;
     align-items: stretch;
-
-    // The row paints its own background and bottom border, so it reads as one
-    // continuous row across the FULL table width. The cells only draw their
-    // vertical separators. Without this the row ended at the last property
-    // column, leaving the trailing area (where the header's +/… sit) blank.
     background: var(--tt-bg-color);
     border-bottom: 1px solid var(--tt-border-color);
   }
@@ -190,4 +182,155 @@
   }
 }
 
+}
+
+.react-renderer.node-databaseRecord{
+  .ProseMirror-selectednode{
+    .db-node-cell--atom,
+    .db-node-cell{
+      background-color: var(--tt-selection-color) !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+    }
+    .db-cell{
+       .db-cell-editor{
+        &__display{
+          background-color: transparent !important;
+        }
+      }
+      .tiptap-card-item-group{
+        background-color: transparent !important;
+      }
+    }
+   
+    //  FIX SMALL DOT
+    .db-node-cell.db-node-cell--atom::after {
+      opacity: 0;
+    }
+    .db-node-cell.db-node-cell--atom:hover::after {
+      opacity: 1; /* Show on hover if needed */
+    }
+  }
+}
+
+
+// ── Record selection checkbox ───────────────────────────────────────────────
+// The ROW BOX is the renderer div (.db-record is display:contents and generates
+// no box), so the positioning context and the row tint must live here.
+// The data-* attributes, however, are on .db-record — the element the NodeView
+// renders. Selectors still work across display:contents, so we match on
+// .db-record for state and paint on the renderer via :has().
+.react-renderer.node-databaseRecord {
+  position: relative;
+
+  // Selected row tint. Applied here because .db-record can't paint a
+  // background. (Same reason the .ProseMirror-selectednode rule above, which
+  // sets `.db-record { background: ... }`, currently has no effect.)
+  &:has(> .db-record[data-selected]) {
+    .db-node-cell {
+      background: var(--tt-brand-color-50, rgba(35, 131, 226, 0.08));
+    }
+  }
+}
+
+// Selected row — keyed off the row's own data attribute, NOT the checkbox's
+// :checked state. The checkbox is portaled to document.body, so it shares no
+// ancestor with the row and can never be a CSS ancestor of it.
+// .db-record is display:contents (paints nothing), so the cells carry the tint.
+.react-renderer.node-databaseRecord:has(> .db-record[data-selected]) {
+  border-bottom: 1px solid var(--tt-bg-color);
+
+  .db-node-cell--atom,
+  .db-node-cell {
+    background-color: var(--tt-selection-color) !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+
+  .db-cell {
+    .db-cell-editor__display {
+      background-color: transparent !important;
+    }
+    .tiptap-card-item-group {
+      background-color: transparent !important;
+    }
+  }
+
+  // FIX SMALL DOT
+  .db-node-cell.db-node-cell--atom::after {
+    opacity: 0;
+  }
+  .db-node-cell.db-node-cell--atom:hover::after {
+    opacity: 1;
+  }
+}
+
+.db-record__select {
+  position: fixed;
+  transform: translateY(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    box-sizing: border-box;
+    border-radius: 3px;
+    border: 1.5px solid var(--tt-icon-secondary);
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+
+    &:hover {
+      border-color: var(--tt-text-secondary);
+      background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+    }
+
+   &:checked {
+      background: var(--tt-brand-color-500);
+      border-color: var(--tt-brand-color-500);
+
+      &::after {
+        content: "";
+        position: absolute;
+        left: 4.5px;
+        top: 1.5px;
+        width: 4px;
+        height: 8px;
+        border: solid #fff;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+
+      &:hover {
+        background: var(--tt-brand-color-600, var(--tt-brand-color-500));
+        border-color: var(--tt-brand-color-600, var(--tt-brand-color-500));
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--tt-brand-color-400);
+      outline-offset: 2px;
+    }
+  }
+}
+
+body.db-row-dragselect {
+  user-select: none;
+  cursor: default;
+
+  .ProseMirror {
+    caret-color: transparent;
+  }
 }

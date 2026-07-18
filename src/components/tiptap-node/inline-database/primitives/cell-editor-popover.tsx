@@ -34,7 +34,6 @@ export function CellEditorPopover({
 
   const open = controlledOpen ?? uncontrolled;
   const setOpen = onOpenChange ?? setUncontrolled;
-  console.log("[popover] open =", open);
 
   if (readonly) {
     return <div className="db-cell-editor__display">{trigger}</div>;

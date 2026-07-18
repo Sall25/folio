@@ -60,6 +60,9 @@ import {
 } from "src/types";
 import "./database-table-node-view.scss";
 import "./database-node.scss";
+import { SelectionToolbar } from "../components/selection-toolbar";
+import { useVisibleSelection } from "../hooks/use-visible-selection";
+import { removeRecordNodes } from "../utils/remove-record-nodes";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -118,6 +121,21 @@ export function DatabaseNodeView({
     activeView?.sorts,
     source?.properties,
   ]);
+
+  // Ids in view order — the visible-selection intersection needs a stable
+  // array identity, so memo it rather than mapping inline.
+  const sortedRecordIds = useMemo(
+    () => sortedRecords.map((r) => r.id),
+    [sortedRecords],
+  );
+
+  // Selection ∩ visible rows. Selection survives filter changes, so a record
+  // can stay selected while filtered out — bulk actions must only touch what
+  // the user can see.
+  const visibleSelection = useVisibleSelection(
+    attrs.id ?? null,
+    sortedRecordIds,
+  );
 
   // Register present views (existing effect)
   useEffect(() => {
@@ -361,7 +379,13 @@ export function DatabaseNodeView({
               locked={locked}
             />
           )}
-          <div style={{ maxWidth: "var(--db-editor-width)", paddingRight: 20 }}>
+          <div
+            style={{
+              maxWidth: "var(--db-editor-width)",
+              paddingRight: 20,
+              position: "relative",
+            }}
+          >
             <DatabaseToolbar
               properties={source.properties}
               attrs={attrs}
@@ -378,6 +402,23 @@ export function DatabaseNodeView({
                   : updateAttributes({ ...attrs, hideTitle: hide })
               }
             />
+            {attrs.id && (
+              <SelectionToolbar
+                databaseId={attrs.id}
+                recordIds={visibleSelection}
+                properties={source.properties}
+                onSetValue={(propertyId, value) =>
+                  visibleSelection.forEach((id) =>
+                    setCellValue(id, propertyId, value as never),
+                  )
+                }
+                onDelete={() => {
+                  if (editor && attrs.id) {
+                    removeRecordNodes(editor, attrs.id, visibleSelection);
+                  }
+                }}
+              />
+            )}
           </div>
 
           <CardItemGroup orientation="horizontal">
@@ -462,6 +503,7 @@ export function DatabaseNodeView({
       onAddProperty={addProperty}
       onCommitColumnWidth={commitColumnWidth}
       onNewRecord={newRecord}
+      databaseId={attrs.id}
     />,
   );
 }

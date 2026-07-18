@@ -6,7 +6,7 @@
 
 .dark{
   --tt-combobox-border-color: var(--tt-gray-dark-a-50);
-  --tt-combobox-bg-color: var(--tt-gray-dark-50);
+  --tt-combobox-bg-color: var(--tt-gray-dark-100);
   --tt-combobox-text-color: var(--tt-gray-dark-a-600);
 }
 
@@ -15,13 +15,13 @@
   min-width: 15rem;
   --padding: .375rem;
   --border-width: 1px;
-  border-radius: calc(var(--padding) + var(--tt-radius-lg) + var(--border-width));
+  border-radius: var(--tt-radius-md);
   border: var(--border-width) solid var(--tt-combobox-border-color);
   background-color: var(--tt-combobox-bg-color);
   height: 100%;
   color: var(--tt-combobox-text-color);
   padding: var(--padding);
-  box-shadow: var(--tt-shadow-elevated-md);
+  box-shadow: var(--tt-shadow-elevated-sm);
   max-width: 18rem;
   max-height: var(--popover-available-height);
   outline: none;

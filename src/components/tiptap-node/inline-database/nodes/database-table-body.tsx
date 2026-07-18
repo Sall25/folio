@@ -13,7 +13,9 @@ import type {
   DatabaseView,
   PropertyConfig,
   Page,
+  ID,
 } from "src/types";
+import { recordSelection } from "../utils/record-selection-store";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -44,6 +46,8 @@ interface Props {
     width: number,
   ) => void;
   onNewRecord: () => void;
+
+  databaseId?: ID;
 }
 
 export function DatabaseTableBody({
@@ -62,6 +66,7 @@ export function DatabaseTableBody({
   onAddProperty,
   onCommitColumnWidth,
   onNewRecord,
+  databaseId,
 }: Props) {
   // An empty database renders as a bare header — it doesn't read as a table at
   // all. These rows give it shape. They are PURELY presentational: no records
@@ -86,6 +91,12 @@ export function DatabaseTableBody({
       className="db-table"
       data-type="database-table"
       data-locked={locked ? "true" : "false"}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onPointerDown={(e: any) => {
+        if ((e.target as HTMLElement).closest(".db-record") || !databaseId)
+          return;
+        recordSelection.clear(databaseId);
+      }}
     >
       <DatabaseTableHeader
         visibleProperties={visibleProperties}

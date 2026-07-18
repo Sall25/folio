@@ -1,0 +1,67 @@
+.db-selection-toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  padding: 0px 4px !important;
+  border-radius: var(--tt-radius-sm) !important;
+  background: var(--tt-gray-light-50);
+  .dark & {
+    background: var(--tt-gray-dark-100);
+  }
+  box-shadow: var(--tt-shadow-elevated-sm);
+  width: max-content;
+  max-width: 100%;
+  pointer-events: auto;
+  user-select: none;
+  animation: db-selection-toolbar-in 120ms ease;
+
+  &__count {
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--tt-brand-color-400);
+  }
+
+  // Display-only property summary. Scrolls rather than wrapping so the bar
+  // keeps a single-row height no matter how many properties exist.
+  &__props {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  &__prop {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border-radius: var(--tt-radius-sm);
+    font-size: 13px;
+    white-space: nowrap;
+    color: var(--tt-text-primary);
+    cursor: default; // display only — not clickable
+  }
+
+  &__prop-name {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@keyframes db-selection-toolbar-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .db-selection-toolbar { animation: none; }
+}

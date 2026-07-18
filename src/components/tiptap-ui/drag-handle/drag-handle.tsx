@@ -16,6 +16,7 @@ import { ColorDropdownProvider } from "../color-dropdown-menu/color-dropdown-pro
 import { Node } from "@tiptap/pm/model";
 import type { NormalizedNestedOptions } from "@tiptap/extension-drag-handle";
 import { createPortal } from "react-dom";
+import { recordSelection } from "src/components/tiptap-node/inline-database/utils/record-selection-store";
 
 const NODE_LABELS: Record<string, string> = {
   paragraph: "Text",
@@ -106,6 +107,10 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
     return () => document.removeEventListener("column:resize", handler);
   }, []);
 
+  // Clear the published hover on unmount so a stale record id can't leave a
+  // checkbox visible after the handle goes away.
+  useEffect(() => () => recordSelection.setHovered(null), []);
+
   const onAction = useCallback(() => {
     setOpen(false);
     editor?.commands.unlockDragHandle();
@@ -121,9 +126,23 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
         placement: "left-start",
       }}
       onNodeChange={({ node, pos: newPos }) => {
-        if (newPos === -1 || node === null) return;
+        if (newPos === -1 || node === null) {
+          // Handle detached from any node — no record is hovered.
+          recordSelection.setHovered(null);
+          return;
+        }
 
         const newTarget = NODE_LABELS[node.type.name] ?? "paragraph";
+
+        // Publish which database record the handle is currently anchored to.
+        // The handle already resolves nested-node ambiguity via nestedOptions,
+        // so this is the authoritative "current row" — the row node views
+        // subscribe to it to reveal their selection checkbox.
+        recordSelection.setHovered(
+          node.type.name === "databaseRecord"
+            ? ((node.attrs.recordId as string | null) ?? null)
+            : null,
+        );
 
         // Only update refs/state when values actually change to avoid
         // unnecessary re-renders on every cursor move
