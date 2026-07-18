@@ -1,4 +1,9 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useState,
+  type CSSProperties,
+} from "react";
 import {
   DEFAULT_CONFIGS,
   type DatabaseProperty,
@@ -43,6 +48,9 @@ import { useDataSource } from "../../hooks/use-data-source";
 import { PROPERTY_TYPE_META } from "src/types/property-type-meta";
 import { PropertyTypeChangePopover } from "../property-type-change-popover";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
+import "./property-header.scss";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { Input } from "src/components/tiptap-ui-primitive/input";
 
 /**
  * Resolves a property's icon and renders it. A custom `iconName` is resolved
@@ -143,7 +151,7 @@ export function PropertyHeader({
         gap: 8,
         display: "flex",
         alignItems: "center",
-        padding: "0 0.5rem",
+        padding: "0",
         justifyContent: "flex-start",
         overflow: "hidden",
         background: "transparent !important",
@@ -151,6 +159,7 @@ export function PropertyHeader({
         fontSize: 14,
         color: "var(--tt-text-color)",
         lineHeight: 1.5,
+
         cursor: locked ? "default" : undefined,
       }}
     >
@@ -165,6 +174,24 @@ export function PropertyHeader({
       <span className="tiptap-button-text">{prop.name}</span>
     </Button>
   );
+
+  const [triggerH, setTriggerH] = useState(34);
+
+  useLayoutEffect(() => {
+    if (open && nodeRef?.current) {
+      setTriggerH(nodeRef.current.getBoundingClientRect().height);
+    }
+  }, [open]);
+
+  // geometry of the input row inside the card
+  const CARD_PAD_TOP = 10; // top padding of your Card/CardBody
+  const INPUT_H = 30; // matches your Input style={{ height: 30 }}
+
+  // distance from content top → input's vertical center
+  const inputCenterFromTop = CARD_PAD_TOP + INPUT_H / 2;
+
+  // offset so input center == header center
+  const centerOffset = -(triggerH / 2 + inputCenterFromTop);
 
   return (
     <div
@@ -197,19 +224,17 @@ export function PropertyHeader({
       ) : (
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
-          <PopoverContent side="bottom" align="start">
+          <PopoverContent side="bottom" align="start" sideOffset={centerOffset}>
             <Card
+              className="property-header-dropdown"
               style={{
-                padding: "5px 10px",
-                boxShadow: "var(--tt-shadow-elevated-sm)",
-                minWidth: 260,
+                boxShadow: "var(--tt-shadow-elevated-md)",
+                minWidth: 60,
               }}
             >
-              <CardHeader>
-                <CardGroupLabel>Edit Property</CardGroupLabel>
-              </CardHeader>
               <CardBody>
                 <CardItemGroup>
+                  <Spacer orientation="vertical" size={5} />
                   <CardItemGroup orientation="horizontal">
                     {/* Icon button → icon picker popover */}
                     <Popover open={iconOpen} onOpenChange={setIconOpen}>
@@ -228,7 +253,7 @@ export function PropertyHeader({
                             color={prop.iconColor}
                             className="tiptap-button-icon"
                             filled={false}
-                            size={22}
+                            size={20}
                             style={{
                               display: "inline-flex",
                               alignItems: "center",
@@ -252,13 +277,23 @@ export function PropertyHeader({
                         </Card>
                       </PopoverContent>
                     </Popover>
-                    <TextareaAutosize
-                      cols={30}
-                      maxRows={1}
+                    <Input
                       value={name}
+                      placeholder="Property name"
                       onChange={(e) => {
                         setName(e.target.value);
                         db.updateProperty(prop.id, { ...prop, name });
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          db.updateProperty(prop.id, {
+                            ...prop,
+                            name: e.currentTarget.value,
+                          });
+                          e.currentTarget.blur();
+                          setOpen(false);
+                        }
                       }}
                       contentEditable={true}
                       onBlur={() =>
@@ -267,8 +302,10 @@ export function PropertyHeader({
                       onSubmit={() =>
                         db.updateProperty(prop.id, { ...prop, name })
                       }
+                      style={{ minHeight: 20, height: 30 }}
                     />
                   </CardItemGroup>
+                  <Spacer orientation="vertical" size={4} />
                   <PropertyTypeChangePopover>
                     <CardItemGroup
                       style={{
@@ -276,6 +313,7 @@ export function PropertyHeader({
                         // overflowY: "auto",
                         width: "100%",
                         marginTop: 10,
+                        scrollbarWidth: "thin",
                       }}
                     >
                       {PROPERTY_TYPE_META.filter((m) => m.type !== "title").map(

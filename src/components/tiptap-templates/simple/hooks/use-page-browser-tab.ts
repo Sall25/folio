@@ -1,6 +1,24 @@
-import {  useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useBrowserTab, type BrowserTabIcon } from "./use-browser-tab";
 import { useActivePage } from "../context/active-page-context";
+
+function resolveColor(raw: string | null): string {
+  const FALLBACK = "#5b5b5b";
+  if (!raw) return FALLBACK;
+
+  // Concrete color already (hex/rgb/hsl) — use as-is.
+  if (!raw.startsWith("var(")) return raw;
+
+  // CSS var → resolve to a real value via the computed style.
+  // Extract the custom-property name from `var(--x, fallback)`.
+  const propName = raw
+    .slice(4, raw.indexOf(",") === -1 ? raw.lastIndexOf(")") : raw.indexOf(","))
+    .trim();
+  const resolved = getComputedStyle(document.documentElement)
+    .getPropertyValue(propName)
+    .trim();
+  return resolved || FALLBACK;
+}
 
 // Draw the Material Symbols glyph to a canvas and export it as a favicon
 // data-URL. The font renders the ligature as a glyph, so we paint text, not SVG.
@@ -27,6 +45,7 @@ async function materialIconToFaviconHref(
 
   ctx.font = `${size}px "Material Symbols Rounded"`;
   ctx.fillStyle = color;
+
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(name, size / 2, size / 2);
@@ -59,13 +78,10 @@ export function usePageBrowserTab(appName: string | null = "Folio") {
   useEffect(() => {
     if (target !== "Icons" || !iconName) return;
 
-    const resolvedColor =
-      color && color !== "var(--tt-text-color)" && !color.startsWith("var(")
-        ? color
-        : "#5b5b5b";
+    const resolvedColor = resolveColor(color);
 
     let cancelled = false;
-   materialIconToFaviconHref(iconName, resolvedColor).then((href) => {
+    materialIconToFaviconHref(iconName, resolvedColor).then((href) => {
       if (!cancelled && href) setResolved({ name: iconName, href });
     });
     return () => {

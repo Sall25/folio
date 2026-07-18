@@ -2,7 +2,16 @@
   width: 280px;
   display: flex;
   flex-direction: column;
-  max-height: 400px;
+  max-height: 600px;
+  border-radius: var(--tt-radius-md);
+  background-color: var(--tt-gray-light-50);
+  .dark & {
+    background-color: var(--tt-gray-dark-100);
+  }
+
+  &__name-input{
+    height: 30px;
+  }
   // overflow-y: scroll;
 
   &__header {
@@ -71,9 +80,11 @@
     }
 
     &-value {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--tt-text-color, #9b9a97);
       white-space: nowrap;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+      -webkit-font-smoothing: auto;
     }
 
     &-chevron {
@@ -96,4 +107,32 @@
     margin: 6px 0;
     background: var(--tt-border-color, rgba(0, 0, 0, 0.08));
   }
+}
+
+// view-options-popover.scss
+.view-options__panel {
+  width: 100%;
+  animation: vo-slide-in 160ms ease;
+  height: fit-content;
+}
+
+// sub-panels enter from the right, main re-enters from the left (back)
+.view-options__panel--sub {
+  animation-name: vo-slide-in-right;
+}
+.view-options__panel--main {
+  animation-name: vo-slide-in-left;
+}
+
+@keyframes vo-slide-in-right {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes vo-slide-in-left {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-options__panel { animation: none; }
 }

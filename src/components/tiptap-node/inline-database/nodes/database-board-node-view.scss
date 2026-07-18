@@ -100,6 +100,15 @@
     padding: 5px 10px !important;
     width: auto;
     // min-width: fit-content;
+
+    .status-badge,
+    .select-badge{
+      margin: 0 !important;
+    }
+
+    &__props{
+      padding: 0;
+    }
   }
 }
 .db-board-col {

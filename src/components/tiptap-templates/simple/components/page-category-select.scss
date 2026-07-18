@@ -40,19 +40,25 @@
   }
 
   &__menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
     position: fixed; // coordinates supplied inline from the trigger's rect
     z-index: 1000; // portaled to body, above sidebar (120) and modals (101)
     min-width: 184px;
-    padding: 5px 10px;
+    //padding: 5px 10px;
     background: var(--tt-card-bg-color);
     border: 1px solid var(--tt-border-color);
     border-radius: var(--tt-radius-md, 8px);
     box-shadow: var(--tt-shadow-elevated-sm);
+    width: 100%;
   }
 
   &__option {
     display: flex;
     align-items: center;
+    justify-content: flex-start;
+    
     gap: 8px;
     width: 100%;
     padding: 6px 8px;

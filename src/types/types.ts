@@ -445,18 +445,15 @@ export interface DatabaseUIState {
   searchQuery: string;
   panelStack: PanelView[];
 }
-
 export type PanelView =
   | { type: "main" }
-  | { type: "status-editor" }
-  | { type: "formula-editor" }
-  | { type: "person-limit" }
-  | { type: "person-default" }
-  | { type: "person-notifications" }
-  | { type: "relation-target" }
-  | { type: "rollup-relation" }
-  | { type: "rollup-property" }
-  | { type: "rollup-aggregation" };
+  | { type: "properties" }
+  | { type: "filter" }
+  | { type: "sort" }
+  | { type: "layout" }
+  | { type: "open-pages-in" }
+  | { type: "group" }
+  | { type: "sub-items" };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Property registry

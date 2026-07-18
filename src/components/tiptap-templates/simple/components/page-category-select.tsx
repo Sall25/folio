@@ -131,6 +131,7 @@ export function PageCategorySelect({
                   onChange(o.value);
                   setOpen(false);
                 }}
+                style={{ width: "100%" }}
               >
                 <span className="page-category-select__icon">{o.icon}</span>
                 <span className="page-category-select__label">{o.label}</span>

@@ -8,8 +8,8 @@
 }
 
 .toggle {
-  width: 32px;
-  height: 18px;
+  width: 28px;
+  height: 16px;
   border-radius: 999px;
   border: none;
   padding: 2px;
@@ -18,6 +18,8 @@
   background: var(--toggle-bg-color);
   display: flex;
   align-items: center;
+  align-self: center;
+  flex: 0 0 auto;
 
   &[data-state="on"] {
     background: var(--tt-brand-color-500); // Notion's blue
@@ -29,8 +31,8 @@
   }
 
   &__thumb {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     background: var(--thumb-bg-color); //white;
     transition: transform 200ms ease;

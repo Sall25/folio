@@ -2,6 +2,7 @@ import {
   ArrowUpDown,
   Bell,
   Calendar,
+  ChevronLeft,
   ChevronRight,
   Columns3,
   Copy,
@@ -10,6 +11,7 @@ import {
   GanttChart,
   Group,
   LayoutGrid,
+  LayoutTemplate,
   Link as LinkIcon,
   List,
   ListTree,
@@ -34,7 +36,7 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import type { DatabaseProperty, DatabaseView } from "src/types";
+import type { DatabaseProperty, DatabaseView, PanelView } from "src/types";
 import {
   useEffect,
   useRef,
@@ -45,10 +47,11 @@ import {
 import "./view-options-popover.scss";
 import type { UseDatabaseReturn } from "../../hooks";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import { LayoutPopover } from "./layout-popover";
+import { LayoutPanel, OpenPagesInPanel } from "./layout-panel";
 import { PropertiesPanel } from "../properties-panel";
 import { FilterPanel } from "../filter-panel";
 import { SortPanel } from "../sort-panel";
+import { Input } from "src/components/tiptap-ui-primitive/input";
 
 type LucideIcon = ComponentType<{ className?: string; size?: number }>;
 
@@ -73,56 +76,35 @@ function layoutMeta(type: DatabaseView["type"]): {
   }
 }
 
+const PANEL_TITLES: Record<Exclude<PanelView["type"], "main">, string> = {
+  properties: "Properties",
+  filter: "Filter",
+  sort: "Sort",
+  layout: "Layouts",
+  "open-pages-in": "Open pages in",
+  group: "Group",
+  "sub-items": "Sub-items",
+};
+
 function OptionRow({
   Icon,
   label,
   sub,
-  value,
   onClick,
   disabled = false,
+  navigable = false,
 }: {
   Icon: LucideIcon;
   label: string;
   sub?: string | ReactNode;
-  value?: ReactNode;
   onClick?: () => void;
   disabled?: boolean;
+  navigable?: boolean;
 }) {
-  const navigable = value !== undefined;
-  if (navigable)
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            onClick={onClick}
-            disabled={disabled}
-            style={{
-              width: "100%",
-              justifyContent: "flex-start",
-              opacity: disabled ? 0.5 : 1,
-            }}
-          >
-            <Icon className="tiptap-button-icon" />
-            <span className="tiptap-button-text">{label}</span>
-            <Spacer orientation="horizontal" />
-            {navigable && (
-              <span className="view-options__row-value">{sub}</span>
-            )}
-            {navigable && (
-              <ChevronRight className="tiptap-button-icon-sub" size={14} />
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent side="left" align="start">
-          {value}
-        </PopoverContent>
-      </Popover>
-    );
   return (
     <Button
       variant="ghost"
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
       disabled={disabled}
       style={{
         width: "100%",
@@ -133,7 +115,47 @@ function OptionRow({
       <Icon className="tiptap-button-icon" />
       <span className="tiptap-button-text">{label}</span>
       <Spacer orientation="horizontal" />
+      {navigable && sub !== undefined && (
+        <span className="view-options__row-value">{sub}</span>
+      )}
+      {navigable && (
+        <ChevronRight className="tiptap-button-icon-sub" size={14} />
+      )}
     </Button>
+  );
+}
+
+function SubPanelHeader({
+  title,
+  onBack,
+  onClose,
+}: {
+  title: string;
+  onBack: () => void;
+  onClose?: () => void;
+}) {
+  return (
+    <CardHeader>
+      <Button
+        variant="ghost"
+        className="view-options__back"
+        onClick={onBack}
+        style={{ background: "transparent" }}
+      >
+        <ChevronLeft size={16} className="tiptap-button-icon" />
+      </Button>
+      <CardGroupLabel>{title}</CardGroupLabel>
+      <Spacer orientation="horizontal" />
+      {onClose && (
+        <Button
+          variant="ghost"
+          className="view-options__close"
+          onClick={onClose}
+        >
+          <X size={16} className="tiptap-button-icon" />
+        </Button>
+      )}
+    </CardHeader>
   );
 }
 
@@ -148,14 +170,13 @@ function ViewOptionsContent({
   db: UseDatabaseReturn;
   properties: DatabaseProperty[];
   onClose?: () => void;
-  // copy-link needs pageId, which db doesn't have → stays a prop from the
-  // node-view / toolbar. Lock lives on db (db.locked / db.toggleLock).
   onCopyLink?: () => void;
 }) {
   const [name, setName] = useState(view.name);
   const [copied, setCopied] = useState(false);
 
   const locked = db.locked;
+  const panel = db.currentPanel;
 
   const v = view as DatabaseView & {
     filters?: unknown[];
@@ -178,6 +199,50 @@ function ViewOptionsContent({
     setTimeout(() => setCopied(false), 1500);
   };
 
+  // ── Sub-panel: replace the body, add a back header ──────────────────────
+  if (panel.type !== "main") {
+    return (
+      <Card className="view-options">
+        <SubPanelHeader
+          title={PANEL_TITLES[panel.type] ?? "Options"}
+          onBack={db.popPanel}
+          onClose={onClose}
+        />
+        <CardBody style={{ width: "100%", padding: "5px 10px" }}>
+          {panel.type === "properties" && (
+            <PropertiesPanel
+              bare
+              properties={properties}
+              db={db}
+              activeView={view}
+            />
+          )}
+          {panel.type === "filter" && (
+            <FilterPanel
+              bare
+              properties={properties}
+              db={db}
+              activeView={view}
+            />
+          )}
+          {panel.type === "sort" && (
+            <SortPanel
+              bare
+              sorts={view.sorts}
+              properties={properties}
+              db={db}
+              activeView={view}
+            />
+          )}
+          {panel.type === "layout" && <LayoutPanel bare view={view} db={db} />}
+          {panel.type === "open-pages-in" && <OpenPagesInPanel bare db={db} />}
+          {/* group / sub-items land here once their panels exist */}
+        </CardBody>
+      </Card>
+    );
+  }
+
+  // ── Main panel ──────────────────────────────────────────────────────────
   return (
     <Card className="view-options">
       <CardHeader>
@@ -202,8 +267,9 @@ function ViewOptionsContent({
           >
             <LayoutIcon className="tiptap-button-icon" />
           </Button>
-          <TextareaAutosize
+          <Input
             className="view-options__name-input"
+            autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
             disabled={locked}
@@ -215,55 +281,45 @@ function ViewOptionsContent({
               if (e.key === "Enter") {
                 e.stopPropagation();
                 if (!locked)
-                  db.updateView(db.activeView.id, { ...db.activeView, name });
+                  db.updateView(db.activeView.id, {
+                    ...db.activeView,
+                    name,
+                  });
               }
             }}
           />
         </CardItemGroup>
 
-        {/* Layout / properties / filter / sort / group / sub-items are all
-            view config → disabled when locked. */}
-        {!locked && <LayoutPopover view={view} db={db} />}
+        <OptionRow
+          Icon={LayoutTemplate}
+          label="Layouts"
+          sub={view.type.charAt(0).toUpperCase() + view.type.slice(1)}
+          navigable
+          onClick={() => db.pushPanel({ type: "layout" })}
+          disabled={locked}
+        />
         <OptionRow
           Icon={SlidersHorizontal}
           label="Properties"
           sub={`${shownCount} shown`}
-          value={
-            locked ? undefined : (
-              <PropertiesPanel
-                properties={properties}
-                db={db}
-                activeView={view}
-              />
-            )
-          }
+          navigable
+          onClick={() => db.pushPanel({ type: "properties" })}
           disabled={locked}
         />
         <OptionRow
           Icon={Filter}
           label="Filter"
           sub={filterCount === 1 ? "1 filter" : `${filterCount} filters`}
-          value={
-            locked ? undefined : (
-              <FilterPanel properties={properties} db={db} activeView={view} />
-            )
-          }
+          navigable
+          onClick={() => db.pushPanel({ type: "filter" })}
           disabled={locked}
         />
         <OptionRow
           Icon={ArrowUpDown}
           label="Sort"
           sub={sortCount === 1 ? "1 sort" : `${sortCount} sorts`}
-          value={
-            locked ? undefined : (
-              <SortPanel
-                sorts={view.sorts}
-                properties={properties}
-                db={db}
-                activeView={view}
-              />
-            )
-          }
+          navigable
+          onClick={() => db.pushPanel({ type: "sort" })}
           disabled={locked}
         />
         <OptionRow
@@ -281,27 +337,20 @@ function ViewOptionsContent({
 
         <Separator orientation="horizontal" />
 
-        {/* Slack notifications — backend feature, placeholder. */}
         <OptionRow Icon={Bell} label="Slack notifications" onClick={() => {}} />
 
-        {/* Lock toggle — always available; reads/writes db. */}
         <OptionRow
           Icon={Lock}
           label={locked ? "Unlock database" : "Lock database"}
-          onClick={() => {
-            db.toggleLock();
-            console.log("locked", locked);
-          }}
+          onClick={() => db.toggleLock()}
         />
 
-        {/* Copy link — read-only, always available. */}
         <OptionRow
           Icon={LinkIcon}
           label={copied ? "Copied!" : "Copy link to view"}
           onClick={handleCopy}
         />
 
-        {/* Duplicate / delete view — structural, disabled when locked. */}
         <OptionRow
           Icon={Copy}
           label="Duplicate view"
@@ -338,14 +387,24 @@ export function ViewOptionsPopover({
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (providedOpen) db.resetPanel();
+  }, [providedOpen, db.resetPanel]);
+
+  const closeControlled = () => {
+    db.resetPanel();
+    onOpenChange?.(false);
+  };
+
+  useEffect(() => {
     if (!providedOpen) return;
     const handleClick = (e: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        onOpenChange?.(false);
+        closeControlled();
       }
     };
     document.addEventListener("mousedown", handleClick, true);
     return () => document.removeEventListener("mousedown", handleClick, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [providedOpen, onOpenChange]);
 
   if (providedOpen !== undefined) {
@@ -365,14 +424,20 @@ export function ViewOptionsPopover({
           view={view}
           db={db}
           onCopyLink={onCopyLink}
-          onClose={() => onOpenChange?.(false)}
+          onClose={closeControlled}
         />
       </div>
     ) : null;
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        db.resetPanel();
+      }}
+    >
       <PopoverTrigger asChild>
         <Button variant="ghost">
           <Ellipsis className="tiptap-button-icon" />
@@ -380,7 +445,7 @@ export function ViewOptionsPopover({
       </PopoverTrigger>
       <PopoverContent
         side="bottom"
-        align="center"
+        align="end"
         avoidCollisions
         collisionPadding={16}
         style={{ width: 280, padding: 0 }}

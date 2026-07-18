@@ -8,6 +8,7 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import "./property-type-change-popover.scss";
 
 export function PropertyTypeChangePopover({
   children,
@@ -26,10 +27,13 @@ export function PropertyTypeChangePopover({
       </PopoverTrigger>
       <PopoverContent side="right" align="center" asChild>
         <Card
+          className="property-type-change-popover-card"
           style={{
             boxShadow: "var(--tt-shadow-elevated-sm)",
-            padding: "10px 15px",
+            padding: "2px 10px",
+            borderRadius: "var(--tt-radius-md)",
             maxHeight: 500,
+            scrollbarWidth: "thin",
             overflowY: "auto",
           }}
         >

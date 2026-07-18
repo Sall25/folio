@@ -120,11 +120,13 @@ export function FilterPanel({
   db,
   activeView,
   onClose,
+  bare = false,
 }: {
   properties: DatabaseProperty[];
   db: UseDatabaseReturn;
   activeView: DatabaseView | undefined;
   onClose?: () => void;
+  bare?: boolean;
 }) {
   const [query, setQuery] = useState("");
 
@@ -155,8 +157,8 @@ export function FilterPanel({
     ? properties.filter((p) => p.name.toLowerCase().includes(q))
     : properties;
 
-  return (
-    <Card className="db-filter-panel">
+  const body = (
+    <>
       <div className="db-filter-panel__search">
         <input
           autoFocus
@@ -173,8 +175,6 @@ export function FilterPanel({
             <span className="db-panel__empty">No properties found</span>
           ) : (
             filtered.map((p) => {
-              // PROPERTY_TYPE_ICONS holds Material Symbols name strings now,
-              // not icon components — render through DynamicIcon.
               const iconName = PROPERTY_TYPE_ICONS[p.config.type];
               return (
                 <Button
@@ -220,6 +220,10 @@ export function FilterPanel({
           <span className="tiptap-button-text">Add advanced filter</span>
         </Button>
       </CardFooter>
-    </Card>
+    </>
   );
+
+  if (bare) return body;
+
+  return <Card className="db-filter-panel">{body}</Card>;
 }

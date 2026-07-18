@@ -254,13 +254,13 @@ export function DatabaseNodeView({
       .catch(() => console.log("Failed to create page"));
   };
 
-  const addProperty = (type: PropertyType) => {
+  const addProperty = (type: PropertyType, propertyName?: string) => {
     if (locked) return;
     updatePropertiesAsync([
       ...source.properties,
       {
         id: crypto.randomUUID(),
-        name: type.charAt(0).toUpperCase() + type.slice(1),
+        name: propertyName ?? type.charAt(0).toUpperCase() + type.slice(1),
         config: DEFAULT_CONFIGS[type],
         width: 160,
       },

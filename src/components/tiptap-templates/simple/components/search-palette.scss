@@ -58,12 +58,12 @@
   z-index: 201;
 
   // Anchored toward the top — the command-palette convention
-  top: 60px;
+  top: 20%;
   left: 50%;
   transform: translateX(-50%);
 
   width: min(960px, 100vw);
-  max-height: min(88vh, 820px);
+  max-height: min(90vh, 820px);
   display: flex;
   flex-direction: column;
   overflow: hidden;

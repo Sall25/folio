@@ -3,7 +3,6 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
   CardBody,
-  //CardFooter,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 import type { DatabaseProperty, DatabaseView, ID } from "src/types";
@@ -22,10 +21,12 @@ export function PropertiesPanel({
   properties,
   db,
   activeView,
+  bare = false,
 }: {
   properties: DatabaseProperty[];
   db: UseDatabaseReturn;
   activeView: DatabaseView | undefined;
+  bare?: boolean;
 }) {
   if (!activeView) return null;
 
@@ -95,66 +96,63 @@ export function PropertiesPanel({
     );
   };
 
-  return (
-    <Card className="db-properties-panel">
-      <CardBody style={{ width: "100%" }}>
-        <Grid columns="20px 3fr 1fr">
-          {visibleProperties.length > 0 && (
-            <>
-              <CardItemGroup orientation="horizontal">
-                <span className="db-properties-panel__group-label">
-                  Visible
-                </span>
-                <Spacer orientation="horizontal" />
-                <Button
-                  variant="ghost"
-                  onClick={showAll}
-                  style={{
-                    justifyContent: "flex-start",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "var(--tt-brand-color-400)",
-                  }}
-                >
-                  Show all
-                </Button>
-              </CardItemGroup>
-              {visibleProperties.map(renderRow)}
-            </>
-          )}
-          {hiddenProperties.length > 0 && (
-            <>
-              <CardItemGroup orientation="horizontal">
-                <span className="db-properties-panel__group-label">Hidden</span>
-                <Spacer orientation="horizontal" />
-                <Button
-                  variant="ghost"
-                  onClick={hideAll}
-                  style={{
-                    justifyContent: "flex-start",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "var(--tt-brand-color-400)",
-                  }}
-                >
-                  Hide all
-                </Button>
-              </CardItemGroup>
-              {hiddenProperties.map(renderRow)}
-            </>
-          )}
-        </Grid>
-      </CardBody>
-
-      {/* <CardFooter style={{ gap: 4 }}>
-        <Button
-          variant="ghost"
-          onClick={hideAll}
-          style={{ justifyContent: "flex-start", fontSize: 12 }}
-        >
-          Hide all
-        </Button>
-      </CardFooter> */}
-    </Card>
+  const body = (
+    <CardBody style={{ width: "100%" }}>
+      <Grid columns="20px 3fr 1fr" style={{ width: "100%" }}>
+        {visibleProperties.length > 0 && (
+          <>
+            <CardItemGroup
+              orientation="horizontal"
+              style={{ width: "100%", justifyContent: "flex-start" }}
+            >
+              <span className="db-properties-panel__group-label">Visible</span>
+              <Spacer orientation="horizontal" />
+              <Button
+                variant="ghost"
+                onClick={showAll}
+                style={{
+                  width: "fit-content",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "var(--tt-brand-color-400)",
+                }}
+              >
+                Show all
+              </Button>
+            </CardItemGroup>
+            {visibleProperties.map(renderRow)}
+          </>
+        )}
+        {hiddenProperties.length > 0 && (
+          <>
+            <CardItemGroup
+              orientation="horizontal"
+              style={{ width: "100%", justifyContent: "flex-start" }}
+            >
+              <span className="db-properties-panel__group-label">Hidden</span>
+              <Spacer orientation="horizontal" />
+              <Button
+                variant="ghost"
+                onClick={hideAll}
+                style={{
+                  width: "100%",
+                  justifyContent: "flex-start",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "var(--tt-brand-color-400)",
+                }}
+              >
+                Hide all
+              </Button>
+            </CardItemGroup>
+            {hiddenProperties.map(renderRow)}
+          </>
+        )}
+      </Grid>
+    </CardBody>
   );
+
+  if (bare) return body;
+
+  return <Card className="db-properties-panel">{body}</Card>;
 }

@@ -38,7 +38,7 @@ interface Props {
   optionsMenu: React.ReactNode;
 
   onReorder: (orderedIds: string[]) => void;
-  onAddProperty: (type: PropertyType) => void;
+  onAddProperty: (type: PropertyType, propertyName?: string) => void;
   onCommitColumnWidth: (
     ref: { current: HTMLElement | null } | undefined,
     width: number,

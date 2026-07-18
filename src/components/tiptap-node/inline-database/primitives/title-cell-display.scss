@@ -14,7 +14,7 @@
   height: 100%;
   padding: 0;
   gap: 6px;
-  margin: auto 5px;
+  margin: auto 0px;
   cursor: text;
 
   &__icon {
@@ -40,15 +40,15 @@
 
     // Notion-style page-link underline: follows the text (clips with the
     // ellipsis), subtle by default, darkens when the row is hovered.
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 2px;
-    text-decoration-color: var(--tt-border-color);
-    transition: text-decoration-color 100ms ease;
+    // text-decoration: underline;
+    // text-decoration-thickness: 1px;
+    // text-underline-offset: 2px;
+    // text-decoration-color: var(--tt-border-color);
+    // transition: text-decoration-color 100ms ease;
 
-    .db-cell-title:hover & {
-      text-decoration-color: var(--tt-theme-text);
-    }
+    // .db-cell-title:hover & {
+    //   text-decoration-color: var(--tt-theme-text);
+    // }
   }
 
   // the textarea inside the popover editor — wraps, grows, borderless
@@ -155,8 +155,9 @@
 }
 
 .open-button{
+  padding: 2px;
   background-color: var(--tt-gray-light-100);
   .dark & {
-    background-color: var(--tt-gray-dark-300);
+    background-color: var(--tt-gray-dark-100);
   }
 }

@@ -1,22 +1,36 @@
-import { cn } from "src/lib/tiptap-utils";
-import "src/components/tiptap-ui-primitive/input/input.scss";
+import * as React from "react";
+import "./input.scss";
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
-  return (
-    <input type={type} className={cn("tiptap-input", className)} {...props} />
-  );
-}
+type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
-function InputGroup({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"div">) {
-  return (
-    <div className={cn("tiptap-input-group", className)} {...props}>
-      {children}
-    </div>
-  );
-}
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className = "", ...props }, ref) => {
+    return (
+      <input
+        ref={ref}
+        className={`tiptap-input ${className}`.trim()}
+        {...props}
+      />
+    );
+  },
+);
 
-export { Input, InputGroup };
+Input.displayName = "Input";
+
+type InputGroupProps = React.HTMLAttributes<HTMLDivElement>;
+
+export const InputGroup = React.forwardRef<HTMLDivElement, InputGroupProps>(
+  ({ className = "", children, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={`tiptap-input-group ${className}`.trim()}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  },
+);
+
+InputGroup.displayName = "InputGroup";

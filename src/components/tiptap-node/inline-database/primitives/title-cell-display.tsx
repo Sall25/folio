@@ -126,7 +126,6 @@ export function TitleCellDisplay({
               minWidth: openVariant === "edit" ? "fit-content" : 68,
               alignItems: "center",
               borderRadius: "var(--tt-radius-sm)",
-              background: "var(--tt-bg-color)",
               cursor: "pointer",
               border: "1px solid var(--tt-border-color)",
               opacity: hover ? 1 : 0,
