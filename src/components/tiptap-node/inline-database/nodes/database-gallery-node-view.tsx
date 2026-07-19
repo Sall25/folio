@@ -3,12 +3,14 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { useDataSource } from "../hooks/use-data-source";
 import { BoardCard } from "../primitives/board-card";
 import type {
+  CellValue,
   DatabaseAttrs,
   DatabaseView,
   DataSource,
   GalleryView,
 } from "src/types";
 import "./database-gallery-node-view.scss";
+import { useMemo } from "react";
 
 // Cards per row by size. Larger size = fewer, wider cards.
 const CARD_COLUMNS = {
@@ -40,6 +42,17 @@ export function DatabaseGalleryNodeView({
   const hidden = new Set(activeView?.hiddenProperties ?? []);
   const cardProps = source.properties.filter((p) => !hidden.has(p.id));
 
+  const columnValuesByProp = useMemo(() => {
+    const map: Record<string, CellValue[]> = {};
+    for (const prop of source.properties) {
+      if (prop.config.type !== "number") continue;
+      map[prop.id] = resolvedRecords.map(
+        (r) => (r.values?.[prop.id] ?? null) as CellValue,
+      );
+    }
+    return map;
+  }, [resolvedRecords, source.properties]);
+
   return (
     <div
       className="db-gallery"
@@ -61,6 +74,7 @@ export function DatabaseGalleryNodeView({
               sourceId={attrs.sourceId!}
               onChange={(propId, v) => setCellValue(rec.id, propId, v)}
               view={view}
+              columnValuesByProp={columnValuesByProp}
             />
           </div>
         ))}

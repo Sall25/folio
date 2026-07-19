@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { PanelRightOpen, Pencil } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+import { Input } from "src/components/tiptap-ui-primitive/input";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 import type { PageCover } from "src/types";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { CellEditorPopover } from "./cell-editor-popover";
-import { AutoTextarea } from "./auto-textarea";
 import "./title-cell-display.scss";
 
 export interface TitleCellDisplayProps {
@@ -16,7 +15,6 @@ export interface TitleCellDisplayProps {
   hasPage?: boolean;
   onOpen?: () => void;
   readonly?: boolean;
-  maxRows?: number;
   /**
    * Which affordance the hover button shows. List view uses a pencil (Notion's
    * inline-edit affordance); everywhere else keeps the open-in-panel icon.
@@ -32,7 +30,6 @@ export function TitleCellDisplay({
   hasPage,
   onOpen,
   readonly,
-  maxRows = 8,
   openVariant = "open",
 }: TitleCellDisplayProps) {
   const [hover, setHover] = useState(false);
@@ -51,7 +48,10 @@ export function TitleCellDisplay({
   }
 
   const commit = (close: () => void) => {
-    if (draft !== value) onChange(draft);
+    // Titles are identifiers — trailing whitespace would surface in the
+    // sidebar and page-link chips.
+    const next = draft.trim();
+    if (next !== value) onChange(next);
     close();
   };
 
@@ -88,16 +88,23 @@ export function TitleCellDisplay({
         }
       >
         {(close) => (
-          <AutoTextarea
+          <Input
+            // Focus with the caret at the end rather than position 0 — autoFocus
+            // alone leaves the caret placement up to the browser.
+            ref={(el) => {
+              if (!el) return;
+              el.focus();
+              const end = el.value.length;
+              el.setSelectionRange(end, end);
+            }}
             className="db-cell-title__field"
             value={draft}
-            maxRows={maxRows}
             placeholder="Untitled"
-            onChange={setDraft}
+            onChange={(e) => setDraft(e.target.value)}
             onBlur={() => commit(close)}
             onKeyDown={(e) => {
-              // Enter commits; Shift+Enter inserts a newline.
-              if (e.key === "Enter" && !e.shiftKey) {
+              // Single-line: Enter always commits, no newline case.
+              if (e.key === "Enter") {
                 e.preventDefault();
                 commit(close);
               }
@@ -111,43 +118,40 @@ export function TitleCellDisplay({
         )}
       </CellEditorPopover>
 
-      {/* Chrome, hidden while editing. The Spacer lives inside the condition too
-          — left mounted, it would push the editor box 10px left the moment the
-          button disappeared. */}
+      {/* Chrome, hidden while editing — left mounted it would sit on top of the
+          editor box, which is exactly where the text is. */}
       {showOpenButton && (
-        <>
-          <Button
-            className="open-button"
-            style={{
-              minHeight: 20,
-              height: "20px !important",
-              fontSize: 14,
-              minWidth: openVariant === "edit" ? "fit-content" : 68,
-              alignItems: "center",
-              borderRadius: "var(--tt-radius-sm)",
-              cursor: "pointer",
-              border: "1px solid var(--tt-border-color)",
-              opacity: hover ? 1 : 0,
-              transition: "opacity 0.15s ease",
-              flexShrink: 0,
-              position: "absolute",
-              right: 0,
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpen();
-            }}
-          >
-            {openVariant === "edit" ? (
-              <Pencil className="tiptap-button-icon" size={12} />
-            ) : (
-              <PanelRightOpen className="tiptap-button-icon" size={12} />
-            )}
-            {openVariant === "open" && (
-              <span className="tiptap-button-text">Open</span>
-            )}
-          </Button>
-        </>
+        <Button
+          className="open-button"
+          style={{
+            minHeight: 20,
+            height: "20px !important",
+            fontSize: 14,
+            minWidth: openVariant === "edit" ? "fit-content" : 68,
+            alignItems: "center",
+            borderRadius: "var(--tt-radius-sm)",
+            cursor: "pointer",
+            border: "1px solid var(--tt-border-color)",
+            opacity: hover ? 1 : 0,
+            transition: "opacity 0.15s ease",
+            flexShrink: 0,
+            position: "absolute",
+            right: 0,
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen();
+          }}
+        >
+          {openVariant === "edit" ? (
+            <Pencil className="tiptap-button-icon" size={12} />
+          ) : (
+            <PanelRightOpen className="tiptap-button-icon" size={12} />
+          )}
+          {openVariant === "open" && (
+            <span className="tiptap-button-text">Open</span>
+          )}
+        </Button>
       )}
     </CardItemGroup>
   );

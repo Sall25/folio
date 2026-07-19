@@ -18,6 +18,7 @@ import { recordMatchesFilters } from "../utils/apply-filters";
 import { sortRecords } from "../utils/apply-sorts";
 import { groupRecords } from "../utils/group-records";
 import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
+import { useMemo } from "react";
 
 function ListRow({
   record,
@@ -25,12 +26,14 @@ function ListRow({
   titleProp,
   onChange,
   view,
+  columnValuesByProp,
 }: {
   record: Page;
   inlineProperties: DatabaseProperty[];
   titleProp: DatabaseProperty | undefined;
   onChange: (propertyId: string, value: CellValue | null) => void;
   view: DatabaseView;
+  columnValuesByProp: Record<string, CellValue[]>;
 }) {
   return (
     <div className="db-list-row">
@@ -43,6 +46,7 @@ function ListRow({
             onChange={(v) => onChange(titleProp.id, v)}
             view={view}
             properties={inlineProperties}
+            columnValues={columnValuesByProp[titleProp.id]}
           />
         )}
       </div>
@@ -57,6 +61,7 @@ function ListRow({
             onChange={(v) => onChange(prop.id, v)}
             view={view}
             properties={inlineProperties}
+            columnValues={columnValuesByProp[prop.id]}
           />
         ))}
       </div>
@@ -120,6 +125,17 @@ export function DatabaseListNodeView({
 
   const ungrouped = !groupProp;
 
+  const columnValuesByProp = useMemo(() => {
+    const map: Record<string, CellValue[]> = {};
+    for (const prop of source.properties) {
+      if (prop.config.type !== "number") continue;
+      map[prop.id] = resolvedRecords.map(
+        (r) => (r.values?.[prop.id] ?? null) as CellValue,
+      );
+    }
+    return map;
+  }, [resolvedRecords, source.properties]);
+
   return (
     <div className="db-list" data-type="database-list">
       <div className="db-list__body">
@@ -159,6 +175,7 @@ export function DatabaseListNodeView({
                     titleProp={titleProp}
                     onChange={(propId, v) => setCellValue(rec.id, propId, v)}
                     view={view}
+                    columnValuesByProp={columnValuesByProp}
                   />
                 ))}
             </div>

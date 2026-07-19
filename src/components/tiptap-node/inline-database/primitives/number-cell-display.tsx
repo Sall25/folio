@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { NumberFormat, DecimalPlaces, NumberShowAs } from "src/types";
+import { Input } from "src/components/tiptap-ui-primitive/input";
 import { CellEditorPopover } from "./cell-editor-popover";
 import "./number-cell-display.scss";
 
@@ -144,21 +145,21 @@ export function NumberCellDisplay({
   const content =
     showAs === "bar" && hasValue ? (
       <span className="num-cell__bar-wrap">
+        <span className="num-cell__num">{display}</span>
         <span className="num-cell__bar-track">
           <span
             className="num-cell__bar-fill"
             style={{ width: `${fraction * 100}%` }}
           />
         </span>
-        <span className="num-cell__num">{display}</span>
       </span>
     ) : showAs === "ring" && hasValue ? (
       <span className="num-cell__ring-wrap">
+        <span className="num-cell__num">{display}</span>
         <span
           className="num-cell__ring"
           style={{ ["--ring-deg" as string]: `${fraction * 360}deg` }}
         />
-        <span className="num-cell__num">{display}</span>
       </span>
     ) : (
       <span className="num-cell__display">{display}</span>
@@ -173,12 +174,25 @@ export function NumberCellDisplay({
       trigger={<div className={`num-cell${alignClass}`}>{content}</div>}
     >
       {(close) => (
-        <input
+        <Input
           type="number"
+          // Focus with the caret at the end rather than position 0 — autoFocus
+          // alone leaves caret placement up to the browser.
+          ref={(el) => {
+            if (!el) return;
+            el.focus();
+            const end = el.value.length;
+            // A number input rejects setSelectionRange in some browsers, so
+            // this is best-effort: focus still lands correctly either way.
+            try {
+              el.setSelectionRange(end, end);
+            } catch {
+              /* type=number disallows selection APIs in Firefox */
+            }
+          }}
           className="num-cell__input"
           placeholder="0"
           value={draft}
-          autoFocus
           onChange={(e) => setDraft(e.target.value)}
           onBlur={() => commit(close)}
           onKeyDown={(e) => {
@@ -187,6 +201,7 @@ export function NumberCellDisplay({
               commit(close);
             }
             if (e.key === "Escape") {
+              e.preventDefault();
               setDraft(value !== null ? String(value) : "");
               close();
             }

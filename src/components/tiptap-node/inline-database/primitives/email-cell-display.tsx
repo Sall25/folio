@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { CellEditorPopover } from "./cell-editor-popover";
-import { AutoTextarea } from "./auto-textarea";
 import "./email-cell-display.scss";
 import { Pencil } from "lucide-react";
+import { Input } from "src/components/tiptap-ui-primitive/input";
 
 export interface EmailCellDisplayProps {
   value: string;
@@ -65,12 +65,22 @@ export function EmailCellDisplay({
   return (
     <CellEditorPopover trigger={display}>
       {(close) => (
-        <AutoTextarea
+        <Input
+          // NOT type="email": setSelectionRange throws on email inputs (the
+          // spec only permits selection APIs on text/search/url/tel/password).
+          // inputMode gets the right mobile keyboard without that restriction.
+          type="text"
+          inputMode="email"
+          ref={(el) => {
+            if (!el) return;
+            el.focus();
+            const end = el.value.length;
+            el.setSelectionRange(end, end);
+          }}
           className="db-cell-email__field"
           value={draft}
-          maxRows={1}
           placeholder="example@email.com"
-          onChange={setDraft}
+          onChange={(e) => setDraft(e.target.value)}
           onBlur={() => commit(close)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {

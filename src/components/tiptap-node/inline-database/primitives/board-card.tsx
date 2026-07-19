@@ -31,6 +31,7 @@ export function BoardCard({
   cardPreview,
   onChange,
   view,
+  columnValuesByProp,
 }: {
   record: Page;
   properties: DatabaseProperty[];
@@ -38,6 +39,9 @@ export function BoardCard({
   sourceId: string;
   onChange: (propertyId: string, value: CellValue | null) => void;
   view: DatabaseView;
+  /** propertyId → column max, for number bar/ring fills. */
+  numberMaxes?: Record<string, number>;
+  columnValuesByProp?: Record<string, CellValue[]>;
 }) {
   const { setTarget } = usePageView();
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -97,6 +101,9 @@ export function BoardCard({
             onChange={(v) => onChange(titleProp.id, v)}
             view={view}
             properties={properties}
+            columnValues={
+              !columnValuesByProp ? [] : columnValuesByProp[titleProp.id]
+            }
           />
         </div>
       )}
@@ -115,6 +122,9 @@ export function BoardCard({
               onChange={(v) => onChange(prop.id, v)}
               view={view}
               properties={properties}
+              columnValues={
+                !columnValuesByProp ? [] : columnValuesByProp[prop.id]
+              }
             />
           ))}
         </div>

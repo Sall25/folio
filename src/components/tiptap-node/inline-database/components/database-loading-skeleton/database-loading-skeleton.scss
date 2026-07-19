@@ -1,11 +1,4 @@
 .db-skeleton {
-  &__sr {
-    position: absolute;
-    width: 1px; height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-  }
-
   &__toolbar {
     display: flex;
     align-items: center;
@@ -16,21 +9,131 @@
   &__row {
     display: grid;
     align-items: center;
+    width: 100%;
 
     &--header .db-skeleton__cell {
-      // match PropertyHeader's height so the header band is right
-      height: 36px;
+      height: 40px;
     }
   }
 
   &__cell {
     display: flex;
     align-items: center;
-    gap: 8px;
-    height: 36px;                              // match real .db-td row height
-    padding: 0 8px;
+    gap: 10px;
+    // Match the real row: .db-node-cell is min-height 34px, and the borders
+    // add to that — 40px reads the same visually.
+    height: 40px;
+    padding: 0 10px;
     border-right: 1px solid var(--tt-border-color);
     border-bottom: 1px solid var(--tt-border-color);
     overflow: hidden;
   }
+
+  &__spacer { flex: 1 1 auto; }
+
+  // ── board ────────────────────────────────────────────────────────────
+  &__board {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding-top: 12px;
+  }
+
+  &__board-col {
+    flex: 0 0 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__board-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 4px;
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    min-height: 76px;
+    border: 1px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-sm);
+  }
+
+  // ── gallery ──────────────────────────────────────────────────────────
+  &__gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    padding-top: 12px;
+  }
+
+  &__gallery-card {
+    border: 1px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-md);
+    overflow: hidden;
+  }
+
+  &__cover { line-height: 0; }
+
+  &__card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+  }
+
+  // ── list ─────────────────────────────────────────────────────────────
+  &__list {
+    display: flex;
+    flex-direction: column;
+    padding-top: 8px;
+  }
+
+  &__list-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 44px;
+    border-bottom: 1px solid var(--tt-border-color);
+  }
+
+  // ── calendar ─────────────────────────────────────────────────────────
+  &__calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-top: 1px solid var(--tt-border-color);
+    border-left: 1px solid var(--tt-border-color);
+    margin-top: 12px;
+  }
+
+  &__day {
+    min-height: 110px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-right: 1px solid var(--tt-border-color);
+    border-bottom: 1px solid var(--tt-border-color);
+  }
+
+  // ── timeline ─────────────────────────────────────────────────────────
+  &__timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 12px;
+  }
+
+  &__timeline-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 32px;
+  }
+
+  &__track { flex: 1 1 auto; min-width: 0; }
 }

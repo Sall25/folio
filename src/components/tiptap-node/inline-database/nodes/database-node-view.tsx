@@ -8,7 +8,7 @@
 // The heavy logic lives in hooks (use-database-*.ts) and the table JSX lives in
 // database-table-body.tsx / database-table-header.tsx.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { NodeViewProps } from "@tiptap/core";
 import { NodeViewWrapper } from "@tiptap/react";
 import { Ellipsis, Lock, Link as LinkIcon } from "lucide-react";
@@ -57,6 +57,7 @@ import {
   type DatabaseAttrs,
   type DatabaseView,
   type PropertyConfig,
+  type ID,
 } from "src/types";
 import "./database-table-node-view.scss";
 import "./database-node.scss";
@@ -104,6 +105,40 @@ export function DatabaseNodeView({
   const tableRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
 
+  // ── View switching ────────────────────────────────────────────────────────
+  // Switching views shows a skeleton because mounting board/gallery/calendar is
+  // expensive — but nothing is *loading* (the source is already in the query
+  // cache), so there's no isLoading to key off. useTransition doesn't help
+  // either: the update travels through a ProseMirror transaction rather than a
+  // React setState, so React never scopes it as transition work. Hence an
+  // explicit flag.
+  const [switchingTo, setSwitchingTo] = useState<ID | null>(null);
+
+  // Clear once the target view is actually active. rAF so the clear lands after
+  // the new view's first paint rather than before it.
+  useEffect(() => {
+    if (switchingTo && attrs.activeViewId === switchingTo) {
+      const raf = requestAnimationFrame(() => setSwitchingTo(null));
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [attrs.activeViewId, switchingTo]);
+
+  const setActiveViewWithSkeleton = useCallback(
+    (viewId: ID) => {
+      if (viewId === attrs.activeViewId) return;
+      setSwitchingTo(viewId);
+      db.setActiveView(viewId);
+    },
+    [attrs.activeViewId, db],
+  );
+
+  // The toolbar and view tabs call db.setActiveView — wrapping it here means
+  // those components need no changes.
+  const dbWithSwitch = useMemo(
+    () => ({ ...db, setActiveView: setActiveViewWithSkeleton }),
+    [db, setActiveViewWithSkeleton],
+  );
+
   // ── Filtered + sorted records ─────────────────────────────────────────────
   const sortedRecords = useMemo(() => {
     // The title's value lives on page.title, not in values[], so filters and
@@ -135,6 +170,10 @@ export function DatabaseNodeView({
   const visibleSelection = useVisibleSelection(
     attrs.id ?? null,
     sortedRecordIds,
+  );
+  const selectedRecords = useMemo(
+    () => sortedRecords.filter((r) => visibleSelection.includes(r.id)),
+    [sortedRecords, visibleSelection],
   );
 
   // Register present views (existing effect)
@@ -247,7 +286,7 @@ export function DatabaseNodeView({
     );
   }
   if (isLoading || !source) {
-    return <DatabaseLoadingSkeleton />;
+    return <DatabaseLoadingSkeleton type={activeView?.type ?? "table"} />;
   }
 
   // ── Handlers ──────────────────────────────────────────────────────────────
@@ -351,7 +390,8 @@ export function DatabaseNodeView({
     >
       <DatabaseProvider
         attrs={attrs}
-        db={db}
+        // Switch-aware db so view tabs anywhere downstream trigger the skeleton.
+        db={dbWithSwitch}
         source={source}
         editor={editor}
         updateAttributes={updateAttributes}
@@ -389,7 +429,7 @@ export function DatabaseNodeView({
             <DatabaseToolbar
               properties={source.properties}
               attrs={attrs}
-              db={db}
+              db={dbWithSwitch}
               onUpdateAttributes={updateAttributes}
               locked={locked}
               hovered={hovered}
@@ -406,6 +446,7 @@ export function DatabaseNodeView({
               <SelectionToolbar
                 databaseId={attrs.id}
                 recordIds={visibleSelection}
+                records={selectedRecords}
                 properties={source.properties}
                 onSetValue={(propertyId, value) =>
                   visibleSelection.forEach((id) =>
@@ -447,6 +488,14 @@ export function DatabaseNodeView({
       </DatabaseProvider>
     </NodeViewWrapper>
   );
+
+  // ── Switching views → skeleton in the body slot ───────────────────────────
+  // Chrome stays mounted so the toolbar and tabs don't flash. The skeleton uses
+  // the TARGET view's shape, so it already looks like where you're going.
+  if (switchingTo) {
+    const target = attrs.views.find((v) => v.id === switchingTo);
+    return chrome(<DatabaseLoadingSkeleton type={target?.type ?? "table"} />);
+  }
 
   // ── View branches ─────────────────────────────────────────────────────────
   if (activeView?.type === "board")

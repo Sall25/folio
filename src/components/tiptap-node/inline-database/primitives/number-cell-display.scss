@@ -6,21 +6,31 @@
   // bar/ring push the number to the right; a plain number sits left.
   justify-content: flex-start;
 
-  &__display, &__num { font-variant-numeric: tabular-nums; font-size: 14px; }
+  &__display, &__num { font-variant-numeric: tabular-nums; font-size: 14px;  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+    -webkit-font-smoothing: auto; }
   &__input {
     min-width: 100px;
     background: none; border: none; outline: none;
     font-size: 14px; color: inherit; width: 120px; text-align: right;
     caret-color: currentColor; font-variant-numeric: tabular-nums;
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+    -webkit-font-smoothing: auto;
     &::-webkit-outer-spin-button, &::-webkit-inner-spin-button { -webkit-appearance: none; }
     -moz-appearance: textfield;
   }
   &__bar-wrap, &__ring-wrap { display: flex; align-items: center; gap: 8px; width: 100%; justify-content: flex-end; }
-  &__bar-track { flex: 1; height: 6px; border-radius: 999px; background: var(--tt-border-color); overflow: hidden; }
-  &__bar-fill { display: block; height: 100%; border-radius: 999px; background: var(--tt-brand-color-400); transition: width 0.2s ease; }
+  &__bar-track { flex: 1; height: 4px; border-radius: 999px; background: var(--tt-border-color); overflow: hidden; }
+  &__bar-fill { display: block; height: 100%; border-radius: 999px; background: color-mix(in srgb, var(--tt-brand-color-400) 30%, transparent); transition: width 0.2s ease; }
   &__ring {
-    width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
-    background: conic-gradient(var(--tt-brand-color-400) var(--ring-deg, 0deg), var(--tt-border-color) 0);
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: conic-gradient(
+      color-mix(in srgb, var(--tt-brand-color-400) 55%, transparent)
+        var(--ring-deg, 0deg),
+      color-mix(in srgb, var(--tt-text-primary) 10%, transparent) 0
+    );
     mask: radial-gradient(circle 5px at center, transparent 99%, #000 100%);
     -webkit-mask: radial-gradient(circle 5px at center, transparent 99%, #000 100%);
   }
@@ -63,4 +73,41 @@
   &__display{
     min-height: 34px;
   }
+}
+
+.db-cell-editor__box:has(.num-cell__input) {
+  padding: 0;
+  min-height: 0;
+  line-height: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+input.num-cell__input {
+  display: block;
+  width: 100%;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 8px;
+  font-family: inherit;
+  font-size: 14px;
+  border: none;
+  background: transparent;
+  // Numbers read right-aligned, matching the bar/ring display variants.
+  text-align: right;
+
+  &:focus,
+  &:focus-visible {
+    box-shadow: none;
+    border-color: transparent;
+  }
+
+  // Hide the spinner — the value is committed on Enter/blur, and the arrows
+  // crowd an already narrow cell.
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+  appearance: textfield;
 }

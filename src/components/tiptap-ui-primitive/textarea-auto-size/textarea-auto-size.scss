@@ -28,15 +28,16 @@
   border: 1.5px solid var(--tt-border-color);
   border-radius: var(--tt-radius-sm);
   transition: border-color var(--tt-transition-duration-default) var(--tt-transition-easing-default);
-
+  width: 100%;
+  margin: 0;
 }
 
 .ta-field:focus-within {
-  border-color: var(--tt-brand-color-500);
+  border-color: var(--tt-gray-dark-a-500);
 }
 
 .dark .ta-field:focus-within {
-  border-color: var(--tt-brand-color-400);
+  border-color: var(--tt-gray-dark-a-500); //var(--tt-brand-color-400);
 }
 
 .ta-field--error {
@@ -56,6 +57,11 @@
   resize: none;
   border: none;
   outline: none;
+  top: 0;
+  left: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: hidden;
 }
 
 /* ── Real textarea ── */
@@ -73,7 +79,7 @@
   line-height: 1.5;
   transition: height var(--tt-transition-duration-short) var(--tt-transition-easing-default);
   overflow: hidden;
-  caret-color: var(--tt-selection-color);
+  caret-color: currentColor;
 }
 
 .dark .ta-input {
@@ -95,6 +101,8 @@
   bottom: 0.4rem;
   right: 0.6rem;
   pointer-events: none;
+
+ 
 }
 
 .ta-char-count {
@@ -120,3 +128,16 @@
 }
 
 .ta-hint--error { color: var(--tt-color-text-red); }
+
+textarea.ta-shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  height: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden;
+  pointer-events: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

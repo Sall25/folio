@@ -162,6 +162,20 @@ export function DatabaseBoardNodeView({
     ? (resolvedRecords.find((r) => r.id === activeId) ?? null)
     : null;
 
+  // Values per property across ALL records in the view — the denominator for
+  // number bar/ring fills. Computed across the whole view, not per group, so
+  // cards stay comparable between columns (Notion's behavior).
+  const columnValuesByProp = useMemo(() => {
+    const map: Record<string, CellValue[]> = {};
+    for (const prop of source.properties) {
+      if (prop.config.type !== "number") continue;
+      map[prop.id] = resolvedRecords.map(
+        (r) => (r.values?.[prop.id] ?? null) as CellValue,
+      );
+    }
+    return map;
+  }, [resolvedRecords, source.properties]);
+
   if (!groupByPropertyId || columnDefs.length === 0) {
     return (
       <div className="db-board-empty">
@@ -250,6 +264,7 @@ export function DatabaseBoardNodeView({
                     sourceId={attrs.sourceId!}
                     onChange={(propId, v) => setCellValue(rec.id, propId, v)}
                     view={view}
+                    columnValuesByProp={columnValuesByProp}
                   />
                 ))}
               </BoardColumn>

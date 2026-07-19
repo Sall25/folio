@@ -28,14 +28,36 @@
 
   // Display-only property summary. Scrolls rather than wrapping so the bar
   // keeps a single-row height no matter how many properties exist.
-  &__props {
+   &__props {
     display: flex;
     align-items: center;
     gap: 2px;
     min-width: 0;
+    // Room for the focus ring to paint before the clip edge.
+    padding: 3px;
+    margin: -3px;
     overflow-x: auto;
     scrollbar-width: none;
     &::-webkit-scrollbar { display: none; }
+  }
+
+   // `input.` beats the bare `.tiptap-input` height/padding.
+  input.db-selection-toolbar__input {
+    width: 220px;
+    height: 28px;
+    min-height: 28px;
+    padding: 0 8px;
+    font-size: 13px;
+    border-radius: var(--tt-radius-sm);
+    flex: 0 0 auto;
+
+    // Inset ring instead of an outset one — can't be clipped by the
+    // scroll container, and keeps the chip row's height uniform.
+    &:focus,
+    &:focus-visible {
+      box-shadow: inset 0 0 0 1.5px var(--tt-brand-color-400);
+      border-color: var(--tt-brand-color-400);
+    }
   }
 
   &__prop {
@@ -64,4 +86,70 @@
 
 @media (prefers-reduced-motion: reduce) {
   .db-selection-toolbar { animation: none; }
+}
+
+.db-selection-toolbar {
+  &__props {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  // `button.` beats a bare `button { … }` global rule.
+  button.db-selection-toolbar__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 8px;
+    margin: 0;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    border-radius: var(--tt-radius-sm);
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 450;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--tt-text-primary);
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition: background-color 120ms ease;
+
+    .tiptap-button-icon {
+      flex: 0 0 auto;
+      // Muted so the label leads and all chips read consistently — the icons
+      // otherwise inherit each property type's own colour.
+      color: var(--tt-icon-secondary);
+    }
+
+    &:hover {
+      background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+    }
+
+    &:active {
+      background: color-mix(in srgb, var(--tt-text-primary) 12%, transparent);
+    }
+
+    &--active {
+      background: color-mix(in srgb, var(--tt-text-primary) 10%, transparent);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--tt-brand-color-400);
+      outline-offset: -2px;
+    }
+  }
+
+  &__chip-name {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }

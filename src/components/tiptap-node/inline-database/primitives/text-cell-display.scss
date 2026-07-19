@@ -1,55 +1,103 @@
-// The display and the field must share IDENTICAL metrics — same font, size,
-// weight, line-height, and zero padding on both — or the text visibly shifts the
-// moment the editor opens. The horizontal inset comes from the editor box
-// (.db-cell-editor__box), which matches the cell's own padding, so neither
-// element adds any of its own.
-
 .db-cell-text {
-  // Plain-text display in the cell — single line, ellipsis.
   &__display {
     display: block;
-    width: 100%;
     min-width: 0;
-    margin: 0;
-    // padding: 0 8px;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 34px;
-    color: var(--tt-theme-text);
-    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-
-    &--empty {
-      color: color-mix(in srgb, var(--tt-text-primary) 40%, transparent);
-    }
+    white-space: nowrap;
+    color: var(--tt-text-primary);
   }
 
-  // The textarea inside the popover editor. A BARE textarea, so this class lands
-  // on the element itself — the TextareaAutosize primitive put it on a wrapper,
-  // leaving the real textarea with its own padding (hence the shift) and a
-  // character counter in the corner.
+  &__display--empty {
+    color: var(--tt-text-tertiary);
+  }
+
   &__field {
+    // An inline-level textarea sits on the text baseline and reserves
+    // descender space beneath it — that's the gap under the editor.
     display: block;
     width: 100%;
-    min-width: 0;
-    margin: 0;
-    padding: 0;
+    box-sizing: border-box;
+    padding: 7px 8px;
+    // textarea defaults to monospace; inherit the app stack instead.
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.4;
     border: none;
     outline: none;
     background: transparent;
+    color: var(--tt-text-primary);
     resize: none;
-    overflow-y: hidden; // JS flips this to auto past maxRows
+
+    &:focus,
+    &:focus-visible {
+      box-shadow: none;
+      border-color: transparent;
+    }
+  }
+}
+
+// The box supplies the border and background; the textarea supplies the height.
+.db-cell-editor__box:has(.db-cell-text__field) {
+  padding: 0;
+  min-height: 0;
+  line-height: 0;
+  display: flex;
+  align-items: stretch;
+}.db-cell-text {
+  &__display {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--tt-text-primary);
+  }
+
+  &__display--empty {
+    color: var(--tt-text-tertiary);
+  }
+
+  &__field {
+    // An inline-level textarea sits on the text baseline and reserves
+    // descender space beneath it — that's the gap under the editor.
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 8px;
+    // textarea defaults to monospace; inherit the app stack instead.
     font-family: inherit;
     font-size: 14px;
-    font-weight: 400;
-    line-height: 1.5;
-    color: var(--tt-paragraph-text-color, var(--tt-theme-text));
-    caret-color: currentColor;
+    line-height: 1.4;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--tt-text-primary);
+    resize: none;
 
-    &::placeholder {
-      color: color-mix(in srgb, var(--tt-text-primary) 40%, transparent);
+    &:focus,
+    &:focus-visible {
+      box-shadow: none;
+      border-color: transparent;
     }
+  }
+}
+
+// The box supplies the border and background; the textarea supplies the height.
+.db-cell-editor__box:has(.db-cell-text__field) {
+  padding: 0;
+  min-height: 0;
+  line-height: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+textarea.db-cell-text__field {
+  border: none;
+  background: transparent;
+  &:focus,
+  &:focus-visible {
+    box-shadow: none;
+    border-color: transparent;
   }
 }

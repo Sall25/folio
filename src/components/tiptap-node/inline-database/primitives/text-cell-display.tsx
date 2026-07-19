@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CellEditorPopover } from "./cell-editor-popover";
-import { AutoTextarea } from "./auto-textarea";
+import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 import "./text-cell-display.scss";
 
 interface TextCellDisplayProps {
@@ -36,6 +36,9 @@ export function TextCellDisplay({
   return (
     <CellEditorPopover
       readonly={readonly || !onChange}
+      // Match the column exactly — the default adds 8px, which spills the box
+      // past the cell edge.
+      width="var(--radix-popover-trigger-width)"
       trigger={
         <span
           className={`db-cell-text__display${
@@ -47,12 +50,14 @@ export function TextCellDisplay({
       }
     >
       {(close) => (
-        <AutoTextarea
+        <TextareaAutosize
+          autoFocus
           className="db-cell-text__field"
           value={draft}
           maxRows={maxRows}
           placeholder={placeholder}
-          onChange={setDraft}
+          // Event-based, unlike AutoTextarea which handed back a string.
+          onChange={(e) => setDraft(e.target.value)}
           onBlur={() => commit(close)}
           onKeyDown={(e) => {
             // Enter commits; Shift+Enter inserts a newline.

@@ -1,94 +1,64 @@
-// Display and field share IDENTICAL metrics — same font, size, weight, zero
-// padding — so the text doesn't shift when the editor opens. The one deliberate
-// difference is line-height: the DISPLAY uses the row height (centring a single
-// line in the cell), the FIELD uses normal leading (a 34px line-height in a
-// textarea would space wrapped lines absurdly, and the auto-grow measures
-// against it).
-
 .db-td--url {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
   min-width: 0;
 }
 
-.db-cell-link {
-  // NOT width:100% — the link must leave room beside it. It stops propagation,
-  // so a click on the link navigates; the space to its right is the ONLY place a
-  // click reaches the editor. `flex: 0 1 auto` lets it take just its text and
-  // shrink (with ellipsis) rather than fill the cell.
+.db-cell-link--url {
+  // NOT flex:1 — the link must leave room beside it. It stops propagation, so
+  // a click on the link navigates; the space to its right is the ONLY place a
+  // click reaches the editor. `0 1 auto` takes just its text and shrinks with
+  // ellipsis rather than filling the cell.
   flex: 0 1 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  // Caps the link so a long URL can never consume the whole cell — the
+  // remainder is the edit target.
+  max-width: calc(100% - 28px);
+  display: flex;
+  align-items: baseline;
   min-width: 0;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: inherit;
   font-size: 14px;
-  font-weight: 400;
-  line-height: 34px; // row height — centres the single line in the cell
-  color: var(--tt-text-primary);
-  text-decoration: none;
+  line-height: 34px;
+  text-decoration: underline;
+  text-decoration-color: var(--tt-text-secondary);
+  text-underline-offset: 2px;
 
   &:hover {
-    text-decoration: underline;
+    text-decoration-color: var(--tt-text-primary);
   }
 
-  // The external-link glyph must not shrink away when the URL is long.
-  svg {
-    flex-shrink: 0;
+  .db-cell-link__domain {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    color: var(--tt-text-primary);
   }
 
-  // The text is what ellipsizes — not the whole link, or the icon would be cut.
-  &__text {
+  .db-cell-link__sep {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    color: var(--tt-text-secondary);
+  }
+
+  .db-cell-link__path-head {
+    flex: 0 1 auto;
     min-width: 0;
     overflow: hidden;
-    white-space: nowrap;
     text-overflow: ellipsis;
-    color: var(--tt-text-primary);
-    text-decoration-color: var(--tt-gray-light-a-600);
-    .dark & {
-      text-decoration-color: rgba(143, 142, 142, 0.462) !important;
-    }
+    white-space: nowrap;
+    color: var(--tt-text-secondary);
   }
 
-  // Empty cell — holds the row's height so the cell doesn't collapse.
-  &__empty {
-    display: block;
-    flex: 1 1 auto;
-    height: 34px;
-  }
-
-  &__field {
-    display: block;
-    width: 100%;
-    min-width: 0;
-    margin: 0;
-    padding: 0;
-    border: none;
-    outline: none;
-    background: transparent;
-    resize: none;
-    overflow-y: hidden;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 1.5;
-    color: var(--tt-text-primary);
-    caret-color: currentColor;
-
-    &::placeholder {
-      color: color-mix(in srgb, var(--tt-text-primary) 40%, transparent);
-    }
+  .db-cell-link__path-tail {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    color: var(--tt-text-secondary);
   }
 }
 
-// The edit affordance. `margin-left: auto` pins it to the cell's right edge,
-// which also GUARANTEES the click gap exists — even when the URL is long enough
-// to fill the column, since the link shrinks and this doesn't (flex: 0 0 auto).
+// The edit affordance. `margin-left: auto` pins it right, which also guarantees
+// the click gap exists even when the URL is long — the link shrinks, this
+// doesn't.
 .db-cell-edit-hint {
   flex: 0 0 auto;
   display: inline-flex;
@@ -114,3 +84,10 @@
 .db-node-cell:hover .db-cell-edit-hint {
   opacity: 1;
 }
+
+
+.db-cell-link__sep {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    color: var(--tt-text-secondary);
+  }

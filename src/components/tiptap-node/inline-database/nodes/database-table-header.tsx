@@ -22,7 +22,6 @@ import {
   Card,
   CardBody,
   CardGroupLabel,
-  CardHeader,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 import {
@@ -228,6 +227,7 @@ export function DatabaseTableHeader({
                 style={{
                   width: "100%",
                   marginBottom: 8,
+                  background: "var(--tt-bg-color)",
                   color: "var(--tt-text-primary)",
                 }}
               />

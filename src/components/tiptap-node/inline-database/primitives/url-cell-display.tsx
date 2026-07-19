@@ -1,8 +1,24 @@
 import { useState } from "react";
-import { ExternalLink, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { CellEditorPopover } from "./cell-editor-popover";
-import { AutoTextarea } from "./auto-textarea";
+import { Input } from "src/components/tiptap-ui-primitive/input";
 import "./url-cell-display.scss";
+
+/** Split into domain, separator, and path so each can be styled and truncated
+ *  independently — the slash must stay visible even when the path head
+ *  ellipsizes away. */
+function splitUrl(url: string): { domain: string; path: string } {
+  const bare = url.replace(/^https?:\/\//i, "");
+  const slash = bare.indexOf("/");
+  return slash === -1
+    ? { domain: bare, path: "" }
+    : { domain: bare.slice(0, slash), path: bare.slice(slash + 1) };
+}
+
+// How many trailing characters survive truncation. The tail of a URL path is
+// usually the identifying part (a slug or id), so it's pinned while the head
+// ellipsizes — CSS can't middle-truncate, hence the split.
+const TAIL_CHARS = 7;
 
 function toHref(url: string): string {
   if (!url) return "";
@@ -34,16 +50,27 @@ export function UrlCellDisplay({
   // invisible dead space unless it's signposted. Hence the pencil: it marks the
   // one spot that edits rather than navigates.
   const link = value ? (
-    <a
-      href={toHref(value)}
-      className="db-cell-link db-cell-link--url"
-      onClick={(e) => e.stopPropagation()}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <ExternalLink stroke="var(--tt-text-primary)" size={11} />
-      <span className="db-cell-link__text">{value}</span>
-    </a>
+    (() => {
+      const { domain, path } = splitUrl(value);
+      const head = path.length > TAIL_CHARS ? path.slice(0, -TAIL_CHARS) : path;
+      const tail = path.length > TAIL_CHARS ? path.slice(-TAIL_CHARS) : "";
+
+      return (
+        <a
+          href={toHref(value)}
+          className="db-cell-link db-cell-link--url"
+          onClick={(e) => e.stopPropagation()}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={value}
+        >
+          <span className="db-cell-link__domain">{domain}</span>
+          {path !== "" && <span className="db-cell-link__sep">/</span>}
+          {head && <span className="db-cell-link__path-head">{head}</span>}
+          {tail && <span className="db-cell-link__path-tail">{tail}</span>}
+        </a>
+      );
+    })()
   ) : (
     <span className="db-cell-link__empty" />
   );
@@ -68,12 +95,18 @@ export function UrlCellDisplay({
       }
     >
       {(close) => (
-        <AutoTextarea
+        <Input
+          type="url"
+          ref={(el) => {
+            if (!el) return;
+            el.focus();
+            const end = el.value.length;
+            el.setSelectionRange(end, end);
+          }}
           className="db-cell-link__field"
           value={draft}
-          maxRows={1}
           placeholder="https://example.com"
-          onChange={setDraft}
+          onChange={(e) => setDraft(e.target.value)}
           onBlur={() => commit(close)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {

@@ -69,3 +69,16 @@
     flex: 1 1 auto;
   }
 }
+
+// Multi-line variant: same tokens, border, placeholder and focus ring as the
+// single-line Input, minus the fixed height.
+.tiptap-input--textarea {
+  height: auto;
+  min-height: 2.25rem;
+  padding: 7px 0.75rem;
+  line-height: 1.4;
+  font-family: inherit;   // textarea defaults to monospace
+  resize: none;
+  display: block;         // avoids the inline baseline gap under the control
+  overflow-y: auto;
+}

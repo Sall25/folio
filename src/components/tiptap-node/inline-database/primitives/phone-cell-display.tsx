@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Pencil, Phone } from "lucide-react";
 import { CellEditorPopover } from "./cell-editor-popover";
-import { AutoTextarea } from "./auto-textarea";
+import { Input } from "src/components/tiptap-ui-primitive/input";
 import "./phone-cell-display.scss";
 
 export interface PhoneCellDisplayProps {
@@ -69,12 +69,18 @@ export function PhoneCellDisplay({
       }
     >
       {(close) => (
-        <AutoTextarea
+        <Input
+          type="tel"
+          ref={(el) => {
+            if (!el) return;
+            el.focus();
+            const end = el.value.length;
+            el.setSelectionRange(end, end);
+          }}
           className="db-cell-phone__field"
           value={draft}
-          maxRows={1}
           placeholder="+221 77 123 4567"
-          onChange={setDraft}
+          onChange={(e) => setDraft(e.target.value)}
           onBlur={() => commit(close)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
