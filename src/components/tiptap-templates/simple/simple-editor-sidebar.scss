@@ -523,3 +523,16 @@
     opacity: 0.75;
   }
 }
+
+.use-button-group{
+  padding: 0 !important;
+  height: 30px;
+  border-radius: var(--tt-radius-lg);
+  &:hover{
+    padding: 0 !important;
+    background-color: var(--tt-gray-light-a-100);
+    .dark & {
+      background-color: var(--tt-gray-dark-a-50);
+    }
+  }
+}

@@ -492,7 +492,7 @@ export default function SearchPalette() {
         role="dialog"
         aria-label={t("search.title")}
         onClick={(e) => e.stopPropagation()}
-        style={{ width: 1200, maxWidth: "99vw" }}
+        style={{ width: 930, maxWidth: "98vw" }}
       >
         <CardItemGroup orientation="horizontal">
           <div className="sp-search">

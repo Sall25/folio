@@ -2,6 +2,7 @@
   width: 280px;
   display: flex;
   flex-direction: column;
+  min-height: 400px;
   max-height: 600px;
   border-radius: var(--tt-radius-md);
   background-color: var(--tt-gray-light-50);

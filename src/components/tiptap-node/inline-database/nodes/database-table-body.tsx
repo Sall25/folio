@@ -14,10 +14,14 @@ import type {
   PropertyConfig,
   Page,
   ID,
+  TableView,
 } from "src/types";
 import { recordSelection } from "../utils/record-selection-store";
 import { FreezeDivider } from "../components/freeze-divider";
 import { useDatabaseContext } from "./database-context";
+import type { GroupHeaderSlot } from "../utils/group-rows";
+import "./database-table-body.scss";
+import { Chevron } from "src/components/tiptap-ui-primitive/chevron";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -49,7 +53,13 @@ interface Props {
   ) => void;
   onNewRecord: () => void;
 
+  headers: GroupHeaderSlot[];
+
+  collapsedKeys: Set<string>;
+
   databaseId?: ID;
+
+  onNewRecordInGroup: (groupKey: string) => void;
 }
 
 export function DatabaseTableBody({
@@ -69,6 +79,9 @@ export function DatabaseTableBody({
   onCommitColumnWidth,
   onNewRecord,
   databaseId,
+  headers,
+  collapsedKeys,
+  onNewRecordInGroup,
 }: Props) {
   const { db } = useDatabaseContext();
 
@@ -87,6 +100,17 @@ export function DatabaseTableBody({
   // header-only). The placeholder rows add their own trailing track so they
   // reach the table's right edge.
   const placeholderGridTemplateColumns = `${bodyGridTemplateColumns} 1fr`;
+
+  const toggleGroup = (key: string) => {
+    const current = (activeView as TableView)?.collapsedGroups ?? [];
+    if (activeView) {
+      db.updateView(activeView.id, {
+        collapsedGroups: current.includes(key)
+          ? current.filter((k) => k !== key)
+          : [...current, key],
+      } as Partial<TableView>);
+    }
+  };
 
   return (
     <NodeViewWrapper
@@ -136,6 +160,48 @@ export function DatabaseTableBody({
           gridTemplateColumns: `${bodyGridTemplateColumns} 1fr`,
         }}
       >
+        {headers.map((h) => {
+          const expanded = !collapsedKeys.has(h.key);
+          return (
+            <div
+              key={h.key}
+              className="db-group-header"
+              style={{ gridColumn: "1 / -1", gridRow: h.row }}
+              contentEditable={false}
+              onClick={() => toggleGroup(h.key)}
+            >
+              <Chevron
+                expanded={expanded}
+                size="default"
+                aria-label={expanded ? "Collapse group" : "Expand group"}
+              />
+              <Button data-highlighted={true}>
+                <span className="tiptap-button-text">{h.label}</span>
+                {/* <span className="db-group-header__count">{h.count}</span> */}
+              </Button>
+            </div>
+          );
+        })}
+        {headers.map((h) => {
+          const expanded = !collapsedKeys.has(h.key);
+          return expanded ? (
+            <div
+              key={`new-${h.key}`}
+              className="db-group-new"
+              style={{ gridColumn: "1 / -1", gridRow: h.newRow }}
+              contentEditable={false}
+            >
+              <Button
+                variant="ghost"
+                className="db-group-new__button"
+                onClick={() => onNewRecordInGroup(h.key)}
+              >
+                <Plus className="tiptap-button-icon" />
+                <span className="tiptap-button-text">New page</span>
+              </Button>
+            </div>
+          ) : null;
+        })}
         <NodeViewContent as="div" className="db-node-grid__body" />
       </div>
 

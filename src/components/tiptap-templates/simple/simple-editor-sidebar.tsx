@@ -82,15 +82,12 @@ function User() {
 
   return (
     <ButtonGroup
+      className="use-button-group"
       orientation="horizontal"
       style={{
         width: "100%",
         justifyContent: "flex-start",
         cursor: "pointer",
-        backgroundColor: hovered
-          ? "var(--tt-button-hover-bg-color) !important"
-          : "transparent",
-        transition: "background-color 0.15s ease",
       }}
       onMouseOver={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -125,23 +122,27 @@ function User() {
       >
         {t("sidebar.personalSpace", { name })}
       </span>
-      {hovered && (
-        <>
-          <Spacer size={1} orientation="horizontal" />
-          <Button
-            variant="ghost"
-            tooltip={t("sidebar.collapse")}
-            onClick={onToggle}
-          >
-            <ChevronsLeft className="tiptap-button-icon" />
-          </Button>
-        </>
-      )}
+      <Spacer size={1} orientation="horizontal" />
+      <Button
+        variant="ghost"
+        size="large"
+        tooltip={t("sidebar.collapse")}
+        onClick={onToggle}
+        style={{
+          background: "transparent",
+          padding: 0,
+          opacity: hovered ? 1 : 0,
+          transition: "opacity 0.12s ease",
+        }}
+      >
+        <ChevronsLeft className="tiptap-button-icon" />
+      </Button>
       <Spacer orientation="horizontal" />
 
       <Button
+        size="large"
         variant="ghost"
-        // tooltip={t("sidebar.collapse")}
+        tooltip={t("page.newPage")}
         onClick={onCreatePage}
       >
         <PenBox
@@ -185,7 +186,7 @@ function WorkspaceHeader() {
       onMouseOver={() => setHide(false)}
       style={{
         width: "100%",
-        paddingLeft: !collapsed ? 7 : 0,
+        paddingLeft: !collapsed ? 2 : 0,
         border: "none",
       }}
     >
@@ -236,6 +237,7 @@ function NavItems() {
     >
       <ButtonGroup className="sidebar-nav-item" orientation="horizontal">
         <Button
+          size="large"
           // variant="ghost"
           data-active-state="on"
           onClick={handleHomeClick}
@@ -260,6 +262,7 @@ function NavItems() {
         <ButtonGroup orientation="horizontal" style={{ maxWidth: "90px" }}>
           <Button
             variant="ghost"
+            size="large"
             // data-active-state={libraryOpen ? "on" : "off"}
             onClick={handleLibraryClick}
             style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
@@ -272,6 +275,7 @@ function NavItems() {
             />
           </Button>
           <Button
+            size="large"
             variant="ghost"
             onClick={handleHomeClick}
             tooltip={t("sidebar.inbox")}
@@ -283,6 +287,7 @@ function NavItems() {
           </Button>
 
           <Button
+            size="large"
             variant="ghost"
             style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
             tooltip={t("sidebar.store")}
@@ -298,6 +303,7 @@ function NavItems() {
         <Spacer orientation="horizontal" />
 
         <Button
+          size="large"
           variant="ghost"
           onClick={() => onOpenChange?.(true)}
           tooltip={t("sidebar.search")}
@@ -354,9 +360,10 @@ function TemplatesModalTrigger() {
   const { t } = useTranslation();
   return (
     <Button
+      size="large"
       variant="ghost"
       onClick={() => onOpenChange?.(true)}
-      style={{ width: "100%", justifyContent: "flex-start", fontWeight: 550 }}
+      style={{ width: "100%", justifyContent: "flex-start" }}
     >
       <LayoutTemplate className="tiptap-button-icon" />
       <Spacer size={3} />
@@ -373,6 +380,7 @@ function LibraryPaletteTrigger() {
 
   return (
     <Button
+      size="large"
       onClick={handleLibraryClick}
       variant="ghost"
       style={{ width: "100%", justifyContent: "flex-start" }}
@@ -488,22 +496,23 @@ export function SimpleEditorSidebar() {
 
             <Spacer orientation="vertical" size={12} />
             <Button
+              size="large"
               variant="ghost"
               onClick={() => openTo("teamspaces")}
               aria-label="Open workspace settings"
               style={{
                 justifyContent: "flex-start",
                 width: "100%",
-                gap: 8,
                 color: "var(--tt-text-color)",
               }}
             >
               <Settings className="tiptap-button-icon" size={16} />
+              <Spacer orientation="horizontal" size={3} />
               <span className="tiptap-button-text">Workspace settings</span>
             </Button>
-            <Spacer orientation="vertical" size={4} />
+            <Spacer orientation="vertical" size={1} />
             <TemplatesModalTrigger />
-            <Spacer orientation="vertical" size={4} />
+            <Spacer orientation="vertical" size={1} />
             <LibraryPaletteTrigger />
             <Spacer orientation="vertical" size={25} />
           </>

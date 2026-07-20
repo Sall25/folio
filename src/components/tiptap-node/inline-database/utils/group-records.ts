@@ -1,7 +1,25 @@
-import type { DatabaseProperty, Page } from "src/types";
+import type { CellValue, DatabaseProperty, Page } from "src/types";
 
 export const NONE_KEY = "__none__";
 export const ALL_KEY = "__all__";
+
+/** Inverse of groupKeyFor: the cell value that puts a record in a given group. */
+export function valueForGroupKey(
+  key: string,
+  prop: DatabaseProperty,
+): CellValue | null {
+  if (key === NONE_KEY) return null;
+  const cfg = prop.config;
+  if (cfg.type === "select")
+    return cfg.options.find((o) => o.id === key) ?? null;
+  if (cfg.type === "multi_select") {
+    const o = cfg.options.find((x) => x.id === key);
+    return o ? [o] : [];
+  }
+  if (cfg.type === "status") return key;
+  if (cfg.type === "checkbox") return key === "true";
+  return null;
+}
 
 export function groupKeyFor(value: unknown, prop: DatabaseProperty): string {
   if (value == null) return NONE_KEY;

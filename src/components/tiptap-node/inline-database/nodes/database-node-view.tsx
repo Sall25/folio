@@ -11,14 +11,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { NodeViewProps } from "@tiptap/core";
 import { NodeViewWrapper } from "@tiptap/react";
-import { Ellipsis, Lock, Link as LinkIcon } from "lucide-react";
-import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "src/components/tiptap-ui-primitive/dropdown-menu";
+import { Ellipsis } from "lucide-react";
+import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -58,12 +52,25 @@ import {
   type DatabaseView,
   type PropertyConfig,
   type ID,
+  type TableView,
 } from "src/types";
 import "./database-table-node-view.scss";
 import "./database-node.scss";
 import { SelectionToolbar } from "../components/selection-toolbar";
 import { useVisibleSelection } from "../hooks/use-visible-selection";
 import { removeRecordNodes } from "../utils/remove-record-nodes";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "src/components/tiptap-ui-primitive/popover";
+import { PropertiesPanel } from "../components/properties-panel";
+import { buildGroupedRows } from "../utils/group-rows";
+import {
+  groupRecords,
+  NONE_KEY,
+  valueForGroupKey,
+} from "../utils/group-records";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -139,7 +146,7 @@ export function DatabaseNodeView({
     [db, setActiveViewWithSkeleton],
   );
 
-  // ── Filtered + sorted records ─────────────────────────────────────────────
+  // ── Filtered + sorted records + queried ─────────────────────────────────────────────
   const sortedRecords = useMemo(() => {
     // The title's value lives on page.title, not in values[], so filters and
     // sorts need the property list to know which id is the title.
@@ -149,28 +156,79 @@ export function DatabaseNodeView({
           recordMatchesFilters(r, activeView.filters, props),
         )
       : resolvedRecords;
-    return sortRecords(filtered, activeView?.sorts ?? [], props);
+
+    // Search matches the title only — same as Notion's in-database search.
+    // It's applied AFTER filters and before sorting: search narrows what the
+    // view already shows rather than reaching past its filters.
+    const q = db.searchQuery.trim().toLowerCase();
+    const searched = q
+      ? filtered.filter((r) => (r.title ?? "").toLowerCase().includes(q))
+      : filtered;
+
+    return sortRecords(searched, activeView?.sorts ?? [], props);
   }, [
     resolvedRecords,
     activeView?.filters,
     activeView?.sorts,
     source?.properties,
+    db.searchQuery,
   ]);
 
-  // Ids in view order — the visible-selection intersection needs a stable
-  // array identity, so memo it rather than mapping inline.
-  const sortedRecordIds = useMemo(
-    () => sortedRecords.map((r) => r.id),
-    [sortedRecords],
+  const groupByPropertyId =
+    activeView?.type === "table"
+      ? ((activeView as TableView).groupByPropertyId ?? null)
+      : null;
+
+  const groupProp = groupByPropertyId
+    ? source?.properties.find((p) => p.id === groupByPropertyId)
+    : undefined;
+
+  const collapsedKeys = useMemo(
+    () => new Set((activeView as TableView)?.collapsedGroups ?? []),
+    [activeView],
   );
+
+  const { rowSlots, headers } = useMemo(() => {
+    if (!groupProp) {
+      return { rowSlots: sortedRecords.map((r) => r.id), headers: [] };
+    }
+    return buildGroupedRows(
+      groupRecords(sortedRecords, groupProp),
+      collapsedKeys,
+      (activeView as TableView)?.showEmptyGroups ?? false,
+    );
+  }, [sortedRecords, groupProp, collapsedKeys, activeView]);
+
+  const newRecordInGroup = (groupKey: string) => {
+    addRecordAsync({ title: "" })
+      .then((page) => {
+        if (editor && attrs.id && attrs.sourceId && source) {
+          insertRecordNode(
+            editor,
+            attrs.id,
+            attrs.sourceId,
+            page,
+            source.properties,
+          );
+        }
+        // Set the grouping value so the record lands in the group it was
+        // created from, rather than in "No <property>".
+        if (groupProp && groupKey !== NONE_KEY) {
+          setCellValue(
+            page.id,
+            groupProp.id,
+            valueForGroupKey(groupKey, groupProp) as never,
+          );
+        }
+        setTarget({ pageId: page.id, view: "Peek" });
+      })
+      .catch(() => console.log("Failed to create page"));
+  };
 
   // Selection ∩ visible rows. Selection survives filter changes, so a record
   // can stay selected while filtered out — bulk actions must only touch what
   // the user can see.
-  const visibleSelection = useVisibleSelection(
-    attrs.id ?? null,
-    sortedRecordIds,
-  );
+  const visibleSelection = useVisibleSelection(attrs.id ?? null, rowSlots);
   const selectedRecords = useMemo(
     () => sortedRecords.filter((r) => visibleSelection.includes(r.id)),
     [sortedRecords, visibleSelection],
@@ -243,6 +301,7 @@ export function DatabaseNodeView({
     resolvedRecords,
     sortedRecords,
     draftWidths,
+    rowSlots,
     hasSource: !!source,
     setCellValue: (recordId, propertyId, value) =>
       setCellValue(recordId, propertyId, value as never),
@@ -347,59 +406,30 @@ export function DatabaseNodeView({
   };
 
   const optionsMenu = (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost">
-          <Ellipsis className="tiptap-button-icon" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <Card
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          tooltip="Hide Properties"
+          variant="ghost"
           style={{
-            padding: "5px",
-            minWidth: 200,
-            boxShadow: "var(--tt-shadow-elevated-sm)",
+            minHeight: 22,
+            height: 22,
+            borderRadius: "var(--tt-radius-sm)",
+            background: "transparent",
           }}
         >
-          <CardItemGroup
-            style={{ width: "100%", justifyContent: "flex-start" }}
-          >
-            <DropdownMenuItem asChild>
-              <Button
-                variant="ghost"
-                style={{ justifyContent: "flex-start", width: "100%" }}
-                onClick={() =>
-                  updateAttributes({ ...attrs, locked: !attrs.locked })
-                }
-              >
-                <Lock className="tiptap-button-icon" />
-                <span className="tiptap-button-text">
-                  {locked ? "Unlock database" : "Lock database"}
-                </span>
-              </Button>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Button
-                variant="ghost"
-                style={{ justifyContent: "flex-start", width: "100%" }}
-                onClick={() => {
-                  const pageId = source.pageId ?? attrs.pageId;
-                  if (pageId == null) return;
-                  navigator.clipboard.writeText(
-                    `${window.location.origin}/page/${pageId}#view=${
-                      activeView?.id ?? ""
-                    }`,
-                  );
-                }}
-              >
-                <LinkIcon className="tiptap-button-icon" />
-                <span className="tiptap-button-text">Copy link to view</span>
-              </Button>
-            </DropdownMenuItem>
-          </CardItemGroup>
-        </Card>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <Ellipsis className="tiptap-button-icon" size={14} />
+        </Button>
+      </PopoverTrigger>
+
+      <PopoverContent side="bottom" align="start" className="db-panel">
+        <PropertiesPanel
+          properties={source?.properties ?? []}
+          db={db}
+          activeView={activeView}
+        />
+      </PopoverContent>
+    </Popover>
   );
 
   // ── Chrome wrapper shared by every view ───────────────────────────────────
@@ -588,6 +618,9 @@ export function DatabaseNodeView({
       onCommitColumnWidth={commitColumnWidth}
       onNewRecord={newRecord}
       databaseId={attrs.id}
+      headers={headers}
+      collapsedKeys={collapsedKeys}
+      onNewRecordInGroup={newRecordInGroup}
     />,
   );
 }

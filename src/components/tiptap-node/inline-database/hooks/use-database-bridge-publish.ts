@@ -26,6 +26,7 @@ interface Params {
   draftWidths: Record<string, number>;
   hasSource: boolean;
   setCellValue: (recordId: string, propertyId: string, value: unknown) => void;
+  rowSlots: string[];
 }
 
 export function useDatabaseBridgePublish({
@@ -39,6 +40,7 @@ export function useDatabaseBridgePublish({
   draftWidths,
   hasSource,
   setCellValue,
+  rowSlots,
 }: Params) {
   const recordsById = useMemo(
     () => new Map((hasSource ? resolvedRecords : []).map((r) => [r.id, r])),
@@ -60,14 +62,6 @@ export function useDatabaseBridgePublish({
     });
     return out;
   }, [properties, sortedRecords]);
-
-  // Ids only: record NodeViews need presence (is this record in the view?) and
-  // index (where does it sort?). Publishing the full Page[] would change identity
-  // on any record edit and re-render every row for nothing.
-  const sortedRecordIds = useMemo(
-    () => sortedRecords.map((r) => r.id),
-    [sortedRecords],
-  );
 
   // Sticky geometry for frozen columns — the same accumulation the header does
   // (DatabaseTableHeader.stickyStyle), computed once here so every cell doesn't
@@ -105,7 +99,7 @@ export function useDatabaseBridgePublish({
       templateId: attrs.templateId,
       recordsById,
       columnWidthByProp,
-      sortedRecordIds,
+      sortedRecordIds: rowSlots,
       stickyByProp,
       setCellValue: (recordId, propertyId, value) =>
         setCellValue(recordId, propertyId, value as never),
@@ -120,7 +114,7 @@ export function useDatabaseBridgePublish({
       locked,
       recordsById,
       columnWidthByProp,
-      sortedRecordIds,
+      rowSlots,
       stickyByProp,
       columnValuesByProp,
       setCellValue,

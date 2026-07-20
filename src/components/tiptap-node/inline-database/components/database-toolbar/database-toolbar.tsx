@@ -1,13 +1,12 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ArrowUpDown,
-  Group,
   Search,
   Plus,
   X,
   ChevronDown,
   ListFilter,
-  SlidersHorizontal,
+  Maximize2,
 } from "lucide-react";
 
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -33,13 +32,16 @@ import { ViewOptionsPopover } from "./view-options-popover";
 import { DatabaseViewTabs } from "../database-view-tabs/database-view-tabs";
 import { FilterPanel } from "../filter-panel";
 import { SortPanel } from "../sort-panel";
-import { PropertiesPanel } from "../properties-panel";
-import { GroupPanel } from "../group-panel";
 import { useDataSource } from "../../hooks/use-data-source";
 import { usePages } from "src/hooks/use-pages";
 import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { makeRowTemplate } from "src/utils/make-row-template";
 import { DatabaseTitleBar } from "../database-title-bar";
+import { ChevronsLeft, ChevronsRight } from "lucide-react";
+import "./database-toolbar.scss";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { Input } from "src/components/tiptap-ui-primitive/input";
+import { useDebouncedCallback } from "use-debounce";
 
 interface DatabaseToolbarProps {
   attrs: DatabaseAttrs;
@@ -97,12 +99,14 @@ export function DatabaseToolbar({
   const activeView = getActiveView(attrs);
   const filters = activeView?.filters ?? [];
   const sorts = activeView?.sorts ?? [];
-  const props = activeView?.hiddenProperties ?? [];
   const activeFilterCount = totalFilterRules(filters);
   const activeSortCount = sorts.length;
-  const activePropsCount = props.length;
   const { data: pages } = usePages();
   const { setTarget } = usePageView();
+  // Collapsed toolbar — the control cluster folds behind the chevron, leaving
+  // just New. Local state, not view attrs: it's a per-session UI preference,
+  // not something to sync to other clients.
+  const [collapsed, setCollapsed] = useState(false);
 
   const { addRowTemplateAsync } = useDataSource(attrs.sourceId ?? null);
 
@@ -122,6 +126,7 @@ export function DatabaseToolbar({
   // Keep the controls visible while one of their popovers is open, so they
   // don't disappear out from under the user when the mouse leaves the node.
   const showControls = /* hovered*/ !locked || viewOptionsOpen || templateOpen;
+  const [showChevrons, setShowChevrons] = useState(false);
 
   const revealStyle: React.CSSProperties = {
     opacity: showControls ? 1 : 0,
@@ -135,6 +140,13 @@ export function DatabaseToolbar({
       .then((page) => setTarget({ pageId: page.id, view: "Center" }))
       .catch(() => console.log("Failed to create page"));
   };
+
+  const { setActivePageId } = useActivePage();
+
+  // The database's own page — `source.pageId` when it's a standalone database,
+  // falling back to the node's for an inline one. Same resolution the
+  // copy-link handler uses.
+  const dbPageId = source?.pageId ?? attrs.pageId ?? null;
 
   return (
     <CardItemGroup
@@ -172,135 +184,72 @@ export function DatabaseToolbar({
 
         {/* Hover-revealed control cluster — search / filter / sort / group /
             hide / view-options / New. Hidden (but space kept) off-hover. */}
-        <div style={revealStyle}>
+        <div
+          style={revealStyle}
+          onMouseOver={() => setShowChevrons(true)}
+          onMouseLeave={() => setShowChevrons(false)}
+        >
           <CardItemGroup orientation="horizontal">
-            {/* Search is reading — always available. */}
-            <SearchButton db={db} />
+            <Spacer orientation="horizontal" /*size={collapsed ? 10 : 3}*/ />
 
-            {/* Filter / Sort / Group / Hide-properties / View-options are all
+            {/* Chevron sits to the RIGHT of the collapsible group: the cluster
+                is right-aligned, so collapsing moves everything to its LEFT.
+                Anchored here, it stays exactly under the cursor across the
+                toggle — no chasing the pointer.
+
+                Always mounted when collapsed: it's the only way back. */}
+            <Button
+              variant="ghost"
+              size="large"
+              tooltip={collapsed ? "Show toolbar" : "Hide toolbar"}
+              onClick={() => setCollapsed((v) => !v)}
+              style={{
+                // minHeight: 22,
+                // height: 22,
+                // borderRadius: "var(--tt-radius-sm)",
+                background: "transparent",
+                padding: 0,
+                opacity: showChevrons || collapsed ? 1 : 0,
+                pointerEvents: showChevrons || collapsed ? "auto" : "none",
+                transition: "opacity 0.15s ease",
+              }}
+            >
+              {collapsed ? (
+                <ChevronsLeft
+                  className="tiptap-button-icon"
+                  style={{ width: 24, height: 18 }}
+                  size={18}
+                />
+              ) : (
+                <ChevronsRight
+                  className="tiptap-button-icon"
+                  style={{ width: 24, height: 18 }}
+                  size={18}
+                />
+              )}
+            </Button>
+
+            <div
+              className="db-toolbar__collapsible"
+              data-collapsed={collapsed || undefined}
+              aria-hidden={collapsed}
+            >
+              {/* Filter / Sort / Group / Hide-properties / View-options are all
                 view config → hidden when locked. */}
-            {!locked && (
-              <>
-                {activeFilterCount > 0 ? (
-                  // Rules exist → the button toggles the chip bar.
-                  <Button
-                    variant="ghost"
-                    tooltip={showFilterChips ? "Hide filters" : "Show filters"}
-                    data-active-state="on"
-                    onClick={onToggleFilterChips}
-                    style={{
-                      minHeight: 22,
-                      height: 22,
-                      borderRadius: "var(--tt-radius-sm)",
-                      background: "transparent",
-                    }}
-                  >
-                    <ListFilter className="tiptap-button-icon" size={14} />
-                  </Button>
-                ) : (
-                  // None yet → open the panel to create the first one.
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        tooltip="Filter"
-                        data-active-state="off"
-                        style={{
-                          minHeight: 22,
-                          height: 22,
-                          borderRadius: "var(--tt-radius-sm)",
-                          background: "transparent",
-                        }}
-                      >
-                        <ListFilter className="tiptap-button-icon" size={14} />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      side="bottom"
-                      align="start"
-                      className="db-panel"
-                    >
-                      <FilterPanel
-                        properties={source?.properties ?? []}
-                        db={db}
-                        activeView={activeView}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                )}
+              {!locked && (
+                <>
+                  <SearchButton db={db} />
 
-                {activeSortCount > 0 ? (
-                  <Button
-                    variant="ghost"
-                    tooltip={showSortChips ? "Hide sorts" : "Show sorts"}
-                    data-active-state="on"
-                    onClick={onToggleSortChips}
-                    style={{
-                      minHeight: 22,
-                      height: 22,
-                      borderRadius: "var(--tt-radius-sm)",
-                      background: "transparent",
-                    }}
-                  >
-                    <ArrowUpDown className="tiptap-button-icon" size={14} />
-                  </Button>
-                ) : (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        tooltip="Sort"
-                        variant="ghost"
-                        data-active-state={activeSortCount > 0 ? "on" : "off"}
-                        style={{
-                          minHeight: 22,
-                          height: 22,
-                          borderRadius: "var(--tt-radius-sm)",
-                          background: "transparent",
-                        }}
-                      >
-                        <ArrowUpDown className="tiptap-button-icon" size={14} />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      side="bottom"
-                      align="start"
-                      className="db-panel"
-                    >
-                      <SortPanel
-                        properties={source?.properties ?? []}
-                        db={db}
-                        activeView={activeView}
-                        sorts={sorts}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                )}
-
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost">
-                      <Group className="tiptap-button-icon" size={14} />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    side="bottom"
-                    align="start"
-                    className="db-panel"
-                  >
-                    <GroupPanel
-                      properties={source?.properties ?? []}
-                      db={db}
-                      activeView={activeView}
-                    />
-                  </PopoverContent>
-                </Popover>
-
-                <Popover>
-                  <PopoverTrigger asChild>
+                  {activeFilterCount > 0 ? (
+                    // Rules exist → the button toggles the chip bar.
                     <Button
-                      tooltip="Hide Properties"
+                      size="small"
                       variant="ghost"
-                      data-active-state={activePropsCount > 0 ? "on" : "off"}
+                      tooltip={
+                        showFilterChips ? "Hide filters" : "Show filters"
+                      }
+                      data-active-state="on"
+                      onClick={onToggleFilterChips}
                       style={{
                         minHeight: 22,
                         height: 22,
@@ -308,134 +257,230 @@ export function DatabaseToolbar({
                         background: "transparent",
                       }}
                     >
-                      <SlidersHorizontal
-                        className="tiptap-button-icon"
-                        size={14}
-                      />
+                      <ListFilter className="tiptap-button-icon" size={14} />
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    side="bottom"
-                    align="start"
-                    className="db-panel"
-                  >
-                    <PropertiesPanel
-                      properties={source?.properties ?? []}
-                      db={db}
-                      activeView={activeView}
-                    />
-                  </PopoverContent>
-                </Popover>
+                  ) : (
+                    // None yet → open the panel to create the first one.
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          tooltip="Filter"
+                          size="small"
+                          data-active-state="off"
+                          style={{
+                            minHeight: 22,
+                            height: 22,
+                            borderRadius: "var(--tt-radius-sm)",
+                            background: "transparent",
+                          }}
+                        >
+                          <ListFilter
+                            className="tiptap-button-icon"
+                            size={14}
+                          />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        side="bottom"
+                        align="start"
+                        className="db-panel"
+                      >
+                        <FilterPanel
+                          properties={source?.properties ?? []}
+                          db={db}
+                          activeView={activeView}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  )}
 
-                {activeView && (
-                  <ViewOptionsPopover
-                    properties={properties}
-                    db={db}
-                    view={activeView}
-                  />
-                )}
-              </>
+                  {activeSortCount > 0 ? (
+                    <Button
+                      variant="ghost"
+                      size="small"
+                      tooltip={showSortChips ? "Hide sorts" : "Show sorts"}
+                      data-active-state="on"
+                      onClick={onToggleSortChips}
+                      style={{
+                        minHeight: 22,
+                        height: 22,
+                        borderRadius: "var(--tt-radius-sm)",
+                        background: "transparent",
+                      }}
+                    >
+                      <ArrowUpDown className="tiptap-button-icon" size={14} />
+                    </Button>
+                  ) : (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          tooltip="Sort"
+                          variant="ghost"
+                          size="small"
+                          data-active-state={activeSortCount > 0 ? "on" : "off"}
+                          style={{
+                            minHeight: 22,
+                            height: 22,
+                            borderRadius: "var(--tt-radius-sm)",
+                            background: "transparent",
+                          }}
+                        >
+                          <ArrowUpDown
+                            className="tiptap-button-icon"
+                            size={14}
+                          />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        side="bottom"
+                        align="start"
+                        className="db-panel"
+                      >
+                        <SortPanel
+                          properties={source?.properties ?? []}
+                          db={db}
+                          activeView={activeView}
+                          sorts={sorts}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  )}
+
+                  <Button
+                    variant="ghost"
+                    size="small"
+                    tooltip="Open as full page"
+                    disabled={!dbPageId}
+                    onClick={() => {
+                      if (dbPageId == null) return;
+                      // Clear any peek/center target first — otherwise the
+                      // panel stays open behind the newly-opened page.
+                      setTarget(undefined);
+                      setActivePageId(dbPageId);
+                    }}
+                  >
+                    <Maximize2 className="tiptap-button-icon" />
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {activeView && (
+              <ViewOptionsPopover
+                properties={properties}
+                db={db}
+                view={activeView}
+              />
             )}
 
             {/* New record stays available when locked (adding data is allowed).
                 The template dropdown changes the database template → frozen. */}
-            <CardItemGroup
-              orientation="horizontal"
-              style={{
-                background: "var(--tt-brand-color-400)",
-                borderRadius: "var(--tt-radius-sm)",
-                color: "white",
-                minHeight: 24,
-                height: 24,
-                padding: "0px 5px",
-                cursor: "pointer",
-              }}
-            >
-              <span
-                style={{ fontSize: 11.5, fontWeight: "bold" }}
-                onClick={handleNewPage}
+            {!collapsed && (
+              <CardItemGroup
+                orientation="horizontal"
+                style={{
+                  background: "var(--tt-brand-color-400)",
+                  borderRadius: "var(--tt-radius-sm)",
+                  color: "white",
+                  minHeight: 26,
+                  height: 26,
+                  padding: "0px 8px",
+                  cursor: "pointer",
+                }}
+                contentEditable={false}
               >
-                New
-              </span>
-              {!locked && (
-                <>
-                  <Separator orientation="vertical" />
-                  <Popover
-                    open={templateOpen}
-                    onOpenChange={onTemplateOpenChange}
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        style={{
-                          background: "transparent",
-                          minWidth: 15,
-                          width: 15,
-                        }}
-                      >
-                        <ChevronDown
-                          className="tiptap-button-icon"
-                          style={{ color: "white" }}
-                        />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent>
-                      <Card style={{ padding: "5px 10px" }}>
-                        <CardBody>
-                          <CardItemGroup>
-                            {pages &&
-                              pages
-                                .filter((p) => p.category === "Template")
-                                .map((p) => (
-                                  <Button
-                                    key={p.id}
-                                    variant="ghost"
-                                    style={{
-                                      justifyContent: "flex-start",
-                                      minHeight: 24,
-                                      height: 24,
-                                    }}
-                                    onClick={() =>
-                                      onUpdateAttributes?.({
-                                        ...attrs,
-                                        templateId: p.id,
-                                      })
-                                    }
-                                  >
-                                    <PageItemIcon cover={p.cover} />
-                                    <span className="tiptap-button-text">
-                                      {p.title}
-                                    </span>
-                                  </Button>
-                                ))}
-                          </CardItemGroup>
-                        </CardBody>
-                        <CardFooter>
-                          <Button
-                            variant="ghost"
+                <span
+                  style={{ fontSize: 11.5, fontWeight: "bold" }}
+                  onClick={handleNewPage}
+                >
+                  New
+                </span>
+                {!locked && (
+                  <>
+                    <Separator orientation="vertical" />
+                    <Popover
+                      open={templateOpen}
+                      onOpenChange={onTemplateOpenChange}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          style={{
+                            background: "transparent",
+                            minWidth: 15,
+                            width: 15,
+                          }}
+                        >
+                          <ChevronDown
+                            className="tiptap-button-icon"
+                            style={{ color: "white" }}
+                          />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent>
+                        <Card style={{ padding: "5px 10px" }}>
+                          <CardBody
                             style={{
-                              background: "var(--tt-brand-color-400)",
+                              width: "100%",
                               justifyContent: "flex-start",
                             }}
-                            onClick={() => {
-                              onTemplateOpenChange(false);
-                              if (!source) return;
-                              const rowTemplate = makeRowTemplate(source, {
-                                name: "New Template",
-                              });
-                              addRowTemplateAsync(rowTemplate);
-                            }}
                           >
-                            <Plus className="tiptap-button-icon" />
-                            <span>Create a template</span>
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    </PopoverContent>
-                  </Popover>
-                </>
-              )}
-            </CardItemGroup>
+                            <CardItemGroup>
+                              {pages &&
+                                pages
+                                  .filter((p) => p.category === "Template")
+                                  .map((p) => (
+                                    <Button
+                                      key={p.id}
+                                      variant="ghost"
+                                      style={{
+                                        justifyContent: "flex-start",
+                                        minHeight: 24,
+                                        height: 24,
+                                      }}
+                                      onClick={() =>
+                                        onUpdateAttributes?.({
+                                          ...attrs,
+                                          templateId: p.id,
+                                        })
+                                      }
+                                    >
+                                      <PageItemIcon cover={p.cover} />
+                                      <span className="tiptap-button-text">
+                                        {p.title}
+                                      </span>
+                                    </Button>
+                                  ))}
+                            </CardItemGroup>
+                          </CardBody>
+                          <CardFooter>
+                            <Button
+                              variant="ghost"
+                              style={{
+                                background: "var(--tt-brand-color-400)",
+                                justifyContent: "flex-start",
+                              }}
+                              onClick={() => {
+                                onTemplateOpenChange(false);
+                                if (!source) return;
+                                const rowTemplate = makeRowTemplate(source, {
+                                  name: "New Template",
+                                });
+                                addRowTemplateAsync(rowTemplate);
+                              }}
+                            >
+                              <Plus className="tiptap-button-icon" />
+                              <span>Create a template</span>
+                            </Button>
+                          </CardFooter>
+                        </Card>
+                      </PopoverContent>
+                    </Popover>
+                  </>
+                )}
+              </CardItemGroup>
+            )}
           </CardItemGroup>
         </div>
 
@@ -456,39 +501,85 @@ export function DatabaseToolbar({
 }
 
 function SearchButton({ db }: { db: UseDatabaseReturn }) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+
+  // The input is driven by LOCAL state so keystrokes never touch the database.
+  // Pushing to db.searchQuery re-renders the node view, recomputes the
+  // filter+sort over every record, and re-publishes to every record node —
+  // far too much work to do per character.
+  const [draft, setDraft] = useState(db.searchQuery);
+
+  const pushQuery = useDebouncedCallback(
+    (q: string) => db.setSearchQuery(q),
+    200,
+    { maxWait: 600 },
+  );
+
+  const clear = () => {
+    setDraft("");
+    pushQuery.cancel();
+    db.setSearchQuery("");
+  };
 
   return (
-    <Popover>
+    <Popover
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) clear();
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
-          onClick={() => setTimeout(() => inputRef.current?.focus(), 0)}
+          tooltip="Search"
+          size="small"
+          data-active-state={db.searchQuery ? "on" : "off"}
+          style={{
+            minHeight: 22,
+            height: 22,
+            borderRadius: "var(--tt-radius-sm)",
+            background: "transparent",
+          }}
+          onClick={() => setOpen(true)}
         >
-          <Search size={14} />
+          <Search size={14} className="tiptap-button-icon" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        side="bottom"
-        align="end"
-        className="db-panel db-panel--search"
-      >
+      <PopoverContent side="bottom" align="end" className="db-panel">
         <div className="db-search">
-          <Search size={13} className="db-search__icon" />
-          <input
-            ref={inputRef}
+          <Search size={14} className="db-search__icon" />
+          <Input
+            autoFocus
             className="db-search__input"
-            placeholder="Search records..."
-            value={db.searchQuery}
-            onChange={(e) => db.setSearchQuery(e.target.value)}
+            placeholder="Type to search..."
+            value={draft}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              pushQuery(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.preventDefault();
+                clear();
+                setOpen(false);
+              }
+              if (e.key === "Enter") {
+                // Commit immediately rather than waiting out the debounce.
+                e.preventDefault();
+                pushQuery.flush();
+              }
+            }}
           />
-          {db.searchQuery && (
-            <button
+          {draft && (
+            <Button
+              variant="ghost"
               className="db-search__clear"
-              onClick={() => db.setSearchQuery("")}
+              onClick={clear}
+              aria-label="Clear search"
             >
-              <X size={12} />
-            </button>
+              <X size={13} className="tiptap-button-icon" />
+            </Button>
           )}
         </div>
       </PopoverContent>

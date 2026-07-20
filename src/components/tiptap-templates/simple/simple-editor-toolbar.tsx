@@ -26,7 +26,7 @@ import { useEditorLayout } from "./context/editor-layout-context";
 import { useCallback } from "react";
 
 function Expand() {
-  //const { t } = useTranslation();
+  const { t } = useTranslation();
   const { collapsed, onCollapsedChange } = useEditorLayout();
 
   const onToggle = useCallback(
@@ -37,7 +37,9 @@ function Expand() {
     <Button
       onClick={onToggle}
       variant="ghost"
-      //tooltip={t("sidebar.expand")}
+      size="large"
+      tooltip={t("sidebar.expand")}
+      style={{ background: "transparent", padding: 0, cursor: "pointer" }}
     >
       <Menu className="tiptap-button-icon" />
     </Button>
@@ -90,7 +92,7 @@ export const MainToolbarContent = ({
     <>
       <ToolbarGroup>
         {collapsed && <Expand />}
-        {collapsed && <Spacer orientation="horizontal" size={5} />}
+
         {view === "home" && (
           <Button variant="ghost">
             <Home className="tiptap-button-icon" strokeWidth={2} />

@@ -41,10 +41,10 @@
 .sp-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 101;
   background: var(--background-drop);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
   animation: sp-backdrop-in 120ms ease;
 }
 
@@ -62,7 +62,7 @@
   left: 50%;
   transform: translateX(-50%);
 
-  width: min(960px, 100vw);
+  width: min(800px, 86vw);
   max-height: min(90vh, 820px);
   display: flex;
   flex-direction: column;

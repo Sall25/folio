@@ -25,10 +25,12 @@ export function GroupPanel({
   properties,
   db,
   activeView,
+  bare,
 }: {
   properties: DatabaseProperty[];
   db: UseDatabaseReturn;
   activeView: DatabaseView | undefined;
+  bare?: boolean;
 }) {
   if (!activeView) return null;
 
@@ -69,8 +71,8 @@ export function GroupPanel({
     } as Partial<TableView>);
   }
 
-  return (
-    <Card className="db-group-panel">
+  const body = (
+    <>
       <CardBody>
         {groupableProperties.length === 0 ? (
           <span className="db-panel__empty">
@@ -142,6 +144,10 @@ export function GroupPanel({
           </Button>
         </CardFooter>
       )}
-    </Card>
+    </>
   );
+
+  if (bare) return body;
+
+  return <Card className="db-group-panel">{body}</Card>;
 }

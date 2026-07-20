@@ -1,0 +1,47 @@
+.db-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 4px 6px;
+  cursor: pointer;
+  background: var(--tt-bg-color);
+  border-bottom: 1px solid var(--tt-border-color);
+
+  &__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--tt-text-primary);
+  }
+
+  &__count {
+    font-size: 12px;
+    color: var(--tt-text-tertiary);
+  }
+  .tiptap-button{
+    padding: 1 2px;
+    min-height: 20px;
+    height: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    border-radius: var(--tt-radius-sm);
+  }
+}
+
+.db-group-new {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  border-bottom: 1px solid var(--tt-border-color);
+
+  &__button {
+    justify-content: flex-start;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    padding-left: 8px;
+    color: var(--tt-text-secondary);
+    font-size: 13px;
+  }
+}

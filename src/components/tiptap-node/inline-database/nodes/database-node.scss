@@ -364,3 +364,14 @@ body.db-row-dragselect {
     caret-color: transparent;
   }
 }
+
+.db-panel{
+  background-color: transparent;
+  .tiptap-card{
+    background-color: var(--tt-gray-light-50);
+    .dark & {
+      background-color: var(--tt-gray-dark-100);
+    }
+    border-radius: var(--tt-radius-sm);
+  }
+}

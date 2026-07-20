@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Columns3,
   Copy,
-  Ellipsis,
   Filter,
   GanttChart,
   Group,
@@ -34,9 +33,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import type { DatabaseProperty, DatabaseView, PanelView } from "src/types";
+import type {
+  BoardView,
+  DatabaseProperty,
+  DatabaseView,
+  PanelView,
+  TableView,
+} from "src/types";
 import {
   useEffect,
   useRef,
@@ -52,6 +56,8 @@ import { PropertiesPanel } from "../properties-panel";
 import { FilterPanel } from "../filter-panel";
 import { SortPanel } from "../sort-panel";
 import { Input } from "src/components/tiptap-ui-primitive/input";
+import { SettingsSlidersIcon } from "src/components/tiptap-icons";
+import { GroupPanel } from "../group-panel";
 
 type LucideIcon = ComponentType<{ className?: string; size?: number }>;
 
@@ -199,6 +205,16 @@ function ViewOptionsContent({
     setTimeout(() => setCopied(false), 1500);
   };
 
+  // Grouping lives on different fields per view type — board requires one,
+  // table/list treat it as optional.
+  const groupByPropertyId =
+    view.type === "board"
+      ? (view as BoardView).groupByPropertyId
+      : ((view as TableView).groupByPropertyId ?? null);
+
+  const groupLabel =
+    properties.find((p) => p.id === groupByPropertyId)?.name ?? "None";
+
   // ── Sub-panel: replace the body, add a back header ──────────────────────
   if (panel.type !== "main") {
     return (
@@ -211,6 +227,14 @@ function ViewOptionsContent({
         <CardBody style={{ width: "100%", padding: "5px 10px" }}>
           {panel.type === "properties" && (
             <PropertiesPanel
+              bare
+              properties={properties}
+              db={db}
+              activeView={view}
+            />
+          )}
+          {panel.type === "group" && (
+            <GroupPanel
               bare
               properties={properties}
               db={db}
@@ -325,7 +349,9 @@ function ViewOptionsContent({
         <OptionRow
           Icon={Group}
           label="Group"
-          onClick={locked ? undefined : () => {}}
+          sub={groupLabel}
+          navigable
+          onClick={() => db.pushPanel({ type: "group" })}
           disabled={locked}
         />
         <OptionRow
@@ -439,8 +465,8 @@ export function ViewOptionsPopover({
       }}
     >
       <PopoverTrigger asChild>
-        <Button variant="ghost">
-          <Ellipsis className="tiptap-button-icon" />
+        <Button size="small" variant="ghost" tooltip="Settings">
+          <SettingsSlidersIcon className="tiptap-button-icon" />
         </Button>
       </PopoverTrigger>
       <PopoverContent
