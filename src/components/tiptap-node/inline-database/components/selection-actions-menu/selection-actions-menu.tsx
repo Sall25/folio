@@ -11,6 +11,8 @@ import {
   Star,
   Trash2,
   ArrowUpRight,
+  Layout,
+  Eye,
 } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -111,6 +113,8 @@ export function SelectionActionsMenu({
   onComment,
   onMoveTo,
   onOpenIn,
+  onLayout,
+  onPropertyVisibility,
   lastEditedBy,
   lastEditedAt,
   onClose,
@@ -126,6 +130,10 @@ export function SelectionActionsMenu({
   onComment?: () => void;
   onMoveTo?: () => void;
   onOpenIn?: () => void;
+  /** Card layout options (cover fit, size) — board/gallery only. */
+  onLayout?: () => void;
+  /** Which properties show on the card — board/gallery only. */
+  onPropertyVisibility?: () => void;
   lastEditedBy?: string;
   lastEditedAt?: string;
   onClose: () => void;
@@ -315,6 +323,22 @@ export function SelectionActionsMenu({
 
         <Separator orientation="horizontal" />
 
+        <CardItemGroup>
+          {match("Layout") && onLayout && (
+            <MenuRow
+              Icon={Layout}
+              label="Layout"
+              onClick={() => run(onLayout)}
+            />
+          )}
+          {match("Property visibility") && onPropertyVisibility && (
+            <MenuRow
+              Icon={Eye}
+              label="Property visibility"
+              onClick={() => run(onPropertyVisibility)}
+            />
+          )}
+        </CardItemGroup>
         <CardItemGroup>
           {match("Open in") && (
             <MenuRow

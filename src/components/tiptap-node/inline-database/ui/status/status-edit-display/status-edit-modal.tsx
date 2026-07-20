@@ -71,7 +71,7 @@ export function StatusEditModal({
             <button
               key={c.id}
               className={`sp-color-swatch ${color === c.id ? "sp-color-swatch--active" : ""}`}
-              style={{ background: c.dot }}
+              style={{ background: `var(--tt-color-text-${c.id})` }}
               onClick={() => setColor(c.id)}
               aria-label={c.id}
             />

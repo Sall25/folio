@@ -1,10 +1,54 @@
 .db-sort-chips {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  user-select: none;
+  .db-panel,
+  .tiptap-card{
+    box-shadow: var(--tt-shadow-elevated-sm);
+    background-color: var(--tt-gray-light-50);
+    .dark & {
+      background-color: var(--tt-gray-dark-100);
+    }
+  }
+}
+
+
+.db-sort-chip {
+  height: 24px;
+  min-height: 24px;
+  padding: 0 8px;
+  gap: 5px;
+  border-radius: var(--tt-radius-lg);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--tt-brand-color-400);
+  background: color-mix(in srgb, var(--tt-brand-color-400) 14%, transparent);
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-brand-color-400) 22%, transparent);
+  }
+}
+
+.db-sort-row {
+  display: grid;
+  grid-template-columns: 20px 150px 150px 28px;
   align-items: center;
   gap: 6px;
 
-  &__add .tiptap-button-text {
-    font-size: 12px;
+  &__grip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    touch-action: none;
+    color: var(--tt-icon-secondary);
+  }
+
+  &__menu {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    min-height: 28px;
+    color: var(--tt-icon-secondary);
   }
 }

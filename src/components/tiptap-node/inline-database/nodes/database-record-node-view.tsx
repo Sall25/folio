@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { NodeViewWrapper, NodeViewContent } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/core";
@@ -45,7 +45,6 @@ export default function DatabaseRecordNodeView({
   const { isSelected, isHovered } = useRecordRowState(databaseId, recordId);
 
   const [wrapperEl, setWrapperEl] = useState<HTMLElement | null>(null);
-
   const { isFilteredOut, order } = useMemo(() => {
     if (!data || !recordId) {
       return { isFilteredOut: false, order: undefined as number | undefined };
@@ -56,6 +55,14 @@ export default function DatabaseRecordNodeView({
       order: index === -1 ? undefined : index,
     };
   }, [data, recordId]);
+
+  useLayoutEffect(() => {
+    const box = wrapperEl?.closest<HTMLElement>(
+      ".react-renderer.node-databaseRecord",
+    );
+    if (!box) return;
+    box.style.gridRow = order !== undefined ? String(order + 1) : "";
+  }, [wrapperEl, order]);
 
   const [pointerOnCheckbox, setPointerOnCheckbox] = useState(false);
 
@@ -77,8 +84,8 @@ export default function DatabaseRecordNodeView({
       data-hovered={isHovered || undefined}
       className="db-record"
       style={{
+        position: "relative",
         display: isFilteredOut ? "none" : undefined,
-        gridRow: order !== undefined ? order + 1 : undefined,
       }}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onPointerDown={(e: any) => {

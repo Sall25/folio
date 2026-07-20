@@ -3,6 +3,8 @@ import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { useDataSource } from "../hooks/use-data-source";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage } from "src/api/pages";
 import { SelectCellDisplay } from "../primitives/select-cell-display";
 import { StatusCellDisplay } from "../primitives/status-cell-display";
 import { CheckboxCellDisplay } from "../primitives/checkbox-cell-display";
@@ -88,13 +90,30 @@ export function DatabaseBoardNodeView({
   attrs,
   source,
   view,
+  onLayout,
+  onPropertyVisibility,
+  onDeleteRecord,
+  onDuplicateRecord,
 }: {
   view: DatabaseView;
   attrs: DatabaseAttrs;
   source: DataSource;
+  /** Opens the view-options menu on its layout panel. Owned by DatabaseNodeView,
+   *  which holds both the panel stack and the menu's open state. */
+  onLayout?: () => void;
+  /** Opens the view-options menu on its properties panel. */
+  onPropertyVisibility?: () => void;
+  onDeleteRecord?: (recordId: string) => void;
+  onDuplicateRecord?: (recordId: string) => void;
 }) {
   const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
     attrs.sourceId,
+  );
+
+  // Cover repositioning writes to the PAGE, not the data source — positionY
+  // lives on page.cover, same as the full-page cover.
+  const { mutateAsync: patchPageAsync } = usePatchPage(({ id, patch }) =>
+    patchPage(id, patch),
   );
 
   const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
@@ -265,6 +284,18 @@ export function DatabaseBoardNodeView({
                     onChange={(propId, v) => setCellValue(rec.id, propId, v)}
                     view={view}
                     columnValuesByProp={columnValuesByProp}
+                    onCoverPositionChange={(recordId, positionY) =>
+                      patchPageAsync({
+                        id: recordId,
+                        patch: {
+                          cover: { ...(rec.cover ?? {}), positionY },
+                        },
+                      })
+                    }
+                    onDelete={onDeleteRecord}
+                    onDuplicate={onDuplicateRecord}
+                    onLayout={onLayout}
+                    onPropertyVisibility={onPropertyVisibility}
                   />
                 ))}
               </BoardColumn>

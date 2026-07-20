@@ -1,0 +1,33 @@
+.db-card-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--tt-radius-md);
+  background: var(--tt-gray-light-50);
+  .dark & {
+    background: var(--tt-gray-dark-100);
+  }
+  box-shadow: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+
+  // Revealed on card hover — and pinned open while its menu is, so the
+  // controls don't vanish out from under an open popover.
+  .db-board-card:hover &,
+  &[data-open] {
+    opacity: 1;
+  }
+
+  &__btn {
+    height: 26px;
+    padding: 0 8px;
+    border-radius: var(--tt-radius-xs);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+}

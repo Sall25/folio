@@ -42,9 +42,16 @@
   min-width: 0;
   border-radius: var(--tt-radius-sm);
   transition: background 80ms ease;
+  cursor: pointer;
 
   &:hover {
-    background: var(--tt-button-hover-bg-color);
+    background: var(--tt-gray-light-a-100);
+    .dark & {
+      background-color: var(--tt-gray-dark-a-50);
+    }
+    .tiptap-card-item-group{
+      background-color: transparent !important;
+    }
   }
 
   &__title {

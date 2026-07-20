@@ -264,6 +264,27 @@ export function DatabaseNodeView({
     ready: !isLoading && !!source,
   });
 
+  const filterRuleCount =
+    activeView?.filters?.reduce((n, g) => n + g.rules.length, 0) ?? 0;
+  const sortCount = activeView?.sorts?.length ?? 0;
+
+  // Chip-row visibility. Notion toggles the bar from the toolbar rather than
+  // showing it unconditionally — a database with six filters shouldn't push
+  // the table down until you ask to see them.
+  const [showFilterChips, setShowFilterChips] = useState(false);
+  const [showSortChips, setShowSortChips] = useState(false);
+
+  // Reveal the bar when rules appear, hide it when the last one goes.
+  const prevCountsRef = useRef({ filters: 0, sorts: 0 });
+  useEffect(() => {
+    const prev = prevCountsRef.current;
+    if (filterRuleCount > prev.filters) setShowFilterChips(true);
+    if (filterRuleCount === 0) setShowFilterChips(false);
+    if (sortCount > prev.sorts) setShowSortChips(true);
+    if (sortCount === 0) setShowSortChips(false);
+    prevCountsRef.current = { filters: filterRuleCount, sorts: sortCount };
+  }, [filterRuleCount, sortCount]);
+
   // ── No source yet → picker ────────────────────────────────────────────────
   if (!attrs.sourceId) {
     return (
@@ -441,6 +462,10 @@ export function DatabaseNodeView({
                   ? undefined
                   : updateAttributes({ ...attrs, hideTitle: hide })
               }
+              showFilterChips={showFilterChips}
+              showSortChips={showSortChips}
+              onToggleFilterChips={() => setShowFilterChips((v) => !v)}
+              onToggleSortChips={() => setShowSortChips((v) => !v)}
             />
             {attrs.id && (
               <SelectionToolbar
@@ -462,27 +487,37 @@ export function DatabaseNodeView({
             )}
           </div>
 
-          <CardItemGroup orientation="horizontal">
-            <FilterRuleChips
-              properties={source.properties}
-              db={db}
-              activeView={activeView}
-              locked={locked}
-            />
-            {activeView && activeView.sorts?.length > 0 && (
-              <>
-                <Spacer orientation="horizontal" size={5} />
-                <Separator orientation="vertical" />
-                <Spacer orientation="horizontal" size={5} />
-              </>
-            )}
-            <SortRuleChips
-              properties={source.properties}
-              db={db}
-              activeView={activeView}
-              sorts={activeView?.sorts ?? []}
-            />
-          </CardItemGroup>
+          {(showFilterChips || showSortChips) && (
+            <CardItemGroup orientation="horizontal">
+              {showFilterChips && (
+                <FilterRuleChips
+                  properties={source.properties}
+                  db={db}
+                  activeView={activeView}
+                  locked={locked}
+                />
+              )}
+              {showFilterChips &&
+                showSortChips &&
+                filterRuleCount > 0 &&
+                sortCount > 0 && (
+                  <>
+                    <Spacer orientation="horizontal" size={5} />
+                    <Separator orientation="vertical" />
+                    <Spacer orientation="horizontal" size={5} />
+                  </>
+                )}
+              {showSortChips && (
+                <SortRuleChips
+                  properties={source.properties}
+                  db={db}
+                  activeView={activeView}
+                  sorts={activeView?.sorts ?? []}
+                />
+              )}
+            </CardItemGroup>
+          )}
+
           {body}
         </CardItemGroup>
       </DatabaseProvider>

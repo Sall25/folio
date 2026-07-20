@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Check } from "lucide-react";
 import type { StatusGroup, StatusItem } from "src/types";
 import {
@@ -6,6 +6,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
+import { Input } from "src/components/tiptap-ui-primitive/input";
+import { StatusPill } from "../ui/status/status-edit-display";
 import "./status-cell-display.scss";
 
 interface StatusCellDisplayProps {
@@ -22,30 +24,28 @@ export function StatusCellDisplay({
   readonly = false,
 }: StatusCellDisplayProps) {
   const [search, setSearch] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
 
   const allItems = (groups ?? []).flatMap((g) => g.items);
-  const selectedItem =
-    (allItems ?? []).find((item) => item.id === value) ?? null;
+  const selectedItem = allItems.find((item) => item.id === value) ?? null;
 
+  const q = search.trim().toLowerCase();
   const filteredGroups = (groups ?? [])
     .map((g) => ({
       ...g,
-      items: g.items.filter((item) =>
-        item.name.toLowerCase().includes(search.toLowerCase()),
-      ),
+      items: q
+        ? g.items.filter((item) => item.name.toLowerCase().includes(q))
+        : g.items,
     }))
     .filter((g) => g.items.length > 0);
 
   const trigger = (
-    <button
-      className={`status-badge status-badge--${selectedItem?.color ?? "gray"}`}
-      contentEditable={false}
-    >
-      <span className="status-badge__dot" />
-      <span className="status-badge__label">
-        {selectedItem?.name ?? "No status"}
-      </span>
+    <button className="status-cell__trigger" contentEditable={false}>
+      {selectedItem ? (
+        <StatusPill name={selectedItem.name} color={selectedItem.color} />
+      ) : (
+        <StatusPill name="No status" color="gray" />
+      )}
     </button>
   );
 
@@ -53,45 +53,73 @@ export function StatusCellDisplay({
 
   return (
     <Popover
-      onOpenChange={(open) => {
-        if (open) setTimeout(() => inputRef.current?.focus(), 0);
-        else setSearch("");
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) setSearch("");
       }}
     >
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent side="bottom" align="start" className="status-dropdown">
+      <PopoverTrigger asChild>
+        {/* Opening from onClick sidesteps ProseMirror, which suppresses the
+            pointerdown Radix's trigger listens for inside a
+            contentEditable=false NodeView. Same fix as CellEditorPopover. */}
+        <button
+          className="status-cell__trigger"
+          contentEditable={false}
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen((v) => !v);
+          }}
+        >
+          {selectedItem ? (
+            <StatusPill name={selectedItem.name} color={selectedItem.color} />
+          ) : (
+            <StatusPill name="No status" color="gray" />
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        side="bottom"
+        align="start"
+        className="status-dropdown"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <div className="status-dropdown__search">
-          <input
-            ref={inputRef}
-            className="status-dropdown__input"
-            placeholder="Search..."
+          <Input
+            autoFocus
             value={search}
+            placeholder="Search..."
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+
         <div className="status-dropdown__list">
-          {filteredGroups.map((group) => (
-            <div key={group.id} className="status-dropdown__group">
-              <span className="status-dropdown__group-label">
-                {group.label}
-              </span>
-              {group.items.map((item) => (
-                <button
-                  key={item.id}
-                  className="status-dropdown__option"
-                  onClick={() => onChange(item)}
-                >
-                  <span className={`status-badge status-badge--${item.color}`}>
-                    <span className="status-badge__dot" />
-                    <span className="status-badge__label">{item.name}</span>
-                  </span>
-                  {item.id === value && (
-                    <Check size={13} className="status-dropdown__check" />
-                  )}
-                </button>
-              ))}
-            </div>
-          ))}
+          {filteredGroups.length === 0 ? (
+            <span className="status-dropdown__empty">No statuses found</span>
+          ) : (
+            filteredGroups.map((group) => (
+              <div key={group.id} className="status-dropdown__group">
+                <span className="status-dropdown__group-label">
+                  {group.label}
+                </span>
+                {group.items.map((item) => (
+                  <button
+                    key={item.id}
+                    className="status-dropdown__option"
+                    onClick={() => {
+                      onChange(item);
+                      setOpen(false);
+                    }}
+                  >
+                    <StatusPill name={item.name} color={item.color} />
+                    {item.id === value && (
+                      <Check size={14} className="status-dropdown__check" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            ))
+          )}
         </div>
       </PopoverContent>
     </Popover>

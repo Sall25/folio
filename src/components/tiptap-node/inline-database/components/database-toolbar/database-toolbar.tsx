@@ -60,6 +60,14 @@ interface DatabaseToolbarProps {
   onTitleChange: (title: string) => void;
 
   onHideTitleChange: (hide: boolean) => void;
+
+  showFilterChips?: boolean;
+
+  showSortChips?: boolean;
+
+  onToggleFilterChips?: () => void;
+
+  onToggleSortChips?: () => void;
 }
 
 function getActiveView(attrs: DatabaseAttrs): DatabaseView | undefined {
@@ -81,6 +89,10 @@ export function DatabaseToolbar({
   hideTitle,
   onTitleChange,
   onHideTitleChange,
+  showFilterChips,
+  showSortChips,
+  onToggleFilterChips,
+  onToggleSortChips,
 }: DatabaseToolbarProps) {
   const activeView = getActiveView(attrs);
   const filters = activeView?.filters ?? [];
@@ -169,64 +181,100 @@ export function DatabaseToolbar({
                 view config → hidden when locked. */}
             {!locked && (
               <>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      tooltip="Filter"
-                      data-active-state={activeFilterCount > 0 ? "on" : "off"}
-                      style={{
-                        minHeight: 22,
-                        height: 22,
-                        borderRadius: "var(--tt-radius-sm)",
-                        background: "transparent",
-                      }}
-                    >
-                      <ListFilter className="tiptap-button-icon" size={14} />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    side="bottom"
-                    align="start"
-                    className="db-panel"
+                {activeFilterCount > 0 ? (
+                  // Rules exist → the button toggles the chip bar.
+                  <Button
+                    variant="ghost"
+                    tooltip={showFilterChips ? "Hide filters" : "Show filters"}
+                    data-active-state="on"
+                    onClick={onToggleFilterChips}
+                    style={{
+                      minHeight: 22,
+                      height: 22,
+                      borderRadius: "var(--tt-radius-sm)",
+                      background: "transparent",
+                    }}
                   >
-                    <FilterPanel
-                      properties={source?.properties ?? []}
-                      db={db}
-                      activeView={activeView}
-                    />
-                  </PopoverContent>
-                </Popover>
+                    <ListFilter className="tiptap-button-icon" size={14} />
+                  </Button>
+                ) : (
+                  // None yet → open the panel to create the first one.
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        tooltip="Filter"
+                        data-active-state="off"
+                        style={{
+                          minHeight: 22,
+                          height: 22,
+                          borderRadius: "var(--tt-radius-sm)",
+                          background: "transparent",
+                        }}
+                      >
+                        <ListFilter className="tiptap-button-icon" size={14} />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      side="bottom"
+                      align="start"
+                      className="db-panel"
+                    >
+                      <FilterPanel
+                        properties={source?.properties ?? []}
+                        db={db}
+                        activeView={activeView}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
 
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      tooltip="Sort"
-                      variant="ghost"
-                      data-active-state={activeSortCount > 0 ? "on" : "off"}
-                      style={{
-                        minHeight: 22,
-                        height: 22,
-                        borderRadius: "var(--tt-radius-sm)",
-                        background: "transparent",
-                      }}
-                    >
-                      <ArrowUpDown className="tiptap-button-icon" size={14} />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    side="bottom"
-                    align="start"
-                    className="db-panel"
+                {activeSortCount > 0 ? (
+                  <Button
+                    variant="ghost"
+                    tooltip={showSortChips ? "Hide sorts" : "Show sorts"}
+                    data-active-state="on"
+                    onClick={onToggleSortChips}
+                    style={{
+                      minHeight: 22,
+                      height: 22,
+                      borderRadius: "var(--tt-radius-sm)",
+                      background: "transparent",
+                    }}
                   >
-                    <SortPanel
-                      properties={source?.properties ?? []}
-                      db={db}
-                      activeView={activeView}
-                      sorts={sorts}
-                    />
-                  </PopoverContent>
-                </Popover>
+                    <ArrowUpDown className="tiptap-button-icon" size={14} />
+                  </Button>
+                ) : (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        tooltip="Sort"
+                        variant="ghost"
+                        data-active-state={activeSortCount > 0 ? "on" : "off"}
+                        style={{
+                          minHeight: 22,
+                          height: 22,
+                          borderRadius: "var(--tt-radius-sm)",
+                          background: "transparent",
+                        }}
+                      >
+                        <ArrowUpDown className="tiptap-button-icon" size={14} />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      side="bottom"
+                      align="start"
+                      className="db-panel"
+                    >
+                      <SortPanel
+                        properties={source?.properties ?? []}
+                        db={db}
+                        activeView={activeView}
+                        sorts={sorts}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
 
                 <Popover>
                   <PopoverTrigger asChild>

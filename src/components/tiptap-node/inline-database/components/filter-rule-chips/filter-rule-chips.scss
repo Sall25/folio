@@ -54,7 +54,8 @@
     font-family: inherit;
     color: var(--tt-brand-color-400);
     white-space: nowrap;
-    border-radius: var(--tt-radius-md);
+    border-radius: var(--tt-radius-lg);
+    font-size: 12px;
    
     .tiptap-button-icon{
       color: var(--tt-brand-color-400);
@@ -71,7 +72,8 @@
   }
 
   &__prop {
-    font-weight: 600;
+    font-weight: 400;
+    font-size: 12px;
   }
 
   &__op {
@@ -134,7 +136,7 @@
   width: 100%;
   padding: 3px 8px;
   height: 26px;
-  border-radius: var(--tt-radius-sm);
+  border-radius: var(--tt-radius-lg);
   border: 1px solid var(--tt-border-color);
   background: transparent;
   font-size: 12px;
@@ -144,5 +146,56 @@
 
   &:focus {
     border-color: var(--tt-brand-color-400);
+  }
+}
+
+.db-sort-chips,
+.db-filter-chips {
+  user-select: none;
+  caret-color: transparent;
+
+  button {
+    user-select: none;
+  }
+}
+
+.option-dropdown{
+  background-color: var(--tt-gray-light-50);
+  .dark & {
+    background-color: var(--tt-gray-dark-100);
+  }
+}
+
+.filter-chip--card{
+  border-radius: var(--tt-radius-sm);
+  background-color: var(--tt-gray-light-50);
+  .dark & {
+    background-color: var(--tt-gray-dark-100);
+  }
+}
+
+.db-filter-row {
+  display: grid;
+  grid-template-columns: 64px 150px 130px 1fr 28px;
+  align-items: center;
+  gap: 6px;
+
+  &__conj { min-width: 0; }
+
+  &__where {
+    display: inline-block;
+    padding-left: 6px;
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+  }
+
+  &__value { min-width: 0; }
+
+  &__menu {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    min-height: 28px;
+    color: var(--tt-icon-secondary);
   }
 }

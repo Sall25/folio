@@ -28,6 +28,7 @@ import { patchPage } from "src/api/pages";
 import { useDebouncedCallback } from "use-debounce";
 // NOTE: adjust this path to wherever you place template-choice-panel.tsx
 import { TemplateChoicePanel } from "./components/template-choice-panel";
+import { PageCenterSkeleton } from "./components/skeletons";
 
 // Backdrop overlay for the centered modal
 function ModalBackdrop({ onClose }: { onClose?: () => void }) {
@@ -141,7 +142,7 @@ export function PageCenterView({
   onCreated?: (page: Page) => void;
 }) {
   const { target, setTarget: setViewTarget } = usePageView();
-  const { data: page } = usePage(target?.pageId ?? null);
+  const { data: page, isLoading } = usePage(target?.pageId ?? null);
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const { setActivePageId } = useActivePage();
   const { extensions } = usePeekEditorExtensions(setActivePageId);
@@ -296,7 +297,8 @@ export function PageCenterView({
 
   useRecordPropertyPanel(editor, page ?? null);
 
-  if (!page) return null;
+  if (!page || isLoading || !editor)
+    return <PageCenterSkeleton onClose={onClose} />;
 
   const showTemplatePanel = bodyEmpty && !templateDismissed;
 

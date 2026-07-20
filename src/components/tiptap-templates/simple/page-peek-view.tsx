@@ -1,11 +1,7 @@
 import { usePeekEditorExtensions } from "./hooks/use-peek-editor-extensions";
 import { useActivePage } from "./context/active-page-context";
 import type { Page } from "src/types";
-import {
-  Editor,
-  useEditor,
-  type JSONContent,
-} from "@tiptap/react";
+import { Editor, useEditor, type JSONContent } from "@tiptap/react";
 import {
   Card,
   CardBody,
@@ -31,6 +27,7 @@ import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import { usePageView } from "./context/page-view-context";
 import { usePage } from "src/hooks/use-pages";
+import "./page-peek-view.scss";
 
 const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
   open,
@@ -234,14 +231,13 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
           <Button variant="ghost" onClick={onClose}>
             <ChevronsRight className="tiptap-button-icon" />
           </Button>
-         
         </CardItemGroup>
         <Spacer orientation="horizontal" />
         <CardItemGroup orientation="horizontal">
           <Button variant="ghost">
             <Ellipsis className="tiptap-button-icon" />
           </Button>
-           <Button
+          <Button
             variant="ghost"
             onClick={() => {
               if (page) {

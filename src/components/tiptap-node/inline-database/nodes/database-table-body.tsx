@@ -16,6 +16,8 @@ import type {
   ID,
 } from "src/types";
 import { recordSelection } from "../utils/record-selection-store";
+import { FreezeDivider } from "../components/freeze-divider";
+import { useDatabaseContext } from "./database-context";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -68,6 +70,8 @@ export function DatabaseTableBody({
   onNewRecord,
   databaseId,
 }: Props) {
+  const { db } = useDatabaseContext();
+
   // An empty database renders as a bare header — it doesn't read as a table at
   // all. These rows give it shape. They are PURELY presentational: no records
   // back them, ProseMirror doesn't own them (contentEditable={false}), and they
@@ -98,6 +102,19 @@ export function DatabaseTableBody({
         recordSelection.clear(databaseId);
       }}
     >
+      <FreezeDivider
+        containerRef={tableRef}
+        visibleProperties={visibleProperties}
+        frozenPropertyId={
+          [...visibleProperties]
+            .reverse()
+            .find((p) => activeView && db.isFrozen(activeView.id, p.id))?.id ??
+          null
+        }
+        onFreeze={(propId) =>
+          activeView && db.freezeProperty(activeView.id, propId)
+        }
+      />
       <DatabaseTableHeader
         visibleProperties={visibleProperties}
         allProperties={allProperties}

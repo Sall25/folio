@@ -6,3 +6,4 @@ export * from "./editor-content-skeleton";
 export * from "./editor-body-skeleton";
 export * from "./page-row-skeleton";
 export * from "./cover-header-skeleton";
+export * from "./page-center-skeleton";

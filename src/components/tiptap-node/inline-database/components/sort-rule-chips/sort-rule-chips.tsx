@@ -1,249 +1,233 @@
 import { nanoid } from "nanoid";
-import { Plus, ArrowUp, ArrowDown, Trash, ChevronDown } from "lucide-react";
+import {
+  Plus,
+  ArrowUp,
+  ArrowDown,
+  Trash,
+  ChevronDown,
+  GripVertical,
+  ArrowUpDown,
+  Ellipsis,
+} from "lucide-react";
 import {
   Card,
-  CardBody,
   CardFooter,
-  CardGroupLabel,
+  CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import type { DatabaseProperty, DatabaseView, ID, SortRule } from "src/types";
-import type { UseDatabaseReturn } from "../../hooks/use-database";
-import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
-import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import "./sort-rule-chips.scss";
-import { Grid, GridRow } from "src/components/tiptap-ui-primitive/grid";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "src/components/tiptap-ui-primitive/dropdown-menu";
+import { Button } from "src/components/tiptap-ui-primitive/button";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
+import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
+import type { DatabaseProperty, DatabaseView, ID, SortRule } from "src/types";
+import type { UseDatabaseReturn } from "../../hooks/use-database";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import "./sort-rule-chips.scss";
 
-function SortChip({
+/** One row in the sort panel: grip, property, direction, remove. */
+function SortRow({
   sort,
   properties,
   onUpdate,
   onDelete,
-  locked,
 }: {
   sort: SortRule;
   properties: DatabaseProperty[];
   onUpdate: (patch: Partial<SortRule>) => void;
   onDelete: () => void;
-  locked: boolean;
 }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: sort.id });
+
   const property = properties.find((p) => p.id === sort.propertyId);
-  // Material Symbols name string now, not an icon component.
   const iconName = property ? PROPERTY_TYPE_ICONS[property.config.type] : null;
-  const DirIcon = sort.direction === "asc" ? ArrowUp : ArrowDown;
 
-  const chipButton = (
-    <Button
-      variant="ghost"
-      style={{
-        border: "1px solid var(--tt-brand-color-400)",
-        padding: "2px 8px",
-        height: 24,
-        minHeight: 24,
-        color: "var(--tt-brand-color-400)",
-        fontSize: 12,
-        cursor: locked ? "default" : undefined,
-      }}
-    >
-      {iconName && (
-        <DynamicIcon
-          name={iconName}
-          size={20}
-          filled={false}
-          className="tiptap-button-icon"
-          style={{ color: "inherit" }}
-        />
-      )}
-      <span className="tiptap-button-text">{property?.name ?? "Property"}</span>
-      <DirIcon
-        size={20}
-        className="tiptap-button-icon-sub"
-        style={{ color: "inherit" }}
-      />
-      {!locked && (
-        <ChevronDown
-          size={10}
-          className="tiptap-button-icon-sub"
-          style={{ color: "inherit" }}
-        />
-      )}
-    </Button>
-  );
-
-  if (locked) return chipButton;
+  const selectStyle: React.CSSProperties = {
+    width: "100%",
+    borderRadius: "var(--tt-radius-sm)",
+    border: "1px solid var(--tt-border-color)",
+    padding: "3px 6px",
+    justifyContent: "flex-start",
+    fontSize: 12,
+    height: 28,
+    minHeight: 28,
+  };
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>{chipButton}</PopoverTrigger>
-      <PopoverContent side="bottom" align="start" className="db-panel">
-        <Card
-          style={{
-            padding: "5px",
-            minWidth: 200,
-            boxShadow: "var(--tt-shadow-elevated-sm)",
-          }}
-        >
-          <CardBody>
-            <Grid columns="1fr 1fr" gap={5}>
-              <GridRow>
-                <CardGroupLabel>Property</CardGroupLabel>
-                <CardGroupLabel>Direction</CardGroupLabel>
-              </GridRow>
-              <GridRow>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      key={property?.id}
-                      variant="ghost"
-                      style={{
-                        justifyContent: "flex-start",
-                        width: "100%",
-                        border: "1px solid var(--tt-border-color)",
-                      }}
-                    >
-                      {iconName && (
-                        <DynamicIcon
-                          name={iconName}
-                          size={20}
-                          filled={false}
-                          className="tiptap-button-icon"
-                        />
-                      )}
-                      <span className="tiptap-button-text">
-                        {property?.name}
-                      </span>
-                      <Spacer orientation="horizontal" />
-                      <ChevronDown className="tiptap-button-icon-sub" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <Card
-                      style={{
-                        padding: "5px 10px",
-                        boxShadow: "var(--tt-shadow-elevated-sm)",
-                      }}
-                    >
-                      {properties.map((p) => {
-                        const pIconName = PROPERTY_TYPE_ICONS[p.config.type];
-                        return (
-                          <DropdownMenuItem key={p.id} asChild>
-                            <Button
-                              variant="ghost"
-                              style={{
-                                justifyContent: "flex-start",
-                                width: "100%",
-                              }}
-                              data-active-state={
-                                sort.propertyId === p.id ? "on" : "off"
-                              }
-                              onClick={() => onUpdate({ propertyId: p.id })}
-                            >
-                              <DynamicIcon
-                                name={pIconName}
-                                size={20}
-                                filled={false}
-                                className="tiptap-button-icon"
-                              />
-                              <span className="tiptap-button-text">
-                                {p.name}
-                              </span>
-                            </Button>
-                          </DropdownMenuItem>
-                        );
-                      })}
-                    </Card>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      style={{
-                        justifyContent: "flex-start",
-                        width: "100%",
-                        border: "1px solid var(--tt-border-color)",
-                      }}
-                    >
-                      {sort.direction === "asc" ? (
-                        <ArrowUp size={13} className="tiptap-button-icon" />
-                      ) : (
-                        <ArrowDown size={13} className="tiptap-button-icon" />
-                      )}
-                      <span className="tiptap-button-text">
-                        {sort.direction === "asc" ? "Ascending" : "Descending"}
-                      </span>
-                      <Spacer orientation="horizontal" />
-                      <ChevronDown className="tiptap-button-icon-sub" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <Card style={{ padding: "5px 10px" }}>
-                      {(["asc", "desc"] as const).map((dir) => (
-                        <DropdownMenuItem key={dir} asChild>
-                          <Button
-                            variant="ghost"
-                            style={{
-                              justifyContent: "flex-start",
-                              width: "100%",
-                            }}
-                            data-active-state={
-                              sort.direction === dir ? "on" : "off"
-                            }
-                            onClick={() => onUpdate({ direction: dir })}
-                          >
-                            {dir === "asc" ? (
-                              <ArrowUp
-                                size={13}
-                                className="tiptap-button-icon"
-                              />
-                            ) : (
-                              <ArrowDown
-                                size={13}
-                                className="tiptap-button-icon"
-                              />
-                            )}
-                            <span className="tiptap-button-text">
-                              {dir === "asc" ? "Ascending" : "Descending"}
-                            </span>
-                          </Button>
-                        </DropdownMenuItem>
-                      ))}
-                    </Card>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </GridRow>
-            </Grid>
-          </CardBody>
-          <CardFooter style={{ width: "100%" }}>
-            <Button
-              variant="ghost"
-              onClick={onDelete}
-              aria-label="Remove sort"
-              style={{
-                justifyContent: "flex-start",
-                width: "100%",
-                borderRadius: "var(--tt-radius-sm)",
-              }}
-            >
-              <Trash className="tiptap-button-icon" />
-              <span className="tiptap-button-text">Remove sort</span>
-            </Button>
-          </CardFooter>
-        </Card>
-      </PopoverContent>
-    </Popover>
+    <div
+      ref={setNodeRef}
+      className="db-sort-row"
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+      }}
+      {...attributes}
+    >
+      {/* Only the grip drags — the dropdowns must stay clickable. */}
+      <span
+        ref={setActivatorNodeRef}
+        {...listeners}
+        className="db-sort-row__grip"
+      >
+        <GripVertical size={12} className="tiptap-button-icon" />
+      </span>
+
+      {/* Property */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" style={selectStyle}>
+            {iconName && (
+              <DynamicIcon
+                name={iconName}
+                size={16}
+                filled={false}
+                className="tiptap-button-icon"
+              />
+            )}
+            <span className="tiptap-button-text">
+              {property?.name ?? "Property"}
+            </span>
+            <Spacer orientation="horizontal" />
+            <ChevronDown className="tiptap-button-icon-sub" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <Card
+            className="option-dropdown"
+            style={{
+              padding: 5,
+              minWidth: 180,
+              maxHeight: 260,
+              overflowY: "auto",
+            }}
+          >
+            <CardItemGroup style={{ width: "100%" }}>
+              {properties.map((p) => (
+                <DropdownMenuItem key={p.id} asChild>
+                  <Button
+                    variant="ghost"
+                    data-active-state={sort.propertyId === p.id ? "on" : "off"}
+                    style={{ justifyContent: "flex-start", width: "100%" }}
+                    onClick={() => onUpdate({ propertyId: p.id })}
+                  >
+                    <DynamicIcon
+                      name={PROPERTY_TYPE_ICONS[p.config.type]}
+                      size={16}
+                      filled={false}
+                      className="tiptap-button-icon"
+                    />
+                    <span className="tiptap-button-text">{p.name}</span>
+                  </Button>
+                </DropdownMenuItem>
+              ))}
+            </CardItemGroup>
+          </Card>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Direction */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" style={selectStyle}>
+            {sort.direction === "asc" ? (
+              <ArrowUp size={13} className="tiptap-button-icon" />
+            ) : (
+              <ArrowDown size={13} className="tiptap-button-icon" />
+            )}
+            <span className="tiptap-button-text">
+              {sort.direction === "asc" ? "Ascending" : "Descending"}
+            </span>
+            <Spacer orientation="horizontal" />
+            <ChevronDown className="tiptap-button-icon-sub" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <Card
+            className="option-dropdown"
+            style={{ padding: 5, minWidth: 160 }}
+          >
+            <CardItemGroup style={{ width: "100%" }}>
+              {(["asc", "desc"] as const).map((dir) => (
+                <DropdownMenuItem key={dir} asChild>
+                  <Button
+                    variant="ghost"
+                    data-active-state={sort.direction === dir ? "on" : "off"}
+                    style={{ justifyContent: "flex-start", width: "100%" }}
+                    onClick={() => onUpdate({ direction: dir })}
+                  >
+                    {dir === "asc" ? (
+                      <ArrowUp size={13} className="tiptap-button-icon" />
+                    ) : (
+                      <ArrowDown size={13} className="tiptap-button-icon" />
+                    )}
+                    <span className="tiptap-button-text">
+                      {dir === "asc" ? "Ascending" : "Descending"}
+                    </span>
+                  </Button>
+                </DropdownMenuItem>
+              ))}
+            </CardItemGroup>
+          </Card>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Per-row menu — matches the filter row's Ellipsis. */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="db-sort-row__menu">
+            <Ellipsis className="tiptap-button-icon" size={14} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <Card style={{ padding: 5, minWidth: 160 }}>
+            <CardItemGroup style={{ width: "100%" }}>
+              <DropdownMenuItem asChild>
+                <Button
+                  variant="ghost"
+                  onClick={onDelete}
+                  style={{ justifyContent: "flex-start", width: "100%" }}
+                >
+                  <Trash className="tiptap-button-icon" size={14} />
+                  <span className="tiptap-button-text">Delete rule</span>
+                </Button>
+              </DropdownMenuItem>
+            </CardItemGroup>
+          </Card>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 
@@ -258,56 +242,142 @@ export function SortRuleChips({
   activeView: DatabaseView | undefined;
   sorts: SortRule[];
 }) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
+
   if (!activeView) return null;
   if (sorts.length === 0) return null;
 
   const locked = db.locked;
 
-  function updateSort(id: ID, patch: Partial<SortRule>) {
-    db.updateView(activeView!.id, {
-      sorts: sorts.map((s) => (s.id === id ? { ...s, ...patch } : s)),
-    });
-  }
+  const save = (next: SortRule[]) =>
+    db.updateView(activeView.id, { sorts: next });
 
-  function deleteSort(id: ID) {
-    db.updateView(activeView!.id, { sorts: sorts.filter((s) => s.id !== id) });
-  }
+  const updateSort = (id: ID, patch: Partial<SortRule>) =>
+    save(sorts.map((s) => (s.id === id ? { ...s, ...patch } : s)));
 
-  function addSort() {
+  const deleteSort = (id: ID) => save(sorts.filter((s) => s.id !== id));
+
+  const addSort = () => {
     const unused = properties.find(
       (p) => !sorts.some((s) => s.propertyId === p.id),
     );
     if (!unused) return;
-    db.updateView(activeView!.id, {
-      sorts: [
-        ...sorts,
-        { id: nanoid(), propertyId: unused.id, direction: "asc" },
-      ],
-    });
-  }
+    save([...sorts, { id: nanoid(), propertyId: unused.id, direction: "asc" }]);
+  };
+
+  // Order is precedence — dragging a rule up makes it sort first.
+  const onDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const from = sorts.findIndex((s) => s.id === active.id);
+    const to = sorts.findIndex((s) => s.id === over.id);
+    if (from === -1 || to === -1) return;
+    save(arrayMove(sorts, from, to));
+  };
+
+  const label = sorts.length === 1 ? "1 sort" : `${sorts.length} sorts`;
+
+  const chip = (
+    <Button
+      variant="ghost"
+      style={{
+        height: 24,
+        minHeight: 24,
+        padding: "0 8px",
+        gap: 5,
+        borderRadius: "var(--tt-radius-lg)",
+        fontSize: 12,
+        fontWeight: 500,
+        color: "var(--tt-brand-color-400)",
+        background:
+          "color-mix(in srgb, var(--tt-brand-color-400) 14%, transparent)",
+        cursor: locked ? "default" : undefined,
+      }}
+    >
+      <ArrowUpDown
+        size={13}
+        className="tiptap-button-icon"
+        style={{ color: "inherit" }}
+      />
+      <span className="tiptap-button-text">{label}</span>
+      {!locked && (
+        <ChevronDown
+          size={11}
+          className="tiptap-button-icon-sub"
+          style={{ color: "inherit" }}
+        />
+      )}
+    </Button>
+  );
+
+  if (locked) return <div className="db-sort-chips">{chip}</div>;
 
   return (
-    <div className="db-sort-chips">
-      {sorts.map((sort) => (
-        <SortChip
-          key={sort.id}
-          sort={sort}
-          properties={properties}
-          onUpdate={(patch) => updateSort(sort.id, patch)}
-          onDelete={() => deleteSort(sort.id)}
-          locked={locked}
-        />
-      ))}
-      {!locked && sorts.length < properties.length && (
-        <Button
-          variant="ghost"
-          className="db-sort-chips__add"
-          onClick={addSort}
-        >
-          <Plus className="tiptap-button-icon" />
-          <span className="tiptap-button-text">Add sort</span>
-        </Button>
-      )}
+    <div className="db-sort-chips" contentEditable={false}>
+      <Popover>
+        <PopoverTrigger asChild>{chip}</PopoverTrigger>
+        <PopoverContent side="bottom" align="start">
+          <Card
+            className="filter-chip--card"
+            style={{ padding: 6, minWidth: 420 }}
+          >
+            <CardItemGroup style={{ width: "100%", gap: 4 }}>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={onDragEnd}
+              >
+                <SortableContext
+                  items={sorts.map((s) => s.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {sorts.map((sort) => (
+                    <SortRow
+                      key={sort.id}
+                      sort={sort}
+                      properties={properties}
+                      onUpdate={(patch) => updateSort(sort.id, patch)}
+                      onDelete={() => deleteSort(sort.id)}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            </CardItemGroup>
+
+            <CardFooter
+              style={{ width: "100%", flexDirection: "column", gap: 2 }}
+            >
+              <Button
+                variant="ghost"
+                onClick={addSort}
+                disabled={sorts.length >= properties.length}
+                style={{
+                  justifyContent: "flex-start",
+                  width: "100%",
+                  fontSize: 12,
+                }}
+              >
+                <Plus className="tiptap-button-icon" size={14} />
+                <span className="tiptap-button-text">Add sort</span>
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => save([])}
+                style={{
+                  justifyContent: "flex-start",
+                  width: "100%",
+                  fontSize: 12,
+                }}
+              >
+                <Trash className="tiptap-button-icon" size={14} />
+                <span className="tiptap-button-text">Delete sort</span>
+              </Button>
+            </CardFooter>
+          </Card>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

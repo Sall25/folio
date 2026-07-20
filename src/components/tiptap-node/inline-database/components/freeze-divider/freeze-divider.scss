@@ -1,0 +1,50 @@
+.db-freeze-divider {
+  position: fixed;
+  left: 0px;
+  width: 0;
+  z-index: 10;
+  pointer-events: none;
+
+&__hit {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -7px;
+    width: 15px;
+    pointer-events: auto;
+    cursor: col-resize;
+  }
+
+  &__handle {
+    position: absolute;
+    top: 0;                    // overwritten by placeHandle
+    left: -2px;
+    width: 4px;
+    height: 32px;
+    margin-top: -9px;          // centres the pill on the pointer
+    border-radius: 999px;
+    background: var(--tt-brand-color-400);
+    opacity: 0;
+    transition: opacity 100ms ease;
+    pointer-events: none;
+  }
+
+  &[data-hovered] &__handle,
+  &[data-dragging] &__handle {
+    opacity: 1;
+  }
+
+  &__line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -1px;
+    width: 2px;
+    background: var(--tt-brand-color-400);
+    opacity: 0;
+  }
+
+  &[data-dragging] &__line {
+    opacity: 1;
+  }
+}

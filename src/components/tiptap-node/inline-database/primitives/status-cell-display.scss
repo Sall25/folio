@@ -2,6 +2,14 @@
 // select pill — see _pill-colors.scss.
 @use "../utils/pill-colors" as pill;
 
+.status-cell{
+   &__trigger{
+    background-color: transparent;
+    border: none;
+    margin: auto 5px;
+  }
+}
+
 .status-badge {
   
   @include pill.pill-base;
@@ -134,4 +142,15 @@
     flex-shrink: 0;
     color: var(--tt-brand-color-400);
   }
+
+ 
+}
+
+.sp-groups .status-badge {
+  // Was flex:1 / min-width:120px — that made the pill absorb the row's
+  // leftover space, so its width varied with whether the row had a DEFAULT
+  // badge. Size to content instead; the Spacer handles the gap.
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
 }

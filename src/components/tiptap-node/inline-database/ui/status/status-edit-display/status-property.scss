@@ -1,10 +1,19 @@
+.sp-card{
+  background-color: var(--tt-gray-light-50);
+  .dark & {
+    background-color: var(--tt-gray-dark-100);
+  }
+  border-radius: var(--tt-radius-md);
+}
+
 .sp-root {
   display: flex;
   flex-direction: column;
   width: 280px;
-  background: var(--tt-bg-color);
+  
+  box-shadow: var(--tt-shadow-elevated-sm);
   border: 0.5px solid var(--tt-border-color);
-  border-radius: var(--tt-radius-lg);
+  border-radius: var(--tt-radius-md);
   overflow: hidden;
   font-family: inherit;
   font-size: 14px;
@@ -244,7 +253,10 @@
 }
 
 .sp-modal {
-  background: var(--tt-bg-color);
+  background: var(--tt-gray-light-50);
+  .dark & {
+     background: var(--tt-gray-dark-100);
+  }
   border: 0.5px solid var(--tt-border-color);
   border-radius: var(--tt-radius-lg);
   box-shadow: var(--tt-shadow-elevated-md);
@@ -373,4 +385,29 @@
       background: var(--tt-color-red-inc-5);
     }
   }
+}
+
+.sp-pill {
+  background: var(--sp-bg);
+  color: var(--sp-text);
+
+  .dark & {
+    background: var(--sp-bg-dark);
+    color: var(--sp-text-dark);
+  }
+}
+
+.sp-pill-dot {
+  background: var(--sp-dot);
+}
+
+.sp-new-input {
+  width: 100%;
+  height: 32px;
+  margin-bottom: 4px;
+}
+
+.sp-groups .status-badge {
+  flex: 1;
+  min-width: 120px;
 }

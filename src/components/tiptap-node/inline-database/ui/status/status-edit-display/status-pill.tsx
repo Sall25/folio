@@ -1,5 +1,4 @@
 import type { StatusColor } from "./types";
-import { getColor } from "./config";
 
 interface StatusPillProps {
   name: string;
@@ -14,15 +13,13 @@ export function StatusPill({
   onClick,
   className = "",
 }: StatusPillProps) {
-  const c = getColor(color);
   return (
     <span
-      className={`sp-pill ${className}`}
-      style={{ background: c.bg, color: c.text }}
+      className={`status-badge status-badge--${color} ${className}`}
       onClick={onClick}
     >
-      <span className="sp-pill-dot" style={{ background: c.dot }} />
-      <span className="sp-pill-text">{name}</span>
+      <span className="status-badge__dot" />
+      <span className="status-badge__label">{name}</span>
     </span>
   );
 }

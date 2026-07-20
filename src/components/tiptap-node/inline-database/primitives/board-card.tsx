@@ -10,6 +10,8 @@ import type {
 } from "src/types";
 import "./board-card.scss";
 import { useDraggable } from "@dnd-kit/core";
+import { BoardCardControls } from "../components/board-card-controls/board-card-controls";
+import { useState } from "react";
 
 // A card hides properties that have no value (Notion behavior), so cards size
 // to their real content instead of showing empty boxes. Checkbox is excluded:
@@ -24,14 +26,18 @@ function isEmptyCellValue(
   if (Array.isArray(value)) return value.length === 0;
   return false;
 }
-
 export function BoardCard({
   record: linkedPage,
   properties,
   cardPreview,
   onChange,
   view,
-  columnValuesByProp,
+  columnValuesByProp = {},
+  onDelete,
+  onDuplicate,
+  onCoverPositionChange,
+  onLayout,
+  onPropertyVisibility,
 }: {
   record: Page;
   properties: DatabaseProperty[];
@@ -39,10 +45,16 @@ export function BoardCard({
   sourceId: string;
   onChange: (propertyId: string, value: CellValue | null) => void;
   view: DatabaseView;
-  /** propertyId → column max, for number bar/ring fills. */
-  numberMaxes?: Record<string, number>;
   columnValuesByProp?: Record<string, CellValue[]>;
+  onDelete?: (recordId: string) => void;
+  onDuplicate?: (recordId: string) => void;
+  onCoverPositionChange?: (recordId: string, positionY: number) => void;
+  /** View-level card layout (cover fit, size) — opens the layout panel. */
+  onLayout?: () => void;
+  /** View-level property visibility — opens the properties panel. */
+  onPropertyVisibility?: () => void;
 }) {
+  const [repositioning, setRepositioning] = useState(false);
   const { setTarget } = usePageView();
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: linkedPage.id });
@@ -79,11 +91,30 @@ export function BoardCard({
       }}
     >
       {cardPreview === "cover" && (
-        <BoardCardCover
-          page={linkedPage}
-          recordId={linkedPage.id}
-          height={120}
-        />
+        <div className="db-board-card__cover-wrap">
+          <BoardCardCover
+            page={linkedPage}
+            recordId={linkedPage.id}
+            height={120}
+            repositioning={repositioning}
+            onPositionChange={(y) => onCoverPositionChange?.(linkedPage.id, y)}
+          />
+          <BoardCardControls
+            record={linkedPage}
+            properties={properties}
+            repositioning={repositioning}
+            onReposition={() => setRepositioning((v) => !v)}
+            onSetValue={(propertyId, value) =>
+              onChange(propertyId, value as CellValue | null)
+            }
+            onDelete={() => onDelete?.(linkedPage.id)}
+            onDuplicate={
+              onDuplicate ? () => onDuplicate(linkedPage.id) : undefined
+            }
+            onLayout={onLayout}
+            onPropertyVisibility={onPropertyVisibility}
+          />
+        </div>
       )}
       {cardPreview === "content" && <BoardCardContent page={linkedPage} />}
 

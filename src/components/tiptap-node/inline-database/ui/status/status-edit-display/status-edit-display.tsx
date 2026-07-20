@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { StatusGroup, StatusItem, StatusPropertyProps } from "./types";
-import { DEFAULT_GROUPS } from "./config";
+import type { StatusGroup, StatusItem, StatusPropertyProps } from "src/types";
+import { colorForGroup, DEFAULT_GROUPS } from "./config";
 import { StatusPill } from "./status-pill";
 import { StatusEditModal } from "./status-edit-modal";
 
@@ -30,6 +30,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Input } from "src/components/tiptap-ui-primitive/input";
 
 interface ModalState {
   item: StatusItem | null;
@@ -66,10 +67,11 @@ function SortableStatusRow({ item, groupId, onEdit }: SortableStatusRowProps) {
       ref={setNodeRef}
       variant="ghost"
       style={{
-        minHeight: 20,
-        height: 22,
+        minHeight: 28,
+        height: 28,
         width: "100%",
         borderRadius: "var(--tt-radius-sm)",
+        gap: 6,
         ...style,
       }}
       onClick={() => onEdit(groupId, item)}
@@ -101,7 +103,6 @@ function SortableStatusRow({ item, groupId, onEdit }: SortableStatusRowProps) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-
 export function StatusEditDisplay({
   groups: initialGroups,
   onChange,
@@ -109,6 +110,15 @@ export function StatusEditDisplay({
   const [groups, setGroups] = useState<StatusGroup[]>(
     initialGroups ?? DEFAULT_GROUPS,
   );
+
+  // Adopt external changes — the component is remounted per property, but the
+  // config can also change under it (type change, another editor).
+  const [prevInitial, setPrevInitial] = useState(initialGroups);
+  if (initialGroups !== prevInitial) {
+    setPrevInitial(initialGroups);
+    setGroups(initialGroups ?? DEFAULT_GROUPS);
+  }
+
   const [modal, setModal] = useState<ModalState | null>(null);
 
   const sensors = useSensors(
@@ -120,7 +130,37 @@ export function StatusEditDisplay({
   const openEdit = (groupId: string, item: StatusItem) =>
     setModal({ item, groupId });
 
-  const openAdd = (groupId: string) => setModal({ item: null, groupId });
+  const [addingGroupId, setAddingGroupId] = useState<string | null>(null);
+  const [newName, setNewName] = useState("");
+
+  const commitNew = (group: StatusGroup) => {
+    const trimmed = newName.trim();
+    if (trimmed) {
+      setGroups((prev) => {
+        const next = prev.map((g) =>
+          g.id === group.id
+            ? {
+                ...g,
+                items: [
+                  ...g.items,
+                  {
+                    id: crypto.randomUUID(),
+                    name: trimmed,
+                    // Inherit the group's color so the pill reads as belonging
+                    // to its section, as Notion does.
+                    color: colorForGroup(g),
+                  },
+                ],
+              }
+            : g,
+        );
+        onChange?.(next);
+        return next;
+      });
+    }
+    setNewName("");
+    setAddingGroupId(null);
+  };
 
   const handleDragEnd = (groupId: string, event: DragEndEvent) => {
     const { active, over } = event;
@@ -169,7 +209,7 @@ export function StatusEditDisplay({
   };
 
   return (
-    <Card>
+    <Card className="sp-card">
       <CardBody className="sp-groups" style={{ width: "100%", minWidth: 260 }}>
         {groups.map((group, gi) => (
           <CardItemGroup key={group.id} style={{ width: "100%", gap: 8 }}>
@@ -178,13 +218,36 @@ export function StatusEditDisplay({
               <Spacer orientation="horizontal" />
               <Button
                 variant="ghost"
-                onClick={() => openAdd(group.id)}
+                onClick={() => {
+                  setNewName("");
+                  setAddingGroupId(group.id);
+                }}
                 aria-label={`Add status to ${group.label}`}
               >
                 <Plus className="tiptap-button-icon" />
               </Button>
             </CardItemGroup>
-
+            {addingGroupId === group.id && (
+              <Input
+                autoFocus
+                className="sp-new-input"
+                value={newName}
+                placeholder="Type a new option..."
+                onChange={(e) => setNewName(e.target.value)}
+                onBlur={() => commitNew(group)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    commitNew(group);
+                  }
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    setNewName("");
+                    setAddingGroupId(null);
+                  }
+                }}
+              />
+            )}
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}

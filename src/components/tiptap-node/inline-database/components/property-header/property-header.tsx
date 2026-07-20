@@ -6,9 +6,14 @@ import {
 } from "react";
 import {
   DEFAULT_CONFIGS,
+  OPERATORS_FOR_TYPE,
   type DatabaseProperty,
+  type FilterGroup,
+  type FilterGroupOperator,
+  type FilterRule,
   type PropertyConfig,
   type SelectOption,
+  type SortRule,
 } from "src/types";
 import {
   Popover,
@@ -19,8 +24,6 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
   CardBody,
-  CardGroupLabel,
-  CardHeader,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 import { PropertyEditPopover } from "../property-edit-popover";
@@ -35,7 +38,6 @@ import { UnwrapPropertyButton } from "../unwrap-property-button";
 import { HidePropertyButton } from "../hide-property-button";
 import { useResizableNode } from "src/components/tiptap-node/figure-node";
 import FormulaEditor from "../formula-editor/formula-editor";
-import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 import { NumberEditDisplay } from "../number-edit-display";
 import { DateEditDisplay } from "../date-edit-display/date-edit-display";
 import { PersonEditDisplay } from "../person-edit-display";
@@ -51,6 +53,103 @@ import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import "./property-header.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Input } from "src/components/tiptap-ui-primitive/input";
+import { StatusEditDisplay } from "../../ui/status/status-edit-display";
+import { PropertyMenuRow } from "../property-menu-row";
+import { ListFilter, SortAscIcon } from "lucide-react";
+import { InsertPropertyButton } from "../insert-property-button";
+
+import { nanoid } from "nanoid";
+
+// ── makeFilterRule ─────────────────────────────────────────────────────────
+function makeFilterRule(property: DatabaseProperty): FilterRule {
+  const type = property.config.type;
+  const operator = OPERATORS_FOR_TYPE[type]?.[0];
+  switch (type) {
+    case "number":
+      return {
+        id: nanoid(),
+        propertyId: property.id,
+        propertyType: type,
+        operator: operator as never,
+        value: 0,
+      };
+    case "checkbox":
+      return {
+        id: nanoid(),
+        propertyId: property.id,
+        propertyType: "checkbox",
+        operator: "is_checked",
+      };
+    case "date":
+    case "created_time":
+    case "edited_time":
+      return {
+        id: nanoid(),
+        propertyId: property.id,
+        propertyType: type,
+        operator: operator as never,
+        value: null,
+      };
+    case "select":
+      return {
+        id: nanoid(),
+        propertyId: property.id,
+        propertyType: "select",
+        operator: "is",
+        value: "",
+      };
+    case "multi_select":
+      return {
+        id: nanoid(),
+        propertyId: property.id,
+        propertyType: "multi_select",
+        operator: "contains",
+        value: "",
+      };
+    case "status":
+      return {
+        id: nanoid(),
+        propertyId: property.id,
+        propertyType: "status",
+        operator: "is",
+        value: "",
+      };
+    case "relation":
+      return {
+        id: nanoid(),
+        propertyId: property.id,
+        propertyType: "relation",
+        operator: "contains",
+        value: "",
+      };
+    case "formula":
+      return {
+        id: nanoid(),
+        propertyId: property.id,
+        propertyType: "formula",
+        operator: "contains",
+        value: "",
+      };
+    case "person":
+    case "created_by":
+    case "edited_by":
+      return {
+        id: nanoid(),
+        propertyId: property.id,
+        propertyType: type,
+        operator: "contains",
+        value: "",
+      };
+    default:
+      return {
+        id: nanoid(),
+        propertyId: property.id,
+        propertyType: type as "title",
+        operator: "contains",
+        value: "",
+      };
+  }
+}
 
 /**
  * Resolves a property's icon and renders it. A custom `iconName` is resolved
@@ -110,7 +209,26 @@ export function PropertyHeader({
   } = useSortable({ id: prop.id, disabled: locked });
 
   const { db, source } = useDatabaseContext();
-  const { changePropertyTypeAsync } = useDataSource(source?.id);
+  const { changePropertyTypeAsync, updatePropertiesAsync } = useDataSource(
+    source?.id,
+  );
+
+  /** Insert a new text property beside this one. Cells are created by
+   *  useDatabaseCellSync once the property lands. */
+  const insertPropertyBeside = (side: "left" | "right") => {
+    const props = source?.properties ?? [];
+    const index = props.findIndex((p) => p.id === prop.id);
+    if (index === -1) return;
+    const next = [...props];
+    next.splice(side === "left" ? index : index + 1, 0, {
+      id: crypto.randomUUID(),
+      name: "Text",
+      config: DEFAULT_CONFIGS.text,
+      width: 160,
+    });
+    updatePropertiesAsync(next);
+    setOpen(false);
+  };
 
   // The type's default icon — used as fallback when no custom icon is set.
 
@@ -192,6 +310,41 @@ export function PropertyHeader({
 
   // offset so input center == header center
   const centerOffset = -(triggerH / 2 + inputCenterFromTop);
+
+  const statusConfig = prop.config.type === "status" ? prop.config : null;
+
+  const view = db.activeView;
+
+  /** Same construction FilterPanel.addRuleFor uses — appends to the first
+   *  filter group, creating it if the view has none. */
+  const addFilter = () => {
+    const group: FilterGroup = view.filters?.[0] ?? {
+      id: nanoid(),
+      operator: "and" as FilterGroupOperator,
+      rules: [],
+    };
+    db.updateView(view.id, {
+      filters: [
+        {
+          ...group,
+          rules: [...(group.rules as FilterRule[]), makeFilterRule(prop)],
+        },
+      ],
+    });
+    setOpen(false);
+  };
+
+  /** Same as SortPanel.addSortFor — no-op if this property is already sorted. */
+  const addSort = (direction: "asc" | "desc") => {
+    const sorts = view.sorts ?? [];
+    if (sorts.some((s) => s.propertyId === prop.id)) {
+      setOpen(false);
+      return;
+    }
+    const next: SortRule = { id: nanoid(), propertyId: prop.id, direction };
+    db.updateView(view.id, { sorts: [...sorts, next] });
+    setOpen(false);
+  };
 
   return (
     <div
@@ -282,7 +435,6 @@ export function PropertyHeader({
                       placeholder="Property name"
                       onChange={(e) => {
                         setName(e.target.value);
-                        db.updateProperty(prop.id, { ...prop, name });
                       }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
@@ -295,13 +447,12 @@ export function PropertyHeader({
                           setOpen(false);
                         }
                       }}
-                      contentEditable={true}
-                      onBlur={() =>
-                        db.updateProperty(prop.id, { ...prop, name })
-                      }
-                      onSubmit={() =>
-                        db.updateProperty(prop.id, { ...prop, name })
-                      }
+                      onBlur={(e) => {
+                        db.updateProperty(prop.id, {
+                          ...prop,
+                          name: e.currentTarget.value,
+                        });
+                      }}
                       style={{ minHeight: 20, height: 30 }}
                     />
                   </CardItemGroup>
@@ -390,6 +541,19 @@ export function PropertyHeader({
                               }),
                               options,
                             },
+                          })
+                        }
+                      />
+                    </PropertyEditPopover>
+                  )}
+                  {statusConfig && (
+                    <PropertyEditPopover>
+                      <StatusEditDisplay
+                        groups={statusConfig.groups}
+                        onChange={(groups) =>
+                          db.updateProperty(prop.id, {
+                            ...prop,
+                            config: { ...statusConfig, groups },
                           })
                         }
                       />
@@ -521,10 +685,67 @@ export function PropertyHeader({
                     }
                   />
                 </CardItemGroup>
+                <CardItemGroup>
+                  <PropertyMenuRow
+                    icon={ListFilter}
+                    label="Filter"
+                    onClick={addFilter}
+                  />
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <div>
+                        <PropertyMenuRow
+                          icon={SortAscIcon}
+                          label="Sort"
+                          navigable
+                        />
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent side="right" align="start">
+                      <Card style={{ padding: 5, minWidth: 160 }}>
+                        <CardItemGroup>
+                          <Button
+                            variant="ghost"
+                            style={{
+                              justifyContent: "flex-start",
+                              width: "100%",
+                            }}
+                            onClick={() => addSort("asc")}
+                          >
+                            <span className="tiptap-button-text">
+                              Ascending
+                            </span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            style={{
+                              justifyContent: "flex-start",
+                              width: "100%",
+                            }}
+                            onClick={() => addSort("desc")}
+                          >
+                            <span className="tiptap-button-text">
+                              Descending
+                            </span>
+                          </Button>
+                        </CardItemGroup>
+                      </Card>
+                    </PopoverContent>
+                  </Popover>
+                </CardItemGroup>
 
                 {prop.config.type !== "title" && (
                   <CardItemGroup>
                     <Separator orientation="horizontal" />
+                    <InsertPropertyButton
+                      side="left"
+                      onInsert={() => insertPropertyBeside("left")}
+                    />
+                    <InsertPropertyButton
+                      side="right"
+                      onInsert={() => insertPropertyBeside("right")}
+                    />
                     <DuplicatePropertyButton
                       onDuplicate={() => db.duplicateProperty(prop.id)}
                     />
