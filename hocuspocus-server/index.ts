@@ -2,83 +2,53 @@ import "dotenv/config";
 import { Server } from "@hocuspocus/server";
 import { SQLite } from "@hocuspocus/extension-sqlite";
 import { TiptapTransformer } from "@hocuspocus/transformer";
-import { jwtVerify, createLocalJWKSet } from "jose";
-
+import { jwtVerify, createRemoteJWKSet } from "jose";
 import { seedExtensions } from "./seed-schema";
 
-// This is a SEPARATE Node process from your Vite app — run it with
-// `npx tsx server/index.ts` (or compile with tsc) alongside `npm run dev`.
-// Needs its own env vars (see bottom of file for a minimal .env).
+// Separate Node process from the Vite app — run with `npx tsx index.ts` from
+// THIS folder (so dotenv finds ./.env). Needs its own env vars:
+//   SUPABASE_URL=https://<ref>.supabase.co
+//   SUPABASE_SERVICE_ROLE_KEY=<service_role secret — the long eyJ... JWT>
+//   PORT=1234                    (optional)
 
-// Where your json-server instance is running — teamspaces/pages/groups
-// still live there per the current split (only `people`/auth moved to
-// Supabase so far).
-const JSON_SERVER_URL = process.env.JSON_SERVER_URL ?? "http://localhost:3001";
-
-// Your Supabase project URL, e.g. https://<project-ref>.supabase.co
-const SUPABASE_URL = process.env.SUPABASE_URL!;
+const SUPABASE_URL = process.env.SUPABASE_URL;
 if (!SUPABASE_URL) {
   throw new Error("Missing SUPABASE_URL env var.");
 }
 
-// Supabase's public verification key, fetched once from
-// https://<project>.supabase.co/auth/v1/.well-known/jwks.json
-// Verifying locally means no network call per connection — and no dependency
-// on Node being able to reach Supabase at all. If Supabase rotates its signing
-// key, re-fetch that URL and replace this block.
-const JWKS = createLocalJWKSet({
-  keys: [
-    {
-      alg: "ES256",
-      crv: "P-256",
-      ext: true,
-      key_ops: ["verify"],
-      kid: "58ebce08-95f2-4bdc-a370-e46ff68c848a",
-      kty: "EC",
-      use: "sig",
-      x: "-Q5NAOi-BDytVNIIe1w3YEA-rakEY-X3G96oTnneLWE",
-      y: "GnR3vNxlPGOXwTJzlqCrDtuhTXrRW4w122qPuq7uAoY",
+const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!SERVICE_ROLE) {
+  throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY env var.");
+}
+
+const REST = `${SUPABASE_URL}/rest/v1`;
+
+// Verify session tokens LOCALLY against Supabase's published PUBLIC keys
+// (JWKS). Tokens are signed ES256; the server only needs the public half. jose
+// fetches the JWKS once and caches it, so this is not a per-connection network
+// call in the normal case.
+const JWKS = createRemoteJWKSet(
+  new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`),
+);
+
+// ── Supabase REST helper (service role — bypasses RLS) ───────────────────────
+// The server reads pages/teamspaces/membership to DECIDE access, so it must see
+// rows regardless of the connecting user's RLS. Service-role key: server-only,
+// never shipped to the client, never logged.
+async function sb<T>(pathAndQuery: string): Promise<T | null> {
+  const res = await fetch(`${REST}${pathAndQuery}`, {
+    headers: {
+      apikey: SERVICE_ROLE!,
+      Authorization: `Bearer ${SERVICE_ROLE!}`,
     },
-  ],
-});
-
-// ── Minimal shapes needed here — kept local rather than importing your
-// full types.ts, since this is a separate Node process/package. If this
-// ends up in the same monorepo with a shared tsconfig, swap these for the
-// real `Page`/`Teamspace`/`Group` imports instead of duplicating.
-interface PageRecord {
-  id: string;
-  teamspaceId?: string | null;
-  // Stored ProseMirror JSON — the source for the one-time Yjs seed.
-  content?: unknown;
-}
-interface TeamspaceRecord {
-  id: string;
-  memberIds: string[];
-  groupIds: string[];
-}
-interface GroupRecord {
-  id: string;
-  memberIds: string[];
-}
-
-function effectiveMemberIds(
-  ts: TeamspaceRecord,
-  groups: GroupRecord[],
-): string[] {
-  const set = new Set<string>(ts.memberIds);
-  const byId = new Map(groups.map((g) => [g.id, g]));
-  for (const gid of ts.groupIds) {
-    const g = byId.get(gid);
-    if (g) for (const pid of g.memberIds) set.add(pid);
-  }
-  return [...set];
-}
-
-async function fetchJson<T>(path: string): Promise<T | null> {
-  const res = await fetch(`${JSON_SERVER_URL}${path}`);
+  });
   if (!res.ok) return null;
   return res.json() as Promise<T>;
+}
+
+interface PageRecord {
+  id: string;
+  content?: unknown;
 }
 
 interface AuthContext {
@@ -94,120 +64,96 @@ const server = new Server<AuthContext>({
     }),
   ],
 
-  // Seed a brand-new document ONCE, before any client edits it. This is the
-  // documented, race-free place to do it: the doc is hydrated from stored
-  // content here, so by the time the client's Collaboration extension and
-  // TitleNode see it, it's already correct — no transitional empty state to
-  // trigger duplicate-title / empty-paragraph insertion.
+  // Seed a brand-new document ONCE, before any client edits it. Race-free: the
+  // doc is hydrated from stored content here, so by the time the client's
+  // Collaboration extension and TitleNode see it, it's already correct.
   async onLoadDocument({ documentName, document }) {
-    const t0 = Date.now();
-
-    // Already has content (seeded before, or has real edits) — never touch.
     if (!document.isEmpty("default")) return;
 
     const pageId = documentName.startsWith("page:")
       ? documentName.slice("page:".length)
       : documentName;
 
-    const page = await fetchJson<PageRecord>(`/pages/${pageId}`);
+    // PostgREST returns an array; unwrap the single row.
+    const rows = await sb<PageRecord[]>(
+      `/pages?id=eq.${encodeURIComponent(pageId)}&select=id,content`,
+    );
+    const page = rows?.[0] ?? null;
     if (!page || !page.content) return; // nothing to seed → stays empty
 
     try {
       const seededYdoc = TiptapTransformer.toYdoc(
         page.content,
         "default",
-        // seedExtensions is a minimal structural schema — see seed-schema.ts.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         seedExtensions as any,
       );
       document.merge(seededYdoc);
     } catch (err) {
       console.error(`[onLoadDocument] seed failed for ${documentName}:`, err);
-      // Leave the doc empty rather than crash the load — better a blank page
-      // than a dead connection. Surfaces loudly in logs for investigation.
     }
-    console.log(`[load] ${documentName} took ${Date.now() - t0}ms`);
   },
 
   async onAuthenticate({ token, documentName }) {
-    const t0 = Date.now();
     if (!token) {
       throw new Error("Not authenticated.");
     }
 
-    // Verify the Supabase session token LOCALLY against the project's public
-    // keys (JWKS). Checks the ES256 signature and exp; throws if invalid or
-    // expired. jose caches the JWKS, so this is not a per-connection network
-    // call in the normal case.
+    // Verify the Supabase session token locally (ES256 signature + exp).
     let personId: string;
     try {
       const { payload } = await jwtVerify(token, JWKS);
-      // `sub` is the Supabase auth user id === people.id (per the migration).
       if (!payload.sub) {
         throw new Error("Token has no subject.");
       }
+      // `sub` is the Supabase auth user id === people.id (per the migration).
       personId = payload.sub;
     } catch (err) {
       console.error("[onAuthenticate] JWT verify failed:", err);
       throw new Error("Not authenticated.");
     }
 
-    // documentName convention: `page:${page.id}`
     const pageId = documentName.startsWith("page:")
       ? documentName.slice("page:".length)
       : documentName;
 
-    const page = await fetchJson<PageRecord>(`/pages/${pageId}`);
-    if (!page) {
-      throw new Error("Page not found.");
-    }
-
-    // No teamspace on this page — no ownership model exists yet for
-    // private pages, so allow any authenticated person through for now.
-    // Known gap, not a decision to leave silent.
-    if (!page.teamspaceId) {
-      return { personId };
-    }
-
-    const teamspace = await fetchJson<TeamspaceRecord>(
-      `/teamspaces/${page.teamspaceId}`,
+    // The DB decides access: can_person_access_page walks parent_id to the
+    // teamspace and checks effective membership, returning a single boolean.
+    // Not under a teamspace → the RPC returns true (v1 private-page gap,
+    // documented in the migration).
+    const ok = await sb<boolean>(
+      `/rpc/can_person_access_page?p_id=${encodeURIComponent(
+        pageId,
+      )}&person=${encodeURIComponent(personId)}`,
     );
-    if (!teamspace) {
-      throw new Error("Teamspace not found.");
+
+    if (ok !== true) {
+      throw new Error("Not authorized for this page.");
     }
 
-    const groups = (await fetchJson<GroupRecord[]>("/groups")) ?? [];
-    const memberIds = effectiveMemberIds(teamspace, groups);
-
-    if (!memberIds.includes(personId)) {
-      throw new Error("Not a member of this teamspace.");
-    }
-
-    console.log(`[auth] ${documentName} took ${Date.now() - t0}ms`);
-
-    // Available in other hooks (onChange, onStoreDocument, etc.) via
-    // `context.personId` — e.g. to attribute changes or log activity.
+    // Available in later hooks via context.personId.
     return { personId };
   },
 
-  // Page.content stops being the source of truth once a page is
-  // collaborative (clean cutover, not kept in sync). But things like the
-  // sidebar's "recently edited" sort still depend on Page.updatedAt, so
-  // that one field keeps getting bumped here — everything else about the
-  // page record is untouched.
+  // Page.content stops being the source of truth once a page is collaborative.
+  // But the sidebar's "recently edited" sort still reads Page.updatedAt, so
+  // that one field keeps getting bumped here — nothing else on the row.
   async onStoreDocument({ documentName }) {
     const pageId = documentName.startsWith("page:")
       ? documentName.slice("page:".length)
       : documentName;
 
-    await fetch(`${JSON_SERVER_URL}/pages/${pageId}`, {
+    await fetch(`${REST}/pages?id=eq.${encodeURIComponent(pageId)}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ updatedAt: Date.now() }),
+      headers: {
+        apikey: SERVICE_ROLE!,
+        Authorization: `Bearer ${SERVICE_ROLE!}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({ updated_at: new Date().toISOString() }),
     }).catch(() => {
-      // Best-effort — a missed updatedAt bump isn't worth crashing the
-      // store hook over. Worth logging properly once you have real
-      // observability, not just swallowing silently forever.
+      // Best-effort — a missed updatedAt bump isn't worth crashing over.
     });
   },
 });

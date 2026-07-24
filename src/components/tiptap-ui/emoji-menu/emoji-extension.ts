@@ -295,8 +295,43 @@ export const EmojiExtension = Emoji.extend({
         .run();
     },
 
+    // -----------------------------------------------------------------------
+    // render() is invoked ONCE per plugin instance; the handlers below are
+    // reused across every suggestion session. All per-session state therefore
+    // has to be reset in onStart, not just initialised here.
+    // -----------------------------------------------------------------------
     render: () => {
-      let component: ReactRenderer<any>;
+      let component: ReactRenderer<any> | null = null;
+      let torndown = true;
+      let closedExplicitly = false;
+      let close: () => void = () => {};
+      let onOutsidePointerDown: ((event: PointerEvent) => void) | null = null;
+
+      // Idempotent teardown. The previous implementation destroyed the React
+      // root in some paths and removed the DOM element in others, so an
+      // Escape followed by an early-returning onExit left an orphaned,
+      // unresponsive menu parented to document.body. Everything now funnels
+      // through here, and calling it twice is a no-op.
+      const destroyMenu = () => {
+        if (torndown) return;
+        torndown = true;
+
+        if (onOutsidePointerDown) {
+          document.removeEventListener(
+            "pointerdown",
+            onOutsidePointerDown,
+            true,
+          );
+          onOutsidePointerDown = null;
+        }
+
+        if (component) {
+          const el = component.element;
+          if (el?.parentNode) el.parentNode.removeChild(el);
+          component.destroy();
+          component = null;
+        }
+      };
 
       const updatePosition = (
         clientRect: () => DOMRect,
@@ -322,43 +357,79 @@ export const EmojiExtension = Emoji.extend({
 
       return {
         onStart: (props: any) => {
+          // Reset per-session state before anything can bail out.
+          destroyMenu();
+          torndown = false;
+          closedExplicitly = false;
+
           if (isInForbiddenBlock(props.editor)) {
+            torndown = true;
             exitSuggestion(props.editor.view);
             return;
           }
 
+          // Single exit route, shared by the footer button, the component's
+          // own Escape handler, the plugin's onKeyDown, and outside clicks.
+          close = () => {
+            closedExplicitly = true;
+            destroyMenu();
+            exitSuggestion(props.editor.view);
+          };
+
           component = new ReactRenderer(EmojiList, {
-            props,
+            props: { ...props, onClose: close },
             editor: props.editor,
           });
 
           component.element.style.position = "absolute";
           document.body.appendChild(component.element);
 
+          // Safety net for the "menu is stuck" case: any pointerdown that
+          // isn't inside the menu dismisses it, so a stray click always
+          // clears the dropdown even if a keyboard path is swallowed.
+          onOutsidePointerDown = (event: PointerEvent) => {
+            const el = component?.element;
+            if (!el) return;
+            const target = event.target as Node | null;
+            if (target && el.contains(target)) return;
+            close();
+          };
+          document.addEventListener("pointerdown", onOutsidePointerDown, true);
+
           // Position after paint so the element has dimensions
           requestAnimationFrame(() => {
+            if (!component) return;
             updatePosition(props.clientRect, component.element);
           });
         },
 
         onUpdate: (props: any) => {
-          component.updateProps(props);
+          if (!component) return;
+          component.updateProps({ ...props, onClose: close });
           requestAnimationFrame(() => {
+            if (!component) return;
             updatePosition(props.clientRect, component.element);
           });
         },
 
         onKeyDown: (props) => {
           if (props.event.key === "Escape") {
-            component.destroy();
-            exitSuggestion(props.view);
-          } else {
-            component.ref?.onKeyDown(props);
+            close();
+            return true;
           }
-          return false;
+          // Propagate the list's own verdict instead of always returning
+          // false — otherwise ArrowUp/ArrowDown moved the ProseMirror cursor
+          // at the same time as the menu selection.
+          return component?.ref?.onKeyDown(props) ?? false;
         },
 
         onExit: (props: SuggestionProps<EmojiItem>) => {
+          // Explicit close already tore everything down.
+          if (closedExplicitly || torndown) {
+            destroyMenu();
+            return;
+          }
+
           const { editor, range } = props;
           const { state } = editor;
           const docSize = state.doc.content.size;
@@ -367,10 +438,7 @@ export const EmojiExtension = Emoji.extend({
           const to = Math.min(range.to, docSize);
 
           if (from >= to) {
-            if (document.body.contains(component.element)) {
-              document.body.removeChild(component.element);
-            }
-            component.destroy();
+            destroyMenu();
             return;
           }
 
@@ -381,15 +449,15 @@ export const EmojiExtension = Emoji.extend({
             const cursorInside =
               cursorPos >= range.from && cursorPos <= range.to + 1;
 
+            // Transient exit while the user is still inside a live ":" query —
+            // keep the menu mounted. Reachable only when the session was NOT
+            // closed explicitly, so this can no longer strand the element.
             if (stillSlash && cursorInside) return;
           } catch {
             console.log("Invalid insertion");
           }
 
-          if (document.body.contains(component.element)) {
-            document.body.removeChild(component.element);
-          }
-          component.destroy();
+          destroyMenu();
         },
       };
     },

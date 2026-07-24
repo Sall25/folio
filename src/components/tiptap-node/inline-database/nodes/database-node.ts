@@ -80,20 +80,6 @@ export const DatabaseNode = Node.create<unknown, DatabaseStorage>({
               // (restored after) is the culprit.
               void target;
               return false;
-              /* eslint-disable no-unreachable */
-              // Editable controls always pass through.
-              if (target.closest("input, textarea, [contenteditable='true']")) {
-                return false;
-              }
-              if (target.closest('[data-type="database-cell"]')) {
-                return false;
-              }
-              if (target.closest('[data-type="database"]')) {
-                event.preventDefault();
-                return true;
-              }
-              return false;
-              /* eslint-enable no-unreachable */
             },
           },
         },

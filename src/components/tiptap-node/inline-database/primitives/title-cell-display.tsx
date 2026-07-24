@@ -127,7 +127,7 @@ export function TitleCellDisplay({
             minHeight: 20,
             height: "20px !important",
             fontSize: 14,
-            minWidth: openVariant === "edit" ? "fit-content" : 68,
+            minWidth: openVariant === "edit" ? "fit-content" : 70,
             alignItems: "center",
             borderRadius: "var(--tt-radius-sm)",
             cursor: "pointer",

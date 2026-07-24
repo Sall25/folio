@@ -90,6 +90,7 @@ export function StatusCellDisplay({
             value={search}
             placeholder="Search..."
             onChange={(e) => setSearch(e.target.value)}
+            style={{ height: 28 }}
           />
         </div>
 

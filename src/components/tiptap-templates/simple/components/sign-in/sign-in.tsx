@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { supabase } from "src/api/supabase-client";
 import "./sign-in.scss";
+import { Input } from "src/components/tiptap-ui-primitive/input";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -64,7 +66,7 @@ export function SignIn() {
         </p>
 
         <form className="sign-in__form" onSubmit={handleSubmit}>
-          <input
+          <Input
             type="email"
             className="sign-in__input"
             placeholder="you@example.com"
@@ -75,7 +77,7 @@ export function SignIn() {
             disabled={status === "sending"}
           />
 
-          <input
+          <Input
             type="text"
             className="sign-in__input"
             placeholder="Your name"
@@ -89,13 +91,27 @@ export function SignIn() {
             <p className="sign-in__error">{errorMessage}</p>
           )}
 
-          <button
+          <Button
             type="submit"
-            className="sign-in__submit"
+            variant="primary"
+            size="large"
+            style={{
+              // display: "flex",
+              // width: "100%",
+              borderRadius: "var(--tt-radius-sm)",
+              // justifyContent: "center",
+              // alignItems: "center",
+            }}
+            // className="sign-in__submit"
             disabled={status === "sending" || !email.trim()}
           >
-            {status === "sending" ? "Sending..." : "Send magic link"}
-          </button>
+            <span
+              className="tiptap-button-text"
+              style={{ textAlign: "center" }}
+            >
+              {status === "sending" ? "Sending..." : "Send magic link"}
+            </span>
+          </Button>
         </form>
       </div>
     </div>

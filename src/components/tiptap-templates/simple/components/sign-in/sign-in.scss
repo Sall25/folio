@@ -11,7 +11,7 @@
     padding: 32px;
     border-radius: 12px;
     border: 1px solid color-mix(in srgb, var(--tt-text-primary) 10%, transparent);
-    background: var(--tt-bg-primary, #fff);
+    background: var(--tt-bg-color, #fff);
   }
 
   &__title {

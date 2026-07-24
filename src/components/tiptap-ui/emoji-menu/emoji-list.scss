@@ -14,9 +14,12 @@
   min-width: 220px;
   max-height: 350px;
   gap: 4px;
-  padding: 8px;
   overflow-y: scroll;
   margin: 0 -12px;
+
+  padding: 4px;
+
+  border-radius: var(--tt-radius-md);
   
   scroll-padding-bottom: 12px;
 
@@ -67,3 +70,69 @@
 
 }
 
+/* Append to emoji-list.scss.
+   The Card is now split into a scrolling .emoji-menu__list and a pinned
+   .emoji-menu__footer, so move `overflow-y` off .emoji-menu and onto the list
+   in your existing block (the max-height stays on .emoji-menu). */
+
+.emoji-menu {
+  display: flex;
+  flex-direction: column;
+
+  .emoji-menu__list {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    // overflow-y: auto;
+    // overflow-x: hidden;
+    // overscroll-behavior: contain;
+    // scroll-padding-bottom: 12px;
+
+    // scrollbar-width: thin;
+    // scrollbar-color: var(--tt-scrollbar-color) transparent;
+  }
+
+  .emoji-menu__footer {
+    position: sticky;
+    bottom: 0;
+    flex: 0 0 auto;
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 6px;
+    margin-top: 4px;
+    border-top: 1px solid var(--emoji-item-separator-color);
+    background: inherit;
+  }
+
+  .emoji-menu__close {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    line-height: 1;
+    padding: 4px 6px;
+    color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
+    background: transparent;
+    outline: none;
+
+    &:hover {
+      color: var(--tt-text-primary);
+    }
+  }
+
+  .emoji-menu__kbd {
+    font-family: inherit;
+    font-size: 10px;
+    line-height: 1;
+    padding: 3px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--emoji-item-border-color);
+    color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+    background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
+  }
+}

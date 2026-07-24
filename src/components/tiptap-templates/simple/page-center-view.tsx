@@ -297,7 +297,7 @@ export function PageCenterView({
 
   useRecordPropertyPanel(editor, page ?? null);
 
-  if (!page || isLoading || !editor)
+  if (isLoading || !page || !editor)
     return <PageCenterSkeleton onClose={onClose} />;
 
   const showTemplatePanel = bodyEmpty && !templateDismissed;

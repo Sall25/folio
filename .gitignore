@@ -41,3 +41,4 @@ db.json
 hocuspocus-server/folio-hocuspocus.sqlite
 hocuspocus-server/folio-hocuspocus.sqlite
 hocuspocus-server/folio-hocuspocus.sqlite
+hocuspocus-server/migration.md

@@ -7,8 +7,14 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 
 import "./emoji-list.scss";
 
-export const EmojiList = forwardRef<EmojiListRef, EmojiListProps>(
-  ({ items, command }, ref) => {
+// onClose is injected by the extension's render() so the footer button and the
+// in-component Escape handler both route through the same teardown as the
+// suggestion plugin's own exit. Declared as an intersection here so ./types
+// stays untouched.
+type Props = EmojiListProps & { onClose?: () => void };
+
+export const EmojiList = forwardRef<EmojiListRef, Props>(
+  ({ items, command, onClose }, ref) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [menuVisible, setMenuVisible] = useState(false);
 
@@ -18,6 +24,7 @@ export const EmojiList = forwardRef<EmojiListRef, EmojiListProps>(
         command(item);
       }
     };
+
     useImperativeHandle(ref, () => {
       const upHandler = () => {
         setSelectedIndex((i) => (i + items.length - 1) % items.length);
@@ -47,10 +54,18 @@ export const EmojiList = forwardRef<EmojiListRef, EmojiListProps>(
             enterHandler();
             return true;
           }
+
+          // Second Escape path. The extension handles Escape first, but if it
+          // ever delegates here instead, the menu still tears down.
+          if (event.key === "Escape") {
+            onClose?.();
+            return true;
+          }
+
           return false;
         },
       };
-    }, [items, command, selectedIndex]);
+    }, [items, command, selectedIndex, onClose]);
 
     useEffect(() => {
       const raf = requestAnimationFrame(() => {
@@ -63,26 +78,48 @@ export const EmojiList = forwardRef<EmojiListRef, EmojiListProps>(
 
     return (
       <Card className="emoji-menu" data-emoji-menu-open={menuVisible}>
-        {items.map((item, index) => (
+        <div className="emoji-menu__list">
+          {items.map((item, index) => (
+            <Button
+              className="emoji-item"
+              variant="ghost"
+              data-highlighted={index === selectedIndex}
+              key={index}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                selectItem(index);
+              }}
+            >
+              <span>{item.emoji}</span>
+              <span
+              //className='slash-item border-none'
+              >
+                {item.name}
+              </span>
+            </Button>
+          ))}
+        </div>
+
+        <div className="emoji-menu__footer">
           <Button
-            className="emoji-item"
+            className="emoji-menu__close"
             variant="ghost"
-            data-highlighted={index === selectedIndex}
-            key={index}
+            type="button"
+            aria-label="Close emoji menu"
             onMouseDown={(e) => {
+              // preventDefault keeps focus in the editor so exitSuggestion can
+              // act on a live selection.
               e.preventDefault();
-              selectItem(index);
+              onClose?.();
             }}
           >
-            <span>{item.emoji}</span>
-            <span
-            //className='slash-item border-none'
-            >
-              {item.name}
-            </span>
+            <span>Close</span>
+            <kbd className="emoji-menu__kbd">Esc</kbd>
           </Button>
-        ))}
+        </div>
       </Card>
     );
   },
 );
+
+EmojiList.displayName = "EmojiList";

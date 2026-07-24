@@ -6,7 +6,7 @@
    &__trigger{
     background-color: transparent;
     border: none;
-    margin: auto 5px;
+    margin: auto 0px;
   }
 }
 
@@ -17,7 +17,7 @@
   transition: filter var(--tt-transition-duration-short)
     var(--tt-transition-easing-default);
   padding: 2px 5px !important;
-  margin: auto 5px;
+  margin: auto 0px;
   
   &:hover {
     filter: brightness(1.08);
