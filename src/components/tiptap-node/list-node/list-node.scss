@@ -1,17 +1,17 @@
 .tiptap.ProseMirror {
   --tt-checklist-bg-color: var(--tt-gray-light-a-100);
-  --tt-checklist-bg-active-color: var(--tt-gray-light-a-600);
+  --tt-checklist-bg-active-color: var(--tt-brand-color-500); //var(--tt-gray-light-a-600);
   --tt-checklist-border-color: var(--tt-gray-light-a-300);
-  --tt-checklist-border-active-color: var(--tt-border-color);
+  --tt-checklist-border-active-color: var(--tt-brand-color-500);
   --tt-checklist-check-icon-color: var(--white);
   --tt-checklist-text-active: var(--tt-gray-light-a-500);
 
   .dark & {
     --tt-checklist-bg-color: var(--tt-gray-dark-a-100);
-    --tt-checklist-bg-active-color: var(--white);
-    --tt-checklist-border-color: var(--tt-gray-dark-a-300);
-    --tt-checklist-border-active-color: var(--tt-border-color);
-    --tt-checklist-check-icon-color: var(--black);
+    --tt-checklist-bg-active-color: var(--tt-brand-color-500); //var(--white);
+    --tt-checklist-border-color: var(--tt-border-color);
+    --tt-checklist-border-active-color: var(--tt-brand-color-500);
+    --tt-checklist-check-icon-color: var(--white); //var(--black);
     --tt-checklist-text-active: var(--tt-gray-dark-a-500);
   }
 }
@@ -69,7 +69,7 @@
           width: 17.5px;
           height: 16.5px;
           border: 1.5px solid var(--tt-checklist-border-color);
-          border-radius: 1px;
+          border-radius: 4px;
           position: relative;
           cursor: pointer;
           background-color: transparent;

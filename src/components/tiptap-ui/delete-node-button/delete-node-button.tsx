@@ -41,14 +41,6 @@ function deleteNode(editor: Editor | null): boolean {
     // Verify the position is still valid in the current doc
     if (from + node.nodeSize > state.doc.nodeSize) return false;
 
-    if (node.type.name === "databaseRecord") {
-      editor.commands.requestDeleteDatabaseRecord(node.attrs.id);
-      editor.view.focus();
-      return true;
-    }
-
-    console.log("case 1");
-
     dispatch(state.tr.delete(from, from + node.nodeSize));
     editor.view.focus();
     return true;

@@ -3,6 +3,7 @@
 }
 
 .menu{
+  border-radius: var(--tt-radius-sm);
   width: fit-content;
   border: 2px solid white;
   background: green;
@@ -13,6 +14,13 @@
   min-width: 15rem;
   justify-content: flex-start;
   align-items: flex-start;
+  .tiptap-card{
+    border-radius: var(--tt-radius-md);
+    background-color: var(--tt-gray-light-50);
+    .dark & {
+      background-color: var(--tt-gray-dark-100);
+    }
+  }
   
    /* Animation states */
   &[data-state="open"] {

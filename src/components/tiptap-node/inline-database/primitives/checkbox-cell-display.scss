@@ -11,7 +11,8 @@
   min-width: 18px !important;
   min-height: 16.5px !important;
   border: 1.5px solid var(--tt-checklist-border-color);
-  border-radius: 3px;      // 1px is nearly square-sharp; 3px reads as a checkbox
+  border-radius: var(--tt-radius-md) !important;
+  // border-radius: 3px;      // 1px is nearly square-sharp; 3px reads as a checkbox
   line-height: 1;          // ← was 34px
   background: transparent !important;
   display: flex;

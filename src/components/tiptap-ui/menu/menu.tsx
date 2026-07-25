@@ -104,6 +104,7 @@ export function Menu({
           showShortcut={true}
           text={t("blockMenu.deleteNode")}
           onDeleted={onAction}
+          className="delete-node-button"
         />
       </CardItemGroup>
     </Card>
