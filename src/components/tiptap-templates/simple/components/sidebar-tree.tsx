@@ -55,7 +55,6 @@ import {
   useSectionSortModes,
   type SortMode,
 } from "../hooks/use-sidebar-order";
-import { SidebarTreeSkeleton } from "./skeletons/sidebar-tree-skeleton";
 import { PageRowSkeleton } from "./skeletons";
 
 type DropZone = "before" | "after" | "inside";
@@ -393,7 +392,7 @@ function TreeSection({
             />
           ))}
 
-     {!isLoading && (
+      {!isLoading && (
         <SectionAddPageButton category={category} onAddPage={onAddPage} />
       )}
     </Section>
@@ -535,16 +534,15 @@ export function SidebarTree({
   const [dropTarget, setDropTarget] = useState<DropTarget>(null);
   const [expandedIds, setExpandedIds] = useState<Set<ID>>(new Set());
   const [hidden, setHidden] = useState<Set<string>>(new Set());
- const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
-    () =>
-      // While loading, `tree` is empty — collapsing every section on that basis
-      // would hide the skeleton rows entirely. Only auto-collapse empty sections
-      // once we actually know they're empty.
-      isLoading
-        ? new Set<string>()
-        : new Set(
-            DEFAULT_SECTION_ORDER.filter((c) => (tree[c]?.length ?? 0) === 0),
-          ),
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(() =>
+    // While loading, `tree` is empty — collapsing every section on that basis
+    // would hide the skeleton rows entirely. Only auto-collapse empty sections
+    // once we actually know they're empty.
+    isLoading
+      ? new Set<string>()
+      : new Set(
+          DEFAULT_SECTION_ORDER.filter((c) => (tree[c]?.length ?? 0) === 0),
+        ),
   );
 
   // Built from the SORTED tree — reorder math needs the currently displayed

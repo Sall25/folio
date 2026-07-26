@@ -135,6 +135,8 @@ export function BubbleMenu({ editor }: { editor: Editor | null }) {
     draftedThreads?.forEach((t) => deleteThread.mutate({ id: t.id }));
   };
 
+  const bubbleContentRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!editor) return;
     const handler = () => {
@@ -172,8 +174,18 @@ export function BubbleMenu({ editor }: { editor: Editor | null }) {
 
             return !state.tr.selection.empty;
           }}
+          options={{
+            onShow() {
+              bubbleContentRef.current?.classList.remove("bubble-hide");
+              bubbleContentRef.current?.classList.add("bubble-show");
+            },
+            onHide() {
+              bubbleContentRef.current?.classList.remove("bubble-show");
+              bubbleContentRef.current?.classList.add("bubble-hide");
+            },
+          }}
         >
-          <Card className="bubble-menu-content">
+          <Card className="bubble-menu-content" ref={bubbleContentRef}>
             <CardItemGroup orientation="horizontal">
               {/* Group 1 — block type */}
               <Group>

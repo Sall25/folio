@@ -288,21 +288,20 @@ body,
 }
 
 
-// Center editor takes all remaining space
 .simple-editor-content {
   font-size: 1rem;
-  min-width: 600px;
- // margin-top: 100px;
-  // margin-top: 20px;
+  // Fluid by default: fill the available width, capped by the max-widths
+  // below. No min-width floor — that was forcing the content wider than a
+  // phone viewport and clipping it.
+  width: 100%;
+  min-width: 0;
 
   transition: transform 0.2s ease;
-  // &.has-threads{
-  //    margin-left: -140px;
-  // }
 
-  &.has-threads{  
+  &.has-threads {
     transform: translateX(var(--x));
   }
+
   &[data-size="medium"] {
     max-width: 800px;
     --db-editor-width: 800px;
@@ -310,20 +309,19 @@ body,
 
   &[data-size="full"] {
     max-width: 1020px;
-    --db-editor-width:1020px;
+    --db-editor-width: 1020px;
   }
 
-  &[data-text="small"]{
+  &[data-text="small"] {
     font-size: 0.75em;
   }
 
-  &[data-locked="true"]{
+  &[data-locked="true"] {
     pointer-events: none;
     user-select: none;
   }
 
   &[data-collapsed="true"] {
-   
     &[data-size="medium"] {
       max-width: 800px;
       --db-editor-width: 800px;
@@ -334,10 +332,34 @@ body,
     }
   }
 
-   // Allow cover child to bleed full width
   overflow-x: visible;
 }
 
+// Below the tablet breakpoint, the content fills the viewport minus a small
+// gutter. The max-widths above still cap it on a large phone in landscape,
+// but the --db-editor-width vars must shrink too or inline databases (which
+// size off that var) overflow the screen.
+@media (max-width: 768px) {
+  .simple-editor-content {
+    &[data-size="medium"],
+    &[data-size="full"],
+    &[data-collapsed="true"][data-size="medium"],
+    &[data-collapsed="true"][data-size="full"] {
+      max-width: 100%;
+      --db-editor-width: calc(100vw - 32px);
+    }
+
+    // overflow-x: visible lets the cover bleed full-width on desktop, but on
+    // mobile it also lets wide children (tables, code blocks, the database
+    // node) push past the viewport. Contain them here.
+    overflow-x: hidden;
+  }
+}
+@media (max-width: 768px) {
+  .simple-editor-content.has-threads {
+    transform: none;
+  }
+}
 
 
 .cover-full-bleed {

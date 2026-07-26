@@ -58,7 +58,7 @@ export default function EditedTimeButton({
             className="tiptap-button-text"
             style={{
               fontSize: 14,
-              fontWeight: 400,
+              fontWeight: 450,
               lineHeight: 1.4,
               color: "var(--tt-text-color)",
               fontFamily:

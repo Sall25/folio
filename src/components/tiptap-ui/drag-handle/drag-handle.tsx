@@ -323,6 +323,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
         <Button
           className="plus-button"
           type="button"
+          size="large"
           variant="ghost"
           role="button"
           tabIndex={-1}
@@ -366,6 +367,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
               type="button"
               variant="ghost"
               role="button"
+              size="large"
               className="grip-button"
               tabIndex={-1}
               onPointerDown={() => {

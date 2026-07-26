@@ -10,7 +10,6 @@ import { NotificationProvider } from "src/components/tiptap-ui/notification";
 import { TocProvider } from "src/components/tiptap-node/toc-node/toc-provider";
 
 // --- Hooks ---
-import { useIsBreakpoint } from "src/hooks/use-is-breakpoint";
 import { useWindowSize } from "src/hooks/use-window-size";
 import { createPageMutationKey } from "src/hooks/use-create-page";
 
@@ -57,8 +56,9 @@ function triggerMainEditorSync(mainEditor: Editor | null) {
 }
 
 function SimpleEditorMain({ view }: { view: View }) {
-  const { versionHistoryOpen, onVersionHistoryOpenChanged /*, collapsed*/ } =
+  const { versionHistoryOpen, onVersionHistoryOpenChanged, mode } =
     useEditorLayout();
+  const isMobile = mode === "mobile";
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
   const { target, setTarget } = usePageView();
   const { editor } = useCurrentEditor();
@@ -77,12 +77,11 @@ function SimpleEditorMain({ view }: { view: View }) {
         <div
           style={{
             width: "100%",
-            minWidth: 950,
-            padding: "1rem 1.5rem 30vh",
+            minWidth: isMobile ? "auto" : 950,
+            padding: isMobile ? "1rem 1rem 30vh" : "1rem 1.5rem 30vh",
             overflowY: "auto",
           }}
         >
-          {" "}
           <HomePageContent />
         </div>
       )}
@@ -90,8 +89,9 @@ function SimpleEditorMain({ view }: { view: View }) {
         <div
           style={{
             width: "100%",
-            minWidth: 950,
-            padding: "1rem 1.5rem 30vh",
+            minWidth: isMobile ? "auto" : 950,
+            padding: isMobile ? "1rem 1rem 30vh" : "1rem 1.5rem 30vh",
+
             overflowY: "auto",
           }}
         >
@@ -163,8 +163,14 @@ function SimpleEditorMain({ view }: { view: View }) {
 function SimpleEditorInner({ view }: { view: View }) {
   const [mobileView, setMobileView] = useState<MobileView>("main");
   const toolbarRef = useRef<HTMLDivElement | null>(null);
-  const isMobile = useIsBreakpoint();
   const { height } = useWindowSize();
+  const {
+    sidebarWidth,
+    versionHistoryOpen,
+    onVersionHistoryOpenChanged,
+    mode,
+  } = useEditorLayout();
+  const isMobile = mode === "mobile";
 
   // A page create is in flight (sidebar "+", or "add page to section").
   // Covers the window where activePageId hasn't moved yet (setActivePageId
@@ -173,11 +179,6 @@ function SimpleEditorInner({ view }: { view: View }) {
   const isCreatingPage =
     useIsMutating({ mutationKey: createPageMutationKey }) > 0;
 
-  // `activePage` is assumed to be exposed by useActivePage (the same active
-  // page that feeds SimpleEditorContentProps). If it actually comes from a
-  // route param or a different field, point `activePageId` below at that.
-  const { sidebarWidth, versionHistoryOpen, onVersionHistoryOpenChanged } =
-    useEditorLayout();
   const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
   useEffect(() => {
     if (!isMobile && mobileView !== "main")

@@ -5,3 +5,12 @@
   font-family: var(--font-ui);
   padding: .188rem;
 }
+.bubble-show {
+  animation: float-in 0.15s ease-out both;
+  pointer-events: auto;
+}
+
+.bubble-hide {
+  animation: float-out 0.15s ease-in both;
+  pointer-events: none;
+}

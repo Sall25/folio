@@ -1,9 +1,12 @@
 import { createContext, useContext, type RefObject } from "react";
+import type { PeekPhase } from "./editor-layout-provider";
 
 export const PADDING_LEFT = 230;
 export const TRANSLATE_X = -80;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+export type LayoutMode = "mobile" | "tablet" | "desktop";
+
 interface EditorLayoutContextValue {
   sidebarWidth: number;
   collapsed: boolean;
@@ -17,6 +20,14 @@ interface EditorLayoutContextValue {
   isResizingSidebar: boolean;
   setSidebarWidth: (w: number) => void;
   onSidebarResizingChange: (resizing: boolean) => void;
+  mode: LayoutMode;
+  drawerWidth: number;
+  peeking: boolean;
+  onPeekChange: (v: boolean) => void;
+  collapseWithFloat: () => void;
+  peekPhase: PeekPhase;
+  openPeek: () => void;
+  closePeek: () => void;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────

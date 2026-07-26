@@ -23,22 +23,21 @@ import { patchPage } from "src/api/pages";
 import EditedTimeButton from "./components/edited-time-button/edited-time-button";
 import { useTranslation } from "react-i18next";
 import { useEditorLayout } from "./context/editor-layout-context";
-import { useCallback } from "react";
+import { useIsMobile, useIsTablet } from "src/hooks/use-breakpoint";
 
 function Expand() {
-  const { t } = useTranslation();
-  const { collapsed, onCollapsedChange } = useEditorLayout();
+  // const { t } = useTranslation();
+  const { collapsed, onCollapsedChange, openPeek, closePeek } =
+    useEditorLayout();
 
-  const onToggle = useCallback(
-    () => onCollapsedChange(!collapsed),
-    [onCollapsedChange, collapsed],
-  );
   return (
     <Button
-      onClick={onToggle}
+      onClick={() => onCollapsedChange(!collapsed)}
+      onMouseEnter={() => collapsed && openPeek()}
+      onMouseLeave={closePeek}
       variant="ghost"
       size="large"
-      tooltip={t("sidebar.expand")}
+      // tooltip={t("sidebar.expand")}
       style={{ background: "transparent", padding: 0, cursor: "pointer" }}
     >
       <Menu className="tiptap-button-icon" />
@@ -52,13 +51,12 @@ function Expand() {
 
 export type MobileView = "main" | "highlighter" | "link";
 
-type MainToolbarProps = {
-  isMobile: boolean;
+type ContentProps = {
   onTriggerVersionHistory?: () => void;
   view: View;
 };
 
-type MobileToolbarProps = {
+type MobileSubToolbarProps = {
   type: "highlighter" | "link";
   onBack: () => void;
 };
@@ -77,54 +75,65 @@ type SimpleEditorToolbarProps = {
 };
 
 // ============================================================
-// Main toolbar
+// Shared left group — title / category / breadcrumbs
+// The leading edge is identical across sizes; only the trailing
+// controls differ, so this is factored out.
 // ============================================================
-export const MainToolbarContent = ({
-  isMobile,
-  onTriggerVersionHistory,
-  view,
-}: MainToolbarProps) => {
+function TitleGroup({ view }: { view: View }) {
   const { activePage, activePageId } = useActivePage();
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const { t } = useTranslation();
   const { collapsed } = useEditorLayout();
+
+  return (
+    <ToolbarGroup>
+      {collapsed && <Expand />}
+
+      {view === "home" && (
+        <Button variant="ghost">
+          <Home className="tiptap-button-icon" strokeWidth={2} />
+          <span className="tiptap-button-text" style={{ fontWeight: "bold" }}>
+            {t("sidebar.home")}
+          </span>
+        </Button>
+      )}
+      {view === "library" && (
+        <Button variant="ghost">
+          <LibraryBig className="tiptap-button-icon" strokeWidth={2} />
+          <span className="tiptap-button-text" style={{ fontWeight: "bold" }}>
+            {t("sidebar.library")}
+          </span>
+        </Button>
+      )}
+      <Breadcrumbs pageId={activePageId} />
+
+      {view !== "home" && activePage && (
+        <PageCategorySelect
+          value={activePage.category}
+          onChange={(category) => {
+            if (activePageId)
+              mutateAsync({ id: activePageId, patch: { category } });
+          }}
+        />
+      )}
+    </ToolbarGroup>
+  );
+}
+
+// ============================================================
+// Desktop — everything inline (the current MainToolbarContent)
+// ============================================================
+export const DesktopToolbarContent = ({
+  onTriggerVersionHistory,
+  view,
+}: ContentProps) => {
+  const { activePage } = useActivePage();
+
   return (
     <>
-      <ToolbarGroup>
-        {collapsed && <Expand />}
-
-        {view === "home" && (
-          <Button variant="ghost">
-            <Home className="tiptap-button-icon" strokeWidth={2} />
-            <span className="tiptap-button-text" style={{ fontWeight: "bold" }}>
-              {t("sidebar.home")}
-            </span>
-          </Button>
-        )}
-        {view === "library" && (
-          <Button variant="ghost">
-            <LibraryBig className="tiptap-button-icon" strokeWidth={2} />
-            <span className="tiptap-button-text" style={{ fontWeight: "bold" }}>
-              {t("sidebar.library")}
-            </span>
-          </Button>
-        )}
-        <Breadcrumbs pageId={activePageId} />
-        {/* <Separator orientation="vertical" /> */}
-
-        {view !== "home" && activePage && (
-          <PageCategorySelect
-            value={activePage.category}
-            onChange={(category) => {
-              if (activePageId)
-                mutateAsync({ id: activePageId, patch: { category } });
-            }}
-          />
-        )}
-      </ToolbarGroup>
+      <TitleGroup view={view} />
       <Spacer />
 
-      {isMobile && <ToolbarSeparator />}
       <ToolbarGroup>
         {view !== "home" && activePage && (
           <>
@@ -144,10 +153,92 @@ export const MainToolbarContent = ({
 };
 
 // ============================================================
-// Mobile toolbar
+// Tablet — fold the label-heavy items (edited-time, theme) into
+// the More popover; keep undo/redo, bell, more on the bar.
 // ============================================================
+export const TabletToolbarContent = ({
+  onTriggerVersionHistory,
+  view,
+}: ContentProps) => {
+  const { activePage } = useActivePage();
 
-export const MobileToolbarContent = ({ type, onBack }: MobileToolbarProps) => (
+  return (
+    <>
+      <TitleGroup view={view} />
+      <Spacer />
+
+      <ToolbarGroup>
+        {view !== "home" && activePage && (
+          <>
+            <UndoRedoButton action="undo" />
+            <UndoRedoButton action="redo" />
+            <Separator orientation="vertical" />
+          </>
+        )}
+
+        <NotificationBell />
+        {/* Edited-time + theme move inside; MorePopover renders them when
+            these flags are set. */}
+        <MorePopover
+          onTriggerVersionHistory={onTriggerVersionHistory}
+          includeTheme={true}
+          editedPage={view !== "home" ? activePage : undefined}
+        />
+      </ToolbarGroup>
+    </>
+  );
+};
+
+// ============================================================
+// Mobile — strip to menu · title · more. Everything else lives
+// in the More popover.
+// ============================================================
+export const MobileToolbarContent = ({
+  onTriggerVersionHistory,
+  view,
+}: ContentProps) => {
+  const { activePage, activePageId } = useActivePage();
+  const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
+  const { collapsed } = useEditorLayout();
+
+  return (
+    <>
+      <ToolbarGroup>
+        {collapsed && <Expand />}
+        <Breadcrumbs pageId={activePageId} />
+      </ToolbarGroup>
+      <Spacer />
+
+      <ToolbarGroup>
+        <MorePopover
+          onTriggerVersionHistory={onTriggerVersionHistory}
+          includeTheme
+          includeUndoRedo
+          includeNotifications
+          editedPage={view !== "home" ? activePage : undefined}
+          category={
+            view !== "home" && activePage
+              ? {
+                  value: activePage.category,
+                  onChange: (category) =>
+                    activePageId &&
+                    mutateAsync({ id: activePageId, patch: { category } }),
+                }
+              : undefined
+          }
+        />
+      </ToolbarGroup>
+    </>
+  );
+};
+
+// ============================================================
+// Highlighter / link sub-view — a MODE within mobile, unchanged.
+// ============================================================
+export const MobileSubToolbarContent = ({
+  type,
+  onBack,
+}: MobileSubToolbarProps) => (
   <>
     <ToolbarGroup>
       <Button variant="ghost" onClick={onBack}>
@@ -164,9 +255,8 @@ export const MobileToolbarContent = ({ type, onBack }: MobileToolbarProps) => (
 );
 
 // ============================================================
-// Composed toolbar
+// Composed toolbar — picks the content by breakpoint.
 // ============================================================
-
 export const SimpleEditorToolbar = ({
   toolbarRef,
   isMobile,
@@ -180,6 +270,36 @@ export const SimpleEditorToolbar = ({
   view,
 }: SimpleEditorToolbarProps) => {
   const { collapsed } = useEditorLayout();
+
+  // Breakpoint selection. useIsMobile/useIsTablet come from the media-query
+  // hook; the `isMobile` prop still drives the positioning offset below since
+  // that's about the on-screen keyboard, not layout.
+  const isMobileBp = useIsMobile();
+  const isTabletBp = useIsTablet();
+
+  const renderMain = () => {
+    if (isMobileBp)
+      return (
+        <MobileToolbarContent
+          view={view}
+          onTriggerVersionHistory={onTriggerVersionHistory}
+        />
+      );
+    if (isTabletBp)
+      return (
+        <TabletToolbarContent
+          view={view}
+          onTriggerVersionHistory={onTriggerVersionHistory}
+        />
+      );
+    return (
+      <DesktopToolbarContent
+        view={view}
+        onTriggerVersionHistory={onTriggerVersionHistory}
+      />
+    );
+  };
+
   return (
     <Toolbar
       ref={toolbarRef}
@@ -193,13 +313,9 @@ export const SimpleEditorToolbar = ({
       }
     >
       {mobileView === "main" ? (
-        <MainToolbarContent
-          view={view}
-          isMobile={isMobile}
-          onTriggerVersionHistory={onTriggerVersionHistory}
-        />
+        renderMain()
       ) : (
-        <MobileToolbarContent
+        <MobileSubToolbarContent
           type={mobileView === "highlighter" ? "highlighter" : "link"}
           onBack={() => onMobileViewChange("main")}
         />

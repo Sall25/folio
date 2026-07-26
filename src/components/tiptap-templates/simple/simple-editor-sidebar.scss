@@ -25,7 +25,7 @@
 
 .sidebar {
   position: relative;
-  z-index: 0;
+  // z-index: 99999 !important;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -78,6 +78,21 @@
       transparent 40%
     );
 }
+
+.sidebar-mobile > div:nth-child(2) {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+.sidebar--floating {
+  background: var(--sidebar-bg-color) !important; // or whatever your solid surface token is
+}
+
+/* Prevent the internal overlay from blocking clicks */
+// .tiptap-card.sidebar > div:nth-child(2) {
+//     display: none !important;
+//     pointer-events: none !important;
+// }
 
 // ── Workspace header ──
 .sidebar-header {

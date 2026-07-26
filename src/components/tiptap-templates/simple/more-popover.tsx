@@ -17,10 +17,35 @@ import { useActivePage } from "./context/active-page-context";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import { PageTemplateMenu } from "./components/page-template-menu";
+import { UndoRedoButton } from "src/components/tiptap-ui/undo-redo-button";
+import { ThemeToggle } from "src/components/tiptap-templates/simple/theme-toggle";
+import { NotificationBell } from "src/components/tiptap-ui/notification";
+import EditedTimeButton from "./components/edited-time-button/edited-time-button";
+import { PageCategorySelect } from "./components/page-category-select";
+import type { Page, PageCategory } from "src/types";
+
 export function MorePopover({
   onTriggerVersionHistory,
+  // Overflow flags — set by the tablet/mobile toolbars so controls hidden from
+  // the bar render inside the popover instead. Absent on desktop (those
+  // controls stay on the bar), so this whole section renders nothing there.
+  includeUndoRedo = false,
+  includeTheme = false,
+  includeNotifications = false,
+  editedPage,
+  category,
 }: {
   onTriggerVersionHistory?: () => void;
+  includeUndoRedo?: boolean;
+  includeTheme?: boolean;
+  includeNotifications?: boolean;
+  /** When set, the edited-time row renders here (folded off the bar). */
+  editedPage?: Page | null;
+  /** When set, the category selector renders here (mobile). */
+  category?: {
+    value: PageCategory;
+    onChange: (category: PageCategory) => void;
+  };
 }) {
   const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const { activePage } = useActivePage();
@@ -86,6 +111,14 @@ export function MorePopover({
     [activePage, mutatePage],
   );
 
+  // Whether the overflow section has anything to show at this breakpoint.
+  const hasOverflow =
+    includeUndoRedo ||
+    includeTheme ||
+    includeNotifications ||
+    !!editedPage ||
+    !!category;
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -100,6 +133,35 @@ export function MorePopover({
           side="bottom"
         >
           <Card className="more-content">
+            {/* Overflow section — controls folded off the bar on tablet/mobile.
+                Renders nothing on desktop, where these live on the toolbar. */}
+            {hasOverflow && (
+              <>
+                <CardItemGroup className="more-item">
+                  {category && (
+                    <PageCategorySelect
+                      value={category.value}
+                      onChange={category.onChange}
+                    />
+                  )}
+
+                  {editedPage && <EditedTimeButton page={editedPage} />}
+
+                  {includeUndoRedo && (
+                    <div className="more-inline-row">
+                      <UndoRedoButton action="undo" />
+                      <UndoRedoButton action="redo" />
+                    </div>
+                  )}
+
+                  {includeNotifications && <NotificationBell />}
+
+                  {includeTheme && <ThemeToggle />}
+                </CardItemGroup>
+                <Separator orientation="horizontal" />
+              </>
+            )}
+
             <CardItemGroup className="more-item">
               <SettingsToggleButton
                 target="width"

@@ -140,8 +140,15 @@ const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
 // ============================================================
 
 const StableShell = React.memo(function StableShell() {
-  const { editorWrapperRef, paddingLeft, translateX, sidebarWidth, collapsed } =
-    useEditorLayout();
+  const {
+    editorWrapperRef,
+    paddingLeft,
+    translateX,
+    sidebarWidth,
+    collapsed,
+    mode,
+  } = useEditorLayout();
+  const isMobile = mode === "mobile";
   const { activePage } = useActivePage();
 
   const {
@@ -176,22 +183,25 @@ const StableShell = React.memo(function StableShell() {
         <div>
           <CoverHeader
             collapsed={collapsed}
-            sidebarWidth={sidebarWidth}
-            paddingLeft={paddingLeft}
+            sidebarWidth={isMobile ? 0 : sidebarWidth}
+            paddingLeft={isMobile ? 0 : paddingLeft}
             translateX={translateX}
             hasThreads={hasThreads}
-            marginLeft={sidebarWidth}
+            marginLeft={isMobile ? 0 : sidebarWidth}
           />
         </div>
         <div
           ref={editorWrapperRef}
           style={
             {
-              width: `calc(100vw)`,
-              marginLeft:
-                activePage?.settings.width === "medium" ? 280 : sidebarWidth,
+              width: isMobile ? "100%" : `calc(100vw)`,
+              marginLeft: isMobile
+                ? 0
+                : activePage?.settings.width === "medium"
+                  ? 280
+                  : sidebarWidth,
               transition: "margin-left 0.2s ease, width 0.2s ease",
-              paddingLeft,
+              paddingLeft: isMobile ? 0 : paddingLeft,
               "--x": `${translateX}px`,
             } as React.CSSProperties
           }

@@ -9,7 +9,6 @@ import {
   LayoutTemplate,
   ChevronsLeft,
   PenBox,
-  Menu,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -22,7 +21,7 @@ import {
 
 import "./simple-editor-sidebar.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-location";
 import { useEditorLayout } from "./context/editor-layout-context";
@@ -44,17 +43,20 @@ import type { Group, Teamspace } from "src/types";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useTemplates } from "./context/templates-context";
 import { SidebarResizeHandle } from "./components/sidebar-resize-handle";
+import { createPortal } from "react-dom";
+import { useWhyDidYouRender } from "src/lib/useWhyDidYouRender";
 
 function User() {
   const { t } = useTranslation();
-  const { collapsed, onCollapsedChange } = useEditorLayout();
+  const { /*collapsed, onCollapsedChange,*/ collapseWithFloat } =
+    useEditorLayout();
   const [hovered, setHovered] = useState(false);
   const { person } = useCurrentPerson();
 
-  const onToggle = useCallback(
-    () => onCollapsedChange(!collapsed),
-    [onCollapsedChange, collapsed],
-  );
+  // const onToggle = useCallback(
+  //   () => onCollapsedChange(!collapsed),
+  //   [onCollapsedChange, collapsed],
+  // );
 
   const name = person?.name ?? "";
   const initial = name ? name.charAt(0).toUpperCase() : "?";
@@ -127,7 +129,7 @@ function User() {
         variant="ghost"
         size="large"
         tooltip={t("sidebar.collapse")}
-        onClick={onToggle}
+        onClick={collapseWithFloat}
         style={{
           background: "transparent",
           padding: 0,
@@ -155,24 +157,9 @@ function User() {
   );
 }
 
-function Expand() {
-  const { t } = useTranslation();
-  const { collapsed, onCollapsedChange } = useEditorLayout();
-
-  const onToggle = useCallback(
-    () => onCollapsedChange(!collapsed),
-    [onCollapsedChange, collapsed],
-  );
-  return (
-    <Button onClick={onToggle} variant="ghost" tooltip={t("sidebar.expand")}>
-      <Menu className="tiptap-button-icon" />
-    </Button>
-  );
-}
-
 function WorkspaceHeader() {
   // const { t } = useTranslation();
-  const { collapsed, onCollapsedChange } = useEditorLayout();
+  const { collapsed } = useEditorLayout();
   const [, setHide] = useState(true);
 
   // const onToggle = useCallback(
@@ -391,11 +378,24 @@ function LibraryPaletteTrigger() {
     </Button>
   );
 }
+
+// type PeekPhase = "hidden" | "entering" | "open" | "leaving";
+
 // ── main component: lens + tree + mutation hooks ─────────────────────────────
 export function SimpleEditorSidebar() {
   const { t } = useTranslation();
-  const { collapsed, sidebarWidth, isResizingSidebar } = useEditorLayout();
-  const { tree, data: pages, isPending, isLoading } = usePageTree();
+  const {
+    collapsed,
+    drawerWidth,
+    mode,
+    sidebarWidth,
+    peeking,
+    openPeek,
+    closePeek,
+    peekPhase: phase,
+  } = useEditorLayout();
+  const isMobile = mode === "mobile";
+  const { tree, isPending, isLoading } = usePageTree();
   // Joined to teamspace-pages by id, only to show a member count in the row.
   const { data: teamspaces = [] } = useTeamspaces();
   const { data: groups = [] } = useGroups();
@@ -406,28 +406,97 @@ export function SimpleEditorSidebar() {
   const { openTo } = useWorkspaceSettingsModal();
   const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
 
-  // if (isPending || !pages) return null;
+  const isFloating = !isMobile && collapsed && peeking;
 
-  return (
+  const [peekEntered, setPeekEntered] = useState(false);
+
+  useEffect(() => {
+    if (isFloating) {
+      // Next frame: flip from the pre-enter offset to resting, so the transition
+      // has a start position to animate from.
+      const raf = requestAnimationFrame(() => setPeekEntered(true));
+      return () => cancelAnimationFrame(raf);
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPeekEntered(false);
+  }, [isFloating]);
+
+  // Render floating styles while entering OR exiting — not just while peeking.
+  const [floatingMounted, setFloatingMounted] = useState(false);
+
+  useEffect(() => {
+    if (isFloating) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFloatingMounted(true);
+      const raf = requestAnimationFrame(() => setPeekEntered(true));
+      return () => cancelAnimationFrame(raf);
+    }
+    setPeekEntered(false); // animate out
+    // Unmount the floating styles only AFTER the transition finishes.
+    const t = window.setTimeout(() => setFloatingMounted(false), 260); // > transition
+    return () => window.clearTimeout(t);
+  }, [isFloating]);
+
+  // const showFloating = !isMobile && collapsed && floatingMounted;
+
+  useWhyDidYouRender("FloatingCard", {
+    collapsed,
+    peeking,
+    peekEntered,
+    floatingMounted,
+    mode,
+    sidebarWidth,
+    drawerWidth,
+  });
+
+  const floatingActive = !isMobile && collapsed && phase !== "hidden";
+  // Visible position: on-screen while open OR during the grace period of leaving.
+  // Only 'hidden' (after the timer) actually moves it off.
+  const onScreen = phase === "open" || phase === "leaving";
+  const showContent = isMobile ? true : !collapsed || floatingActive;
+
+  const sidebarCard = (
     <Card
-      className={`sidebar ${collapsed ? "sidebar--collapsed" : ""}`}
+      className={`sidebar ${collapsed ? "sidebar--collapsed" : ""} ${
+        isMobile ? "sidebar-mobile" : ""
+      } ${floatingActive ? "sidebar--floating" : ""}`}
+      onMouseEnter={() => !isMobile && collapsed && openPeek()}
+      onMouseLeave={() => !isMobile && closePeek()}
       style={{
-        zIndex: 120,
+        zIndex: isMobile ? 950 : floatingActive ? 900 : 120,
         position: "fixed",
-        left: 0,
+        left: 0, //floatingActive ? 8 : 0,
+        top: floatingActive ? "8%" : 0,
         borderRadius: 0,
-        width: sidebarWidth,
-        // boxShadow: "none",
-        //width: collapsed ? 52 : 290,
-        ["--sidebar-width" as string]: `${sidebarWidth}px`,
-        transition: isResizingSidebar ? "none" : "width 0.2s ease",
-        height: "100vh",
+        borderTopRightRadius: floatingActive ? "var(--tt-radius-xl)" : 0,
+        borderBottomRightRadius: floatingActive ? "var(--tt-radius-xl)" : 0,
+        boxShadow: floatingActive ? "var(--tt-shadow-md)" : "none",
+        width: isMobile
+          ? drawerWidth
+          : floatingActive
+            ? drawerWidth
+            : sidebarWidth,
+        height: floatingActive ? "min(600px, calc(100vh - 32px))" : "100vh",
+        transform:
+          isMobile && collapsed
+            ? "translateX(-100%)"
+            : floatingActive
+              ? onScreen
+                ? "translateX(0)"
+                : "translateX(-110%)"
+              : collapsed
+                ? "translateX(-110%)"
+                : "translateX(0)",
+        transition:
+          phase === "leaving" || phase === "hidden"
+            ? "transform 0.3s cubic-bezier(0.4, 0, 1, 1)" // smooth accelerate-out
+            : "transform 0.24s cubic-bezier(0.32, 0.72, 0, 1)",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
       }}
     >
-      {!collapsed && (
+      {showContent && !peeking && (
         <CardHeader
           className="sidebar-header-content"
           style={{ border: "none" }}
@@ -440,7 +509,24 @@ export function SimpleEditorSidebar() {
         </CardHeader>
       )}
 
-      {!collapsed && (
+      {!isMobile && collapsed && floatingActive && (
+        <div
+          onMouseEnter={openPeek}
+          style={{
+            position: "fixed",
+            left: 0,
+            top: 0,
+            // Wide enough to cover the card's left edge (left:8 + shadow) AND the
+            // diagonal path down from the toolbar hamburger. Full height so the
+            // vertically-centered card is always reachable without crossing a gap.
+            width: Math.max(28, 8 + 20),
+            height: "100vh",
+            zIndex: 899,
+          }}
+        />
+      )}
+
+      {showContent && (
         <CardBody
           className="sidebar-body-content"
           style={{
@@ -452,11 +538,15 @@ export function SimpleEditorSidebar() {
           }}
         >
           <>
-            <ScrollFog edge="top" color="var(--sidebar-fog-color)" />
-            <Spacer orientation="vertical" size={15} />
+            {!peeking && (
+              <>
+                <ScrollFog edge="top" color="var(--sidebar-fog-color)" />
+                <Spacer orientation="vertical" size={15} />
 
-            <ShowcaseSection />
-            <Spacer orientation="vertical" size={15} />
+                <ShowcaseSection />
+                <Spacer orientation="vertical" size={15} />
+              </>
+            )}
 
             <SidebarTree
               tree={tree}
@@ -494,27 +584,31 @@ export function SimpleEditorSidebar() {
               isLoading={isPending || isLoading}
             />
 
-            <Spacer orientation="vertical" size={12} />
-            <Button
-              size="large"
-              variant="ghost"
-              onClick={() => openTo("teamspaces")}
-              aria-label="Open workspace settings"
-              style={{
-                justifyContent: "flex-start",
-                width: "100%",
-                color: "var(--tt-text-color)",
-              }}
-            >
-              <Settings className="tiptap-button-icon" size={16} />
-              <Spacer orientation="horizontal" size={3} />
-              <span className="tiptap-button-text">Workspace settings</span>
-            </Button>
-            <Spacer orientation="vertical" size={1} />
-            <TemplatesModalTrigger />
-            <Spacer orientation="vertical" size={1} />
-            <LibraryPaletteTrigger />
-            <Spacer orientation="vertical" size={25} />
+            {!peeking && (
+              <>
+                <Spacer orientation="vertical" size={12} />
+                <Button
+                  size="large"
+                  variant="ghost"
+                  onClick={() => openTo("teamspaces")}
+                  aria-label="Open workspace settings"
+                  style={{
+                    justifyContent: "flex-start",
+                    width: "100%",
+                    color: "var(--tt-text-color)",
+                  }}
+                >
+                  <Settings className="tiptap-button-icon" size={16} />
+                  <Spacer orientation="horizontal" size={3} />
+                  <span className="tiptap-button-text">Workspace settings</span>
+                </Button>
+                <Spacer orientation="vertical" size={1} />
+                <TemplatesModalTrigger />
+                <Spacer orientation="vertical" size={1} />
+                <LibraryPaletteTrigger />
+                <Spacer orientation="vertical" size={25} />
+              </>
+            )}
           </>
         </CardBody>
       )}
@@ -531,4 +625,8 @@ export function SimpleEditorSidebar() {
       <SidebarResizeHandle />
     </Card>
   );
+
+  return mode === "mobile"
+    ? createPortal(<>{sidebarCard}</>, document.body)
+    : sidebarCard;
 }
