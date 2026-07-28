@@ -13,6 +13,7 @@ import { useCreateComment } from "src/hooks/use-create-comment";
 import { makeComment } from "src/utils/make-comment";
 import { usePatchThread } from "src/hooks/use-patch-thread";
 import { patchThread } from "src/api/threads";
+import { useCurrentPerson } from "src/hooks/use-session";
 
 function SubmitBtn({ disabled = false }: { disabled?: boolean }) {
   return (
@@ -32,6 +33,7 @@ export function ThreadComposerSubmit({ threadId }: { threadId: ID }) {
   //  const [focused, setFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const createComment = useCreateComment();
+  const { person } = useCurrentPerson();
   const mutateThread = usePatchThread(({ id, patch }) =>
     patchThread(id, patch),
   );
@@ -46,11 +48,11 @@ export function ThreadComposerSubmit({ threadId }: { threadId: ID }) {
   const handleSubmit = useCallback(
     (e: FormEvent) => {
       e.preventDefault();
-      if (!comment.trim()) return;
+      if (!comment.trim() || !person) return;
       const newComment = makeComment({
         threadId: threadIdRef.current,
         text: comment,
-        authorId: "",
+        authorId: person.id,
       });
       createComment.mutate({
         comment: newComment,
@@ -61,13 +63,11 @@ export function ThreadComposerSubmit({ threadId }: { threadId: ID }) {
         patch: { status: "open" },
       });
       setComment("");
-      //    setFocused(false);
+
       if (textareaRef.current) textareaRef.current.style.height = "auto";
     },
-    [comment, createComment, mutateThread],
+    [comment, createComment, mutateThread, person],
   );
-
-  // if (!editor) return null
 
   return (
     <form onSubmit={handleSubmit} className="thread-submit-form">

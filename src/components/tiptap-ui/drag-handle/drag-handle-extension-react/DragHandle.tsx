@@ -73,8 +73,6 @@ export const DragHandle = (props: DragHandleProps) => {
       };
     }
 
-    console.log("drag handle effect");
-
     if (!plugin.current) {
       initPlugin = DragHandlePlugin({
         editor,

@@ -52,6 +52,16 @@ export function ThreadSidebarBase({
         threads: threadsData,
       }),
     );
+    // Force a decoration rebuild after the state settles — the fresh editor's
+    // decoration plugin otherwise stays empty until an unrelated transaction.
+    requestAnimationFrame(() => {
+      if (editor.isDestroyed) return;
+      editor.view.dispatch(
+        editor.view.state.tr.setMeta(commentThreadPluginKey, {
+          type: "scroll",
+        }),
+      );
+    });
   }, [editor, threadsData]);
 
   const measuredThreadsRef = useRef<MeasuredThread[] | null>(null);
@@ -118,14 +128,9 @@ export function ThreadSidebarBase({
   const reflowRafRef = useRef<number | null>(null);
   const reflowThreads = useCallback(() => {
     if (!editor || !threadsDataRef.current) {
-      console.log("[reflow] bail", {
-        editor: !!editor,
-        threads: threadsDataRef.current,
-      });
       return;
     }
     onMeasureAllThreads(editor);
-    console.log("[reflow] measured", measuredThreadsRef.current);
     if (selectedThread) {
       onResolveActiveThreadCollisions(selectedThread.id);
     } else {
@@ -157,17 +162,54 @@ export function ThreadSidebarBase({
     scheduleReflow();
   }, [threadsData, selectedThread, scheduleReflow]);
 
-  // Reflow on document edits: keep the ref's anchors aligned, then reposition.
+  // Reflow once the editor has actually rendered its content. On a fresh load
+  // the Yjs document hydrates AFTER threads arrive, so the first reflow can run
+  // against an unrendered doc (coordsAtPos throws → threads fall back). Firing
+  // again on editor "create" — and once more on the next frame — re-measures
+  // after the content paints, so cards land on their real positions without
+  // needing a manual edit/scroll to trigger it.
   useEffect(() => {
     if (!editor) return;
-    const onDocChange = ({ transaction }: { transaction: Transaction }) => {
-      if (!transaction.docChanged) return;
-      onMapThreads(transaction);
-      scheduleReflow();
-    };
-    editor.on("transaction", onDocChange);
+    const onReady = () => scheduleReflow();
+    editor.on("create", onReady);
+    // In case "create" already fired before this effect attached, schedule now
+    // and once more after paint.
+    scheduleReflow();
+    const raf = requestAnimationFrame(() => scheduleReflow());
     return () => {
-      editor.off("transaction", onDocChange);
+      editor.off("create", onReady);
+      cancelAnimationFrame(raf);
+    };
+  }, [editor, scheduleReflow]);
+
+  // Reflow on document edits AND on plugin-state changes. A doc edit remaps
+  // anchors then repositions. But selecting, hovering-off, or receiving a new
+  // thread set (setThreads) changes what must be measured/positioned WITHOUT a
+  // doc change — and those previously triggered no reflow, so measuredThreads /
+  // positionedThreads never populated for them. Reflow on those metas too.
+  useEffect(() => {
+    if (!editor) return;
+    const onTx = ({ transaction }: { transaction: Transaction }) => {
+      if (transaction.docChanged) {
+        onMapThreads(transaction);
+        scheduleReflow();
+        return;
+      }
+      const meta = transaction.getMeta(commentThreadPluginKey) as
+        | { type?: string }
+        | undefined;
+      if (
+        meta &&
+        (meta.type === "setThreads" ||
+          meta.type === "selectThread" ||
+          meta.type === "unselectThread")
+      ) {
+        scheduleReflow();
+      }
+    };
+    editor.on("transaction", onTx);
+    return () => {
+      editor.off("transaction", onTx);
     };
   }, [editor, onMapThreads, scheduleReflow]);
 
@@ -274,12 +316,15 @@ export function ThreadSidebarBase({
       } else if (meta && meta.type === "unselectThread") {
         setSelectedThread(null);
       } else if (meta && meta.type === "draftThread") {
-        const { from, to } = meta;
+        const { from, to, threadId } = meta;
+
         const newThread = makeThread({
+          id: threadId,
           pageId: activePageId,
           anchor: { from, to },
           status: "drafted",
         });
+        console.log("CREATE newThread anchor:", newThread.anchor);
         createThread.mutate(newThread);
       }
     };

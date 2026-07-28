@@ -18,6 +18,7 @@ import { useCommentsByThread } from "src/hooks/use-comments.js";
 import { useDeleteComment } from "src/hooks/use-delete-comment.js";
 import { usePatchComment } from "src/hooks/use-patch-comment.js";
 import { patchComment } from "src/api/comments.js";
+import { usePersonNames } from "src/hooks/use-person-names.js";
 
 interface ThreadListItemProps {
   thread: Thread;
@@ -89,6 +90,8 @@ export const ThreadsListItem = ({
     if (!thread) return;
     unresolveThread?.(thread.id);
   }, [thread, unresolveThread]);
+
+  const resolveName = usePersonNames();
 
   return (
     <>
@@ -181,7 +184,7 @@ export const ThreadsListItem = ({
                   {comments?.map((comment) => (
                     <CommentCard
                       key={comment.id}
-                      name={comment.personId}
+                      name={resolveName(comment.personId)}
                       content={comment.body}
                       createdAt={comment.createdAt}
                       deleted={false}
@@ -208,7 +211,7 @@ export const ThreadsListItem = ({
               <div className="comments-group">
                 <CommentCard
                   key={firstComment.id}
-                  name={firstComment.personId}
+                  name={resolveName(firstComment.personId)}
                   content={firstComment.body}
                   createdAt={firstComment.createdAt}
                   deleted={false}

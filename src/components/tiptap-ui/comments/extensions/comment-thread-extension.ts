@@ -1,9 +1,19 @@
 import { Extension } from "@tiptap/core";
-import type { Thread } from "src/types";
+import type { ID, Thread } from "src/types";
 import { Plugin, PluginKey, NodeSelection } from "@tiptap/pm/state";
 import { CellSelection } from "@tiptap/pm/tables";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { scrollToThread } from "./utils/scrollToThread";
+
+interface CommentThreadStorage {
+  draftId: ID | null;
+}
+
+declare module "@tiptap/core" {
+  interface Storage {
+    commentThreadExtension: CommentThreadStorage;
+  }
+}
 
 export interface CommentThreadState {
   selectedThread: Thread | null;
@@ -25,6 +35,12 @@ export const commentThreadPluginKey = new PluginKey<CommentThreadState>(
 export const CommentThreadExtension = Extension.create({
   name: "commentThreadExtension",
 
+  addStorage() {
+    return {
+      draftId: null,
+    };
+  },
+
   addProseMirrorPlugins() {
     return [
       // State plugin: owns threads + selection/hover, keeps anchors aligned.
@@ -45,13 +61,11 @@ export const CommentThreadExtension = Extension.create({
               threads = threads.map((thread) => ({
                 ...thread,
                 anchor: {
-                  ...thread.anchor,
                   from: tr.mapping.map(thread.anchor.from),
                   to: tr.mapping.map(thread.anchor.to),
                 },
               }));
             }
-
             const meta = tr.getMeta(commentThreadPluginKey) as
               | CommentThreadMeta
               | undefined;
@@ -62,15 +76,21 @@ export const CommentThreadExtension = Extension.create({
 
             switch (meta.type) {
               case "setThreads": {
-                // Reconcile by id: keep the live (remapped) anchor for
-                // threads we already have, take the incoming anchor only
-                // for genuinely new threads.
                 const byId = new Map(threads.map((t) => [t.id, t]));
                 const next = meta.threads.map((incoming) => {
                   const existing = byId.get(incoming.id);
-                  return existing
-                    ? { ...incoming, anchor: existing.anchor }
-                    : incoming;
+                  if (!existing) return incoming;
+                  // Keep the live (remapped) anchor ONLY if it's still valid. If it
+                  // collapsed (from === to) but the incoming DB anchor is a real range,
+                  // the remap corrupted it — trust the persisted anchor instead.
+                  const existingCollapsed =
+                    existing.anchor.from === existing.anchor.to;
+                  const incomingValid =
+                    incoming.anchor.to > incoming.anchor.from;
+                  if (existingCollapsed && incomingValid) {
+                    return incoming; // recover the real range from the DB
+                  }
+                  return { ...incoming, anchor: existing.anchor };
                 });
                 return { ...value, threads: next };
               }
