@@ -184,15 +184,20 @@ function EditorInstance({
     // which useCollabDoc has already seeded (or is genuinely empty/new).
   });
 
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).__editor = editor;
+  }, [editor]);
+
   const { mutateAsync: createPage } = useCreatePage();
 
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || !person) return;
     editor.commands.syncSlashCommandCtx({
       activePageId: page.id,
       setActivePageId: (id) => refsRef.current?.setActivePageId(id),
       addPageAsync: ({ title, parentId }) => {
-        const newPage = makePage({ title, parentId });
+        const newPage = makePage({ title, parentId, ownerId: person.id });
         return createPage(newPage);
       },
     });

@@ -16,6 +16,7 @@ export const ColumnBlock = Node.create({
   content: "column*",
   draggable: true,
   isolating: true,
+  topNode: true,
 
   parseHTML() {
     return [{ tag: "div[data-type='column-block']" }];

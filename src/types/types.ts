@@ -570,11 +570,20 @@ export type Page = {
   createdAt: CreatedAt;
   updatedAt: UpdatedAt;
   parentId: ID | null;
+  /** The workspace this page belongs to. Explicit (not derived from the
+   *  teamspace ancestor) so page queries can scope by workspace without a
+   *  parentId walk. */
+  workspaceId: ID;
   category: PageCategory;
   /** Database membership — null when this page is not a database row. */
   sourceId: ID | null;
   /** Cell values keyed by propertyId — null when not a database row. */
   values: Record<ID, CellValue> | null;
+
+  generalAccess: GeneralAccess;
+  generalAccessRole: PageRole;
+
+  ownerId: ID | null;
 };
 
 /** Derived tree shape — built at read time from parentId, never stored. */
@@ -608,6 +617,8 @@ export type MemberRole = "owner" | "member" | "guest";
 
 export interface Person {
   id: ID;
+  /** The workspace this person belongs to. */
+  workspaceId: ID;
   name: string;
   email: string;
   avatarUrl: string | null;
@@ -617,6 +628,10 @@ export interface Person {
 
 export interface Group {
   id: ID;
+  /** Groups belong to the workspace, not a teamspace — they're referenced BY
+   *  teamspaces (via groupIds) but owned here, so one group can grant access
+   *  to several teamspaces. */
+  workspaceId: ID;
   name: string;
   /** emoji or icon name */
   icon: string | null;
@@ -629,6 +644,81 @@ export interface InviteLink {
   enabled: boolean;
   url: string;
 }
+
+// ── Workspace domain ─────────────────────────────────────────────────────────
+// The top-level container. People, groups, teamspaces and pages each belong to
+// exactly one workspace (via workspaceId). Folio ships single-workspace, but the
+// model is multi-workspace-ready so the eventual switch is additive — no entity
+// needs restructuring, only queries need scoping.
+
+export type Theme = "light" | "dark" | "system";
+
+export type WorkspaceLanguage = "en" | "fr";
+
+// Where a newly-invited person lands the first time they enter the workspace.
+export type InviteLanding = "welcome" | "top-page" | "library";
+
+// Where a person lands when switching INTO this workspace from another.
+//   last-visited — the page they were last on in this workspace
+//   top-page     — the topmost page in the sidebar
+//   library      — the Library view
+export type SwitchLanding = "last-visited" | "top-page" | "library";
+
+// Workspace-wide sidebar defaults. Individuals may override locally; this is
+// the shipped default for new members.
+export interface WorkspaceSidebarSettings {
+  /** Sections collapsed by default. */
+  defaultCollapsedSections: PageCategory[];
+  /** Whether the Showcase section is shown at all. */
+  showShowcase: boolean;
+}
+
+export interface WorkspaceSettings {
+  /** Workspace DEFAULT theme. Individual members may override for themselves;
+   *  this is the fallback, not a hard workspace-wide lock. */
+  defaultTheme: Theme;
+  language: WorkspaceLanguage;
+
+  /** Landing rules — see InviteLanding / SwitchLanding. */
+  landingOnInvite: InviteLanding;
+  landingOnSwitch: SwitchLanding;
+
+  sidebar: WorkspaceSidebarSettings;
+
+  // People-directory surface (Notion's three People-settings toggles).
+  peopleDirectoryEnabled: boolean;
+  showRecentActivityOnProfiles: boolean;
+  hoverCardsEnabled: boolean;
+
+  /** Invite link — folded in from the former standalone settings singleton. */
+  inviteLink: InviteLink;
+}
+
+export interface Workspace {
+  id: ID;
+  name: string;
+  /** emoji or icon name — same convention as Group.icon. */
+  icon: string | null;
+  settings: WorkspaceSettings;
+  createdAt: CreatedAt;
+  updatedAt: UpdatedAt;
+}
+
+/** Defaults for a freshly created workspace — matches Notion's on-state. */
+export const DEFAULT_WORKSPACE_SETTINGS: WorkspaceSettings = {
+  defaultTheme: "system",
+  language: "en",
+  landingOnInvite: "welcome",
+  landingOnSwitch: "last-visited",
+  sidebar: {
+    defaultCollapsedSections: [],
+    showShowcase: true,
+  },
+  peopleDirectoryEnabled: true,
+  showRecentActivityOnProfiles: true,
+  hoverCardsEnabled: true,
+  inviteLink: { enabled: false, url: "" },
+};
 
 // ── Derived helpers (pure) ───────────────────────────────────────────────
 
@@ -671,6 +761,8 @@ export interface Teamspace {
    * two sources of truth that can drift on rename.
    */
   id: ID;
+  /** The workspace this teamspace belongs to. */
+  workspaceId: ID;
   description: string | null;
   access: TeamspaceAccess;
   /** People directly in the teamspace. */
@@ -766,3 +858,39 @@ export type MeasuredThread = {
 };
 
 export type PositionedThread = MeasuredThread & { resolvedTop: number };
+
+// ── Add to src/types.ts ──────────────────────────────────────────────────────
+// Per-page permissions (Notion model). Roles are ordered view < comment < edit
+// < full; the effective role is the highest reaching a person across direct
+// grants, group grants, inherited ancestor grants, and general access.
+
+export type PageRole = "view" | "comment" | "edit" | "full";
+
+// How people WITHOUT an explicit grant reach a page.
+//   private   — only explicitly granted people/groups (and ancestors' grants)
+//   teamspace — everyone in the page's teamspace (the default)
+//   workspace — every workspace member
+//   public    — anyone with the link
+export type GeneralAccess = "private" | "teamspace" | "workspace" | "public";
+
+export type PageAccessSubject = "person" | "group";
+
+export interface PageAccessGrant {
+  id: ID;
+  pageId: ID;
+  subjectType: PageAccessSubject;
+  subjectId: ID; // Person.id or Group.id
+  role: PageRole;
+  createdAt: CreatedAt;
+}
+
+// Ordered for max-role comparisons on the client (mirrors the SQL enum order).
+export const PAGE_ROLE_ORDER: Record<PageRole, number> = {
+  view: 0,
+  comment: 1,
+  edit: 2,
+  full: 3,
+};
+
+export const higherRole = (a: PageRole, b: PageRole): PageRole =>
+  PAGE_ROLE_ORDER[a] >= PAGE_ROLE_ORDER[b] ? a : b;

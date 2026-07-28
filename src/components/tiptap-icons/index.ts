@@ -63,3 +63,4 @@ export * from "./merge-icon";
 export * from "./split-icon";
 export * from "./triangle-chevron-icon";
 export * from "./settings-sliders-icon";
+export * from "./file-icon";

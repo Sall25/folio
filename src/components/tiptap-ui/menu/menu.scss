@@ -5,8 +5,8 @@
 }
 
 .dark{
-  --tt-combobox-border-color: var(--tt-gray-dark-a-50);
-  --tt-combobox-bg-color: var(--tt-gray-dark-100);
+  --tt-combobox-border-color: var(--tt-border-color);
+  --tt-combobox-bg-color: #1f1f1f;
   --tt-combobox-text-color: var(--tt-gray-dark-a-600);
 }
 
@@ -15,7 +15,7 @@
   min-width: 15rem;
   --padding: .375rem;
   --border-width: 1px;
-  border-radius: var(--tt-radius-md);
+  border-radius: var(--tt-radius-lg);
   border: var(--border-width) solid var(--tt-combobox-border-color);
   background-color: var(--tt-combobox-bg-color);
   height: 100%;

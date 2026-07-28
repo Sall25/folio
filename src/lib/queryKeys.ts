@@ -41,6 +41,16 @@ export const queryKeys = {
     lists: () => [...queryKeys.teamspaces.all, "list"] as const,
     detail: (id: ID) => [...queryKeys.teamspaces.all, "detail", id] as const,
   },
+  workspaces: {
+    all: ["workspaces"] as const,
+    lists: () => [...queryKeys.workspaces.all, "list"] as const,
+    detail: (id: ID) => [...queryKeys.workspaces.all, "detail", id] as const,
+  },
+  pageAccess: {
+    all: ["pageAccess"] as const,
+    list: (pageId: ID) =>
+      [...queryKeys.pageAccess.all, "list", pageId] as const,
+  },
   dataSources: {
     all: ["dataSources"] as const,
     lists: () => [...queryKeys.dataSources.all, "list"] as const,

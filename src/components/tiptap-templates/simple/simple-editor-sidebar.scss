@@ -86,6 +86,10 @@
 
 .sidebar--floating {
   background: var(--sidebar-bg-color) !important; // or whatever your solid surface token is
+  box-shadow: var(--tt-shadow-elevated-md);
+  .dark & {
+    box-shadow: var(--tt-shadow-elevated-sm);
+  }
 }
 
 /* Prevent the internal overlay from blocking clicks */

@@ -25,6 +25,7 @@ import { useCreatePage } from "src/hooks/use-create-page";
 import { makePage } from "src/utils/make-page";
 import { useLibrary } from "../context/library-context";
 import { formatRelativeTime } from "src/utils/format-relative";
+import { FileIcon } from "src/components/tiptap-icons";
 export type LibraryTab = Exclude<PageCategory, "Template"> | "Recents";
 
 function Tabs({
@@ -376,7 +377,8 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
           <RecentGrid rows={rows} />
         ) : (
           <div className="library-empty">
-            <FileText size={32} className="library-empty__icon" />
+            <FileIcon className="library-empty__icon" />
+            {/* <FileText size={32} className="library-empty__icon" /> */}
             <p className="library-empty__text">{t(TAB_EMPTY[tab])}</p>
             {tab === "Recents" && pages.length === 0 && (
               <button

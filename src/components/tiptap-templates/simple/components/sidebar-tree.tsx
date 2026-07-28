@@ -21,6 +21,13 @@ import {
   type DragOverEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type {
   PageCategory,
   PageTreeNode,
@@ -46,7 +53,6 @@ import {
   buildCategoryByPageId,
   DEFAULT_SECTION_ORDER,
   getSortMode,
-  reorderList,
   reorderScope,
   scopeKeyForChildren,
   scopeKeyForRoots,
@@ -62,11 +68,6 @@ type DropZone = "before" | "after" | "inside";
 type DropTarget =
   | { kind: "page"; pageId: ID; zone: DropZone }
   | { kind: "section"; category: PageCategory }
-  | {
-      kind: "section-reorder";
-      category: PageCategory;
-      zone: "before" | "after";
-    }
   | null;
 
 const SECTION_DRAG_PREFIX = "section-drag:";
@@ -408,24 +409,19 @@ function TreeSection({
 // the section label to wrap one letter per line during drag.
 function SectionDragWrapper({
   category,
-  dropTarget,
-  activeId,
   children,
 }: {
   category: PageCategory;
-  dropTarget: DropTarget;
-  activeId: ID | null;
   children: ReactNode;
 }) {
-  const { attributes, listeners, setNodeRef } = useDraggable({
-    id: `${SECTION_DRAG_PREFIX}${category}`,
-  });
-
-  const isDragging = activeId === `${SECTION_DRAG_PREFIX}${category}`;
-  const zone =
-    dropTarget?.kind === "section-reorder" && dropTarget.category === category
-      ? dropTarget.zone
-      : null;
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: `${SECTION_DRAG_PREFIX}${category}` });
 
   return (
     <div
@@ -433,40 +429,18 @@ function SectionDragWrapper({
       style={{
         position: "relative",
         width: "100%",
+        // The sortable transform shifts this section aside as another drags
+        // past it, opening a real gap to drop into — replacing the old
+        // before/after line, which marked a target without making room for it.
+        transform: CSS.Transform.toString(transform),
+        transition,
         opacity: isDragging ? 0.4 : 1,
+        zIndex: isDragging ? 1 : undefined,
       }}
       {...attributes}
       {...listeners}
     >
-      {zone === "before" && (
-        <div
-          style={{
-            position: "absolute",
-            top: -5,
-            left: 4,
-            right: 4,
-            height: 2,
-            borderRadius: 2,
-            background: "var(--tt-brand-color-400)",
-          }}
-        />
-      )}
-
       {children}
-
-      {zone === "after" && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: -5,
-            left: 4,
-            right: 4,
-            height: 2,
-            borderRadius: 2,
-            background: "var(--tt-brand-color-400)",
-          }}
-        />
-      )}
     </div>
   );
 }
@@ -577,33 +551,9 @@ export function SidebarTree({
     const activeIdStr = String(active.id);
     const overId = over.id;
 
-    // ── Section reorder (dragging a section's grip handle) ─────────────────
-    if (activeIdStr.startsWith(SECTION_DRAG_PREFIX)) {
-      let hitCategory: PageCategory | null = null;
-      if (typeof overId === "string" && overId.startsWith("section:")) {
-        hitCategory = overId.slice("section:".length) as PageCategory;
-      } else if (
-        typeof overId === "string" &&
-        overId.startsWith("section-header:")
-      ) {
-        hitCategory = overId.slice("section-header:".length) as PageCategory;
-      } else {
-        hitCategory = categoryByPageId.get(String(overId)) ?? null;
-      }
-      if (!hitCategory) {
-        setDropTarget(null);
-        return;
-      }
-      const rect = over.rect;
-      const pointerY =
-        (activatorEvent as PointerEvent | undefined)?.clientY != null
-          ? (activatorEvent as PointerEvent).clientY + e.delta.y
-          : rect.top + rect.height / 2;
-      const zone: "before" | "after" =
-        pointerY - rect.top < rect.height / 2 ? "before" : "after";
-      setDropTarget({ kind: "section-reorder", category: hitCategory, zone });
-      return;
-    }
+    // Section reorder is handled by SortableContext's own shift — the
+    // siblings animate apart, so no manual dropTarget is computed here.
+    if (activeIdStr.startsWith(SECTION_DRAG_PREFIX)) return;
 
     // ── Page drag (unchanged) ────────────────────────────────────────────
     if (typeof overId === "string" && overId.startsWith("section:")) {
@@ -687,26 +637,30 @@ export function SidebarTree({
 
   const onDragEnd = (e: DragEndEvent) => {
     const activeIdStr = String(e.active.id);
-    const target = dropTarget;
+    const overId = e.over ? String(e.over.id) : null;
     setActiveId(null);
     setDropTarget(null);
-    if (!target) return;
 
-    // ── Section reorder ──────────────────────────────────────────────────
+    // ── Section reorder — sortable: resolve against over.id, arrayMove ────
     if (activeIdStr.startsWith(SECTION_DRAG_PREFIX)) {
-      if (target.kind !== "section-reorder") return;
-      const movedCategory = activeIdStr.slice(
+      if (!overId || !overId.startsWith(SECTION_DRAG_PREFIX)) return;
+      const moved = activeIdStr.slice(
         SECTION_DRAG_PREFIX.length,
       ) as PageCategory;
-      if (movedCategory === target.category) return;
-      setSectionOrder((prev) =>
-        reorderList(prev, movedCategory, target.category, target.zone),
-      );
+      const overCat = overId.slice(SECTION_DRAG_PREFIX.length) as PageCategory;
+      if (moved === overCat) return;
+      setSectionOrder((prev) => {
+        const from = prev.indexOf(moved);
+        const to = prev.indexOf(overCat);
+        if (from === -1 || to === -1) return prev;
+        return arrayMove(prev, from, to);
+      });
       return;
     }
 
     // ── Page drag (unchanged) ────────────────────────────────────────────
-    if (target.kind === "section-reorder") return; // narrowing guard only
+    const target = dropTarget;
+    if (!target) return;
 
     const pageId = activeIdStr;
 
@@ -809,33 +763,33 @@ export function SidebarTree({
       }}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {visibleCategories.map((category) => (
-          <SectionDragWrapper
-            key={category}
-            category={category}
-            dropTarget={dropTarget}
-            activeId={activeId}
-          >
-            <TreeSection
-              category={category}
-              topLevel={sortedTree[category] ?? []}
-              expandedIds={expandedIds}
-              onToggleExpand={onToggleExpand}
-              dropTarget={dropTarget}
-              activeId={activeId}
-              collapsed={collapsedSections.has(category)}
-              onToggleCollapse={() => onToggleCollapse(category)}
-              onAddPage={onAddPageToSection}
-              onRename={onRenameSection}
-              onDelete={onDeleteSection}
-              onHide={handleHide}
-              subtitleByPageId={subtitleByPageId}
-              sortMode={getSortMode(sortModeByCategory, category)}
-              onSetSortMode={(mode) => setSortModeForCategory(category, mode)}
-              isLoading={isLoading}
-            />
-          </SectionDragWrapper>
-        ))}
+        <SortableContext
+          items={visibleCategories.map((c) => `${SECTION_DRAG_PREFIX}${c}`)}
+          strategy={verticalListSortingStrategy}
+        >
+          {visibleCategories.map((category) => (
+            <SectionDragWrapper key={category} category={category}>
+              <TreeSection
+                category={category}
+                topLevel={sortedTree[category] ?? []}
+                expandedIds={expandedIds}
+                onToggleExpand={onToggleExpand}
+                dropTarget={dropTarget}
+                activeId={activeId}
+                collapsed={collapsedSections.has(category)}
+                onToggleCollapse={() => onToggleCollapse(category)}
+                onAddPage={onAddPageToSection}
+                onRename={onRenameSection}
+                onDelete={onDeleteSection}
+                onHide={handleHide}
+                subtitleByPageId={subtitleByPageId}
+                sortMode={getSortMode(sortModeByCategory, category)}
+                onSetSortMode={(mode) => setSortModeForCategory(category, mode)}
+                isLoading={isLoading}
+              />
+            </SectionDragWrapper>
+          ))}
+        </SortableContext>
       </div>
 
       <DragOverlay>

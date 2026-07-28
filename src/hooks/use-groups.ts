@@ -68,6 +68,7 @@ function makeGroup(args: { name: string }): Group {
     icon: null,
     memberIds: [],
     createdAt: Date.now(),
+    workspaceId: "workspace_default",
   };
 }
 

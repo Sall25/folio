@@ -4,7 +4,7 @@ import { makePage } from "./make-page";
 
 export function makeRow(
   source: DataSource,
-  opts?: { title?: string; template?: RowTemplate },
+  opts?: { ownerId: ID; title?: string; template?: RowTemplate },
 ): Page {
   const values: Record<ID, CellValue> = {};
   for (const prop of source.properties) {
@@ -16,6 +16,7 @@ export function makeRow(
 
   return {
     ...makePage({
+      ownerId: opts!.ownerId,
       title: opts?.title ?? opts?.template?.name ?? "",
       parentId: source.pageId, // rows nested under container (default)
       category: "Private",

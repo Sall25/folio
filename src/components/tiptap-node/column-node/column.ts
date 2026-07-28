@@ -50,7 +50,6 @@ export const Column = Node.create({
   addNodeView() {
     return ReactNodeViewRenderer(WrappedColumnView);
   },
-  
 
   addProseMirrorPlugins() {
     return [
@@ -84,7 +83,6 @@ export const Column = Node.create({
             // every bubble-phase dragover listener on view.dom, including the
             // drop-cursor's, from running. preventDefault keeps the drop
             // allowed so handleDrop still fires.
-            console.log("over the drop zone")
             event.preventDefault();
             event.stopImmediatePropagation();
             clearHighlights();

@@ -17,8 +17,9 @@ export const patchComment = (id: ID, patch: Partial<Comment>) =>
     body: JSON.stringify({ ...patch }),
   });
 
-export const createComment = (comment: Comment) =>
-  http<Comment>(`/comments`, {
+export const createComment = (comment: Comment) => {
+  return http<Comment>(`/comments`, {
     method: "POST",
     body: JSON.stringify(comment),
   });
+};

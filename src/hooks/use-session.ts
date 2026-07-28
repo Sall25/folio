@@ -26,6 +26,7 @@ function toPerson(row: PeopleRow): Person {
     avatarUrl: row.avatar_url,
     role: row.role,
     createdAt: row.created_at,
+    workspaceId: "workspace_default",
   };
 }
 

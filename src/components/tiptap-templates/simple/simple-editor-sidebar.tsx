@@ -5,10 +5,10 @@ import {
   Store,
   LibraryBig,
   Sparkles,
-  Settings,
   LayoutTemplate,
   ChevronsLeft,
   PenBox,
+  ChevronsRight,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -21,7 +21,7 @@ import {
 
 import "./simple-editor-sidebar.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-location";
 import { useEditorLayout } from "./context/editor-layout-context";
@@ -37,77 +37,66 @@ import { patchPage as updatePage } from "src/api/pages";
 import { useActivePage } from "./context/active-page-context";
 import { Section } from "./components/section";
 import { ScrollFog } from "src/components/tiptap-ui-primitive/scroll-frog";
-import { useWorkspaceSettings as useWorkspaceSettingsModal } from "./context/workspace-settings-context";
 import { CreateTeamspaceModal } from "./components/create-teamspace-modal";
 import type { Group, Teamspace } from "src/types";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useTemplates } from "./context/templates-context";
 import { SidebarResizeHandle } from "./components/sidebar-resize-handle";
 import { createPortal } from "react-dom";
-import { useWhyDidYouRender } from "src/lib/useWhyDidYouRender";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "src/components/tiptap-ui-primitive/popover";
 
-function User() {
-  const { t } = useTranslation();
-  const { /*collapsed, onCollapsedChange,*/ collapseWithFloat } =
-    useEditorLayout();
-  const [hovered, setHovered] = useState(false);
+import { WorkspaceSwitcherPopover } from "./workspace-switcher-popover";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
+
+function User({ hovered }: { hovered: boolean }) {
   const { person } = useCurrentPerson();
+  const { workspace } = useCurrentWorkspace(); // ← add
 
-  // const onToggle = useCallback(
-  //   () => onCollapsedChange(!collapsed),
-  //   [onCollapsedChange, collapsed],
-  // );
+  const [switcherOpen, setSwitcherOpen] = useState(false); // ← add
+  const initialRef = useRef<HTMLButtonElement>(null); // ← add
 
-  const name = person?.name ?? "";
-  const initial = name ? name.charAt(0).toUpperCase() : "?";
-
-  const { activePageId, setActivePageId } = useActivePage();
-  const createPage = useCreatePage();
-
-  const onCreatePage = () => {
-    const newPage = makePage({
-      title: t("page.newPage"),
-      parentId: null,
-      category: "Private",
-    });
-
-    createPage
-      .mutateAsync(newPage)
-      .then((newPage) => setActivePageId(newPage.id))
-      .catch(() => {
-        if (activePageId) {
-          setActivePageId(activePageId);
-        }
-        console.log("failed to create new page");
-      });
-  };
+  // Workspace identity for the header (falls back to person name until the
+  // workspace row loads).
+  const wsName = workspace?.name ?? person?.name ?? ""; // ← add
+  const wsIcon = workspace?.icon ?? null; // ← add
+  const initial = wsName ? wsName.charAt(0).toUpperCase() : "?";
 
   return (
-    <ButtonGroup
-      className="use-button-group"
-      orientation="horizontal"
-      style={{
-        width: "100%",
-        justifyContent: "flex-start",
-        cursor: "pointer",
-      }}
-      onMouseOver={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <Button
-        style={{
-          minWidth: 20,
-          width: 20,
-          minHeight: 20,
-          height: 20,
-          borderRadius: "var(--tt-radius-sm)",
-        }}
-        className="name-initial"
-        data-highlighted={true}
-      >
-        <span className="tiptap-button-icon">{initial}</span>
-      </Button>
-      <Spacer orientation="horizontal" size={5} />
+    <>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            ref={initialRef} // ← add
+            style={{
+              minWidth: 20,
+              width: 20,
+              minHeight: 20,
+              height: 20,
+              cursor: "pointer",
+              borderRadius: "var(--tt-radius-sm)",
+            }}
+            className="name-initial"
+            data-highlighted={true}
+            onClick={() => setSwitcherOpen((v) => !v)} // ← add
+          >
+            <span className="tiptap-button-icon">
+              {wsIcon ? wsIcon : initial} {/* ← icon if set, else initial */}
+            </span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent>
+          <WorkspaceSwitcherPopover
+            anchorRef={initialRef}
+            open={switcherOpen}
+            onClose={() => setSwitcherOpen(false)}
+          />
+        </PopoverContent>
+      </Popover>
+      <Spacer orientation="horizontal" size={2} />
       <span
         style={{
           color: "var(--tt-text-primary)",
@@ -122,50 +111,40 @@ function User() {
           transition: "max-width 0.15s ease",
         }}
       >
-        {t("sidebar.personalSpace", { name })}
+        {wsName}
       </span>
-      <Spacer size={1} orientation="horizontal" />
-      <Button
-        variant="ghost"
-        size="large"
-        tooltip={t("sidebar.collapse")}
-        onClick={collapseWithFloat}
-        style={{
-          background: "transparent",
-          padding: 0,
-          opacity: hovered ? 1 : 0,
-          transition: "opacity 0.12s ease",
-        }}
-      >
-        <ChevronsLeft className="tiptap-button-icon" />
-      </Button>
-      <Spacer orientation="horizontal" />
-
-      <Button
-        size="large"
-        variant="ghost"
-        tooltip={t("page.newPage")}
-        onClick={onCreatePage}
-      >
-        <PenBox
-          className="tiptap-button-icon"
-          // fill="var(--tt-brand-color-400)"
-        />
-        {/* <ChevronsLeft className="tiptap-button-icon" /> */}
-      </Button>
-    </ButtonGroup>
+    </>
   );
 }
 
 function WorkspaceHeader() {
-  // const { t } = useTranslation();
-  const { collapsed } = useEditorLayout();
   const [, setHide] = useState(true);
+  const { t } = useTranslation();
+  const { collapseWithFloat, collapsed, onCollapsedChange } = useEditorLayout();
+  const [hovered, setHovered] = useState(false);
 
-  // const onToggle = useCallback(
-  //   () => onCollapsedChange(!collapsed),
-  //   [onCollapsedChange, collapsed],
-  // );
+  const { activePageId, setActivePageId } = useActivePage();
+  const { person } = useCurrentPerson();
+  const createPage = useCreatePage();
+  const onCreatePage = () => {
+    if (!person) return; // no session, can't own a page
+
+    const newPage = makePage({
+      ownerId: person.id,
+      title: t("page.newPage"),
+      parentId: null,
+      category: "Private",
+    });
+
+    createPage
+      .mutateAsync(newPage)
+      .then((created) => setActivePageId(created.id))
+      .catch(() => {
+        if (activePageId) setActivePageId(activePageId);
+        console.log("failed to create new page");
+      });
+  };
+
   return (
     <CardItemGroup
       orientation={collapsed ? "vertical" : "horizontal"}
@@ -177,31 +156,67 @@ function WorkspaceHeader() {
         border: "none",
       }}
     >
-      {/* {!collapsed && <Logo collapsed={collapsed} />} */}
-      {!collapsed && <User />}
+      <ButtonGroup
+        className="use-button-group"
+        orientation="horizontal"
+        style={{
+          width: "100%",
+          justifyContent: "flex-start",
+          cursor: "pointer",
+        }}
+        onMouseOver={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <User hovered={hovered} />
+        <Spacer size={1} orientation="horizontal" />
+        {!collapsed ? (
+          <Button
+            variant="ghost"
+            size="large"
+            tooltip={t("sidebar.collapse")}
+            onClick={collapseWithFloat}
+            style={{
+              background: "transparent",
+              padding: 0,
+              opacity: hovered ? 1 : 0,
+              transition: "opacity 0.12s ease",
+            }}
+          >
+            <ChevronsLeft className="tiptap-button-icon" />
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="large"
+            tooltip={t("sidebar.expand")}
+            onClick={() => onCollapsedChange(!collapsed)}
+            style={{
+              background: "transparent",
+              padding: 0,
+              opacity: hovered ? 1 : 0,
+              transition: "opacity 0.12s ease",
+            }}
+          >
+            <ChevronsRight className="tiptap-button-icon" />
+          </Button>
+        )}
+        <Spacer orientation="horizontal" />
 
-      {/* <Spacer orientation="horizontal" />
-
-      {collapsed && (
         <Button
+          size="large"
           variant="ghost"
-          onClick={onToggle}
-          tooltip={t("sidebar.expand")}
-          style={{ justifyContent: "flex-start" }}
+          tooltip={t("page.newPage")}
+          onClick={onCreatePage}
         >
-          <PanelRight
-            style={{ minWidth: 18, width: 18, minHeight: 18, height: 18 }}
-            className="tiptap-button-icon"
-          />
+          <PenBox className="tiptap-button-icon" />
         </Button>
-      )} */}
+      </ButtonGroup>
     </CardItemGroup>
   );
 }
 
 function NavItems() {
   const { t } = useTranslation();
-  const { collapsed } = useEditorLayout();
   const navigate = useNavigate();
 
   const handleHomeClick = () => {
@@ -212,10 +227,6 @@ function NavItems() {
   };
 
   const { open, onOpenChange } = useSearch();
-  // const {
-  //   open: templatesGalleryOpen,
-  //   onOpenChange: onTemplatesGalleryOpenChange,
-  // } = useTemplates();
 
   return (
     <CardItemGroup
@@ -240,52 +251,79 @@ function NavItems() {
           }}
         >
           <Home size={32} strokeWidth={3} className="tiptap-button-icon" />
-          {/* <Spacer orientation="horizontal" size={1} /> */}
-          {!collapsed && (
-            <span className="tiptap-button-text">{t("sidebar.home")}</span>
-          )}
+          <Spacer orientation="horizontal" size={2} />
+          <span
+            className="tiptap-button-text"
+            style={{ color: "green !important", opacity: 1, display: "block" }}
+          >
+            {t("sidebar.home")}
+          </span>
         </Button>
-        <Spacer orientation="horizontal" size={2.5} />
-        <ButtonGroup orientation="horizontal" style={{ maxWidth: "90px" }}>
-          <Button
-            variant="ghost"
-            size="large"
-            // data-active-state={libraryOpen ? "on" : "off"}
-            onClick={handleLibraryClick}
-            style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
-            tooltip={t("sidebar.library")}
-          >
-            <LibraryBig
-              size={32}
-              strokeWidth={1.8}
-              className="tiptap-button-icon"
-            />
-          </Button>
-          <Button
-            size="large"
-            variant="ghost"
-            onClick={handleHomeClick}
-            tooltip={t("sidebar.inbox")}
-            style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
-          >
-            <Inbox size={32} strokeWidth={1.8} className="tiptap-button-icon" />
-            <Spacer orientation="horizontal" size={1} />
-            {/* {!collapsed && <span className="tiptap-button-text">Inbox</span>} */}
-          </Button>
+        <Spacer orientation="horizontal" size={2} />
+        <Button
+          variant="ghost"
+          size="large"
+          // data-active-state={libraryOpen ? "on" : "off"}
+          onClick={handleLibraryClick}
+          style={{
+            fontWeight: 400,
+            color: "var(--tt-text-color)",
+            padding: 5,
+            minHeight: "fit-content",
+            height: "fit-content",
+            minWidth: "fit-content",
+            width: "fit-content",
+          }}
+          tooltip={t("sidebar.library")}
+        >
+          <LibraryBig
+            size={32}
+            strokeWidth={1.8}
+            className="tiptap-button-icon"
+          />
+        </Button>
 
-          <Button
-            size="large"
-            variant="ghost"
-            style={{ fontWeight: 400, color: "var(--tt-text-color)" }}
-            tooltip={t("sidebar.store")}
-          >
-            <Store size={32} strokeWidth={1.8} className="tiptap-button-icon" />
-            <Spacer orientation="horizontal" size={1} />
-            {/* {!collapsed && (
+        <Button
+          size="large"
+          variant="ghost"
+          onClick={handleHomeClick}
+          tooltip={t("sidebar.inbox")}
+          style={{
+            fontWeight: 400,
+            color: "var(--tt-text-color)",
+            padding: 5,
+            minHeight: "fit-content",
+            height: "fit-content",
+            minWidth: "fit-content",
+            width: "fit-content",
+          }}
+        >
+          <Inbox size={32} strokeWidth={1.8} className="tiptap-button-icon" />
+          {/* <Spacer orientation="horizontal" size={1} /> */}
+          {/* {!collapsed && <span className="tiptap-button-text">Inbox</span>} */}
+        </Button>
+        {/* <Spacer orientation="horizontal" size={1} /> */}
+
+        <Button
+          size="large"
+          variant="ghost"
+          style={{
+            fontWeight: 400,
+            color: "var(--tt-text-color)",
+            padding: 5,
+            minHeight: "fit-content",
+            height: "fit-content",
+            minWidth: "fit-content",
+            width: "fit-content",
+          }}
+          tooltip={t("sidebar.store")}
+        >
+          <Store size={32} strokeWidth={1.8} className="tiptap-button-icon" />
+          {/* <Spacer orientation="horizontal" size={1} /> */}
+          {/* {!collapsed && (
             <span className="tiptap-button-text">Marketplace</span>
           )} */}
-          </Button>
-        </ButtonGroup>
+        </Button>
 
         <Spacer orientation="horizontal" />
 
@@ -297,10 +335,11 @@ function NavItems() {
           style={{
             fontWeight: 400,
             color: "var(--tt-text-color)",
-            minHeight: 32,
-            height: 32,
-            minWidth: 36,
-            width: 36,
+            padding: 5,
+            minHeight: "fit-content",
+            height: "fit-content",
+            minWidth: "fit-content",
+            width: "fit-content",
           }}
           data-active-state={open ? "on" : "off"}
         >
@@ -354,7 +393,12 @@ function TemplatesModalTrigger() {
     >
       <LayoutTemplate className="tiptap-button-icon" />
       <Spacer size={3} />
-      <span className="tiptap-button-text">{t("templates.browse")}</span>
+      <span
+        style={{ opacity: 1, display: "block" }}
+        className="tiptap-button-text"
+      >
+        {t("templates.browse")}
+      </span>
     </Button>
   );
 }
@@ -402,13 +446,12 @@ export function SimpleEditorSidebar() {
   const patchPage = usePatchPage(({ id, patch }) => updatePage(id, patch));
   const createPage = useCreatePage();
   const { setActivePageId /*, activePageId*/ } = useActivePage();
-  //  const { onOpenChange: onTemplatesGalleryOpenChange } = useTemplates();
-  const { openTo } = useWorkspaceSettingsModal();
   const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
+  const { person } = useCurrentPerson();
 
   const isFloating = !isMobile && collapsed && peeking;
 
-  const [peekEntered, setPeekEntered] = useState(false);
+  const [, setPeekEntered] = useState(false);
 
   useEffect(() => {
     if (isFloating) {
@@ -422,7 +465,7 @@ export function SimpleEditorSidebar() {
   }, [isFloating]);
 
   // Render floating styles while entering OR exiting — not just while peeking.
-  const [floatingMounted, setFloatingMounted] = useState(false);
+  const [, setFloatingMounted] = useState(false);
 
   useEffect(() => {
     if (isFloating) {
@@ -436,18 +479,6 @@ export function SimpleEditorSidebar() {
     const t = window.setTimeout(() => setFloatingMounted(false), 260); // > transition
     return () => window.clearTimeout(t);
   }, [isFloating]);
-
-  // const showFloating = !isMobile && collapsed && floatingMounted;
-
-  useWhyDidYouRender("FloatingCard", {
-    collapsed,
-    peeking,
-    peekEntered,
-    floatingMounted,
-    mode,
-    sidebarWidth,
-    drawerWidth,
-  });
 
   const floatingActive = !isMobile && collapsed && phase !== "hidden";
   // Visible position: on-screen while open OR during the grace period of leaving.
@@ -466,11 +497,10 @@ export function SimpleEditorSidebar() {
         zIndex: isMobile ? 950 : floatingActive ? 900 : 120,
         position: "fixed",
         left: 0, //floatingActive ? 8 : 0,
-        top: floatingActive ? "8%" : 0,
+        top: floatingActive ? "12%" : 0,
         borderRadius: 0,
         borderTopRightRadius: floatingActive ? "var(--tt-radius-xl)" : 0,
         borderBottomRightRadius: floatingActive ? "var(--tt-radius-xl)" : 0,
-        boxShadow: floatingActive ? "var(--tt-shadow-md)" : "none",
         width: isMobile
           ? drawerWidth
           : floatingActive
@@ -563,6 +593,7 @@ export function SimpleEditorSidebar() {
                 });
               }}
               onAddPageToSection={(category) => {
+                if (!person) return null;
                 // A teamspace is created through its own modal (it must create
                 // a page + a Teamspace record sharing one id), not as a plain
                 // page. Every other section creates a page directly.
@@ -574,6 +605,7 @@ export function SimpleEditorSidebar() {
                   title: t("page.newPage"),
                   parentId: null,
                   category,
+                  ownerId: person.id,
                 });
                 createPage
                   .mutateAsync(p)
@@ -587,21 +619,7 @@ export function SimpleEditorSidebar() {
             {!peeking && (
               <>
                 <Spacer orientation="vertical" size={12} />
-                <Button
-                  size="large"
-                  variant="ghost"
-                  onClick={() => openTo("teamspaces")}
-                  aria-label="Open workspace settings"
-                  style={{
-                    justifyContent: "flex-start",
-                    width: "100%",
-                    color: "var(--tt-text-color)",
-                  }}
-                >
-                  <Settings className="tiptap-button-icon" size={16} />
-                  <Spacer orientation="horizontal" size={3} />
-                  <span className="tiptap-button-text">Workspace settings</span>
-                </Button>
+
                 <Spacer orientation="vertical" size={1} />
                 <TemplatesModalTrigger />
                 <Spacer orientation="vertical" size={1} />

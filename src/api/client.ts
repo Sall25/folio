@@ -24,6 +24,8 @@ const TABLE: Record<string, string> = {
   people: "people",
   groups: "groups",
   teamspaces: "teamspaces",
+  workspaces: "workspaces",       
+  pageAccess: "page_access",   
   comments: "comments",
   threads: "threads",
   versions: "versions",

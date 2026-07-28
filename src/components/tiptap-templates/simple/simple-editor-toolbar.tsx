@@ -15,7 +15,7 @@ import { NotificationBell } from "src/components/tiptap-ui/notification";
 import { MorePopover } from "./more-popover";
 import { useActivePage } from "./context/active-page-context";
 import type { View } from "src/types";
-import { Home, LibraryBig, Menu } from "lucide-react";
+import { Home, LibraryBig, Lock, Menu, Star } from "lucide-react";
 import { PageCategorySelect } from "./components/page-category-select";
 import { Breadcrumbs } from "./breadcrumbs";
 import { usePatchPage } from "src/hooks/use-patch-page";
@@ -24,6 +24,8 @@ import EditedTimeButton from "./components/edited-time-button/edited-time-button
 import { useTranslation } from "react-i18next";
 import { useEditorLayout } from "./context/editor-layout-context";
 import { useIsMobile, useIsTablet } from "src/hooks/use-breakpoint";
+import { SharePanel } from "./components/share-panel";
+import { useRef, useState } from "react";
 
 function Expand() {
   // const { t } = useTranslation();
@@ -42,6 +44,84 @@ function Expand() {
     >
       <Menu className="tiptap-button-icon" />
     </Button>
+  );
+}
+
+function FavoriteToggle() {
+  const { t } = useTranslation();
+  const { activePage, activePageId } = useActivePage();
+  const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
+
+  if (!activePage) return null;
+
+  // Favoriting only applies to a user's own private pages. Shared and teamspace
+  // pages live in their section by their access model, not the owner's stars.
+  const canFavorite =
+    activePage.category === "Private" || activePage.category === "Favorites";
+  if (!canFavorite) return null;
+
+  const isFavorite = activePage.category === "Favorites";
+
+  const toggle = () => {
+    if (!activePageId) return;
+    mutateAsync({
+      id: activePageId,
+      patch: {
+        category: isFavorite ? "Private" : "Favorites",
+        generalAccess: "private",
+        generalAccessRole: "view",
+      },
+    });
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="large"
+      tooltip={t(isFavorite ? "page.unfavorite" : "page.favorite")}
+      onClick={toggle}
+    >
+      <Star
+        className="tiptap-button-icon"
+        fill={isFavorite ? "currentColor" : "none"}
+        style={{ color: isFavorite ? "var(--tt-brand-color-500)" : undefined }}
+      />
+    </Button>
+  );
+}
+
+function ShareButton() {
+  const { activePage } = useActivePage();
+  const { t } = useTranslation();
+  const anchorRef = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+
+  if (!activePage) return null;
+
+  return (
+    <>
+      <Button
+        ref={anchorRef}
+        variant="ghost"
+        onClick={() => setOpen((v) => !v)}
+        tooltip={t("share.share", "Share")}
+        style={{
+          border: "1px solid var(--tt-border-color)",
+          borderRadius: "var(--tt-radius-sm)",
+          minHeight: 22,
+          height: 25,
+        }}
+      >
+        <Lock className="tiptap-button-icon" />
+        <span className="tiptap-button-text">{t("share.share", "Share")}</span>
+      </Button>
+      <SharePanel
+        page={activePage}
+        anchorRef={anchorRef}
+        open={open}
+        onClose={() => setOpen(false)}
+      />
+    </>
   );
 }
 
@@ -138,9 +218,16 @@ export const DesktopToolbarContent = ({
         {view !== "home" && activePage && (
           <>
             <EditedTimeButton page={activePage} />
-            <UndoRedoButton action="undo" />
-            <UndoRedoButton action="redo" />
-            <Separator orientation="vertical" />
+            {/* <UndoRedoButton action="undo" />
+            <UndoRedoButton action="redo" /> */}
+            {/* <Separator orientation="vertical" /> */}
+          </>
+        )}
+
+        {view !== "home" && (
+          <>
+            <ShareButton />
+            <FavoriteToggle />
           </>
         )}
 
