@@ -19,6 +19,7 @@ import { useEditorLayout } from "./context/editor-layout-context";
 import { useRecordPropertyPanel } from "./hooks/use-record-property-panel";
 import { useEditorSync } from "./context/editor-sync-context";
 import { EditorBodySkeleton } from "./components/skeletons";
+import { usePageComment } from "./hooks/use-page-comment";
 
 // ============================================================
 // Memoized leaves
@@ -51,6 +52,7 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
   const { isSyncing } = useEditorSync();
 
   useRecordPropertyPanel(editor, activePage ?? null);
+  usePageComment(editor, activePage ?? null);
 
   if (isSyncing || !editor) {
     return (

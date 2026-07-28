@@ -4,7 +4,7 @@ import type { Thread, ID, ThreadStatus } from "src/types";
 export function makeThread(opts: {
   id?: ID;
   pageId: ID;
-  anchor: { from: number; to: number };
+  anchor: { from: number; to: number } | null;
   status?: ThreadStatus;
 }): Thread {
   return {

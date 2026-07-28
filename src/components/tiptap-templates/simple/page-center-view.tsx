@@ -29,6 +29,7 @@ import { useDebouncedCallback } from "use-debounce";
 // NOTE: adjust this path to wherever you place template-choice-panel.tsx
 import { TemplateChoicePanel } from "./components/template-choice-panel";
 import { PageCenterSkeleton } from "./components/skeletons";
+import { usePageComment } from "./hooks/use-page-comment";
 
 // Backdrop overlay for the centered modal
 function ModalBackdrop({ onClose }: { onClose?: () => void }) {
@@ -296,6 +297,7 @@ export function PageCenterView({
   }, [mutateAsync]);
 
   useRecordPropertyPanel(editor, page ?? null);
+  usePageComment(editor, page ?? null);
 
   if (isLoading || !page || !editor)
     return <PageCenterSkeleton onClose={onClose} />;

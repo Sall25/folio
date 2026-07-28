@@ -58,13 +58,18 @@ export const CommentThreadExtension = Extension.create({
             // Keep live anchors aligned with edits to the document.
             let threads = value.threads;
             if (tr.docChanged) {
-              threads = threads.map((thread) => ({
-                ...thread,
-                anchor: {
-                  from: tr.mapping.map(thread.anchor.from),
-                  to: tr.mapping.map(thread.anchor.to),
-                },
-              }));
+              threads = threads.map(
+                (thread) =>
+                  thread.anchor
+                    ? {
+                        ...thread,
+                        anchor: {
+                          from: tr.mapping.map(thread.anchor.from),
+                          to: tr.mapping.map(thread.anchor.to),
+                        },
+                      }
+                    : thread, // page-level thread (anchor === null) — nothing to remap
+              );
             }
             const meta = tr.getMeta(commentThreadPluginKey) as
               | CommentThreadMeta
@@ -80,15 +85,19 @@ export const CommentThreadExtension = Extension.create({
                 const next = meta.threads.map((incoming) => {
                   const existing = byId.get(incoming.id);
                   if (!existing) return incoming;
-                  // Keep the live (remapped) anchor ONLY if it's still valid. If it
-                  // collapsed (from === to) but the incoming DB anchor is a real range,
-                  // the remap corrupted it — trust the persisted anchor instead.
+
+                  // Page-level threads (null anchor) have nothing to remap or recover —
+                  // take the incoming as-is.
+                  if (!existing.anchor || !incoming.anchor) return incoming;
+
+                  // Keep the live (remapped) anchor unless it collapsed while the DB has a
+                  // real range — then recover from the DB.
                   const existingCollapsed =
                     existing.anchor.from === existing.anchor.to;
                   const incomingValid =
                     incoming.anchor.to > incoming.anchor.from;
                   if (existingCollapsed && incomingValid) {
-                    return incoming; // recover the real range from the DB
+                    return incoming;
                   }
                   return { ...incoming, anchor: existing.anchor };
                 });
@@ -161,8 +170,8 @@ export const CommentThreadExtension = Extension.create({
               const { threads } = pluginState;
               const { from, to } = state.selection;
 
-              // Find threads overlapping the selection
               const focusedThreads = threads.filter((thread) => {
+                if (!thread.anchor) return false; // page-level thread — never text-focused
                 return thread.anchor.from <= to && thread.anchor.to >= from;
               });
 
@@ -202,19 +211,24 @@ export const CommentThreadExtension = Extension.create({
 
           apply(tr, oldDecorations, _, newState) {
             const pluginState = commentThreadPluginKey.getState(newState);
-
             if (!pluginState) return oldDecorations.map(tr.mapping, tr.doc);
 
             const { selectedThread, hoveredThread, threads } = pluginState;
-
+            const docSize = newState.doc.content.size;
             const decorations: Decoration[] = [];
 
             for (const thread of threads) {
+              if (!thread.anchor) continue; // page-level — no text range to decorate
+
+              const from = Math.max(1, Math.min(thread.anchor.from, docSize));
+              const to = Math.max(1, Math.min(thread.anchor.to, docSize));
+              if (to <= from) continue;
+
               const isSelected = selectedThread?.id === thread.id;
               const isHovered = hoveredThread?.id === thread.id;
 
               decorations.push(
-                Decoration.inline(thread.anchor.from, thread.anchor.to, {
+                Decoration.inline(from, to, {
                   class: `thread-anchor${isSelected ? " selected" : ""}${
                     isHovered ? " hovered" : ""
                   }`,

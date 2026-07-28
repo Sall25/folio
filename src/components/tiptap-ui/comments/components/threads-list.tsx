@@ -14,7 +14,16 @@ export const ThreadsList = ({
 }: ThreadsListProps) => {
   const { threads, selectedThread } = useThreadState();
 
-  if (positionedThreads.length === 0) {
+  // Inline threads only. Page-level threads (anchor === null) belong to the
+  // page-comment node, never the sidebar. measureAllThreads already excludes
+  // them, but guard here so a page-level thread can never render a card even
+  // if it slipped into positionedThreads.
+  const inline = positionedThreads.filter((t) => {
+    const thread = threads.find((th) => th.id === t.id);
+    return thread?.anchor != null; // has a real text anchor → inline
+  });
+
+  if (inline.length === 0) {
     return <label className="label"></label>;
   }
 
@@ -22,9 +31,9 @@ export const ThreadsList = ({
 
   return (
     <div className="threads-group">
-      {positionedThreads.map((t, index) => (
+      {inline.map((t) => (
         <ThreadsListItem
-          key={index}
+          key={t.id}
           thread={threads.find((thread) => thread.id === t.id)!}
           active={selectedThread?.id === t.id}
           open={selectedThread?.id === t.id}

@@ -35,7 +35,18 @@ export const ThreadCard = ({
         return;
       }
 
-      if (!cardRef.current.contains(event.target as Node)) {
+      const target = event.target as HTMLElement;
+
+      // The actions menu (edit/delete) is a Radix popover portaled OUTSIDE the
+      // card's DOM. A click on it isn't "inside" cardRef, so without this guard
+      // it would fire onClickOutside — closing the thread and unmounting the
+      // button before its onClick runs. Treat any click inside a Radix popover
+      // as inside the card.
+      if (target.closest("[data-radix-popper-content-wrapper]")) {
+        return;
+      }
+
+      if (!cardRef.current.contains(target)) {
         onClickOutside();
       }
     };

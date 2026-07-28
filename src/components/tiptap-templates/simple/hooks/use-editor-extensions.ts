@@ -74,6 +74,7 @@ import {
   AppendixSummary,
   toLetters,
 } from "src/components/tiptap-node/appendix-node";
+import { PageComment } from "src/components/tiptap-node/page-comment-node";
 
 export function useEditorExtensions(
   refsRef: React.RefObject<EditorExtensionRefs>,
@@ -211,6 +212,7 @@ export function useEditorExtensions(
       EmojiExtension,
 
       // --- Collaboration / comments ---
+      PageComment,
       CommentThreadExtension,
       PageLinkNode.configure({
         onNavigate: (pageId) => refsRef.current?.setActivePageId(pageId),

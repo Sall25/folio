@@ -1,6 +1,7 @@
 import { useCallback, useState, type FormEvent } from "react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { useCreateComment } from "src/hooks/use-create-comment";
+import { useCurrentPerson } from "src/hooks/use-session";
 import { makeComment } from "src/utils/make-comment";
 
 interface ThreadComposerProps {
@@ -9,32 +10,27 @@ interface ThreadComposerProps {
 
 export const ThreadComposer = ({ threadId }: ThreadComposerProps) => {
   const [comment, setComment] = useState("");
+  const { person } = useCurrentPerson();
   const createComment = useCreateComment();
 
   const handleSubmit = useCallback(
     (e: FormEvent) => {
       e.preventDefault();
 
-      if (!comment) {
+      if (!comment || !person) {
         return;
       }
       const newComment = makeComment({
         threadId,
         text: comment,
-        authorId: "You",
+        authorId: person.id,
       });
       createComment.mutate({ comment: newComment, threadId });
 
       setComment("");
     },
-    [comment, threadId, createComment],
+    [comment, threadId, createComment, person],
   );
-
-  // const handleFocus = useCallback(() => {
-  //   if (editor) {
-  //     editor.commands.forceMeasure(threadId);
-  //   }
-  // }, [editor, threadId]);
 
   return (
     <form onSubmit={handleSubmit}>

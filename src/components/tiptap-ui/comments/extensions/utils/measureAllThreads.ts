@@ -10,6 +10,7 @@ export function measureAllThreads(
   const docSize = editor.state.doc.content.size;
 
   return threads.flatMap((t) => {
+    if (!t.anchor) return [];
     // Clamp the anchor into the current document. On initial load (Yjs still
     // hydrating) or right after a remount, the stored anchor can exceed the
     // rendered doc; coordsAtPos then throws.

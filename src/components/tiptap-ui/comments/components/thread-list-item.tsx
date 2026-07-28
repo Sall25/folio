@@ -222,7 +222,7 @@ export const ThreadsListItem = ({
                   showActions={false}
                 />
                 <div className="comments-count">
-                  <label style={{ marginLeft: "10px" }}>
+                  <label style={{ marginLeft: "4px" }}>
                     {Math.max(0, comments.length - 1) || 0}{" "}
                     {(comments.length - 1 || 0) === 1 ? "reply" : "replies"}
                   </label>

@@ -844,7 +844,7 @@ export type Thread = {
   anchor: {
     from: number;
     to: number;
-  };
+  } | null;
   status: ThreadStatus;
   pageId: ID;
 };

@@ -1,0 +1,80 @@
+.page-comment {
+  margin: 4px 0 12px;
+  padding: 0;
+
+  &__threads {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  &__thread {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0;
+    //padding: 3px 5px;
+    border: none;
+    // border: 0.5px solid var(--tt-border-color);
+    // border-radius: var(--tt-radius-md, 6px);
+    background: var(--tt-bg-color); //color-mix(in srgb, var(--tt-text-color) 3%, transparent);
+  }
+
+  &__reply,
+  &__composer textarea {
+    width: 100%;
+    resize: none;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--tt-text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+    font-family: inherit;
+  }
+
+  &__reply {
+    border-top: 0.5px solid var(--tt-border-color);
+    padding-top: 6px;
+  }
+
+  &__composer {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 0.5px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-md, 6px);
+
+    &-icon {
+      margin-top: 3px;
+      flex: 0 0 auto;
+      color: var(--tt-text-color-subtle, color-mix(in srgb, var(--tt-text-color) 55%, transparent));
+    }
+
+    textarea {
+      padding-top: 1px;
+    }
+  }
+}
+
+// Empty state: node stays mounted (for the event listener) but invisible.
+.page-comment.is-empty {
+  margin: 0;
+  padding: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.page-comment__reply-trigger {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  font-size: 13px;
+  color: var(--tt-text-color-subtle, color-mix(in srgb, var(--tt-text-color) 55%, transparent));
+  cursor: pointer;
+
+  &:hover { color: var(--tt-text-primary); }
+}

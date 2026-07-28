@@ -79,7 +79,12 @@ export function FloatingActions({
         </Button>
       )}
 
-      <Button variant="ghost">
+      <Button
+        variant="ghost"
+        onClick={() => {
+          document.dispatchEvent(new CustomEvent("folio:open-page-comment"));
+        }}
+      >
         <MessageSquareText className="tiptap-button-icon" />
         <span>Comment</span>
       </Button>

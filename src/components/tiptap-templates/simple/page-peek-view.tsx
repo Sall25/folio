@@ -28,6 +28,7 @@ import { patchPage } from "src/api/pages";
 import { usePageView } from "./context/page-view-context";
 import { usePage } from "src/hooks/use-pages";
 import "./page-peek-view.scss";
+import { usePageComment } from "./hooks/use-page-comment";
 
 const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
   open,
@@ -209,6 +210,7 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
   }, [editor]);
 
   useRecordPropertyPanel(editor, page ?? null);
+  usePageComment(editor, page ?? null);
 
   return (
     <Card
