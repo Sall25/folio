@@ -52,6 +52,7 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const [expandedWidth, setExpandedWidth] = useState<number>(loadStoredWidth);
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
+  const [discussionOpen, setDiscussionOpen] = useState(false);
 
   // Auto-collapse when the viewport can't hold a persistent panel, and restore
   // when it can again — otherwise rotating a tablet leaves the sidebar covering
@@ -206,6 +207,8 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
         openPeek,
         closePeek,
         peekPhase,
+        discussionOpen,
+        onDiscussionOpenChanged: setDiscussionOpen,
       }}
     >
       {children}

@@ -15,7 +15,14 @@ import { NotificationBell } from "src/components/tiptap-ui/notification";
 import { MorePopover } from "./more-popover";
 import { useActivePage } from "./context/active-page-context";
 import type { View } from "src/types";
-import { Home, LibraryBig, Lock, Menu, Star } from "lucide-react";
+import {
+  Home,
+  LibraryBig,
+  Lock,
+  Menu,
+  MessageSquareText,
+  Star,
+} from "lucide-react";
 import { PageCategorySelect } from "./components/page-category-select";
 import { Breadcrumbs } from "./breadcrumbs";
 import { usePatchPage } from "src/hooks/use-patch-page";
@@ -86,6 +93,21 @@ function FavoriteToggle() {
         fill={isFavorite ? "currentColor" : "none"}
         style={{ color: isFavorite ? "var(--tt-brand-color-500)" : undefined }}
       />
+    </Button>
+  );
+}
+
+function DiscussionTrigger() {
+  const { discussionOpen, onDiscussionOpenChanged } = useEditorLayout();
+  return (
+    <Button
+      variant="ghost"
+      size="large"
+      data-active={discussionOpen}
+      onClick={() => onDiscussionOpenChanged(!discussionOpen)}
+      tooltip="Comments"
+    >
+      <MessageSquareText className="tiptap-button-icon" />
     </Button>
   );
 }
@@ -228,6 +250,7 @@ export const DesktopToolbarContent = ({
           <>
             <ShareButton />
             <FavoriteToggle />
+            <DiscussionTrigger />
           </>
         )}
 

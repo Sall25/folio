@@ -28,6 +28,8 @@ interface EditorLayoutContextValue {
   peekPhase: PeekPhase;
   openPeek: () => void;
   closePeek: () => void;
+  discussionOpen: boolean;
+  onDiscussionOpenChanged: (open: boolean) => void;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────

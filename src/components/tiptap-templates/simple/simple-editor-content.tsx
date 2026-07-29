@@ -20,6 +20,7 @@ import { useRecordPropertyPanel } from "./hooks/use-record-property-panel";
 import { useEditorSync } from "./context/editor-sync-context";
 import { EditorBodySkeleton } from "./components/skeletons";
 import { usePageComment } from "./hooks/use-page-comment";
+import { DiscussionPane } from "src/components/tiptap-ui/discussion-pane";
 
 // ============================================================
 // Memoized leaves
@@ -149,9 +150,11 @@ const StableShell = React.memo(function StableShell() {
     sidebarWidth,
     collapsed,
     mode,
+    discussionOpen,
+    onDiscussionOpenChanged,
   } = useEditorLayout();
   const isMobile = mode === "mobile";
-  const { activePage } = useActivePage();
+  const { activePage, activePageId } = useActivePage();
 
   const {
     open,
@@ -164,6 +167,8 @@ const StableShell = React.memo(function StableShell() {
   } = useCoverActions();
 
   const [hasThreads, setHasThreads] = useState(false);
+
+  const { editor } = useCurrentEditor();
 
   useWhyDidYouRender("stableShell", {
     hasThreads,
@@ -220,7 +225,22 @@ const StableShell = React.memo(function StableShell() {
           floatingRef={floatingRef}
         />
       </section>
-      <ThreadSidebarMemo setHasThreads={setHasThreads} />
+
+      <div className="right-gutter">
+        {discussionOpen ? (
+          <DiscussionPane
+            key="discussion-pane"
+            editor={editor}
+            pageId={activePageId}
+            onClose={() => onDiscussionOpenChanged(false)}
+          />
+        ) : (
+          <ThreadSidebarMemo
+            key="thread-sidebar"
+            setHasThreads={setHasThreads}
+          />
+        )}
+      </div>
     </>
   );
 });

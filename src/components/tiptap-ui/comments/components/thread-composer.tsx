@@ -1,5 +1,6 @@
 import { useCallback, useState, type FormEvent } from "react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
+import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 import { useCreateComment } from "src/hooks/use-create-comment";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { makeComment } from "src/utils/make-comment";
@@ -34,13 +35,13 @@ export const ThreadComposer = ({ threadId }: ThreadComposerProps) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <textarea
+      <TextareaAutosize
         placeholder="Reply to thread..."
         onChange={(e) => setComment(e.currentTarget.value)}
         value={comment}
         // onFocus={handleFocus}
       />
-      <div className="flex-row">
+      <div className="flex-row" style={{ marginTop: 6 }}>
         <ButtonGroup>
           <Button
             type="submit"
