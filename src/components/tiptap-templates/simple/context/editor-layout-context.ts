@@ -30,6 +30,8 @@ interface EditorLayoutContextValue {
   closePeek: () => void;
   discussionOpen: boolean;
   onDiscussionOpenChanged: (open: boolean) => void;
+  sidebarView: "pages" | "inbox";
+  setSidebarView: (v: "pages" | "inbox") => void;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────

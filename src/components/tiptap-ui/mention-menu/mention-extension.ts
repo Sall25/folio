@@ -26,6 +26,7 @@ import { users } from "./users";
 import "./mention-extension.scss";
 import { MentionView } from "./mention-view";
 import { flattenPages } from "src/lib/flatten-pages";
+import type { Person } from "src/types";
 
 const FORBIDDEN_BLOCKS = [
   "codeBlock",
@@ -37,6 +38,24 @@ const FORBIDDEN_BLOCKS = [
 
 const isInForbiddenBlock = (editor: Editor) =>
   FORBIDDEN_BLOCKS.some((block) => editor.isActive(block));
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    mention: {
+      setMentionPeople: (people: Person[]) => ReturnType;
+    };
+  }
+}
+
+interface MentionStorage {
+  people: Person[];
+}
+
+declare module "@tiptap/core" {
+  interface Storage {
+    mention: MentionStorage;
+  }
+}
 
 const MentionWithView = Mention.extend({
   addAttributes() {
@@ -50,6 +69,23 @@ const MentionWithView = Mention.extend({
       includeTime: { default: false },
       dateFormat: { default: "relative" }, // "relative" | "absolute"
       endDate: { default: null },
+    };
+  },
+  addStorage() {
+    return {
+      ...this.parent?.(),
+      people: [],
+    };
+  },
+  addCommands() {
+    return {
+      ...this.parent?.(),
+      setMentionPeople:
+        (people: Person[]) =>
+        ({ editor }) => {
+          editor.storage.mention.people = people;
+          return true;
+        },
     };
   },
   addNodeView() {
@@ -78,10 +114,16 @@ export const MentionExtension = MentionWithView.configure({
       if (isInForbiddenBlock(editor)) return [];
       const q = query.toLowerCase();
       const pages = editor.storage.pageLink.pages ?? [];
+      const people = editor.storage.mention.people ?? [];
 
-      const matchedUsers = users
-        .filter((u) => u.role) // ← only real users have a role
-        .filter((u) => u.label.toLowerCase().includes(q));
+      const matchedUsers = people
+        .filter((u) => u.name?.toLowerCase().includes(q))
+        .map((p) => ({
+          id: String(p.id),
+          label: p.name,
+          role: "user",
+          type: "user" as const,
+        }));
 
       const matchedPages = flattenPages(pages)
         .filter((p) => (p.title || "New Page").toLowerCase().includes(q))
@@ -252,11 +294,27 @@ export const MentionExtension = MentionWithView.configure({
 
         onExit(props: SuggestionProps<MentionItem>) {
           const { editor, range } = props;
+
+          // The editor may be tearing down (page switch / unmount) when onExit fires.
+          // Reading the doc then throws (nodeSize of undefined). Bail if the editor is
+          // destroyed or the range is out of the current doc bounds.
+          if (editor.isDestroyed) {
+            reactRenderer?.element.remove();
+            reactRenderer?.destroy();
+            return;
+          }
+
           const { state } = editor;
+          const docSize = state.doc.content.size;
+          if (range.from > docSize || range.to > docSize) {
+            reactRenderer?.element.remove();
+            reactRenderer?.destroy();
+            return;
+          }
 
           const textAtRange = state.doc.textBetween(
-            range.from,
-            range.to,
+            Math.min(range.from, docSize),
+            Math.min(range.to, docSize),
             "\0",
             "\0",
           );

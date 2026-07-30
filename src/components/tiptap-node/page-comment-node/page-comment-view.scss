@@ -6,19 +6,22 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
   }
 
   &__thread {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 0;
-    //padding: 3px 5px;
-    border: none;
-    // border: 0.5px solid var(--tt-border-color);
-    // border-radius: var(--tt-radius-md, 6px);
-    background: var(--tt-bg-color); //color-mix(in srgb, var(--tt-text-color) 3%, transparent);
+    gap: 12px;
+    padding: 10px 12px;
+    border: 0.5px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-md, 6px);
+    background-color: var(--tt-bg-color);
+    transition: background 0.15s ease;
+    &:hover{
+      background: color-mix(in srgb, var(--tt-text-color) 3%, transparent);
+    }
+    
   }
 
   &__reply,
@@ -77,4 +80,63 @@
   cursor: pointer;
 
   &:hover { color: var(--tt-text-primary); }
+}
+
+// Tighten the shared CommentCard when it renders inside the page-comment node —
+// more compact than the sidebar version.
+.page-comment .comment {
+  gap: 3px;
+
+  .profile-group {
+    gap: 6px;
+
+    // Smaller avatar in the compact page context.
+    .avatar,
+    [class*="avatar"] {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .label-group {
+    label:first-child { font-size: 12px; }
+    label:last-child { font-size: 11px; }
+  }
+
+  .comment-content p {
+    font-size: 13px;
+    margin-left: 0 !important; // override the inline marginLeft:10
+  }
+}
+
+.page-comment__thread {
+  padding: 8px 10px;
+  gap: 4px;
+}
+
+.page-comment__submit {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border: none;
+  border-radius: var(--tt-radius-md, 6px);
+  background: var(--tt-brand-color-500, #2b7fff);
+  color: #fff;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.page-comment__composer,
+.page-comment__reply {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+
+  .comment-mention-editor { flex: 1; }
 }

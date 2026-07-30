@@ -1,7 +1,7 @@
 import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { Edit, Ellipsis, Trash } from "lucide-react";
-import { useCallback, useState, type FormEvent } from "react";
+import { useRef, useState } from "react";
 import {
   Popover,
   PopoverContent,
@@ -10,7 +10,10 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { Card } from "src/components/tiptap-ui-primitive/card";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import type { JSONContent } from "@tiptap/core";
 import "./comment-card.scss";
+import { CommentBody } from "./comment-body";
+import { CommentMentionEditor, type CommentEditorRef } from "../editor";
 
 interface CommentCardProps {
   name: string;
@@ -23,6 +26,7 @@ interface CommentCardProps {
   showReply?: boolean;
   onReply?: () => void;
 }
+
 export const CommentCard = ({
   name,
   createdAt,
@@ -35,22 +39,38 @@ export const CommentCard = ({
   onReply,
 }: CommentCardProps) => {
   const [isComposing, setIsComposing] = useState(false);
-  const [composeValue, setComposeValue] = useState(content);
   const [hovered, setHovered] = useState(false);
+  const editRef = useRef<CommentEditorRef>(null);
 
-  const handleSubmit = useCallback(
-    (e: FormEvent) => {
-      e.preventDefault();
+  // Seed the edit editor from the current content. New comments are stringified
+  // ProseMirror JSON; legacy comments are plain strings — wrap those as a
+  // paragraph so they're still editable as rich text (and upgrade to JSON on
+  // save).
+  const initialJson: JSONContent | null = (() => {
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === "object" && parsed.type === "doc") {
+        return parsed;
+      }
+    } catch {
+      /* not JSON — fall through to legacy handling */
+    }
+    return content
+      ? {
+          type: "doc",
+          content: [
+            { type: "paragraph", content: [{ type: "text", text: content }] },
+          ],
+        }
+      : null;
+  })();
 
-      setIsComposing(false);
-
-      onEdit(composeValue);
-    },
-    [composeValue, onEdit],
-  );
+  const handleEditSubmit = (json: JSONContent) => {
+    setIsComposing(false);
+    onEdit(JSON.stringify(json)); // store as stringified JSON, like new comments
+  };
 
   const commentWrapperClass: string[] = ["comment"];
-
   if (deleted) {
     commentWrapperClass.push("deleted");
   }
@@ -84,13 +104,9 @@ export const CommentCard = ({
             alignItems: "center",
           }}
         >
-          <p
-            style={{
-              marginLeft: "4px",
-            }}
-          >
-            {content}
-          </p>
+          <div style={{ marginLeft: "4px" }} className="comment-body-wrapper">
+            <CommentBody body={content} />
+          </div>
           <Spacer orientation="horizontal" />
           {showActions && (
             <Popover>
@@ -137,7 +153,6 @@ export const CommentCard = ({
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-
                           setIsComposing(true);
                         }}
                       >
@@ -154,11 +169,8 @@ export const CommentCard = ({
                           type="button"
                           variant="ghost"
                           onClick={(e) => {
-                            console.log("delete button clicked");
-
                             e.preventDefault();
                             e.stopPropagation();
-
                             onDelete();
                           }}
                         >
@@ -177,30 +189,29 @@ export const CommentCard = ({
 
       {isComposing && !deleted && (
         <div className="comment-edit">
-          <form onSubmit={handleSubmit}>
-            <textarea
-              onChange={(e) => setComposeValue(e.currentTarget.value)}
-              value={composeValue}
-            />
-            <ButtonGroup orientation="horizontal">
-              <Button
-                //className="tiptap-button"
-                variant="ghost"
-                type="reset"
-                onClick={() => setIsComposing(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="ghost"
-                //  className="tiptap-button"
-                type="submit"
-                disabled={!composeValue.length || composeValue === content}
-              >
-                Accept
-              </Button>
-            </ButtonGroup>
-          </form>
+          <CommentMentionEditor
+            ref={editRef}
+            autoFocus
+            placeholder="Edit comment…"
+            initialContent={initialJson}
+            onSubmit={handleEditSubmit}
+          />
+          <ButtonGroup orientation="horizontal">
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => setIsComposing(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => editRef.current?.submit()}
+            >
+              Accept
+            </Button>
+          </ButtonGroup>
         </div>
       )}
     </div>

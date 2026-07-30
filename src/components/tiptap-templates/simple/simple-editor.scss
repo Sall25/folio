@@ -434,7 +434,8 @@ TABLE STYLE
   top: 0;
   right: 0;
   height: 100vh;
-  width: 320px;         // the pane's width
+  min-width: 0;
+  // width: 320px;         // the pane's width
   z-index: 10;
   flex-shrink: 0;
 }

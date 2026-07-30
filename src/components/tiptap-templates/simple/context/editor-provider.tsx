@@ -24,6 +24,7 @@ import { useCurrentPerson } from "src/hooks/use-session";
 import { EditorSyncContext } from "./editor-sync-context"; // adjust path
 import { useCreatePage } from "src/hooks/use-create-page";
 import { makePage } from "src/utils/make-page";
+import { useScrollToPendingTarget } from "../components/inbox-panel";
 
 // Exactly the array type useEditorExtensions produces — derived so it can't
 // drift from the real return, whatever member types are in it (one of them
@@ -184,10 +185,7 @@ function EditorInstance({
     // which useCollabDoc has already seeded (or is genuinely empty/new).
   });
 
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).__editor = editor;
-  }, [editor]);
+  useScrollToPendingTarget(editor, page.id);
 
   const { mutateAsync: createPage } = useCreatePage();
 

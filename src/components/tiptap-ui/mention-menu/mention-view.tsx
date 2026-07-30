@@ -9,14 +9,15 @@ import {
 
 import "./mention-view.scss";
 import { users } from "./users";
-import type { MentionItem } from "./types";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardGroupLabel } from "src/components/tiptap-ui-primitive/card";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import CalendarView from "./calendar-view/calendar-view";
 import { useMentionNotification } from "../notification";
 import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { usePeople } from "src/hooks/use-people";
+import type { Person } from "src/types";
 
 function getRelativeLabel(date: Date): string {
   const today = new Date();
@@ -41,14 +42,6 @@ function getRelativeLabel(date: Date): string {
   });
 }
 
-function getMentionItem(id?: string): MentionItem | undefined {
-  if (id) {
-    return users.find((user) => user.id === id);
-  }
-
-  return undefined;
-}
-
 function isPast(date: Date) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -59,7 +52,11 @@ function isPast(date: Date) {
   return d < today;
 }
 
-export function MentionView({ node, updateAttributes }: ReactNodeViewProps) {
+export function MentionView({
+  node,
+  updateAttributes,
+  editor,
+}: ReactNodeViewProps) {
   const [today] = useState(new Date());
   const [tomorrow] = useState(() => {
     const t = new Date();
@@ -74,12 +71,18 @@ export function MentionView({ node, updateAttributes }: ReactNodeViewProps) {
     setDate(d);
     updateAttributes({ date: d.toISOString() }); // ← persist to node attrs
   };
+
   const { activePage } = useActivePage();
 
-  const mentionItem = useMemo(
-    () => getMentionItem(node.attrs.id ?? node.attrs.label),
-    [node],
-  );
+  const { data: people = [] } = usePeople();
+
+  const mentionItem = useMemo(() => {
+    const id = node.attrs.id;
+    const p = (people as Person[]).find((pp) => String(pp.id) === String(id));
+    if (p) return { id: String(p.id), label: p.name, role: "user" };
+    // fall back to static users for dates/demo items
+    return users.find((u) => u.id === id);
+  }, [node, people]);
 
   const handleRemindChange = (remind: string | null) => {
     updateAttributes({ remind });
@@ -117,6 +120,10 @@ export function MentionView({ node, updateAttributes }: ReactNodeViewProps) {
     remind: node.attrs.remind,
   });
   const endDateValue = node.attrs.endDate ? new Date(node.attrs.endDate) : null;
+
+  useEffect(() => {
+    editor.commands.setMentionPeople(people as Person[]);
+  }, [editor, people]);
 
   return (
     <NodeViewWrapper

@@ -46,6 +46,8 @@ export const ThreadCard = ({
         return;
       }
 
+      if (target.closest(".mention-list")) return;
+
       if (!cardRef.current.contains(target)) {
         onClickOutside();
       }

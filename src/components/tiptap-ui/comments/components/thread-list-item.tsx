@@ -101,7 +101,6 @@ export const ThreadsListItem = ({
           style={{
             position: "absolute",
             top: layout.resolvedTop,
-            background: "aqua",
             right: 25,
           }}
         >
@@ -221,12 +220,12 @@ export const ThreadsListItem = ({
                   onEdit={() => {}}
                   showActions={false}
                 />
-                <div className="comments-count">
-                  <label style={{ marginLeft: "4px" }}>
+                {/* <div className="comments-count">
+                  <label style={{ marginLeft: "30px" }}>
                     {Math.max(0, comments.length - 1) || 0}{" "}
                     {(comments.length - 1 || 0) === 1 ? "reply" : "replies"}
                   </label>
-                </div>
+                </div> */}
               </div>
             ) : null}
           </ThreadCard>

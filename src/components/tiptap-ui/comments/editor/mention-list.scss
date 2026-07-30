@@ -1,0 +1,55 @@
+.mention-list {
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  max-width: 280px;
+  padding: 4px;
+  background: var(--tt-card-bg-color, var(--tt-bg-color));
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md, 6px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+
+  &.is-empty {
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--tt-text-color-subtle, color-mix(in srgb, var(--tt-text-color) 50%, transparent));
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: none;
+    background: transparent;
+    border-radius: var(--tt-radius-sm, 4px);
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+
+    &.is-selected {
+      background: color-mix(in srgb, var(--tt-text-color) 8%, transparent);
+    }
+  }
+
+  &__avatar {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--tt-text-color) 14%, transparent);
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--tt-text-primary);
+  }
+
+  &__text { display: flex; flex-direction: column; min-width: 0; }
+  &__name { font-size: 13px; color: var(--tt-text-primary); }
+  &__email {
+    font-size: 11px;
+    color: var(--tt-text-color-subtle, color-mix(in srgb, var(--tt-text-color) 50%, transparent));
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+}

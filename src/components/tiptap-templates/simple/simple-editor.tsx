@@ -6,7 +6,6 @@ import { useIsMutating } from "@tanstack/react-query";
 
 // --- Providers ---
 import { ToastProvider } from "src/components/tiptap-ui/copy-toast";
-import { NotificationProvider } from "src/components/tiptap-ui/notification";
 import { TocProvider } from "src/components/tiptap-node/toc-node/toc-provider";
 
 // --- Hooks ---
@@ -187,28 +186,26 @@ function SimpleEditorInner({ view }: { view: View }) {
 
   return (
     <div className="simple-editor-wrapper">
-      <NotificationProvider>
-        <ToastProvider>
-          <SimpleEditorToolbar
-            view={view}
-            toolbarRef={toolbarRef as RefObject<HTMLDivElement>}
-            isMobile={isMobile}
-            mobileView={mobileView}
-            height={height}
-            rectY={0}
-            onMobileViewChange={setMobileView}
-            sidebarWidth={sidebarWidth}
-            versionSidebarWidth={versionWidth}
-            onTriggerVersionHistory={() => onVersionHistoryOpenChanged(true)}
-          />
-          <SimpleEditorMain view={view} />
-          {isCreatingPage && (
-            <div className="editor-skeleton-overlay">
-              <EditorContentSkeletonFull />
-            </div>
-          )}
-        </ToastProvider>
-      </NotificationProvider>
+      <ToastProvider>
+        <SimpleEditorToolbar
+          view={view}
+          toolbarRef={toolbarRef as RefObject<HTMLDivElement>}
+          isMobile={isMobile}
+          mobileView={mobileView}
+          height={height}
+          rectY={0}
+          onMobileViewChange={setMobileView}
+          sidebarWidth={sidebarWidth}
+          versionSidebarWidth={versionWidth}
+          onTriggerVersionHistory={() => onVersionHistoryOpenChanged(true)}
+        />
+        <SimpleEditorMain view={view} />
+        {isCreatingPage && (
+          <div className="editor-skeleton-overlay">
+            <EditorContentSkeletonFull />
+          </div>
+        )}
+      </ToastProvider>
     </div>
   );
 }

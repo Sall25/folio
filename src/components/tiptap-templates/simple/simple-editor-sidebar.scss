@@ -555,3 +555,59 @@
     }
   }
 }
+
+.sidebar-inbox-badge {
+  position: absolute;
+  top: 6px;
+  left: 18px;
+  min-width: 12px;
+  height: 12px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  color: #fff;
+  background: var(--tt-color-red-dec-2);
+  .dark & {
+    background: var(--tt-color-red-inc-2);
+  }
+  border-radius: 999px;
+  border: none;
+  pointer-events: none;
+  // Prevent layout shift; the badge floats over the icon corner.
+  transform: translate(0, 0);
+}
+
+.workspace-icon-button {   // whatever the trigger's class is
+  position: relative;      // anchor for the badge
+}
+
+.workspace-notification-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 6px;
+  height: 6px;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  line-height: 1;
+  color: #fff;
+  border-radius: 999px;
+  pointer-events: none;
+  background: var(--tt-color-red-dec-2);
+  .dark & {
+    background: var(--tt-color-red-inc-2);
+  }
+}
+
+// Or a minimal dot (no number) if you prefer:
+.workspace-notification-badge--dot {
+  min-width: 2px;
+  height: 2px;
+  padding: 0;
+  top: 0;
+  right: 0;
+}

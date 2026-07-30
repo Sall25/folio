@@ -24,13 +24,14 @@ const TABLE: Record<string, string> = {
   people: "people",
   groups: "groups",
   teamspaces: "teamspaces",
-  workspaces: "workspaces",       
-  pageAccess: "page_access",   
+  workspaces: "workspaces",
+  pageAccess: "page_access",
   comments: "comments",
   threads: "threads",
   versions: "versions",
   dataSources: "data_sources",
   workspaceSettings: "workspace_settings",
+  notifications: "notifications",
 };
 
 // query-param key (camelCase) → column (snake_case)

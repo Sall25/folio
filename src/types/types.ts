@@ -859,6 +859,46 @@ export type MeasuredThread = {
 
 export type PositionedThread = MeasuredThread & { resolvedTop: number };
 
+export type NotificationType =
+  | "user-mention"
+  | "date-due"
+  | "date-overdue"
+  | "backlink"
+  | "comment-mention"; // ← new: a mention inside a comment
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  sourcePageId?: string | number;
+  sourcePageTitle?: string;
+  mentionLabel?: string;
+  mentionId?: string;
+  targetNodeId?: string;
+}
+
+export interface NotificationContextValue {
+  notifications: Notification[];
+  unreadCount: number;
+  // addNotification now accepts an optional recipientId (defaults to the
+  // current user) and dedupKey (server-side idempotency).
+  addNotification: (
+    payload: Omit<Notification, "id" | "timestamp" | "read"> & {
+      recipientId?: string;
+      dedupKey?: string;
+    },
+  ) => void;
+  markAllRead: () => void;
+  markRead: (id: string) => void;
+  dismiss: (id: string) => void;
+  dismissAll: () => void;
+  hasNotified: (key: string) => boolean;
+  registerNotified: (key: string) => void;
+}
+
 // ── Add to src/types.ts ──────────────────────────────────────────────────────
 // Per-page permissions (Notion model). Roles are ordered view < comment < edit
 // < full; the effective role is the highest reaching a person across direct

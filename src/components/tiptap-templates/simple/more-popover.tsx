@@ -122,7 +122,7 @@ export function MorePopover({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost">
+        <Button variant="ghost" size="large">
           <Ellipsis className="tiptap-button-icon" />
         </Button>
       </PopoverTrigger>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNotificationContext } from "./use-notification-context";
-import type { Notification, NotificationType } from "./types";
+import type { Notification, NotificationType } from "src/types";
 
 import "./notification-bell.scss";
 import {
@@ -218,7 +218,7 @@ export function NotificationBell() {
                   <span>No notifications yet</span>
                 </CardGroupLabel>
               ) : (
-                notifications.map((n) => (
+                notifications.map((n: Notification) => (
                   <CardItemGroup
                     key={n.id}
                     orientation="horizontal"

@@ -1,18 +1,14 @@
 import { useEffect } from "react";
 import { useNotificationContext } from "./use-notification-context";
 
+// PATCHED useMentionNotification — user mentions now target the MENTIONED
+// PERSON as recipient (so it lands in THEIR bell, cross-user), with a DB-level
+// dedupKey. Date reminders stay self-directed (no recipientId → defaults to the
+// current user in the provider). Merge over your existing use-notification.ts.
+
 export function useNotifications() {
   return useNotificationContext();
 }
-
-/**
- * Hook for MentionView — fires the right notification based on mention type.
- *
- * @param mentionId  - The mention's unique id (used as dedup key)
- * @param mentionLabel - Display label e.g. "John Doe", "Today", "Remind me"
- * @param isUserMention - True when the mention is a person (has a role)
- * @param date - The selected date (for date mentions)
- */
 
 export function useMentionNotification({
   mentionId,
@@ -36,28 +32,33 @@ export function useMentionNotification({
   const { addNotification, hasNotified, registerNotified } =
     useNotificationContext();
 
+  // ── User mention → notify the MENTIONED PERSON ──────────────────────────
   useEffect(() => {
     if (!isUserMention) return;
     if (!targetNodeId) return;
-    const key = `user-mention:${mentionId}`;
+    const key = `user-mention:${mentionId}:${targetNodeId}`;
     if (hasNotified(key)) return;
     registerNotified(key);
 
     addNotification({
       type: "user-mention",
       title: "New mention",
-      message: `@${mentionLabel} was mentioned in a note.`,
+      message: `You were mentioned in ${sourcePageTitle ?? "a note"}.`,
+      recipientId: mentionId,
+      dedupKey: key,
       mentionId,
       mentionLabel,
       sourcePageId,
       sourcePageTitle,
       targetNodeId,
     });
-  }, [isUserMention, mentionId, targetNodeId]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isUserMention, mentionId, targetNodeId]);
 
+  // ── Date reminders → self-directed (recipient defaults to current user) ──
   useEffect(() => {
     if (isUserMention || !date) return;
-    if (!targetNodeId) return; // ← add guard
+    if (!targetNodeId) return;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -66,7 +67,6 @@ export function useMentionNotification({
 
     const d = new Date(date);
     d.setHours(0, 0, 0, 0);
-
     const dateKey = d.toISOString().split("T")[0];
 
     if (d < today) {
@@ -81,6 +81,7 @@ export function useMentionNotification({
           day: "numeric",
           year: "numeric",
         })} is past due.`,
+        dedupKey: key,
         mentionId,
         mentionLabel,
         sourcePageId,
@@ -88,36 +89,37 @@ export function useMentionNotification({
         targetNodeId,
       });
     } else if (d.getTime() === today.getTime()) {
-      const key = `date-due:${mentionId}:today`;
+      const key = `date-due:${mentionId}:today:${dateKey}`;
       if (hasNotified(key)) return;
       registerNotified(key);
       addNotification({
         type: "date-due",
         title: "Reminder due today",
         message: `Your reminder for today is due.`,
+        dedupKey: key,
         mentionId,
         mentionLabel,
         sourcePageId,
         sourcePageTitle,
-        targetNodeId, // ← add
+        targetNodeId,
       });
     } else if (d.getTime() === tomorrow.getTime()) {
-      const key = `date-due:${mentionId}:tomorrow`;
+      const key = `date-due:${mentionId}:tomorrow:${dateKey}`;
       if (hasNotified(key)) return;
       registerNotified(key);
       addNotification({
         type: "date-due",
         title: "Reminder due tomorrow",
         message: `You have a reminder set for tomorrow.`,
+        dedupKey: key,
         mentionId,
         mentionLabel,
         sourcePageId,
         sourcePageTitle,
-        targetNodeId, // ← add
+        targetNodeId,
       });
     }
 
-    // add to the date effect, after the existing due/overdue checks:
     if (remind && remind !== "none" && date) {
       const remindLabels: Record<string, string> = {
         on_day: "On the day",
@@ -125,7 +127,6 @@ export function useMentionNotification({
         "2_days_before": "2 days before",
         "1_week_before": "1 week before",
       };
-
       const remindOffsets: Record<string, number> = {
         on_day: 0,
         "1_day_before": -1,
@@ -142,7 +143,7 @@ export function useMentionNotification({
       todayNorm.setHours(0, 0, 0, 0);
 
       if (remindDate.getTime() === todayNorm.getTime()) {
-        const key = `remind:${mentionId}:${remind}:${date.toISOString()}`;
+        const key = `remind:${mentionId}:${remind}:${dateKey}`;
         if (!hasNotified(key)) {
           registerNotified(key);
           addNotification({
@@ -152,14 +153,16 @@ export function useMentionNotification({
               remind === "on_day"
                 ? `Reminder for ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
                 : `${remindLabels[remind]} reminder for ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+            dedupKey: key,
             mentionId,
             mentionLabel,
-            sourcePageId: String(sourcePageId),
+            sourcePageId,
             sourcePageTitle,
             targetNodeId,
           });
         }
       }
     }
-  }, [isUserMention, mentionId, targetNodeId]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isUserMention, mentionId, targetNodeId]);
 }

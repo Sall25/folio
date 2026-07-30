@@ -1,0 +1,44 @@
+.comment-mention-editor {
+  .ProseMirror {
+    min-height: 32px;
+    min-width: 250px;
+    padding: 1px 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+    color: var(--tt-text-primary);
+    background: var(--comment-textarea-bg-color, var(--tt-bg-color));
+    border: none; //0.5px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-lg, 6px);
+    outline: none;
+
+    &:focus { border: none; /*var(--tt-brand-color-500, #2b7fff); */}
+
+    p { margin: 0; }
+
+    p.is-editor-empty:first-child::before {
+      content: attr(data-placeholder);
+      float: left;
+      height: 0;
+      pointer-events: none;
+      color: var(--tt-text-color-subtle, color-mix(in srgb, var(--tt-text-color) 45%, transparent));
+    }
+  }
+}
+
+// The mention token, in both the composer and rendered comments.
+.comment-mention {
+  color: var(--tt-brand-color-500, #2b7fff);
+  font-weight: 500;
+  border-radius: 3px;
+  padding: 0 1px;
+  cursor: default;
+}
+
+.comment-body{
+  &__p{
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 400;
+  }
+}

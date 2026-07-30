@@ -226,7 +226,10 @@ const StableShell = React.memo(function StableShell() {
         />
       </section>
 
-      <div className="right-gutter">
+      <div
+        className="right-gutter"
+        style={{ minWidth: discussionOpen ? 320 : 0 }}
+      >
         {discussionOpen ? (
           <DiscussionPane
             key="discussion-pane"

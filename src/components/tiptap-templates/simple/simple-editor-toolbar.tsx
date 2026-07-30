@@ -11,7 +11,6 @@ import { ArrowLeftIcon } from "src/components/tiptap-icons/arrow-left-icon";
 import { HighlighterIcon } from "src/components/tiptap-icons/highlighter-icon";
 import { LinkIcon } from "src/components/tiptap-icons/link-icon";
 import { ThemeToggle } from "src/components/tiptap-templates/simple/theme-toggle";
-import { NotificationBell } from "src/components/tiptap-ui/notification";
 import { MorePopover } from "./more-popover";
 import { useActivePage } from "./context/active-page-context";
 import type { View } from "src/types";
@@ -255,7 +254,7 @@ export const DesktopToolbarContent = ({
         )}
 
         <ThemeToggle />
-        <NotificationBell />
+
         <MorePopover onTriggerVersionHistory={onTriggerVersionHistory} />
       </ToolbarGroup>
     </>
@@ -286,7 +285,6 @@ export const TabletToolbarContent = ({
           </>
         )}
 
-        <NotificationBell />
         {/* Edited-time + theme move inside; MorePopover renders them when
             these flags are set. */}
         <MorePopover

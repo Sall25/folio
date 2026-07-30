@@ -1,11 +1,5 @@
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type FormEvent,
-} from "react";
+import { useRef, useState } from "react";
 import "./thread-composer-submit.scss";
 import { ArrowUp } from "lucide-react";
 import type { ID } from "src/types";
@@ -14,11 +8,24 @@ import { makeComment } from "src/utils/make-comment";
 import { usePatchThread } from "src/hooks/use-patch-thread";
 import { patchThread } from "src/api/threads";
 import { useCurrentPerson } from "src/hooks/use-session";
+import { CommentMentionEditor, type CommentEditorRef } from "../editor";
+import type { JSONContent } from "@tiptap/core";
+import { newId } from "src/lib/id";
+import { extractMentionIds } from "src/utils/extract-mention-ids";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useNotifications } from "../../notification";
 
-function SubmitBtn({ disabled = false }: { disabled?: boolean }) {
+function SubmitBtn({
+  disabled,
+  onClick,
+}: {
+  disabled?: boolean;
+  onClick?: () => void;
+}) {
   return (
     <Button
-      type="submit"
+      type="button"
+      onClick={onClick}
       data-state-active={!disabled ? "on" : "off"}
       disabled={disabled}
     >
@@ -28,82 +35,62 @@ function SubmitBtn({ disabled = false }: { disabled?: boolean }) {
 }
 
 export function ThreadComposerSubmit({ threadId }: { threadId: ID }) {
-  const [comment, setComment] = useState("");
-  const threadIdRef = useRef(threadId);
-  //  const [focused, setFocused] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const createComment = useCreateComment();
   const { person } = useCurrentPerson();
   const mutateThread = usePatchThread(({ id, patch }) =>
     patchThread(id, patch),
   );
+  const [isEmpty, setIsEmpty] = useState(true);
+  const editorRef = useRef<CommentEditorRef>(null);
+  const { activePageId, activePage } = useActivePage();
+  const { addNotification } = useNotifications();
 
-  useEffect(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = el.scrollHeight + "px";
-  }, [comment]); // runs after every render caused by comment change
-
-  const handleSubmit = useCallback(
-    (e: FormEvent) => {
-      e.preventDefault();
-      if (!comment.trim() || !person) return;
-      const newComment = makeComment({
-        threadId: threadIdRef.current,
-        text: comment,
+  const handleSubmit = (json: JSONContent) => {
+    if (!person || !activePageId) return;
+    const commentId = newId();
+    createComment.mutate({
+      comment: makeComment({
+        id: commentId,
+        threadId,
+        text: JSON.stringify(json),
         authorId: person.id,
-      });
-      createComment.mutate({
-        comment: newComment,
-        threadId: threadIdRef.current,
-      });
-      mutateThread.mutate({
-        id: threadIdRef.current,
-        patch: { status: "open" },
-      });
-      setComment("");
+      }),
+      threadId,
+    });
+    // Notify each mentioned person (except yourself).
+    // Notify each mentioned person (except yourself).
+    const ids = extractMentionIds(json);
 
-      if (textareaRef.current) textareaRef.current.style.height = "auto";
-    },
-    [comment, createComment, mutateThread, person],
-  );
+    ids.forEach((personId) => {
+      if (personId === person.id) return;
+      console.log("COMMENT notif recipient:", personId, "actor:", person.id);
+      addNotification({
+        type: "comment-mention",
+        title: "Mentioned in a comment",
+        message: `${person.name} mentioned you in a comment.`,
+        recipientId: personId,
+        dedupKey: `comment-mention:${commentId}:${personId}`,
+        sourcePageId: activePageId,
+        sourcePageTitle: activePage?.title,
+        targetNodeId: threadId,
+      });
+    });
+    mutateThread.mutate({ id: threadId, patch: { status: "open" } });
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="thread-submit-form">
-      <textarea
-        ref={textareaRef}
-        rows={1}
-        placeholder="Submit your thread..."
-        onChange={(e) => {
-          setComment(e.currentTarget.value);
-        }}
-        value={comment}
+    <div className="thread-submit-form">
+      <CommentMentionEditor
+        ref={editorRef}
+        autoFocus
+        placeholder="Reply…"
+        onSubmit={handleSubmit}
+        onEmptyChange={setIsEmpty}
       />
-
-      <SubmitBtn disabled={!comment.length} />
-
-      {/* <div
-        className="actions"
-      >
-        <Button
-          variant="ghost"
-          type="button"
-          onClick={handleCancel}
-          className="cancel-btn"
-        >
-          Cancel
-        </Button>
-        <Button
-          className="submit-btn"
-          variant="ghost"
-          type="submit"
-          disabled={!comment.length}
-        >
-          Submit
-        </Button>
-
-      </div> */}
-    </form>
+      <SubmitBtn
+        disabled={isEmpty}
+        onClick={() => editorRef.current?.submit()}
+      />
+    </div>
   );
 }

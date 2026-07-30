@@ -51,19 +51,23 @@ import {
 
 import { WorkspaceSwitcherPopover } from "./workspace-switcher-popover";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
+import { useNotifications } from "src/components/tiptap-ui/notification";
+import { InboxPanel } from "./components/inbox-panel";
 
 function User({ hovered }: { hovered: boolean }) {
   const { person } = useCurrentPerson();
-  const { workspace } = useCurrentWorkspace(); // ← add
+  const { workspace } = useCurrentWorkspace();
 
-  const [switcherOpen, setSwitcherOpen] = useState(false); // ← add
-  const initialRef = useRef<HTMLButtonElement>(null); // ← add
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const initialRef = useRef<HTMLButtonElement>(null);
 
   // Workspace identity for the header (falls back to person name until the
   // workspace row loads).
-  const wsName = workspace?.name ?? person?.name ?? ""; // ← add
-  const wsIcon = workspace?.icon ?? null; // ← add
+  const wsName = workspace?.name ?? person?.name ?? "";
+  const wsIcon = workspace?.icon ?? null;
   const initial = wsName ? wsName.charAt(0).toUpperCase() : "?";
+
+  const { unreadCount } = useNotifications();
 
   return (
     <>
@@ -83,8 +87,13 @@ function User({ hovered }: { hovered: boolean }) {
             data-highlighted={true}
             onClick={() => setSwitcherOpen((v) => !v)} // ← add
           >
-            <span className="tiptap-button-icon">
+            <span className="tiptap-button-icon workspace-icon-button">
               {wsIcon ? wsIcon : initial} {/* ← icon if set, else initial */}
+              {unreadCount > 0 && (
+                <span className="workspace-notification-badge">
+                  {/* {unreadCount > 99 ? "99+" : unreadCount} */}
+                </span>
+              )}
             </span>
           </Button>
         </PopoverTrigger>
@@ -219,8 +228,19 @@ function NavItems() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  const { sidebarView, setSidebarView } = useEditorLayout();
+  const { unreadCount } = useNotifications();
+
   const handleHomeClick = () => {
-    navigate({ to: "/" });
+    if (sidebarView === "inbox") {
+      // Coming back from inbox — just show the tree, don't navigate.
+      setSidebarView("pages");
+    } else {
+      navigate({ to: "/" });
+    }
+  };
+  const handleInboxClick = () => {
+    setSidebarView("inbox");
   };
   const handleLibraryClick = () => {
     navigate({ to: "/library/Recents" });
@@ -236,8 +256,8 @@ function NavItems() {
       <ButtonGroup className="sidebar-nav-item" orientation="horizontal">
         <Button
           size="large"
-          // variant="ghost"
-          data-active-state="on"
+          variant="ghost"
+          data-active-state={sidebarView === "pages" ? "on" : "off"}
           onClick={handleHomeClick}
           style={{
             fontWeight: 600,
@@ -251,13 +271,17 @@ function NavItems() {
           }}
         >
           <Home size={32} strokeWidth={3} className="tiptap-button-icon" />
-          <Spacer orientation="horizontal" size={2} />
-          <span
-            className="tiptap-button-text"
-            style={{ color: "green !important", opacity: 1, display: "block" }}
-          >
-            {t("sidebar.home")}
-          </span>
+          {sidebarView === "pages" && (
+            <>
+              <Spacer orientation="horizontal" size={2} />
+              <span
+                className="tiptap-button-text"
+                style={{ opacity: 1, display: "block" }}
+              >
+                {t("sidebar.home")}
+              </span>
+            </>
+          )}
         </Button>
         <Spacer orientation="horizontal" size={2} />
         <Button
@@ -282,28 +306,6 @@ function NavItems() {
             className="tiptap-button-icon"
           />
         </Button>
-
-        <Button
-          size="large"
-          variant="ghost"
-          onClick={handleHomeClick}
-          tooltip={t("sidebar.inbox")}
-          style={{
-            fontWeight: 400,
-            color: "var(--tt-text-color)",
-            padding: 5,
-            minHeight: "fit-content",
-            height: "fit-content",
-            minWidth: "fit-content",
-            width: "fit-content",
-          }}
-        >
-          <Inbox size={32} strokeWidth={1.8} className="tiptap-button-icon" />
-          {/* <Spacer orientation="horizontal" size={1} /> */}
-          {/* {!collapsed && <span className="tiptap-button-text">Inbox</span>} */}
-        </Button>
-        {/* <Spacer orientation="horizontal" size={1} /> */}
-
         <Button
           size="large"
           variant="ghost"
@@ -319,10 +321,41 @@ function NavItems() {
           tooltip={t("sidebar.store")}
         >
           <Store size={32} strokeWidth={1.8} className="tiptap-button-icon" />
-          {/* <Spacer orientation="horizontal" size={1} /> */}
-          {/* {!collapsed && (
-            <span className="tiptap-button-text">Marketplace</span>
-          )} */}
+        </Button>
+
+        <Button
+          size="large"
+          variant="ghost"
+          data-active-state={sidebarView === "inbox" ? "on" : "off"}
+          onClick={handleInboxClick}
+          tooltip={t("sidebar.inbox")}
+          style={{
+            fontWeight: 400,
+            color: "var(--tt-text-color)",
+            // padding: 5,
+            minHeight: sidebarView === "inbox" ? 32 : "fit-content",
+            height: sidebarView === "inbox" ? 32 : "fit-content",
+            minWidth: "fit-content",
+            width: "fit-content",
+            borderRadius: "var(--tt-radius-xl)",
+            position: "relative",
+          }}
+        >
+          <Inbox size={32} strokeWidth={1.8} className="tiptap-button-icon" />
+          {unreadCount > 0 && (
+            <span className="sidebar-inbox-badge">{unreadCount}</span>
+          )}
+          {sidebarView === "inbox" && (
+            <>
+              <Spacer orientation="horizontal" size={2} />
+              <span
+                className="tiptap-button-text"
+                style={{ opacity: 1, display: "block" }}
+              >
+                {t("sidebar.inbox")}
+              </span>
+            </>
+          )}
         </Button>
 
         <Spacer orientation="horizontal" />
@@ -437,6 +470,7 @@ export function SimpleEditorSidebar() {
     openPeek,
     closePeek,
     peekPhase: phase,
+    sidebarView,
   } = useEditorLayout();
   const isMobile = mode === "mobile";
   const { tree, isPending, isLoading } = usePageTree();
@@ -578,43 +612,50 @@ export function SimpleEditorSidebar() {
               </>
             )}
 
-            <SidebarTree
-              tree={tree}
-              teamspaces={teamspaces as Teamspace[]}
-              groups={groups as Group[]}
-              onMovePage={({ pageId, newParentId, category }) => {
-                // optimistic move — patch parentId (+ category on cross-section drop)
-                patchPage.mutate({
-                  id: pageId,
-                  patch: {
-                    parentId: newParentId,
-                    ...(category ? { category } : {}),
-                  },
-                });
-              }}
-              onAddPageToSection={(category) => {
-                if (!person) return null;
-                // A teamspace is created through its own modal (it must create
-                // a page + a Teamspace record sharing one id), not as a plain
-                // page. Every other section creates a page directly.
-                if (category === "Teamspaces") {
-                  setCreateTeamspaceOpen(true);
-                  return;
-                }
-                const p = makePage({
-                  title: t("page.newPage"),
-                  parentId: null,
-                  category,
-                  ownerId: person.id,
-                });
-                createPage
-                  .mutateAsync(p)
-                  .then((page) => setActivePageId(page.id));
-              }}
-              onRenameSection={() => {}}
-              onDeleteSection={() => {}}
-              isLoading={isPending || isLoading}
-            />
+            <div style={{ display: "contents" }}>
+              {sidebarView === "inbox" ? (
+                <InboxPanel key={"inbox-panel"} />
+              ) : (
+                <SidebarTree
+                  key={"sidebar-tree"}
+                  tree={tree}
+                  teamspaces={teamspaces as Teamspace[]}
+                  groups={groups as Group[]}
+                  onMovePage={({ pageId, newParentId, category }) => {
+                    // optimistic move — patch parentId (+ category on cross-section drop)
+                    patchPage.mutate({
+                      id: pageId,
+                      patch: {
+                        parentId: newParentId,
+                        ...(category ? { category } : {}),
+                      },
+                    });
+                  }}
+                  onAddPageToSection={(category) => {
+                    if (!person) return null;
+                    // A teamspace is created through its own modal (it must create
+                    // a page + a Teamspace record sharing one id), not as a plain
+                    // page. Every other section creates a page directly.
+                    if (category === "Teamspaces") {
+                      setCreateTeamspaceOpen(true);
+                      return;
+                    }
+                    const p = makePage({
+                      title: t("page.newPage"),
+                      parentId: null,
+                      category,
+                      ownerId: person.id,
+                    });
+                    createPage
+                      .mutateAsync(p)
+                      .then((page) => setActivePageId(page.id));
+                  }}
+                  onRenameSection={() => {}}
+                  onDeleteSection={() => {}}
+                  isLoading={isPending || isLoading}
+                />
+              )}
+            </div>
 
             {!peeking && (
               <>

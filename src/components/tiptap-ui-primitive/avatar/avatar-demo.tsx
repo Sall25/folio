@@ -13,7 +13,7 @@ export function AvatarDemo() {
       name={user.name}
       src={user.src}
       online={user.online}
-      size="xs"
+      size="sm"
       style={{
         margin: "0 3px",
         background: "#d9f99d",
