@@ -19,6 +19,7 @@ import { useDeleteComment } from "src/hooks/use-delete-comment.js";
 import { usePatchComment } from "src/hooks/use-patch-comment.js";
 import { patchComment } from "src/api/comments.js";
 import { usePersonNames } from "src/hooks/use-person-names.js";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context.js";
 
 interface ThreadListItemProps {
   thread: Thread;
@@ -47,6 +48,8 @@ export const ThreadsListItem = ({
   } = useThreadState();
 
   const itemRef = useRef<HTMLDivElement | null>(null);
+
+  const { activePageId, activePage } = useActivePage();
 
   // Re-resolve collisions whenever this card's own height changes
   // (textarea auto-grow, a reply rendering, open/close). measureAllThreads
@@ -147,6 +150,7 @@ export const ThreadsListItem = ({
                         type="button"
                         role="menuitem"
                         variant="ghost"
+                        size="small"
                         onClick={handleResolveClick}
                       >
                         <Check size={12} />
@@ -157,6 +161,7 @@ export const ThreadsListItem = ({
                         type="button"
                         role="menuitem"
                         variant="ghost"
+                        size="small"
                         onClick={handleUnresolveClick}
                       >
                         <RotateCw size={12} />
@@ -167,6 +172,8 @@ export const ThreadsListItem = ({
                       type="button"
                       role="menuitem"
                       variant="ghost"
+                      size="small"
+                      className="delete-thread-btn"
                       onClick={handleDeleteClick}
                     >
                       <Trash size={12} />
@@ -197,6 +204,18 @@ export const ThreadsListItem = ({
                         deleteComment.mutate(comment.id);
                       }}
                       showActions={true}
+                      reactions={comment.reactions}
+                      authorId={comment.personId}
+                      commentId={comment.id}
+                      pageId={activePageId ?? undefined}
+                      pageTitle={activePage?.title}
+                      threadId={thread.id}
+                      onReact={(next) =>
+                        updateComment.mutate({
+                          id: comment.id,
+                          patch: { reactions: next },
+                        })
+                      }
                     />
                   ))}
                 </div>
@@ -219,13 +238,19 @@ export const ThreadsListItem = ({
                   }}
                   onEdit={() => {}}
                   showActions={false}
+                  reactions={firstComment.reactions}
+                  onReact={(next) =>
+                    updateComment.mutate({
+                      id: firstComment.id,
+                      patch: { reactions: next },
+                    })
+                  }
+                  authorId={firstComment.personId}
+                  commentId={firstComment.id}
+                  pageId={activePageId ?? undefined}
+                  pageTitle={activePage?.title}
+                  threadId={thread.id}
                 />
-                {/* <div className="comments-count">
-                  <label style={{ marginLeft: "30px" }}>
-                    {Math.max(0, comments.length - 1) || 0}{" "}
-                    {(comments.length - 1 || 0) === 1 ? "reply" : "replies"}
-                  </label>
-                </div> */}
               </div>
             ) : null}
           </ThreadCard>

@@ -9,7 +9,7 @@ import {
 
 import "./mention-view.scss";
 import { users } from "./users";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardGroupLabel } from "src/components/tiptap-ui-primitive/card";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
@@ -52,11 +52,7 @@ function isPast(date: Date) {
   return d < today;
 }
 
-export function MentionView({
-  node,
-  updateAttributes,
-  editor,
-}: ReactNodeViewProps) {
+export function MentionView({ node, updateAttributes }: ReactNodeViewProps) {
   const [today] = useState(new Date());
   const [tomorrow] = useState(() => {
     const t = new Date();
@@ -120,10 +116,6 @@ export function MentionView({
     remind: node.attrs.remind,
   });
   const endDateValue = node.attrs.endDate ? new Date(node.attrs.endDate) : null;
-
-  useEffect(() => {
-    editor.commands.setMentionPeople(people as Person[]);
-  }, [editor, people]);
 
   return (
     <NodeViewWrapper

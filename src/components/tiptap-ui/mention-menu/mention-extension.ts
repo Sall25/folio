@@ -25,8 +25,7 @@ import { users } from "./users";
 
 import "./mention-extension.scss";
 import { MentionView } from "./mention-view";
-import { flattenPages } from "src/lib/flatten-pages";
-import type { Person } from "src/types";
+import type { Page, Person } from "src/types";
 
 const FORBIDDEN_BLOCKS = [
   "codeBlock",
@@ -43,6 +42,7 @@ declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     mention: {
       setMentionPeople: (people: Person[]) => ReturnType;
+      setMentionPages: (pages: Page[]) => ReturnType;
     };
   }
 }
@@ -86,6 +86,12 @@ const MentionWithView = Mention.extend({
           editor.storage.mention.people = people;
           return true;
         },
+      setMentionPages:
+        (pages: Page[]) =>
+        ({ editor }) => {
+          editor.storage.pageLink.pages = pages;
+          return true;
+        },
     };
   },
   addNodeView() {
@@ -125,7 +131,7 @@ export const MentionExtension = MentionWithView.configure({
           type: "user" as const,
         }));
 
-      const matchedPages = flattenPages(pages)
+      const matchedPages = pages
         .filter((p) => (p.title || "New Page").toLowerCase().includes(q))
         .map((p) => ({
           id: String(p.id),
@@ -190,9 +196,9 @@ export const MentionExtension = MentionWithView.configure({
         editor.commands.insertContent({
           type: "pageLink",
           attrs: {
-            pageId: Number(props.id),
+            pageId: props.id,
             parentId: editor.storage.slashCommand.activePage?.id
-              ? Number(editor.storage.slashCommand.activePage?.id)
+              ? editor.storage.slashCommand.activePage?.id
               : null,
             title: "",
             nodeId: `pageLink-${Date.now()}`,

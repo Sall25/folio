@@ -1,0 +1,39 @@
+.reaction-picker {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: var(--tt-radius-lg, 10px);
+
+  &__trigger {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: transparent;
+    border-radius: var(--tt-radius-md, 6px);
+    color: var(--tt-text-color-subtle, color-mix(in srgb, var(--tt-text-color) 50%, transparent));
+    cursor: pointer;
+
+    &:hover {
+      background: color-mix(in srgb, var(--tt-text-color) 8%, transparent);
+      color: var(--tt-text-primary);
+    }
+  }
+
+  &__emoji {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    border-radius: var(--tt-radius-md, 6px);
+    font-size: 18px;
+    cursor: pointer;
+    transition: transform 0.08s ease, background 0.12s ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--tt-text-color) 10%, transparent);
+      transform: scale(1.15);
+    }
+  }
+}

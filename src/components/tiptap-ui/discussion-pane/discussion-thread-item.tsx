@@ -6,6 +6,9 @@ import { usePersonNames } from "src/hooks/use-person-names";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { CommentCard } from "../comments/components/comment-card";
 import { ThreadComposer } from "../comments/components/thread-composer";
+import { usePatchComment } from "src/hooks/use-patch-comment";
+import { patchComment } from "src/api/comments";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 
 // A thread row in the discussion pane. Collapsed by default (first comment +
 // reply count); expands on click to show all comments + a reply box. Selecting
@@ -22,11 +25,16 @@ export function DiscussionThreadItem({
   const { data: comments = [] } = useCommentsByThread(thread.id);
   const resolveName = usePersonNames();
   const { person } = useCurrentPerson();
+  const { activePage, activePageId } = useActivePage();
 
   const first = comments[0];
   const replyCount = Math.max(0, comments.length - 1);
 
-  if (!first) return null; // no comments — don't render an empty thread
+  const updateComment = usePatchComment(({ id, patch }) =>
+    patchComment(id, patch),
+  );
+
+  if (!first) return null;
 
   return (
     <div
@@ -50,6 +58,15 @@ export function DiscussionThreadItem({
               onEdit={() => {}}
               onDelete={() => {}}
               showActions={c.personId === person?.id}
+              reactions={c.reactions}
+              onReact={(next) =>
+                updateComment.mutate({ id: c.id, patch: { reactions: next } })
+              }
+              authorId={c.personId}
+              commentId={c.id}
+              pageId={activePageId ?? undefined}
+              pageTitle={activePage?.title}
+              threadId={thread.id}
             />
           ))}
           <div

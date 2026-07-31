@@ -14,14 +14,28 @@ import type { JSONContent } from "@tiptap/core";
 import "./comment-card.scss";
 import { CommentBody } from "./comment-body";
 import { CommentMentionEditor, type CommentEditorRef } from "../editor";
+import { ReactionChips } from "./reaction-chips";
+import { ReactionPicker } from "./reaction-picker";
+import type { Reactions } from "src/types";
+import { toggleReaction, parseReactions } from "src/lib/comment-reactions";
+import { useCurrentPerson } from "src/hooks/use-session";
+import { usePersonNames } from "src/hooks/use-person-names";
+import { useNotifications } from "../../notification";
 
 interface CommentCardProps {
   name: string;
   createdAt: number;
   deleted: boolean;
   content: string;
+  reactions?: unknown;
+  authorId?: string;
+  commentId?: string;
+  pageId?: string;
+  pageTitle?: string;
+  threadId?: string;
   onEdit: (content: string) => void;
   onDelete: () => void;
+  onReact?: (next: Reactions) => void;
   showActions: boolean;
   showReply?: boolean;
   onReply?: () => void;
@@ -32,20 +46,53 @@ export const CommentCard = ({
   createdAt,
   deleted,
   content,
+  reactions: rawReactions,
   onEdit,
   onDelete,
+  onReact,
   showActions,
   showReply,
   onReply,
+  authorId,
+  commentId,
+  pageId,
+  pageTitle,
+  threadId,
 }: CommentCardProps) => {
   const [isComposing, setIsComposing] = useState(false);
   const [hovered, setHovered] = useState(false);
   const editRef = useRef<CommentEditorRef>(null);
+  const { person } = useCurrentPerson();
 
-  // Seed the edit editor from the current content. New comments are stringified
-  // ProseMirror JSON; legacy comments are plain strings — wrap those as a
-  // paragraph so they're still editable as rich text (and upgrade to JSON on
-  // save).
+  const reactions = parseReactions(rawReactions);
+
+  const resolveName = usePersonNames();
+  const { addNotification } = useNotifications();
+
+  const handleToggleReaction = (emoji: string) => {
+    if (!person || !onReact) return;
+
+    // Was this an ADD (person not yet in this emoji's list)?
+    const alreadyReacted = (reactions[emoji] ?? []).includes(person.id);
+    onReact(toggleReaction(reactions, emoji, person.id));
+
+    // Notify the comment author on ADD only, and never for reacting to your own
+    // comment.
+    if (!alreadyReacted && authorId && authorId !== person.id && commentId) {
+      addNotification({
+        type: "comment-mention", // reuse the comment notification type
+        title: "Reaction on your comment",
+        message: `${resolveName(person.id)} reacted ${emoji} to your comment.`,
+        recipientId: authorId,
+        dedupKey: `reaction:${commentId}:${person.id}:${emoji}`,
+        sourcePageId: pageId,
+        sourcePageTitle: pageTitle,
+        targetNodeId: threadId,
+      });
+    }
+  };
+
+  // Seed the edit editor from the current content (JSON or legacy string).
   const initialJson: JSONContent | null = (() => {
     try {
       const parsed = JSON.parse(content);
@@ -53,7 +100,7 @@ export const CommentCard = ({
         return parsed;
       }
     } catch {
-      /* not JSON — fall through to legacy handling */
+      /* legacy plain string */
     }
     return content
       ? {
@@ -67,13 +114,11 @@ export const CommentCard = ({
 
   const handleEditSubmit = (json: JSONContent) => {
     setIsComposing(false);
-    onEdit(JSON.stringify(json)); // store as stringified JSON, like new comments
+    onEdit(JSON.stringify(json));
   };
 
   const commentWrapperClass: string[] = ["comment"];
-  if (deleted) {
-    commentWrapperClass.push("deleted");
-  }
+  if (deleted) commentWrapperClass.push("deleted");
 
   return (
     <div
@@ -96,95 +141,110 @@ export const CommentCard = ({
       )}
 
       {!isComposing && !deleted && (
-        <div
-          className="comment-content"
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <div style={{ marginLeft: "4px" }} className="comment-body-wrapper">
-            <CommentBody body={content} />
-          </div>
-          <Spacer orientation="horizontal" />
-          {showActions && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  style={{
-                    opacity: hovered ? 1 : 0,
-                    transition: "opacity 0.15s ease",
-                  }}
-                >
-                  <Ellipsis className="tiptap-button-icon" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverPortal container={document.getElementById("root")}>
-                <PopoverContent
-                  style={{ zIndex: 9999 }}
-                  align="center"
-                  sideOffset={5}
-                >
-                  <Card
-                    style={{
-                      padding: "2px 5px",
-                      borderRadius: "var(--tt-radius-sm)",
-                    }}
-                  >
-                    <ButtonGroup orientation="vertical">
-                      {showReply && (
-                        <Button
-                          type="button"
-                          size="small"
-                          variant="ghost"
-                          className="page-comment__reply-trigger"
-                          onClick={onReply}
-                        >
-                          <span className="tiptap-button-text"> Reply</span>
-                        </Button>
-                      )}
-                      <Button
-                        style={{ justifyContent: "flex-start" }}
-                        variant="ghost"
-                        size="small"
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setIsComposing(true);
+        <>
+          <div
+            className="comment-content"
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <div style={{ marginLeft: "4px" }} className="comment-body-wrapper">
+              <CommentBody body={content} />
+            </div>
+            <Spacer orientation="horizontal" />
+            <div className="comment-actions-cluster">
+              {onReact && <ReactionPicker onPick={handleToggleReaction} />}
+              {showActions && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      style={{
+                        opacity: hovered ? 1 : 0,
+                        transition: "opacity 0.15s ease",
+                      }}
+                    >
+                      <Ellipsis className="tiptap-button-icon" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverPortal container={document.getElementById("root")}>
+                    <PopoverContent
+                      style={{ zIndex: 9999 }}
+                      align="center"
+                      sideOffset={5}
+                    >
+                      <Card
+                        style={{
+                          padding: "2px 5px",
+                          borderRadius: "var(--tt-radius-sm)",
                         }}
                       >
-                        <Edit size={11} />
-                        <span>Edit</span>
-                      </Button>
-                      {onDelete && (
-                        <Button
-                          style={{
-                            justifyContent: "flex-start",
-                            minWidth: 100,
-                          }}
-                          size="small"
-                          type="button"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            onDelete();
-                          }}
-                        >
-                          <Trash size={11} />
-                          <span>Delete</span>
-                        </Button>
-                      )}
-                    </ButtonGroup>
-                  </Card>
-                </PopoverContent>
-              </PopoverPortal>
-            </Popover>
+                        <ButtonGroup orientation="vertical">
+                          {showReply && (
+                            <Button
+                              type="button"
+                              size="small"
+                              variant="ghost"
+                              className="page-comment__reply-trigger"
+                              onClick={onReply}
+                            >
+                              <span className="tiptap-button-text"> Reply</span>
+                            </Button>
+                          )}
+                          <Button
+                            style={{ justifyContent: "flex-start" }}
+                            variant="ghost"
+                            size="small"
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setIsComposing(true);
+                            }}
+                          >
+                            <Edit size={11} />
+                            <span>Edit</span>
+                          </Button>
+                          {onDelete && (
+                            <Button
+                              style={{
+                                justifyContent: "flex-start",
+                                minWidth: 100,
+                              }}
+                              size="small"
+                              type="button"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onDelete();
+                              }}
+                            >
+                              <Trash size={11} />
+                              <span>Delete</span>
+                            </Button>
+                          )}
+                        </ButtonGroup>
+                      </Card>
+                    </PopoverContent>
+                  </PopoverPortal>
+                </Popover>
+              )}
+            </div>
+          </div>
+
+          {onReact && (
+            <div style={{ marginLeft: "4px" }}>
+              <ReactionChips
+                reactions={reactions}
+                currentPersonId={person?.id}
+                onToggle={handleToggleReaction}
+              />
+            </div>
           )}
-        </div>
+        </>
       )}
 
       {isComposing && !deleted && (

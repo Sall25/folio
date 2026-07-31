@@ -35,6 +35,8 @@
   overflow-x: hidden;
   margin: 0 -12px;
   z-index: 9990;
+  border-radius: var(--tt-radius-sm);
+
   
   scroll-padding-bottom: 12px;
 
@@ -45,8 +47,8 @@
   //transition: scale 0.15s ease-in-out;
   opacity: 0;
   transform: translateY(-4px) scale(0.98);
-
-  box-shadow: none;
+  border: 1px solid var(--tt-border-color);
+  box-shadow: var(--tt-shadow-elevated-md);
   
   
   &[data-mention-menu-open="true"] {
@@ -76,9 +78,10 @@
     align-items: center;
     gap: 4px;
     padding: 0px;
-    margin: 0px;
+    margin: 0px 10px;
     margin-top: 5px;
     min-height: 25px;
+
     svg{
       width:14px;
       height: 14px;

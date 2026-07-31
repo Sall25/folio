@@ -27,7 +27,7 @@ declare module "@tiptap/core" {
 export const PageLinkNode = Node.create<PageLinkOptions, PageLinkStorage>({
   name: "pageLink",
   group: "block",
-  atom: false, // treated as a single unit, not editable inside
+  atom: false,
   selectable: true,
   draggable: true,
   content: "inline*",

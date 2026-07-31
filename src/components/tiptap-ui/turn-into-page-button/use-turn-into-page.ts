@@ -5,6 +5,7 @@ import { FileIcon } from "lucide-react";
 import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { makePage } from "src/utils/make-page";
+import { useCurrentPerson } from "src/hooks/use-session";
 
 interface Props {
   editor: Editor | null;
@@ -47,8 +48,11 @@ export function useTurnIntoPage({
     };
   }, [editor]);
 
+  const { person } = useCurrentPerson();
+
   const handleTurnIntoPage = useCallback(async () => {
-    if (!editor || !canTurn || activePageId === undefined) return false;
+    if (!editor || !canTurn || activePageId === undefined || !person)
+      return false;
 
     const { selection } = editor.state;
 
@@ -74,7 +78,11 @@ export function useTurnIntoPage({
     }
 
     const title = paragraphText.trim() || "New Page";
-    const newPage = makePage({ title, parentId: activePageId });
+    const newPage = makePage({
+      title,
+      parentId: activePageId,
+      ownerId: person.id,
+    });
     await createPage.mutateAsync(newPage);
 
     // Update pageLink storage so the node view can resolve the page
@@ -98,7 +106,7 @@ export function useTurnIntoPage({
 
     onTurnedIntoPage?.();
     return true;
-  }, [editor, canTurn, activePageId, createPage, onTurnedIntoPage]);
+  }, [editor, canTurn, activePageId, createPage, onTurnedIntoPage, person]);
 
   return {
     isVisible: hideWhenUnavailable ? canTurn : true,

@@ -9,8 +9,11 @@ import "./mention-list.scss";
 import { AlarmClock, Clock, File, Users } from "lucide-react";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
-import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
+import { useCurrentEditor } from "@tiptap/react";
+import { usePeople } from "src/hooks/use-people";
+import { usePages } from "src/hooks/use-pages";
+import type { Page, Person } from "src/types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isSelectable = (item: any) => !item.title && item.type !== "divider";
@@ -76,6 +79,17 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
       return () => cancelAnimationFrame(raf);
     }, []);
 
+    const { editor } = useCurrentEditor();
+
+    const { data: people = [] } = usePeople();
+    const { data: pages = [] } = usePages();
+
+    useEffect(() => {
+      if (!editor) return;
+      editor.commands.setMentionPeople(people as Person[]);
+      editor.commands.setMentionPages(pages as Page[]);
+    }, [editor, people, pages]);
+
     return (
       <Card className="mention-menu" data-mention-menu-open={menuVisible}>
         {items.length === 0 && <CardGroupLabel>No results</CardGroupLabel>}
@@ -85,6 +99,7 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
             {item.type === "divider" && (
               <>
                 <CardGroupLabel className="mention-title">
+                  <Spacer orientation="horizontal" size={5} />
                   {item.title === "Date" ? (
                     <AlarmClock />
                   ) : item.title === "Pages" ? (
@@ -94,7 +109,6 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
                   )}
                   <span>{item.title}</span>
                 </CardGroupLabel>
-                <Separator orientation="horizontal" />
               </>
             )}
             {item.date && (
