@@ -9,11 +9,13 @@ import {
   ChevronsLeft,
   PenBox,
   ChevronsRight,
+  Shapes,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
   CardBody,
+  CardFooter,
   //CardFooter,
   CardHeader,
   CardItemGroup,
@@ -53,6 +55,7 @@ import { WorkspaceSwitcherPopover } from "./workspace-switcher-popover";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { useNotifications } from "src/components/tiptap-ui/notification";
 import { InboxPanel } from "./components/inbox-panel";
+import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
 
 function User({ hovered }: { hovered: boolean }) {
   const { person } = useCurrentPerson();
@@ -126,17 +129,15 @@ function User({ hovered }: { hovered: boolean }) {
   );
 }
 
-function WorkspaceHeader() {
-  const [, setHide] = useState(true);
+function WorkspaceFooter() {
   const { t } = useTranslation();
-  const { collapseWithFloat, collapsed, onCollapsedChange } = useEditorLayout();
-  const [hovered, setHovered] = useState(false);
+  const { onOpenChange, open } = useTemplates();
 
   const { activePageId, setActivePageId } = useActivePage();
   const { person } = useCurrentPerson();
   const createPage = useCreatePage();
   const onCreatePage = () => {
-    if (!person) return; // no session, can't own a page
+    if (!person) return;
 
     const newPage = makePage({
       ownerId: person.id,
@@ -153,6 +154,62 @@ function WorkspaceHeader() {
         console.log("failed to create new page");
       });
   };
+  return (
+    <CardFooter style={{ paddingBottom: 10, width: "100%" }}>
+      <CardItemGroup orientation="horizontal" style={{ width: "100%" }}>
+        <Spacer orientation="horizontal" />
+        <Button
+          variant="ghost"
+          size="large"
+          style={{
+            boxShadow: "var(--tt-shadow-elevated-md)",
+            borderRadius: "150px",
+            border: "1px solid var(--tt-border-color)",
+            paddingTop: 20,
+            paddingBottom: 20,
+            // padding: "20px 40px",
+          }}
+          onClick={() => onOpenChange?.(!open)}
+        >
+          <Spacer orientation="horizontal" size={5} />
+          <Shapes className="tiptap-button-icon" />
+          <Spacer orientation="horizontal" size={2} />
+          <span
+            className="tiptap-button-text"
+            style={{ opacity: 1, display: "block" }}
+          >
+            Templates
+          </span>
+          <Spacer orientation="horizontal" size={10} />
+          <ShortcutBadge shortcutKeys="Ctrl + O" />
+          <Spacer orientation="horizontal" size={5} />
+        </Button>
+        <Spacer orientation="horizontal" />
+        <Button
+          variant="ghost"
+          size="large"
+          style={{
+            padding: "20px 12px",
+            boxShadow: "var(--tt-shadow-elevated-md)",
+            border: "1px solid var(--tt-border-color)",
+            borderRadius: "150px",
+          }}
+          tooltip={t("page.newPage")}
+          onClick={onCreatePage}
+        >
+          <PenBox className="tiptap-button-icon" />
+        </Button>
+        <Spacer orientation="horizontal" />
+      </CardItemGroup>
+    </CardFooter>
+  );
+}
+
+function WorkspaceHeader() {
+  const [, setHide] = useState(true);
+  const { t } = useTranslation();
+  const { collapseWithFloat, collapsed, onCollapsedChange } = useEditorLayout();
+  const [hovered, setHovered] = useState(false);
 
   return (
     <CardItemGroup
@@ -209,16 +266,6 @@ function WorkspaceHeader() {
             <ChevronsRight className="tiptap-button-icon" />
           </Button>
         )}
-        <Spacer orientation="horizontal" />
-
-        <Button
-          size="large"
-          variant="ghost"
-          tooltip={t("page.newPage")}
-          onClick={onCreatePage}
-        >
-          <PenBox className="tiptap-button-icon" />
-        </Button>
       </ButtonGroup>
     </CardItemGroup>
   );
@@ -530,7 +577,7 @@ export function SimpleEditorSidebar() {
       style={{
         zIndex: isMobile ? 950 : floatingActive ? 900 : 120,
         position: "fixed",
-        left: 0, //floatingActive ? 8 : 0,
+        left: 0,
         top: floatingActive ? "12%" : 0,
         borderRadius: 0,
         borderTopRightRadius: floatingActive ? "var(--tt-radius-xl)" : 0,
@@ -674,6 +721,8 @@ export function SimpleEditorSidebar() {
 
       {/* <Separator orientation="horizontal" style={{ height: 0.5 }} /> */}
       {/* {!collapsed && <WorkSpaceFooter onCreatePage={onCreatePage} />} */}
+
+      <WorkspaceFooter />
 
       {createTeamspaceOpen && (
         <CreateTeamspaceModal

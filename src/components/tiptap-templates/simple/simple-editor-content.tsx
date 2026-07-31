@@ -21,6 +21,8 @@ import { useEditorSync } from "./context/editor-sync-context";
 import { EditorBodySkeleton } from "./components/skeletons";
 import { usePageComment } from "./hooks/use-page-comment";
 import { DiscussionPane } from "src/components/tiptap-ui/discussion-pane";
+import { CommentThreadPopover } from "src/components/tiptap-ui/comments/components/comment-thread-popover";
+import { BlockCommentHandle } from "src/components/tiptap-ui/block-comment-handle";
 
 // ============================================================
 // Memoized leaves
@@ -152,6 +154,7 @@ const StableShell = React.memo(function StableShell() {
     mode,
     discussionOpen,
     onDiscussionOpenChanged,
+    commentDisplayMode,
   } = useEditorLayout();
   const isMobile = mode === "mobile";
   const { activePage, activePageId } = useActivePage();
@@ -183,6 +186,8 @@ const StableShell = React.memo(function StableShell() {
     onAddCoverAsync,
     floatingRef,
   });
+
+  console.log("commentDisplayMode:", commentDisplayMode, "mode:", mode);
 
   return (
     <>
@@ -226,22 +231,25 @@ const StableShell = React.memo(function StableShell() {
         />
       </section>
 
-      <div
-        className="right-gutter"
-        style={{ minWidth: discussionOpen ? 320 : 0 }}
-      >
-        {discussionOpen ? (
-          <DiscussionPane
-            key="discussion-pane"
-            editor={editor}
-            pageId={activePageId}
-            onClose={() => onDiscussionOpenChanged(false)}
-          />
+      <div className="right-gutter-container">
+        {commentDisplayMode === "popover" && !discussionOpen ? (
+          <CommentThreadPopover key="comment-thread-popover" editor={editor} />
+        ) : discussionOpen ? (
+          <div className="right-gutter" style={{ minWidth: 320 }}>
+            <DiscussionPane
+              key="discussion-pane"
+              editor={editor}
+              pageId={activePageId}
+              onClose={() => onDiscussionOpenChanged(false)}
+            />
+          </div>
         ) : (
-          <ThreadSidebarMemo
-            key="thread-sidebar"
-            setHasThreads={setHasThreads}
-          />
+          <div className="right-gutter" style={{ minWidth: 0 }}>
+            <ThreadSidebarMemo
+              key="thread-sidebar"
+              setHasThreads={setHasThreads}
+            />
+          </div>
         )}
       </div>
     </>
@@ -259,6 +267,7 @@ export function SimpleEditorContent() {
     <>
       <StableShell />
       <DragHandle editor={editor} />
+      <BlockCommentHandle editor={editor} />
       <BubbleMenu editor={editor} />
       <ImageBubble editor={editor} />
     </>

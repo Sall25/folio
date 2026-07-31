@@ -54,6 +54,17 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   const [discussionOpen, setDiscussionOpen] = useState(false);
   const [sidebarView, setSidebarView] = useState<"pages" | "inbox">("pages");
+  const [commentModeOverride, setCommentModeOverride] = useState<
+    "sidebar" | "popover" | null
+  >(null);
+
+  const commentDisplayMode: "sidebar" | "popover" =
+    mode === "mobile" || mode === "tablet"
+      ? "popover"
+      : (commentModeOverride ?? "sidebar");
+
+  const setCommentDisplayMode = (m: "sidebar" | "popover") =>
+    setCommentModeOverride(m);
 
   // Auto-collapse when the viewport can't hold a persistent panel, and restore
   // when it can again — otherwise rotating a tablet leaves the sidebar covering
@@ -212,6 +223,8 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
         onDiscussionOpenChanged: setDiscussionOpen,
         sidebarView,
         setSidebarView,
+        commentDisplayMode,
+        setCommentDisplayMode,
       }}
     >
       {children}

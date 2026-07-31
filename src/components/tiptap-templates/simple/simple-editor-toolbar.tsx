@@ -86,6 +86,12 @@ function FavoriteToggle() {
       size="large"
       tooltip={t(isFavorite ? "page.unfavorite" : "page.favorite")}
       onClick={toggle}
+      style={{
+        width: "1.25rem",
+        height: "1.25rem",
+        minWidth: "1.25rem",
+        minHeight: "1.25rem",
+      }}
     >
       <Star
         className="tiptap-button-icon"
@@ -105,8 +111,17 @@ function DiscussionTrigger() {
       data-active={discussionOpen}
       onClick={() => onDiscussionOpenChanged(!discussionOpen)}
       tooltip="Comments"
+      style={{
+        width: "1.25rem",
+        height: "1.25rem",
+        minWidth: "1.25rem",
+        minHeight: "1.25rem",
+      }}
     >
-      <MessageSquareText className="tiptap-button-icon" />
+      <MessageSquareText
+        className="tiptap-button-icon"
+        style={{ color: "var(--tt-text-primary)" }}
+      />
     </Button>
   );
 }
@@ -126,14 +141,24 @@ function ShareButton() {
         variant="ghost"
         onClick={() => setOpen((v) => !v)}
         tooltip={t("share.share", "Share")}
+        size="large"
         style={{
           border: "1px solid var(--tt-border-color)",
           borderRadius: "var(--tt-radius-sm)",
           minHeight: 22,
           height: 25,
+          color: "var(--tt-text-primary)",
         }}
       >
-        <Lock className="tiptap-button-icon" />
+        <Lock
+          className="tiptap-button-icon"
+          style={{
+            width: 14,
+            height: 14,
+            marginBottom: 4,
+            color: "var(--tt-text-primary)",
+          }}
+        />
         <span className="tiptap-button-text">{t("share.share", "Share")}</span>
       </Button>
       <SharePanel
@@ -248,8 +273,11 @@ export const DesktopToolbarContent = ({
         {view !== "home" && (
           <>
             <ShareButton />
+            <Spacer orientation="horizontal" size={8} />
             <FavoriteToggle />
+            <Spacer orientation="horizontal" size={8} />
             <DiscussionTrigger />
+            <Spacer orientation="horizontal" size={8} />
           </>
         )}
 
@@ -282,6 +310,7 @@ export const TabletToolbarContent = ({
             <UndoRedoButton action="undo" />
             <UndoRedoButton action="redo" />
             <Separator orientation="vertical" />
+            <Spacer orientation="horizontal" size={5} />
           </>
         )}
 

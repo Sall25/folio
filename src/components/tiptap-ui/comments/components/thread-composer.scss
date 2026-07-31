@@ -1,0 +1,89 @@
+.thread-composer {
+  display: flex;
+  flex-direction: column;   // editor on top, actions row below
+  gap: 4px;
+  padding: 8px 10px 6px 4px;
+  border: 1px solid var(--tt-border-color);
+  outline: none;
+  border-radius: var(--tt-radius-md, 10px);
+  background: var(--tt-bg-color);
+  transition: outline 0.15s ease;//, box-shadow 0.15s ease;
+  &:focus-within {
+    outline: 1px solid var(--tt-brand-color-400, #2b7fff);
+    // box-shadow: 0 0 0 3px
+    //   color-mix(in srgb, var(--tt-brand-color-500, #2b7fff) 18%, transparent);
+  }
+
+  &__editor {
+    width: 100%;
+    min-width: 0;
+
+    // Editor takes the full width; text never shares a row with the actions.
+    .comment-mention-editor .ProseMirror {
+      border: none;
+      background: transparent;
+      padding: 0;
+      min-height: 22px;
+      max-height: 200px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      line-height: 1.5;
+      outline: none;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .comment-mention-editor .ProseMirror p { margin: 0; }
+  }
+
+  // Actions on their own row, right-aligned, below the editor.
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+  }
+
+  &__icon-btn {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: transparent;
+    border-radius: var(--tt-radius-md, 8px);
+    color: var(--tt-text-color-subtle, color-mix(in srgb, var(--tt-text-color) 55%, transparent));
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease;
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--tt-text-color) 8%, transparent);
+      color: var(--tt-text-primary);
+    }
+    &:disabled { opacity: 0.4; cursor: default; }
+  }
+
+  &__send {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    font-size: 12px !important;
+    text-align: center;
+    border: none;
+    border-radius: var(--tt-radius-xl) !important;
+    background: var(--tt-brand-color-500, #2b7fff);
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.12s ease, transform 0.08s ease;
+    margin-left: 2px;
+
+    &:hover:not(:disabled) { transform: scale(1.05); }
+    &:active:not(:disabled) { transform: scale(0.95); }
+    &:disabled {
+      background: color-mix(in srgb, var(--tt-text-color) 18%, transparent);
+      color: color-mix(in srgb, var(--tt-text-color) 45%, transparent);
+      cursor: default;
+    }
+  }
+}

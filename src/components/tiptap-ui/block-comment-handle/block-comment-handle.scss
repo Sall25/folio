@@ -1,0 +1,34 @@
+.block-comment-handle {
+  // Only visible on block hover (the plugin shows/hides it like the drag handle).
+  display: flex;
+  align-items: flex-start;
+  // Nudge it into the right margin, away from the text edge.
+  margin-left: 8px;
+
+  &__button {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border-radius: var(--tt-radius-md, 8px);
+    color: var(--tt-text-color-subtle, color-mix(in srgb, var(--tt-text-color) 50%, transparent));
+    background: transparent;
+    opacity: 0;
+    transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--tt-text-color) 8%, transparent);
+      color: var(--tt-text-primary);
+    }
+  }
+
+  // Reveal the button when its block is hovered. The drag-handle plugin toggles
+  // a visibility class/attribute on the handle element when a node is active;
+  // if yours uses a different mechanism, match it here. As a fallback, show on
+  // hover of the handle container itself.
+  &:hover &__button,
+  &.is-active &__button {
+    opacity: 1;
+  }
+}
