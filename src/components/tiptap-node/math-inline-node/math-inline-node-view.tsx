@@ -34,7 +34,7 @@ export function MathInlineNodeView(props: NodeViewProps) {
             {isEmpty ? (
               <span className="math-inline__placeholder">new equation</span>
             ) : (
-              <span style={{ opacity: 0.5, fontFamily: "monospace" }}>
+              <span style={{ opacity: 0.5, fontFamily: "monospace", cursor: 'pointer' }}>
                 {latex}
               </span>
             )}

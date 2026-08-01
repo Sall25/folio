@@ -72,7 +72,6 @@ import {
   Appendix,
   AppendixContent,
   AppendixSummary,
-  toLetters,
 } from "src/components/tiptap-node/appendix-node";
 import { PageComment } from "src/components/tiptap-node/page-comment-node";
 
@@ -176,25 +175,9 @@ export function useEditorExtensions(
 
       // --- TOC ---
       TableOfContents.configure({
-        anchorTypes: ["heading", "title", "appendixSummary"],
+        anchorTypes: ["heading", "title"],
         onUpdate: (content) => {
-          // Appendix summaries carry no `level` attr, and their "Appendix X: "
-          // prefix is a decoration the extension can't see — patch both here.
-          // Counting in content order matches the numbering plugin, since both
-          // follow document order.
-          let appendixIndex = 0;
-          const mapped = content.map((item) => {
-            if (item.node.type.name !== "appendixSummary") return item;
-            appendixIndex += 1;
-            const letter = toLetters(appendixIndex);
-            return {
-              ...item,
-              level: 2,
-              originalLevel: 2,
-              textContent: `Appendix ${letter}: ${item.textContent}`,
-            };
-          });
-          queueMicrotask(() => refsRef.current?.setTocContent(mapped));
+          queueMicrotask(() => refsRef.current?.setTocContent(content));
         },
       }),
       TocNode.configure({ topOffset: 80, maxShowCount: 20, showTitle: true }),

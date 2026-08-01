@@ -823,6 +823,8 @@ export type Version = {
   name: string | null;
 };
 
+export type Reactions = Record<string, ID[]>;
+
 export type Comment = {
   id: ID;
   threadId: ID;
@@ -830,6 +832,7 @@ export type Comment = {
   body: string;
   createdAt: CreatedAt;
   updatedAt: UpdatedAt;
+  reactions?: Reactions;
 };
 
 export type ThreadStatus =

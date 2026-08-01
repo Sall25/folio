@@ -27,8 +27,7 @@ export function draftNodeThread(
     id: threadId,
     pageId,
     anchor: { from, to },
-    status: "drafted", // node comments are born open (they'll get their first
-    // comment from the composer that opens with the thread)
+    status: "drafted", 
   });
 
   createThread(thread).then(() => {

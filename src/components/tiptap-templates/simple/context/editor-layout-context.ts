@@ -32,6 +32,8 @@ interface EditorLayoutContextValue {
   onDiscussionOpenChanged: (open: boolean) => void;
   sidebarView: "pages" | "inbox";
   setSidebarView: (v: "pages" | "inbox") => void;
+  commentDisplayMode: "sidebar" | "popover"; 
+  setCommentDisplayMode: (m: "sidebar" | "popover") => void;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
