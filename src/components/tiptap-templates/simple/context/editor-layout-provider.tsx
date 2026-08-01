@@ -53,7 +53,9 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
   const [expandedWidth, setExpandedWidth] = useState<number>(loadStoredWidth);
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   const [discussionOpen, setDiscussionOpen] = useState(false);
-  const [sidebarView, setSidebarView] = useState<"pages" | "inbox">("pages");
+  const [sidebarView, setSidebarView] = useState<"pages" | "inbox" | "trash">(
+    "pages",
+  );
   const [commentModeOverride, setCommentModeOverride] = useState<
     "sidebar" | "popover" | null
   >(null);

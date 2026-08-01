@@ -91,7 +91,9 @@ export function useTabPages(tabIds: ID[]) {
 // Teamspace-pages (category "Teamspaces") fall into the Teamspaces bucket like
 // any other root — a teamspace is just a page.
 export function usePageTree() {
-  const query = usePagesBase((pages) => pages);
+  const query = usePagesBase((pages) =>
+    pages.filter((p) => p.deletedAt == null),
+  );
 
   const pages = query.data;
 

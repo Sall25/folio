@@ -30,9 +30,9 @@ interface EditorLayoutContextValue {
   closePeek: () => void;
   discussionOpen: boolean;
   onDiscussionOpenChanged: (open: boolean) => void;
-  sidebarView: "pages" | "inbox";
-  setSidebarView: (v: "pages" | "inbox") => void;
-  commentDisplayMode: "sidebar" | "popover"; 
+  sidebarView: "pages" | "inbox" | "trash";
+  setSidebarView: (v: "pages" | "inbox" | "trash") => void;
+  commentDisplayMode: "sidebar" | "popover";
   setCommentDisplayMode: (m: "sidebar" | "popover") => void;
 }
 

@@ -584,6 +584,7 @@ export type Page = {
   generalAccessRole: PageRole;
 
   ownerId: ID | null;
+  deletedAt?: number | null;
 };
 
 /** Derived tree shape — built at read time from parentId, never stored. */

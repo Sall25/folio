@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { Card } from "src/components/tiptap-ui-primitive/card";
 import {
@@ -10,11 +9,10 @@ import { TrashIcon } from "src/components/tiptap-icons";
 import { Ellipsis, Plus, PencilIcon } from "lucide-react";
 import type { Page } from "src/types";
 import { useActivePage } from "./context/active-page-context";
-import { useDeletePage } from "src/hooks/use-delete-page";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { useRecentPages } from "src/hooks/use-pages";
 import { makeChildPage } from "src/utils/make-page";
-import { DeletePageDialog } from "./components/delete-page-dialog";
+import { trashPage } from "src/api/pages-trash";
 
 interface PageItemOptionsProps {
   page: Page;
@@ -29,11 +27,10 @@ export function PageItemOptions({
 }: PageItemOptionsProps) {
   const { setActivePageId, activePageId } = useActivePage();
   const createPage = useCreatePage();
-  const deletePage = useDeletePage();
-  const { data: recentPages } = useRecentPages();
-  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const handleConfirmDelete = () => {
+  const { data: recentPages } = useRecentPages();
+
+  const handleDeletePage = () => {
     // Deleting the page we're on: navigate away FIRST so the editor never
     // lingers on the doomed page, then fire the mutation.
     if (page.id === activePageId) {
@@ -42,8 +39,7 @@ export function PageItemOptions({
         setActivePageId(fallback.id);
       }
     }
-    deletePage.mutate(page.id);
-    setConfirmOpen(false);
+    trashPage(page.id);
   };
 
   return (
@@ -111,10 +107,8 @@ export function PageItemOptions({
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onOpenChange(false); // close the dropdown first
-                  // Let the popover's close commit before mounting the dialog, so the
-                  // dropdown doesn't hang open behind it.
-                  requestAnimationFrame(() => setConfirmOpen(true));
+                  onOpenChange(false);
+                  handleDeletePage();
                 }}
               >
                 <TrashIcon className="tiptap-button-icon" />
@@ -124,13 +118,6 @@ export function PageItemOptions({
           </Card>
         </PopoverContent>
       </Popover>
-
-      <DeletePageDialog
-        open={confirmOpen}
-        pageTitle={page.title}
-        onCancel={() => setConfirmOpen(false)}
-        onConfirm={handleConfirmDelete}
-      />
     </>
   );
 }

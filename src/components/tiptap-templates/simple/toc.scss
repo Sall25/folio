@@ -73,7 +73,7 @@
 
 /* ─── Hover card ─────────────────────────────────────── */
 .toc-sidebar__card {
-  box-shadow: none;
+  box-shadow: var(--tt-shadow-elevated-md);
   position: absolute;
   align-items: flex-start;
   justify-content: flex-start;

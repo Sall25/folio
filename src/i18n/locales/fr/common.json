@@ -23,6 +23,12 @@
   "creadtedBy": "Créé par",
   "editedBy": "Modifié par",
   "edited": "Modifié",
+  "trash.title": "Corbeille",
+  "trash.empty": "Vider",
+  "trash.restore": "Restaurer",
+  "trash.deleteForever": "Supprimer définitivement",
+  "trash.emptyState": "La corbeille est vide",
+  
   "sidebar": {
     "home": "Accueil",
     "search": "Rechercher",

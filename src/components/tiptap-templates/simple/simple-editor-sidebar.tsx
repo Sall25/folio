@@ -10,6 +10,7 @@ import {
   PenBox,
   ChevronsRight,
   Shapes,
+  Archive,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -56,6 +57,7 @@ import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { useNotifications } from "src/components/tiptap-ui/notification";
 import { InboxPanel } from "./components/inbox-panel";
 import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
+import { TrashPanel } from "./components/trash-panel";
 
 function User({ hovered }: { hovered: boolean }) {
   const { person } = useCurrentPerson();
@@ -279,7 +281,7 @@ function NavItems() {
   const { unreadCount } = useNotifications();
 
   const handleHomeClick = () => {
-    if (sidebarView === "inbox") {
+    if (sidebarView === "inbox" || sidebarView === "trash") {
       // Coming back from inbox — just show the tree, don't navigate.
       setSidebarView("pages");
     } else {
@@ -287,11 +289,17 @@ function NavItems() {
     }
   };
   const handleInboxClick = () => {
+    if (sidebarView === "inbox") return;
     setSidebarView("inbox");
   };
-  const handleLibraryClick = () => {
-    navigate({ to: "/library/Recents" });
+  const handleTrashClick = () => {
+    if (sidebarView === "trash") return;
+    setSidebarView("trash");
   };
+
+  // const handleLibraryClick = () => {
+  //   navigate({ to: "/library/Recents" });
+  // };
 
   const { open, onOpenChange } = useSearch();
 
@@ -334,24 +342,31 @@ function NavItems() {
         <Button
           variant="ghost"
           size="large"
-          // data-active-state={libraryOpen ? "on" : "off"}
-          onClick={handleLibraryClick}
+          data-active-state={sidebarView === "trash" ? "on" : "off"}
+          onClick={handleTrashClick}
           style={{
             fontWeight: 400,
-            color: "var(--tt-text-color)",
-            padding: 5,
-            minHeight: "fit-content",
-            height: "fit-content",
+            color: "var(--tt-text-primary)",
+            minHeight: 32,
+            height: 32,
             minWidth: "fit-content",
             width: "fit-content",
+            borderRadius: "var(--tt-radius-xl)",
           }}
-          tooltip={t("sidebar.library")}
+          tooltip={t("sidebar.trash")}
         >
-          <LibraryBig
-            size={32}
-            strokeWidth={1.8}
-            className="tiptap-button-icon"
-          />
+          <Archive size={32} strokeWidth={1.8} className="tiptap-button-icon" />
+          {sidebarView === "trash" && (
+            <>
+              <Spacer orientation="horizontal" size={2} />
+              <span
+                className="tiptap-button-text"
+                style={{ opacity: 1, display: "block" }}
+              >
+                {t("sidebar.trash")}
+              </span>
+            </>
+          )}
         </Button>
         <Button
           size="large"
@@ -662,6 +677,8 @@ export function SimpleEditorSidebar() {
             <div style={{ display: "contents" }}>
               {sidebarView === "inbox" ? (
                 <InboxPanel key={"inbox-panel"} />
+              ) : sidebarView === "trash" ? (
+                <TrashPanel key={"trash-panel"} />
               ) : (
                 <SidebarTree
                   key={"sidebar-tree"}

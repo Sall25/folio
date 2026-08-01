@@ -175,7 +175,7 @@ export function useEditorExtensions(
 
       // --- TOC ---
       TableOfContents.configure({
-        anchorTypes: ["heading", "title"],
+        anchorTypes: ["heading", "title", "appendixSummary"],
         onUpdate: (content) => {
           queueMicrotask(() => refsRef.current?.setTocContent(content));
         },

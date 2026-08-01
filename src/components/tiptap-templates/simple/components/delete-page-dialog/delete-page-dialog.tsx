@@ -60,7 +60,7 @@ export function DeletePageDialog({
           background: "var(--tt-card-bg-color)",
           border: "0.5px solid var(--tt-border-color)",
           borderRadius: "var(--tt-radius-lg)",
-          boxShadow: "0 12px 40px rgba(0, 0, 0, 0.18)",
+          boxShadow: "var(--tt-shadow-elavated-md)",
         }}
       >
         <div>
