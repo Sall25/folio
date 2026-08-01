@@ -1,71 +1,21 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { Plugin, PluginKey, TextSelection } from "@tiptap/pm/state";
-import { Decoration, DecorationSet } from "@tiptap/pm/view";
-import type { Node as PMNode } from "@tiptap/pm/model";
 import { AppendixView } from "./appendix-node-view";
 import "./appendix-node.scss";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     appendix: {
-      /** Insert an empty appendix block (open, cursor in the title). */
+      /** Insert an empty toggle block (open, cursor in the title). */
       insertAppendix: () => ReturnType;
+      /** Alias — reads better at call sites. */
+      insertToggle: () => ReturnType;
     };
   }
 }
 
-// A → B → … → Z → AA → AB …
-export function toLetters(n: number): string {
-  let s = "";
-  let x = n;
-  while (x > 0) {
-    const rem = (x - 1) % 26;
-    s = String.fromCharCode(65 + rem) + s;
-    x = Math.floor((x - 1) / 26);
-  }
-  return s;
-}
-
-// Walk the doc, letter each appendix in order, and decorate its summary
-// with an "Appendix X: " prefix widget. Numbering lives here — NOT in CSS
-// counters — so it can't be broken by stylesheet conflicts.
-function buildAppendixDecorations(doc: PMNode): DecorationSet {
-  const decorations: Decoration[] = [];
-  let index = 0;
-
-  doc.descendants((node, pos) => {
-    if (node.type.name !== "appendix") return true;
-    index += 1;
-    const letter = toLetters(index);
-
-    // Summary is the appendix's first child; its content starts at pos + 2
-    // (+1 into appendix, +1 into summary).
-    const summaryStart = pos + 2;
-    decorations.push(
-      Decoration.widget(
-        summaryStart,
-        () => {
-          const span = document.createElement("span");
-          span.className = "appendix-summary__prefix";
-          span.contentEditable = "false";
-          span.textContent = `Appendix ${letter}: `;
-          return span;
-        },
-        // side: -1 keeps the caret/typing to the RIGHT of the prefix, and
-        // key makes PM reuse the widget unless the letter itself changed.
-        { side: -1, key: `appendix-prefix-${letter}` },
-      ),
-    );
-    // Don't descend into the appendix — nested appendices aren't a thing
-    // (schema-wise they'd letter weirdly anyway), and skipping keeps this walk cheap.
-    return false;
-  });
-
-  return DecorationSet.create(doc, decorations);
-}
-
-// ── Summary: the heading line ("Interview Guide") ───────────────────────────
+// ── Summary: the toggle's title line ────────────────────────────────────────
 export const AppendixSummary = Node.create({
   name: "appendixSummary",
   content: "inline*",
@@ -111,7 +61,10 @@ export const AppendixContent = Node.create({
   },
 });
 
-// ── Wrapper: owns the open/closed state ─────────────────────────────────────
+// ── Wrapper: a Notion-style toggle. Owns the open/closed state. ──────────────
+// (Kept the node name "appendix" for backward-compat with existing documents
+// and the Hocuspocus schema; it now behaves and renders as a plain toggle —
+// free-text title, no auto-lettering.)
 export const Appendix = Node.create({
   name: "appendix",
   group: "block",
@@ -150,26 +103,29 @@ export const Appendix = Node.create({
   },
 
   addCommands() {
+    const insert =
+      () =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ({ chain }: any) =>
+        chain()
+          .insertContent({
+            type: this.name,
+            attrs: { open: true },
+            content: [
+              { type: "appendixSummary" },
+              { type: "appendixContent", content: [{ type: "paragraph" }] },
+            ],
+          })
+          .run();
     return {
-      insertAppendix:
-        () =>
-        ({ chain }) =>
-          chain()
-            .insertContent({
-              type: this.name,
-              attrs: { open: true },
-              content: [
-                { type: "appendixSummary" },
-                { type: "appendixContent", content: [{ type: "paragraph" }] },
-              ],
-            })
-            .run(),
+      insertAppendix: insert,
+      insertToggle: insert,
     };
   },
 
   addKeyboardShortcuts() {
     return {
-      // Enter in the title → open the appendix and jump into the body.
+      // Enter in the title → open the toggle and jump into the body.
       Enter: ({ editor }) => {
         const { state } = editor;
         const { $from } = state.selection;
@@ -189,8 +145,6 @@ export const Appendix = Node.create({
             open: true,
           });
         }
-        // appendixPos +1 enters appendix, +summary.nodeSize passes the title,
-        // +1 enters appendixContent, +1 enters its first block.
         const contentTextPos = appendixPos + 1 + summaryNode.nodeSize + 2;
         tr.setSelection(TextSelection.near(tr.doc.resolve(contentTextPos), 1));
         editor.view.dispatch(tr.scrollIntoView());
@@ -229,27 +183,12 @@ export const Appendix = Node.create({
   },
 
   addProseMirrorPlugins() {
+    // The appendix-lettering plugin ("Appendix A/B: " prefixes) is removed — a
+    // toggle has a free-text title. Only the auto-open guard remains, so the
+    // caret is never left inside collapsed (display:none) content.
     return [
-      // ── Numbering: decoration-based "Appendix A/B/C: " prefixes ─────────
       new Plugin({
-        key: new PluginKey("appendixNumbering"),
-        state: {
-          init: (_config, state) => buildAppendixDecorations(state.doc),
-          apply: (tr, old) =>
-            tr.docChanged ? buildAppendixDecorations(tr.doc) : old,
-        },
-        props: {
-          decorations(state) {
-            return this.getState(state);
-          },
-        },
-      }),
-
-      // ── Auto-open: if the selection lands inside a CLOSED appendix body
-      // (arrow keys, undo, programmatic selection), open it so the caret
-      // is never inside display:none content. ────────────────────────────
-      new Plugin({
-        key: new PluginKey("appendixAutoOpen"),
+        key: new PluginKey("toggleAutoOpen"),
         appendTransaction: (transactions, _oldState, newState) => {
           if (!transactions.some((tr) => tr.selectionSet || tr.docChanged)) {
             return null;

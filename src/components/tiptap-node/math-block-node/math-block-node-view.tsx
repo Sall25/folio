@@ -31,7 +31,14 @@ export function MathBlockNodeView(props: NodeViewProps) {
                 Add a TeX equation
               </span>
             ) : (
-              <span style={{ opacity: 0.5, fontFamily: "monospace" }}>
+              <span
+                style={{
+                  opacity: 0.5,
+                  fontFamily: "monospace",
+                  fontSize: "15px !important",
+                  lineHeight: 1.4,
+                }}
+              >
                 {latex}
               </span>
             )}

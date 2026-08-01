@@ -84,7 +84,10 @@ export function MathInlineNodeViewKatex({
             }}
           >
             {isEmpty ? (
-              <span className="math-inline__placeholder">new equation</span>
+              <span className="math-inline__placeholder">
+                <span className="math-inline__placeholder-icon">√x</span>
+                New equation
+              </span>
             ) : committed.error ? (
               <span className="math-inline__error">⚠</span>
             ) : (
@@ -95,32 +98,42 @@ export function MathInlineNodeViewKatex({
 
         <PopoverContent
           side="bottom"
-          align="center"
+          align="start"
           className="math-inline__pop"
         >
-          <div className="math-inline__preview">
-            {draft.trim() === "" ? (
-              <span className="math-inline__preview-empty">Preview</span>
-            ) : preview.error ? (
-              <span className="math-inline__error-text">{preview.error}</span>
-            ) : (
-              <span dangerouslySetInnerHTML={{ __html: preview.html }} />
-            )}
+          {draft.trim() !== "" && (
+            <div className="math-inline__preview">
+              {preview.error ? (
+                <span className="math-inline__error-text">{preview.error}</span>
+              ) : (
+                <span dangerouslySetInnerHTML={{ __html: preview.html }} />
+              )}
+            </div>
+          )}
+          <div className="math-inline__input-row">
+            <input
+              ref={inputRef}
+              className="math-inline__input"
+              value={draft}
+              spellCheck={false}
+              placeholder="E = mc^2"
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === "Escape") {
+                  e.preventDefault();
+                  close();
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="math-inline__done"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={close}
+            >
+              Done <kbd>↵</kbd>
+            </button>
           </div>
-          <input
-            ref={inputRef}
-            className="math-inline__input"
-            value={draft}
-            spellCheck={false}
-            placeholder="E = mc^2"
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === "Escape") {
-                e.preventDefault();
-                close();
-              }
-            }}
-          />
         </PopoverContent>
       </Popover>
     </NodeViewWrapper>

@@ -106,6 +106,7 @@ export const ImageUploadNodeView: React.FC<NodeViewProps> = (props) => {
           padding: "12px 14px 14px",
           width: "100%",
           maxWidth: 380,
+          boxShadow: "var(--tt-shadow-elevated-md)",
         }}
       >
         <div style={tabBarStyle}>

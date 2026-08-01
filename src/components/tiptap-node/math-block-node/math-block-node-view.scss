@@ -1,17 +1,16 @@
-// The √x placeholder trigger.
-.math-inline__placeholder {
+
+.math-block__placeholder {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 1px 6px;
-  border-radius: 4px;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: var(--tt-radius-md, 8px);
   color: var(--tt-text-color-subtle, color-mix(in srgb, var(--tt-text-color) 50%, transparent));
-  background: color-mix(in srgb, var(--tt-text-color) 6%, transparent);
+  background: color-mix(in srgb, var(--tt-text-color) 5%, transparent);
   cursor: pointer;
+  width: 100%;
 
-  &:hover {
-    background: color-mix(in srgb, var(--tt-text-color) 10%, transparent);
-  }
+  &:hover { background: color-mix(in srgb, var(--tt-text-color) 9%, transparent); }
 
   &-icon {
     font-family: "KaTeX_Main", serif;
@@ -20,9 +19,8 @@
   }
 }
 
-// The popover: dark card holding preview + input row.
-.math-inline__pop {
-  min-width: 420px;
+.math-block__pop {
+  min-width: 460px;
   max-width: 90vw;
   padding: 8px;
   border-radius: var(--tt-radius-lg, 12px);
@@ -30,46 +28,49 @@
   box-shadow: var(--tt-shadow-elevated-md);
 }
 
-.math-inline__preview {
-  padding: 10px 12px;
+.math-block__preview {
+  padding: 14px 12px;
   margin-bottom: 6px;
   border-radius: var(--tt-radius-md, 8px);
   background: color-mix(in srgb, var(--tt-text-color) 4%, transparent);
-  font-size: 16px;
-  min-height: 20px;
+  text-align: center;
+  min-height: 24px;
 }
 
-// Input + Done on one row (Notion style).
-.math-inline__input-row {
+.math-block__input-row {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 8px;
   padding: 6px 8px;
   border-radius: var(--tt-radius-md, 8px);
   background: var(--tt-bg-color) !important; //color-mix(in srgb, var(--tt-text-color) 8%, transparent);
 }
 
-.math-inline__input {
+.math-block__input {
   flex: 1;
   min-width: 0;
   border: none;
   background: transparent;
   outline: none;
+  resize: none;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: 14px;
+  line-height: 1.5;
   color: var(--tt-text-primary);
+  max-height: 160px;
+  overflow-y: auto;
 
   &::placeholder {
     color: var(--tt-text-color-subtle, color-mix(in srgb, var(--tt-text-color) 40%, transparent));
   }
 }
 
-.math-inline__done {
+.math-block__done {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   flex: 0 0 auto;
-  padding: 5px 12px;
+  padding: 6px 12px;
   border: none;
   border-radius: var(--tt-radius-md, 8px);
   background: var(--tt-brand-color-500, #2b7fff);
@@ -80,9 +81,9 @@
 
   &:hover { background: var(--tt-brand-color-600, #2563eb); }
 
-  kbd {
-    font-family: inherit;
-    font-size: 12px;
-    opacity: 0.85;
-  }
+  kbd { font-family: inherit; font-size: 12px; opacity: 0.85; }
+}
+
+.katex{
+  font-size: 18px;
 }

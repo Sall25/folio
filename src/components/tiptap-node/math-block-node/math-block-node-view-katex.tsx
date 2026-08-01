@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-// import "./math-block-node-view.scss";
+import "./math-block-node-view.scss";
 
 function renderKatex(latex: string): { html: string; error: string | null } {
   if (!latex.trim()) return { html: "", error: null };
@@ -37,23 +37,18 @@ export function MathBlockNodeViewKatex({
   const [draft, setDraft] = useState(latex);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Keep draft in sync when the popover (re)opens
   useEffect(() => {
     if (open) {
-      // setDraft(latex);
       requestAnimationFrame(() => textareaRef.current?.focus());
     }
   }, [open, latex]);
 
-  // Rendered output for the block itself (committed value)
   const committed = useMemo(() => renderKatex(latex), [latex]);
-  // Live preview inside the popover (draft value)
   const preview = useMemo(() => renderKatex(draft), [draft]);
 
   function commit() {
     if (draft !== latex) updateAttributes({ latex: draft });
   }
-
   function close() {
     commit();
     setOpen(false);
@@ -89,6 +84,7 @@ export function MathBlockNodeViewKatex({
           >
             {isEmpty ? (
               <span className="math-block__placeholder">
+                <span className="math-block__placeholder-icon">√x</span>
                 Add a TeX equation
               </span>
             ) : committed.error ? (
@@ -104,35 +100,45 @@ export function MathBlockNodeViewKatex({
           align="center"
           className="math-block__pop"
         >
-          <div className="math-block__preview">
-            {draft.trim() === "" ? (
-              <span className="math-block__preview-empty">Preview</span>
-            ) : preview.error ? (
-              <span className="math-block__error">{preview.error}</span>
-            ) : (
-              <span dangerouslySetInnerHTML={{ __html: preview.html }} />
-            )}
-          </div>
+          {draft.trim() !== "" && (
+            <div className="math-block__preview">
+              {preview.error ? (
+                <span className="math-block__error-text">{preview.error}</span>
+              ) : (
+                <span dangerouslySetInnerHTML={{ __html: preview.html }} />
+              )}
+            </div>
+          )}
 
-          <textarea
-            ref={textareaRef}
-            className="math-block__input"
-            value={draft}
-            spellCheck={false}
-            placeholder="E = mc^2"
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              // Enter commits & closes; Shift+Enter inserts a newline
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                close();
-              }
-              if (e.key === "Escape") {
-                e.preventDefault();
-                close();
-              }
-            }}
-          />
+          <div className="math-block__input-row">
+            <textarea
+              ref={textareaRef}
+              className="math-block__input"
+              value={draft}
+              spellCheck={false}
+              placeholder="E = mc^2"
+              rows={1}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  close();
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  close();
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="math-block__done"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={close}
+            >
+              Done <kbd>↵</kbd>
+            </button>
+          </div>
         </PopoverContent>
       </Popover>
     </NodeViewWrapper>

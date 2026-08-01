@@ -386,6 +386,12 @@ blockquote .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-chi
   > .is-empty[data-placeholder]:has(> .ProseMirror-trailingBreak:only-child)::before {
   left: 2.3rem;
 }
+.appendixContent{
+  &[data-placeholder]{
+    left: 2.3rem !important;
+  background-color: aqua;
+  }
+}
 
 .callout-root--no-icon
   > .callout-content

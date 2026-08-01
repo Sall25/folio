@@ -10,6 +10,9 @@ import { Chevron } from "src/components/tiptap-ui-primitive/chevron";
 export function AppendixView({ node, editor, getPos }: NodeViewProps) {
   const open: boolean = node.attrs.open;
 
+  // Show a "Toggle" placeholder when the title is empty (Notion style).
+  const summaryEmpty = node.child(0)?.content.size === 0;
+
   const toggle = useCallback(() => {
     const pos = getPos();
     if (typeof pos !== "number") return;
@@ -23,9 +26,6 @@ export function AppendixView({ node, editor, getPos }: NodeViewProps) {
         const nextOpen = !current.attrs.open;
         tr.setNodeMarkup(pos, undefined, { ...current.attrs, open: nextOpen });
 
-        // Collapsing while the caret is inside the body: move it to the end
-        // of the title so it isn't trapped in hidden content (and so the
-        // auto-open guard doesn't immediately undo the collapse).
         if (!nextOpen) {
           const { from } = state.selection;
           const inside = from > pos && from < pos + current.nodeSize;
@@ -42,16 +42,17 @@ export function AppendixView({ node, editor, getPos }: NodeViewProps) {
 
   return (
     <NodeViewWrapper
-      className={["appendix", open && "appendix--open"]
+      className={["appendix", "toggle-block", open && "appendix--open"]
         .filter(Boolean)
         .join(" ")}
+      data-empty={summaryEmpty ? "true" : "false"}
     >
       <Chevron
         className="appendix__caret"
         size="large"
         expanded={open}
         contentEditable={false}
-        aria-label={open ? "Collapse appendix" : "Expand appendix"}
+        aria-label={open ? "Collapse toggle" : "Expand toggle"}
         onMouseDown={(e) => e.preventDefault()}
         onClick={toggle}
       />
