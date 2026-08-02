@@ -32,6 +32,7 @@ import { useEditorLayout } from "./context/editor-layout-context";
 import { useIsMobile, useIsTablet } from "src/hooks/use-breakpoint";
 import { SharePanel } from "./components/share-panel";
 import { useRef, useState } from "react";
+import { usePageCapabilities } from "src/hooks/use-page-role";
 
 function Expand() {
   // const { t } = useTranslation();
@@ -58,7 +59,9 @@ function FavoriteToggle() {
   const { activePage, activePageId } = useActivePage();
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
 
-  if (!activePage) return null;
+  const { canEditContent, isLoading } = usePageCapabilities(activePageId);
+
+  if (!activePage || canEditContent || !isLoading) return null;
 
   // Favoriting only applies to a user's own private pages. Shared and teamspace
   // pages live in their section by their access model, not the owner's stars.
@@ -211,6 +214,8 @@ function TitleGroup({ view }: { view: View }) {
   const { t } = useTranslation();
   const { collapsed } = useEditorLayout();
 
+  const { canEditContent, isLoading } = usePageCapabilities(activePageId);
+
   return (
     <ToolbarGroup>
       {collapsed && <Expand />}
@@ -233,7 +238,7 @@ function TitleGroup({ view }: { view: View }) {
       )}
       <Breadcrumbs pageId={activePageId} />
 
-      {view !== "home" && activePage && (
+      {view !== "home" && activePage && canEditContent && !isLoading && (
         <PageCategorySelect
           value={activePage.category}
           onChange={(category) => {

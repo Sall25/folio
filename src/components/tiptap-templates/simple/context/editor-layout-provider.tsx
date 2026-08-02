@@ -198,6 +198,8 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
     leaveTimer.current = window.setTimeout(() => setPeekPhase("hidden"), 300);
   }, []);
 
+  const [sidebarHovered, setSidebarHovered] = useState(false);
+
   return (
     <EditorLayoutContext.Provider
       value={{
@@ -227,6 +229,8 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
         setSidebarView,
         commentDisplayMode,
         setCommentDisplayMode,
+        sidebarHovered,
+        setSidebarHovered,
       }}
     >
       {children}

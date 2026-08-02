@@ -13,6 +13,7 @@ import { TemplatesProvider } from "./components/tiptap-templates/simple/context/
 import { WorkspaceSettingsProvider } from "./components/tiptap-templates/simple/context/workspace-settings-provider";
 import { AuthGate } from "./components/tiptap-templates/simple/components/auth-gate";
 import { NotificationProvider } from "./components/tiptap-ui/notification";
+import { PageCapabilitiesProvider } from "./components/tiptap-templates/simple/context/page-capabilities-provider";
 const client = new QueryClient();
 
 function App() {
@@ -27,12 +28,14 @@ function App() {
                   <LibraryProvider>
                     <ActivePageProvider>
                       <WorkspaceSettingsProvider>
-                        <EditorProvider>
-                          <NotificationProvider>
-                            <SimpleEditorSidebar />
-                            <Outlet />
-                          </NotificationProvider>
-                        </EditorProvider>
+                        <PageCapabilitiesProvider>
+                          <EditorProvider>
+                            <NotificationProvider>
+                              <SimpleEditorSidebar />
+                              <Outlet />
+                            </NotificationProvider>
+                          </EditorProvider>
+                        </PageCapabilitiesProvider>
                       </WorkspaceSettingsProvider>
                     </ActivePageProvider>
                   </LibraryProvider>

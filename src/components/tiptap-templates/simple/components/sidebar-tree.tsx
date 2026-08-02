@@ -62,6 +62,7 @@ import {
   type SortMode,
 } from "../hooks/use-sidebar-order";
 import { PageRowSkeleton } from "./skeletons";
+import { useCurrentPerson } from "src/hooks/use-session";
 
 type DropZone = "before" | "after" | "inside";
 
@@ -130,12 +131,14 @@ function TreeRow({
   const page = node.page;
   const hasChildren = node.children.length > 0;
   const isExpanded = expandedIds.has(page.id);
+  const { person } = useCurrentPerson();
+  const isOwner = person?.id != null && page.ownerId === person.id;
 
   const {
     attributes,
     listeners,
     setNodeRef: setDragRef,
-  } = useDraggable({ id: page.id });
+  } = useDraggable({ id: page.id, disabled: !isOwner });
   const { setNodeRef: setDropRef } = useDroppable({ id: page.id });
 
   const setRefs = useCallback(
@@ -518,6 +521,7 @@ export function SidebarTree({
           DEFAULT_SECTION_ORDER.filter((c) => (tree[c]?.length ?? 0) === 0),
         ),
   );
+  const { person } = useCurrentPerson();
 
   // Built from the SORTED tree — reorder math needs the currently displayed
   // order, not raw tree order, so untouched siblings don't silently reshuffle
@@ -692,6 +696,8 @@ export function SidebarTree({
     }
 
     if (target.zone === "inside") {
+      const targetOwner = nodeById.get(target.pageId)?.page.ownerId;
+      if (targetOwner !== person?.id) return;
       onMovePage({ pageId, newParentId: target.pageId });
       const destCategory = categoryByPageId.get(target.pageId);
       if (destCategory) {

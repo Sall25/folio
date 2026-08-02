@@ -4,6 +4,7 @@ import CoverControlsGroup from "./cover-controls";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import { Bone } from "src/components/tiptap-ui-primitive/bone";
+import { usePageCapabilities } from "src/hooks/use-page-role";
 
 export default function CoverImage({
   page,
@@ -65,6 +66,8 @@ export default function CoverImage({
     [],
   );
 
+  const { canEditContent, isLoading } = usePageCapabilities(page.id);
+
   useEffect(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
@@ -124,7 +127,7 @@ export default function CoverImage({
         }}
       />
 
-      {showControls && (
+      {showControls && canEditContent && !isLoading && (
         <CoverControlsGroup
           page={page}
           btnPosition={btnPosition}

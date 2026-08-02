@@ -15,6 +15,7 @@ import { useActivePage } from "./context/active-page-context";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { makeChildPage } from "src/utils/make-page";
 import { Chevron } from "src/components/tiptap-ui-primitive/chevron";
+import { usePageCapabilities } from "src/hooks/use-page-role";
 
 interface PageItemProps {
   page: Page;
@@ -51,6 +52,8 @@ export function PageItem({
 
   const isActive = activePageId === page.id && !disableActive;
   const title = page.title || "New Page";
+
+  const { canEditContent } = usePageCapabilities(activePageId);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
@@ -94,24 +97,6 @@ export function PageItem({
         onMouseOver={() => setShouldShow(true)}
         onMouseLeave={() => setShouldShow(false)}
       >
-        {/* Every page is collapsible/expandable in tree contexts — chevron
-            renders leftmost, before the icon. Flat lists (Recents) pass
-            showChevron={false} since there's no hierarchy to expand. */}
-        {/* {showChevron && (
-          <>
-            <Chevron
-              expanded={expanded}
-              size="default"
-              variant="ghost"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleExpand?.(page.id);
-              }}
-            />
-            <Spacer orientation="horizontal" size={0.4} />
-          </>
-        )} */}
-
         {shouldShow ? (
           <Chevron
             expanded={expanded}
@@ -183,36 +168,38 @@ export function PageItem({
 
         {/* <Spacer orientation="horizontal" /> */}
 
-        <CardItemGroup
-          orientation="horizontal"
-          className="page-item-actions"
-          style={{ maxWidth: shouldShow ? "fit-content" : 0 }}
-        >
-          <PageItemOptions
-            onOpenChange={(v) => setShouldShow(v)}
-            page={page}
-            onRenameAsync={async () => setEditing(true)}
-          />
-          <Button
-            style={{
-              minWidth: 20,
-              width: 20,
-              minHeight: 20,
-              height: 20,
-              opacity: shouldShow ? 1 : 0,
-            }}
-            variant="ghost"
-            tooltip="New page"
-            onClick={async (e) => {
-              e.stopPropagation();
-              const child = makeChildPage(page, "New Page");
-              createPage.mutate(child);
-              setActivePageId(child.id);
-            }}
+        {canEditContent && (
+          <CardItemGroup
+            orientation="horizontal"
+            className="page-item-actions"
+            style={{ maxWidth: shouldShow ? "fit-content" : 0 }}
           >
-            <Plus size={12} className="tiptap-button-icon" />
-          </Button>
-        </CardItemGroup>
+            <PageItemOptions
+              onOpenChange={(v) => setShouldShow(v)}
+              page={page}
+              onRenameAsync={async () => setEditing(true)}
+            />
+            <Button
+              style={{
+                minWidth: 20,
+                width: 20,
+                minHeight: 20,
+                height: 20,
+                opacity: shouldShow ? 1 : 0,
+              }}
+              variant="ghost"
+              tooltip="New page"
+              onClick={async (e) => {
+                e.stopPropagation();
+                const child = makeChildPage(page, "New Page");
+                createPage.mutate(child);
+                setActivePageId(child.id);
+              }}
+            >
+              <Plus size={12} className="tiptap-button-icon" />
+            </Button>
+          </CardItemGroup>
+        )}
       </CardItemGroup>
     </div>
   );

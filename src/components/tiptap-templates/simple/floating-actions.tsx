@@ -13,6 +13,7 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import "./floating-actions.scss";
 import type { Page } from "src/types";
 import { useActivePage } from "./context/active-page-context";
+import { usePageCapabilities } from "src/hooks/use-page-role";
 
 export function FloatingActions({
   open,
@@ -31,11 +32,13 @@ export function FloatingActions({
   onAddCoverAsync: () => Promise<void>;
   providedPage?: Page;
 }) {
-  const { activePage } = useActivePage();
+  const { activePage, activePageId } = useActivePage();
   const page = providedPage ?? activePage;
 
   const hasIcon = !!page?.cover.iconName;
   const hasCover = !!page?.cover.coverImage;
+
+  const { canComment } = usePageCapabilities(activePageId);
 
   return (
     <div
@@ -79,15 +82,17 @@ export function FloatingActions({
         </Button>
       )}
 
-      <Button
-        variant="ghost"
-        onClick={() => {
-          document.dispatchEvent(new CustomEvent("folio:open-page-comment"));
-        }}
-      >
-        <MessageSquareText className="tiptap-button-icon" />
-        <span>Comment</span>
-      </Button>
+      {canComment && (
+        <Button
+          variant="ghost"
+          onClick={() => {
+            document.dispatchEvent(new CustomEvent("folio:open-page-comment"));
+          }}
+        >
+          <MessageSquareText className="tiptap-button-icon" />
+          <span className="tiptap-button-text">Comment</span>
+        </Button>
+      )}
     </div>
   );
 }

@@ -18,6 +18,7 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import { CoverHeaderSkeleton } from "src/components/tiptap-templates/simple/components/skeletons";
+import { usePageCapabilities } from "src/hooks/use-page-role";
 
 function IconButton({
   open,
@@ -76,6 +77,8 @@ function IconButton({
       ? "var(--tt-theme-text)"
       : cover.color;
 
+  const { canEditContent, isLoading } = usePageCapabilities(page.id);
+
   return (
     <div
       style={{
@@ -85,56 +88,96 @@ function IconButton({
         maxWidth: 400,
       }}
     >
-      <Popover open={open} onOpenChange={onOpenChange}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            className="cover-icon-btn"
-            style={{
-              fontSize: 60,
-              marginTop: hasCover ? -60 : 0,
-              color: iconColor,
-            }}
-          >
-            {cover.target === "Emoji" && cover.iconName}
-            {cover.target === "Icons" && cover.iconName && (
-              <DynamicIcon
-                name={cover.iconName}
-                size={95}
-                weight={500}
-                style={{ color: iconColor }}
+      {canEditContent && !isLoading ? (
+        <Popover
+          open={open}
+          onOpenChange={onOpenChange}
+          key={"page-icon-popover"}
+        >
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              className="cover-icon-btn"
+              style={{
+                fontSize: 60,
+                marginTop: hasCover ? -60 : 0,
+                color: iconColor,
+              }}
+            >
+              {cover.target === "Emoji" && cover.iconName}
+              {cover.target === "Icons" && cover.iconName && (
+                <DynamicIcon
+                  name={cover.iconName}
+                  size={95}
+                  weight={500}
+                  style={{ color: iconColor }}
+                />
+              )}
+              {cover.target === "Upload" && cover.iconName && (
+                <img
+                  src={cover.iconName}
+                  alt="icon"
+                  style={{
+                    width: 85,
+                    height: 85,
+                    objectFit: "contain",
+                    borderRadius: 4,
+                    display: "block",
+                  }}
+                />
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverPortal container={document.getElementById("root")}>
+            <PopoverContent
+              style={{ position: "fixed", zIndex: 999 }}
+              side="bottom"
+              align="start"
+            >
+              <IconPickerCard
+                target={target}
+                onTargetChange={onTargetChange}
+                onSelect={onSelectIconAsync}
+                onRemove={onRemoveIconAsync}
               />
-            )}
-            {cover.target === "Upload" && cover.iconName && (
-              <img
-                src={cover.iconName}
-                alt="icon"
-                style={{
-                  width: 85,
-                  height: 85,
-                  objectFit: "contain",
-                  borderRadius: 4,
-                  display: "block",
-                }}
-              />
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverPortal container={document.getElementById("root")}>
-          <PopoverContent
-            style={{ position: "fixed", zIndex: 999 }}
-            side="bottom"
-            align="start"
-          >
-            <IconPickerCard
-              target={target}
-              onTargetChange={onTargetChange}
-              onSelect={onSelectIconAsync}
-              onRemove={onRemoveIconAsync}
+            </PopoverContent>
+          </PopoverPortal>
+        </Popover>
+      ) : (
+        <Button
+          key={"page-icon-btn"}
+          variant="ghost"
+          className="cover-icon-btn"
+          style={{
+            fontSize: 60,
+            marginTop: hasCover ? -60 : 0,
+            color: iconColor,
+          }}
+        >
+          {cover.target === "Emoji" && cover.iconName}
+          {cover.target === "Icons" && cover.iconName && (
+            <DynamicIcon
+              name={cover.iconName}
+              size={95}
+              weight={500}
+              style={{ color: iconColor }}
             />
-          </PopoverContent>
-        </PopoverPortal>
-      </Popover>
+          )}
+          {cover.target === "Upload" && cover.iconName && (
+            <img
+              src={cover.iconName}
+              alt="icon"
+              style={{
+                width: 85,
+                height: 85,
+                objectFit: "contain",
+                borderRadius: 4,
+                display: "block",
+              }}
+            />
+          )}
+        </Button>
+      )}
     </div>
   );
 }

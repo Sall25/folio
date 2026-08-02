@@ -34,6 +34,8 @@ interface EditorLayoutContextValue {
   setSidebarView: (v: "pages" | "inbox" | "trash") => void;
   commentDisplayMode: "sidebar" | "popover";
   setCommentDisplayMode: (m: "sidebar" | "popover") => void;
+  sidebarHovered: boolean;
+  setSidebarHovered: (v: boolean) => void;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────

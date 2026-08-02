@@ -5,7 +5,6 @@ import {
   Store,
   LibraryBig,
   Sparkles,
-  LayoutTemplate,
   ChevronsLeft,
   PenBox,
   ChevronsRight,
@@ -58,9 +57,19 @@ import { useNotifications } from "src/components/tiptap-ui/notification";
 import { InboxPanel } from "./components/inbox-panel";
 import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
 import { TrashPanel } from "./components/trash-panel";
+import { Bone } from "./components/skeletons";
+
+function UserSkeleton() {
+  return (
+    <div className="sidebar-tree-skeleton__row">
+      <Bone width={13} height={13} rounded />
+      <Bone width={"62%"} height={10} pill />
+    </div>
+  );
+}
 
 function User({ hovered }: { hovered: boolean }) {
-  const { person } = useCurrentPerson();
+  const { person, isLoading } = useCurrentPerson();
   const { workspace } = useCurrentWorkspace();
 
   const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -73,6 +82,8 @@ function User({ hovered }: { hovered: boolean }) {
   const initial = wsName ? wsName.charAt(0).toUpperCase() : "?";
 
   const { unreadCount } = useNotifications();
+
+  if (isLoading) return <UserSkeleton />;
 
   return (
     <>
@@ -208,16 +219,13 @@ function WorkspaceFooter() {
 }
 
 function WorkspaceHeader() {
-  const [, setHide] = useState(true);
   const { t } = useTranslation();
-  const { collapseWithFloat, collapsed, onCollapsedChange } = useEditorLayout();
-  const [hovered, setHovered] = useState(false);
+  const { collapseWithFloat, collapsed, onCollapsedChange, sidebarHovered } =
+    useEditorLayout();
 
   return (
     <CardItemGroup
       orientation={collapsed ? "vertical" : "horizontal"}
-      onMouseLeave={() => setHide(true)}
-      onMouseOver={() => setHide(false)}
       style={{
         width: "100%",
         paddingLeft: !collapsed ? 2 : 0,
@@ -232,11 +240,9 @@ function WorkspaceHeader() {
           justifyContent: "flex-start",
           cursor: "pointer",
         }}
-        onMouseOver={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
       >
-        <User hovered={hovered} />
-        <Spacer size={1} orientation="horizontal" />
+        <User hovered={sidebarHovered} />
+        <Spacer orientation="horizontal" />
         {!collapsed ? (
           <Button
             variant="ghost"
@@ -246,11 +252,14 @@ function WorkspaceHeader() {
             style={{
               background: "transparent",
               padding: 0,
-              opacity: hovered ? 1 : 0,
+              opacity: sidebarHovered ? 1 : 0,
               transition: "opacity 0.12s ease",
             }}
           >
-            <ChevronsLeft className="tiptap-button-icon" />
+            <ChevronsLeft
+              className="tiptap-button-icon"
+              style={{ width: 28, height: 22 }}
+            />
           </Button>
         ) : (
           <Button
@@ -261,11 +270,14 @@ function WorkspaceHeader() {
             style={{
               background: "transparent",
               padding: 0,
-              opacity: hovered ? 1 : 0,
+              opacity: sidebarHovered ? 1 : 0,
               transition: "opacity 0.12s ease",
             }}
           >
-            <ChevronsRight className="tiptap-button-icon" />
+            <ChevronsRight
+              style={{ width: 28, height: 22 }}
+              className="tiptap-button-icon"
+            />
           </Button>
         )}
       </ButtonGroup>
@@ -476,28 +488,6 @@ function ShowcaseSection() {
   );
 }
 
-function TemplatesModalTrigger() {
-  const { onOpenChange } = useTemplates();
-  const { t } = useTranslation();
-  return (
-    <Button
-      size="large"
-      variant="ghost"
-      onClick={() => onOpenChange?.(true)}
-      style={{ width: "100%", justifyContent: "flex-start" }}
-    >
-      <LayoutTemplate className="tiptap-button-icon" />
-      <Spacer size={3} />
-      <span
-        style={{ opacity: 1, display: "block" }}
-        className="tiptap-button-text"
-      >
-        {t("templates.browse")}
-      </span>
-    </Button>
-  );
-}
-
 function LibraryPaletteTrigger() {
   const navigate = useNavigate();
   const handleLibraryClick = () => {
@@ -512,8 +502,7 @@ function LibraryPaletteTrigger() {
       style={{ width: "100%", justifyContent: "flex-start" }}
     >
       <LibraryBig className="tiptap-button-icon" />
-      <Spacer size={3} />
-      <span>Library</span>
+      <span className="tiptap-button-text">Library</span>
     </Button>
   );
 }
@@ -533,6 +522,7 @@ export function SimpleEditorSidebar() {
     closePeek,
     peekPhase: phase,
     sidebarView,
+    setSidebarHovered,
   } = useEditorLayout();
   const isMobile = mode === "mobile";
   const { tree, isPending, isLoading } = usePageTree();
@@ -587,8 +577,14 @@ export function SimpleEditorSidebar() {
       className={`sidebar ${collapsed ? "sidebar--collapsed" : ""} ${
         isMobile ? "sidebar-mobile" : ""
       } ${floatingActive ? "sidebar--floating" : ""}`}
-      onMouseEnter={() => !isMobile && collapsed && openPeek()}
-      onMouseLeave={() => !isMobile && closePeek()}
+      onMouseEnter={() => {
+        if (!isMobile && collapsed) openPeek();
+        setSidebarHovered(true);
+      }}
+      onMouseLeave={() => {
+        if (!isMobile) closePeek();
+        setSidebarHovered(false);
+      }}
       style={{
         zIndex: isMobile ? 950 : floatingActive ? 900 : 120,
         position: "fixed",
@@ -723,11 +719,7 @@ export function SimpleEditorSidebar() {
 
             {!peeking && (
               <>
-                <Spacer orientation="vertical" size={12} />
-
-                <Spacer orientation="vertical" size={1} />
-                <TemplatesModalTrigger />
-                <Spacer orientation="vertical" size={1} />
+                <Spacer orientation="vertical" size={10} />
                 <LibraryPaletteTrigger />
                 <Spacer orientation="vertical" size={25} />
               </>
@@ -735,9 +727,6 @@ export function SimpleEditorSidebar() {
           </>
         </CardBody>
       )}
-
-      {/* <Separator orientation="horizontal" style={{ height: 0.5 }} /> */}
-      {/* {!collapsed && <WorkSpaceFooter onCreatePage={onCreatePage} />} */}
 
       <WorkspaceFooter />
 

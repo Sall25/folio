@@ -13,6 +13,7 @@ import { useCreatePage } from "src/hooks/use-create-page";
 import { useRecentPages } from "src/hooks/use-pages";
 import { makeChildPage } from "src/utils/make-page";
 import { trashPage } from "src/api/pages-trash";
+import { usePageCapabilities } from "src/hooks/use-page-role";
 
 interface PageItemOptionsProps {
   page: Page;
@@ -28,6 +29,8 @@ export function PageItemOptions({
   const { setActivePageId, activePageId } = useActivePage();
   const createPage = useCreatePage();
 
+  const { canDeletePage } = usePageCapabilities(activePageId);
+
   const { data: recentPages } = useRecentPages();
 
   const handleDeletePage = () => {
@@ -41,6 +44,8 @@ export function PageItemOptions({
     }
     trashPage(page.id);
   };
+
+  if (!canDeletePage) return null;
 
   return (
     <>

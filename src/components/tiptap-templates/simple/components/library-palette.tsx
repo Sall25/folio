@@ -26,6 +26,8 @@ import { makePage } from "src/utils/make-page";
 import { useLibrary } from "../context/library-context";
 import { formatRelativeTime } from "src/utils/format-relative";
 import { FileIcon } from "src/components/tiptap-icons";
+import { usePersonNames } from "src/hooks/use-person-names";
+import { useCurrentPerson } from "src/hooks/use-session";
 export type LibraryTab = Exclude<PageCategory, "Template"> | "Recents";
 
 function Tabs({
@@ -117,6 +119,8 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
   const hasChildren = (children.data?.length ?? 0) > 0;
   const isOpen = expanded.has(page.id);
 
+  const personName = usePersonNames();
+
   return (
     <>
       <div
@@ -200,7 +204,9 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
 
       <div key={`${page.id}-author`} style={cellStyle}>
         <AvatarDemo />
-        <span style={{ ...dataStyle, fontWeight: 500 }}>Jule Sall</span>
+        <span style={{ ...dataStyle, fontWeight: 500 }}>
+          {page.ownerId ? personName(page.ownerId) : "Unknown"}
+        </span>
       </div>
 
       <div key={`${page.id}-date`} style={cellStyle}>
@@ -278,6 +284,7 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
   const { t } = useTranslation();
   const { data: pages } = usePages();
   const createPage = useCreatePage();
+  const { person } = useCurrentPerson();
   const { setActivePageId } = useActivePage();
   const { activeTab } = useLibrary();
   const [tab, setTab] = useState<LibraryTab>(activeTab ?? "Recents");
@@ -349,9 +356,11 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
               borderRadius: "var(--tt-radius-sm)",
             }}
             onClick={() => {
+              if (!person) return;
               const page = makePage({
                 title: t("page.newPage"),
                 parentId: null,
+                ownerId: person.id,
               });
               createPage
                 .mutateAsync(page)
@@ -384,9 +393,11 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
               <button
                 className="library-palette-content__new-btn"
                 onClick={() => {
+                  if (!person) return;
                   const page = makePage({
                     title: t("page.newPage"),
                     parentId: null,
+                    ownerId: person.id,
                   });
                   createPage
                     .mutateAsync(page)

@@ -10,7 +10,7 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { useTranslation } from "react-i18next";
 import { formatRelativeTime } from "src/utils/format-relative";
 import i18n from "src/i18n/config";
-import { useCurrentPerson } from "src/hooks/use-session";
+import { usePersonNames } from "src/hooks/use-person-names";
 
 // Re-render on an interval so "1m ago" advances on its own, no reload needed.
 function useNow(intervalMs = 30000) {
@@ -36,7 +36,7 @@ export default function EditedTimeButton({
   useNow();
   const editedAt = page.updatedAt ?? page.createdAt;
   const { t } = useTranslation();
-  const { person } = useCurrentPerson();
+  const personName = usePersonNames();
 
   return (
     <Popover>
@@ -70,8 +70,11 @@ export default function EditedTimeButton({
           </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end">
-        <PageActivity page={page} authorName={person?.name ?? "Unknown"} />
+      <PopoverContent>
+        <PageActivity
+          page={page}
+          authorName={page.ownerId ? personName(page.ownerId) : "Unknown"}
+        />
       </PopoverContent>
     </Popover>
   );

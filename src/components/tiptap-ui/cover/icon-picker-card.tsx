@@ -51,7 +51,8 @@ export function IconPickerCard({
         minHeight: 40,
         maxWidth: 380,
         overflow: "hidden",
-        boxShadow: "var(--tt-shadow-elevated-sm)",
+        border: "1px solid var(--tt-border-color)",
+        boxShadow: "var(--tt-shadow-elevated-md)",
       }}
     >
       <Tabs target={target} onActive={handleTargetChange} />

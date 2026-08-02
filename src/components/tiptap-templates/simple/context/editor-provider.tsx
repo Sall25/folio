@@ -25,6 +25,7 @@ import { EditorSyncContext } from "./editor-sync-context"; // adjust path
 import { useCreatePage } from "src/hooks/use-create-page";
 import { makePage } from "src/utils/make-page";
 import { useScrollToPendingTarget } from "../components/inbox-panel";
+import { usePageCapabilities } from "src/hooks/use-page-role";
 
 // Exactly the array type useEditorExtensions produces — derived so it can't
 // drift from the real return, whatever member types are in it (one of them
@@ -184,6 +185,11 @@ function EditorInstance({
     // No `content` — Collaboration reads initial content from the Y.Doc,
     // which useCollabDoc has already seeded (or is genuinely empty/new).
   });
+
+  const { canEditContent, isLoading } = usePageCapabilities(page.id);
+  useEffect(() => {
+    editor.setEditable(canEditContent && !isLoading);
+  }, [editor, canEditContent, isLoading]);
 
   useScrollToPendingTarget(editor, page.id);
 
