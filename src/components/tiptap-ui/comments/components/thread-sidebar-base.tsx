@@ -324,7 +324,6 @@ export function ThreadSidebarBase({
           anchor: { from, to },
           status: "drafted",
         });
-        console.log("CREATE newThread anchor:", newThread.anchor);
         createThread.mutate(newThread);
       }
     };

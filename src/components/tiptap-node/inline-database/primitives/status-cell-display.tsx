@@ -27,7 +27,8 @@ export function StatusCellDisplay({
   const [open, setOpen] = useState(false);
 
   const allItems = (groups ?? []).flatMap((g) => g.items);
-  const selectedItem = allItems.find((item) => item.id === value) ?? null;
+  const selectedItem =
+    allItems.find((item) => item.id === value) ?? allItems[0];
 
   const q = search.trim().toLowerCase();
   const filteredGroups = (groups ?? [])

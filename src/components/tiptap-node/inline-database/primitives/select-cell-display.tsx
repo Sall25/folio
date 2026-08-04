@@ -13,6 +13,7 @@ interface SelectCellDisplayProps {
   options: SelectOption[];
   onChange?: (option: SelectOption) => void;
   readonly?: boolean;
+  placeholder?: string;
 }
 
 /**
@@ -27,6 +28,7 @@ export function SelectCellDisplay({
   options,
   onChange,
   readonly = false,
+  placeholder = "Empty",
 }: SelectCellDisplayProps) {
   const displayed = value ?? null;
 
@@ -39,13 +41,14 @@ export function SelectCellDisplay({
       <span className="select-badge__label">{displayed.label}</span>
     </button>
   ) : (
-    <button
-      type="button"
-      className="select-badge select-badge--empty"
-      contentEditable={false}
+    <span
+      className={`db-cell-text__display${
+        value ? "" : " db-cell-text__display--empty"
+      }`}
+      style={{ paddingLeft: 5 }}
     >
-      <span className="select-badge__label">Empty</span>
-    </button>
+      {placeholder}
+    </span>
   );
 
   if (readonly || !onChange) return trigger;

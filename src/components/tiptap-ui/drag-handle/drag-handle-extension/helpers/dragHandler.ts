@@ -69,10 +69,7 @@ function getDragHandleRanges(
   const topPos = $resolved.before(1); // position before the depth-1 ancestor
   const topNode = doc.nodeAt(topPos);
 
-  console.log("handle ranges empty");
   if (!topNode) return [];
-
-  console.log("topNode", topNode);
 
   const $from = doc.resolve(topPos);
   const $to = doc.resolve(topPos + topNode.nodeSize);
@@ -84,7 +81,6 @@ export function dragHandler(event: DragEvent, editor: Editor) {
   const { view } = editor;
 
   if (!event.dataTransfer) {
-    console.log("return from dragHandler");
     return;
   }
 

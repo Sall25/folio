@@ -12,8 +12,8 @@ import { useActivePage } from "./context/active-page-context";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { useRecentPages } from "src/hooks/use-pages";
 import { makeChildPage } from "src/utils/make-page";
-import { trashPage } from "src/api/pages-trash";
 import { usePageCapabilities } from "src/hooks/use-page-role";
+import { useTrashPage } from "src/hooks/use-trash-page";
 
 interface PageItemOptionsProps {
   page: Page;
@@ -32,6 +32,8 @@ export function PageItemOptions({
   const { canDeletePage } = usePageCapabilities(activePageId);
 
   const { data: recentPages } = useRecentPages();
+
+  const { mutate: trashPage } = useTrashPage();
 
   const handleDeletePage = () => {
     // Deleting the page we're on: navigate away FIRST so the editor never
@@ -112,8 +114,8 @@ export function PageItemOptions({
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onOpenChange(false);
                   handleDeletePage();
+                  onOpenChange(false);
                 }}
               >
                 <TrashIcon className="tiptap-button-icon" />

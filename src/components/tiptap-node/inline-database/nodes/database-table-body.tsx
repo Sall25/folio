@@ -32,7 +32,6 @@ const EMPTY_PLACEHOLDER_ROWS = 3;
 interface Props {
   tableRef: React.RefObject<HTMLDivElement | null>;
   locked: boolean;
-  hovered: boolean;
 
   visibleProperties: DatabaseProperty[];
   allProperties: DatabaseProperty[];
@@ -65,7 +64,7 @@ interface Props {
 export function DatabaseTableBody({
   tableRef,
   locked,
-  // hovered,
+
   visibleProperties,
   allProperties,
   activeView,
@@ -260,10 +259,14 @@ export function DatabaseTableBody({
           <Button
             variant="ghost"
             style={{
+              background: "transparent",
               justifyContent: "flex-start",
               borderRadius: "var(--tt-radius-sm)",
               color: "var(--tt-text-secondary)",
-              fontSize: 13,
+              fontSize: 14,
+              lineHeight: 1.4,
+              cursor: "pointer",
+              fontWeight: 400,
             }}
             onClick={onNewRecord}
           >

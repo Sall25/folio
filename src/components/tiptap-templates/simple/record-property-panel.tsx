@@ -89,7 +89,7 @@ function PropertyRow({
       case "number":
         return (
           <NumberCellDisplay
-            value={(value as CellValueMap["number"]) ?? null}
+            value={(value as CellValueMap["number"]) ?? 0}
             format={prop.config.format}
             prefix={prop.config.prefix}
             suffix={prop.config.suffix}
@@ -98,6 +98,7 @@ function PropertyRow({
             // which doesn't exist here — a single record has no column.
             showAs="number"
             onChange={(v) => onChange(v as CellValue)}
+            align="left"
           />
         );
 
@@ -113,7 +114,10 @@ function PropertyRow({
       case "status":
         return (
           <StatusCellDisplay
-            value={value as CellValueMap["status"]}
+            value={
+              (value as CellValueMap["status"]) ??
+              prop.config.groups.flatMap((g) => g.items)[0].name
+            }
             groups={prop.config.groups}
             onChange={(item) => onChange(item.id)}
           />
@@ -200,7 +204,6 @@ function PropertyRow({
   return (
     <div
       className="record-prop-panel__row"
-      onClick={() => console.log("[panel row] clicked", prop.name)}
     >
       <div className="record-prop-panel__label">
         <DynamicIcon

@@ -5,7 +5,7 @@
   --cv-bg: var(--tt-gray-light-50);
 }
 .dark{
-  --cv-bg: var(--tt-gray-dark-50);
+  --cv-bg: var(--tt-gray-dark-100);
 }
 
 .cv {
@@ -16,11 +16,14 @@
   gap: 2px;
   font-size: 12px;
   color: var(--tt-text-color);
-  background-color: var(--tt-card-bg-color);
+  background-color: var(--cv-bg);
   border: 1px solid var(--tt-border-color);
   border-radius: var(--tt-radius-lg);
   z-index: 99999;
   overflow-y: auto;
+  box-shadow: var(--tt-shadow-elevated-md);
+
+  scrollbar-width: thin;
 
   &-hint {
     font-size: 11px;

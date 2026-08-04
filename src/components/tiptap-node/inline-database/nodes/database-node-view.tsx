@@ -71,6 +71,7 @@ import {
   NONE_KEY,
   valueForGroupKey,
 } from "../utils/group-records";
+import { useWhyDidYouRender } from "src/lib/useWhyDidYouRender";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -110,7 +111,6 @@ export function DatabaseNodeView({
   const { data: dbPage } = usePage(dbPageId);
 
   const tableRef = useRef<HTMLDivElement>(null);
-  const [hovered, setHovered] = useState(false);
 
   // ── View switching ────────────────────────────────────────────────────────
   // Switching views shows a skeleton because mounting board/gallery/calendar is
@@ -344,6 +344,35 @@ export function DatabaseNodeView({
     prevCountsRef.current = { filters: filterRuleCount, sorts: sortCount };
   }, [filterRuleCount, sortCount]);
 
+  // ── DEBUG: what changes each render? Remove once the loop is found. ────────
+  useWhyDidYouRender("db-inputs", {
+    updateAttributes,
+    source,
+    updatePropertiesAsync,
+    attrs,
+    node,
+  });
+  useWhyDidYouRender("database-node-view", {
+    node,
+    attrs,
+    source,
+    activeView,
+    resolvedRecords,
+    sortedRecords,
+    rowSlots,
+    headers,
+    collapsedKeys,
+    visibleSelection,
+    selectedRecords,
+    db,
+    dbWithSwitch,
+    switchingTo,
+
+    showFilterChips,
+    showSortChips,
+    resolvedTitle,
+  });
+
   // ── No source yet → picker ────────────────────────────────────────────────
   if (!attrs.sourceId) {
     return (
@@ -434,11 +463,7 @@ export function DatabaseNodeView({
 
   // ── Chrome wrapper shared by every view ───────────────────────────────────
   const chrome = (body: React.ReactNode) => (
-    <NodeViewWrapper
-      className="db-node"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
+    <NodeViewWrapper className="db-node">
       <DatabaseProvider
         attrs={attrs}
         // Switch-aware db so view tabs anywhere downstream trigger the skeleton.
@@ -483,7 +508,6 @@ export function DatabaseNodeView({
               db={dbWithSwitch}
               onUpdateAttributes={updateAttributes}
               locked={locked}
-              hovered={hovered}
               title={resolvedTitle}
               hideTitle={attrs.hideTitle}
               onTitleChange={handleTitleChange}
@@ -604,7 +628,6 @@ export function DatabaseNodeView({
     <DatabaseTableBody
       tableRef={tableRef}
       locked={locked}
-      hovered={hovered}
       visibleProperties={visibleProperties}
       allProperties={source.properties}
       activeView={activeView}

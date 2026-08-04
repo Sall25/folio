@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type {
   ID,
   PropertyType,
@@ -8,89 +8,6 @@ import type {
 } from "src/types";
 import type { FilterRule } from "src/types/filter-types";
 import { DEFAULT_CONFIGS } from "src/types";
-
-// function defaultConfigFor(type: PropertyType): PropertyConfig {
-//   switch (type) {
-//     case "number":
-//       return { type: "number", format: "number" };
-//     case "select":
-//       return { type: "select", options: [] };
-//     case "multi_select":
-//       return { type: "multi_select", options: [] };
-//     case "status":
-//       // Was `groups: []` — a status property with no groups can never have a
-//       // value, so every cell reads "No status" and the dropdown is empty.
-//       return {
-//         type: "status",
-//         groups: [
-//           {
-//             id: "todo",
-//             label: "To do",
-//             items: [
-//               {
-//                 id: "not-started",
-//                 name: "Not started",
-//                 color: "gray",
-//                 isDefault: true,
-//               },
-//             ],
-//           },
-//           {
-//             id: "in_progress",
-//             label: "In progress",
-//             items: [
-//               {
-//                 id: "in-progress",
-//                 name: "In progress",
-//                 color: "blue",
-//                 isDefault: false,
-//               },
-//             ],
-//           },
-//           {
-//             id: "done",
-//             label: "Done",
-//             items: [
-//               { id: "done", name: "Done", color: "green", isDefault: false },
-//             ],
-//           },
-//         ],
-//       };
-//     case "date":
-//       return {
-//         type: "date",
-//         format: "short",
-//         timeFormat: "12h",
-//         includeTime: false,
-//       };
-//     case "person":
-//       return {
-//         type: "person",
-//         limit: "no-limit",
-//         default: "no-default",
-//         notifications: "users-only",
-//       };
-//     case "formula":
-//       return { type: "formula", expression: "" };
-//     case "relation":
-//       return {
-//         type: "relation",
-//         targetSourceId: "",
-//         mirrorPropertyId: null,
-//         showOnTarget: false,
-//       };
-//     case "rollup":
-//       return {
-//         type: "rollup",
-//         relationPropertyId: "",
-//         targetPropertyId: "",
-//         aggregation: "count",
-//       };
-//     default:
-//       // title, text, checkbox, url, email, phone, created_*, edited_* — config is just { type }
-//       return { type } as PropertyConfig;
-//   }
-// }
 
 export function useDatabaseProperties(
   attrs: DatabaseAttrs,
@@ -274,21 +191,40 @@ export function useDatabaseProperties(
     [viewById],
   );
 
-  return {
-    addProperty,
-    deleteProperty,
-    updateProperty,
-    reorderProperties,
-    duplicateProperty,
-    freezeProperty,
-    toggleUnwrapProperty,
-    hideProperty,
-    showProperty,
-    sortByProperty,
-    removeSortByProperty,
-    filterByProperty,
-    groupByProperty,
-    isFrozen,
-    isUnwrapped,
-  };
+  return useMemo(
+    () => ({
+      addProperty,
+      deleteProperty,
+      updateProperty,
+      reorderProperties,
+      duplicateProperty,
+      freezeProperty,
+      toggleUnwrapProperty,
+      hideProperty,
+      showProperty,
+      sortByProperty,
+      removeSortByProperty,
+      filterByProperty,
+      groupByProperty,
+      isFrozen,
+      isUnwrapped,
+    }),
+    [
+      addProperty,
+      deleteProperty,
+      updateProperty,
+      reorderProperties,
+      duplicateProperty,
+      freezeProperty,
+      toggleUnwrapProperty,
+      hideProperty,
+      showProperty,
+      sortByProperty,
+      removeSortByProperty,
+      filterByProperty,
+      groupByProperty,
+      isFrozen,
+      isUnwrapped,
+    ],
+  );
 }

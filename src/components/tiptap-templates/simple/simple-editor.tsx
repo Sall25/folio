@@ -5,7 +5,8 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { useIsMutating } from "@tanstack/react-query";
 
 // --- Providers ---
-import { ToastProvider } from "src/components/tiptap-ui/copy-toast";
+import { ToastProvider as CopyToastProvider } from "src/components/tiptap-ui/copy-toast";
+import { ToastProvider } from "./components/toast";
 import { TocProvider } from "src/components/tiptap-node/toc-node/toc-provider";
 
 // --- Hooks ---
@@ -187,24 +188,26 @@ function SimpleEditorInner({ view }: { view: View }) {
   return (
     <div className="simple-editor-wrapper">
       <ToastProvider>
-        <SimpleEditorToolbar
-          view={view}
-          toolbarRef={toolbarRef as RefObject<HTMLDivElement>}
-          isMobile={isMobile}
-          mobileView={mobileView}
-          height={height}
-          rectY={0}
-          onMobileViewChange={setMobileView}
-          sidebarWidth={sidebarWidth}
-          versionSidebarWidth={versionWidth}
-          onTriggerVersionHistory={() => onVersionHistoryOpenChanged(true)}
-        />
-        <SimpleEditorMain view={view} />
-        {isCreatingPage && (
-          <div className="editor-skeleton-overlay">
-            <EditorContentSkeletonFull />
-          </div>
-        )}
+        <CopyToastProvider>
+          <SimpleEditorToolbar
+            view={view}
+            toolbarRef={toolbarRef as RefObject<HTMLDivElement>}
+            isMobile={isMobile}
+            mobileView={mobileView}
+            height={height}
+            rectY={0}
+            onMobileViewChange={setMobileView}
+            sidebarWidth={sidebarWidth}
+            versionSidebarWidth={versionWidth}
+            onTriggerVersionHistory={() => onVersionHistoryOpenChanged(true)}
+          />
+          <SimpleEditorMain view={view} />
+          {isCreatingPage && (
+            <div className="editor-skeleton-overlay">
+              <EditorContentSkeletonFull />
+            </div>
+          )}
+        </CopyToastProvider>
       </ToastProvider>
     </div>
   );

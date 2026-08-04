@@ -53,11 +53,9 @@ function onMove(e: PointerEvent) {
   if (!dragging) {
     if (Math.abs(e.clientY - startY) < DRAG_THRESHOLD) return;
     dragging = true;
-    console.log("[dragselect] drag started");
     document.body.classList.add("db-row-dragselect");
   }
   const i = indexAtY(e.clientY);
-  console.log("[dragselect] move", e.clientY, "→ index", i);
   if (i !== null) apply(i);
 }
 
@@ -99,7 +97,6 @@ export function beginRowDragSelect(
   e: React.PointerEvent,
 ) {
   const grid = rowEl?.closest(".db-node-grid") as HTMLElement | null;
-  console.log("[dragselect] down", { rowEl, grid, recordId });
   if (!grid) return console.warn("[dragselect] no grid — selector wrong");
 
   e.preventDefault();
@@ -107,7 +104,6 @@ export function beginRowDragSelect(
 
   rows = measureRows(grid);
   const index = rows.findIndex((r) => r.id === recordId);
-  console.log("[dragselect] rows", rows.length, "index", index);
   if (index === -1) return console.warn("[dragselect] row not in measured set");
 
   // const grid = rowEl?.closest(".db-node-grid") as HTMLElement | null;

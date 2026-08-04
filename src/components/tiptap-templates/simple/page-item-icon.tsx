@@ -5,9 +5,14 @@ import type { CSSProperties } from "react";
 interface PageItemIconProps {
   cover: Page["cover"];
   styles?: CSSProperties;
+  usePrimaryColor?: boolean;
 }
 
-export function PageItemIcon({ cover, styles }: PageItemIconProps) {
+export function PageItemIcon({
+  cover,
+  styles,
+  usePrimaryColor,
+}: PageItemIconProps) {
   const hasIcon = Boolean(cover.iconName);
 
   if (cover.target === "Emoji" && hasIcon) {
@@ -41,9 +46,9 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
         ) : (
           <DynamicIcon
             name="description"
-            size={20}
+            size={21}
             weight={400}
-            filled={true}
+            filled={false}
             style={{
               color:
                 !cover.color || cover.color === "var(--tt-text-color)"
@@ -60,11 +65,13 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
     <span className="page-icon" style={{ ...styles }} aria-hidden="true">
       <DynamicIcon
         name="description"
-        size={20}
+        size={21}
         weight={400}
-        filled={true}
+        filled={false}
         style={{
-          color: "var(--tt-text-color)",
+          color: usePrimaryColor
+            ? "var(--tt-text-primary)"
+            : "var(--tt-text-color)",
         }}
       />
     </span>

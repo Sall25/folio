@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
 interface DeletePageDialogProps {
   open: boolean;
@@ -64,37 +66,52 @@ export function DeletePageDialog({
         }}
       >
         <div>
-          <h2
-            id="delete-page-title"
-            style={{
-              margin: 0,
-              fontSize: 15,
-              fontWeight: 600,
-              color: "var(--tt-text-primary)",
-            }}
-          >
-            Delete this page?
-          </h2>
           <p
             id="delete-page-desc"
             style={{
               margin: "8px 0 0",
-              fontSize: 13,
-              lineHeight: 1.5,
-              color: "var(--tt-text-secondary)",
+              fontSize: 16,
+              lineHeight: 1.4,
+              textAlign: "center",
+              color: "var(--tt-text-primary)",
             }}
           >
+            Are you sure you want to permanently delete{" "}
             <strong
-              style={{ color: "var(--tt-text-primary)", fontWeight: 600 }}
+              style={{ color: "var(--tt-brand-color-400)", fontWeight: 600 }}
             >
               {pageTitle || "Untitled"}
             </strong>{" "}
-            and everything inside it will be permanently deleted. This can't be
-            undone.
+            ?
           </p>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+        <CardItemGroup orientation="vertical">
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              onConfirm();
+            }}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "var(--tt-radius-md)",
+
+              border: "1px solid var(--tt-color-text-red, #ef4444)",
+              color: "var(--tt-color-text-red)",
+
+              background: "transparent",
+              cursor: "pointer",
+            }}
+          >
+            <span
+              className="tiptap-button-text"
+              style={{ fontWeight: 500, textAlign: "center" }}
+            >
+              {" "}
+              Permanently delete
+            </span>
+          </Button>
+          <Spacer orientation="vertical" size={5} />
           <Button
             variant="ghost"
             onClick={(e) => {
@@ -105,25 +122,12 @@ export function DeletePageDialog({
               padding: "6px 14px",
               borderRadius: "var(--tt-radius-md)",
               color: "var(--tt-text-primary)",
+              border: "1px solid var(--tt-border-color)",
             }}
           >
             Cancel
           </Button>
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              onConfirm();
-            }}
-            style={{
-              padding: "6px 14px",
-              borderRadius: "var(--tt-radius-md)",
-              background: "var(--tt-danger-color, #ef4444)",
-              color: "#fff",
-            }}
-          >
-            Delete
-          </Button>
-        </div>
+        </CardItemGroup>
       </div>
     </div>,
     document.body,

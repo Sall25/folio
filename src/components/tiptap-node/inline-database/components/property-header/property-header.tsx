@@ -286,8 +286,8 @@ export function PropertyHeader({
         fallback={typeIconName}
         color={prop.iconColor}
         className="tiptap-button-icon"
-        filled={false}
-        size={22}
+        filled={true}
+        size={20}
       />
       <span className="tiptap-button-text">{prop.name}</span>
     </Button>

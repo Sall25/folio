@@ -19,6 +19,7 @@ interface DateCellDisplayProps {
   includeTime?: boolean;
   onChange?: (iso: string) => void;
   readonly?: boolean;
+  placeholder?: string;
 }
 
 function formatForCell(
@@ -57,6 +58,7 @@ export function DateCellDisplay({
   includeTime = false,
   onChange,
   readonly = false,
+  placeholder = "Empty",
 }: DateCellDisplayProps) {
   const [draft, setDraft] = useState<Date | undefined>(
     value ? new Date(value) : undefined,
@@ -78,14 +80,24 @@ export function DateCellDisplay({
         justifyContent: "flex-start",
         fontSize: 14,
         fontWeight: 400,
-        lineHeight: 1.5,
+        lineHeight: 1.4,
         color: "var(--tt-text-cell)",
         minWidth: 100,
+        minHeight: 34,
+        // minHeight: "inherit",
+        margin: 0,
         padding: 0,
+        paddingTop: 2,
       }}
     >
-      <span className="tiptap-button-text">
-        {value ? formatForCell(date, format, timeFormat, includeTime) : ""}
+      <span
+        className={`tiptap-button-text db-cell-text__display${
+          value ? "" : " db-cell-text__display--empty"
+        }`}
+      >
+        {value
+          ? formatForCell(date, format, timeFormat, includeTime)
+          : placeholder}
       </span>
     </Button>
   );

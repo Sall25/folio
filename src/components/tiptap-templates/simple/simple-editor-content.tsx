@@ -37,9 +37,6 @@ function useWhyDidYouRender(name: string, props: Record<string, unknown>) {
         changes[key] = { from: prev.current[key], to: props[key] };
       }
     });
-    if (Object.keys(changes).length) {
-      console.log(`[${name}] re-render caused by:`, changes);
-    }
     prev.current = props;
   });
 }
@@ -186,8 +183,6 @@ const StableShell = React.memo(function StableShell() {
     onAddCoverAsync,
     floatingRef,
   });
-
-  console.log("commentDisplayMode:", commentDisplayMode, "mode:", mode);
 
   return (
     <>

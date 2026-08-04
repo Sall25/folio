@@ -124,7 +124,6 @@ export default function DatabaseRecordNodeView({
               aria-label="Select record"
               draggable={false}
               onPointerDown={(e) => {
-                console.log("[dragselect] input pointerdown");
                 beginRowDragSelect(databaseId!, recordId!, wrapperEl, e);
               }}
               onMouseDown={(e) => e.stopPropagation()}

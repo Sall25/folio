@@ -1,0 +1,29 @@
+.network-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: var(--tt-radius-md, 6px);
+  font-size: 12px;
+  font-weight: 500;
+  user-select: none;
+  cursor: default;
+
+  &__label { white-space: nowrap; }
+
+  &--online {
+    color: var(--tt-color-green-base, #17b26a);
+    background: color-mix(in srgb, var(--tt-color-green-base, #17b26a) 12%, transparent);
+  }
+
+  &--unstable {
+    color: var(--tt-color-yellow-base, #f79009);
+    background: color-mix(in srgb, var(--tt-color-yellow-base, #f79009) 14%, transparent);
+  }
+
+  &--offline {
+    color: var(--tt-color-red-base, #f04438);
+    background: color-mix(in srgb, var(--tt-color-red-base, #f04438) 14%, transparent);
+  }
+}

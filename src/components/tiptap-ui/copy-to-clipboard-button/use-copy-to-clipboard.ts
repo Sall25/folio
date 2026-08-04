@@ -56,7 +56,6 @@ export function useCopyToClipboard({
       setIsCopied(true);
       onCopied?.();
       show();
-      console.log("should show");
     }
   }, [editor, canCopy, copyWithFormatting, onCopied, show]);
 

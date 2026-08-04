@@ -8,7 +8,7 @@
   cursor: pointer;
   transition: filter var(--tt-transition-duration-short)
     var(--tt-transition-easing-default);
-    margin: auto 5px;
+    margin: auto 10px;
   border-radius: var(--tt-radius-sm);
 
   &:hover {
@@ -24,6 +24,12 @@
   &__label {
     overflow: hidden;
     text-overflow: ellipsis;
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol" !important;
+    -webkit-font-smoothing: auto;
+    color: var(--tt-text-secondary);
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 400;
   }
 
   // Unset cell — a quiet placeholder, not a coloured pill.
@@ -69,7 +75,7 @@
     display: block;
     padding: 8px 6px;
     color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
-    font-size: 12.5px;
+    font-size: 14px;
     line-height: 1.4;
   }
 }

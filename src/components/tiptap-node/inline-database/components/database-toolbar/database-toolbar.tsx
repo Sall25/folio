@@ -51,9 +51,6 @@ interface DatabaseToolbarProps {
   /** Notion-style lock: view config + structure frozen. Search and New
       (add record) stay available. */
   locked?: boolean;
-  /** Hover-reveal: when false the control cluster + add-view "+" are hidden
-      (kept in layout) until the database node is hovered. */
-  hovered?: boolean;
 
   title: string;
 
@@ -86,7 +83,6 @@ export function DatabaseToolbar({
   properties,
   onUpdateAttributes,
   locked = false,
-  hovered = false,
   title,
   hideTitle,
   onTitleChange,
@@ -125,7 +121,7 @@ export function DatabaseToolbar({
 
   // Keep the controls visible while one of their popovers is open, so they
   // don't disappear out from under the user when the mouse leaves the node.
-  const showControls = /* hovered*/ !locked || viewOptionsOpen || templateOpen;
+  const showControls = !locked || viewOptionsOpen || templateOpen;
   const [showChevrons, setShowChevrons] = useState(false);
 
   const revealStyle: React.CSSProperties = {
@@ -177,7 +173,6 @@ export function DatabaseToolbar({
             onRename={() => onViewOptionsOpenChange(true)}
             onUpdateAttributes={onUpdateAttributes}
             locked={locked}
-            hovered={hovered}
           />
         )}
         <Spacer orientation="horizontal" />

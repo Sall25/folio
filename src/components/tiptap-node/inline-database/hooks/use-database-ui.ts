@@ -174,43 +174,54 @@ export function useDatabaseUI(
     [updateAttributes],
   );
 
-  return {
-    // Derived
-    activeView,
-    currentPanel,
-
-    // Ephemeral state (read)
-    editingCell: uiState.editingCell,
-    openRecordId: uiState.openRecordId,
-    openPropertyId: uiState.openPropertyId,
-    searchQuery: uiState.searchQuery,
-
-    // Cell editing
-    setEditingCell,
-    isCellEditing,
-
-    // Record / property popups
-    setOpenRecordId,
-    setOpenPropertyId,
-
-    // Search
-    setSearchQuery,
-
-    // Panel navigation
-    pushPanel,
-    popPanel,
-    resetPanel,
-
-    // View mutations
-    setActiveView,
-    addView,
-    updateView,
-    deleteView,
-    duplicateView,
-
-    // Locking
-    locked: !!attrs.locked,
-    toggleLock,
-    setLocked,
-  };
+  return useMemo(
+    () => ({
+      activeView,
+      currentPanel,
+      editingCell: uiState.editingCell,
+      openRecordId: uiState.openRecordId,
+      openPropertyId: uiState.openPropertyId,
+      searchQuery: uiState.searchQuery,
+      setEditingCell,
+      isCellEditing,
+      setOpenRecordId,
+      setOpenPropertyId,
+      setSearchQuery,
+      pushPanel,
+      popPanel,
+      resetPanel,
+      setActiveView,
+      addView,
+      updateView,
+      deleteView,
+      duplicateView,
+      locked: !!attrs.locked,
+      toggleLock,
+      setLocked,
+    }),
+    [
+      activeView,
+      currentPanel,
+      uiState.editingCell,
+      uiState.openRecordId,
+      uiState.openPropertyId,
+      uiState.searchQuery,
+      setEditingCell,
+      isCellEditing,
+      setOpenRecordId,
+      setOpenPropertyId,
+      setSearchQuery,
+      pushPanel,
+      popPanel,
+      resetPanel,
+      setActiveView,
+      addView,
+      updateView,
+      deleteView,
+      duplicateView,
+      attrs.locked,
+      toggleLock,
+      setLocked,
+    ],
+  );
 }

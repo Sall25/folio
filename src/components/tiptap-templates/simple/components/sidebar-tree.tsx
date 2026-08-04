@@ -4,6 +4,7 @@ import {
   useCallback,
   type CSSProperties,
   type ReactNode,
+  useEffect,
 } from "react";
 import { Plus, Pencil, Trash2, EyeOff } from "lucide-react";
 import {
@@ -63,6 +64,7 @@ import {
 } from "../hooks/use-sidebar-order";
 import { PageRowSkeleton } from "./skeletons";
 import { useCurrentPerson } from "src/hooks/use-session";
+import { useActivePage } from "../context/active-page-context";
 
 type DropZone = "before" | "after" | "inside";
 
@@ -733,6 +735,53 @@ export function SidebarTree({
       else n.add(id);
       return n;
     });
+
+  const { activePageId } = useActivePage();
+
+  // Keep the active page reachable: expand its ancestor chain and un-collapse
+  // its section whenever the current page changes. Additive only — never
+  // collapses or contracts anything the user opened.
+  useEffect(() => {
+    if (activePageId == null) return;
+
+    const node = nodeById.get(activePageId);
+    if (!node) return; // page isn't in the sidebar tree
+
+    // Climb parentId to collect ancestors (excludes the page itself).
+    const ancestors: ID[] = [];
+    let cur: PageTreeNode | undefined = node;
+    while (cur && cur.page.parentId != null) {
+      const parent = nodeById.get(cur.page.parentId);
+      if (!parent) break;
+      ancestors.push(parent.page.id);
+      cur = parent;
+    }
+
+    if (ancestors.length) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setExpandedIds((prev) => {
+        let changed = false;
+        const next = new Set(prev);
+        for (const id of ancestors) {
+          if (!next.has(id)) {
+            next.add(id);
+            changed = true;
+          }
+        }
+        return changed ? next : prev; // no new Set unless something changed
+      });
+    }
+
+    const category = categoryByPageId.get(activePageId);
+    if (category != null) {
+      setCollapsedSections((prev) => {
+        if (!prev.has(category)) return prev;
+        const next = new Set(prev);
+        next.delete(category);
+        return next;
+      });
+    }
+  }, [activePageId, nodeById, categoryByPageId]);
 
   const onToggleCollapse = (category: string) =>
     setCollapsedSections((s) => {

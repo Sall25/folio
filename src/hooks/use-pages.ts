@@ -22,7 +22,10 @@ export function usePages() {
 
 export function usePagesByCategory(category: PageCategory) {
   return usePagesBase((pages) =>
-    pages.filter((p) => p.sourceId == null && p.category === category),
+    pages.filter(
+      (p) =>
+        p.sourceId == null && p.deletedAt == null && p.category === category,
+    ),
   );
 }
 
@@ -48,7 +51,9 @@ export function useBreadcrumbs(pageId: ID | null) {
   return usePagesBase((pages) => {
     if (pageId == null) return [];
 
-    const byId = new Map(pages.map((p) => [p.id, p]));
+    const byId = new Map(
+      pages.filter((p) => p.deletedAt == null).map((p) => [p.id, p]),
+    );
 
     const chain: Page[] = [];
     let current = byId.get(pageId);

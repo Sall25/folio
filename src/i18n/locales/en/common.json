@@ -41,6 +41,8 @@
   "trash.restore": "Restore",
   "trash.deleteForever": "Delete permanently",
   "trash.emptyState": "Trash is empty",
+  "trash.movedToast": "Page moved to Trash",
+  "trash.undo": "Undo",
   
   "sidebar": {
     "home": "Home",

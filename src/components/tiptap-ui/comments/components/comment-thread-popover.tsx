@@ -69,12 +69,6 @@ export function CommentThreadPopover({ editor }: { editor: Editor | null }) {
   }, [editor, openThreadId]);
 
   const thread = threads.find((t) => t.id === openThreadId);
-  console.log("popover render:", {
-    openThreadId,
-    anchorRect,
-    threadsCount: threads.length,
-    foundThread: !!thread,
-  });
   if (!editor || !openThreadId || !anchorRect || !thread) return null;
 
   return (

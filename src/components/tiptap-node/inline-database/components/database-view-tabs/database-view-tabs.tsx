@@ -21,9 +21,6 @@ interface DatabaseViewTabsProps {
   /** When locked: no add-view, no rename/delete-view. View SWITCHING stays
       allowed (clicking a tab is reading, not structural). */
   locked?: boolean;
-  /** Hover-reveal: the add-view "+" is hidden (space kept) until the database
-      node is hovered. Tabs themselves are always visible. */
-  hovered?: boolean;
 }
 
 const VIEW_TYPES: { type: DatabaseView["type"]; label: string }[] = [
@@ -41,12 +38,11 @@ export function DatabaseViewTabs({
   onRename,
   onUpdateAttributes,
   locked = false,
-  hovered = false,
 }: DatabaseViewTabsProps) {
   const [open, setOpen] = useState(false);
 
   // Keep the "+" visible while its picker is open, even if the mouse leaves.
-  const showAdd = hovered || open;
+  const showAdd = open;
 
   return (
     <div

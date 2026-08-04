@@ -18,7 +18,6 @@ export const patchThread = (id: ID, patch: Partial<Thread>) =>
   });
 
 export const createThread = (thread: Thread) => {
-  console.log("POST thread", thread);
   return http<Thread>("/threads", {
     method: "POST",
     body: JSON.stringify(thread),

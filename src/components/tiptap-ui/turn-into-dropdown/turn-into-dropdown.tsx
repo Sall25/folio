@@ -91,7 +91,6 @@ function turnInto(editor: Editor, option: BlockTypeOption) {
       toggleCodeBlock(editor);
       break;
   }
-  console.log("turn into called");
 }
 
 export function TurnIntoDropdown({

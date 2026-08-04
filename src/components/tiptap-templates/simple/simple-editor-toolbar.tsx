@@ -33,6 +33,7 @@ import { useIsMobile, useIsTablet } from "src/hooks/use-breakpoint";
 import { SharePanel } from "./components/share-panel";
 import { useRef, useState } from "react";
 import { usePageCapabilities } from "src/hooks/use-page-role";
+import { NetworkStatusBadge } from "./components/network-status-badge";
 
 function Expand() {
   // const { t } = useTranslation();
@@ -59,9 +60,9 @@ function FavoriteToggle() {
   const { activePage, activePageId } = useActivePage();
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
 
-  const { canEditContent, isLoading } = usePageCapabilities(activePageId);
+  const { canEditContent } = usePageCapabilities(activePageId);
 
-  if (!activePage || canEditContent || !isLoading) return null;
+  if (!activePage || !canEditContent) return null;
 
   // Favoriting only applies to a user's own private pages. Shared and teamspace
   // pages live in their section by their access model, not the owner's stars.
@@ -247,6 +248,7 @@ function TitleGroup({ view }: { view: View }) {
           }}
         />
       )}
+      <NetworkStatusBadge />
     </ToolbarGroup>
   );
 }

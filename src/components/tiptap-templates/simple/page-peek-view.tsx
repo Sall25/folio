@@ -218,11 +218,11 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
       style={{
         //    marginTop: "var(--tt-toolbar-height)",
         position: "fixed",
-        borderTopRightRadius: 0,
-        borderBottomRightRadius: 0,
+        borderRadius: 0,
         top: 0,
         bottom: 0,
-        boxShadow: "var(--tt-shadow-elevated-sm)",
+        border: "1px solid var(--tt-border-color)",
+        boxShadow: "var(--tt-shadow-elevated-md)",
       }}
     >
       <CardItemGroup
@@ -230,14 +230,13 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
         style={{ width: "100%", justifyContent: "flex-start" }}
       >
         <CardItemGroup orientation="horizontal">
-          <Button variant="ghost" onClick={onClose}>
+          <Button
+            size="large"
+            style={{ background: "transparent" }}
+            variant="ghost"
+            onClick={onClose}
+          >
             <ChevronsRight className="tiptap-button-icon" />
-          </Button>
-        </CardItemGroup>
-        <Spacer orientation="horizontal" />
-        <CardItemGroup orientation="horizontal">
-          <Button variant="ghost">
-            <Ellipsis className="tiptap-button-icon" />
           </Button>
           <Button
             variant="ghost"
@@ -257,6 +256,12 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
             }}
           >
             <Maximize2 className="tiptap-button-icon" />
+          </Button>
+        </CardItemGroup>
+        <Spacer orientation="horizontal" />
+        <CardItemGroup orientation="horizontal">
+          <Button variant="ghost">
+            <Ellipsis className="tiptap-button-icon" />
           </Button>
         </CardItemGroup>
       </CardItemGroup>

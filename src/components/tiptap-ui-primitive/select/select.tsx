@@ -3,8 +3,6 @@ import {
   useRef,
   useEffect,
   useCallback,
-  useId,
-  type KeyboardEvent,
 } from "react";
 import { Check, ChevronDown, X } from "lucide-react";
 import type { SelectProps, SelectOption, SelectGroup } from "./types";
@@ -186,8 +184,7 @@ export function Select<T = string>({
     (opt: SelectOption<T>) => {
       if (opt.disabled) return;
 
-      console.log("selectOption");
-
+    
       if (multiple) {
         const isSelected = selectedValues.includes(opt.value);
         const next = isSelected
@@ -434,7 +431,6 @@ export function Select<T = string>({
                             // onMouseDown={(e) => e.preventDefault()}
                             onClick={(e) => {
                               e.stopPropagation();
-                              console.log("onClick");
                               selectOption(opt);
                             }}
                           >

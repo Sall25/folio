@@ -79,7 +79,8 @@ export function TitleCellDisplay({
               <span className="db-cell-title__icon">
                 <PageItemIcon
                   cover={icon}
-                  styles={{ color: "var(--tt-text-secondary)" }}
+                  styles={{ color: "var(--tt-text-primary)" }}
+                  usePrimaryColor
                 />
               </span>
             )}

@@ -646,7 +646,6 @@ export function updateNodesAttr<A extends string = string, V = unknown>(
       delete nextAttrs[attrName];
     } else {
       nextAttrs[attrName] = resolvedNext;
-      console.log("nextAttrs", nextAttrs);
     }
 
     tr.setNodeMarkup(pos, undefined, nextAttrs);
@@ -785,7 +784,6 @@ export function clearNodesContent(
 
   if (selection instanceof CellSelection) {
     selection.replace(tr, Slice.empty);
-    console.log("replaced");
     return;
   }
   const nodes = getSelectedNodesOfType(selection, allowed);

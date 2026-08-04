@@ -92,6 +92,7 @@ export interface NumberCellDisplayProps {
   /** column max, for bar/ring fill — caller computes it */
   max?: number;
   readonly?: boolean;
+  align?: "left" | "right";
 }
 
 /**
@@ -103,7 +104,7 @@ export interface NumberCellDisplayProps {
  * explicit submit button, which made it the odd one out.
  */
 export function NumberCellDisplay({
-  value,
+  value = 0,
   onChange,
   format = "number",
   prefix,
@@ -112,6 +113,7 @@ export function NumberCellDisplay({
   showAs = "number",
   max = 0,
   readonly,
+  align = "right",
 }: NumberCellDisplayProps) {
   const [draft, setDraft] = useState(value !== null ? String(value) : "");
 
@@ -171,7 +173,16 @@ export function NumberCellDisplay({
 
   return (
     <CellEditorPopover
-      trigger={<div className={`num-cell${alignClass}`}>{content}</div>}
+      trigger={
+        <div
+          className={`num-cell${alignClass}`}
+          style={{
+            justifyContent: align === "left" ? "flex-start" : "flex-end",
+          }}
+        >
+          {content}
+        </div>
+      }
     >
       {(close) => (
         <Input

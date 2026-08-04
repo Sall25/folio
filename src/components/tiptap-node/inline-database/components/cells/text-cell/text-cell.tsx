@@ -5,7 +5,7 @@ export function TextCell({ value, onChange, unwrapped }: CellProps<"text">) {
   return (
     <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
       <TextCellDisplay
-        value={value || "Add text..."}
+        value={value || ""}
         onChange={onChange}
         placeholder="Add text..."
       />

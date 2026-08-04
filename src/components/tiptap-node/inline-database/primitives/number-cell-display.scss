@@ -3,8 +3,7 @@
   align-items: center;
   width: 100%;
   min-width: 100px;
-  // bar/ring push the number to the right; a plain number sits left.
-  justify-content: flex-start;
+  
 
   &__display, &__num { font-variant-numeric: tabular-nums; font-size: 14px;  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
     -webkit-font-smoothing: auto; }

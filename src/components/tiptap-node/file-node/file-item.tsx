@@ -67,7 +67,6 @@ export function FileItem({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log("clicked");
             if (previewable) setExpanded((v) => !v);
           }}
           title={

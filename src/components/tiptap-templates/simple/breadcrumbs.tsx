@@ -204,7 +204,6 @@ function CrumbDropdown({
   onPick: (id: ID) => void;
 }) {
   const { data: pages } = usePagesByCategory(category);
-  const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
@@ -215,15 +214,24 @@ function CrumbDropdown({
       setPos({ top: r.bottom + 4, left: r.left });
       inputRef.current?.focus();
     }
-    // fixed positioning doesn't follow scroll — close instead of drifting
-    const onScroll = () => requestClose();
+    // fixed positioning doesn't follow scroll — close instead of drifting,
+    // but ignore scrolls that happen inside the dropdown's own list
+    const onScroll = (e: Event) => {
+      const target = e.target as Node | null;
+      if (
+        target instanceof Element &&
+        target.closest(".breadcrumbs__dropdown")
+      ) {
+        return;
+      }
+      requestClose();
+    };
     window.addEventListener("scroll", onScroll, true);
     return () => window.removeEventListener("scroll", onScroll, true);
   }, [anchorRef, requestClose]);
 
-  const q = query.trim().toLowerCase();
   const list = (pages ?? []).filter((p) =>
-    (p.title || "Untitled").toLowerCase().includes(q),
+    (p.title || "Untitled").toLowerCase(),
   );
 
   if (!pos) return null;
@@ -238,14 +246,6 @@ function CrumbDropdown({
       <CardHeader>
         <CardGroupLabel>{category.toLocaleLowerCase()}</CardGroupLabel>
       </CardHeader>
-      {/* <div className="breadcrumbs__dropdown-search">
-        <input
-          ref={inputRef}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={`Search ${category.toLowerCase()}…`}
-        />
-      </div> */}
 
       <CardBody className="breadcrumbs__dropdown-list">
         {list.length === 0 ? (

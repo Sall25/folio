@@ -61,12 +61,6 @@ function matchesRule(
       value && typeof value === "object" && "id" in value
         ? String((value as { id: unknown }).id)
         : String(value ?? "");
-    console.log("SELECT match", {
-      rawValue: value,
-      cellId,
-      ruleValue: String(ruleValue ?? ""),
-      eq: cellId === String(ruleValue ?? ""),
-    });
   }
 
   if (rule.propertyType === "select" || rule.propertyType === "status") {

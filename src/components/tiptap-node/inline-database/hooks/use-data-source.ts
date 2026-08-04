@@ -23,6 +23,16 @@ import { useChangePropertyType } from "src/hooks/use-change-property-type";
 import { useMaterializeComputedColumn } from "src/hooks/use-materialized-computed-column";
 import { makeDefaultView } from "src/utils/make-default-view";
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCurrentPerson } from "src/hooks/use-session";
+
+// module scope, outside the hook
+const patchDataSourceFn = ({
+  id,
+  patch,
+}: {
+  id: ID;
+  patch: Partial<Omit<DataSource, "id" | "properties">>;
+}) => patchDataSource(id, patch);
 
 export interface UseDataSourceReturn {
   source: DataSource | undefined;
@@ -95,51 +105,63 @@ export function useDataSource(
     return page ? (page.values?.[propertyId] ?? null) : null;
   }, []);
 
+  // Extract stable mutate fns. useMutation returns a NEW object every render
+  // (it carries live status), but the .mutate/.mutateAsync methods keep a
+  // stable identity — so depend on those, never on the mutation object.
   const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
+  const patchPageMutate = mutatePage.mutate;
+
   const setCellValue = useCallback(
     (recordId: ID, propertyId: ID, value: CellValue<PropertyType>) => {
       const record = rowsRef.current.find((r) => r.id === recordId);
       if (!record) return;
-      mutatePage.mutate({
+      patchPageMutate({
         id: recordId,
         patch: { values: { ...(record.values ?? {}), [propertyId]: value } },
       });
     },
-    [mutatePage],
+    [patchPageMutate],
   );
 
   const addRow = useAddRow();
+  const addRowAsync = addRow.mutateAsync;
+  const { person } = useCurrentPerson();
   // CREATE row from optional template (templateId falls back to node default elsewhere)
   const addRecordAsync = useCallback(
     async (opts?: { title?: string; templateId?: ID }): Promise<Page> => {
-      if (!sourceRef.current) throw new Error("No source");
+      if (!sourceRef.current || !person) throw new Error("No source");
+
       const template = opts?.templateId
         ? sourceRef.current.rowTemplates.find((t) => t.id === opts.templateId)
         : undefined;
-      const row = makeRow(sourceRef.current, { title: opts?.title, template });
-      await addRow.mutateAsync(row);
+      const row = makeRow(sourceRef.current, {
+        title: opts?.title,
+        template,
+        ownerId: person.id,
+      });
+      await addRowAsync(row);
       return row;
     },
-    [addRow],
+    [addRowAsync, person],
   );
 
   const deletePage = useDeletePage();
+  const deletePageAsync = deletePage.mutateAsync;
   const removeRecordAsync = useCallback(
     async (recordId: ID) => {
-      await deletePage.mutateAsync(recordId);
+      await deletePageAsync(recordId);
     },
-    [deletePage],
+    [deletePageAsync],
   );
 
-  const mutateSource = usePatchDataSource(({ id, patch }) =>
-    patchDataSource(id, patch),
-  );
+  const mutateSource = usePatchDataSource(patchDataSourceFn);
+  const patchSourceAsync = mutateSource.mutateAsync;
 
   // ── row-template CRUD (source-owned config, via source patch) ──────────────
   const addRowTemplateAsync = useCallback(
     async (template: RowTemplate) => {
       if (!sourceRef.current) throw new Error("No source");
-      await mutateSource.mutateAsync({
+      await patchSourceAsync({
         id: sourceRef.current.id,
         patch: {
           rowTemplates: [...(sourceRef.current.rowTemplates ?? []), template],
@@ -147,13 +169,13 @@ export function useDataSource(
       });
       return template;
     },
-    [mutateSource],
+    [patchSourceAsync],
   );
 
   const removeRowTemplateAsync = useCallback(
     async (templateId: ID) => {
       if (!sourceRef.current) throw new Error("No source");
-      return mutateSource.mutateAsync({
+      return patchSourceAsync({
         id: sourceRef.current.id,
         patch: {
           rowTemplates: (sourceRef.current.rowTemplates ?? []).filter(
@@ -162,7 +184,7 @@ export function useDataSource(
         },
       });
     },
-    [mutateSource],
+    [patchSourceAsync],
   );
 
   // "save this row AS a template" — snapshot a row-page's values + content
@@ -177,7 +199,7 @@ export function useDataSource(
         content: row.content ? structuredClone(row.content) : null,
         createdAt: Date.now(),
       };
-      await mutateSource.mutateAsync({
+      await patchSourceAsync({
         id: sourceRef.current.id,
         patch: {
           rowTemplates: [...(sourceRef.current.rowTemplates ?? []), template],
@@ -185,30 +207,30 @@ export function useDataSource(
       });
       return template;
     },
-    [mutateSource],
+    [patchSourceAsync],
   );
   // the ONE hook allowed to write properties[] — layout only (reorder/width/wrap)
   const updatePropertiesAsync = useCallback(
     async (properties: DatabaseProperty[]) => {
       const src = sourceRef.current;
       if (!src) throw new Error("No source");
-      return mutateSource.mutateAsync({
+      return patchSourceAsync({
         id: src.id,
         patch: { properties } as Parameters<
-          typeof mutateSource.mutateAsync
+          typeof patchSourceAsync
         >[0]["patch"],
       });
     },
-    [mutateSource],
+    [patchSourceAsync],
   );
 
   const updateSourceMetaAsync = useCallback(
     async (patch: { name?: string; pageId?: ID }) => {
       const src = sourceRef.current;
       if (!src) throw new Error("No source");
-      return mutateSource.mutateAsync({ id: src.id, patch });
+      return patchSourceAsync({ id: src.id, patch });
     },
-    [mutateSource],
+    [patchSourceAsync],
   );
 
   // Change a property's type AND migrate every record's value in a single
@@ -217,7 +239,9 @@ export function useDataSource(
   // displayed value isn't stored — we snapshot the computed values first (from
   // the cache) so the new column inherits them. planTypeChange is pure.
   const changeType = useChangePropertyType();
+  const changeTypeAsync = changeType.mutateAsync;
   const materialize = useMaterializeComputedColumn();
+  const materializeAsync = materialize.mutateAsync;
 
   const changePropertyTypeAsync = useCallback(
     async (propId: ID, newProp: DatabaseProperty) => {
@@ -227,20 +251,20 @@ export function useDataSource(
 
       // converting AWAY from a computed type → materialize (snapshot + store)
       if (cfg?.type === "rollup" || cfg?.type === "formula") {
-        return materialize.mutateAsync({
+        return materializeAsync({
           sourceId: src.id,
           propertyId: propId,
           newProp,
         });
       }
       // scalar → scalar (or scalar → relation/rollup is remove+add, handled elsewhere)
-      return changeType.mutateAsync({
+      return changeTypeAsync({
         sourceId: src.id,
         propertyId: propId,
         newProp,
       });
     },
-    [changeType, materialize],
+    [changeTypeAsync, materializeAsync],
   );
   // ── Views: the shared catalog. Every node on this source reads/writes
   //    here; a node only keeps which view is active (attrs.activeViewId).
@@ -251,19 +275,19 @@ export function useDataSource(
     ): Promise<DatabaseView | undefined> => {
       if (!sourceRef.current) throw new Error("no source");
       const view = makeDefaultView(type, name);
-      await mutateSource.mutateAsync({
+      await patchSourceAsync({
         id: sourceRef.current.id,
         patch: { views: [...(sourceRef.current.views ?? []), view] },
       });
       return view;
     },
-    [mutateSource],
+    [patchSourceAsync],
   );
 
   const updateViewAsync = useCallback(
     async (viewId: ID, patch: Partial<Omit<DatabaseView, "id">>) => {
       if (!sourceRef.current) throw new Error("no source");
-      return mutateSource.mutateAsync({
+      return patchSourceAsync({
         id: sourceRef.current.id,
         patch: {
           views: (sourceRef.current.views ?? []).map((v) =>
@@ -272,13 +296,13 @@ export function useDataSource(
         },
       });
     },
-    [mutateSource],
+    [patchSourceAsync],
   );
 
   const deleteViewAsync = useCallback(
     async (viewId: ID): Promise<DatabaseView[]> => {
       if (!sourceRef.current) throw new Error("no source");
-      const next = await mutateSource.mutateAsync({
+      const next = await patchSourceAsync({
         id: sourceRef.current.id,
         patch: {
           views: (sourceRef.current.views ?? []).filter((v) => v.id !== viewId),
@@ -287,7 +311,7 @@ export function useDataSource(
       const remaining = next.views;
       return remaining;
     },
-    [mutateSource],
+    [patchSourceAsync],
   );
 
   const duplicateViewAsync = useCallback(
@@ -303,13 +327,13 @@ export function useDataSource(
         id: crypto.randomUUID(),
         name: `${src.name} copy`,
       } as DatabaseView;
-      const next = await mutateSource.mutateAsync({
+      const next = await patchSourceAsync({
         id: source.id,
         patch: { views: [...(source.views ?? []), copy] },
       });
       return next ? copy : undefined;
     },
-    [mutateSource],
+    [patchSourceAsync],
   );
 
   // ── Saved-view catalog: snapshot full views into source.savedViews so any
@@ -332,12 +356,12 @@ export function useDataSource(
       }
       if (!changed) return;
 
-      await mutateSource.mutateAsync({
+      await patchSourceAsync({
         id: src.id,
         patch: { savedViews: [...byId.values()] },
       });
     },
-    [mutateSource],
+    [patchSourceAsync],
   );
 
   // Counterpart to registerViewsAsync — prune saved views whose ids are no
@@ -354,12 +378,12 @@ export function useDataSource(
 
       if (next.length === existing.length) return; // nothing removed
 
-      await mutateSource.mutateAsync({
+      await patchSourceAsync({
         id: src.id,
         patch: { savedViews: next },
       });
     },
-    [mutateSource],
+    [patchSourceAsync],
   );
 
   const resolvedRecords = useMemo(

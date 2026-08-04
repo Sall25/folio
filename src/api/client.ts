@@ -50,6 +50,10 @@ const JSONB_PASSTHROUGH = new Set([
   "data",
   "inviteLink",
   "invite_link",
+  "properties",
+  "views",
+  "savedViews",
+  "rowTemplates",
 ]);
 
 const toSnake = (s: string) =>

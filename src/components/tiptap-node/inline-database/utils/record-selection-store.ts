@@ -30,22 +30,24 @@ export const recordSelection = {
 export const recordSelection = {
   // ── Hover (published by the drag handle) ─────────────────────────────
   setHovered(recordId: string | null) {
-    if (hoverClearTimer) {
-      clearTimeout(hoverClearTimer);
-      hoverClearTimer = null;
-    }
-
     // Clearing is deferred: the checkbox is portaled outside the row, so moving
     // onto it momentarily reads as "left the row". A short grace period stops
     // that from unmounting the element the pointer is travelling toward.
     if (recordId === null) {
-      if (hoveredRecordId === null) return;
+      if (hoveredRecordId === null) return; // already clear
+      if (hoverClearTimer) return; // a clear is already scheduled — let it fire
       hoverClearTimer = setTimeout(() => {
         hoverClearTimer = null;
         hoveredRecordId = null;
         emit();
       }, 200);
       return;
+    }
+
+    // A real hover cancels any pending clear.
+    if (hoverClearTimer) {
+      clearTimeout(hoverClearTimer);
+      hoverClearTimer = null;
     }
 
     if (hoveredRecordId === recordId) return;

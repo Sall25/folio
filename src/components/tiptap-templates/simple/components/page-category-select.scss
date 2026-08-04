@@ -46,12 +46,16 @@
     position: fixed; // coordinates supplied inline from the trigger's rect
     z-index: 1000; // portaled to body, above sidebar (120) and modals (101)
     min-width: 184px;
+  
     //padding: 5px 10px;
-    background: var(--tt-card-bg-color);
+    background: var(--tt-gray-light-50);
+    .dark & {
+      background: var(--tt-gray-dark-100);
+    }
     border: 1px solid var(--tt-border-color);
     border-radius: var(--tt-radius-md, 8px);
-    box-shadow: var(--tt-shadow-elevated-sm);
-    width: 100%;
+    box-shadow: var(--tt-shadow-elevated-md);
+    // width: 100%;
   }
 
   &__option {

@@ -320,9 +320,7 @@ export const SlashCommand = Extension.create<
             reactRenderer?.destroy();
             exitSuggestion(view);
           }
-          if (event.key === "Space") {
-            console.log("space");
-          }
+
           return false;
         },
         onExit: destroyRenderer,

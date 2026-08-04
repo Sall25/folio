@@ -58,6 +58,7 @@ import { InboxPanel } from "./components/inbox-panel";
 import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
 import { TrashPanel } from "./components/trash-panel";
 import { Bone } from "./components/skeletons";
+import { usePressScale } from "src/hooks/use-press-scale";
 
 function UserSkeleton() {
   return (
@@ -146,6 +147,9 @@ function WorkspaceFooter() {
   const { t } = useTranslation();
   const { onOpenChange, open } = useTemplates();
 
+  const templatesScale = usePressScale();
+  const createScale = usePressScale();
+
   const { activePageId, setActivePageId } = useActivePage();
   const { person } = useCurrentPerson();
   const createPage = useCreatePage();
@@ -171,47 +175,57 @@ function WorkspaceFooter() {
     <CardFooter style={{ paddingBottom: 10, width: "100%" }}>
       <CardItemGroup orientation="horizontal" style={{ width: "100%" }}>
         <Spacer orientation="horizontal" />
-        <Button
-          variant="ghost"
-          size="large"
-          style={{
-            boxShadow: "var(--tt-shadow-elevated-md)",
-            borderRadius: "150px",
-            border: "1px solid var(--tt-border-color)",
-            paddingTop: 20,
-            paddingBottom: 20,
-            // padding: "20px 40px",
-          }}
-          onClick={() => onOpenChange?.(!open)}
+        <span
+          {...templatesScale.handlers}
+          style={{ display: "inline-flex", ...templatesScale.style }}
         >
-          <Spacer orientation="horizontal" size={5} />
-          <Shapes className="tiptap-button-icon" />
-          <Spacer orientation="horizontal" size={2} />
-          <span
-            className="tiptap-button-text"
-            style={{ opacity: 1, display: "block" }}
+          <Button
+            variant="ghost"
+            size="large"
+            style={{
+              boxShadow: "var(--tt-shadow-elevated-md)",
+              borderRadius: "150px",
+              border: "1px solid var(--tt-border-color)",
+              paddingTop: 20,
+              paddingBottom: 20,
+              // padding: "20px 40px",
+            }}
+            onClick={() => onOpenChange?.(!open)}
           >
-            Templates
-          </span>
-          <Spacer orientation="horizontal" size={10} />
-          <ShortcutBadge shortcutKeys="Ctrl + O" />
-          <Spacer orientation="horizontal" size={5} />
-        </Button>
+            <Spacer orientation="horizontal" size={5} />
+            <Shapes className="tiptap-button-icon" />
+            <Spacer orientation="horizontal" size={2} />
+            <span
+              className="tiptap-button-text"
+              style={{ opacity: 1, display: "block" }}
+            >
+              Templates
+            </span>
+            <Spacer orientation="horizontal" size={10} />
+            <ShortcutBadge shortcutKeys="Ctrl + O" />
+            <Spacer orientation="horizontal" size={5} />
+          </Button>
+        </span>
         <Spacer orientation="horizontal" />
-        <Button
-          variant="ghost"
-          size="large"
-          style={{
-            padding: "20px 12px",
-            boxShadow: "var(--tt-shadow-elevated-md)",
-            border: "1px solid var(--tt-border-color)",
-            borderRadius: "150px",
-          }}
-          tooltip={t("page.newPage")}
-          onClick={onCreatePage}
+        <span
+          {...createScale.handlers}
+          style={{ display: "inline-flex", ...createScale.style }}
         >
-          <PenBox className="tiptap-button-icon" />
-        </Button>
+          <Button
+            variant="ghost"
+            size="large"
+            style={{
+              padding: "20px 12px",
+              boxShadow: "var(--tt-shadow-elevated-md)",
+              border: "1px solid var(--tt-border-color)",
+              borderRadius: "150px",
+            }}
+            tooltip={t("page.newPage")}
+            onClick={onCreatePage}
+          >
+            <PenBox className="tiptap-button-icon" />
+          </Button>
+        </span>
         <Spacer orientation="horizontal" />
       </CardItemGroup>
     </CardFooter>
@@ -258,6 +272,7 @@ function WorkspaceHeader() {
           >
             <ChevronsLeft
               className="tiptap-button-icon"
+              strokeWidth={1}
               style={{ width: 28, height: 22 }}
             />
           </Button>
@@ -275,6 +290,7 @@ function WorkspaceHeader() {
             }}
           >
             <ChevronsRight
+              strokeWidth={1}
               style={{ width: 28, height: 22 }}
               className="tiptap-button-icon"
             />

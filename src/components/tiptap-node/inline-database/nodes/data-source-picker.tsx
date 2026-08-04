@@ -24,6 +24,7 @@ import { makeDatabasePage } from "src/utils/make-page";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { usePages } from "src/hooks/use-pages";
 import { newId } from "src/lib/id";
+import { useCurrentPerson } from "src/hooks/use-session";
 
 const VIEW_ICON: Record<DatabaseView["type"], LucideIcon> = {
   table: Table,
@@ -53,6 +54,7 @@ export function DataSourcePicker({
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
   const { data: pages } = usePages();
+  const { person } = useCurrentPerson();
 
   const filtered = ((sources as DataSource[]) ?? []).filter((s) =>
     s.name?.toLowerCase().includes(query.trim().toLowerCase()),
@@ -62,12 +64,14 @@ export function DataSourcePicker({
     try {
       const sourceId = newId();
       const name = query.trim() || "Untitled Database";
+      if (!person) return;
 
       const dbPage = makeDatabasePage({
         sourceId,
         name,
         parentId: activePageId,
         category: activePage?.category,
+        ownerId: person.id,
       });
       const source = makeDataSource({ name, pageId: dbPage.id, sourceId });
 
@@ -96,7 +100,9 @@ export function DataSourcePicker({
           style={{
             padding: 8,
             minWidth: 260,
-            boxShadow: "var(--tt-shadow-sm)",
+            border: "1px solid var(--tt-border-color)",
+            borderRadius: "var(--tt-radius-sm)",
+            boxShadow: "var(--tt-shadow-md)",
           }}
         >
           <input

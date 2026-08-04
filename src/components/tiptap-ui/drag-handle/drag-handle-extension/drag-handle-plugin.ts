@@ -170,8 +170,6 @@ export const DragHandlePlugin = ({
   function onDragStart(e: DragEvent) {
     onElementDragStart?.(e);
 
-    console.log("onDragStart");
-
     dragHandler(e, editor);
 
     if (element) {
@@ -295,9 +293,7 @@ export const DragHandlePlugin = ({
         wrapper.style.top = "0";
         wrapper.style.left = "0";
 
-        console.log("wrapper size", wrapper.getBoundingClientRect());
-        console.log("element size", element.getBoundingClientRect());
-
+     
         return {
           update(_, oldState) {
             if (!element) {
@@ -413,10 +409,8 @@ export const DragHandlePlugin = ({
           },
 
           mousemove(view, e) {
-            console.log("mousemove");
             // Do not continue if popup is not initialized or open.
             if (!element || locked) {
-              console.log("locked on mousemove", locked);
               return false;
             }
 

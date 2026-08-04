@@ -13,9 +13,19 @@ export const FileIcon = memo(({ className, ...props }: SvgProps) => {
       aria-hidden="true"
       role="graphics-symbol"
       viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.1"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       {...props}
     >
-      <path d="M4.8 3.2a1.2 1.2 0 1 0 2.4 0 1.2 1.2 0 0 0-2.4 0m4 0a1.2 1.2 0 1 0 2.4 0 1.2 1.2 0 0 0-2.4 0m1.2 6a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4M4.8 8a1.2 1.2 0 1 0 2.4 0 1.2 1.2 0 0 0-2.4 0m5.2 6a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4m-5.2-1.2a1.2 1.2 0 1 0 2.4 0 1.2 1.2 0 0 0-2.4 0"></path>
+      {/* Page outline with a folded top-right corner */}
+      <path d="M4 1.75h5.4L12.25 4.6v9.65H4z" />
+      {/* Dog-ear fold */}
+      <path d="M9.4 1.75V4.6h2.85" />
+      {/* Text lines */}
+      <path d="M5.9 8h4.2M5.9 10.4h4.2M5.9 12.8h2.6" />
     </svg>
   );
 });

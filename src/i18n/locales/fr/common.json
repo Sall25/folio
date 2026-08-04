@@ -28,6 +28,8 @@
   "trash.restore": "Restaurer",
   "trash.deleteForever": "Supprimer définitivement",
   "trash.emptyState": "La corbeille est vide",
+  "trash.movedToast": "Page déplacée vers la corbeille",
+  "trash.undo": "Annuler",
   
   "sidebar": {
     "home": "Accueil",

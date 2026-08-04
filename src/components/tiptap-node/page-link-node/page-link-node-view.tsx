@@ -92,6 +92,28 @@ export function PageLinkNodeView({ node }: NodeViewProps) {
       </NodeViewWrapper>
     );
 
+  if (page.deletedAt) {
+    return (
+      <NodeViewWrapper data-drag-handle data-node-id={node.attrs.nodeId}>
+        <div className="page-link-node">
+          <PageItemIcon cover={page.cover} />
+
+          <span
+            style={{
+              textDecoration: "line-through",
+              opacity: 0.4,
+              fontSize: "1.05em",
+              cursor: "not-allowed",
+              color: "var(--tt-color-red-base)",
+            }}
+          >
+            {page.title}
+          </span>
+        </div>
+      </NodeViewWrapper>
+    );
+  }
+
   const excerpt = getContentExcerpt(page);
   const handleClick = () => setActivePageId(pageId);
 
