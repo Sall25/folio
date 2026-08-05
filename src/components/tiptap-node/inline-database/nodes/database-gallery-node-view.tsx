@@ -1,5 +1,4 @@
 import { Plus } from "lucide-react";
-import { Button } from "src/components/tiptap-ui-primitive/button";
 import { useDataSource } from "../hooks/use-data-source";
 import { BoardCard } from "../primitives/board-card";
 import type {
@@ -8,25 +7,87 @@ import type {
   DatabaseView,
   DataSource,
   GalleryView,
+  ID,
+  Page,
 } from "src/types";
 import "./database-gallery-node-view.scss";
-import { useMemo } from "react";
+import { memo, useMemo, useState } from "react";
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  type DragOverEvent,
+  type CollisionDetection,
+  pointerWithin,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  rectSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { applyManualOrder } from "../utils/apply-manual-order";
 
-// Cards per row by size. Larger size = fewer, wider cards.
+// Pointer-based first (tolerant of slow drags over gaps), then fall back to
+// closestCenter so a release over padding still snaps to the nearest card.
+const galleryCollision: CollisionDetection = (args) => {
+  const pointer = pointerWithin(args);
+  if (pointer.length > 0) return pointer;
+  return closestCenter(args);
+};
+
 const CARD_COLUMNS = {
   small: 5,
   medium: 4,
   large: 3,
 } as const;
 
-export function DatabaseGalleryNodeView({
+function SortableGalleryCard({
+  id,
+  children,
+}: {
+  id: ID;
+  children: React.ReactNode;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      className="db-gallery__card"
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+        zIndex: isDragging ? 10 : undefined,
+      }}
+      {...attributes}
+      {...listeners}
+    >
+      {children}
+    </div>
+  );
+}
+
+function DatabaseGalleryNodeViewImpl({
   attrs,
   source,
   view,
+  onUpdateView,
 }: {
   attrs: DatabaseAttrs & { sourceId?: string | null };
   source: DataSource;
   view: DatabaseView;
+  onUpdateView: (patch: Partial<DatabaseView>) => void;
 }) {
   const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
     attrs.sourceId,
@@ -42,16 +103,80 @@ export function DatabaseGalleryNodeView({
   const hidden = new Set(activeView?.hiddenProperties ?? []);
   const cardProps = source.properties.filter((p) => !hidden.has(p.id));
 
+  // Manual drag order overrides the incoming (sorted) order.
+  // Persisted order from the view.
+  const persistedOrder = useMemo(
+    () =>
+      applyManualOrder(resolvedRecords, activeView?.manualOrder).map(
+        (r) => r.id,
+      ),
+    [resolvedRecords, activeView?.manualOrder],
+  );
+  // Optimistic order held ONLY during a drag. null = not dragging, use persisted.
+  const [dragOrder, setDragOrder] = useState<ID[] | null>(null);
+
+  // If the underlying records change (add/delete) while not dragging, the
+  // persisted order is the source of truth — nothing to reconcile.
+  const orderedIds = dragOrder ?? persistedOrder;
+
+  const recordById = useMemo(
+    () => new Map(resolvedRecords.map((r) => [r.id, r])),
+    [resolvedRecords],
+  );
+  const orderedRecords = useMemo(
+    () =>
+      orderedIds.map((id) => recordById.get(id)).filter((r): r is Page => !!r),
+    [orderedIds, recordById],
+  );
   const columnValuesByProp = useMemo(() => {
     const map: Record<string, CellValue[]> = {};
     for (const prop of source.properties) {
       if (prop.config.type !== "number") continue;
-      map[prop.id] = resolvedRecords.map(
+      map[prop.id] = orderedRecords.map(
         (r) => (r.values?.[prop.id] ?? null) as CellValue,
       );
     }
     return map;
-  }, [resolvedRecords, source.properties]);
+  }, [orderedRecords, source.properties]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
+
+  function onDragStart() {
+    // Seed the optimistic order from the persisted one at drag start.
+    setDragOrder(persistedOrder);
+  }
+
+  function onDragOver(e: DragOverEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    setDragOrder((prev) => {
+      const base = prev ?? persistedOrder;
+      const from = base.indexOf(String(active.id));
+      const to = base.indexOf(String(over.id));
+      if (from === -1 || to === -1) return base;
+      return arrayMove(base, from, to);
+    });
+  }
+
+  function onDragEnd() {
+    const finalOrder = dragOrder;
+    setDragOrder(null);
+    if (!finalOrder) return;
+    // Persist if the optimistic order ended up different from what's saved —
+    // independent of whether `over` resolved at the release point.
+    const changed =
+      finalOrder.length !== persistedOrder.length ||
+      finalOrder.some((id, i) => id !== persistedOrder[i]);
+    if (changed) {
+      onUpdateView({ manualOrder: finalOrder } as Partial<GalleryView>);
+    }
+  }
+
+  function onDragCancel() {
+    setDragOrder(null);
+  }
 
   return (
     <div
@@ -64,33 +189,46 @@ export function DatabaseGalleryNodeView({
         } as React.CSSProperties
       }
     >
-      <div className="db-gallery__body">
-        {resolvedRecords.map((rec) => (
-          <div key={rec.id} className="db-gallery__card">
-            <BoardCard
-              record={rec}
-              properties={cardProps}
-              cardPreview="cover"
-              sourceId={attrs.sourceId!}
-              onChange={(propId, v) => setCellValue(rec.id, propId, v)}
-              view={view}
-              columnValuesByProp={columnValuesByProp}
-            />
-          </div>
-        ))}
-      </div>
-
-      <Button
-        variant="ghost"
-        style={{
-          justifyContent: "flex-start",
-          borderRadius: "var(--tt-radius-sm)",
-        }}
-        onClick={() => addRecordAsync({ title: "" })}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={galleryCollision}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragEnd={onDragEnd}
+        onDragCancel={onDragCancel}
       >
-        <Plus className="tiptap-button-icon" />
-        <span className="tiptap-button-text">New</span>
-      </Button>
+        <SortableContext items={orderedIds} strategy={rectSortingStrategy}>
+          <div className="db-gallery__body">
+            {orderedRecords.map((rec) => (
+              <SortableGalleryCard key={rec.id} id={rec.id}>
+                <BoardCard
+                  record={rec}
+                  properties={cardProps}
+                  cardPreview="cover"
+                  sourceId={attrs.sourceId!}
+                  onChange={(propId, v) => setCellValue(rec.id, propId, v)}
+                  view={view}
+                  columnValuesByProp={columnValuesByProp}
+                  disableDrag
+                />
+              </SortableGalleryCard>
+            ))}
+            <button
+              type="button"
+              className="db-new-card db-new-card--gallery"
+              contentEditable={false}
+              onClick={() => addRecordAsync({ title: "" })}
+            >
+              <span className="db-new-card__label">
+                <Plus size={16} />
+                <span>New page</span>
+              </span>
+            </button>
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }
+
+export const DatabaseGalleryNodeView = memo(DatabaseGalleryNodeViewImpl);

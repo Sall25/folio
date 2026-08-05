@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { useDataSource } from "../hooks/use-data-source";
@@ -31,7 +31,7 @@ function isoToMonthDay(iso: string) {
   return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() };
 }
 
-export function DatabaseCalendarNodeView({
+export function DatabaseCalendarNodeViewImpl({
   attrs,
   source,
   onUpdateView,
@@ -258,3 +258,5 @@ export function DatabaseCalendarNodeView({
     </div>
   );
 }
+
+export const DatabaseCalendarNodeView = memo(DatabaseCalendarNodeViewImpl);

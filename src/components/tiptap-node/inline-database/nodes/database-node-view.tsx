@@ -75,6 +75,8 @@ import { useWhyDidYouRender } from "src/lib/useWhyDidYouRender";
 
 type PropertyType = PropertyConfig["type"];
 
+const EMPTY_SOURCE = { properties: [] };
+
 export function DatabaseNodeView({
   node,
   editor,
@@ -97,13 +99,20 @@ export function DatabaseNodeView({
     resolvedRecords,
     addRecordAsync,
   } = useDataSource(attrs.sourceId);
+  const attrsRef = useRef(attrs);
+  attrsRef.current = attrs;
+
+  const handleTitleUpdate = useCallback(
+    (title: string) => updateAttributes({ ...attrsRef.current, title }),
+    [updateAttributes],
+  );
 
   const db = useDatabase(
     attrs,
     updateAttributes,
-    source ?? { properties: [] },
+    source ?? EMPTY_SOURCE,
     updatePropertiesAsync,
-    (title: string) => updateAttributes({ ...attrs, title }),
+    handleTitleUpdate,
   );
   const activeView = db.activeView;
 
@@ -593,6 +602,7 @@ export function DatabaseNodeView({
         view={db.activeView}
         attrs={attrs}
         source={source}
+        onUpdateView={onUpdateView}
       />,
     );
   if (activeView?.type === "gallery")
@@ -601,6 +611,7 @@ export function DatabaseNodeView({
         view={db.activeView}
         attrs={attrs}
         source={source}
+        onUpdateView={onUpdateView}
       />,
     );
   if (activeView?.type === "list")

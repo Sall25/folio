@@ -42,7 +42,7 @@ export function DatabaseViewTabs({
   const [open, setOpen] = useState(false);
 
   // Keep the "+" visible while its picker is open, even if the mouse leaves.
-  const showAdd = open;
+  const showAdd = true; //open;
 
   return (
     <div

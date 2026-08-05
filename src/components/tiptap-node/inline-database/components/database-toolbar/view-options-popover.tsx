@@ -465,7 +465,7 @@ export function ViewOptionsPopover({
       }}
     >
       <PopoverTrigger asChild>
-        <Button size="small" variant="ghost" tooltip="Settings">
+        <Button variant="ghost" tooltip="Settings">
           <SettingsSlidersIcon className="tiptap-button-icon" />
         </Button>
       </PopoverTrigger>

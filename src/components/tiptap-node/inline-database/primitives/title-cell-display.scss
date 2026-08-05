@@ -156,10 +156,11 @@
 }
 
 .open-button{
-  padding: 2px 6px !important;
-  background-color: var(--tt-gray-light-100);
+  padding: 2px !important;
+  box-shadow: var(--tt-shadow-elevated-md);
+  background-color: var(--tt-gray-light-50);
   .dark & {
-    background-color: var(--tt-gray-dark-100);
+    background-color: var(--tt-gray-dark-50);
   }
 }
 

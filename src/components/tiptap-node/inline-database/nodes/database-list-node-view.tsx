@@ -18,7 +18,7 @@ import { recordMatchesFilters } from "../utils/apply-filters";
 import { sortRecords } from "../utils/apply-sorts";
 import { groupRecords } from "../utils/group-records";
 import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 
 function ListRow({
   record,
@@ -69,7 +69,7 @@ function ListRow({
   );
 }
 
-export function DatabaseListNodeView({
+function DatabaseListNodeViewImpl({
   attrs,
   source,
   onUpdateView,
@@ -183,21 +183,23 @@ export function DatabaseListNodeView({
         })}
       </div>
 
-      <Button
-        variant="ghost"
-        style={{
-          justifyContent: "flex-start",
-          borderRadius: "var(--tt-radius-sm)",
-        }}
-        onClick={async () => {
+      <button
+        type="button"
+        className="db-new-row"
+        contentEditable={false}
+        onClick={() => {
           addRecordAsync({ title: "" })
             .then((page) => setTarget({ pageId: page.id, view: "Peek" }))
             .catch(() => console.log("failed to add page to list"));
         }}
       >
-        <Plus className="tiptap-button-icon" />
-        <span className="tiptap-button-text">New</span>
-      </Button>
+        <span className="db-new-row__label">
+          <Plus size={16} />
+          <span>New page</span>
+        </span>
+      </button>
     </div>
   );
 }
+
+export const DatabaseListNodeView = memo(DatabaseListNodeViewImpl);

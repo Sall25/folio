@@ -7,6 +7,7 @@ import type { PageCover } from "src/types";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { CellEditorPopover } from "./cell-editor-popover";
 import "./title-cell-display.scss";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
 export interface TitleCellDisplayProps {
   value: string;
@@ -147,10 +148,16 @@ export function TitleCellDisplay({
           {openVariant === "edit" ? (
             <Pencil className="tiptap-button-icon" size={12} />
           ) : (
-            <PanelRightOpen className="tiptap-button-icon" size={12} />
+            <>
+              <Spacer orientation="horizontal" size={2} />
+              <PanelRightOpen className="tiptap-button-icon" size={12} />
+            </>
           )}
           {openVariant === "open" && (
-            <span className="tiptap-button-text">Open</span>
+            <>
+              <span className="tiptap-button-text">Open</span>
+              <Spacer orientation="horizontal" size={2} />
+            </>
           )}
         </Button>
       )}

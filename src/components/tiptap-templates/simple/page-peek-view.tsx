@@ -236,7 +236,11 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
             variant="ghost"
             onClick={onClose}
           >
-            <ChevronsRight className="tiptap-button-icon" />
+            <ChevronsRight
+              className="tiptap-button-icon"
+              strokeWidth={1}
+              style={{ width: 28, height: 22 }}
+            />
           </Button>
           <Button
             variant="ghost"

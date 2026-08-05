@@ -199,3 +199,9 @@
     margin-bottom: 0;
   }
 }
+
+.db-board-col-footer{
+  &__add{
+    border: 1px solid var(--tt-border-color) !important;
+  }
+}

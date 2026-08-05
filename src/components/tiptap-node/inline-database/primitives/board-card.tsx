@@ -38,6 +38,7 @@ export function BoardCard({
   onCoverPositionChange,
   onLayout,
   onPropertyVisibility,
+  disableDrag = false,
 }: {
   record: Page;
   properties: DatabaseProperty[];
@@ -53,11 +54,19 @@ export function BoardCard({
   onLayout?: () => void;
   /** View-level property visibility — opens the properties panel. */
   onPropertyVisibility?: () => void;
+  disableDrag?: boolean;
 }) {
   const [repositioning, setRepositioning] = useState(false);
   const { setTarget } = usePageView();
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({ id: linkedPage.id });
+  // When a parent (e.g. the gallery's SortableContext) owns the drag, don't
+  // register our own — two dnd nodes with the same id cancel each other out
+  // and the drop never resolves.
+  const draggable = useDraggable({ id: linkedPage.id });
+  const setNodeRef = disableDrag ? undefined : draggable.setNodeRef;
+  const attributes = disableDrag ? undefined : draggable.attributes;
+  const listeners = disableDrag ? undefined : draggable.listeners;
+  const transform = disableDrag ? null : draggable.transform;
+  const isDragging = disableDrag ? false : draggable.isDragging;
 
   const titleProp = properties.find((p) => p.config.type === "title") ?? null;
   // Non-title props that actually have a value — empty ones are hidden so the

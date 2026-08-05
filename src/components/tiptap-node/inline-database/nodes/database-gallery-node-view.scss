@@ -80,3 +80,23 @@
 .status-badge{
   padding: 5px 10px;
 }
+
+.db-new-card--gallery {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;            // match your gallery card height
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-lg);   // gallery cards use radius-lg
+  background: transparent;
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+  transition: background 80ms ease;
+
+  &:hover {
+    background: var(--tt-gray-light-a-100);
+    .dark & {
+      background: var(--tt-gray-dark-a-50);
+    }
+  }
+}

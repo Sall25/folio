@@ -212,14 +212,16 @@ export function DatabaseToolbar({
               {collapsed ? (
                 <ChevronsLeft
                   className="tiptap-button-icon"
-                  style={{ width: 24, height: 18 }}
-                  size={18}
+                  style={{ width: 28, height: 24 }}
+                  strokeWidth={1}
+                  // size={18}
                 />
               ) : (
                 <ChevronsRight
                   className="tiptap-button-icon"
-                  style={{ width: 24, height: 18 }}
-                  size={18}
+                  style={{ width: 28, height: 24 }}
+                  strokeWidth={1}
+                  // size={18}
                 />
               )}
             </Button>
@@ -234,6 +236,8 @@ export function DatabaseToolbar({
               {!locked && (
                 <>
                   <SearchButton db={db} />
+
+                  <Spacer orientation="horizontal" size={1} />
 
                   {activeFilterCount > 0 ? (
                     // Rules exist → the button toggles the chip bar.
@@ -261,7 +265,6 @@ export function DatabaseToolbar({
                         <Button
                           variant="ghost"
                           tooltip="Filter"
-                          size="small"
                           data-active-state="off"
                           style={{
                             minHeight: 22,
@@ -289,7 +292,7 @@ export function DatabaseToolbar({
                       </PopoverContent>
                     </Popover>
                   )}
-
+                  <Spacer orientation="horizontal" size={1} />
                   {activeSortCount > 0 ? (
                     <Button
                       variant="ghost"
@@ -312,7 +315,6 @@ export function DatabaseToolbar({
                         <Button
                           tooltip="Sort"
                           variant="ghost"
-                          size="small"
                           data-active-state={activeSortCount > 0 ? "on" : "off"}
                           style={{
                             minHeight: 22,
@@ -341,10 +343,9 @@ export function DatabaseToolbar({
                       </PopoverContent>
                     </Popover>
                   )}
-
+                  <Spacer orientation="horizontal" size={1} />
                   <Button
                     variant="ghost"
-                    size="small"
                     tooltip="Open as full page"
                     disabled={!dbPageId}
                     onClick={() => {
@@ -360,7 +361,7 @@ export function DatabaseToolbar({
                 </>
               )}
             </div>
-
+            {/* <Spacer orientation="horizontal" size={1} /> */}
             {activeView && (
               <ViewOptionsPopover
                 properties={properties}
@@ -368,7 +369,7 @@ export function DatabaseToolbar({
                 view={activeView}
               />
             )}
-
+            <Spacer orientation="horizontal" size={1} />
             {/* New record stays available when locked (adding data is allowed).
                 The template dropdown changes the database template → frozen. */}
             {!collapsed && (
@@ -378,15 +379,15 @@ export function DatabaseToolbar({
                   background: "var(--tt-brand-color-400)",
                   borderRadius: "var(--tt-radius-sm)",
                   color: "white",
-                  minHeight: 26,
-                  height: 26,
+                  minHeight: 30,
+                  height: 30,
                   padding: "0px 8px",
                   cursor: "pointer",
                 }}
                 contentEditable={false}
               >
                 <span
-                  style={{ fontSize: 11.5, fontWeight: "bold" }}
+                  style={{ fontSize: 12.5, fontWeight: "bold" }}
                   onClick={handleNewPage}
                 >
                   New
@@ -528,7 +529,6 @@ function SearchButton({ db }: { db: UseDatabaseReturn }) {
         <Button
           variant="ghost"
           tooltip="Search"
-          size="small"
           data-active-state={db.searchQuery ? "on" : "off"}
           style={{
             minHeight: 22,

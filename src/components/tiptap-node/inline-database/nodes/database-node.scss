@@ -375,3 +375,66 @@ body.db-row-dragselect {
     border-radius: var(--tt-radius-sm);
   }
 }
+
+// Empty "New page" affordance shaped like the view's unit (card or row).
+.db-new-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 120px;
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-lg);
+  background: transparent;
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+  transition: background 80ms ease, border-color 80ms ease;
+
+  &:hover {
+    background: var(--tt-gray-light-a-100);
+    .dark & {
+      background: var(--tt-gray-dark-a-50);
+    }
+  }
+
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+  }
+
+  // In a board column the card is short, not tall.
+  &--column {
+    min-height: 40px;
+    border-radius: var(--tt-radius-sm);
+  }
+}
+
+.db-new-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 34px;
+  padding: 0 8px;
+  border: none;
+  background: transparent;
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+  border-radius: var(--tt-radius-sm);
+  transition: background 80ms ease;
+
+  &:hover {
+    background: var(--tt-gray-light-a-100);
+    .dark & {
+      background: var(--tt-gray-dark-a-50);
+    }
+  }
+
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+  }
+}

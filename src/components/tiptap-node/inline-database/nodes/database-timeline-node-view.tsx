@@ -5,7 +5,7 @@ import {
   ChevronsRight,
   Plus,
 } from "lucide-react";
-import { useMemo, useRef, useState, useCallback } from "react";
+import { useMemo, useRef, useState, useCallback, memo } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { useDataSource } from "../hooks/use-data-source";
@@ -148,7 +148,7 @@ function getBarGeo(rec: TimelineRecord, range: ViewRange, hasEnd: boolean) {
 
 const TIMEFRAMES: Timeframe[] = ["day", "week", "month", "quarter", "year"];
 
-export function DatabaseTimelineNodeView({
+export function DatabaseTimelineNodeViewImpl({
   attrs,
   source,
   onUpdateView,
@@ -439,3 +439,5 @@ export function DatabaseTimelineNodeView({
     </div>
   );
 }
+
+export const DatabaseTimelineNodeView = memo(DatabaseTimelineNodeViewImpl);

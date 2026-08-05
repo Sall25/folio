@@ -399,6 +399,10 @@ export interface BoardView extends BaseView {
   groupByPropertyId: ID;
   showEmptyGroups: boolean;
   cardPreview?: "none" | "cover" | "content";
+  /** Record ids in user-arranged order. Applied after `sorts`; ids not present
+   *  fall through in sorted order. Flat across columns — per-column order is
+   *  derived by filtering this to the column's records. */
+  manualOrder?: ID[];
 }
 
 export interface GalleryView extends BaseView {
@@ -407,6 +411,10 @@ export interface GalleryView extends BaseView {
   cardSize: "small" | "medium" | "large";
   coverFit: "cover" | "contain";
   cardPreview?: "none" | "cover" | "content";
+  /** Record ids in user-arranged order. Applied after `sorts`; ids not present
+   *  fall through in sorted order. Flat across columns — per-column order is
+   *  derived by filtering this to the column's records. */
+  manualOrder?: ID[];
 }
 
 export interface CalendarView extends BaseView {
