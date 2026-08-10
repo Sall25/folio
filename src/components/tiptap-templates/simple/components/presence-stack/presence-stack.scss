@@ -1,0 +1,15 @@
+.presence-stack {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 8px 3px 4px;
+  border-radius: 20px;
+  background: var(--tt-card-bg-color, var(--tt-gray-light-a-50));
+  border: 0.5px solid var(--tt-border-color);
+
+  &__label {
+    font-size: 11.5px;
+    color: var(--tt-text-secondary);
+    white-space: nowrap;
+  }
+}

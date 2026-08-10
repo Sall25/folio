@@ -13,24 +13,21 @@ interface UseCollabDocResult {
   isSynced: boolean;
 }
 
-/**
- * One Yjs doc + Hocuspocus connection per page. Recreates both whenever
- * `page.id` changes (switching pages), and cleans up the previous
- * connection on the way out.
- *
- * Seeding of existing content is NOT done here — it happens once on the
- * server in onLoadDocument (the documented, race-free place). By the time
- * this hook reports `isSynced`, the doc already holds the correct content.
- */
 export function useCollabDoc(page: Page | null): UseCollabDocResult {
   const { session } = useSession();
   const [isSynced, setIsSynced] = useState(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const ydoc = useMemo(() => new Y.Doc(), [page?.id]);
+
+  useEffect(() => {
+    return () => {
+      ydoc.destroy();
+    };
+  }, [ydoc]);
 
   const provider = useMemo(() => {
     if (!page || !session?.access_token) return null;
-
     return new HocuspocusProvider({
       url: HOCUSPOCUS_URL,
       name: `page:${page.id}`,
@@ -44,8 +41,13 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
     if (!provider || !page) return;
 
     setIsSynced(false);
+    // in useCollabDoc, in the synced handler:
+    const handleSynced = () => {
+      const xml = ydoc.getXmlFragment("default"); // or your content field
+      console.log("[synced]", page?.id, "doc length:", xml.length);
+      setIsSynced(true);
+    };
 
-    const handleSynced = () => setIsSynced(true);
     provider.on("synced", handleSynced);
 
     return () => {

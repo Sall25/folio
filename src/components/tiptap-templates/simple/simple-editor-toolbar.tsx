@@ -34,6 +34,7 @@ import { SharePanel } from "./components/share-panel";
 import { useRef, useState } from "react";
 import { usePageCapabilities } from "src/hooks/use-page-role";
 import { NetworkStatusBadge } from "./components/network-status-badge";
+import { ToolbarPresence } from "./components/toolbar-presence";
 
 function Expand() {
   // const { t } = useTranslation();
@@ -265,6 +266,8 @@ export const DesktopToolbarContent = ({
   return (
     <>
       <TitleGroup view={view} />
+      <Spacer />
+      <ToolbarPresence />
       <Spacer />
 
       <ToolbarGroup>

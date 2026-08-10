@@ -26,6 +26,7 @@ import { useCreatePage } from "src/hooks/use-create-page";
 import { makePage } from "src/utils/make-page";
 import { useScrollToPendingTarget } from "../components/inbox-panel";
 import { usePageCapabilities } from "src/hooks/use-page-role";
+import { CollabProviderContext } from "./collab-provider-context";
 
 // Exactly the array type useEditorExtensions produces — derived so it can't
 // drift from the real return, whatever member types are in it (one of them
@@ -175,8 +176,10 @@ function EditorInstance({
       CollaborationCaret.configure({
         provider,
         user: {
+          id: person?.id ?? null,
           name: person?.name ?? "Anonymous",
           color: person ? colorForPersonId(person.id) : "#999999",
+          avatarUrl: person?.avatarUrl ?? null,
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }) as any,
@@ -314,26 +317,28 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   return (
     <EditorSyncContext.Provider value={{ isSyncing }}>
       <EditorRefsContext.Provider value={refsRef}>
-        {ready ? (
-          <EditorInstance
-            key={activePage.id}
-            page={activePage}
-            isDbPage={isDbPage}
-            ydoc={ydoc}
-            provider={provider}
-            baseExtensions={extensions}
-            refsRef={refsRef}
-          >
-            {children}
-          </EditorInstance>
-        ) : (
-          // Before a page is synced, provide a null editor so UI that reads
-          // useCurrentEditor() renders its empty/loading state instead of
-          // crashing. Same context shape, editor just isn't there yet.
-          <EditorContext.Provider value={{ editor: null }}>
-            {children}
-          </EditorContext.Provider>
-        )}
+        <CollabProviderContext.Provider value={provider ?? null}>
+          {ready ? (
+            <EditorInstance
+              key={activePage.id}
+              page={activePage}
+              isDbPage={isDbPage}
+              ydoc={ydoc}
+              provider={provider}
+              baseExtensions={extensions}
+              refsRef={refsRef}
+            >
+              {children}
+            </EditorInstance>
+          ) : (
+            // Before a page is synced, provide a null editor so UI that reads
+            // useCurrentEditor() renders its empty/loading state instead of
+            // crashing. Same context shape, editor just isn't there yet.
+            <EditorContext.Provider value={{ editor: null }}>
+              {children}
+            </EditorContext.Provider>
+          )}
+        </CollabProviderContext.Provider>
       </EditorRefsContext.Provider>
     </EditorSyncContext.Provider>
   );

@@ -131,6 +131,14 @@ export function makeDatabasePage(opts: {
       category: opts.category ?? "Private",
     }),
     content: databasePageContent(opts.sourceId, name),
-    settings: { width: "medium", text: "normal", locked: true },
+    settings: { width: "full", text: "normal", locked: false },
+    cover: {
+      iconName: "table",
+      coverImage: null,
+      target: null,
+      color: null,
+      gradient: null,
+      positionY: null,
+    },
   };
 }

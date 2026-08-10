@@ -61,6 +61,12 @@ import {
 import { CustomizeSidebarPanel } from "./components/customize-sidebar-panel";
 import { useHiddenSections } from "./hooks/use-hidden-sections";
 import { useSectionOrder } from "./hooks/use-sidebar-order";
+import {
+  Grid,
+  GridRow,
+  GridCell,
+} from "src/components/tiptap-ui-primitive/grid";
+import { usePeopleBase } from "src/hooks/use-people";
 
 function UserSkeleton() {
   return (
@@ -73,13 +79,12 @@ function UserSkeleton() {
 
 function User({ hovered }: { hovered: boolean }) {
   const { person, isLoading } = useCurrentPerson();
-  const { workspace } = useCurrentWorkspace();
 
+  const { workspace } = useCurrentWorkspace();
+  const { data: memberCount = 0 } = usePeopleBase((people) => people.length);
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const initialRef = useRef<HTMLButtonElement>(null);
 
-  // Workspace identity for the header (falls back to person name until the
-  // workspace row loads).
   const wsName = workspace?.name ?? person?.name ?? "";
   const wsIcon = workspace?.icon ?? null;
   const initial = wsName ? wsName.charAt(0).toUpperCase() : "?";
@@ -90,57 +95,112 @@ function User({ hovered }: { hovered: boolean }) {
 
   return (
     <>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            ref={initialRef} // ← add
+      <Grid columns="36px 1fr " gap={4} style={{ width: "100%" }}>
+        <GridRow>
+          <GridCell>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  ref={initialRef}
+                  className="name-initial workspace-avatar"
+                  data-highlighted={true}
+                  onClick={() => setSwitcherOpen((v) => !v)}
+                  // variant="primary"
+                  style={{
+                    width: 26,
+                    height: 24,
+                    minWidth: 26,
+                    minHeight: 24,
+                    padding: 0,
+                    borderRadius: "var(--tt-radius-sm)",
+                    cursor: "pointer",
+                    // boxShadow: "var(--tt-shadow-elevated-sm)",
+                    border: "1px solid var(--tt-border-color)",
+                  }}
+                >
+                  <span className="tiptap-button-icon workspace-icon-button">
+                    {wsIcon ? wsIcon : initial}
+                    {unreadCount > 0 && (
+                      <span className="workspace-notification-badge" />
+                    )}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent>
+                <WorkspaceSwitcherPopover
+                  anchorRef={initialRef}
+                  open={switcherOpen}
+                  onClose={() => setSwitcherOpen(false)}
+                />
+              </PopoverContent>
+            </Popover>
+          </GridCell>
+
+          {/* ── Middle: name over subtext ── */}
+          <GridCell
             style={{
-              minWidth: 20,
-              width: 20,
-              minHeight: 20,
-              height: 20,
-              cursor: "pointer",
-              borderRadius: "var(--tt-radius-sm)",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              justifyContent: "center",
+              gap: 1,
+              maxWidth: hovered ? 150 : "fit-content",
+              transition: "max-width 0.15s ease",
             }}
-            className="name-initial"
-            data-highlighted={true}
-            onClick={() => setSwitcherOpen((v) => !v)} // ← add
           >
-            <span className="tiptap-button-icon workspace-icon-button">
-              {wsIcon ? wsIcon : initial} {/* ← icon if set, else initial */}
-              {unreadCount > 0 && (
-                <span className="workspace-notification-badge">
-                  {/* {unreadCount > 99 ? "99+" : unreadCount} */}
-                </span>
-              )}
+            <span
+              style={{
+                color: "var(--tt-text-primary)",
+                fontSize: 14,
+                fontWeight: 600,
+                lineHeight: 1.15,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                maxWidth: "100%",
+              }}
+            >
+              {wsName}
             </span>
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent>
-          <WorkspaceSwitcherPopover
-            anchorRef={initialRef}
-            open={switcherOpen}
-            onClose={() => setSwitcherOpen(false)}
-          />
-        </PopoverContent>
-      </Popover>
-      <Spacer orientation="horizontal" size={2} />
-      <span
-        style={{
-          color: "var(--tt-text-primary)",
-          fontSize: 14,
-          fontWeight: 600,
-          fontFamily:
-            'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif',
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          maxWidth: hovered ? 150 : "fit-content",
-          transition: "max-width 0.15s ease",
-        }}
-      >
-        {wsName}
-      </span>
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: 11,
+                lineHeight: 1.15,
+                color: "var(--tt-theme-muted)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <span
+                style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: "50%",
+                  background: "var(--tt-color-text-green, #1D9E75)",
+                  flex: "none",
+                }}
+              />
+              {memberCount} {memberCount === 1 ? "member" : "members"}
+            </span>
+          </GridCell>
+
+          {/* ── Right: switcher chevron ── */}
+          {/* <GridCell style={{ justifyContent: "flex-end" }}>
+            <ChevronDown
+              size={16}
+              strokeWidth={1.5}
+              style={{
+                color: "var(--tt-theme-muted)",
+                opacity: hovered ? 1 : 0.6,
+                transition: "opacity 0.12s ease",
+                cursor: "pointer",
+              }}
+              onClick={() => setSwitcherOpen((v) => !v)}
+            />
+          </GridCell> */}
+        </GridRow>
+      </Grid>
     </>
   );
 }
@@ -173,8 +233,10 @@ function NewPageCard() {
         minHeight: 30,
         height: 40,
         boxShadow: "var(--tt-shadow-elevated-md)",
-        borderRadius: "300px !important",
-        background: "var(--tt-brand-color-500)",
+        borderRadius: "100% !important",
+        background: "inherit",
+        border: "1px solid var(--tt-border-color)",
+        // background: "var(--tt-brand-color-600)",
         cursor: "pointer",
       }}
     >
@@ -190,14 +252,17 @@ function NewPageCard() {
       >
         <Button
           variant="ghost"
-          size="large"
+          // size="large"
           style={{
             background: "transparent",
-            color: "white",
+            color: "var(--tt-text-primary)",
             cursor: "pointer",
           }}
         >
-          <PenBox className="tiptap-button-icon" style={{ color: "white" }} />
+          <PenBox
+            className="tiptap-button-icon"
+            style={{ color: "var(--tt-text-primary)" }}
+          />
           <Spacer orientation="horizontal" size={5} />
           <span
             className="tiptap-button-text"
@@ -648,7 +713,7 @@ export function SimpleEditorSidebar() {
         >
           <CardItemGroup orientation="vertical" style={{ width: "100%" }}>
             <WorkspaceHeader />
-            <Spacer orientation="vertical" size={4} />
+            <Spacer orientation="vertical" size={6} />
             <NavItems />
           </CardItemGroup>
         </CardHeader>

@@ -74,7 +74,7 @@ export function useBreadcrumbs(pageId: ID | null) {
 export function useRecentPages(limit?: number) {
   return usePagesBase((pages) => {
     const sorted = [...pages]
-      .filter((p) => p.sourceId == null)
+      .filter((p) => p.sourceId == null && p.deletedAt == null)
       .sort(
         (a, b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt),
       );

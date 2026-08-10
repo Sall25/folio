@@ -68,6 +68,12 @@ const server = new Server<AuthContext>({
   // doc is hydrated from stored content here, so by the time the client's
   // Collaboration extension and TitleNode see it, it's already correct.
   async onLoadDocument({ documentName, document }) {
+    console.log(
+      "[onLoadDocument]",
+      documentName,
+      "isEmpty:",
+      document.isEmpty("default"),
+    );
     if (!document.isEmpty("default")) return;
 
     const pageId = documentName.startsWith("page:")
