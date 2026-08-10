@@ -1,6 +1,7 @@
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import type { Page } from "src/types";
 import type { CSSProperties } from "react";
+import { FileIcon } from "src/components/tiptap-icons";
 
 interface PageItemIconProps {
   cover: Page["cover"];
@@ -8,11 +9,7 @@ interface PageItemIconProps {
   usePrimaryColor?: boolean;
 }
 
-export function PageItemIcon({
-  cover,
-  styles,
-  usePrimaryColor,
-}: PageItemIconProps) {
+export function PageItemIcon({ cover, styles }: PageItemIconProps) {
   const hasIcon = Boolean(cover.iconName);
 
   if (cover.target === "Emoji" && hasIcon) {
@@ -44,28 +41,40 @@ export function PageItemIcon({
             filled={true}
           />
         ) : (
-          <DynamicIcon
-            name="description"
-            size={21}
-            weight={400}
-            filled={false}
+          <FileIcon
+            size={36}
             style={{
+              width: 32,
+              height: 32,
               color:
                 !cover.color || cover.color === "var(--tt-text-color)"
                   ? "var(--tt-text-color)"
                   : cover.color,
             }}
           />
+          // <DynamicIcon
+          //   name="description"
+          //   size={21}
+          //   weight={400}
+          //   filled={false}
+          //   style={{
+          //     color:
+          //       !cover.color || cover.color === "var(--tt-text-color)"
+          //         ? "var(--tt-text-color)"
+          //         : cover.color,
+          //   }}
+          // />
         )}
       </span>
     );
   }
 
   return (
-    <span className="page-icon" style={{ ...styles }} aria-hidden="true">
-      <DynamicIcon
+    <span className="page-icon" /*style={{ ...styles }}*/ aria-hidden="true">
+      <FileIcon size={36} style={{ width: 32, height: 32 }} />
+      {/* <DynamicIcon
         name="description"
-        size={21}
+        size={22}
         weight={400}
         filled={false}
         style={{
@@ -73,7 +82,7 @@ export function PageItemIcon({
             ? "var(--tt-text-primary)"
             : "var(--tt-text-color)",
         }}
-      />
+      /> */}
     </span>
   );
 }

@@ -119,12 +119,10 @@ export function SectionMenuItem({
 }) {
   const { close } = useContext(SectionMenuContext);
   return (
-    <button
+    <Button
       type="button"
-      className={[
-        "sidebar-section-menu__item",
-        danger && "sidebar-section-menu__item--danger",
-      ]
+      variant="ghost"
+      className={[danger && "sidebar-section-menu__item--danger"]
         .filter(Boolean)
         .join(" ")}
       disabled={disabled}
@@ -132,11 +130,17 @@ export function SectionMenuItem({
         onClick?.();
         if (closeOnClick) close();
       }}
+      style={{ width: "100%" }}
     >
-      {icon}
-      <span>{label}</span>
-      {selected && <Check size={14} className="sidebar-section-menu__check" />}
-    </button>
+      <span className="tiptap-button-icon">{icon}</span>
+      <span className="tiptap-button-text">{label}</span>
+      {selected && (
+        <Check
+          className="tiptap-button-icon-sub"
+          size={14} /*className="sidebar-section-menu__check"*/
+        />
+      )}
+    </Button>
   );
 }
 

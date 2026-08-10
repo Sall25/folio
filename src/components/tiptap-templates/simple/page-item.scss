@@ -49,8 +49,11 @@
   }
 
   &.active {
+    .page-item-title{
+       max-width: calc(var(--sidebar-width, 290px) - 124px);
+    }
     background: var(--page-item-active-bg-color);
-    color: var(--tt-text-primary);
+    color: var(--tt-text-primary) !important;
     font-weight: 500;
     .dark & {
       color: var(--white);
@@ -69,42 +72,56 @@
     align-items: center;
     gap: 1px;
     width: 55px;
-    flex-shrink: 0;
-    opacity: 0;
+    // flex-shrink: 0;
+    // opacity: 0;
     pointer-events: none;
     transition: opacity 0.1s;
    
     // no width:0 or overflow:hidden — space is always reserved
   }
 
+  .page-item-title{
+    color: inherit;
+  }
+
   &:hover .page-item-actions,
   &.active .page-item-actions {
     opacity: 1;
     pointer-events: auto;
+    width: 55px;
+    max-width: 55px;
   }
 
-  max-width: calc(var(--sidebar-width, 290px) - 10px);
+  max-width: calc(var(--sidebar-width, 290px) - 5px);
 
   &:hover{
     .page-item-title{
+       max-width: calc(var(--sidebar-width, 290px) - 124px);
+      
       // was 130px at the fixed 290px sidebar → same 168px offset, now live
-      max-width: calc(var(--sidebar-width, 290px) - 124px);
+   //   max-width: calc(var(--sidebar-width, 290px) - 124px);
     }
+    .page-item-actions{
+      opacity: 1;
+      width: 55px !important;
+      max-width: 55px;
+    }
+   
   }
 }
 
 .page-item-title {
   font-size: 14px;
   
-  font-weight: inherit;
+  //font-weight: inherit;
   // color: #5f5e59;
 
-  color: inherit;
+  color: inherit !important;
   
   // color: inherit;
   opacity: 1;
-  // was 175px at the fixed 290px sidebar → same 120px offset, now live
-   max-width: calc(var(--sidebar-width, 290px) - 120px);
+  // was 175px at the fixed 290px sidebar 
+   max-width: calc(var(--sidebar-width, 290px) - 60px);
 
   flex: 1;           
   min-width: 0;     
@@ -116,8 +133,9 @@
   // letter-spacing: 0.1px;
   margin: 0;
   padding: 0;
-  line-height: 20px;
-  letter-spacing: -0.01em;
+  line-height: 1.4;
+  // letter-spacing: -0.01em;
+  font-weight: 500 !important;
   
   // line-height: 1.1;
   cursor: pointer;
@@ -164,7 +182,7 @@
 .sidebar-item-icon-wrapper {
   background-color: var(--white);
   border-radius: 4px;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.1s ease;
 }
 
 /* Pop the icon background slightly more when hovering over the row */

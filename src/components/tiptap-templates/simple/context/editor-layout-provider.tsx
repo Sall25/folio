@@ -60,6 +60,8 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
     "sidebar" | "popover" | null
   >(null);
 
+  const [customizeSidebarOpen, setCustomizeSidebarOpen] = useState(false);
+
   const commentDisplayMode: "sidebar" | "popover" =
     mode === "mobile" || mode === "tablet"
       ? "popover"
@@ -231,6 +233,8 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
         setCommentDisplayMode,
         sidebarHovered,
         setSidebarHovered,
+        customizeSidebarOpen,
+        setCustomizeSidebarOpen,
       }}
     >
       {children}

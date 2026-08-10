@@ -97,6 +97,7 @@
     "title": "Votre travail, exposé au grand jour",
     "desc": "Le foyer de tout ce que vous créez — applications, designs, animations, films, présentations — et des événements qui les mettent en lumière."
   },
+  "done": "Terminé",
   "recents": {
     "options": "Options des récents",
     "show": "Afficher",
@@ -109,7 +110,8 @@
     "shared": "Partagés",
     "teamspaces": "Travail de Groupes",
     "favorites": "Favoris",
-    "template": "Modèles"
+    "template": "Modèles",
+    "recent": "recent"
   },
  "page": {
     "untitled": "Sans titre",
@@ -252,6 +254,11 @@
       "hoursAgo": "il y a {{count}} h",
       "yesterday": "hier",
       "daysAgo": "il y a {{count}} j"
+    },
+     "firstRun": {
+      "guideTitle": "Read the quick start",   "guideDesc": "A 2-minute tour of the essentials.",
+      "dbTitle": "Try a database",            "dbDesc": "Tables, boards, and galleries.",
+      "blankTitle": "Create your first page", "blankDesc": "A blank page to make your own."
     }
   },
   "greeting": {

@@ -126,6 +126,7 @@ export function Cell({
           columnValues={columnValues as (number | null)[] | undefined}
           onChange={change}
           readonly={readonly}
+          align={view?.type === "table" ? "right" : "left"}
         />
       );
 

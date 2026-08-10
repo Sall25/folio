@@ -28,7 +28,9 @@ import { formatRelativeTime } from "src/utils/format-relative";
 import { FileIcon } from "src/components/tiptap-icons";
 import { usePersonNames } from "src/hooks/use-person-names";
 import { useCurrentPerson } from "src/hooks/use-session";
-export type LibraryTab = Exclude<PageCategory, "Template"> | "Recents";
+export type LibraryTab =
+  | Exclude<PageCategory, "Template" | "Recent">
+  | "Recents";
 
 function Tabs({
   active,
@@ -350,8 +352,8 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
           <span className="library">{t("library.title")}</span>
           <Spacer orientation="horizontal" />
           <Button
+            variant="primary"
             style={{
-              background: "var(--tt-brand-color-400)",
               color: "white",
               borderRadius: "var(--tt-radius-sm)",
             }}
@@ -368,10 +370,7 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
                 .catch(() => console.log("Failed to create page"));
             }}
           >
-            <span
-              className="tiptap-button-text"
-              style={{ whiteSpace: "nowrap" }}
-            >
+            <span className="tiptap-button-text" style={{ width: "75px" }}>
               {t("actions.newPage")}
             </span>
           </Button>

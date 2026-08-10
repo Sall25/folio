@@ -6,7 +6,7 @@ import {
   type ReactNode,
   useEffect,
 } from "react";
-import { Plus, Pencil, Trash2, EyeOff } from "lucide-react";
+import { Pencil, Trash2, EyeOff, Layout } from "lucide-react";
 import {
   DndContext,
   PointerSensor,
@@ -65,6 +65,8 @@ import {
 import { PageRowSkeleton } from "./skeletons";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useActivePage } from "../context/active-page-context";
+import { useHiddenSections } from "../hooks/use-hidden-sections";
+import { useEditorLayout } from "../context/editor-layout-context";
 
 type DropZone = "before" | "after" | "inside";
 
@@ -234,34 +236,6 @@ function TreeRow({
   );
 }
 
-const SECTION_ADD_LABEL: Record<string, string> = {
-  private: "New private page",
-  shared: "Start collaborating",
-  teamspaces: "Create a teamspace",
-  favorites: "Star a page to pin it here",
-};
-
-// ── SectionAddPageButton: persistent "+ Add page" affordance ────────────────
-// Always rendered beneath a section's page list, empty or not.
-function SectionAddPageButton({
-  category,
-  onAddPage,
-}: {
-  category: PageCategory;
-  onAddPage?: (c: PageCategory) => void;
-}) {
-  return (
-    <button
-      className="sidebar-section__add-page"
-      onClick={() => onAddPage?.(category)}
-      type="button"
-    >
-      <Plus size={14} />
-      <span>{SECTION_ADD_LABEL[(category as string).toLowerCase()]}</span>
-    </button>
-  );
-}
-
 // ── TreeSection: wires dnd-kit droppables into the reusable Section ──────────
 // The reusable Section is dnd-agnostic; this wrapper owns the droppables and
 // passes their refs + active state down. Header/body droppable ids are
@@ -270,11 +244,12 @@ function SectionAddPageButton({
  * "Favorites" | "Shared" | "Private" | "Template" | "Teamspaces"
  */
 const CATEGORY_TRANSLATION_MAP: Record<PageCategory, string> = {
+  Recent: "section.recent",
   Favorites: "section.favorites",
   Shared: "section.shared",
   Private: "section.private",
-  Template: "section.template",
   Teamspaces: "section.teamspaces",
+  Template: "section.template",
 };
 
 function TreeSection({
@@ -329,6 +304,10 @@ function TreeSection({
   };
   const { t } = useTranslation();
 
+  const isRecent = category === "Recent";
+
+  const { setCustomizeSidebarOpen } = useEditorLayout();
+
   return (
     <Section
       label={t(CATEGORY_TRANSLATION_MAP[category]) ?? category}
@@ -337,70 +316,83 @@ function TreeSection({
       headerRef={setHeaderRef}
       bodyRef={setBodyRef}
       dropActive={isSectionDrop}
-      onAddClick={() => onAddPage?.(category)}
+      onAddClick={isRecent ? undefined : () => onAddPage?.(category)}
       addLabel={`New page in ${category}`}
       menuLabel={`${category} options`}
       hasLibrary={true}
       onLibraryClick={() => {
-        if (category === "Template") return;
+        if (category === "Template" || category === "Recent") return;
         handleLibraryClick(category);
       }}
       menu={
-        <>
-          <SectionMenuLabel>Order by</SectionMenuLabel>
-          <SectionMenuItem
-            label="Recent"
-            selected={sortMode === "recent"}
-            closeOnClick={false}
-            onClick={() => onSetSortMode("recent")}
-          />
-          <SectionMenuItem
-            label="Custom (drag to arrange)"
-            selected={sortMode === "custom"}
-            closeOnClick={false}
-            onClick={() => onSetSortMode("custom")}
-          />
-          <SectionMenuSeparator />
-          <SectionMenuItem
-            icon={<Pencil size={14} />}
-            label="Rename"
-            onClick={() => onRename?.(category)}
-          />
-          <SectionMenuItem
-            icon={<EyeOff size={14} />}
-            label="Hide section"
-            onClick={() => onHide?.(category)}
-          />
-          <SectionMenuSeparator />
-          <SectionMenuItem
-            danger
-            icon={<Trash2 size={14} />}
-            label="Delete"
-            onClick={() => onDelete?.(category)}
-          />
-        </>
+        isRecent ? undefined : (
+          <>
+            <SectionMenuLabel>Order by</SectionMenuLabel>
+            <SectionMenuItem
+              label="Recent"
+              selected={sortMode === "recent"}
+              closeOnClick={false}
+              onClick={() => onSetSortMode("recent")}
+            />
+            <SectionMenuItem
+              label="Custom (drag to arrange)"
+              selected={sortMode === "custom"}
+              closeOnClick={false}
+              onClick={() => onSetSortMode("custom")}
+            />
+            <SectionMenuSeparator />
+            <SectionMenuItem
+              icon={<Pencil size={14} />}
+              label="Rename"
+              onClick={() => onRename?.(category)}
+            />
+            <SectionMenuItem
+              icon={<EyeOff size={14} />}
+              label="Hide section"
+              onClick={() => onHide?.(category)}
+            />
+            <SectionMenuSeparator />
+            <SectionMenuItem
+              icon={<Layout size={14} />}
+              label="Customize sidebar"
+              onClick={() => setCustomizeSidebarOpen?.(true)}
+            />
+            <SectionMenuItem
+              danger
+              icon={<Trash2 size={14} />}
+              label="Delete"
+              onClick={() => onDelete?.(category)}
+            />
+          </>
+        )
       }
     >
       {isLoading
         ? Array.from({ length: 4 }).map((_, i) => (
             <PageRowSkeleton key={i} index={i} />
           ))
-        : topLevel.map((node) => (
-            <TreeRow
-              key={node.page.id}
-              node={node}
-              depth={0}
-              expandedIds={expandedIds}
-              onToggleExpand={onToggleExpand}
-              dropTarget={dropTarget}
-              activeId={activeId}
-              subtitleByPageId={subtitleByPageId}
-            />
-          ))}
-
-      {!isLoading && (
-        <SectionAddPageButton category={category} onAddPage={onAddPage} />
-      )}
+        : isRecent
+          ? topLevel.map((node) => (
+              <PageItem
+                key={node.page.id}
+                page={node.page}
+                depth={0}
+                disableActive={false}
+                showChevron={false}
+              />
+            ))
+          : topLevel.map((node) => (
+              <TreeRow
+                key={node.page.id}
+                node={node}
+                depth={0}
+                expandedIds={expandedIds}
+                onToggleExpand={onToggleExpand}
+                dropTarget={dropTarget}
+                activeId={activeId}
+                subtitleByPageId={subtitleByPageId}
+              />
+            ))}
     </Section>
   );
 }
@@ -512,7 +504,8 @@ export function SidebarTree({
   const [activeId, setActiveId] = useState<ID | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget>(null);
   const [expandedIds, setExpandedIds] = useState<Set<ID>>(new Set());
-  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const [hidden, toggleHidden] = useHiddenSections();
+
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(() =>
     // While loading, `tree` is empty — collapsing every section on that basis
     // would hide the skeleton rows entirely. Only auto-collapse empty sections
@@ -644,6 +637,7 @@ export function SidebarTree({
   const onDragEnd = (e: DragEndEvent) => {
     const activeIdStr = String(e.active.id);
     const overId = e.over ? String(e.over.id) : null;
+
     setActiveId(null);
     setDropTarget(null);
 
@@ -792,12 +786,7 @@ export function SidebarTree({
     });
 
   const handleHide = (c: PageCategory) => {
-    setHidden((s) => {
-      const n = new Set(s);
-      if (n.has(c)) n.delete(c);
-      else n.add(c);
-      return n;
-    });
+    toggleHidden(c);
     onHideSection?.(c);
   };
 

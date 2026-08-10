@@ -54,9 +54,9 @@ export function Greeting({ name, className, iconSize = 28 }: GreetingProps) {
         display: "flex",
         alignItems: "center",
         gap: 10,
-        fontSize: 28,
-        fontFamily: "Inter",
-        // color: greeting.color,
+        fontSize: 30,
+        fontFamily:
+          'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"',
       }}
     >
       <Icon

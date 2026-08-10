@@ -8,7 +8,8 @@ export function NumberCell({
   columnValues,
   readonly,
   unwrapped,
-}: CellProps<"number">) {
+  align,
+}: CellProps<"number"> & { align?: "left" | "right" }) {
   const max =
     columnValues?.reduce<number>((m, v) => (v != null && v > m ? v : m), 0) ??
     0;
@@ -25,6 +26,7 @@ export function NumberCell({
         showAs={config.showAs}
         max={max}
         readonly={readonly}
+        align={align}
       />
     </div>
   );

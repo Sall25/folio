@@ -202,9 +202,7 @@ function PropertyRow({
   if (!rendered) return null;
 
   return (
-    <div
-      className="record-prop-panel__row"
-    >
+    <div className="record-prop-panel__row">
       <div className="record-prop-panel__label">
         <DynamicIcon
           name={iconName}

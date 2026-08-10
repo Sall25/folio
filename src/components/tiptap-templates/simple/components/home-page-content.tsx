@@ -3,13 +3,11 @@ import type { TFunction } from "i18next";
 import { useRecentPages } from "src/hooks/use-pages";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { useActivePage } from "../context/active-page-context";
-import { useTemplates } from "../context/templates-context";
 import { makePage } from "src/utils/make-page";
 import { PageItemIcon } from "../page-item-icon";
-import { Plus, LayoutGrid } from "lucide-react";
+import { FileText, LayoutGrid, PenBox } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { List, ListItem } from "src/components/tiptap-ui-primitive/list/list";
-import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { Greeting } from "src/components/tiptap-ui-primitive/greeting/greeting";
 import {
   Board,
@@ -17,6 +15,7 @@ import {
   BoardCover,
 } from "src/components/tiptap-ui-primitive/board/board";
 import { getPageExcerpt } from "src/lib/get-page-excerpt";
+import { useCurrentPerson } from "src/hooks/use-session";
 
 const GRID: React.CSSProperties = {
   display: "grid",
@@ -62,17 +61,20 @@ export function HomePageContent({ userName }: { userName?: string }) {
   const { data, isPending } = useRecentPages();
   const { setActivePageId } = useActivePage();
   const createPage = useCreatePage();
-  const { onOpenChange: openTemplates } = useTemplates();
 
   const recents = (data ?? []).filter((p) => p.category !== "Template");
   const visited = recents.slice(0, 4);
   const earlier = recents.slice(4, 12);
 
+  const { person } = useCurrentPerson();
+
   const newPage = () => {
+    if (!person) return;
     const page = makePage({
       title: t("page.newPage"),
       parentId: null,
       category: "Private",
+      ownerId: person.id,
     });
     createPage.mutate(page);
     setActivePageId(page.id);
@@ -102,22 +104,6 @@ export function HomePageContent({ userName }: { userName?: string }) {
         <div style={{ fontSize: 13, color: "var(--tt-theme-muted)" }}>
           {todayLabel(i18n.language)}
         </div>
-      </div>
-
-      {/* quick actions */}
-      <div
-        style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}
-      >
-        <ButtonGroup orientation="horizontal" style={{ gap: 8 }}>
-          <Button data-active-state="on" variant="ghost" onClick={newPage}>
-            <Plus className="tiptap-button-icon" />
-            <span className="tiptap-button-text">{t("actions.newPage")}</span>
-          </Button>
-          <Button variant="ghost" onClick={() => openTemplates?.(true)}>
-            <LayoutGrid className="tiptap-button-icon" />
-            <span className="tiptap-button-text">{t("sidebar.templates")}</span>
-          </Button>
-        </ButtonGroup>
       </div>
 
       {/* recently visited */}
@@ -262,79 +248,31 @@ function RecentCard({ page, onOpen }: { page: Page; onOpen: () => void }) {
       </BoardContent>
     </Board>
   );
-  // return (
-  //   <button
-  //     type="button"
-  //
-  //     style={{
-  //       display: "flex",
-  //       flexDirection: "column",
-  //       width: "100%",
-  //       minWidth: 0,
-  //       overflow: "hidden",
-  //       border: "0.5px solid var(--tt-border-color)",
-  //       borderRadius: 12,
-  //       background: "var(--tt-card-bg-color)",
-  //       cursor: "pointer",
-  //       padding: 0,
-  //       textAlign: "left",
-  //       transition: "border-color 0.12s",
-  //     }}
-  //     onMouseEnter={(e) =>
-  //       (e.currentTarget.style.borderColor = "var(--tt-brand-color-500)")
-  //     }
-  //     onMouseLeave={(e) =>
-  //       (e.currentTarget.style.borderColor = "var(--tt-border-color)")
-  //     }
-  //   >
-  //     <div
-  //       style={{
-  //         height: 64,
-  //         background: coverBackground(page.cover),
-  //         borderBottom: "0.5px solid var(--tt-border-color)",
-  //       }}
-  //     />
-  //     <div style={{ padding: "10px 12px", minWidth: 0 }}>
-  //       <PageItemIcon cover={page.cover} styles={{ width: 18, height: 18 }} />
-  //       <div
-  //         style={{
-  //           fontSize: 14,
-  //           color: "var(--tt-text-color)",
-  //           marginTop: 6,
-  //           overflow: "hidden",
-  //           textOverflow: "ellipsis",
-  //           whiteSpace: "nowrap",
-  //         }}
-  //       >
-  //         {page.title || "Untitled"}
-  //       </div>
-  //       <div
-  //         style={{ fontSize: 12, color: "var(--tt-theme-muted)", marginTop: 2 }}
-  //       >
-  //         Edited {formatRelative(page.updatedAt ?? page.createdAt)}
-  //       </div>
-  //     </div>
-  //   </button>
-  // );
 }
 
 function EmptyState({ onNewPage }: { onNewPage: () => void }) {
   const { t } = useTranslation();
+  // const { setActivePageId } = useActivePage();
+
+  // // These ids point at the starter pages you'll author + seed. Until they
+  // // exist, the cards can fall back to onNewPage or be hidden — see note below.
+  // const openStarter = (pageId: string) => setActivePageId(pageId);
+
   return (
     <div
       style={{
         border: "0.5px dashed var(--tt-border-color)",
-        borderRadius: 12,
-        padding: "32px 16px",
-        textAlign: "center",
+        borderRadius: 14,
+        padding: 22,
+        textAlign: "left",
       }}
     >
       <div
         style={{
-          fontSize: 14,
-          fontWeight: 500,
+          fontSize: 15,
+          fontWeight: 600,
           color: "var(--tt-text-color)",
-          marginBottom: 4,
+          marginBottom: 3,
         }}
       >
         {t("home.emptyTitle")}
@@ -343,16 +281,102 @@ function EmptyState({ onNewPage }: { onNewPage: () => void }) {
         style={{
           fontSize: 13,
           color: "var(--tt-theme-muted)",
-          marginBottom: 14,
+          marginBottom: 16,
+          maxWidth: "52ch",
+          lineHeight: 1.5,
         }}
       >
         {t("home.emptyDesc")}
       </div>
-      <Button variant="ghost" onClick={onNewPage}>
-        <Plus className="tiptap-button-icon" />
-        <span className="tiptap-button-text">{t("actions.newPage")}</span>
-      </Button>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, minmax(0,1fr))",
+          gap: 10,
+        }}
+      >
+        <FirstRunCard
+          icon={<FileText size={19} />}
+          title={t("home.firstRun.guideTitle")}
+          desc={t("home.firstRun.guideDesc")}
+          onClick={
+            onNewPage /* → replace with openStarter(GUIDE_PAGE_ID) once seeded */
+          }
+        />
+        <FirstRunCard
+          icon={<LayoutGrid size={19} />}
+          title={t("home.firstRun.dbTitle")}
+          desc={t("home.firstRun.dbDesc")}
+          onClick={onNewPage /* → openStarter(DB_PAGE_ID) once seeded */}
+        />
+        <FirstRunCard
+          icon={<PenBox size={19} />}
+          title={t("home.firstRun.blankTitle")}
+          desc={t("home.firstRun.blankDesc")}
+          onClick={onNewPage}
+        />
+      </div>
     </div>
+  );
+}
+
+function FirstRunCard({
+  icon,
+  title,
+  desc,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        gap: 2,
+        textAlign: "left",
+        border: "0.5px solid var(--tt-border-color)",
+        borderRadius: 10,
+        background: "var(--tt-card-bg-color)",
+        padding: 12,
+        cursor: "pointer",
+        transition: "border-color 0.12s",
+      }}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.borderColor = "var(--tt-brand-color-500)")
+      }
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.borderColor = "var(--tt-border-color)")
+      }
+    >
+      <span style={{ color: "var(--tt-brand-color-500)" }}>{icon}</span>
+      <span
+        style={{
+          fontSize: 13,
+          fontWeight: 500,
+          color: "var(--tt-text-color)",
+          marginTop: 8,
+        }}
+      >
+        {title}
+      </span>
+      <span
+        style={{
+          fontSize: 11.5,
+          color: "var(--tt-theme-muted)",
+          lineHeight: 1.4,
+        }}
+      >
+        {desc}
+      </span>
+    </button>
   );
 }
 

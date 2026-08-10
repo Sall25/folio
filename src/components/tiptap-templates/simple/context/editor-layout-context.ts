@@ -36,6 +36,8 @@ interface EditorLayoutContextValue {
   setCommentDisplayMode: (m: "sidebar" | "popover") => void;
   sidebarHovered: boolean;
   setSidebarHovered: (v: boolean) => void;
+  customizeSidebarOpen?: boolean;
+  setCustomizeSidebarOpen?: (v: boolean) => void;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────

@@ -8,6 +8,7 @@ export interface SelectOption {
   id: string;
   label: string;
   color: string;
+  isDefault?: boolean;
 }
 
 export type PageView = "Full" | "Center" | "Peek";
@@ -541,6 +542,7 @@ export type UpdatedAt = number | null;
 // Stored categories only. "Recent" is a derived view (sort by updatedAt),
 // not a stored category — it lives in the sidebar code, not on the page.
 export type PageCategory =
+  | "Recent"
   | "Favorites"
   | "Shared"
   | "Private"

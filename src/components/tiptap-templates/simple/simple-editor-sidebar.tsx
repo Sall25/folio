@@ -4,7 +4,6 @@ import {
   Inbox,
   Store,
   LibraryBig,
-  Sparkles,
   ChevronsLeft,
   PenBox,
   ChevronsRight,
@@ -16,20 +15,19 @@ import {
   Card,
   CardBody,
   CardFooter,
-  //CardFooter,
   CardHeader,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 
 import "./simple-editor-sidebar.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-location";
 import { useEditorLayout } from "./context/editor-layout-context";
 import { useSearch } from "./context/search-context";
 import { SidebarTree } from "./components/sidebar-tree";
-import { usePageTree } from "src/hooks/use-pages";
+import { usePageTree, useRecentPages } from "src/hooks/use-pages";
 import { useTeamspaces } from "src/hooks/use-teamspaces";
 import { useGroups } from "src/hooks/use-groups";
 import { makePage } from "src/utils/make-page";
@@ -37,7 +35,6 @@ import { useCreatePage } from "src/hooks/use-create-page";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage as updatePage } from "src/api/pages";
 import { useActivePage } from "./context/active-page-context";
-import { Section } from "./components/section";
 import { ScrollFog } from "src/components/tiptap-ui-primitive/scroll-frog";
 import { CreateTeamspaceModal } from "./components/create-teamspace-modal";
 import type { Group, Teamspace } from "src/types";
@@ -55,10 +52,15 @@ import { WorkspaceSwitcherPopover } from "./workspace-switcher-popover";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { useNotifications } from "src/components/tiptap-ui/notification";
 import { InboxPanel } from "./components/inbox-panel";
-import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
 import { TrashPanel } from "./components/trash-panel";
 import { Bone } from "./components/skeletons";
-import { usePressScale } from "src/hooks/use-press-scale";
+import {
+  Board,
+  BoardContent,
+} from "src/components/tiptap-ui-primitive/board/board";
+import { CustomizeSidebarPanel } from "./components/customize-sidebar-panel";
+import { useHiddenSections } from "./hooks/use-hidden-sections";
+import { useSectionOrder } from "./hooks/use-sidebar-order";
 
 function UserSkeleton() {
   return (
@@ -143,26 +145,19 @@ function User({ hovered }: { hovered: boolean }) {
   );
 }
 
-function WorkspaceFooter() {
-  const { t } = useTranslation();
-  const { onOpenChange, open } = useTemplates();
-
-  const templatesScale = usePressScale();
-  const createScale = usePressScale();
-
-  const { activePageId, setActivePageId } = useActivePage();
-  const { person } = useCurrentPerson();
+function NewPageCard() {
   const createPage = useCreatePage();
+  const { setActivePageId, activePageId } = useActivePage();
+  const { person } = useCurrentPerson();
+  const { t } = useTranslation();
   const onCreatePage = () => {
     if (!person) return;
-
     const newPage = makePage({
-      ownerId: person.id,
       title: t("page.newPage"),
       parentId: null,
       category: "Private",
+      ownerId: person.id,
     });
-
     createPage
       .mutateAsync(newPage)
       .then((created) => setActivePageId(created.id))
@@ -172,62 +167,56 @@ function WorkspaceFooter() {
       });
   };
   return (
-    <CardFooter style={{ paddingBottom: 10, width: "100%" }}>
-      <CardItemGroup orientation="horizontal" style={{ width: "100%" }}>
-        <Spacer orientation="horizontal" />
-        <span
-          {...templatesScale.handlers}
-          style={{ display: "inline-flex", ...templatesScale.style }}
+    <Board
+      onClick={onCreatePage}
+      style={{
+        minHeight: 30,
+        height: 40,
+        boxShadow: "var(--tt-shadow-elevated-md)",
+        borderRadius: "300px !important",
+        background: "var(--tt-brand-color-500)",
+        cursor: "pointer",
+      }}
+    >
+      <BoardContent
+        style={{
+          height: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+          cursor: "pointer",
+        }}
+      >
+        <Button
+          variant="ghost"
+          size="large"
+          style={{
+            background: "transparent",
+            color: "white",
+            cursor: "pointer",
+          }}
         >
-          <Button
-            variant="ghost"
-            size="large"
-            style={{
-              boxShadow: "var(--tt-shadow-elevated-md)",
-              borderRadius: "150px",
-              border: "1px solid var(--tt-border-color)",
-              paddingTop: 20,
-              paddingBottom: 20,
-              // padding: "20px 40px",
-            }}
-            onClick={() => onOpenChange?.(!open)}
+          <PenBox className="tiptap-button-icon" style={{ color: "white" }} />
+          <Spacer orientation="horizontal" size={5} />
+          <span
+            className="tiptap-button-text"
+            style={{ opacity: 1, display: "block" }}
           >
-            <Spacer orientation="horizontal" size={5} />
-            <Shapes className="tiptap-button-icon" />
-            <Spacer orientation="horizontal" size={2} />
-            <span
-              className="tiptap-button-text"
-              style={{ opacity: 1, display: "block" }}
-            >
-              Templates
-            </span>
-            <Spacer orientation="horizontal" size={10} />
-            <ShortcutBadge shortcutKeys="Ctrl + O" />
-            <Spacer orientation="horizontal" size={5} />
-          </Button>
-        </span>
-        <Spacer orientation="horizontal" />
-        <span
-          {...createScale.handlers}
-          style={{ display: "inline-flex", ...createScale.style }}
-        >
-          <Button
-            variant="ghost"
-            size="large"
-            style={{
-              padding: "20px 12px",
-              boxShadow: "var(--tt-shadow-elevated-md)",
-              border: "1px solid var(--tt-border-color)",
-              borderRadius: "150px",
-            }}
-            tooltip={t("page.newPage")}
-            onClick={onCreatePage}
-          >
-            <PenBox className="tiptap-button-icon" />
-          </Button>
-        </span>
-        <Spacer orientation="horizontal" />
-      </CardItemGroup>
+            {t("page.newPage")}
+          </span>
+        </Button>
+      </BoardContent>
+    </Board>
+  );
+}
+
+function WorkspaceFooter() {
+  return (
+    <CardFooter style={{ paddingBottom: 10, width: "90%" }}>
+      <Spacer orientation="horizontal" size={5} />
+      <NewPageCard />
+      <Spacer orientation="horizontal" size={5} />
     </CardFooter>
   );
 }
@@ -340,7 +329,8 @@ function NavItems() {
         <Button
           size="large"
           variant="ghost"
-          data-active-state={sidebarView === "pages" ? "on" : "off"}
+          data-highlighted={sidebarView === "pages" ? "true" : "false"}
+          // data-active-state={sidebarView === "pages" ? "on" : "off"}
           onClick={handleHomeClick}
           style={{
             fontWeight: 600,
@@ -370,7 +360,7 @@ function NavItems() {
         <Button
           variant="ghost"
           size="large"
-          data-active-state={sidebarView === "trash" ? "on" : "off"}
+          data-highlighted={sidebarView === "trash" ? "true" : "false"}
           onClick={handleTrashClick}
           style={{
             fontWeight: 400,
@@ -416,7 +406,7 @@ function NavItems() {
         <Button
           size="large"
           variant="ghost"
-          data-active-state={sidebarView === "inbox" ? "on" : "off"}
+          data-highlighted={sidebarView === "inbox" ? "true" : "false"}
           onClick={handleInboxClick}
           tooltip={t("sidebar.inbox")}
           style={{
@@ -474,36 +464,6 @@ function NavItems() {
   );
 }
 
-// ── ShowcaseSection: feature-of-the-week, collapsible, empty for now ──────────
-function ShowcaseSection() {
-  const { t } = useTranslation();
-
-  return (
-    <Section
-      label={t("sidebar.showcase")}
-      defaultCollapsed={false}
-      badge={
-        <span className="sidebar-section__badge">
-          <Sparkles size={11} />
-          {t("sidebar.featureOfTheWeek")}
-        </span>
-      }
-    >
-      <div className="sidebar-showcase-empty">
-        <Sparkles size={16} className="sidebar-showcase-empty__icon" />
-        <div className="sidebar-showcase-empty__text">
-          <span className="sidebar-showcase-empty__title">
-            {t("showcase.title")}
-          </span>
-          <span className="sidebar-showcase-empty__desc">
-            {t("showcase.desc")}
-          </span>
-        </div>
-      </div>
-    </Section>
-  );
-}
-
 function LibraryPaletteTrigger() {
   const navigate = useNavigate();
   const handleLibraryClick = () => {
@@ -512,13 +472,42 @@ function LibraryPaletteTrigger() {
 
   return (
     <Button
-      size="large"
       onClick={handleLibraryClick}
+      size="large"
       variant="ghost"
       style={{ width: "100%", justifyContent: "flex-start" }}
     >
       <LibraryBig className="tiptap-button-icon" />
-      <span className="tiptap-button-text">Library</span>
+      <Spacer orientation="horizontal" size={2} />
+
+      <span
+        className="tiptap-button-text"
+        style={{ opacity: 1, display: "block" }}
+      >
+        Library
+      </span>
+    </Button>
+  );
+}
+
+function TemplatePaletteTrigger() {
+  const { onOpenChange, open } = useTemplates();
+
+  return (
+    <Button
+      variant="ghost"
+      size="large"
+      style={{ width: "100%", justifyContent: "flex-start" }}
+      onClick={() => onOpenChange?.(!open)}
+    >
+      <Shapes className="tiptap-button-icon" />
+      <Spacer orientation="horizontal" size={2} />
+      <span
+        className="tiptap-button-text"
+        style={{ opacity: 1, display: "block" }}
+      >
+        Templates
+      </span>
     </Button>
   );
 }
@@ -539,6 +528,8 @@ export function SimpleEditorSidebar() {
     peekPhase: phase,
     sidebarView,
     setSidebarHovered,
+    customizeSidebarOpen,
+    setCustomizeSidebarOpen,
   } = useEditorLayout();
   const isMobile = mode === "mobile";
   const { tree, isPending, isLoading } = usePageTree();
@@ -587,6 +578,22 @@ export function SimpleEditorSidebar() {
   // Only 'hidden' (after the timer) actually moves it off.
   const onScreen = phase === "open" || phase === "leaving";
   const showContent = isMobile ? true : !collapsed || floatingActive;
+
+  const { data: recentPages } = useRecentPages(6);
+
+  const treeWithRecent = useMemo(
+    () => ({
+      ...tree,
+      Recent: (recentPages ?? []).map((page) => ({
+        page,
+        children: [],
+      })),
+    }),
+    [tree, recentPages],
+  );
+
+  const [order] = useSectionOrder();
+  const [hidden, toggleHidden] = useHiddenSections();
 
   const sidebarCard = (
     <Card
@@ -664,7 +671,7 @@ export function SimpleEditorSidebar() {
         />
       )}
 
-      {showContent && (
+      {showContent && !customizeSidebarOpen && (
         <CardBody
           className="sidebar-body-content"
           style={{
@@ -680,9 +687,6 @@ export function SimpleEditorSidebar() {
               <>
                 <ScrollFog edge="top" color="var(--sidebar-fog-color)" />
                 <Spacer orientation="vertical" size={15} />
-
-                <ShowcaseSection />
-                <Spacer orientation="vertical" size={15} />
               </>
             )}
 
@@ -694,7 +698,8 @@ export function SimpleEditorSidebar() {
               ) : (
                 <SidebarTree
                   key={"sidebar-tree"}
-                  tree={tree}
+                  tree={treeWithRecent}
+                  // tree={tree}
                   teamspaces={teamspaces as Teamspace[]}
                   groups={groups as Group[]}
                   onMovePage={({ pageId, newParentId, category }) => {
@@ -737,11 +742,22 @@ export function SimpleEditorSidebar() {
               <>
                 <Spacer orientation="vertical" size={10} />
                 <LibraryPaletteTrigger />
+                <Spacer orientation="vertical" size={5} />
+                <TemplatePaletteTrigger />
                 <Spacer orientation="vertical" size={25} />
               </>
             )}
           </>
         </CardBody>
+      )}
+
+      {customizeSidebarOpen && (
+        <CustomizeSidebarPanel
+          order={order}
+          hidden={hidden}
+          onToggle={toggleHidden}
+          onDone={() => setCustomizeSidebarOpen?.(false)}
+        />
       )}
 
       <WorkspaceFooter />

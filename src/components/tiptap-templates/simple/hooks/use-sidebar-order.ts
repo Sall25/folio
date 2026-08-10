@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useLocalStorage } from "../hooks/use-local-storage";
 import type { ID, PageCategory, PageTreeNode } from "src/types";
 
@@ -134,9 +134,10 @@ export function buildCategoryByPageId(
 // The set of sections itself is still fixed and closed — this only controls
 // their display order, client-only for now like everything else here.
 export const DEFAULT_SECTION_ORDER: PageCategory[] = [
-  "Private",
+  "Recent",
   "Favorites",
   "Shared",
+  "Private",
   "Teamspaces",
 ];
 
@@ -166,13 +167,35 @@ export function useSectionOrder() {
     "folio:section-order",
     DEFAULT_SECTION_ORDER,
   );
-  // Merge-normalize: keep stored positions for known categories, append any
-  // fixed category not yet in storage (e.g. this ran before Teamspaces
-  // existed) at the end, drop anything stale that's no longer a real category.
+
+  // Merge-normalize: stored positions for known categories, append any fixed
+  // category not yet in storage, drop anything no longer a real category.
   const order = useMemo(() => {
-    const valid = stored.filter((c) => DEFAULT_SECTION_ORDER.includes(c));
-    const missing = DEFAULT_SECTION_ORDER.filter((c) => !valid.includes(c));
-    return [...valid, ...missing];
+    const known = DEFAULT_SECTION_ORDER;
+    const merged = [
+      ...stored.filter((c) => known.includes(c)), // keep valid stored, drop stale
+      ...known.filter((c) => !stored.includes(c)), // append missing (e.g. Recent)
+    ];
+    return merged;
   }, [stored]);
-  return [order, setStored] as const;
+
+  // Setter operates on the SAME normalized array the caller reads from, so an
+  // arrayMove computed against `order` writes back a consistent order — even
+  // for categories (like Recent) that were only present via the merge append.
+  const setOrder = useCallback(
+    (next: PageCategory[] | ((prev: PageCategory[]) => PageCategory[])) => {
+      setStored((prevStored) => {
+        const prevOrder = [
+          ...prevStored.filter((c) => DEFAULT_SECTION_ORDER.includes(c)),
+          ...DEFAULT_SECTION_ORDER.filter((c) => !prevStored.includes(c)),
+        ];
+        return typeof next === "function"
+          ? (next as (p: PageCategory[]) => PageCategory[])(prevOrder)
+          : next;
+      });
+    },
+    [setStored],
+  );
+
+  return [order, setOrder] as const;
 }

@@ -28,7 +28,8 @@
   &[data-highlighted="true"],
   &[data-focus-visible="true"] {
     background-color: var(--tt-button-hover-bg-color);
-    color: var(--tt-button-hover-text-color);
+    color: var(--tt-button-active-text-color);
+    // color: var(--tt-button-hover-text-color);
    // outline: 2px solid var(--tt-button-active-icon-color);
   }
 
@@ -45,6 +46,8 @@
     height: 2rem;
     min-width: 2.375rem;
     padding: 0.225rem;
+    padding-left: 0.43rem;
+    padding-right: 0.43rem;
   }
 
   /* button size small */

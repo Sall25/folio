@@ -1,0 +1,33 @@
+.customize-sidebar {
+  padding: 8px;
+  min-width: 260px;
+  height: 100%;
+
+  &__list { display: flex; flex-direction: column; }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: var(--tt-radius-sm);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--tt-text-primary);
+    &:hover { background: var(--tt-gray-light-a-50); .dark & { background: var(--tt-gray-dark-a-50); } }
+  }
+
+  &__label {
+    font-size: 14px;
+    &.is-hidden { color: var(--tt-theme-muted); }
+  }
+
+  &__eye {
+    color: var(--tt-text-secondary);
+    &.is-off { color: var(--tt-theme-muted); }
+  }
+
+  &__done { width: 100%; margin-top: 8px; }
+}
