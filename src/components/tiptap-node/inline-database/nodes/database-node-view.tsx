@@ -11,12 +11,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { NodeViewProps } from "@tiptap/core";
 import { NodeViewWrapper } from "@tiptap/react";
-import { Ellipsis } from "lucide-react";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { Button } from "src/components/tiptap-ui-primitive/button";
-
 import { usePage } from "src/hooks/use-pages";
 import { useDataSource } from "../hooks/use-data-source";
 import { useDatabase } from "../hooks/use-database";
@@ -32,10 +29,8 @@ import { DatabaseListNodeView } from "./database-list-node-view";
 import { DatabaseCalendarNodeView } from "./database-calendar-node-view";
 import { DatabaseTimelineNodeView } from "./database-timeline-node-view";
 import { DatabaseLoadingSkeleton } from "../components/database-loading-skeleton";
-import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { recordMatchesFilters } from "../utils/apply-filters";
 import { sortRecords } from "../utils/apply-sorts";
-
 import { DatabaseTableBody } from "./database-table-body";
 import { useDatabaseTitle } from "../hooks/use-database-title";
 import { useDatabaseColumnLayout } from "../hooks/use-database-column-layout";
@@ -44,6 +39,7 @@ import {
   useDatabaseSeed,
   useDatabaseCellSync,
   insertRecordNode,
+  removeRecordNode,
 } from "../hooks/use-database-seed";
 
 import {
@@ -59,12 +55,6 @@ import "./database-node.scss";
 import { SelectionToolbar } from "../components/selection-toolbar";
 import { useVisibleSelection } from "../hooks/use-visible-selection";
 import { removeRecordNodes } from "../utils/remove-record-nodes";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "src/components/tiptap-ui-primitive/popover";
-import { PropertiesPanel } from "../components/properties-panel";
 import { buildGroupedRows } from "../utils/group-rows";
 import {
   groupRecords,
@@ -72,6 +62,7 @@ import {
   valueForGroupKey,
 } from "../utils/group-records";
 import { useWhyDidYouRender } from "src/lib/useWhyDidYouRender";
+import { NewRowEditProvider } from "./new-row-edit-provider";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -85,8 +76,6 @@ export function DatabaseNodeView({
   const attrs = node.attrs as DatabaseAttrs;
   const locked = !!attrs.locked;
 
-  const { setTarget } = usePageView();
-
   // ── DataSource + view state ───────────────────────────────────────────────
   const {
     source,
@@ -98,7 +87,20 @@ export function DatabaseNodeView({
     unregisterViewsAsync,
     resolvedRecords,
     addRecordAsync,
+    removeRecordAsync,
   } = useDataSource(attrs.sourceId);
+  const [editingRecordId, setEditingRecordId] = useState<ID | null>(null);
+
+  const cancelEmptyRecord = useCallback(
+    (recordId: ID) => {
+      // Remove the record node from the editor, then delete the page.
+      if (editor && attrs.id) removeRecordNode(editor, attrs.id, recordId);
+      removeRecordAsync(recordId);
+      setEditingRecordId(null);
+    },
+    [editor, attrs.id, removeRecordAsync],
+  );
+
   const attrsRef = useRef(attrs);
   attrsRef.current = attrs;
 
@@ -208,6 +210,23 @@ export function DatabaseNodeView({
     );
   }, [sortedRecords, groupProp, collapsedKeys, activeView]);
 
+  const newRecord = () => {
+    addRecordAsync({ title: "" })
+      .then((page) => {
+        if (editor && attrs.id && attrs.sourceId && source) {
+          insertRecordNode(
+            editor,
+            attrs.id,
+            attrs.sourceId,
+            page,
+            source.properties,
+          );
+        }
+        setEditingRecordId(page.id);
+      })
+      .catch(() => console.log("Failed to create page"));
+  };
+
   const newRecordInGroup = (groupKey: string) => {
     addRecordAsync({ title: "" })
       .then((page) => {
@@ -220,8 +239,6 @@ export function DatabaseNodeView({
             source.properties,
           );
         }
-        // Set the grouping value so the record lands in the group it was
-        // created from, rather than in "No <property>".
         if (groupProp && groupKey !== NONE_KEY) {
           setCellValue(
             page.id,
@@ -229,7 +246,7 @@ export function DatabaseNodeView({
             valueForGroupKey(groupKey, groupProp) as never,
           );
         }
-        setTarget({ pageId: page.id, view: "Peek" });
+        setEditingRecordId(page.id); // focus title inline instead of peek
       })
       .catch(() => console.log("Failed to create page"));
   };
@@ -412,23 +429,6 @@ export function DatabaseNodeView({
     if (activeView) db.updateView(activeView.id, patch);
   };
 
-  const newRecord = () => {
-    addRecordAsync({ title: "" })
-      .then((page) => {
-        if (editor && attrs.id && attrs.sourceId) {
-          insertRecordNode(
-            editor,
-            attrs.id,
-            attrs.sourceId,
-            page,
-            source.properties,
-          );
-        }
-        setTarget({ pageId: page.id, view: "Peek" });
-      })
-      .catch(() => console.log("Failed to create page"));
-  };
-
   const addProperty = (type: PropertyType, propertyName?: string) => {
     if (locked) return;
     updatePropertiesAsync([
@@ -443,148 +443,123 @@ export function DatabaseNodeView({
     // Cells for the new property are inserted by useDatabaseCellSync.
   };
 
-  const optionsMenu = (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          tooltip="Hide Properties"
-          variant="ghost"
-          style={{
-            minHeight: 22,
-            height: 22,
-            borderRadius: "var(--tt-radius-sm)",
-            background: "transparent",
-          }}
-        >
-          <Ellipsis className="tiptap-button-icon" size={14} />
-        </Button>
-      </PopoverTrigger>
-
-      <PopoverContent side="bottom" align="start" className="db-panel">
-        <PropertiesPanel
-          properties={source?.properties ?? []}
-          db={db}
-          activeView={activeView}
-        />
-      </PopoverContent>
-    </Popover>
-  );
-
   // ── Chrome wrapper shared by every view ───────────────────────────────────
   const chrome = (body: React.ReactNode) => (
-    <NodeViewWrapper className="db-node">
-      <DatabaseProvider
-        attrs={attrs}
-        // Switch-aware db so view tabs anywhere downstream trigger the skeleton.
-        db={dbWithSwitch}
-        source={source}
-        editor={editor}
-        updateAttributes={updateAttributes}
-      >
-        <CardItemGroup>
-          {dbPage?.cover?.coverImage && (
-            <div className="db-cover">
-              <img
-                src={dbPage.cover.coverImage}
-                alt=""
-                className="db-cover__img"
-              />
-            </div>
-          )}
-          {attrs.views.length > 1 && (
-            <DatabaseTitleBar
-              hideTitle={attrs.hideTitle}
-              title={resolvedTitle}
-              onTitleChange={handleTitleChange}
-              onHideTitleChange={(hide) =>
-                locked
-                  ? undefined
-                  : updateAttributes({ ...attrs, hideTitle: hide })
-              }
-              locked={locked}
-            />
-          )}
-          <div
-            style={{
-              maxWidth: "var(--db-editor-width)",
-              paddingRight: 20,
-              position: "relative",
-            }}
-          >
-            <DatabaseToolbar
-              properties={source.properties}
-              attrs={attrs}
-              db={dbWithSwitch}
-              onUpdateAttributes={updateAttributes}
-              locked={locked}
-              title={resolvedTitle}
-              hideTitle={attrs.hideTitle}
-              onTitleChange={handleTitleChange}
-              onHideTitleChange={(hide) =>
-                locked
-                  ? undefined
-                  : updateAttributes({ ...attrs, hideTitle: hide })
-              }
-              showFilterChips={showFilterChips}
-              showSortChips={showSortChips}
-              onToggleFilterChips={() => setShowFilterChips((v) => !v)}
-              onToggleSortChips={() => setShowSortChips((v) => !v)}
-            />
-            {attrs.id && (
-              <SelectionToolbar
-                databaseId={attrs.id}
-                recordIds={visibleSelection}
-                records={selectedRecords}
-                properties={source.properties}
-                onSetValue={(propertyId, value) =>
-                  visibleSelection.forEach((id) =>
-                    setCellValue(id, propertyId, value as never),
-                  )
+    <NewRowEditProvider value={{ editingRecordId, cancelEmptyRecord }}>
+      <NodeViewWrapper className="db-node">
+        <DatabaseProvider
+          attrs={attrs}
+          // Switch-aware db so view tabs anywhere downstream trigger the skeleton.
+          db={dbWithSwitch}
+          source={source}
+          editor={editor}
+          updateAttributes={updateAttributes}
+        >
+          <CardItemGroup>
+            {dbPage?.cover?.coverImage && (
+              <div className="db-cover">
+                <img
+                  src={dbPage.cover.coverImage}
+                  alt=""
+                  className="db-cover__img"
+                />
+              </div>
+            )}
+            {attrs.views.length > 1 && (
+              <DatabaseTitleBar
+                hideTitle={attrs.hideTitle}
+                title={resolvedTitle}
+                onTitleChange={handleTitleChange}
+                onHideTitleChange={(hide) =>
+                  locked
+                    ? undefined
+                    : updateAttributes({ ...attrs, hideTitle: hide })
                 }
-                onDelete={() => {
-                  if (editor && attrs.id) {
-                    removeRecordNodes(editor, attrs.id, visibleSelection);
-                  }
-                }}
+                locked={locked}
               />
             )}
-          </div>
-
-          {(showFilterChips || showSortChips) && (
-            <CardItemGroup orientation="horizontal">
-              {showFilterChips && (
-                <FilterRuleChips
+            <div
+              style={{
+                maxWidth: "var(--db-editor-width)",
+                paddingRight: 20,
+                position: "relative",
+              }}
+            >
+              <DatabaseToolbar
+                properties={source.properties}
+                attrs={attrs}
+                db={dbWithSwitch}
+                onUpdateAttributes={updateAttributes}
+                locked={locked}
+                title={resolvedTitle}
+                hideTitle={attrs.hideTitle}
+                onTitleChange={handleTitleChange}
+                onHideTitleChange={(hide) =>
+                  locked
+                    ? undefined
+                    : updateAttributes({ ...attrs, hideTitle: hide })
+                }
+                showFilterChips={showFilterChips}
+                showSortChips={showSortChips}
+                onToggleFilterChips={() => setShowFilterChips((v) => !v)}
+                onToggleSortChips={() => setShowSortChips((v) => !v)}
+              />
+              {attrs.id && (
+                <SelectionToolbar
+                  databaseId={attrs.id}
+                  recordIds={visibleSelection}
+                  records={selectedRecords}
                   properties={source.properties}
-                  db={db}
-                  activeView={activeView}
-                  locked={locked}
+                  onSetValue={(propertyId, value) =>
+                    visibleSelection.forEach((id) =>
+                      setCellValue(id, propertyId, value as never),
+                    )
+                  }
+                  onDelete={() => {
+                    if (editor && attrs.id) {
+                      removeRecordNodes(editor, attrs.id, visibleSelection);
+                    }
+                  }}
                 />
               )}
-              {showFilterChips &&
-                showSortChips &&
-                filterRuleCount > 0 &&
-                sortCount > 0 && (
-                  <>
-                    <Spacer orientation="horizontal" size={5} />
-                    <Separator orientation="vertical" />
-                    <Spacer orientation="horizontal" size={5} />
-                  </>
+            </div>
+
+            {(showFilterChips || showSortChips) && (
+              <CardItemGroup orientation="horizontal">
+                {showFilterChips && (
+                  <FilterRuleChips
+                    properties={source.properties}
+                    db={db}
+                    activeView={activeView}
+                    locked={locked}
+                  />
                 )}
-              {showSortChips && (
-                <SortRuleChips
-                  properties={source.properties}
-                  db={db}
-                  activeView={activeView}
-                  sorts={activeView?.sorts ?? []}
-                />
-              )}
-            </CardItemGroup>
-          )}
+                {showFilterChips &&
+                  showSortChips &&
+                  filterRuleCount > 0 &&
+                  sortCount > 0 && (
+                    <>
+                      <Spacer orientation="horizontal" size={5} />
+                      <Separator orientation="vertical" />
+                      <Spacer orientation="horizontal" size={5} />
+                    </>
+                  )}
+                {showSortChips && (
+                  <SortRuleChips
+                    properties={source.properties}
+                    db={db}
+                    activeView={activeView}
+                    sorts={activeView?.sorts ?? []}
+                  />
+                )}
+              </CardItemGroup>
+            )}
 
-          {body}
-        </CardItemGroup>
-      </DatabaseProvider>
-    </NodeViewWrapper>
+            {body}
+          </CardItemGroup>
+        </DatabaseProvider>
+      </NodeViewWrapper>
+    </NewRowEditProvider>
   );
 
   // ── Switching views → skeleton in the body slot ───────────────────────────
@@ -646,7 +621,6 @@ export function DatabaseNodeView({
       gridTemplateColumns={gridTemplateColumns}
       bodyGridTemplateColumns={bodyGridTemplateColumns}
       widthFor={widthFor}
-      optionsMenu={optionsMenu}
       onReorder={(orderedIds) => db.reorderProperties(orderedIds)}
       onAddProperty={addProperty}
       onCommitColumnWidth={commitColumnWidth}

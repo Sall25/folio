@@ -63,7 +63,7 @@ export function DataSourcePicker({
     setCreating(true);
     try {
       const sourceId = newId();
-      const name = query.trim() || "Untitled Database";
+      const name = query.trim() || "New Database";
       if (!person) return;
 
       const dbPage = makeDatabasePage({

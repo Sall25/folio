@@ -45,3 +45,24 @@
     font-size: 13px;
   }
 }
+
+.db-table__placeholder-row {
+  // hover affects the ENTIRE row, not just the first cell
+  &:hover {
+    background: var(--tt-gray-light-a-50);
+    .dark & {
+      background: var(--tt-gray-dark-a-50);
+    }
+  }
+}
+
+.db-table__placeholder-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  height: 100%;
+  color: var(--tt-text-secondary);
+  font-size: 13px;
+  pointer-events: none; // the row handles the click now
+}

@@ -22,6 +22,8 @@ export interface TitleCellDisplayProps {
    * The caller (TitleCell) sets this from the view type.
    */
   openVariant?: "open" | "edit";
+  autoEdit?: boolean;
+  onCancelEmpty?: () => void;
 }
 
 export function TitleCellDisplay({
@@ -32,16 +34,13 @@ export function TitleCellDisplay({
   onOpen,
   readonly,
   openVariant = "open",
+  autoEdit,
+  onCancelEmpty,
 }: TitleCellDisplayProps) {
   const [hover, setHover] = useState(false);
   const [draft, setDraft] = useState(value);
+  const [editing, setEditing] = useState(!!autoEdit); // ← open on mount for new rows
 
-  // The popover's open state is lifted here so the cell's chrome can react to
-  // it: while editing, the "Open" button would sit directly on top of the editor
-  // box — which is exactly where the text is.
-  const [editing, setEditing] = useState(false);
-
-  // Adopt external changes while idle (popover closed).
   const [prev, setPrev] = useState(value);
   if (value !== prev) {
     setPrev(value);
@@ -49,9 +48,13 @@ export function TitleCellDisplay({
   }
 
   const commit = (close: () => void) => {
-    // Titles are identifiers — trailing whitespace would surface in the
-    // sidebar and page-link chips.
     const next = draft.trim();
+    // New row left empty → cancel (delete) instead of committing an empty title.
+    if (next === "" && onCancelEmpty) {
+      onCancelEmpty();
+      close();
+      return;
+    }
     if (next !== value) onChange(next);
     close();
   };

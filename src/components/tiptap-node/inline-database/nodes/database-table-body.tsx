@@ -2,7 +2,7 @@
 // (ProseMirror puts databaseRecord > databaseCell here via NodeViewContent),
 // the "New" record button, and the calculations footer.
 
-import React from "react";
+import React, { useState } from "react";
 import { Plus } from "lucide-react";
 import { NodeViewWrapper, NodeViewContent } from "@tiptap/react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -42,8 +42,6 @@ interface Props {
   bodyGridTemplateColumns: string;
   widthFor: (p: DatabaseProperty) => number;
 
-  optionsMenu: React.ReactNode;
-
   onReorder: (orderedIds: string[]) => void;
   onAddProperty: (type: PropertyType, propertyName?: string) => void;
   onCommitColumnWidth: (
@@ -64,7 +62,6 @@ interface Props {
 export function DatabaseTableBody({
   tableRef,
   locked,
-
   visibleProperties,
   allProperties,
   activeView,
@@ -72,7 +69,6 @@ export function DatabaseTableBody({
   gridTemplateColumns,
   bodyGridTemplateColumns,
   widthFor,
-  optionsMenu,
   onReorder,
   onAddProperty,
   onCommitColumnWidth,
@@ -111,6 +107,10 @@ export function DatabaseTableBody({
     }
   };
 
+  const [hoveredPlaceholderRow, setHoveredPlaceholderRow] = useState<
+    number | null
+  >(null);
+
   return (
     <NodeViewWrapper
       as="div"
@@ -145,7 +145,6 @@ export function DatabaseTableBody({
         locked={locked}
         gridTemplateColumns={gridTemplateColumns}
         widthFor={widthFor}
-        optionsMenu={optionsMenu}
         onReorder={onReorder}
         onAddProperty={onAddProperty}
         onCommitColumnWidth={onCommitColumnWidth}
@@ -205,42 +204,36 @@ export function DatabaseTableBody({
       </div>
 
       {/* Empty state — ghost rows, with "New page" living in the first cell. */}
+      {/* Empty state — ghost rows; "New page" appears in the hovered row. */}
       {isEmpty && (
         <div className="db-table__placeholder" contentEditable={false}>
           {Array.from({ length: EMPTY_PLACEHOLDER_ROWS }).map((_, row) => (
             <div
               key={row}
               className="db-table__placeholder-row"
+              onMouseEnter={() => setHoveredPlaceholderRow(row)}
+              onMouseLeave={() =>
+                setHoveredPlaceholderRow((r) => (r === row ? null : r))
+              }
+              onClick={onNewRecord}
               style={{
                 display: "grid",
                 gridTemplateColumns: placeholderGridTemplateColumns,
+                cursor: "pointer",
               }}
             >
               {visibleProperties.map((prop, col) =>
-                row === 0 && col === 0 ? (
+                hoveredPlaceholderRow === row && col === 0 ? (
                   <div key={prop.id} className="db-table__placeholder-cell">
-                    <Button
-                      variant="ghost"
-                      className="db-table__placeholder-new"
-                      style={{
-                        justifyContent: "flex-start",
-                        width: "100%",
-                        height: "100%",
-                        borderRadius: 0,
-                        color: "var(--tt-text-secondary)",
-                        fontSize: 13,
-                      }}
-                      onClick={onNewRecord}
-                    >
-                      <Plus className="tiptap-button-icon" />
+                    <span className="db-table__placeholder-new">
+                      <Plus className="tiptap-button-icon" size={15} />
                       <span className="tiptap-button-text">New page</span>
-                    </Button>
+                    </span>
                   </div>
                 ) : (
                   <div key={prop.id} className="db-table__placeholder-cell" />
                 ),
               )}
-              {/* Trailing cell fills to the table's right edge. */}
               <div className="db-table__placeholder-cell db-table__placeholder-cell--trailing" />
             </div>
           ))}

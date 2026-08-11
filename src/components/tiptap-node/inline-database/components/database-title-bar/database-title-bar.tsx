@@ -81,7 +81,7 @@ export function DatabaseTitleBar({
         ref={inputRef}
         className="db-title-bar__title"
         defaultValue={title}
-        placeholder="Untitled database"
+        placeholder="New database"
         readOnly={locked}
         spellCheck={false}
         autoComplete="off"

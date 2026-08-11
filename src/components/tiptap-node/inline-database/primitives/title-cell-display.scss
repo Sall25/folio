@@ -158,9 +158,10 @@
 .open-button{
   padding: 2px !important;
   box-shadow: var(--tt-shadow-elevated-md);
+  border: 1px solid var(--tt-border-color);
   background-color: var(--tt-gray-light-50);
   .dark & {
-    background-color: var(--tt-gray-dark-50);
+    background-color: var(--tt-gray-dark-100);
   }
 }
 

@@ -81,7 +81,6 @@ interface Props {
   locked: boolean;
   gridTemplateColumns: string;
   widthFor: (p: DatabaseProperty) => number;
-  optionsMenu: React.ReactNode;
   onReorder: (orderedIds: string[]) => void;
   onAddProperty: (type: PropertyType, propertyName?: string) => void;
   onCommitColumnWidth: (
@@ -97,7 +96,6 @@ export function DatabaseTableHeader({
   locked,
   gridTemplateColumns,
   widthFor,
-  optionsMenu,
   onReorder,
   onAddProperty,
   onCommitColumnWidth,
@@ -206,6 +204,12 @@ export function DatabaseTableHeader({
                 }}
               >
                 <Plus className="tiptap-button-icon" />
+                <span
+                  className="tiptap-button-text"
+                  style={{ fontWeight: 400 }}
+                >
+                  Add Property
+                </span>
               </Button>
             </PopoverTrigger>
             <PopoverContent align="start" sideOffset={sideOffset}>
@@ -299,7 +303,7 @@ export function DatabaseTableHeader({
             </PopoverContent>
           </Popover>
         )}
-        {optionsMenu}
+        {/* {optionsMenu} */}
       </CardItemGroup>
     </div>
   );

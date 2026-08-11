@@ -6,10 +6,25 @@ import { computeRollup } from "../lib/compute-rollup";
 import { usePagesBase } from "./use-pages";
 
 function useDataSourcesBase<T>(select?: (sources: DataSource[]) => T) {
+  // Live page ids — a source whose pageId no longer resolves to a page is an
+  // orphan (its database page was deleted like a regular page, leaving the
+  // source behind). Filter those out everywhere sources are read.
+  const { data: pages } = usePagesBase();
+  const livePageIds = pages
+    ? new Set((pages as Page[]).map((p) => p.id))
+    : null;
+
   return useQuery({
     queryKey: queryKeys.dataSources.lists(),
     queryFn: fetchDataSources,
-    select,
+    select: (sources) => {
+      // Only filter once pages have loaded; before that, don't hide anything
+      // (avoids flicker / dropping valid sources while pages are pending).
+      const live = livePageIds
+        ? sources.filter((s) => s.pageId != null && livePageIds.has(s.pageId))
+        : sources;
+      return select ? select(live) : (live as T);
+    },
   });
 }
 

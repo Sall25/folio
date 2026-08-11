@@ -266,18 +266,17 @@ export function PropertyHeader({
       style={{
         width: "100%",
         borderRadius: "var(--tt-radius-sm)",
-        gap: 8,
+        gap: 4,
         display: "flex",
         alignItems: "center",
         padding: "0",
         justifyContent: "flex-start",
         overflow: "hidden",
         background: "transparent !important",
-        fontFamily: '"Inter", ui-sans-serif, system-ui, sans-serif',
         fontSize: 14,
         color: "var(--tt-text-color)",
-        lineHeight: 1.5,
-
+        lineHeight: 1.4,
+        fontWeight: 400,
         cursor: locked ? "default" : undefined,
       }}
     >

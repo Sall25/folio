@@ -6,6 +6,7 @@ import { usePageView } from "src/components/tiptap-templates/simple/context/page
 import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
+import { useNewRowEdit } from "../../../nodes/new-row-edit-context";
 
 /**
  * The title cell is an ATOM: page.title is the single source of truth.
@@ -41,6 +42,9 @@ export function TitleCell({
   const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const { setActivePageId } = useActivePage();
   const { setTarget } = usePageView();
+
+  const { editingRecordId, cancelEmptyRecord } = useNewRowEdit();
+  const isNewlyCreated = editingRecordId != null && editingRecordId === pageId;
 
   const icon = templatePage?.cover ?? linkedPage?.cover ?? null;
 
@@ -92,6 +96,10 @@ export function TitleCell({
         }}
         readonly={readonly}
         openVariant={openVariant}
+        autoEdit={isNewlyCreated}
+        onCancelEmpty={
+          isNewlyCreated && pageId ? () => cancelEmptyRecord(pageId) : undefined
+        }
       />
     </div>
   );
