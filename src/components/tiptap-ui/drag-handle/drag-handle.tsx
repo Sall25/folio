@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Editor } from "@tiptap/core";
 import { DragHandle as TiptapDragHandle } from "./drag-handle-extension-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragHandleMenu } from "./drag-handle-menu/drag-handle-menu";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -90,10 +90,9 @@ const nestedOptions = {
 export function DragHandle({ editor }: { editor: Editor | null }) {
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState("paragraph");
-  const [pos, setPos] = useState(-1);
   const isDraggingRef = useRef(false);
   const targetRef = useRef(target);
-  const posRef = useRef(pos);
+  const posRef = useRef(-1);
 
   // Hide the drag handle while a column is being resized to avoid
   // it flickering or repositioning during the resize interaction
@@ -115,6 +114,36 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
     setOpen(false);
     editor?.commands.unlockDragHandle();
   }, [editor]);
+
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      if (isDraggingRef.current) return;
+      if (next) {
+        editor?.commands.lockDragHandle();
+      } else {
+        editor?.commands.unlockDragHandle();
+      }
+      setOpen(next);
+    },
+    [editor],
+  );
+
+  const menu = useMemo(
+    () =>
+      open
+        ? createPortal(
+            <DragHandleMenu
+              onAction={onAction}
+              target={target}
+              editor={editor!}
+              side="left"
+              sideOffset={0}
+            />,
+            document.body,
+          )
+        : null,
+    [open, onAction, target, editor],
+  );
 
   if (!editor) return null;
 
@@ -148,7 +177,6 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
         // unnecessary re-renders on every cursor move
         if (newPos !== posRef.current) {
           posRef.current = newPos;
-          setPos(newPos);
         }
 
         if (newTarget !== targetRef.current) {
@@ -332,20 +360,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
           <Plus className="tiptap-button-icon" />
         </Button>
 
-        <DropdownMenu
-          open={open}
-          onOpenChange={(next) => {
-            // Ignore open/close events that fire during a drag — the menu
-            // should never open while the user is dragging a node
-            if (isDraggingRef.current) return;
-            if (next) {
-              editor.commands.lockDragHandle();
-            } else {
-              editor.commands.unlockDragHandle();
-            }
-            setOpen(next);
-          }}
-        >
+        <DropdownMenu open={open} onOpenChange={handleOpenChange}>
           <ColorDropdownProvider>
             {/* Hidden anchor — only used to anchor the dropdown menu position,
                 the actual trigger is the grip button below */}
@@ -371,7 +386,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
               className="grip-button"
               tabIndex={-1}
               onPointerDown={() => {
-                editor.commands.setNodeSelection(pos);
+                editor.commands.setNodeSelection(posRef.current);
               }}
               onClick={() => {
                 if (isDraggingRef.current) return;
@@ -388,17 +403,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
               <GripVertical className="tiptap-button-icon" />
             </Button>
 
-            {open &&
-              createPortal(
-                <DragHandleMenu
-                  onAction={onAction}
-                  target={target}
-                  editor={editor}
-                  side="left"
-                  sideOffset={0}
-                />,
-                document.body,
-              )}
+            {menu}
           </ColorDropdownProvider>
         </DropdownMenu>
       </CardItemGroup>
