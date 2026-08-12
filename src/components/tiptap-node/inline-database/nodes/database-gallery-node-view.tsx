@@ -99,31 +99,50 @@ function DatabaseGalleryNodeViewImpl() {
   const cardProps =
     source?.properties.filter((p) => !hidden.has(p.id)) ?? EMPTY_PROPERTIES;
 
-  // Manual drag order overrides the incoming (sorted) order.
-  // Persisted order from the view.
-  const persistedOrder = useMemo(
-    () =>
-      applyManualOrder(resolvedRecords, activeView?.manualOrder).map(
-        (r) => r.id,
-      ),
-    [resolvedRecords, activeView?.manualOrder],
-  );
   // Optimistic order held ONLY during a drag. null = not dragging, use persisted.
   const [dragOrder, setDragOrder] = useState<ID[] | null>(null);
 
-  // If the underlying records change (add/delete) while not dragging, the
-  // persisted order is the source of truth — nothing to reconcile.
+  // 1. Filter + sort first (the visible set).
+  const visibleRecords = useMemo(() => {
+    const filters = activeView?.filters;
+    const filtered = filters?.length
+      ? resolvedRecords.filter((r) =>
+          recordMatchesFilters(r, filters, source?.properties),
+        )
+      : resolvedRecords;
+    return sortRecords(filtered, activeView?.sorts ?? [], source?.properties);
+  }, [
+    resolvedRecords,
+    activeView?.filters,
+    activeView?.sorts,
+    source?.properties,
+  ]);
+
+  // 2. Apply manual order to the FILTERED set (not raw resolvedRecords).
+  const persistedOrder = useMemo(
+    () =>
+      applyManualOrder(visibleRecords, activeView?.manualOrder).map(
+        (r) => r.id,
+      ),
+    [visibleRecords, activeView?.manualOrder],
+  );
+
   const orderedIds = dragOrder ?? persistedOrder;
 
+  // 3. Build the final render list from orderedIds, looked up in the VISIBLE set.
   const recordById = useMemo(
-    () => new Map(resolvedRecords.map((r) => [r.id, r])),
-    [resolvedRecords],
+    () => new Map(visibleRecords.map((r) => [r.id, r])),
+    [visibleRecords],
   );
+
   const orderedRecords = useMemo(
     () =>
       orderedIds.map((id) => recordById.get(id)).filter((r): r is Page => !!r),
     [orderedIds, recordById],
   );
+
+  // If the underlying records change (add/delete) while not dragging, the
+  // persisted order is the source of truth — nothing to reconcile.
   const columnValuesByProp = useMemo(() => {
     if (!source) return;
     const map: Record<string, CellValue[]> = {};
@@ -175,21 +194,6 @@ function DatabaseGalleryNodeViewImpl() {
     setDragOrder(null);
   }
 
-  const visibleRecords = useMemo(() => {
-    const filters = activeView?.filters;
-    const filtered = filters?.length
-      ? resolvedRecords.filter((r) =>
-          recordMatchesFilters(r, filters, source?.properties),
-        )
-      : resolvedRecords;
-    return sortRecords(filtered, activeView?.sorts ?? [], source?.properties);
-  }, [
-    resolvedRecords,
-    activeView?.filters,
-    activeView?.sorts,
-    source?.properties,
-  ]);
-
   return (
     <div
       className="db-gallery"
@@ -211,7 +215,7 @@ function DatabaseGalleryNodeViewImpl() {
       >
         <SortableContext items={orderedIds} strategy={rectSortingStrategy}>
           <div className="db-gallery__body">
-            {visibleRecords.map((rec) => (
+            {orderedRecords.map((rec) => (
               <SortableGalleryCard key={rec.id} id={rec.id}>
                 <BoardCard
                   record={rec}
