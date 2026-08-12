@@ -1,9 +1,12 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { NodeViewWrapper } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/core";
 import { useDatabaseBridgeData } from "../hooks/use-database-bridge-data";
 import { Cell } from "../components/cells/cell";
-import type { ID } from "src/types";
+import type { CellValue, DatabaseProperty, ID } from "src/types";
+
+const EMPTY_PROPERTIES: DatabaseProperty[] = [];
+const EMPTY_COLUMN_VALUES: CellValue[] = [];
 
 /**
  * databaseCell NodeView. ONE node type for every property type, and every cell is
@@ -40,9 +43,10 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
 
   const data = useDatabaseBridgeData(editor, databaseId);
 
+  const properties = data?.properties ?? EMPTY_PROPERTIES;
   const property = useMemo(
-    () => data?.properties.find((p) => p.id === propertyId) ?? null,
-    [data?.properties, propertyId],
+    () => properties?.find((p) => p.id === propertyId) ?? null,
+    [properties, propertyId],
   );
 
   // ── View-driven presentation ──────────────────────────────────────────────
@@ -75,6 +79,15 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
     data?.view?.unwrappedProperties?.includes(propertyId)
   );
 
+  const setCellValue = data?.setCellValue;
+  const handleChange = useCallback(
+    (v: CellValue | null) =>
+      recordId && propertyId
+        ? setCellValue?.(recordId, propertyId, v)
+        : undefined,
+    [setCellValue, recordId, propertyId],
+  );
+
   // Data not published yet, or unresolvable cell → empty grid cell. No content
   // hole: nothing in this node is ProseMirror-owned anymore.
   if (!data || !property || !recordId || !propertyId) {
@@ -104,14 +117,16 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
       {record && (
         <Cell
           property={property}
-          properties={data.properties}
+          properties={properties}
           value={value}
           record={record}
           view={data.view}
-          columnValues={data.columnValuesByProp[propertyId] ?? []}
+          columnValues={
+            data.columnValuesByProp[propertyId] ?? EMPTY_COLUMN_VALUES
+          }
           templateId={data.templateId}
           readonly={data.locked}
-          onChange={(v) => data.setCellValue(recordId, propertyId, v)}
+          onChange={handleChange}
           unwrapped={unwrapped}
         />
       )}

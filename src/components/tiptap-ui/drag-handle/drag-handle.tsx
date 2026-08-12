@@ -64,7 +64,7 @@ const nestedOptions = {
         depth: number;
       }) => {
         const name = node.type.name;
-        if (name === "column" || name === "columnBlock") {
+        if (name === "column" || name === "columnBlock" || name === "title") {
           return 1000;
         }
 

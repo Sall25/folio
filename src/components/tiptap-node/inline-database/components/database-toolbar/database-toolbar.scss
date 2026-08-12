@@ -5,7 +5,7 @@
   // max-width rather than width: the content is intrinsically sized, and
   // width:auto isn't animatable. The value just needs to exceed the natural
   // width — it's a ceiling, not a size.
-  max-width: 400px;
+  max-width: 600px;
   opacity: 1;
   transition:
     max-width 220ms cubic-bezier(0.4, 0, 0.2, 1),

@@ -3,9 +3,7 @@ import { useDataSource } from "../hooks/use-data-source";
 import { BoardCard } from "../primitives/board-card";
 import type {
   CellValue,
-  DatabaseAttrs,
-  DatabaseView,
-  DataSource,
+  DatabaseProperty,
   GalleryView,
   ID,
   Page,
@@ -30,6 +28,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { applyManualOrder } from "../utils/apply-manual-order";
+import { useDatabaseContext } from "./database-context";
+import { recordMatchesFilters } from "../utils/apply-filters";
+import { sortRecords } from "../utils/apply-sorts";
 
 // Pointer-based first (tolerant of slow drags over gaps), then fall back to
 // closestCenter so a release over padding still snaps to the nearest card.
@@ -78,17 +79,11 @@ function SortableGalleryCard({
   );
 }
 
-function DatabaseGalleryNodeViewImpl({
-  attrs,
-  source,
-  view,
-  onUpdateView,
-}: {
-  attrs: DatabaseAttrs & { sourceId?: string | null };
-  source: DataSource;
-  view: DatabaseView;
-  onUpdateView: (patch: Partial<DatabaseView>) => void;
-}) {
+const EMPTY_PROPERTIES: DatabaseProperty[] = [];
+
+function DatabaseGalleryNodeViewImpl() {
+  const { attrs, source, onUpdateView, db } = useDatabaseContext();
+  const view = db.activeView;
   const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
     attrs.sourceId,
   );
@@ -101,7 +96,8 @@ function DatabaseGalleryNodeViewImpl({
   const cardCols = CARD_COLUMNS[cardSize];
 
   const hidden = new Set(activeView?.hiddenProperties ?? []);
-  const cardProps = source.properties.filter((p) => !hidden.has(p.id));
+  const cardProps =
+    source?.properties.filter((p) => !hidden.has(p.id)) ?? EMPTY_PROPERTIES;
 
   // Manual drag order overrides the incoming (sorted) order.
   // Persisted order from the view.
@@ -129,6 +125,7 @@ function DatabaseGalleryNodeViewImpl({
     [orderedIds, recordById],
   );
   const columnValuesByProp = useMemo(() => {
+    if (!source) return;
     const map: Record<string, CellValue[]> = {};
     for (const prop of source.properties) {
       if (prop.config.type !== "number") continue;
@@ -137,7 +134,7 @@ function DatabaseGalleryNodeViewImpl({
       );
     }
     return map;
-  }, [orderedRecords, source.properties]);
+  }, [orderedRecords, source]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -178,6 +175,21 @@ function DatabaseGalleryNodeViewImpl({
     setDragOrder(null);
   }
 
+  const visibleRecords = useMemo(() => {
+    const filters = activeView?.filters;
+    const filtered = filters?.length
+      ? resolvedRecords.filter((r) =>
+          recordMatchesFilters(r, filters, source?.properties),
+        )
+      : resolvedRecords;
+    return sortRecords(filtered, activeView?.sorts ?? [], source?.properties);
+  }, [
+    resolvedRecords,
+    activeView?.filters,
+    activeView?.sorts,
+    source?.properties,
+  ]);
+
   return (
     <div
       className="db-gallery"
@@ -199,7 +211,7 @@ function DatabaseGalleryNodeViewImpl({
       >
         <SortableContext items={orderedIds} strategy={rectSortingStrategy}>
           <div className="db-gallery__body">
-            {orderedRecords.map((rec) => (
+            {visibleRecords.map((rec) => (
               <SortableGalleryCard key={rec.id} id={rec.id}>
                 <BoardCard
                   record={rec}

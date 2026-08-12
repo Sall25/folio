@@ -208,10 +208,9 @@ export function PropertyHeader({
     isDragging,
   } = useSortable({ id: prop.id, disabled: locked });
 
-  const { db, source } = useDatabaseContext();
-  const { changePropertyTypeAsync, updatePropertiesAsync } = useDataSource(
-    source?.id,
-  );
+  const { db, attrs } = useDatabaseContext();
+  const { changePropertyTypeAsync, updatePropertiesAsync, source } =
+    useDataSource(attrs.sourceId);
 
   /** Insert a new text property beside this one. Cells are created by
    *  useDatabaseCellSync once the property lands. */

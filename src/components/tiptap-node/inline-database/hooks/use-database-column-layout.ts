@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import type { DatabaseProperty, DatabaseView, DataSource } from "src/types";
 
 interface Params {
@@ -22,10 +29,17 @@ export function useDatabaseColumnLayout({
   const [draftWidths, setDraftWidths] = useState<Record<string, number>>({});
   const lastCommitRef = useRef<{ propId: string; width: number } | null>(null);
 
-  const hidden = new Set(activeView?.hiddenProperties ?? []);
-  const visibleProperties = properties.filter((p) => !hidden.has(p.id));
+  const hiddenProperties = activeView?.hiddenProperties;
 
-  const widthFor = (p: DatabaseProperty) => draftWidths[p.id] ?? p.width ?? 160;
+  const visibleProperties = useMemo(() => {
+    const hidden = new Set(hiddenProperties ?? []);
+    return properties.filter((p) => !hidden.has(p.id));
+  }, [properties, hiddenProperties]);
+
+  const widthFor = useMemo(
+    () => (p: DatabaseProperty) => draftWidths[p.id] ?? p.width ?? 160,
+    [draftWidths],
+  );
 
   // Header grid: property columns + trailing 1fr for the actions (+/...) cell.
   const gridTemplateColumns =
@@ -54,29 +68,29 @@ export function useDatabaseColumnLayout({
   }, [locked, tableRef]);
 
   // Persist the final width to the source, then drop the draft for that column.
-  const commitColumnWidth = async (
-    ref: { current: HTMLElement | null } | undefined,
-    width: number,
-  ) => {
-    if (locked) return;
-    const propId = (ref?.current as HTMLElement | null)?.dataset.propId;
-    if (!propId) return;
+  const commitColumnWidth = useCallback(
+    async (ref: { current: HTMLElement | null } | undefined, width: number) => {
+      if (locked) return;
+      const propId = (ref?.current as HTMLElement | null)?.dataset.propId;
+      if (!propId) return;
 
-    const last = lastCommitRef.current;
-    if (last && last.propId === propId && last.width === width) return;
-    lastCommitRef.current = { propId, width };
+      const last = lastCommitRef.current;
+      if (last && last.propId === propId && last.width === width) return;
+      lastCommitRef.current = { propId, width };
 
-    await updatePropertiesAsync(
-      properties.map((p) => (p.id === propId ? { ...p, width } : p)),
-    );
+      await updatePropertiesAsync(
+        properties.map((p) => (p.id === propId ? { ...p, width } : p)),
+      );
 
-    setDraftWidths((d) => {
-      if (!(propId in d)) return d;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { [propId]: _drop, ...rest } = d;
-      return rest;
-    });
-  };
+      setDraftWidths((d) => {
+        if (!(propId in d)) return d;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { [propId]: _drop, ...rest } = d;
+        return rest;
+      });
+    },
+    [locked, setDraftWidths, properties, updatePropertiesAsync],
+  );
 
   return {
     draftWidths,

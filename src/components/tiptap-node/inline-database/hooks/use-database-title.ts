@@ -3,7 +3,7 @@
 // node in its content). Linked views keep an independent label and never
 // rename the source.
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import type { JSONContent } from "@tiptap/core";
 import type { DatabaseAttrs, Page } from "src/types";
@@ -64,11 +64,16 @@ export function useDatabaseTitle({
   const isLinked = !!attrs.isLinked;
   const resolvedTitle = attrs.title || sourceName || "";
 
-  const handleTitleChange = (title: string) => {
-    // Linked view → independent label, never rename the source.
-    updateAttributes({ title });
-    if (!isLinked) persistTitle(title);
-  };
+  const handleTitleChange = useCallback(
+    (title: string) => {
+      updateAttributes({ title });
+
+      if (!isLinked) {
+        persistTitle(title);
+      }
+    },
+    [updateAttributes, isLinked, persistTitle],
+  );
 
   return { resolvedTitle, handleTitleChange };
 }

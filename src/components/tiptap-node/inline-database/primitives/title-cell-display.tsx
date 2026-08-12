@@ -88,7 +88,12 @@ export function TitleCellDisplay({
                 />
               </span>
             )}
-            <span className="db-cell-title__text">{value || "Untitled"}</span>
+            <span
+              className="db-cell-title__text"
+              data-empty={!value ? "true" : undefined}
+            >
+              {value || "New Page"}
+            </span>
           </div>
         }
       >

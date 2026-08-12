@@ -3,10 +3,13 @@ import type { Editor } from "@tiptap/core";
 import type {
   DatabaseAttrs,
   DatabaseProperty,
+  DatabaseView,
   DataSource,
   ID,
+  Page,
 } from "src/types";
 import type { UseDatabaseReturn } from "../hooks/use-database";
+import type { GroupedRowLayout } from "../utils/group-rows";
 
 // ── Context shape ──────────────────────────────────────────────────────────
 
@@ -22,9 +25,33 @@ interface DatabaseContextValue {
   /** The computed grid template columns string */
   gridTemplateColumns: string;
 
-  updateAttributes: (attributes: Record<string, DatabaseAttrs>) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  updateAttributes: (attributes: Record<string, any>) => void;
 
   source: DataSource | null;
+
+  showFilterChips: boolean;
+  onShowFilterChipsChange: (v: boolean) => void;
+
+  showSortChips: boolean;
+  onShowSortChipsChange: (v: boolean) => void;
+
+  title: string;
+  onTitleChange: (v: string) => void;
+
+  sortedRecords: Page[];
+
+  tableLayout: GroupedRowLayout;
+
+  onNewRecord: () => void;
+  onNewRecordInGroup: (groupKeys: ID) => void;
+
+  visibleSelection: ID[];
+  selectedRecords: Page[];
+
+  onUpdateView: (patch: Partial<DatabaseView>) => void;
+
+  visibleProperties: DatabaseProperty[];
 }
 
 // ── Context ────────────────────────────────────────────────────────────────

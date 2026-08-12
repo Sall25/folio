@@ -1,0 +1,99 @@
+import { memo, useState } from "react";
+import { Search, X } from "lucide-react";
+
+import { Button } from "src/components/tiptap-ui-primitive/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "src/components/tiptap-ui-primitive/popover";
+import type { UseDatabaseReturn } from "../../hooks/use-database";
+import { Input } from "src/components/tiptap-ui-primitive/input";
+import { useDebouncedCallback } from "use-debounce";
+
+// Shared style for the small square control buttons (search/filter/sort).
+const CONTROL_BUTTON_STYLE: React.CSSProperties = {
+  minHeight: 22,
+  height: 22,
+  borderRadius: "var(--tt-radius-sm)",
+  background: "transparent",
+};
+
+// ── search (already extracted; unchanged) ────────────────────────────────────
+
+function SearchButtonImpl({ db }: { db: UseDatabaseReturn }) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(db.searchQuery);
+
+  const pushQuery = useDebouncedCallback(
+    (q: string) => db.setSearchQuery(q),
+    200,
+    { maxWait: 600 },
+  );
+
+  const clear = () => {
+    setDraft("");
+    pushQuery.cancel();
+    db.setSearchQuery("");
+  };
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) clear();
+      }}
+    >
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          tooltip="Search"
+          data-active-state={db.searchQuery ? "on" : "off"}
+          style={CONTROL_BUTTON_STYLE}
+          onClick={() => setOpen(true)}
+        >
+          <Search size={14} className="tiptap-button-icon" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent side="bottom" align="end" className="db-panel">
+        <div className="db-search">
+          <Search size={14} className="db-search__icon" />
+          <Input
+            autoFocus
+            className="db-search__input"
+            placeholder="Type to search..."
+            value={draft}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              pushQuery(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.preventDefault();
+                clear();
+                setOpen(false);
+              }
+              if (e.key === "Enter") {
+                e.preventDefault();
+                pushQuery.flush();
+              }
+            }}
+          />
+          {draft && (
+            <Button
+              variant="ghost"
+              className="db-search__clear"
+              onClick={clear}
+              aria-label="Clear search"
+            >
+              <X size={13} className="tiptap-button-icon" />
+            </Button>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+export const SearchButton = memo(SearchButtonImpl);

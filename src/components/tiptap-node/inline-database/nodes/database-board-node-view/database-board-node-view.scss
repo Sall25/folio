@@ -1,4 +1,4 @@
-@use "../utils/pill-colors.scss" as pill;
+@use "../../utils/pill-colors.scss" as pill;
 
 @include pill.pill-tint-variants(".db-board-col");
 

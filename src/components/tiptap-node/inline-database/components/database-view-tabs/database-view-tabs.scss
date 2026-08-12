@@ -1,44 +1,35 @@
 .db-view-tabs {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   overflow-x: auto;
   max-width: 500px;
   margin-top: 8px;
-  // The thin rule the whole row sits on; the active tab's underline merges
-  // with it — the Notion collection-tab look.
-  border-bottom: 1px solid var(--tt-border-color);
-  border-radius: 0;
+  padding-bottom: 6px;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
   }
 }
 
-// Base tab. Targets every tab trigger in the row regardless of nesting —
-// inactive buttons, the locked active button, and the active view's
-// ViewPopover trigger. Popover *content* buttons are portaled out of this
-// container, so they're unaffected.
+// Base tab — inactive: bare icon + muted text, no background, no underline.
 .db-view-tabs button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 8px;
+  padding: 5px 10px;
   border: none;
-  border-bottom: 2px solid transparent; // reserve the underline's space
-  margin-bottom: -1px; // overlap the row's 1px rule
-  border-radius: 0;
+  border-radius: var(--tt-radius-md, 8px); // pill corners (only shows when active)
   background: transparent;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.4;
   font-family: inherit;
   white-space: nowrap;
   color: var(--tt-text-secondary, #9b9a97); // inactive = muted
   transition:
     color 100ms ease,
-    border-color 100ms ease,
     background 100ms ease;
 
   .tiptap-button-text {
@@ -54,40 +45,75 @@
 
   &:hover {
     color: var(--tt-text-primary, var(--tt-theme-text));
+    background: var(--tt-button-hover-bg-color, var(--tt-gray-light-a-50));
+    .dark & {
+      background: var(--tt-gray-dark-a-50);
+    }
   }
 
-  // Active view: primary text + the underline, flush with the row rule.
-  // Driven by data-active-state="on" so it also catches the ViewPopover
-  // trigger (higher specificity than the base, so no !important needed).
+  // Active view: filled pill + primary text. No underline.
   &[data-active-state="on"] {
     color: var(--tt-text-primary, var(--tt-theme-text));
-    border-bottom-color: currentColor;
-    border-radius: 0 !important;
-    background-color: transparent !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    background: var(--tt-gray-light-a-100);
+    font-weight: 600;
+
+    .dark & {
+      background: var(--tt-gray-dark-a-100);
+    }
 
     .tiptap-button-icon,
     svg {
       opacity: 1;
     }
+
+    &:hover {
+      // keep the pill fill on hover (don't lighten to the hover bg)
+      background: var(--tt-gray-light-a-100);
+      .dark & {
+        background: var(--tt-gray-dark-a-100);
+      }
+    }
   }
 }
 
-// The "+" is not a real tab — small muted icon button, no underline, no
-// reserved underline space. Extra specificity (button.db-view-tab--add) so it
-// overrides the base .db-view-tabs button rule cleanly.
+// The "+" add button — small muted icon, no pill.
 .db-view-tabs button.db-view-tab--add {
   gap: 0;
-  padding: 4px 6px;
+  padding: 5px 7px;
   min-width: unset;
-  border-bottom: none;
-  margin-bottom: 0;
-  border-radius: var(--tt-radius-md, 6px);
+  border-radius: var(--tt-radius-md, 8px);
   color: var(--tt-text-secondary, #9b9a97);
 
   &:hover {
     color: var(--tt-text-primary, var(--tt-theme-text));
-    background: var(--tt-button-hover-bg-color);
+    background: var(--tt-button-hover-bg-color, var(--tt-gray-light-a-50));
   }
+}
+
+.db-view-tabs {
+  position: relative;
+  overflow: visible;   // was overflow-x: auto — overflow into the menu, no scroll
+  max-width: 100%;
+}
+.db-view-tabs__measure {
+  position: absolute;
+  top: 0; left: 0;
+  display: flex;
+  gap: 8px;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.db-view-tab--more .tiptap-button-text {
+  color: var(--tt-text-secondary);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.db-view-more {
+  min-width: 200px;
+  
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
 }

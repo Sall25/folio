@@ -29,8 +29,9 @@ import { evaluateFormula } from "../../formula-editor/formula-evaluator";
 import { RelationCell } from "../relation-cell";
 import { RollupCell } from "../rollup-cell";
 import { PhoneCell } from "../phone-cell";
+import { memo } from "react";
 
-export function Cell({
+function CellImpl({
   property,
   properties,
   value,
@@ -274,3 +275,5 @@ export function Cell({
     }
   }
 }
+
+export const Cell = memo(CellImpl);

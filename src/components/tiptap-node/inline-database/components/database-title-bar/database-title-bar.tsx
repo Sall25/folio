@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Ellipsis, Eye, EyeOff, Plus } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import "./database-title-bar.scss";
@@ -10,6 +10,7 @@ import {
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { ViewIcon } from "../database-toolbar/view-icon";
 import type { DatabaseView } from "src/types";
+import { useDatabaseContext } from "../../nodes/database-context";
 
 const VIEW_TYPES: { type: DatabaseView["type"]; label: string }[] = [
   { type: "table", label: "Table" },
@@ -21,30 +22,20 @@ const VIEW_TYPES: { type: DatabaseView["type"]; label: string }[] = [
 ];
 
 interface DatabaseTitleBarProps {
-  title: string;
-  hideTitle?: boolean;
-  onTitleChange: (title: string) => void;
-  onHideTitleChange: (hide: boolean) => void;
-  /** When locked, the title is read-only and both the options menu (hide
-      title) and the add-view "+" are removed — title/visibility and view
-      structure are config, frozen when locked. */
-  locked?: boolean;
   /** Create a view. Same path DatabaseViewTabs' "+" uses (db.addView), so both
       entry points build views identically. Omit to hide the "+" — e.g. in the
       multi-view layout, where the tabs already carry their own add-view. */
   onAddView?: (type: DatabaseView["type"], label: string) => void;
 }
 
-export function DatabaseTitleBar({
-  title,
-  hideTitle = false,
-  onTitleChange,
-  onHideTitleChange,
-  locked = false,
-  onAddView,
-}: DatabaseTitleBarProps) {
+function DatabaseTitleBarImpl({ onAddView }: DatabaseTitleBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [addOpen, setAddOpen] = useState(false);
+
+  const { title, onTitleChange, attrs, updateAttributes } =
+    useDatabaseContext();
+  const locked = !!attrs.locked;
+  const hideTitle = attrs.hideTitle;
 
   // ONE element, always mounted, deliberately UNCONTROLLED — no `value` prop,
   // no onChange→state. A controlled input is rewritten by React on every
@@ -120,7 +111,11 @@ export function DatabaseTitleBar({
             >
               <Button
                 variant="ghost"
-                onClick={() => onHideTitleChange(!hideTitle)}
+                onClick={() =>
+                  locked
+                    ? undefined
+                    : updateAttributes({ ...attrs, hideTitle: !hideTitle })
+                }
               >
                 {hideTitle ? (
                   <EyeOff className="tiptap-button-icon" />
@@ -134,9 +129,6 @@ export function DatabaseTitleBar({
         </Popover>
       )}
 
-      {/* Add view — only rendered when the tabs aren't (single-view layout),
-          so there's never a second add-view button competing with theirs.
-          Frozen when locked: adding a view is structural config. */}
       {!locked && onAddView && (
         <Popover open={addOpen} onOpenChange={setAddOpen}>
           <PopoverTrigger asChild>
@@ -174,3 +166,5 @@ export function DatabaseTitleBar({
     </div>
   );
 }
+
+export const DatabaseTitleBar = memo(DatabaseTitleBarImpl);

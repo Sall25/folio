@@ -1,14 +1,12 @@
 // The database NodeView. Responsibilities kept here are orchestration only:
 //   - load the DataSource + view state
-//   - call the focused hooks (title, column layout, bridge publish, node sync)
+//   - call the focused hooks (records, view-switch, title, column layout,
+//     bridge publish, node sync, chip visibility)
 //   - assemble the chrome (cover, toolbar, title bar, filter/sort chips)
 //   - branch to the six view renderers (table is node-rendered; the other five
 //     are still imperative)
-//
-// The heavy logic lives in hooks (use-database-*.ts) and the table JSX lives in
-// database-table-body.tsx / database-table-header.tsx.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { NodeViewProps } from "@tiptap/core";
 import { NodeViewWrapper } from "@tiptap/react";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
@@ -25,48 +23,31 @@ import { SortRuleChips } from "../components/sort-rule-chips/sort-rule-chips";
 import { DataSourcePicker } from "./data-source-picker";
 import { DatabaseBoardNodeView } from "./database-board-node-view";
 import { DatabaseGalleryNodeView } from "./database-gallery-node-view";
-import { DatabaseListNodeView } from "./database-list-node-view";
+import { DatabaseListNodeView } from "./database-list-node-view/database-list-node-view";
 import { DatabaseCalendarNodeView } from "./database-calendar-node-view";
 import { DatabaseTimelineNodeView } from "./database-timeline-node-view";
 import { DatabaseLoadingSkeleton } from "../components/database-loading-skeleton";
-import { recordMatchesFilters } from "../utils/apply-filters";
-import { sortRecords } from "../utils/apply-sorts";
 import { DatabaseTableBody } from "./database-table-body";
-import { useDatabaseTitle } from "../hooks/use-database-title";
 import { useDatabaseColumnLayout } from "../hooks/use-database-column-layout";
 import { useDatabaseBridgePublish } from "../hooks/use-database-bridge-publish";
 import {
   useDatabaseSeed,
   useDatabaseCellSync,
-  insertRecordNode,
   removeRecordNode,
 } from "../hooks/use-database-seed";
+import { useTableRecords } from "../hooks/use-table-records";
+import { useViewSwitch } from "../hooks/use-view-switch";
+import { useChipVisibility } from "../hooks/use-chip-visibility";
 
-import {
-  DEFAULT_CONFIGS,
-  type DatabaseAttrs,
-  type DatabaseView,
-  type PropertyConfig,
-  type ID,
-  type TableView,
-} from "src/types";
+import { type DatabaseAttrs, type ID, type DatabaseProperty } from "src/types";
 import "./database-table-node-view.scss";
 import "./database-node.scss";
 import { SelectionToolbar } from "../components/selection-toolbar";
-import { useVisibleSelection } from "../hooks/use-visible-selection";
-import { removeRecordNodes } from "../utils/remove-record-nodes";
-import { buildGroupedRows } from "../utils/group-rows";
-import {
-  groupRecords,
-  NONE_KEY,
-  valueForGroupKey,
-} from "../utils/group-records";
-import { useWhyDidYouRender } from "src/lib/useWhyDidYouRender";
 import { NewRowEditProvider } from "./new-row-edit-provider";
-
-type PropertyType = PropertyConfig["type"];
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 
 const EMPTY_SOURCE = { properties: [] };
+const EMPTY_PROPERTIES: DatabaseProperty[] = [];
 
 export function DatabaseNodeView({
   node,
@@ -89,6 +70,7 @@ export function DatabaseNodeView({
     addRecordAsync,
     removeRecordAsync,
   } = useDataSource(attrs.sourceId);
+
   const [editingRecordId, setEditingRecordId] = useState<ID | null>(null);
 
   const cancelEmptyRecord = useCallback(
@@ -123,151 +105,26 @@ export function DatabaseNodeView({
 
   const tableRef = useRef<HTMLDivElement>(null);
 
-  // ── View switching ────────────────────────────────────────────────────────
-  // Switching views shows a skeleton because mounting board/gallery/calendar is
-  // expensive — but nothing is *loading* (the source is already in the query
-  // cache), so there's no isLoading to key off. useTransition doesn't help
-  // either: the update travels through a ProseMirror transaction rather than a
-  // React setState, so React never scopes it as transition work. Hence an
-  // explicit flag.
-  const [switchingTo, setSwitchingTo] = useState<ID | null>(null);
+  // ── View switching (skeleton while a new view type mounts) ────────────────
+  const { switchingTo, dbWithSwitch } = useViewSwitch(db, attrs.activeViewId);
 
-  // Clear once the target view is actually active. rAF so the clear lands after
-  // the new view's first paint rather than before it.
-  useEffect(() => {
-    if (switchingTo && attrs.activeViewId === switchingTo) {
-      const raf = requestAnimationFrame(() => setSwitchingTo(null));
-      return () => cancelAnimationFrame(raf);
-    }
-  }, [attrs.activeViewId, switchingTo]);
-
-  const setActiveViewWithSkeleton = useCallback(
-    (viewId: ID) => {
-      if (viewId === attrs.activeViewId) return;
-      setSwitchingTo(viewId);
-      db.setActiveView(viewId);
-    },
-    [attrs.activeViewId, db],
-  );
-
-  // The toolbar and view tabs call db.setActiveView — wrapping it here means
-  // those components need no changes.
-  const dbWithSwitch = useMemo(
-    () => ({ ...db, setActiveView: setActiveViewWithSkeleton }),
-    [db, setActiveViewWithSkeleton],
-  );
-
-  // ── Filtered + sorted records + queried ─────────────────────────────────────────────
-  const sortedRecords = useMemo(() => {
-    // The title's value lives on page.title, not in values[], so filters and
-    // sorts need the property list to know which id is the title.
-    const props = source?.properties ?? [];
-    const filtered = activeView?.filters?.length
-      ? resolvedRecords.filter((r) =>
-          recordMatchesFilters(r, activeView.filters, props),
-        )
-      : resolvedRecords;
-
-    // Search matches the title only — same as Notion's in-database search.
-    // It's applied AFTER filters and before sorting: search narrows what the
-    // view already shows rather than reaching past its filters.
-    const q = db.searchQuery.trim().toLowerCase();
-    const searched = q
-      ? filtered.filter((r) => (r.title ?? "").toLowerCase().includes(q))
-      : filtered;
-
-    return sortRecords(searched, activeView?.sorts ?? [], props);
-  }, [
+  // ── Filtered → searched → sorted → grouped records + row layout ───────────
+  const { sortedRecords, collapsedKeys, rowSlots } = useTableRecords({
     resolvedRecords,
-    activeView?.filters,
-    activeView?.sorts,
-    source?.properties,
-    db.searchQuery,
-  ]);
+    source,
+    db,
+    editingRecordId,
+  });
 
-  const groupByPropertyId =
-    activeView?.type === "table"
-      ? ((activeView as TableView).groupByPropertyId ?? null)
-      : null;
-
-  const groupProp = groupByPropertyId
-    ? source?.properties.find((p) => p.id === groupByPropertyId)
-    : undefined;
-
-  const collapsedKeys = useMemo(
-    () => new Set((activeView as TableView)?.collapsedGroups ?? []),
-    [activeView],
-  );
-
-  const { rowSlots, headers } = useMemo(() => {
-    if (!groupProp) {
-      return { rowSlots: sortedRecords.map((r) => r.id), headers: [] };
-    }
-    return buildGroupedRows(
-      groupRecords(sortedRecords, groupProp),
-      collapsedKeys,
-      (activeView as TableView)?.showEmptyGroups ?? false,
-    );
-  }, [sortedRecords, groupProp, collapsedKeys, activeView]);
-
-  const newRecord = () => {
-    addRecordAsync({ title: "" })
-      .then((page) => {
-        if (editor && attrs.id && attrs.sourceId && source) {
-          insertRecordNode(
-            editor,
-            attrs.id,
-            attrs.sourceId,
-            page,
-            source.properties,
-          );
-        }
-        setEditingRecordId(page.id);
-      })
-      .catch(() => console.log("Failed to create page"));
-  };
-
-  const newRecordInGroup = (groupKey: string) => {
-    addRecordAsync({ title: "" })
-      .then((page) => {
-        if (editor && attrs.id && attrs.sourceId && source) {
-          insertRecordNode(
-            editor,
-            attrs.id,
-            attrs.sourceId,
-            page,
-            source.properties,
-          );
-        }
-        if (groupProp && groupKey !== NONE_KEY) {
-          setCellValue(
-            page.id,
-            groupProp.id,
-            valueForGroupKey(groupKey, groupProp) as never,
-          );
-        }
-        setEditingRecordId(page.id); // focus title inline instead of peek
-      })
-      .catch(() => console.log("Failed to create page"));
-  };
-
-  // Selection ∩ visible rows. Selection survives filter changes, so a record
-  // can stay selected while filtered out — bulk actions must only touch what
-  // the user can see.
-  const visibleSelection = useVisibleSelection(attrs.id ?? null, rowSlots);
-  const selectedRecords = useMemo(
-    () => sortedRecords.filter((r) => visibleSelection.includes(r.id)),
-    [sortedRecords, visibleSelection],
-  );
-
-  // Register present views (existing effect)
+  // ── View lifecycle effects ────────────────────────────────────────────────
+  // Register present views.
   useEffect(() => {
     if (!source) return;
     registerViewsAsync(attrs.views);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attrs.views, source?.id, registerViewsAsync]);
 
-  // Prune saved views that were deleted from the node
+  // Prune saved views that were deleted from the node.
   useEffect(() => {
     if (!source) return;
     const liveIds = new Set(attrs.views.map((v) => v.id));
@@ -294,15 +151,6 @@ export function DatabaseNodeView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [db.views?.length]);
 
-  // ── Focused hooks ─────────────────────────────────────────────────────────
-  const { resolvedTitle, handleTitleChange } = useDatabaseTitle({
-    attrs,
-    sourceName: source?.name,
-    sourcePageId: source?.pageId,
-    updateSourceMetaAsync,
-    updateAttributes: (patch) => updateAttributes({ ...attrs, ...patch }),
-  });
-
   const {
     draftWidths,
     visibleProperties,
@@ -311,7 +159,7 @@ export function DatabaseNodeView({
     bodyGridTemplateColumns,
     commitColumnWidth,
   } = useDatabaseColumnLayout({
-    properties: source?.properties ?? [],
+    properties: source?.properties ?? EMPTY_PROPERTIES,
     activeView,
     locked,
     tableRef,
@@ -349,55 +197,17 @@ export function DatabaseNodeView({
     ready: !isLoading && !!source,
   });
 
+  // ── Chip-row visibility (auto-reveal when rules appear) ───────────────────
   const filterRuleCount =
     activeView?.filters?.reduce((n, g) => n + g.rules.length, 0) ?? 0;
   const sortCount = activeView?.sorts?.length ?? 0;
+  const { showFilterChips, showSortChips } = useChipVisibility(
+    filterRuleCount,
+    sortCount,
+  );
 
-  // Chip-row visibility. Notion toggles the bar from the toolbar rather than
-  // showing it unconditionally — a database with six filters shouldn't push
-  // the table down until you ask to see them.
-  const [showFilterChips, setShowFilterChips] = useState(false);
-  const [showSortChips, setShowSortChips] = useState(false);
-
-  // Reveal the bar when rules appear, hide it when the last one goes.
-  const prevCountsRef = useRef({ filters: 0, sorts: 0 });
-  useEffect(() => {
-    const prev = prevCountsRef.current;
-    if (filterRuleCount > prev.filters) setShowFilterChips(true);
-    if (filterRuleCount === 0) setShowFilterChips(false);
-    if (sortCount > prev.sorts) setShowSortChips(true);
-    if (sortCount === 0) setShowSortChips(false);
-    prevCountsRef.current = { filters: filterRuleCount, sorts: sortCount };
-  }, [filterRuleCount, sortCount]);
-
-  // ── DEBUG: what changes each render? Remove once the loop is found. ────────
-  useWhyDidYouRender("db-inputs", {
-    updateAttributes,
-    source,
-    updatePropertiesAsync,
-    attrs,
-    node,
-  });
-  useWhyDidYouRender("database-node-view", {
-    node,
-    attrs,
-    source,
-    activeView,
-    resolvedRecords,
-    sortedRecords,
-    rowSlots,
-    headers,
-    collapsedKeys,
-    visibleSelection,
-    selectedRecords,
-    db,
-    dbWithSwitch,
-    switchingTo,
-
-    showFilterChips,
-    showSortChips,
-    resolvedTitle,
-  });
+  const { activePageId } = useActivePage();
+  const isOwnPage = activePageId != null && activePageId === dbPageId;
 
   // ── No source yet → picker ────────────────────────────────────────────────
   if (!attrs.sourceId) {
@@ -424,36 +234,23 @@ export function DatabaseNodeView({
     return <DatabaseLoadingSkeleton type={activeView?.type ?? "table"} />;
   }
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
-  const onUpdateView = (patch: Partial<DatabaseView>) => {
-    if (activeView) db.updateView(activeView.id, patch);
-  };
-
-  const addProperty = (type: PropertyType, propertyName?: string) => {
-    if (locked) return;
-    updatePropertiesAsync([
-      ...source.properties,
-      {
-        id: crypto.randomUUID(),
-        name: propertyName ?? type.charAt(0).toUpperCase() + type.slice(1),
-        config: DEFAULT_CONFIGS[type],
-        width: 160,
-      },
-    ]);
-    // Cells for the new property are inserted by useDatabaseCellSync.
-  };
-
   // ── Chrome wrapper shared by every view ───────────────────────────────────
   const chrome = (body: React.ReactNode) => (
     <NewRowEditProvider value={{ editingRecordId, cancelEmptyRecord }}>
       <NodeViewWrapper className="db-node">
         <DatabaseProvider
+          resolvedRecords={resolvedRecords}
+          updateSourceMetaAsync={updateSourceMetaAsync}
           attrs={attrs}
           // Switch-aware db so view tabs anywhere downstream trigger the skeleton.
           db={dbWithSwitch}
           source={source}
           editor={editor}
           updateAttributes={updateAttributes}
+          addRecordAsync={addRecordAsync}
+          setCellValue={setCellValue}
+          setEditingRecordId={setEditingRecordId}
+          visibleProperties={visibleProperties}
         >
           <CardItemGroup>
             {dbPage?.cover?.coverImage && (
@@ -465,19 +262,7 @@ export function DatabaseNodeView({
                 />
               </div>
             )}
-            {attrs.views.length > 1 && (
-              <DatabaseTitleBar
-                hideTitle={attrs.hideTitle}
-                title={resolvedTitle}
-                onTitleChange={handleTitleChange}
-                onHideTitleChange={(hide) =>
-                  locked
-                    ? undefined
-                    : updateAttributes({ ...attrs, hideTitle: hide })
-                }
-                locked={locked}
-              />
-            )}
+            {attrs.views.length > 1 && !isOwnPage && <DatabaseTitleBar />}
             <div
               style={{
                 maxWidth: "var(--db-editor-width)",
@@ -485,55 +270,17 @@ export function DatabaseNodeView({
                 position: "relative",
               }}
             >
-              <DatabaseToolbar
-                properties={source.properties}
-                attrs={attrs}
-                db={dbWithSwitch}
-                onUpdateAttributes={updateAttributes}
-                locked={locked}
-                title={resolvedTitle}
-                hideTitle={attrs.hideTitle}
-                onTitleChange={handleTitleChange}
-                onHideTitleChange={(hide) =>
-                  locked
-                    ? undefined
-                    : updateAttributes({ ...attrs, hideTitle: hide })
-                }
-                showFilterChips={showFilterChips}
-                showSortChips={showSortChips}
-                onToggleFilterChips={() => setShowFilterChips((v) => !v)}
-                onToggleSortChips={() => setShowSortChips((v) => !v)}
-              />
-              {attrs.id && (
-                <SelectionToolbar
-                  databaseId={attrs.id}
-                  recordIds={visibleSelection}
-                  records={selectedRecords}
-                  properties={source.properties}
-                  onSetValue={(propertyId, value) =>
-                    visibleSelection.forEach((id) =>
-                      setCellValue(id, propertyId, value as never),
-                    )
-                  }
-                  onDelete={() => {
-                    if (editor && attrs.id) {
-                      removeRecordNodes(editor, attrs.id, visibleSelection);
-                    }
-                  }}
-                />
+              <DatabaseToolbar />
+              {db.views?.length > 0 && (showFilterChips || showSortChips) && (
+                <Separator orientation="horizontal" />
               )}
+
+              {attrs.id && <SelectionToolbar />}
             </div>
 
             {(showFilterChips || showSortChips) && (
               <CardItemGroup orientation="horizontal">
-                {showFilterChips && (
-                  <FilterRuleChips
-                    properties={source.properties}
-                    db={db}
-                    activeView={activeView}
-                    locked={locked}
-                  />
-                )}
+                {showFilterChips && <FilterRuleChips />}
                 {showFilterChips &&
                   showSortChips &&
                   filterRuleCount > 0 &&
@@ -544,14 +291,7 @@ export function DatabaseNodeView({
                       <Spacer orientation="horizontal" size={5} />
                     </>
                   )}
-                {showSortChips && (
-                  <SortRuleChips
-                    properties={source.properties}
-                    db={db}
-                    activeView={activeView}
-                    sorts={activeView?.sorts ?? []}
-                  />
-                )}
+                {showSortChips && <SortRuleChips />}
               </CardItemGroup>
             )}
 
@@ -571,64 +311,24 @@ export function DatabaseNodeView({
   }
 
   // ── View branches ─────────────────────────────────────────────────────────
-  if (activeView?.type === "board")
-    return chrome(
-      <DatabaseBoardNodeView
-        view={db.activeView}
-        attrs={attrs}
-        source={source}
-        onUpdateView={onUpdateView}
-      />,
-    );
+  if (activeView?.type === "board") return chrome(<DatabaseBoardNodeView />);
   if (activeView?.type === "gallery")
-    return chrome(
-      <DatabaseGalleryNodeView
-        view={db.activeView}
-        attrs={attrs}
-        source={source}
-        onUpdateView={onUpdateView}
-      />,
-    );
-  if (activeView?.type === "list")
-    return chrome(
-      <DatabaseListNodeView
-        view={db.activeView}
-        attrs={attrs}
-        source={source}
-        onUpdateView={onUpdateView}
-      />,
-    );
+    return chrome(<DatabaseGalleryNodeView />);
+  if (activeView?.type === "list") return chrome(<DatabaseListNodeView />);
   if (activeView?.type === "calendar")
-    return chrome(<DatabaseCalendarNodeView attrs={attrs} source={source} />);
+    return chrome(<DatabaseCalendarNodeView />);
   if (activeView?.type === "timeline")
-    return chrome(
-      <DatabaseTimelineNodeView
-        attrs={attrs}
-        source={source}
-        onUpdateView={onUpdateView}
-      />,
-    );
+    return chrome(<DatabaseTimelineNodeView />);
 
   // ── Table view (node-rendered) ────────────────────────────────────────────
   return chrome(
     <DatabaseTableBody
       tableRef={tableRef}
-      locked={locked}
-      visibleProperties={visibleProperties}
-      allProperties={source.properties}
-      activeView={activeView}
-      sortedRecords={sortedRecords}
       gridTemplateColumns={gridTemplateColumns}
       bodyGridTemplateColumns={bodyGridTemplateColumns}
       widthFor={widthFor}
-      onReorder={(orderedIds) => db.reorderProperties(orderedIds)}
-      onAddProperty={addProperty}
       onCommitColumnWidth={commitColumnWidth}
-      onNewRecord={newRecord}
-      databaseId={attrs.id}
-      headers={headers}
       collapsedKeys={collapsedKeys}
-      onNewRecordInGroup={newRecordInGroup}
     />,
   );
 }

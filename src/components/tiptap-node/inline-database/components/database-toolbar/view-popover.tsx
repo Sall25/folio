@@ -23,7 +23,7 @@ import { ViewIcon } from "./view-icon";
 
 interface ViewNamePopoverProps {
   view: DatabaseView;
-  onRename?: () => void;
+  onRename?: (v: boolean) => void;
   onEdit?: () => void;
   onCopyLink?: () => void;
   onOpenAsFullPage?: () => void;
@@ -68,14 +68,15 @@ export function ViewPopover({
         <Card
           style={{
             padding: "5px 15px",
-            boxShadow: "var(--tt-shadow-elevated-sm)",
+            boxShadow: "var(--tt-shadow-elevated-md)",
+            minWidth: 220,
           }}
         >
           <Button
             variant="ghost"
             className="action-button"
             onClick={() => {
-              onRename?.();
+              onRename?.(true);
               setOpen(false);
             }}
             style={{ width: "100%", justifyContent: "flex-start" }}
@@ -95,7 +96,11 @@ export function ViewPopover({
             <SlidersHorizontal className="tiptap-button-icon" />
             <span className="tiptap-button-text">Edit view</span>
           </Button>
-          <Separator orientation="horizontal" className="sep" />
+          <Separator
+            orientation="horizontal"
+            className="sep"
+            style={{ height: 0.5 }}
+          />
           <Button
             variant="ghost"
             className="action-button"

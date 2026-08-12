@@ -39,6 +39,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
 
+     &[data-empty="true"] {
+      color: var(--tt-theme-muted, var(--tt-text-secondary));
+      opacity: 0.55;
+    }
+
     // Notion-style page-link underline: follows the text (clips with the
     // ellipsis), subtle by default, darkens when the row is hovered.
     // text-decoration: underline;

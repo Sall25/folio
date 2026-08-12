@@ -9,7 +9,7 @@ import { useMemo, useRef, useState, useCallback, memo } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { useDataSource } from "../hooks/use-data-source";
-import type { DatabaseAttrs, DataSource, TimelineView } from "src/types";
+import type { TimelineView } from "src/types";
 import "./database-timeline-node-view.scss";
 import {
   DndContext,
@@ -19,6 +19,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { TimelineBar } from "./timeline-bar";
+import { useDatabaseContext } from "./database-context";
 
 const DAY_WIDTH = 40;
 const ROW_HEIGHT = 34;
@@ -148,15 +149,8 @@ function getBarGeo(rec: TimelineRecord, range: ViewRange, hasEnd: boolean) {
 
 const TIMEFRAMES: Timeframe[] = ["day", "week", "month", "quarter", "year"];
 
-export function DatabaseTimelineNodeViewImpl({
-  attrs,
-  source,
-  onUpdateView,
-}: {
-  attrs: DatabaseAttrs & { sourceId?: string | null };
-  source: DataSource;
-  onUpdateView: (patch: Partial<TimelineView>) => void;
-}) {
+export function DatabaseTimelineNodeViewImpl() {
+  const { attrs, source, onUpdateView } = useDatabaseContext();
   const { setTarget } = usePageView();
   const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
     attrs.sourceId,
@@ -169,10 +163,10 @@ export function DatabaseTimelineNodeViewImpl({
   const timeframe = activeView?.timeframe ?? "month";
   const showTable = activeView?.showTable ?? true;
 
-  const startProp = source.properties.find((p) => p.id === startPropId);
-  const endProp = source.properties.find((p) => p.id === endPropId);
+  const startProp = source?.properties.find((p) => p.id === startPropId);
+  const endProp = source?.properties.find((p) => p.id === endPropId);
   const hasEnd = !!endProp;
-  const titleProp = source.properties.find((p) => p.config.type === "title");
+  const titleProp = source?.properties.find((p) => p.config.type === "title");
 
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());

@@ -2,26 +2,25 @@
 // (ProseMirror puts databaseRecord > databaseCell here via NodeViewContent),
 // the "New" record button, and the calculations footer.
 
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Plus } from "lucide-react";
 import { NodeViewWrapper, NodeViewContent } from "@tiptap/react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { DatabaseCalculations } from "../components/database-calculations";
 import { DatabaseTableHeader } from "./database-table-header";
-import type {
-  DatabaseProperty,
-  DatabaseView,
-  PropertyConfig,
-  Page,
-  ID,
-  TableView,
+import {
+  DEFAULT_CONFIGS,
+  type DatabaseProperty,
+  type ID,
+  type PropertyConfig,
+  type TableView,
 } from "src/types";
 import { recordSelection } from "../utils/record-selection-store";
 import { FreezeDivider } from "../components/freeze-divider";
 import { useDatabaseContext } from "./database-context";
-import type { GroupHeaderSlot } from "../utils/group-rows";
 import "./database-table-body.scss";
 import { Chevron } from "src/components/tiptap-ui-primitive/chevron";
+import { useDataSource } from "../hooks/use-data-source";
 
 type PropertyType = PropertyConfig["type"];
 
@@ -31,54 +30,65 @@ const EMPTY_PLACEHOLDER_ROWS = 3;
 
 interface Props {
   tableRef: React.RefObject<HTMLDivElement | null>;
-  locked: boolean;
-
-  visibleProperties: DatabaseProperty[];
-  allProperties: DatabaseProperty[];
-  activeView: DatabaseView | undefined;
-  sortedRecords: Page[];
-
   gridTemplateColumns: string;
   bodyGridTemplateColumns: string;
   widthFor: (p: DatabaseProperty) => number;
-
-  onReorder: (orderedIds: string[]) => void;
-  onAddProperty: (type: PropertyType, propertyName?: string) => void;
   onCommitColumnWidth: (
     ref: { current: HTMLElement | null } | undefined,
     width: number,
   ) => void;
-  onNewRecord: () => void;
-
-  headers: GroupHeaderSlot[];
 
   collapsedKeys: Set<string>;
-
-  databaseId?: ID;
-
-  onNewRecordInGroup: (groupKey: string) => void;
 }
+
+const EMPTY_PROPERTIES: DatabaseProperty[] = [];
 
 export function DatabaseTableBody({
   tableRef,
-  locked,
-  visibleProperties,
-  allProperties,
-  activeView,
-  sortedRecords,
   gridTemplateColumns,
   bodyGridTemplateColumns,
   widthFor,
-  onReorder,
-  onAddProperty,
   onCommitColumnWidth,
-  onNewRecord,
-  databaseId,
-  headers,
   collapsedKeys,
-  onNewRecordInGroup,
 }: Props) {
-  const { db } = useDatabaseContext();
+  const {
+    db,
+    tableLayout,
+    onNewRecord,
+    onNewRecordInGroup,
+    attrs,
+    sortedRecords,
+    visibleProperties,
+    source,
+  } = useDatabaseContext();
+  const { updatePropertiesAsync } = useDataSource(source?.id);
+  const databaseId = attrs.id;
+  const activeView = db.activeView;
+  const allProperties = attrs.properties ?? EMPTY_PROPERTIES;
+  const locked = !!attrs.locked;
+  const { headers } = tableLayout;
+
+  const onReorder = useCallback(
+    (orderedIds: ID[]) => db.reorderProperties(orderedIds),
+    [db],
+  );
+
+  const onAddProperty = useCallback(
+    (type: PropertyType, propertyName?: string) => {
+      if (locked || !source) return;
+      updatePropertiesAsync([
+        ...source.properties,
+        {
+          id: crypto.randomUUID(),
+          name: propertyName ?? type.charAt(0).toUpperCase() + type.slice(1),
+          config: DEFAULT_CONFIGS[type],
+          width: 160,
+        },
+      ]);
+      // Cells for the new property are inserted by useDatabaseCellSync.
+    },
+    [source, updatePropertiesAsync, locked],
+  );
 
   // An empty database renders as a bare header — it doesn't read as a table at
   // all. These rows give it shape. They are PURELY presentational: no records

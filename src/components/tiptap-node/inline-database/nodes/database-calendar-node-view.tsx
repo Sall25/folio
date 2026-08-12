@@ -6,13 +6,13 @@ import { useDataSource } from "../hooks/use-data-source";
 import { CalendarChip } from "../components/calendar-chip";
 import type {
   CalendarView,
-  DatabaseAttrs,
-  DataSource,
   DatabaseView,
   ID,
   CellValue,
+  DatabaseProperty,
 } from "src/types";
 import "./database-calendar-node-view.scss";
+import { useDatabaseContext } from "./database-context";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -31,15 +31,10 @@ function isoToMonthDay(iso: string) {
   return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() };
 }
 
-export function DatabaseCalendarNodeViewImpl({
-  attrs,
-  source,
-  onUpdateView,
-}: {
-  attrs: DatabaseAttrs & { sourceId?: string | null };
-  source: DataSource;
-  onUpdateView?: (patch: Partial<DatabaseView>) => void;
-}) {
+const EMPTY_PROPERTIES: DatabaseProperty[] = [];
+
+export function DatabaseCalendarNodeViewImpl() {
+  const { attrs, source, onUpdateView } = useDatabaseContext();
   const { setTarget } = usePageView();
   const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
     attrs.sourceId,
@@ -55,20 +50,20 @@ export function DatabaseCalendarNodeViewImpl({
 
   const dateProp = useMemo(() => {
     if (activeView?.datePropertyId) {
-      const explicit = source.properties.find(
+      const explicit = source?.properties.find(
         (p) => p.id === activeView.datePropertyId && p.config.type === "date",
       );
       if (explicit) return explicit;
     }
-    return source.properties.find((p) => p.config.type === "date");
-  }, [source.properties, activeView?.datePropertyId]);
+    return source?.properties.find((p) => p.config.type === "date");
+  }, [source?.properties, activeView?.datePropertyId]);
 
   const cardProps = useMemo(() => {
     const hidden = new Set(activeView?.hiddenProperties ?? []);
-    return source.properties.filter(
+    return source?.properties.filter(
       (p) => !hidden.has(p.id) && p.id !== dateProp?.id,
     );
-  }, [source.properties, activeView?.hiddenProperties, dateProp?.id]);
+  }, [source?.properties, activeView?.hiddenProperties, dateProp?.id]);
 
   useEffect(() => {
     if (!activeView || !onUpdateView) return;
@@ -219,7 +214,7 @@ export function DatabaseCalendarNodeViewImpl({
                           key={id}
                           record={rec}
                           title={title}
-                          cardProps={cardProps}
+                          cardProps={cardProps ?? EMPTY_PROPERTIES}
                           sourceId={attrs.sourceId!}
                           view={activeView as DatabaseView}
                           onOpenPeek={() =>
