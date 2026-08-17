@@ -1,26 +1,5 @@
 "use client";
 
-import { useEffect, useRef, useState, type RefObject } from "react";
-//import { useNavigate } from "@tanstack/react-location";
-import { useIsMutating } from "@tanstack/react-query";
-
-// --- Providers ---
-import { ToastProvider as CopyToastProvider } from "src/components/tiptap-ui/copy-toast";
-import { ToastProvider } from "./components/toast";
-import { TocProvider } from "src/components/tiptap-node/toc-node/toc-provider";
-
-// --- Hooks ---
-import { useWindowSize } from "src/hooks/use-window-size";
-import { createPageMutationKey } from "src/hooks/use-create-page";
-
-// --- Local ---
-import { SimpleEditorToolbar, type MobileView } from "./simple-editor-toolbar";
-import { SimpleEditorContent } from "./simple-editor-content";
-import { VersionHistorySidebar } from "src/components/tiptap-ui/version-history/version-history-sidebar";
-import { HomePageContent } from "./components";
-import { PagePeekView } from "./page-peek-view";
-import { useEditorLayout } from "./context/editor-layout-context";
-
 // --- Styles ---
 import "src/components/tiptap-node/blockquote-node/blockquote-node.scss";
 import "src/components/tiptap-node/code-block-node/code-block-node.scss";
@@ -32,184 +11,23 @@ import "src/components/tiptap-node/paragraph-node/paragraph-node.scss";
 import "src/components/tiptap-templates/simple/simple-editor.scss";
 import "src/components/tiptap-templates/simple/toc.scss";
 import "src/components/tiptap-templates/simple/page-create-modal.scss";
-import { TocSidebar } from "src/components/tiptap-node/toc-node/toc-sidebar";
 import type { View } from "src/types";
-import { Editor, useCurrentEditor } from "@tiptap/react";
-import { useSearch } from "./context/search-context";
-import SearchPalette from "./components/search-palette";
-import { LibraryPalette } from "./components/library-palette";
-import { usePageView } from "./context/page-view-context";
-import { PageCenterView } from "./page-center-view";
-import { EditorContentSkeletonFull } from "./components/skeletons";
-import { useTemplates } from "./context/templates-context";
-import { useTemplates as useTemplatesApi } from "src/hooks/use-templates";
-import { TemplatesGallery } from "./components/template-gallery";
-import { WorkspaceSettings } from "./components/workspace-settings";
 import { usePageBrowserTab } from "./hooks/use-page-browser-tab";
-import { useCurrentPerson } from "src/hooks/use-session";
-
-const VERSION_SIDEBAR_WIDTH = 270;
-
-function triggerMainEditorSync(mainEditor: Editor | null) {
-  if (!mainEditor) return;
-  mainEditor.view.dispatch(mainEditor.state.tr.setMeta("peekPageClosed", true));
-}
+import { HomePage, LibraryPage, PageEditorLayout } from "./components/pages";
+import { AppOverlays } from "./app-overlays";
+import { SimpleEditorToolbar } from "./simple-editor-toolbar";
 
 function SimpleEditorMain({ view }: { view: View }) {
-  const { versionHistoryOpen, onVersionHistoryOpenChanged, mode } =
-    useEditorLayout();
-  const isMobile = mode === "mobile";
-  const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
-  const { target, setTarget } = usePageView();
-  const { editor } = useCurrentEditor();
-  const { open } = useSearch();
-  const {
-    open: templatesGalleryOpen,
-    onOpenChange: onTemplatesGalleryOpenChange,
-  } = useTemplates();
-
-  const { data: templates } = useTemplatesApi();
-  const { person: currentPerson } = useCurrentPerson();
-
   return (
     <>
-      {view === "home" && (
-        <div
-          style={{
-            width: "100%",
-            minWidth: isMobile ? "auto" : 950,
-            padding: isMobile ? "1rem 1rem 30vh" : "1rem 1.5rem 30vh",
-            overflowY: "auto",
-          }}
-        >
-          <HomePageContent />
-        </div>
-      )}
-      {view === "library" && (
-        <div
-          style={{
-            width: "100%",
-            minWidth: isMobile ? "auto" : 950,
-            padding: isMobile ? "1rem 1rem 30vh" : "1rem 1.5rem 30vh",
+      {view === "home" && <HomePage />}
 
-            overflowY: "auto",
-          }}
-        >
-          {" "}
-          <LibraryPalette />
-        </div>
-      )}
-      {view === "page" && (
-        <>
-          <div
-            className="simple-editor-main"
-            style={{
-              marginRight: versionWidth,
-              // paddingLeft: collapsed ? 80 : 0,
-              transition: "margin-right 0.2s ease",
-            }}
-          >
-            <SimpleEditorContent />
-            <VersionHistorySidebar
-              open={versionHistoryOpen}
-              onClose={() => onVersionHistoryOpenChanged(false)}
-              userColor="#7c3aed"
-            />
-            <aside className="simple-editor-sidebar-right" />
-          </div>
-          <TocSidebar topOffset={80} maxShowCount={20} />
-        </>
-      )}
+      {view === "library" && <LibraryPage />}
 
-      {target && target.view === "Peek" && (
-        <PagePeekView
-          onClose={() => {
-            triggerMainEditorSync(editor);
-            setTarget(undefined);
-          }}
-        />
-      )}
+      {view === "page" && <PageEditorLayout />}
 
-      {target && target.view === "Center" && (
-        <PageCenterView onClose={() => setTarget(undefined)} />
-      )}
-
-      {open && <SearchPalette />}
-      {templatesGalleryOpen && (
-        <TemplatesGallery
-          templates={templates ?? []}
-          open={templatesGalleryOpen}
-          onClose={() => onTemplatesGalleryOpenChange?.(false)}
-          getTemplateMeta={() => ({
-            createdBy: {
-              name: currentPerson?.name ?? "",
-              avatarUrl: currentPerson?.avatarUrl ?? null,
-            },
-            // usedBy/usedCount aren't backed by real usage data yet — that needs
-            // its own tracking (who's opened/used a template), separate from
-            // "who am I." Left as placeholders until that exists.
-            usedBy: [{ name: "Jule" }, { name: "Amadou" }],
-            usedCount: 12,
-          })}
-        />
-      )}
-
-      {/* Renders null until opened via the WorkspaceSettings context. */}
-      <WorkspaceSettings />
+      <AppOverlays />
     </>
-  );
-}
-
-function SimpleEditorInner({ view }: { view: View }) {
-  const [mobileView, setMobileView] = useState<MobileView>("main");
-  const toolbarRef = useRef<HTMLDivElement | null>(null);
-  const { height } = useWindowSize();
-  const {
-    sidebarWidth,
-    versionHistoryOpen,
-    onVersionHistoryOpenChanged,
-    mode,
-  } = useEditorLayout();
-  const isMobile = mode === "mobile";
-
-  // A page create is in flight (sidebar "+", or "add page to section").
-  // Covers the window where activePageId hasn't moved yet (setActivePageId
-  // only fires in .then()) as well as the moment right after it moves but
-  // usePage(newId) hasn't resolved.
-  const isCreatingPage =
-    useIsMutating({ mutationKey: createPageMutationKey }) > 0;
-
-  const versionWidth = versionHistoryOpen ? VERSION_SIDEBAR_WIDTH : 0;
-  useEffect(() => {
-    if (!isMobile && mobileView !== "main")
-      requestAnimationFrame(() => setMobileView("main"));
-  }, [isMobile, mobileView]);
-
-  return (
-    <div className="simple-editor-wrapper">
-      <ToastProvider>
-        <CopyToastProvider>
-          <SimpleEditorToolbar
-            view={view}
-            toolbarRef={toolbarRef as RefObject<HTMLDivElement>}
-            isMobile={isMobile}
-            mobileView={mobileView}
-            height={height}
-            rectY={0}
-            onMobileViewChange={setMobileView}
-            sidebarWidth={sidebarWidth}
-            versionSidebarWidth={versionWidth}
-            onTriggerVersionHistory={() => onVersionHistoryOpenChanged(true)}
-          />
-          <SimpleEditorMain view={view} />
-          {isCreatingPage && (
-            <div className="editor-skeleton-overlay">
-              <EditorContentSkeletonFull />
-            </div>
-          )}
-        </CopyToastProvider>
-      </ToastProvider>
-    </div>
   );
 }
 
@@ -217,8 +35,9 @@ export function SimpleEditor({ view }: { view: View }) {
   usePageBrowserTab();
 
   return (
-    <TocProvider>
-      <SimpleEditorInner view={view} />
-    </TocProvider>
+    <div className="simple-editor-wrapper">
+      <SimpleEditorToolbar view={view} rectY={0} />
+      <SimpleEditorMain view={view} />
+    </div>
   );
 }

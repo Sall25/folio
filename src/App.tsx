@@ -2,7 +2,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { routes, location } from "./routes";
 import { Outlet, Router } from "@tanstack/react-location";
-import { EditorProvider } from "./components/tiptap-templates/simple/context/editor-provider";
 import { EditorLayoutProvider } from "./components/tiptap-templates/simple/context/editor-layout-provider";
 import { SimpleEditorSidebar } from "./components/tiptap-templates/simple/simple-editor-sidebar";
 import { ActivePageProvider } from "./components/tiptap-templates/simple/context/active-page-provider";
@@ -14,6 +13,7 @@ import { WorkspaceSettingsProvider } from "./components/tiptap-templates/simple/
 import { AuthGate } from "./components/tiptap-templates/simple/components/auth-gate";
 import { NotificationProvider } from "./components/tiptap-ui/notification";
 import { PageCapabilitiesProvider } from "./components/tiptap-templates/simple/context/page-capabilities-provider";
+import { ToastProvider } from "./components/tiptap-templates/simple/components/toast";
 const client = new QueryClient();
 
 function App() {
@@ -29,12 +29,12 @@ function App() {
                     <ActivePageProvider>
                       <WorkspaceSettingsProvider>
                         <PageCapabilitiesProvider>
-                          <EditorProvider>
-                            <NotificationProvider>
+                          <NotificationProvider>
+                            <ToastProvider>
                               <SimpleEditorSidebar />
                               <Outlet />
-                            </NotificationProvider>
-                          </EditorProvider>
+                            </ToastProvider>
+                          </NotificationProvider>
                         </PageCapabilitiesProvider>
                       </WorkspaceSettingsProvider>
                     </ActivePageProvider>

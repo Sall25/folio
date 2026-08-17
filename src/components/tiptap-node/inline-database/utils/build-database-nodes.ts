@@ -23,8 +23,7 @@ export function buildCellNode(
   const isContent = CONTENT_TYPES.has(property.config.type);
   const text =
     isContent && value != null && String(value).length > 0 ? String(value) : "";
-  console.log("[buildCell]", property.config.type, { value, text });
-
+  
   return {
     type: "databaseCell",
     attrs: { recordId, propertyId: property.id, databaseId },

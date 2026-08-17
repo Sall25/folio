@@ -1,5 +1,5 @@
 import { usePeekEditorExtensions } from "./hooks/use-peek-editor-extensions";
-import { useActivePage } from "./context/active-page-context";
+import { useActivePageActions } from "./context/active-page-context";
 import type { Page } from "src/types";
 import { Editor, useEditor, type JSONContent } from "@tiptap/react";
 import {
@@ -26,7 +26,6 @@ import { usePage } from "src/hooks/use-pages";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import { useDebouncedCallback } from "use-debounce";
-// NOTE: adjust this path to wherever you place template-choice-panel.tsx
 import { TemplateChoicePanel } from "./components/template-choice-panel";
 import { PageCenterSkeleton } from "./components/skeletons";
 import { usePageComment } from "./hooks/use-page-comment";
@@ -51,7 +50,6 @@ function isBodyEmpty(editor: Editor): boolean {
     if (node.type.name === "paragraph") {
       if (node.content.size > 0) hasBody = true;
     } else {
-      // any non-paragraph block (heading, image, list, etc.) counts as content
       hasBody = true;
     }
   });
@@ -113,66 +111,82 @@ const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
 function getTitleChange(
   editor: Editor,
   transaction: Transaction,
-): {
-  changed: boolean;
-  text: string | null;
-} {
+): { changed: boolean; text: string | null } {
   if (!transaction.docChanged) return { changed: false, text: null };
-
   const { $from } = editor.state.selection;
-
   const node = $from.node();
   if (node.type.name === "title") {
-    return {
-      changed: true,
-      text: node.textContent,
-    };
+    return { changed: true, text: node.textContent };
   }
-  return {
-    changed: false,
-    text: null,
-  };
+  return { changed: false, text: null };
 }
 
+// ── Gate ──────────────────────────────────────────────────────────────────────
+// The editor MUST NOT be created until the page (and its content) is loaded.
+// useEditor reads `content` once at init; if it inits while page is still
+// loading, it starts EMPTY and the debounced save then overwrites the real
+// content with empty — the template-page data loss. Gating here guarantees the
+// editor is only ever created with real content, and keying by page.id remounts
+// it (fresh content) when navigating to a different page.
 export function PageCenterView({
   onClose,
-  // onCreated,
+  onCreated,
 }: {
   onClose?: () => void;
-  /** Called with the new page after it's been saved for the first time */
   onCreated?: (page: Page) => void;
 }) {
-  const { target, setTarget: setViewTarget } = usePageView();
+  const { target } = usePageView();
   const { data: page, isLoading } = usePage(target?.pageId ?? null);
+
+  if (isLoading || !page) return <PageCenterSkeleton onClose={onClose} />;
+
+  return (
+    <PageCenterEditor
+      key={page.id}
+      page={page}
+      onClose={onClose}
+      onCreated={onCreated}
+    />
+  );
+}
+
+// ── Editor (only mounts once page is loaded) ───────────────────────────────────
+function PageCenterEditor({
+  page,
+  onClose,
+}: {
+  page: Page;
+  onClose?: () => void;
+  onCreated?: (page: Page) => void;
+}) {
+  const { setTarget: setViewTarget } = usePageView();
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId } = useActivePageActions();
   const { extensions } = usePeekEditorExtensions(setActivePageId);
 
   const floatingRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-
   const [iconTarget, setIconTarget] = useState<Target>("Emoji");
 
-  // ── refs the editor effect reads (always current, no stale closures) ────────
+  // page is guaranteed present here (parent gated on it), but keep the ref
+  // pattern for the debounced saver / async handlers that read it later.
   const pageRef = useRef(page);
   useEffect(() => {
     pageRef.current = page;
   }, [page]);
 
-  // latest title captured cheaply per keystroke (textContent is cheap);
-  // getJSON() is NOT called here — only at flush.
   const latestTitleRef = useRef<string | null>(null);
 
+  // content is the REAL page content — the editor never inits empty now.
   const editor = useEditor({
     extensions,
-    content: page?.content ?? {
+    content: page.content ?? {
       type: "doc",
       content: [{ type: "title", content: [] }],
     },
     autofocus: "start",
   });
 
-  // Show the blank/template chooser while the body is empty and not dismissed.
   const [templateDismissed, setTemplateDismissed] = useState(false);
   const [bodyEmpty, setBodyEmpty] = useState(true);
 
@@ -186,17 +200,6 @@ export function PageCenterView({
     };
   }, [editor]);
 
-  // Reset the chooser when a different page loads — during render, no effect.
-  const [seenPageId, setSeenPageId] = useState(page?.id);
-  if (page?.id !== seenPageId) {
-    setSeenPageId(page?.id);
-    setTemplateDismissed(false);
-  }
-
-  // One debounced save. The expensive work — getJSON() + stripPropertyPanels —
-  // runs HERE, at flush, at most once per ~800ms of typing. The per-keystroke
-  // handler just captures the title and reschedules. That deferral is the
-  // typing-lag fix from before, carried into the patch world.
   const saveActivePage = useDebouncedCallback(
     () => {
       const current = pageRef.current;
@@ -205,13 +208,12 @@ export function PageCenterView({
       const titleOverride = latestTitleRef.current;
       latestTitleRef.current = null;
 
-      // partial patch — only what changed. NOT a whole-page spread.
       mutateAsync({
         id: current.id,
         patch: {
           ...(titleOverride != null ? { title: titleOverride } : {}),
           content: stripPropertyPanels(editor.getJSON()) as JSONContent,
-          updatedAt: Date.now(), // epoch number, no .toString()
+          updatedAt: Date.now(),
         },
       });
     },
@@ -219,13 +221,11 @@ export function PageCenterView({
     { maxWait: 2500 },
   );
 
-  // keep a stable ref to the debounced saver for the editor event handler
   const saveRef = useRef(saveActivePage);
   useEffect(() => {
     saveRef.current = saveActivePage;
   }, [saveActivePage]);
 
-  // ── the editor update handler — cheap per keystroke ─────────────────────────
   useEffect(() => {
     if (!editor) return;
 
@@ -239,13 +239,9 @@ export function PageCenterView({
       if (!pageRef.current) return;
       if (!transaction.docChanged) return;
 
-      // cheap: capture the title text if the title node changed.
-      // (No getRecordPropertyPanelChange — cells live in page.values now,
-      //  edited via usePatchPage, so they never touch the editor doc.)
       const { changed, text } = getTitleChange(editor, transaction);
       if (changed) latestTitleRef.current = text;
 
-      // reschedule the (deferred-serialization) save. getJSON runs at flush.
       saveRef.current();
     };
 
@@ -255,7 +251,6 @@ export function PageCenterView({
     };
   }, [editor]);
 
-  // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose?.();
@@ -296,11 +291,11 @@ export function PageCenterView({
     });
   }, [mutateAsync]);
 
-  useRecordPropertyPanel(editor, page ?? null);
-  usePageComment(editor, page ?? null);
+  useRecordPropertyPanel(editor, page);
+  usePageComment(editor, page);
 
-  if (isLoading || !page || !editor)
-    return <PageCenterSkeleton onClose={onClose} />;
+  // Editor may still be null for the first render tick after mount.
+  if (!editor) return <PageCenterSkeleton onClose={onClose} />;
 
   const showTemplatePanel = bodyEmpty && !templateDismissed;
 
@@ -309,7 +304,6 @@ export function PageCenterView({
       <ModalBackdrop onClose={onClose} />
 
       <Card className="page-create-modal">
-        {/* Toolbar */}
         <CardItemGroup
           orientation="horizontal"
           style={{ width: "100%", justifyContent: "flex-start" }}
@@ -322,13 +316,8 @@ export function PageCenterView({
             <Button
               variant="ghost"
               onClick={() => {
-                if (page) {
-                  setViewTarget(undefined);
-                  // NO setContent — the editor is bound to the CURRENT page's Y.Doc, so this
-                  // wrote the record's body into the parent's document (and persisted it).
-                  // Changing the active page remounts the editor against the record's own doc.
-                  setActivePageId(page.id);
-                }
+                setViewTarget(undefined);
+                setActivePageId(page.id);
               }}
               aria-label="Open full page"
             >

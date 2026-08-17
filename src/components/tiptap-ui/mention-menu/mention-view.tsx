@@ -15,7 +15,7 @@ import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import CalendarView from "./calendar-view/calendar-view";
 import { useMentionNotification } from "../notification";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { usePeople } from "src/hooks/use-people";
 import type { Person } from "src/types";
 
@@ -68,7 +68,7 @@ export function MentionView({ node, updateAttributes }: ReactNodeViewProps) {
     updateAttributes({ date: d.toISOString() }); // ← persist to node attrs
   };
 
-  const { activePage } = useActivePage();
+  const { activePage } = useActivePageState();
 
   const { data: people = [] } = usePeople();
 

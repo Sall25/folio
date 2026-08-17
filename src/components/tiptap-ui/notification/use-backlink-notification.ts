@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNotificationContext } from "./use-notification-context";
+import { useNotificationActions } from "./notification-context";
 
 export function useBacklinkNotification({
   pageId,
@@ -13,7 +13,7 @@ export function useBacklinkNotification({
   nodeId: string;
 }) {
   const { addNotification, hasNotified, registerNotified } =
-    useNotificationContext();
+    useNotificationActions();
 
   useEffect(() => {
     const key = `backlink:${sourcePageId}→${pageId}`;

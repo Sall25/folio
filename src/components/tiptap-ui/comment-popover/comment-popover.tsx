@@ -9,7 +9,7 @@ import { useRef, useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { MessageSquareMore } from "lucide-react";
 import "./comment-popover.scss";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { submitThread } from "../comments/extensions/utils/submitThread";
 import { removeThread } from "../comments/extensions/utils/removeThread";
 import { draftThread } from "../comments/extensions/utils/draftThread";
@@ -17,7 +17,7 @@ import { draftThread } from "../comments/extensions/utils/draftThread";
 export function CommentPopover({ editor }: { editor: Editor | null }) {
   const [comment, setComment] = useState("");
   const [open, setOpen] = useState(false);
-  const { activePageId } = useActivePage();
+  const { activePageId } = useActivePageState();
 
   // Remember the id of the draft we created, so cancel removes the right one.
   const draftIdRef = useRef<string | null>(null);

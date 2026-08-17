@@ -23,18 +23,35 @@
   to   { opacity: 1; }
 }
 
+.dark .page-create-modal{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0px;
+  z-index: 1000;
+}
+:root .page-create-modal{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0px;
+  z-index: 1000;
+}
+
 .page-create-modal {
   position: fixed;
-  z-index: 110;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0px;
+  z-index: 1000;
+
   background-color: var(--tt-gray-light-50);
   .dark & {
     background-color: var(--tt-gray-dark-100);
   }
-
-  // Center it
-  top: calc( 50% + 15px);
-  left: calc(50% + 100px);
-  transform: translate(-50%, -50%);
 
   // Sizing
   width: min(960px, 94vw);
@@ -65,11 +82,15 @@
   }
 }
 
+
 // Scrollable body
 .page-create-modal .tiptap-card-body {
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1;
+ 
+
+ 
 
   // Custom scrollbar to match dark theme
   scrollbar-width:auto;

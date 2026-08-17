@@ -34,7 +34,11 @@ export function useChildPages(parentId: ID) {
 }
 
 export function useRows(sourceId: ID) {
-  return usePagesBase((pages) => pages.filter((p) => p.sourceId === sourceId));
+  return usePagesBase((pages) =>
+    pages.filter(
+      (p) => p.sourceId === sourceId && p.deletedAt == null && p.category !== "Template",
+    ),
+  );
 }
 
 // ─── the detail query ────────────────────────────────────────────────────────
@@ -74,7 +78,7 @@ export function useBreadcrumbs(pageId: ID | null) {
 export function useRecentPages(limit?: number) {
   return usePagesBase((pages) => {
     const sorted = [...pages]
-      .filter((p) => p.sourceId == null && p.deletedAt == null)
+      .filter((p) => /*p.sourceId == null &&*/ p.deletedAt == null)
       .sort(
         (a, b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt),
       );

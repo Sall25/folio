@@ -13,7 +13,7 @@ import {
 import { useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import type { DatabaseView, SavedView, ID, DataSource } from "src/types";
 import "./data-source-picker.scss";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
@@ -50,7 +50,7 @@ export function DataSourcePicker({
   const { data: sources, isLoading } = useDataSources();
   const createPage = useCreatePage();
   const createDataSource = useCreateDataSource();
-  const { activePageId, activePage } = useActivePage();
+  const { activePageId, activePage } = useActivePageState();
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
   const { data: pages } = usePages();

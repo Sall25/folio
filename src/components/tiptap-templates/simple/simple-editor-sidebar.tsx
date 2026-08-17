@@ -1,6 +1,6 @@
 import {
   Search,
-  Home,
+  // Home,
   Inbox,
   Store,
   LibraryBig,
@@ -21,10 +21,14 @@ import {
 
 import "./simple-editor-sidebar.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-location";
-import { useEditorLayout } from "./context/editor-layout-context";
+import {
+  useEditorLayout,
+  useEditorLayoutActions,
+  useEditorLayoutState,
+} from "./context/editor-layout-context";
 import { useSearch } from "./context/search-context";
 import { SidebarTree } from "./components/sidebar-tree";
 import { usePageTree, useRecentPages } from "src/hooks/use-pages";
@@ -34,10 +38,13 @@ import { makePage } from "src/utils/make-page";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage as updatePage } from "src/api/pages";
-import { useActivePage } from "./context/active-page-context";
+import {
+  useActivePage,
+  useActivePageActions,
+} from "./context/active-page-context";
 import { ScrollFog } from "src/components/tiptap-ui-primitive/scroll-frog";
 import { CreateTeamspaceModal } from "./components/create-teamspace-modal";
-import type { Group, Teamspace } from "src/types";
+import type { Group, ID, PageCategory, Teamspace } from "src/types";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useTemplates } from "./context/templates-context";
 import { SidebarResizeHandle } from "./components/sidebar-resize-handle";
@@ -50,7 +57,6 @@ import {
 
 import { WorkspaceSwitcherPopover } from "./workspace-switcher-popover";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
-import { useNotifications } from "src/components/tiptap-ui/notification";
 import { InboxPanel } from "./components/inbox-panel";
 import { TrashPanel } from "./components/trash-panel";
 import { Bone } from "./components/skeletons";
@@ -66,22 +72,31 @@ import {
   GridRow,
   GridCell,
 } from "src/components/tiptap-ui-primitive/grid";
-import { usePeopleBase } from "src/hooks/use-people";
+import { HouseIcon } from "src/components/tiptap-icons";
+import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
+import { calculateDrawerWidth, calculateSidebarWidth } from "src/lib/utils";
+import { useLayoutMode } from "./hooks/use-layout-mode";
+import { useNotificationState } from "src/components/tiptap-ui/notification/notification-context";
 
-function UserSkeleton() {
+// Stable references so a memoized <SidebarTree /> can skip re-render when the
+// pages cache churns but nothing it renders actually changed.
+const NOOP = () => {};
+const EMPTY_TEAMSPACES: Teamspace[] = [];
+const EMPTY_GROUPS: Group[] = [];
+
+const UserSkeleton = memo(() => {
   return (
     <div className="sidebar-tree-skeleton__row">
       <Bone width={13} height={13} rounded />
       <Bone width={"62%"} height={10} pill />
     </div>
   );
-}
+});
 
-function User({ hovered }: { hovered: boolean }) {
+const User = memo(() => {
   const { person, isLoading } = useCurrentPerson();
 
   const { workspace } = useCurrentWorkspace();
-  const { data: memberCount = 0 } = usePeopleBase((people) => people.length);
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const initialRef = useRef<HTMLButtonElement>(null);
 
@@ -89,13 +104,13 @@ function User({ hovered }: { hovered: boolean }) {
   const wsIcon = workspace?.icon ?? null;
   const initial = wsName ? wsName.charAt(0).toUpperCase() : "?";
 
-  const { unreadCount } = useNotifications();
+  const { unreadCount } = useNotificationState();
 
   if (isLoading) return <UserSkeleton />;
 
   return (
     <>
-      <Grid columns="36px 1fr " gap={4} style={{ width: "100%" }}>
+      <Grid columns="36px 1fr" gap={4} style={{ width: "100%" }}>
         <GridRow>
           <GridCell>
             <Popover>
@@ -115,7 +130,7 @@ function User({ hovered }: { hovered: boolean }) {
                     borderRadius: "var(--tt-radius-sm)",
                     cursor: "pointer",
                     // boxShadow: "var(--tt-shadow-elevated-sm)",
-                    border: "1px solid var(--tt-border-color)",
+                    //                border: "1px solid var(--tt-border-color)",
                   }}
                 >
                   <span className="tiptap-button-icon workspace-icon-button">
@@ -138,13 +153,12 @@ function User({ hovered }: { hovered: boolean }) {
 
           {/* ── Middle: name over subtext ── */}
           <GridCell
+            className="sidebar-ws-name-cell"
             style={{
               flexDirection: "column",
               alignItems: "flex-start",
               justifyContent: "center",
               gap: 1,
-              maxWidth: hovered ? 150 : "fit-content",
-              transition: "max-width 0.15s ease",
             }}
           >
             <span
@@ -161,51 +175,14 @@ function User({ hovered }: { hovered: boolean }) {
             >
               {wsName}
             </span>
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                fontSize: 11,
-                lineHeight: 1.15,
-                color: "var(--tt-theme-muted)",
-                whiteSpace: "nowrap",
-              }}
-            >
-              <span
-                style={{
-                  width: 5,
-                  height: 5,
-                  borderRadius: "50%",
-                  background: "var(--tt-color-text-green, #1D9E75)",
-                  flex: "none",
-                }}
-              />
-              {memberCount} {memberCount === 1 ? "member" : "members"}
-            </span>
           </GridCell>
-
-          {/* ── Right: switcher chevron ── */}
-          {/* <GridCell style={{ justifyContent: "flex-end" }}>
-            <ChevronDown
-              size={16}
-              strokeWidth={1.5}
-              style={{
-                color: "var(--tt-theme-muted)",
-                opacity: hovered ? 1 : 0.6,
-                transition: "opacity 0.12s ease",
-                cursor: "pointer",
-              }}
-              onClick={() => setSwitcherOpen((v) => !v)}
-            />
-          </GridCell> */}
         </GridRow>
       </Grid>
     </>
   );
-}
+});
 
-function NewPageCard() {
+const NewPageCard = memo(() => {
   const createPage = useCreatePage();
   const { setActivePageId, activePageId } = useActivePage();
   const { person } = useCurrentPerson();
@@ -231,12 +208,11 @@ function NewPageCard() {
       onClick={onCreatePage}
       style={{
         minHeight: 30,
-        height: 40,
+        height: 48,
         boxShadow: "var(--tt-shadow-elevated-md)",
-        borderRadius: "100% !important",
+        borderRadius: "300px !important",
         background: "inherit",
         border: "1px solid var(--tt-border-color)",
-        // background: "var(--tt-brand-color-600)",
         cursor: "pointer",
       }}
     >
@@ -270,26 +246,28 @@ function NewPageCard() {
           >
             {t("page.newPage")}
           </span>
+          <Spacer orientation="horizontal" size={15} />
+          <ShortcutBadge shortcutKeys="Ctrl+I" />
         </Button>
       </BoardContent>
     </Board>
   );
-}
+});
 
-function WorkspaceFooter() {
+const WorkspaceFooter = memo(() => {
   return (
-    <CardFooter style={{ paddingBottom: 10, width: "90%" }}>
-      <Spacer orientation="horizontal" size={5} />
+    <CardFooter style={{ paddingBottom: 10, width: "80%" }}>
+      <Spacer orientation="horizontal" size={15} />
       <NewPageCard />
-      <Spacer orientation="horizontal" size={5} />
+      <Spacer orientation="horizontal" size={15} />
     </CardFooter>
   );
-}
+});
 
-function WorkspaceHeader() {
+const WorkspaceHeader = memo(() => {
   const { t } = useTranslation();
-  const { collapseWithFloat, collapsed, onCollapsedChange, sidebarHovered } =
-    useEditorLayout();
+  const { onCollapsedChange, collapseWithFloat } = useEditorLayoutActions();
+  const { collapsed } = useEditorLayoutState();
 
   return (
     <CardItemGroup
@@ -309,7 +287,7 @@ function WorkspaceHeader() {
           cursor: "pointer",
         }}
       >
-        <User hovered={sidebarHovered} />
+        <User />
         <Spacer orientation="horizontal" />
         {!collapsed ? (
           <Button
@@ -317,11 +295,10 @@ function WorkspaceHeader() {
             size="large"
             tooltip={t("sidebar.collapse")}
             onClick={collapseWithFloat}
+            className="sidebar-collapse-toggle"
             style={{
               background: "transparent",
               padding: 0,
-              opacity: sidebarHovered ? 1 : 0,
-              transition: "opacity 0.12s ease",
             }}
           >
             <ChevronsLeft
@@ -336,11 +313,10 @@ function WorkspaceHeader() {
             size="large"
             tooltip={t("sidebar.expand")}
             onClick={() => onCollapsedChange(!collapsed)}
+            className="sidebar-collapse-toggle"
             style={{
               background: "transparent",
               padding: 0,
-              opacity: sidebarHovered ? 1 : 0,
-              transition: "opacity 0.12s ease",
             }}
           >
             <ChevronsRight
@@ -353,14 +329,15 @@ function WorkspaceHeader() {
       </ButtonGroup>
     </CardItemGroup>
   );
-}
+});
 
-function NavItems() {
+const NavItems = memo(() => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const { sidebarView, setSidebarView } = useEditorLayout();
-  const { unreadCount } = useNotifications();
+  const { sidebarView } = useEditorLayoutState();
+  const { setSidebarView } = useEditorLayoutActions();
+  const { unreadCount } = useNotificationState();
 
   const handleHomeClick = () => {
     if (sidebarView === "inbox" || sidebarView === "trash") {
@@ -378,10 +355,6 @@ function NavItems() {
     if (sidebarView === "trash") return;
     setSidebarView("trash");
   };
-
-  // const handleLibraryClick = () => {
-  //   navigate({ to: "/library/Recents" });
-  // };
 
   const { open, onOpenChange } = useSearch();
 
@@ -408,7 +381,7 @@ function NavItems() {
             borderRadius: "var(--tt-radius-xl)",
           }}
         >
-          <Home size={32} strokeWidth={3} className="tiptap-button-icon" />
+          <HouseIcon size={32} strokeWidth={3} className="tiptap-button-icon" />
           {sidebarView === "pages" && (
             <>
               <Spacer orientation="horizontal" size={2} />
@@ -422,6 +395,42 @@ function NavItems() {
           )}
         </Button>
         <Spacer orientation="horizontal" size={2} />
+
+        <Button
+          size="large"
+          variant="ghost"
+          data-highlighted={sidebarView === "inbox" ? "true" : "false"}
+          onClick={handleInboxClick}
+          tooltip={t("sidebar.inbox")}
+          style={{
+            fontWeight: 400,
+            color: "var(--tt-text-color)",
+            // padding: 5,
+            minHeight: sidebarView === "inbox" ? 32 : "fit-content",
+            height: sidebarView === "inbox" ? 32 : "fit-content",
+            minWidth: "fit-content",
+            width: "fit-content",
+            borderRadius: "var(--tt-radius-xl)",
+            position: "relative",
+          }}
+        >
+          <Inbox size={34} strokeWidth={1.8} className="tiptap-button-icon" />
+          {unreadCount > 0 && (
+            <span className="sidebar-inbox-badge">{unreadCount}</span>
+          )}
+          {sidebarView === "inbox" && (
+            <>
+              <Spacer orientation="horizontal" size={2} />
+              <span
+                className="tiptap-button-text"
+                style={{ opacity: 1, display: "block" }}
+              >
+                {t("sidebar.inbox")}
+              </span>
+            </>
+          )}
+        </Button>
+
         <Button
           variant="ghost"
           size="large"
@@ -468,41 +477,6 @@ function NavItems() {
           <Store size={32} strokeWidth={1.8} className="tiptap-button-icon" />
         </Button>
 
-        <Button
-          size="large"
-          variant="ghost"
-          data-highlighted={sidebarView === "inbox" ? "true" : "false"}
-          onClick={handleInboxClick}
-          tooltip={t("sidebar.inbox")}
-          style={{
-            fontWeight: 400,
-            color: "var(--tt-text-color)",
-            // padding: 5,
-            minHeight: sidebarView === "inbox" ? 32 : "fit-content",
-            height: sidebarView === "inbox" ? 32 : "fit-content",
-            minWidth: "fit-content",
-            width: "fit-content",
-            borderRadius: "var(--tt-radius-xl)",
-            position: "relative",
-          }}
-        >
-          <Inbox size={32} strokeWidth={1.8} className="tiptap-button-icon" />
-          {unreadCount > 0 && (
-            <span className="sidebar-inbox-badge">{unreadCount}</span>
-          )}
-          {sidebarView === "inbox" && (
-            <>
-              <Spacer orientation="horizontal" size={2} />
-              <span
-                className="tiptap-button-text"
-                style={{ opacity: 1, display: "block" }}
-              >
-                {t("sidebar.inbox")}
-              </span>
-            </>
-          )}
-        </Button>
-
         <Spacer orientation="horizontal" />
 
         <Button
@@ -527,9 +501,9 @@ function NavItems() {
       </ButtonGroup>
     </CardItemGroup>
   );
-}
+});
 
-function LibraryPaletteTrigger() {
+const LibraryPaletteTrigger = memo(() => {
   const navigate = useNavigate();
   const handleLibraryClick = () => {
     navigate({ to: "/library/Recents" });
@@ -553,9 +527,9 @@ function LibraryPaletteTrigger() {
       </span>
     </Button>
   );
-}
+});
 
-function TemplatePaletteTrigger() {
+const TemplatePaletteTrigger = memo(() => {
   const { onOpenChange, open } = useTemplates();
 
   return (
@@ -575,7 +549,7 @@ function TemplatePaletteTrigger() {
       </span>
     </Button>
   );
-}
+});
 
 // type PeekPhase = "hidden" | "entering" | "open" | "leaving";
 
@@ -584,26 +558,26 @@ export function SimpleEditorSidebar() {
   const { t } = useTranslation();
   const {
     collapsed,
-    drawerWidth,
-    mode,
-    sidebarWidth,
     peeking,
     openPeek,
     closePeek,
     peekPhase: phase,
     sidebarView,
-    setSidebarHovered,
     customizeSidebarOpen,
     setCustomizeSidebarOpen,
+    expandedWidth,
   } = useEditorLayout();
-  const isMobile = mode === "mobile";
+  const { mode, isMobile } = useLayoutMode();
+  const drawerWidth = calculateDrawerWidth(mode, expandedWidth);
+  const sidebarWidth = calculateSidebarWidth(mode, collapsed, expandedWidth);
+
   const { tree, isPending, isLoading } = usePageTree();
   // Joined to teamspace-pages by id, only to show a member count in the row.
-  const { data: teamspaces = [] } = useTeamspaces();
-  const { data: groups = [] } = useGroups();
+  const { data: teamspaces = EMPTY_TEAMSPACES } = useTeamspaces();
+  const { data: groups = EMPTY_GROUPS } = useGroups();
   const patchPage = usePatchPage(({ id, patch }) => updatePage(id, patch));
   const createPage = useCreatePage();
-  const { setActivePageId /*, activePageId*/ } = useActivePage();
+  const { setActivePageId } = useActivePageActions();
   const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
   const { person } = useCurrentPerson();
 
@@ -660,6 +634,49 @@ export function SimpleEditorSidebar() {
   const [order] = useSectionOrder();
   const [hidden, toggleHidden] = useHiddenSections();
 
+  const handleMovePage = useCallback(
+    ({
+      pageId,
+      newParentId,
+      category,
+    }: {
+      pageId: ID;
+      newParentId: ID | null;
+      category?: PageCategory;
+    }) => {
+      // optimistic move — patch parentId (+ category on cross-section drop)
+      patchPage.mutate({
+        id: pageId,
+        patch: {
+          parentId: newParentId,
+          ...(category ? { category } : {}),
+        },
+      });
+    },
+    [patchPage],
+  );
+
+  const handleAddPageToSection = useCallback(
+    (category: PageCategory) => {
+      if (!person) return null;
+      // A teamspace is created through its own modal (it must create a page +
+      // a Teamspace record sharing one id), not as a plain page. Every other
+      // section creates a page directly.
+      if (category === "Teamspaces") {
+        setCreateTeamspaceOpen(true);
+        return;
+      }
+      const p = makePage({
+        title: t("page.newPage"),
+        parentId: null,
+        category,
+        ownerId: person.id,
+      });
+      createPage.mutateAsync(p).then((page) => setActivePageId(page.id));
+    },
+    [person, t, createPage, setActivePageId, setCreateTeamspaceOpen],
+  );
+
   const sidebarCard = (
     <Card
       className={`sidebar ${collapsed ? "sidebar--collapsed" : ""} ${
@@ -667,11 +684,9 @@ export function SimpleEditorSidebar() {
       } ${floatingActive ? "sidebar--floating" : ""}`}
       onMouseEnter={() => {
         if (!isMobile && collapsed) openPeek();
-        setSidebarHovered(true);
       }}
       onMouseLeave={() => {
         if (!isMobile) closePeek();
-        setSidebarHovered(false);
       }}
       style={{
         zIndex: isMobile ? 950 : floatingActive ? 900 : 120,
@@ -767,37 +782,10 @@ export function SimpleEditorSidebar() {
                   // tree={tree}
                   teamspaces={teamspaces as Teamspace[]}
                   groups={groups as Group[]}
-                  onMovePage={({ pageId, newParentId, category }) => {
-                    // optimistic move — patch parentId (+ category on cross-section drop)
-                    patchPage.mutate({
-                      id: pageId,
-                      patch: {
-                        parentId: newParentId,
-                        ...(category ? { category } : {}),
-                      },
-                    });
-                  }}
-                  onAddPageToSection={(category) => {
-                    if (!person) return null;
-                    // A teamspace is created through its own modal (it must create
-                    // a page + a Teamspace record sharing one id), not as a plain
-                    // page. Every other section creates a page directly.
-                    if (category === "Teamspaces") {
-                      setCreateTeamspaceOpen(true);
-                      return;
-                    }
-                    const p = makePage({
-                      title: t("page.newPage"),
-                      parentId: null,
-                      category,
-                      ownerId: person.id,
-                    });
-                    createPage
-                      .mutateAsync(p)
-                      .then((page) => setActivePageId(page.id));
-                  }}
-                  onRenameSection={() => {}}
-                  onDeleteSection={() => {}}
+                  onMovePage={handleMovePage}
+                  onAddPageToSection={handleAddPageToSection}
+                  onRenameSection={NOOP}
+                  onDeleteSection={NOOP}
                   isLoading={isPending || isLoading}
                 />
               )}

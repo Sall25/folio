@@ -115,23 +115,22 @@ function DatabaseListNodeViewImpl() {
             </div>
           );
         })}
+        <button
+          type="button"
+          className="db-new-row"
+          contentEditable={false}
+          onClick={() => {
+            addRecordAsync({ title: "" })
+              .then((page) => setTarget({ pageId: page.id, view: "Peek" }))
+              .catch(() => console.log("failed to add page to list"));
+          }}
+        >
+          <span className="db-new-row__label">
+            <Plus size={16} />
+            <span>New page</span>
+          </span>
+        </button>
       </div>
-
-      <button
-        type="button"
-        className="db-new-row"
-        contentEditable={false}
-        onClick={() => {
-          addRecordAsync({ title: "" })
-            .then((page) => setTarget({ pageId: page.id, view: "Peek" }))
-            .catch(() => console.log("failed to add page to list"));
-        }}
-      >
-        <span className="db-new-row__label">
-          <Plus size={16} />
-          <span>New page</span>
-        </span>
-      </button>
     </div>
   );
 }

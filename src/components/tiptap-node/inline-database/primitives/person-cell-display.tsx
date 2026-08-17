@@ -53,6 +53,8 @@ export interface PersonCellDisplayProps {
   readonly?: boolean;
 }
 
+// ...imports and PersonChip unchanged...
+
 export function PersonCellDisplay({
   value,
   people,
@@ -91,26 +93,48 @@ export function PersonCellDisplay({
       value.map((p) => <PersonChip key={p.id} person={p} />)
     );
 
+  const triggerButton = (
+    <Button
+      variant="ghost"
+      style={{
+        background: "transparent",
+        width: "100%",
+        justifyContent: "flex-start",
+        minHeight: 32,
+        flexWrap: "wrap",
+        padding: 0,
+        gap: 4,
+      }}
+    >
+      {chips}
+    </Button>
+  );
+
   if (readonly) return <div className="db-td--person">{chips}</div>;
 
+  // Closed → plain trigger, no Radix Popover.
+  if (!open) {
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        style={{ display: "contents" }}
+        onClick={() => setOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
+      >
+        {triggerButton}
+      </div>
+    );
+  }
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          style={{
-            background: "transparent",
-            width: "100%",
-            justifyContent: "flex-start",
-            minHeight: 32,
-            flexWrap: "wrap",
-            padding: 0,
-            gap: 4,
-          }}
-        >
-          {chips}
-        </Button>
-      </PopoverTrigger>
+    <Popover open onOpenChange={setOpen} defaultOpen>
+      <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
       <PopoverContent side="bottom" align="start">
         <Card style={{ padding: 6, minWidth: 240 }}>
           <input

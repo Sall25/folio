@@ -89,7 +89,6 @@ export function useMenuNavigation<T>({
 
         case "ArrowDown": {
           if (orientation === "horizontal") return false;
-          console.log("index", selectedIndex);
           event.preventDefault();
           moveNext();
           return true;

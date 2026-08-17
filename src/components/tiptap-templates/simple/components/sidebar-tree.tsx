@@ -2,6 +2,7 @@ import {
   useState,
   useMemo,
   useCallback,
+  memo,
   type CSSProperties,
   type ReactNode,
   useEffect,
@@ -47,7 +48,6 @@ import {
   SectionMenuSeparator,
 } from "./section";
 import { useLibrary } from "../context/library-context";
-import type { LibraryTab } from "./library-palette";
 import { useTranslation } from "react-i18next";
 import {
   applySectionSort,
@@ -64,9 +64,10 @@ import {
 } from "../hooks/use-sidebar-order";
 import { PageRowSkeleton } from "./skeletons";
 import { useCurrentPerson } from "src/hooks/use-session";
-import { useActivePage } from "../context/active-page-context";
+import { useActivePageState } from "../context/active-page-context";
+import { usePageCapabilities } from "src/hooks/use-page-role";
 import { useHiddenSections } from "../hooks/use-hidden-sections";
-import { useEditorLayout } from "../context/editor-layout-context";
+import { useEditorLayoutActions } from "../context/editor-layout-context";
 
 type DropZone = "before" | "after" | "inside";
 
@@ -123,6 +124,7 @@ function TreeRow({
   dropTarget,
   activeId,
   subtitleByPageId,
+  canEditContent,
 }: {
   node: PageTreeNode;
   depth: number;
@@ -131,6 +133,7 @@ function TreeRow({
   dropTarget: DropTarget;
   activeId: ID | null;
   subtitleByPageId: Map<ID, string>;
+  canEditContent: boolean;
 }) {
   const page = node.page;
   const hasChildren = node.children.length > 0;
@@ -195,6 +198,7 @@ function TreeRow({
             subtitle={subtitleByPageId.get(page.id)}
             expanded={isExpanded}
             onToggleExpand={onToggleExpand}
+            canEditContent={canEditContent}
           />
         </div>
       </div>
@@ -212,6 +216,7 @@ function TreeRow({
                 dropTarget={dropTarget}
                 activeId={activeId}
                 subtitleByPageId={subtitleByPageId}
+                canEditContent={canEditContent}
               />
             ))
           ) : (
@@ -269,6 +274,7 @@ function TreeSection({
   sortMode,
   onSetSortMode,
   isLoading,
+  canEditContent,
 }: {
   category: PageCategory;
   topLevel: PageTreeNode[];
@@ -277,15 +283,16 @@ function TreeSection({
   dropTarget: DropTarget;
   activeId: ID | null;
   collapsed: boolean;
-  onToggleCollapse: () => void;
+  onToggleCollapse: (category: PageCategory) => void;
   onAddPage?: (c: PageCategory) => void;
   onRename?: (c: PageCategory) => void;
   onDelete?: (c: PageCategory) => void;
   onHide?: (c: PageCategory) => void;
   subtitleByPageId: Map<ID, string>;
   sortMode: SortMode;
-  onSetSortMode: (mode: SortMode) => void;
+  onSetSortMode: (category: PageCategory, mode: SortMode) => void;
   isLoading?: boolean;
+  canEditContent: boolean;
 }) {
   const { setNodeRef: setBodyRef } = useDroppable({
     id: `section:${category}`,
@@ -299,73 +306,94 @@ function TreeSection({
 
   const { setActiveTab } = useLibrary();
 
-  const handleLibraryClick = (tab: LibraryTab) => {
-    setActiveTab(tab);
-  };
+  const onLibraryClick = useCallback(() => {
+    if (category === "Template" || category === "Recent") return;
+    setActiveTab(category);
+  }, [setActiveTab, category]);
+
+  const onAddClick = useCallback(
+    () => (category === "Recent" ? undefined : onAddPage?.(category)),
+    [onAddPage, category],
+  );
+
   const { t } = useTranslation();
 
   const isRecent = category === "Recent";
 
-  const { setCustomizeSidebarOpen } = useEditorLayout();
+  const { setCustomizeSidebarOpen } = useEditorLayoutActions();
+
+  const menu = useMemo(() => {
+    if (isRecent) return undefined;
+    return (
+      <>
+        <SectionMenuLabel>Order by</SectionMenuLabel>
+        <SectionMenuItem
+          label="Recent"
+          selected={sortMode === "recent"}
+          closeOnClick={false}
+          onClick={() => onSetSortMode(category, "recent")}
+        />
+        <SectionMenuItem
+          label="Custom (drag to arrange)"
+          selected={sortMode === "custom"}
+          closeOnClick={false}
+          onClick={() => onSetSortMode(category, "custom")}
+        />
+        <SectionMenuSeparator />
+        <SectionMenuItem
+          icon={<Pencil size={14} />}
+          label="Rename"
+          onClick={() => onRename?.(category)}
+        />
+        <SectionMenuItem
+          icon={<EyeOff size={14} />}
+          label="Hide section"
+          onClick={() => onHide?.(category)}
+        />
+        <SectionMenuSeparator />
+        <SectionMenuItem
+          icon={<Layout size={14} />}
+          label="Customize sidebar"
+          onClick={() => setCustomizeSidebarOpen?.(true)}
+        />
+        <SectionMenuItem
+          danger
+          icon={<Trash2 size={14} />}
+          label="Delete"
+          onClick={() => onDelete?.(category)}
+        />
+      </>
+    );
+  }, [
+    isRecent,
+    sortMode,
+    category,
+    onSetSortMode,
+    onRename,
+    onHide,
+    onDelete,
+    setCustomizeSidebarOpen,
+  ]);
+
+  const onToggleCollapseMemo = useCallback(
+    () => onToggleCollapse(category),
+    [onToggleCollapse, category],
+  );
 
   return (
     <Section
       label={t(CATEGORY_TRANSLATION_MAP[category]) ?? category}
       collapsed={collapsed}
-      onToggleCollapse={onToggleCollapse}
+      onToggleCollapse={onToggleCollapseMemo}
       headerRef={setHeaderRef}
       bodyRef={setBodyRef}
       dropActive={isSectionDrop}
-      onAddClick={isRecent ? undefined : () => onAddPage?.(category)}
+      onAddClick={onAddClick}
       addLabel={`New page in ${category}`}
       menuLabel={`${category} options`}
       hasLibrary={true}
-      onLibraryClick={() => {
-        if (category === "Template" || category === "Recent") return;
-        handleLibraryClick(category);
-      }}
-      menu={
-        isRecent ? undefined : (
-          <>
-            <SectionMenuLabel>Order by</SectionMenuLabel>
-            <SectionMenuItem
-              label="Recent"
-              selected={sortMode === "recent"}
-              closeOnClick={false}
-              onClick={() => onSetSortMode("recent")}
-            />
-            <SectionMenuItem
-              label="Custom (drag to arrange)"
-              selected={sortMode === "custom"}
-              closeOnClick={false}
-              onClick={() => onSetSortMode("custom")}
-            />
-            <SectionMenuSeparator />
-            <SectionMenuItem
-              icon={<Pencil size={14} />}
-              label="Rename"
-              onClick={() => onRename?.(category)}
-            />
-            <SectionMenuItem
-              icon={<EyeOff size={14} />}
-              label="Hide section"
-              onClick={() => onHide?.(category)}
-            />
-            <SectionMenuSeparator />
-            <SectionMenuItem
-              icon={<Layout size={14} />}
-              label="Customize sidebar"
-              onClick={() => setCustomizeSidebarOpen?.(true)}
-            />
-            <SectionMenuItem
-              danger
-              icon={<Trash2 size={14} />}
-              label="Delete"
-              onClick={() => onDelete?.(category)}
-            />
-          </>
-        )
-      }
+      onLibraryClick={onLibraryClick}
+      menu={menu}
     >
       {isLoading
         ? Array.from({ length: 4 }).map((_, i) => (
@@ -379,6 +407,7 @@ function TreeSection({
                 depth={0}
                 disableActive={false}
                 showChevron={false}
+                canEditContent={canEditContent}
               />
             ))
           : topLevel.map((node) => (
@@ -391,6 +420,7 @@ function TreeSection({
                 dropTarget={dropTarget}
                 activeId={activeId}
                 subtitleByPageId={subtitleByPageId}
+                canEditContent={canEditContent}
               />
             ))}
     </Section>
@@ -442,7 +472,9 @@ function SectionDragWrapper({
   );
 }
 
-export function SidebarTree({
+const EMPTY_NODES: PageTreeNode[] = [];
+
+export const SidebarTree = memo(function SidebarTree({
   tree,
   teamspaces,
   groups,
@@ -722,15 +754,23 @@ export function SidebarTree({
     }
   };
 
-  const onToggleExpand = (id: ID) =>
-    setExpandedIds((s) => {
-      const n = new Set(s);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
-      return n;
-    });
+  const onToggleExpand = useCallback(
+    (id: ID) =>
+      setExpandedIds((s) => {
+        const n = new Set(s);
+        if (n.has(id)) n.delete(id);
+        else n.add(id);
+        return n;
+      }),
+    [],
+  );
 
-  const { activePageId } = useActivePage();
+  const { activePageId } = useActivePageState();
+
+  // Capability for the active page, computed ONCE here instead of in every
+  // PageItem. Previously ~30 rows each called usePageCapabilities(activePageId)
+  // against the same key — that was the 55-observer page-role line in devtools.
+  const { canEditContent } = usePageCapabilities(activePageId);
 
   // Keep the active page reachable: expand its ancestor chain and un-collapse
   // its section whenever the current page changes. Additive only — never
@@ -777,22 +817,39 @@ export function SidebarTree({
     }
   }, [activePageId, nodeById, categoryByPageId]);
 
-  const onToggleCollapse = (category: string) =>
-    setCollapsedSections((s) => {
-      const n = new Set(s);
-      if (n.has(category)) n.delete(category);
-      else n.add(category);
-      return n;
-    });
+  const onToggleCollapse = useCallback(
+    (category: string) =>
+      setCollapsedSections((s) => {
+        const n = new Set(s);
+        if (n.has(category)) n.delete(category);
+        else n.add(category);
+        return n;
+      }),
+    [],
+  );
 
-  const handleHide = (c: PageCategory) => {
-    toggleHidden(c);
-    onHideSection?.(c);
-  };
+  const handleHide = useCallback(
+    (c: PageCategory) => {
+      toggleHidden(c);
+      onHideSection?.(c);
+    },
+    [toggleHidden, onHideSection],
+  );
+
+  const onSetSortMode = useCallback(
+    (category: PageCategory, mode: SortMode) =>
+      setSortModeForCategory(category, mode),
+    [setSortModeForCategory],
+  );
 
   const activeNode = activeId != null ? nodeById.get(activeId) : null;
   const isDraggingSection = activeId?.startsWith(SECTION_DRAG_PREFIX) ?? false;
   const visibleCategories = sectionOrder.filter((c) => !hidden.has(c));
+
+  const sectionItems = useMemo(
+    () => visibleCategories.map((c) => `${SECTION_DRAG_PREFIX}${c}`),
+    [visibleCategories],
+  );
 
   return (
     <DndContext
@@ -808,28 +865,29 @@ export function SidebarTree({
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <SortableContext
-          items={visibleCategories.map((c) => `${SECTION_DRAG_PREFIX}${c}`)}
+          items={sectionItems}
           strategy={verticalListSortingStrategy}
         >
           {visibleCategories.map((category) => (
             <SectionDragWrapper key={category} category={category}>
               <TreeSection
                 category={category}
-                topLevel={sortedTree[category] ?? []}
+                topLevel={sortedTree[category] ?? EMPTY_NODES}
                 expandedIds={expandedIds}
                 onToggleExpand={onToggleExpand}
                 dropTarget={dropTarget}
                 activeId={activeId}
                 collapsed={collapsedSections.has(category)}
-                onToggleCollapse={() => onToggleCollapse(category)}
+                onToggleCollapse={onToggleCollapse}
                 onAddPage={onAddPageToSection}
                 onRename={onRenameSection}
                 onDelete={onDeleteSection}
                 onHide={handleHide}
                 subtitleByPageId={subtitleByPageId}
                 sortMode={getSortMode(sortModeByCategory, category)}
-                onSetSortMode={(mode) => setSortModeForCategory(category, mode)}
+                onSetSortMode={onSetSortMode}
                 isLoading={isLoading}
+                canEditContent={canEditContent}
               />
             </SectionDragWrapper>
           ))}
@@ -855,10 +913,10 @@ export function SidebarTree({
           </div>
         ) : activeNode ? (
           <div className="sidebar-drag-overlay" style={{ opacity: 0.7 }}>
-            <PageItem page={activeNode.page} />
+            <PageItem page={activeNode.page} canEditContent={canEditContent} />
           </div>
         ) : null}
       </DragOverlay>
     </DndContext>
   );
-}
+});

@@ -10,7 +10,7 @@ import {
 import type { Target } from "./types";
 import type { Page } from "src/types";
 import { IconPickerCard } from "./icon-picker-card";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { usePage } from "src/hooks/use-pages";
 import CoverImage from "./cover-image";
 import GradientCover from "./gradient-cover";
@@ -207,7 +207,7 @@ export function CoverHeader({
   const [target, setTarget] = useState<Target>("Emoji");
 
   // fetch the active page only when no page is provided (peek passes its own)
-  const { activePageId } = useActivePage();
+  const { activePageId } = useActivePageState();
   const { data: activePage } = usePage(providedPage ? null : activePageId);
   const page = providedPage ?? activePage;
 
@@ -285,7 +285,7 @@ export function CoverHeader({
             : page.settings.width === "medium"
               ? 280
               : marginLeft,
-          transition: "margin-left 0.2s ease, width 0.2s ease",
+          transition: "margin-left 0.15s ease, width 0.15s ease",
         }}
       >
         {hasIcon && (

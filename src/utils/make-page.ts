@@ -1,4 +1,4 @@
-import type { Page, PageCategory, ID } from "src/types";
+import type { Page, PageCategory, ID, PageCover } from "src/types";
 import { newId } from "src/lib/id";
 import type { JSONContent } from "@tiptap/core";
 import { makeDefaultView } from "src/utils/make-default-view";
@@ -28,6 +28,7 @@ export function makePage(opts: {
   title?: string;
   parentId?: ID | null;
   category?: PageCategory;
+  cover?: PageCover;
 }): Page {
   const title = opts.title ?? "";
   const category = opts.category ?? "Private";
@@ -42,7 +43,7 @@ export function makePage(opts: {
     category,
     ...access,
     settings: { width: "medium", text: "normal", locked: false },
-    cover: {
+    cover: opts.cover ?? {
       iconName: null,
       coverImage: null,
       target: null,

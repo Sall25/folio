@@ -1,8 +1,18 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
 import type { TocItem } from "./toc-context";
-import { TocContext } from "./toc-context";
+import {
+  TocActionsContext,
+  TocContentContext,
+  TocUIStateContext,
+} from "./toc-context";
 import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 
 function normalizeDepths(items: TocItem[]): number[] {
   if (!items.length) return [];
@@ -54,12 +64,12 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
   const [tocContent, setTocContent] = useState<TocItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-  const { activePageId } = useActivePage();
+  const { activePageId } = useActivePageState();
   const { editor } = useTiptapEditor();
   const hasRestoredRef = useRef<string | null>(null);
 
-  const showTocContent = () => setOpen(true);
-  const hideTocContent = () => setOpen(false);
+  const showTocContent = useCallback(() => setOpen(true), []);
+  const hideTocContent = useCallback(() => setOpen(false), []);
 
   // reset on page switch
   useEffect(() => {
@@ -173,21 +183,32 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
     };
   }, [editor, computeActiveHeading]);
 
+  // ── Actions: memoized ONCE. Setters + useCallback'd fns are all stable. ──
+  const actions = useMemo(
+    () => ({
+      setTocContent,
+      setActiveId,
+      navigateToHeading,
+      normalizeDepths,
+      showTocContent,
+      hideTocContent,
+    }),
+    [navigateToHeading, showTocContent, hideTocContent],
+  );
+
+  // ── Content: rebuilds only when tocContent changes (editing headings). ──
+  const content = useMemo(() => ({ tocContent }), [tocContent]);
+
+  // ── UI state: rebuilds on scroll (activeId) and toggle (open) — the hot one. ──
+  const uiState = useMemo(() => ({ activeId, open }), [activeId, open]);
+
   return (
-    <TocContext.Provider
-      value={{
-        tocContent,
-        setTocContent,
-        activeId,
-        setActiveId,
-        navigateToHeading,
-        normalizeDepths,
-        open,
-        showTocContent,
-        hideTocContent,
-      }}
-    >
-      {children}
-    </TocContext.Provider>
+    <TocActionsContext.Provider value={actions}>
+      <TocContentContext.Provider value={content}>
+        <TocUIStateContext.Provider value={uiState}>
+          {children}
+        </TocUIStateContext.Provider>
+      </TocContentContext.Provider>
+    </TocActionsContext.Provider>
   );
 }

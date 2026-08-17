@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { PageItemIcon } from "./page-item-icon";
 import { PageItemOptions } from "./page-item-options";
@@ -11,7 +11,10 @@ import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-au
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
-import { useActivePage } from "./context/active-page-context";
+import {
+  useActivePage,
+  useActivePageState,
+} from "./context/active-page-context";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { makeChildPage } from "src/utils/make-page";
 import { Chevron } from "src/components/tiptap-ui-primitive/chevron";
@@ -28,9 +31,36 @@ interface PageItemProps {
   onToggleExpand?: (id: ID) => void;
   /** Flat contexts (e.g. Recents) have no hierarchy — hide the chevron there. */
   showChevron?: boolean;
+  /**
+   * Whether the current user can edit content, gating the row's hover actions.
+   * Computed once in SidebarTree and passed down (was previously a per-row
+   * usePageCapabilities call). Defaults to false so a PageItem rendered outside
+   * the sidebar tree simply hides those actions rather than crashing.
+   */
+  canEditContent?: boolean;
 }
 
-export function PageItem({
+export const PageItem = memo(function PageItem(props: PageItemProps) {
+  // Sidebar rows are handed `canEditContent` (computed once in SidebarTree), so
+  // they don't each open a page-role subscription — that was the ~30-observer
+  // line on ["page-role", activePageId]. PageItems rendered elsewhere omit the
+  // prop and compute it themselves, unchanged.
+  return props.canEditContent === undefined ? (
+    <PageItemStandalone {...props} />
+  ) : (
+    <PageItemView {...props} canEditContent={props.canEditContent} />
+  );
+});
+
+// Fallback for PageItems rendered outside the sidebar tree (peek, tabs, drag
+// overlays elsewhere): compute the active page's capability itself, as before.
+function PageItemStandalone(props: PageItemProps) {
+  const { activePageId } = useActivePageState();
+  const { canEditContent } = usePageCapabilities(activePageId);
+  return <PageItemView {...props} canEditContent={canEditContent} />;
+}
+
+function PageItemView({
   page,
   depth = 0,
   disableActive = false,
@@ -38,6 +68,7 @@ export function PageItem({
   expanded = false,
   onToggleExpand,
   // showChevron = true,
+  canEditContent = false,
 }: PageItemProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(page.title);
@@ -52,8 +83,6 @@ export function PageItem({
 
   const isActive = activePageId === page.id && !disableActive;
   const title = page.title || "New Page";
-
-  const { canEditContent } = usePageCapabilities(activePageId);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();

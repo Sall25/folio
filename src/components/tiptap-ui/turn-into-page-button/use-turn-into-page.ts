@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { Editor } from "@tiptap/core";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { FileIcon } from "lucide-react";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { makePage } from "src/utils/make-page";
 import { useCurrentPerson } from "src/hooks/use-session";
@@ -34,7 +34,7 @@ export function useTurnIntoPage({
 }: Props) {
   const [canTurn, setCanTurn] = useState(false);
   const createPage = useCreatePage();
-  const { activePageId } = useActivePage();
+  const { activePageId } = useActivePageState();
 
   useEffect(() => {
     if (!editor) return;

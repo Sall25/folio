@@ -3,7 +3,7 @@ import type { JSONContent } from "@tiptap/core";
 import { TitleCellDisplay } from "../../../primitives/title-cell-display";
 import type { DatabaseView, ID } from "src/types";
 import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageActions } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import { useNewRowEdit } from "../../../nodes/new-row-edit-context";
@@ -40,7 +40,7 @@ export function TitleCell({
   const { data: linkedPage } = usePage(pageId ?? null);
   const { data: templatePage } = usePage(templateId ?? null);
   const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId } = useActivePageActions();
   const { setTarget } = usePageView();
 
   const { editingRecordId, cancelEmptyRecord } = useNewRowEdit();

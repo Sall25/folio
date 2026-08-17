@@ -6,9 +6,9 @@ import {
   Link2,
   Check,
 } from "lucide-react";
-import { useNotifications } from "src/components/tiptap-ui/notification";
+import { useNotifications } from "src/components/tiptap-ui/notification/notification-context";
 import type { Notification, NotificationType } from "src/types";
-import { useActivePage } from "../../context/active-page-context";
+import { useActivePageActions } from "../../context/active-page-context";
 import { setPendingScrollTarget } from "./pending-scroll-target";
 import "./inbox-panel.scss";
 
@@ -19,7 +19,8 @@ export function InboxPanel() {
   const { t } = useTranslation();
   const { notifications, markRead, markAllRead, unreadCount } =
     useNotifications();
-  const { setActivePageId } = useActivePage();
+
+  const { setActivePageId } = useActivePageActions();
 
   const handleClick = (n: Notification) => {
     markRead(n.id);

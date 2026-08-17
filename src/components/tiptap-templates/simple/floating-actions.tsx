@@ -12,7 +12,7 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 
 import "./floating-actions.scss";
 import type { Page } from "src/types";
-import { useActivePage } from "./context/active-page-context";
+import { useActivePageState } from "./context/active-page-context";
 import { usePageCapabilities } from "src/hooks/use-page-role";
 
 export function FloatingActions({
@@ -32,7 +32,7 @@ export function FloatingActions({
   onAddCoverAsync: () => Promise<void>;
   providedPage?: Page;
 }) {
-  const { activePage, activePageId } = useActivePage();
+  const { activePage, activePageId } = useActivePageState();
   const page = providedPage ?? activePage;
 
   const hasIcon = !!page?.cover.iconName;
@@ -74,7 +74,6 @@ export function FloatingActions({
           variant="ghost"
           onClick={async () => {
             await onAddCoverAsync();
-            console.log("addCover clicked");
           }}
         >
           <Image className="tiptap-button-icon" />

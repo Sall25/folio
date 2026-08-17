@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useBrowserTab, type BrowserTabIcon } from "./use-browser-tab";
-import { useActivePage } from "../context/active-page-context";
+import { useActivePageState } from "../context/active-page-context";
 
 function resolveColor(raw: string | null): string {
   const FALLBACK = "#5b5b5b";
@@ -59,7 +59,7 @@ async function materialIconToFaviconHref(
  * branching on cover.target exactly like PageItemIcon.
  */
 export function usePageBrowserTab(appName: string | null = "Folio") {
-  const { activePage } = useActivePage();
+  const { activePage } = useActivePageState();
   const cover = activePage?.cover;
   const title = activePage?.title;
 

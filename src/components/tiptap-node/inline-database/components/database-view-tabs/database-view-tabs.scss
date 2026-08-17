@@ -3,7 +3,7 @@
   align-items: center;
   gap: 4px;
   overflow-x: auto;
-  max-width: 500px;
+  min-width: 450px;
   margin-top: 8px;
   padding-bottom: 6px;
   scrollbar-width: none;
@@ -19,7 +19,7 @@
   gap: 6px;
   padding: 5px 10px;
   border: none;
-  border-radius: var(--tt-radius-md, 8px); // pill corners (only shows when active)
+  border-radius: var(--tt-radius-xl, 8px); // pill corners (only shows when active)
   background: transparent;
   cursor: pointer;
   font-size: 14px;
@@ -31,10 +31,12 @@
   transition:
     color 100ms ease,
     background 100ms ease;
+  flex-shrink: 0; 
 
   .tiptap-button-text {
     font: inherit;
     color: inherit;
+    white-space: nowrap;
   }
 
   .tiptap-button-icon,
@@ -81,7 +83,7 @@
   gap: 0;
   padding: 5px 7px;
   min-width: unset;
-  border-radius: var(--tt-radius-md, 8px);
+  border-radius: var(--tt-radius-xl, 8px);
   color: var(--tt-text-secondary, #9b9a97);
 
   &:hover {

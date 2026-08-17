@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { MoreHorizontal } from "lucide-react";
 import type { Page, ID, PageCategory } from "src/types";
 import { useBreadcrumbs, usePagesByCategory } from "src/hooks/use-pages";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageActions } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 import "./breadcrumbs.scss";
 import { Bone } from "./components/skeletons";
@@ -40,7 +40,7 @@ export function Breadcrumbs({
   showDropdown?: boolean;
 }) {
   const { data: chain, isPending } = useBreadcrumbs(pageId);
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId } = useActivePageActions();
 
   if (!pageId) return null;
   if (isPending) return <BreadcrumbsSkeleton />;

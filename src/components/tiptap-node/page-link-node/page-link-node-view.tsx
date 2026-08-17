@@ -6,7 +6,7 @@ import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-i
 import { useRef, useState } from "react";
 import type { Page } from "src/types";
 import { createPortal } from "react-dom";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageActions } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { usePage } from "src/hooks/use-pages";
 import { Breadcrumbs } from "src/components/tiptap-templates/simple/breadcrumbs";
 
@@ -31,7 +31,7 @@ function getContentExcerpt(page: Page): string {
 export function PageLinkNodeView({ node }: NodeViewProps) {
   const { pageId } = node.attrs;
   const { data: page, isError } = usePage(pageId);
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId } = useActivePageActions();
   const [isHovered, setIsHovered] = useState(false);
   const [previewPos, setPreviewPos] = useState({ top: 0, left: 0 });
   const linkRef = useRef<HTMLDivElement>(null);

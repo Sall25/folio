@@ -14,7 +14,7 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { LinkPicker } from "src/components/tiptap-ui/link-picker/link-picker"; // adjust path
 import { useEditorEditable } from "./use-editor-editable";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageActions } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { ResizableNodeProvider } from "../figure-node";
 import { ResizableNodeContext } from "../figure-node/resize-node-context";
 import "./button-node.scss";
@@ -115,7 +115,7 @@ function ButtonView({ node, editor, updateAttributes }: NodeViewProps) {
   };
   const editable = useEditorEditable(editor);
   const [open, setOpen] = useState(false);
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId } = useActivePageActions();
 
   const navigate = () => {
     if (!href) return;

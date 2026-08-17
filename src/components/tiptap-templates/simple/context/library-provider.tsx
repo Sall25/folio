@@ -26,9 +26,12 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     [navigate],
   );
 
+  const value = useMemo(
+    () => ({ activeTab, setActiveTab }),
+    [activeTab, setActiveTab],
+  );
+
   return (
-    <LibraryContext.Provider value={{ activeTab, setActiveTab }}>
-      {children}
-    </LibraryContext.Provider>
+    <LibraryContext.Provider value={value}>{children}</LibraryContext.Provider>
   );
 }

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Target } from "src/components/tiptap-ui/cover/types";
 import type { Page } from "src/types";
-import { useActivePage } from "../context/active-page-context";
+import { useActivePageState } from "../context/active-page-context";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 
 export function useCoverActions(providedPage?: Page) {
-  const { activePage } = useActivePage();
+  const { activePage } = useActivePageState();
 
   const page = providedPage ?? activePage;
 

@@ -8,7 +8,7 @@ import type {
   PropertyType,
 } from "src/types";
 import { resolveRecordFormulas } from "../../../../lib/resolve-records-formula";
-import { useRows } from "src/hooks/use-pages";
+import { usePagesBase, useRows } from "src/hooks/use-pages";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import type { CellValue, RowTemplate } from "src/types";
@@ -51,10 +51,18 @@ export interface UseDataSourceReturn {
     templateId?: string;
   }) => Promise<Page>;
   removeRecordAsync: (recordId: ID) => Promise<void>;
-  addRowTemplateAsync: (rowTemp: RowTemplate) => Promise<RowTemplate>;
-  removeRowTemplateAsync: (templateId: ID) => Promise<DataSource>;
+  /** Create a template: makes a Template-category page and registers it. */
+  createRowTemplateAsync: (name: string) => Promise<RowTemplate>;
+
+  /** Delete a template: removes its page AND unregisters it (no orphan). */
+  deleteRowTemplateAsync: (templateId: ID) => Promise<void>;
+
+  /** Set (or clear, with null) the default template for new rows — the check. */
+  setDefaultRowTemplateAsync: (templateId: ID | null) => Promise<void>;
+
+  /** Save an existing row as a new template (creates a page from the row). */
   saveRowAsTemplateAsync: (
-    rowId: ID,
+    recordId: ID,
     name: string,
   ) => Promise<RowTemplate | undefined>;
   /** Change a property's type, migrating every record's value in one PATCH. */
@@ -126,6 +134,16 @@ export function useDataSource(
   const addRow = useAddRow();
   const addRowAsync = addRow.mutateAsync;
   const { person } = useCurrentPerson();
+
+  // The full pages list — MUST include template pages, so use the base hook,
+  // not usePages() (which filters out sourceId != null).
+  const { data: allPages } = usePagesBase((p) => p);
+
+  const pagesRef = useRef(allPages);
+  useEffect(() => {
+    pagesRef.current = allPages;
+  }, [allPages]);
+
   // CREATE row from optional template (templateId falls back to node default elsewhere)
   const addRecordAsync = useCallback(
     async (opts?: { title?: string; templateId?: ID }): Promise<Page> => {
@@ -134,11 +152,21 @@ export function useDataSource(
       const template = opts?.templateId
         ? sourceRef.current.rowTemplates.find((t) => t.id === opts.templateId)
         : undefined;
+
+      // Clone the template PAGE's current content (Model B). Read via ref so this
+      // callback doesn't depend on the pages list and stays stable.
+      const templatePage = template?.pageId
+        ? pagesRef.current?.find((p) => p.id === template.pageId)
+        : undefined;
+
       const row = makeRow(sourceRef.current, {
-        title: opts?.title,
-        template,
         ownerId: person.id,
+        title: opts?.templateId ? templatePage?.title : opts?.title,
+        template,
+        content: templatePage?.content ?? undefined,
+        cover: templatePage?.cover,
       });
+
       await addRowAsync(row);
       return row;
     },
@@ -158,9 +186,27 @@ export function useDataSource(
   const patchSourceAsync = mutateSource.mutateAsync;
 
   // ── row-template CRUD (source-owned config, via source patch) ──────────────
-  const addRowTemplateAsync = useCallback(
-    async (template: RowTemplate) => {
-      if (!sourceRef.current) throw new Error("No source");
+
+  const createRowTemplateAsync = useCallback(
+    async (name: string): Promise<RowTemplate> => {
+      if (!sourceRef.current || !person) throw new Error("No source");
+
+      // The editable template page: a real page tied to this source, marked
+      // Template so useRows excludes it from live rows.
+      const page = makeRow(sourceRef.current, {
+        title: name,
+        ownerId: person.id,
+      });
+      await addRowAsync({ ...page, category: "Template" });
+
+      // Register it in the source so the picker can list/open/apply it.
+      const template: RowTemplate = {
+        id: newId(),
+        name,
+        values: {},
+        pageId: page.id,
+        createdAt: Date.now(),
+      };
       await patchSourceAsync({
         id: sourceRef.current.id,
         patch: {
@@ -169,19 +215,34 @@ export function useDataSource(
       });
       return template;
     },
-    [patchSourceAsync],
+    [addRowAsync, patchSourceAsync, person],
   );
 
-  const removeRowTemplateAsync = useCallback(
+  const deleteRowTemplateAsync = useCallback(
     async (templateId: ID) => {
       if (!sourceRef.current) throw new Error("No source");
-      return patchSourceAsync({
+      const tpl = sourceRef.current.rowTemplates?.find(
+        (t) => t.id === templateId,
+      );
+      if (tpl?.pageId) await deletePageAsync(tpl.pageId); // delete the page too — no orphan
+      await patchSourceAsync({
         id: sourceRef.current.id,
         patch: {
           rowTemplates: (sourceRef.current.rowTemplates ?? []).filter(
             (t) => t.id !== templateId,
           ),
         },
+      });
+    },
+    [patchSourceAsync, deletePageAsync],
+  );
+
+  const setDefaultRowTemplateAsync = useCallback(
+    async (templateId: ID | null) => {
+      if (!sourceRef.current) throw new Error("No source");
+      await patchSourceAsync({
+        id: sourceRef.current.id,
+        patch: { defaultTemplateId: templateId },
       });
     },
     [patchSourceAsync],
@@ -209,6 +270,7 @@ export function useDataSource(
     },
     [patchSourceAsync],
   );
+
   // the ONE hook allowed to write properties[] — layout only (reorder/width/wrap)
   const updatePropertiesAsync = useCallback(
     async (properties: DatabaseProperty[]) => {
@@ -399,8 +461,8 @@ export function useDataSource(
     setCellValue,
     addRecordAsync,
     removeRecordAsync,
-    addRowTemplateAsync,
-    removeRowTemplateAsync,
+    createRowTemplateAsync,
+    deleteRowTemplateAsync,
     saveRowAsTemplateAsync,
     updatePropertiesAsync,
     updateSourceMetaAsync,
@@ -411,5 +473,6 @@ export function useDataSource(
     duplicateViewAsync,
     registerViewsAsync,
     unregisterViewsAsync,
+    setDefaultRowTemplateAsync,
   };
 }

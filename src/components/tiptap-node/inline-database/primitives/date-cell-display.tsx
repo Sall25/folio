@@ -60,6 +60,7 @@ export function DateCellDisplay({
   readonly = false,
   placeholder = "Empty",
 }: DateCellDisplayProps) {
+  const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Date | undefined>(
     value ? new Date(value) : undefined,
   );
@@ -84,7 +85,6 @@ export function DateCellDisplay({
         color: "var(--tt-text-cell)",
         minWidth: 100,
         minHeight: 34,
-        // minHeight: "inherit",
         margin: 0,
         padding: 0,
         paddingTop: 2,
@@ -104,8 +104,27 @@ export function DateCellDisplay({
 
   if (readonly || !onChange) return trigger;
 
+  if (!open) {
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        style={{ display: "contents" }}
+        onClick={() => setOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
+      >
+        {trigger}
+      </div>
+    );
+  }
+
   return (
-    <Popover>
+    <Popover open onOpenChange={setOpen} defaultOpen>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent>
         <CalendarView

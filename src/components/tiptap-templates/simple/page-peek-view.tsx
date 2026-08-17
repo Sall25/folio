@@ -1,5 +1,5 @@
 import { usePeekEditorExtensions } from "./hooks/use-peek-editor-extensions";
-import { useActivePage } from "./context/active-page-context";
+import { useActivePageActions } from "./context/active-page-context";
 import type { Page } from "src/types";
 import { Editor, useEditor, type JSONContent } from "@tiptap/react";
 import {
@@ -85,30 +85,42 @@ const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
 function getTitleChange(
   editor: Editor,
   transaction: Transaction,
-): {
-  changed: boolean;
-  text: string | null;
-} {
+): { changed: boolean; text: string | null } {
   if (!transaction.docChanged) return { changed: false, text: null };
-
   const { $from } = editor.state.selection;
-
   const node = $from.node();
   if (node.type.name === "title") {
-    return {
-      changed: true,
-      text: node.textContent,
-    };
+    return { changed: true, text: node.textContent };
   }
-  return {
-    changed: false,
-    text: null,
-  };
+  return { changed: false, text: null };
 }
 
+// ── Gate ──────────────────────────────────────────────────────────────────────
+// Do NOT create the editor until the page (and its content) has loaded. useEditor
+// reads `content` once at init; if it inits while page is still loading it starts
+// EMPTY, and the always-writes-content autosave then overwrites the real content
+// with empty — the template-page data loss. Gating guarantees the editor is only
+// ever created with real content; keying by page.id remounts it (fresh content)
+// when the peek target changes.
 export function PagePeekView({ onClose }: { onClose?: () => void }) {
-  const { target: viewTarget, setTarget: setViewTarget } = usePageView();
-  const { setActivePageId } = useActivePage();
+  const { target: viewTarget } = usePageView();
+  const { data: page, isLoading } = usePage(viewTarget?.pageId ?? null);
+
+  if (isLoading || !page) return null; // peek has no skeleton; render nothing until loaded
+
+  return <PagePeekEditor key={page.id} page={page} onClose={onClose} />;
+}
+
+// ── Editor (only mounts once page is loaded) ───────────────────────────────────
+function PagePeekEditor({
+  page,
+  onClose,
+}: {
+  page: Page;
+  onClose?: () => void;
+}) {
+  const { setTarget: setViewTarget } = usePageView();
+  const { setActivePageId } = useActivePageActions();
   const { extensions } = usePeekEditorExtensions(setActivePageId);
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
 
@@ -116,11 +128,20 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState<Target>("Emoji");
 
-  const { data: page } = usePage(viewTarget?.pageId ?? null);
   const pageRef = useRef(page);
   useEffect(() => {
     pageRef.current = page;
   }, [page]);
+
+  // page.content is guaranteed real here — the editor never inits empty.
+  const editor = useEditor({
+    extensions,
+    content: page.content ?? {
+      type: "doc",
+      content: [{ type: "title", content: [] }],
+    },
+    autofocus: "start",
+  });
 
   const onSelectAsync = useCallback(
     async (name: string, color?: string) => {
@@ -154,16 +175,7 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
     });
   }, [mutateAsync]);
 
-  const editor = useEditor({
-    extensions,
-    content: page?.content ?? {
-      type: "doc",
-      content: [{ type: "title", content: [] }],
-    },
-    autofocus: "start",
-  });
-
-  // deferred-serialization autosave — identical to PageCenterView
+  // deferred-serialization autosave
   const latestTitleRef = useRef<string | null>(null);
   const saveActivePage = useDebouncedCallback(
     () => {
@@ -209,14 +221,15 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
     };
   }, [editor]);
 
-  useRecordPropertyPanel(editor, page ?? null);
-  usePageComment(editor, page ?? null);
+  useRecordPropertyPanel(editor, page);
+  usePageComment(editor, page);
+
+  if (!editor) return null;
 
   return (
     <Card
       className="page-peek"
       style={{
-        //    marginTop: "var(--tt-toolbar-height)",
         position: "fixed",
         borderRadius: 0,
         top: 0,
@@ -245,18 +258,8 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
           <Button
             variant="ghost"
             onClick={() => {
-              if (page) {
-                // Close the peek and navigate to the record as a full page.
-                // Do NOT manually setContent the main editor here: the record
-                // is its own Page, and the main editor's load effect (keyed on
-                // activePageId) will load its content correctly on its own.
-                // Manually stuffing page.content into the main editor while it
-                // still belongs to the PARENT page caused the parent to be
-                // saved with the record's content (content/id mismatch at
-                // autosave time).
-                setViewTarget(undefined);
-                setActivePageId(page.id);
-              }
+              setViewTarget(undefined);
+              setActivePageId(page.id);
             }}
           >
             <Maximize2 className="tiptap-button-icon" />
@@ -279,7 +282,6 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
           providedPage={page}
           marginLeft={0}
         />
-        {/* <RecordPropertyPanel page={page} editor={mainEditor} /> */}
         <div>
           <PeekEditorProvider value={editor}>
             <EditorContent editor={editor} className="page-peek-content" />

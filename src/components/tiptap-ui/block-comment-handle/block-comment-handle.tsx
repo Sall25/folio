@@ -4,7 +4,7 @@ import { MessageSquarePlus } from "lucide-react";
 import { DragHandle as TiptapDragHandle } from "../drag-handle/drag-handle-extension-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { useCreateThread } from "src/hooks/use-create-thread";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { draftNodeThread } from "./draft-node-thread";
 import "./block-comment-handle.scss";
 
@@ -15,7 +15,7 @@ export function BlockCommentHandle({ editor }: { editor: Editor | null }) {
   const [pos, setPos] = useState(-1);
   const posRef = useRef(pos);
   const createThread = useCreateThread();
-  const { activePageId } = useActivePage();
+  const { activePageId } = useActivePageState();
 
   const onCommentBlock = useCallback(() => {
     if (!editor || posRef.current === -1 || !activePageId) return;

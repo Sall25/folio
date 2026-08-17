@@ -13,7 +13,7 @@ import type { ID, Page, PageCategory } from "src/types";
 import { PageItemIcon } from "../page-item-icon";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
-import { useActivePage } from "../context/active-page-context";
+import { useActivePageActions } from "../context/active-page-context";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
@@ -102,7 +102,7 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
   const { t, i18n } = useTranslation();
   const [show, setShow] = useState(false);
   const [expanded, setExpanded] = useState<Set<ID>>(new Set());
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId } = useActivePageActions();
   const toggle = (id: ID) =>
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -287,7 +287,7 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
   const { data: pages } = usePages();
   const createPage = useCreatePage();
   const { person } = useCurrentPerson();
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId } = useActivePageActions();
   const { activeTab } = useLibrary();
   const [tab, setTab] = useState<LibraryTab>(activeTab ?? "Recents");
 

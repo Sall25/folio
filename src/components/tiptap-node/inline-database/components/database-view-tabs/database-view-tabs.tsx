@@ -12,6 +12,7 @@ import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { useLayoutEffect, useRef, useState } from "react";
 import "./database-view-tabs.scss";
 import { useDatabaseContext } from "../../nodes/database-context";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 interface DatabaseViewTabsProps {
   onRename: (o: boolean) => void;
@@ -99,6 +100,7 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
   // row and (the inactive-tab form) the overflow menu can reuse it.
   const renderTab = (view: DatabaseView) => {
     const isActive = view.id === activeId;
+    const iconName = view.iconName;
 
     if (isActive) {
       if (locked) {
@@ -110,7 +112,11 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
             data-highlighted
             // data-active-state="on"
           >
-            <ViewIcon view={view} />
+            {iconName ? (
+              <DynamicIcon key={"dynamic-icon"} name={iconName} size={20} />
+            ) : (
+              <ViewIcon key={"view-icon"} view={view} />
+            )}
             <span className="tiptap-button-text">{view.name}</span>
           </Button>
         );
@@ -121,6 +127,7 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
           attrs={attrs}
           view={view}
           onRename={() => onRename(true)}
+          onEdit={() => onRename(true)}
           onDelete={() => db.deleteView(view.id)}
           canDelete={attrs.views.length > 1}
           active={isActive}
@@ -188,7 +195,7 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
                     key={view.id}
                     variant="ghost"
                     className="db-view-tab"
-                    data-active-state={view.id === activeId ? "on" : "off"}
+                    data-highlighted={view.id === activeId ? "true" : "false"}
                     style={{ justifyContent: "flex-start", width: "100%" }}
                     onClick={(e) => {
                       e.preventDefault();

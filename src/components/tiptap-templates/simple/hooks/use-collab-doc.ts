@@ -8,54 +8,44 @@ const HOCUSPOCUS_URL =
   import.meta.env.VITE_HOCUSPOCUS_URL ?? "ws://localhost:1234";
 
 interface UseCollabDocResult {
-  ydoc: Y.Doc;
+  ydoc: Y.Doc | null;
   provider: HocuspocusProvider | null;
   isSynced: boolean;
 }
 
 export function useCollabDoc(page: Page | null): UseCollabDocResult {
   const { session } = useSession();
-  const [isSynced, setIsSynced] = useState(false);
+  const pageId = page?.id ?? null;
+  const token = session?.access_token ?? null;
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const ydoc = useMemo(() => new Y.Doc(), [page?.id]);
-
-  useEffect(() => {
-    return () => {
-      ydoc.destroy();
-    };
-  }, [ydoc]);
-
-  const provider = useMemo(() => {
-    if (!page || !session?.access_token) return null;
-    return new HocuspocusProvider({
+  const { ydoc, provider } = useMemo(() => {
+    if (!pageId || !token) return { ydoc: null, provider: null };
+    const ydoc = new Y.Doc();
+    const provider = new HocuspocusProvider({
       url: HOCUSPOCUS_URL,
-      name: `page:${page.id}`,
+      name: `page:${pageId}`,
       document: ydoc,
-      token: session.access_token,
+      token,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page?.id, session?.access_token, ydoc]);
+    return { ydoc, provider };
+  }, [pageId, token]);
+
+  // Track WHICH provider has synced. Derived isSynced avoids setState-in-body.
+  const [syncedProvider, setSyncedProvider] =
+    useState<HocuspocusProvider | null>(null);
 
   useEffect(() => {
-    if (!provider || !page) return;
-
-    setIsSynced(false);
-    // in useCollabDoc, in the synced handler:
-    const handleSynced = () => {
-      const xml = ydoc.getXmlFragment("default"); // or your content field
-      console.log("[synced]", page?.id, "doc length:", xml.length);
-      setIsSynced(true);
-    };
-
+    if (!provider || !ydoc) return;
+    const handleSynced = () => setSyncedProvider(provider);
     provider.on("synced", handleSynced);
-
     return () => {
       provider.off("synced", handleSynced);
       provider.destroy();
+      ydoc.destroy();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider, page?.id]);
+  }, [provider, ydoc]);
+
+  const isSynced = syncedProvider !== null && syncedProvider === provider;
 
   return { ydoc, provider, isSynced };
 }

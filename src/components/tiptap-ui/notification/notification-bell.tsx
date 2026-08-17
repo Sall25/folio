@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useNotificationContext } from "./use-notification-context";
 import type { Notification, NotificationType } from "src/types";
 
 import "./notification-bell.scss";
@@ -17,7 +16,8 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Bell } from "lucide-react";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageActions } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useNotifications } from "./notification-context";
 
 // ── Icons (inline SVG, no extra dep) ──────────────────────────────────────
 function BellIcon() {
@@ -132,10 +132,10 @@ export function NotificationBell() {
     markRead,
     dismiss,
     dismissAll,
-  } = useNotificationContext();
+  } = useNotifications();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId } = useActivePageActions();
   // Close on outside click
   useEffect(() => {
     if (!open) return;

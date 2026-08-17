@@ -11,7 +11,7 @@ import { MessageSquareText } from "lucide-react";
 // --- UI Primitives ---
 import type { ButtonProps } from "src/components/tiptap-ui-primitive/button";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { draftThread } from "../comments/extensions/utils/draftThread";
 
 export interface CommentButtonProps extends Omit<ButtonProps, "type"> {
@@ -34,7 +34,7 @@ export const CommentButton = forwardRef<HTMLButtonElement, CommentButtonProps>(
     ref,
   ) => {
     const { editor } = useTiptapEditor(providedEditor);
-    const { activePageId } = useActivePage();
+    const { activePageId } = useActivePageState();
 
     return (
       <Button

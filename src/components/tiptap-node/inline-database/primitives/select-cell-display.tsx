@@ -23,6 +23,8 @@ interface SelectCellDisplayProps {
  * highlight-token background did not. normalizeColor() accepts the legacy var
  * strings too, so existing options render correctly without a data migration.
  */
+import { useState } from "react";
+
 export function SelectCellDisplay({
   value,
   options,
@@ -30,6 +32,7 @@ export function SelectCellDisplay({
   readonly = false,
   placeholder = "Empty",
 }: SelectCellDisplayProps) {
+  const [open, setOpen] = useState(false);
   const displayed = value ?? null;
 
   const trigger = displayed ? (
@@ -42,9 +45,7 @@ export function SelectCellDisplay({
     </button>
   ) : (
     <span
-      className={`db-cell-text__display${
-        value ? "" : " db-cell-text__display--empty"
-      }`}
+      className={`db-cell-text__display${value ? "" : " db-cell-text__display--empty"}`}
       style={{ paddingLeft: 5 }}
     >
       {placeholder}
@@ -53,8 +54,29 @@ export function SelectCellDisplay({
 
   if (readonly || !onChange) return trigger;
 
+  // Closed → plain trigger, NO Radix Popover (the leak/overhead source).
+  if (!open) {
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
+        style={{ display: "contents" }}
+      >
+        {trigger}
+      </div>
+    );
+  }
+
+  // Open → mount the Radix Popover.
   return (
-    <Popover>
+    <Popover open onOpenChange={setOpen} defaultOpen>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent side="bottom" align="start" className="select-dropdown">
         <Card
@@ -79,7 +101,10 @@ export function SelectCellDisplay({
                 key={option.id}
                 type="button"
                 className="select-dropdown__option"
-                onClick={() => onChange(option)}
+                onClick={() => {
+                  onChange(option);
+                  setOpen(false); // close after picking
+                }}
               >
                 <span className={pillClass("select-badge", option.color)}>
                   <span className="select-badge__label">{option.label}</span>

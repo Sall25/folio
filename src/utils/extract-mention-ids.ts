@@ -3,7 +3,6 @@ import type { JSONContent } from "@tiptap/core";
 export function extractMentionIds(
   json: JSONContent | null | undefined,
 ): string[] {
-  console.log("EXTRACTOR v2 running");
   const ids: string[] = [];
   if (!json) return ids;
   const walk = (node: JSONContent | undefined) => {

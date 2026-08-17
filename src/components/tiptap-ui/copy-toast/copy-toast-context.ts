@@ -7,4 +7,4 @@ interface ToastContextValue {
 export const ToastContext = createContext<ToastContextValue>({
   visible: false,
   show: () => {},
-});
+}); 

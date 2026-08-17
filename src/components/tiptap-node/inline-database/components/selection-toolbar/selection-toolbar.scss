@@ -8,10 +8,7 @@
   padding: 0px 4px !important;
   border: 1px solid var(--tt-border-color);
   border-radius: var(--tt-radius-md) !important;
-  background: var(--tt-gray-light-50);
-  .dark & {
-    background: var(--tt-gray-dark-100);
-  }
+  background: var(--tt-card-bg-color);
   box-shadow: var(--tt-shadow-elevated-md);
   width: max-content;
   max-width: 100%;
@@ -65,7 +62,7 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    padding: 4px 8px;
+    padding: 2px 8px;
     border-radius: var(--tt-radius-sm);
     font-size: 13px;
     white-space: nowrap;

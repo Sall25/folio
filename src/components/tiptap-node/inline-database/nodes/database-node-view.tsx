@@ -44,7 +44,7 @@ import "./database-table-node-view.scss";
 import "./database-node.scss";
 import { SelectionToolbar } from "../components/selection-toolbar";
 import { NewRowEditProvider } from "./new-row-edit-provider";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 
 const EMPTY_SOURCE = { properties: [] };
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
@@ -206,7 +206,7 @@ export function DatabaseNodeView({
     sortCount,
   );
 
-  const { activePageId } = useActivePage();
+  const { activePageId } = useActivePageState();
   const isOwnPage = activePageId != null && activePageId === dbPageId;
 
   // ── No source yet → picker ────────────────────────────────────────────────

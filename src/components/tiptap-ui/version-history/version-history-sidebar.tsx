@@ -5,7 +5,7 @@ import { VersionHistoryList } from "./version-history-list";
 import { useVersionHistory } from "./use-version-history";
 import { useDiff } from "./use-diff";
 import type { Version } from "src/types";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { useCurrentEditor } from "@tiptap/react";
@@ -35,7 +35,7 @@ function VersionHistorySidebarInner({
   userColor?: string;
 }) {
   // const mutatePage = usePatchPage(({id, patch})=>patchPage(id, patch))
-  const { activePage } = useActivePage();
+  const { activePage } = useActivePageState();
   const {
     versions,
     selectedVersion,

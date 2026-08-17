@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useToc } from "./use-toc";
 import { Card } from "src/components/tiptap-ui-primitive/card";
+import { useTocActions, useTocContent, useTocUIState } from "./toc-context";
 
 interface Props {
   maxShowCount?: number;
@@ -9,14 +9,10 @@ interface Props {
 }
 
 export function TocContent({ maxShowCount = 20, topOffset = 0 }: Props) {
-  const {
-    tocContent,
-    activeId,
-    open,
-    hideTocContent,
-    navigateToHeading,
-    normalizeDepths,
-  } = useToc();
+  const { activeId, open } = useTocUIState();
+  const { hideTocContent, navigateToHeading, normalizeDepths } =
+    useTocActions();
+  const { tocContent } = useTocContent();
   const [scrollActiveId, setScrollActiveId] = useState<string | null>(null);
   const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
 

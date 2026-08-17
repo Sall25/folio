@@ -1,11 +1,12 @@
 // TocNodeView.tsx
 import { NodeViewWrapper, type ReactNodeViewProps } from '@tiptap/react'
-import { useToc } from './use-toc'
+import { useTocActions, useTocContent } from './toc-context'
 
 
 export function TocNodeView({ node }: ReactNodeViewProps) {
   const { topOffset, maxShowCount, showTitle } = node.attrs
-  const { tocContent, navigateToHeading, normalizeDepths } = useToc()
+  const { navigateToHeading, normalizeDepths } = useTocActions()
+  const {tocContent} = useTocContent()
 
   const items = tocContent.slice(0, maxShowCount)
   const depths = normalizeDepths(items)

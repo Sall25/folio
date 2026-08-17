@@ -56,13 +56,6 @@ function deleteNode(editor: Editor | null): boolean {
       // Validate before deleting
       if (pos < 0 || pos + node.nodeSize > state.doc.nodeSize) return false;
 
-      console.log(
-        "case 2, pos",
-        pos,
-        " pos + node.nodeSize",
-        pos + node.nodeSize,
-      );
-
       dispatch(state.tr.delete(pos, pos + node.nodeSize));
       editor.view.focus();
       return true;

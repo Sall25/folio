@@ -6,12 +6,12 @@ import type { ID, Page, DataSource } from "src/types";
 import { createPage, fetchPages } from "src/api/pages";
 import { createDataSource, fetchDataSource } from "src/api/data-sources";
 import { useCurrentPerson } from "src/hooks/use-session";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageActions } from "src/components/tiptap-templates/simple/context/active-page-context";
 
 export function useClonePage() {
   const qc = useQueryClient();
   const { person } = useCurrentPerson();
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId } = useActivePageActions();
   const [cloning, setCloning] = useState(false);
 
   const clone = useCallback(

@@ -31,7 +31,6 @@ export function CellEditorPopover({
   onOpenChange,
 }: CellEditorPopoverProps) {
   const [uncontrolled, setUncontrolled] = useState(false);
-
   const open = controlledOpen ?? uncontrolled;
   const setOpen = onOpenChange ?? setUncontrolled;
 
@@ -39,24 +38,40 @@ export function CellEditorPopover({
     return <div className="db-cell-editor__display">{trigger}</div>;
   }
 
+  // Not editing → a plain div, NO Radix Popover. This is the common case (every
+  // cell that isn't currently being edited). Mounting a full Radix Popover per
+  // cell — hundreds per table — leaked its dismiss-layer listeners and portal
+  // DOM when ProseMirror destroyed the cell node views (the detached-DOM leak),
+  // and was pure render/memory overhead. The Popover now exists ONLY for the one
+  // cell actually open for editing.
+  if (!open) {
+    return (
+      <div
+        className="db-cell-editor__display"
+        role="button"
+        tabIndex={0}
+        onClick={() => setOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
+      >
+        {trigger}
+      </div>
+    );
+  }
+
+  // Editing → mount the Radix Popover (defaultOpen so it opens immediately).
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open onOpenChange={setOpen} defaultOpen>
       <PopoverTrigger asChild>
         <div
           className="db-cell-editor__display"
           role="button"
           tabIndex={0}
-          // Radix's trigger binds on POINTERDOWN, which ProseMirror suppresses
-          // inside a contentEditable=false NodeView — so the popover never opened
-          // in the record-property panel (while the checkbox, a plain onClick,
-          // worked fine). Opening from onClick sidesteps PM entirely.
           onClick={() => setOpen(true)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              setOpen(true);
-            }
-          }}
         >
           {trigger}
         </div>
@@ -67,19 +82,11 @@ export function CellEditorPopover({
         sideOffset={-36}
         alignOffset={-4}
         avoidCollisions={false}
-        // ProseMirror handles the same pointerdown that Radix's dismiss layer
-        // watches, and inside a contentEditable=false NodeView that reads as an
-        // "outside" interaction — so the popover opened and closed on the same
-        // click. Refusing the auto-dismiss on those two events keeps it open.
         onOpenAutoFocus={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
         onFocusOutside={(e) => e.preventDefault()}
         className="db-cell-editor__popover"
         style={{
-          // Match the cell's width by default — Radix publishes the trigger's
-          // size as a custom property, so the box lines up with the column
-          // instead of being an arbitrary fixed width. A caller can still
-          // override with an explicit `width` where a wider box makes sense.
           width: width ?? "calc(var(--radix-popover-trigger-width) + 8px)",
           minWidth: "var(--radix-popover-trigger-width)",
         }}

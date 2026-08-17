@@ -58,6 +58,8 @@ import { SortPanel } from "../sort-panel";
 import { Input } from "src/components/tiptap-ui-primitive/input";
 import { SettingsSlidersIcon } from "src/components/tiptap-icons";
 import { GroupPanel } from "../group-panel";
+import { IconPicker } from "src/components/tiptap-ui/cover/icon-picker";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 type LucideIcon = ComponentType<{ className?: string; size?: number }>;
 
@@ -284,13 +286,37 @@ function ViewOptionsContent({
       </CardHeader>
       <CardBody style={{ width: "100%", padding: "5px 10px" }}>
         <CardItemGroup className="view-options__name" orientation="horizontal">
-          <Button
-            variant="ghost"
-            data-active-state="on"
-            style={{ background: "transparent" }}
-          >
-            <LayoutIcon className="tiptap-button-icon" />
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                data-active-state="on"
+                style={{ background: "transparent" }}
+              >
+                {view.iconName ? (
+                  <DynamicIcon
+                    key={"dynamic-icon"}
+                    name={view.iconName}
+                    size={20}
+                  />
+                ) : (
+                  <LayoutIcon
+                    key={"layout-icon"}
+                    className="tiptap-button-icon"
+                  />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="start">
+              <Card style={{ padding: "5px 10px", minWidth: 360 }}>
+                <IconPicker
+                  onSelect={(iconName) => {
+                    db.updateView(view.id, { ...view, iconName });
+                  }}
+                />
+              </Card>
+            </PopoverContent>
+          </Popover>
           <Input
             className="view-options__name-input"
             autoFocus
@@ -424,9 +450,22 @@ export function ViewOptionsPopover({
   useEffect(() => {
     if (!providedOpen) return;
     const handleClick = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        closeControlled();
+      const target = e.target as Node;
+      if (!panelRef.current) return;
+      if (panelRef.current.contains(target)) return;
+
+      // The IconPicker popover is portaled outside panelRef — don't treat clicks
+      // inside any popper content as "outside".
+      const el = target as HTMLElement;
+      if (
+        el.closest?.(
+          "[data-radix-popper-content-wrapper], [data-radix-popover-content]",
+        )
+      ) {
+        return;
       }
+
+      closeControlled();
     };
     document.addEventListener("mousedown", handleClick, true);
     return () => document.removeEventListener("mousedown", handleClick, true);

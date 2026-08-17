@@ -10,7 +10,7 @@ import { Star, Users, Lock, Building2, Check, ChevronDown } from "lucide-react";
 import type { PageCategory } from "src/types";
 import "./page-category-select.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { useActivePage } from "../context/active-page-context";
+import { useActivePageState } from "../context/active-page-context";
 import { Bone } from "./skeletons";
 
 // Selectable categories — mirror the sidebar sections.
@@ -38,7 +38,7 @@ export function PageCategorySelect({
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { isLoading } = useActivePage();
+  const { isLoading } = useActivePageState();
 
   const current =
     OPTIONS.find((o) => o.value === value) ??

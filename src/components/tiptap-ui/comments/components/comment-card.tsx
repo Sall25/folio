@@ -20,7 +20,7 @@ import type { Reactions } from "src/types";
 import { toggleReaction, parseReactions } from "src/lib/comment-reactions";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { usePersonNames } from "src/hooks/use-person-names";
-import { useNotifications } from "../../notification";
+import { useNotificationActions } from "../../notification/notification-context";
 
 interface CommentCardProps {
   name: string;
@@ -67,7 +67,7 @@ export const CommentCard = ({
   const reactions = parseReactions(rawReactions);
 
   const resolveName = usePersonNames();
-  const { addNotification } = useNotifications();
+  const { addNotification } = useNotificationActions();
 
   const handleToggleReaction = (emoji: string) => {
     if (!person || !onReact) return;

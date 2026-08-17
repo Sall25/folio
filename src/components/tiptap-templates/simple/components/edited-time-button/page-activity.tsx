@@ -35,7 +35,7 @@ export default function PageActivity({ page, authorName }: PageActivityProps) {
         background: "var(--tt-card-bg-color)",
         border: "1px solid var(--tt-border-color)",
         borderRadius: "var(--tt-radius-lg)",
-        boxShadow: "var(--tt-shadow-elevated-sm)",
+        boxShadow: "var(--tt-shadow-elevated-md)",
         overflow: "hidden",
         zIndex: 50,
       }}

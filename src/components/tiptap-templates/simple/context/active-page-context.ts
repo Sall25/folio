@@ -1,22 +1,32 @@
-// active-page-context.tsx
 import { createContext, useContext } from "react";
 import type { ID, Page } from "src/types";
 
-type ActivePageContextType = {
+export interface ActivePageActions {
+  setActivePageId: (id: ID | null) => void;
+}
+export interface ActivePageState {
   activePageId: ID | null;
-  setActivePageId: (id: ID) => void;
   activePage: Page | undefined;
   isLoading: boolean;
-};
-export const ActivePageContext = createContext<
-  ActivePageContextType | undefined
->(undefined);
+}
+export const ActivePageActionsContext = createContext<ActivePageActions | null>(
+  null,
+);
+export const ActivePageStateContext = createContext<ActivePageState | null>(
+  null,
+);
 
-export function useActivePage() {
-  const ctx = useContext(ActivePageContext);
-  if (!ctx)
-    throw new Error(
-      "useActivePageContext must be used inside ActivePageProvider",
-    );
+export function useActivePageActions() {
+  const ctx = useContext(ActivePageActionsContext);
+  if (!ctx) throw new Error("useActivePageActions outside ActivePageProvider");
   return ctx;
+}
+export function useActivePageState() {
+  const ctx = useContext(ActivePageStateContext);
+  if (!ctx) throw new Error("useActivePageState outside ActivePageProvider");
+  return ctx;
+}
+// shim (delete after migration):
+export function useActivePage() {
+  return { ...useActivePageActions(), ...useActivePageState() };
 }

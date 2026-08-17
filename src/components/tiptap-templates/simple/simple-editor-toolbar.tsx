@@ -12,7 +12,7 @@ import { HighlighterIcon } from "src/components/tiptap-icons/highlighter-icon";
 import { LinkIcon } from "src/components/tiptap-icons/link-icon";
 import { ThemeToggle } from "src/components/tiptap-templates/simple/theme-toggle";
 import { MorePopover } from "./more-popover";
-import { useActivePage } from "./context/active-page-context";
+import { useActivePageState } from "./context/active-page-context";
 import type { View } from "src/types";
 import {
   Home,
@@ -28,18 +28,25 @@ import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import EditedTimeButton from "./components/edited-time-button/edited-time-button";
 import { useTranslation } from "react-i18next";
-import { useEditorLayout } from "./context/editor-layout-context";
+import {
+  useEditorLayoutActions,
+  useEditorLayoutState,
+  useEditorLayoutTransient,
+} from "./context/editor-layout-context";
 import { useIsMobile, useIsTablet } from "src/hooks/use-breakpoint";
 import { SharePanel } from "./components/share-panel";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePageCapabilities } from "src/hooks/use-page-role";
 import { NetworkStatusBadge } from "./components/network-status-badge";
 import { ToolbarPresence } from "./components/toolbar-presence";
+import { useWindowSize } from "src/hooks/use-window-size";
+import { useLayoutMode } from "./hooks/use-layout-mode";
+import { calculateSidebarWidth } from "src/lib/utils";
 
 function Expand() {
   // const { t } = useTranslation();
-  const { collapsed, onCollapsedChange, openPeek, closePeek } =
-    useEditorLayout();
+  const { collapsed } = useEditorLayoutState();
+  const { openPeek, closePeek, onCollapsedChange } = useEditorLayoutActions();
 
   return (
     <Button
@@ -58,7 +65,7 @@ function Expand() {
 
 function FavoriteToggle() {
   const { t } = useTranslation();
-  const { activePage, activePageId } = useActivePage();
+  const { activePage, activePageId } = useActivePageState();
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
 
   const { canEditContent } = usePageCapabilities(activePageId);
@@ -108,7 +115,8 @@ function FavoriteToggle() {
 }
 
 function DiscussionTrigger() {
-  const { discussionOpen, onDiscussionOpenChanged } = useEditorLayout();
+  const { discussionOpen } = useEditorLayoutState();
+  const { onDiscussionOpenChanged } = useEditorLayoutActions();
   return (
     <Button
       variant="ghost"
@@ -132,7 +140,7 @@ function DiscussionTrigger() {
 }
 
 function ShareButton() {
-  const { activePage } = useActivePage();
+  const { activePage } = useActivePageState();
   const { t } = useTranslation();
   const anchorRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -183,7 +191,6 @@ function ShareButton() {
 export type MobileView = "main" | "highlighter" | "link";
 
 type ContentProps = {
-  onTriggerVersionHistory?: () => void;
   view: View;
 };
 
@@ -193,15 +200,7 @@ type MobileSubToolbarProps = {
 };
 
 type SimpleEditorToolbarProps = {
-  toolbarRef: React.RefObject<HTMLDivElement>;
-  isMobile: boolean;
-  mobileView: MobileView;
-  height: number;
   rectY: number;
-  onMobileViewChange: (view: MobileView) => void;
-  sidebarWidth?: number;
-  versionSidebarWidth?: number;
-  onTriggerVersionHistory?: () => void;
   view: View;
 };
 
@@ -211,10 +210,10 @@ type SimpleEditorToolbarProps = {
 // controls differ, so this is factored out.
 // ============================================================
 function TitleGroup({ view }: { view: View }) {
-  const { activePage, activePageId } = useActivePage();
+  const { activePage, activePageId } = useActivePageState();
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const { t } = useTranslation();
-  const { collapsed } = useEditorLayout();
+  const { collapsed } = useEditorLayoutState();
 
   const { canEditContent, isLoading } = usePageCapabilities(activePageId);
 
@@ -257,11 +256,8 @@ function TitleGroup({ view }: { view: View }) {
 // ============================================================
 // Desktop — everything inline (the current MainToolbarContent)
 // ============================================================
-export const DesktopToolbarContent = ({
-  onTriggerVersionHistory,
-  view,
-}: ContentProps) => {
-  const { activePage } = useActivePage();
+export const DesktopToolbarContent = ({ view }: ContentProps) => {
+  const { activePage } = useActivePageState();
 
   return (
     <>
@@ -274,9 +270,6 @@ export const DesktopToolbarContent = ({
         {view !== "home" && activePage && (
           <>
             <EditedTimeButton page={activePage} />
-            {/* <UndoRedoButton action="undo" />
-            <UndoRedoButton action="redo" /> */}
-            {/* <Separator orientation="vertical" /> */}
           </>
         )}
 
@@ -293,7 +286,7 @@ export const DesktopToolbarContent = ({
 
         <ThemeToggle />
 
-        <MorePopover onTriggerVersionHistory={onTriggerVersionHistory} />
+        <MorePopover />
       </ToolbarGroup>
     </>
   );
@@ -303,11 +296,8 @@ export const DesktopToolbarContent = ({
 // Tablet — fold the label-heavy items (edited-time, theme) into
 // the More popover; keep undo/redo, bell, more on the bar.
 // ============================================================
-export const TabletToolbarContent = ({
-  onTriggerVersionHistory,
-  view,
-}: ContentProps) => {
-  const { activePage } = useActivePage();
+export const TabletToolbarContent = ({ view }: ContentProps) => {
+  const { activePage } = useActivePageState();
 
   return (
     <>
@@ -327,7 +317,6 @@ export const TabletToolbarContent = ({
         {/* Edited-time + theme move inside; MorePopover renders them when
             these flags are set. */}
         <MorePopover
-          onTriggerVersionHistory={onTriggerVersionHistory}
           includeTheme={true}
           editedPage={view !== "home" ? activePage : undefined}
         />
@@ -340,13 +329,10 @@ export const TabletToolbarContent = ({
 // Mobile — strip to menu · title · more. Everything else lives
 // in the More popover.
 // ============================================================
-export const MobileToolbarContent = ({
-  onTriggerVersionHistory,
-  view,
-}: ContentProps) => {
-  const { activePage, activePageId } = useActivePage();
+export const MobileToolbarContent = ({ view }: ContentProps) => {
+  const { activePage, activePageId } = useActivePageState();
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
-  const { collapsed } = useEditorLayout();
+  const { collapsed } = useEditorLayoutState();
 
   return (
     <>
@@ -358,7 +344,6 @@ export const MobileToolbarContent = ({
 
       <ToolbarGroup>
         <MorePopover
-          onTriggerVersionHistory={onTriggerVersionHistory}
           includeTheme
           includeUndoRedo
           includeNotifications
@@ -405,18 +390,23 @@ export const MobileSubToolbarContent = ({
 // Composed toolbar — picks the content by breakpoint.
 // ============================================================
 export const SimpleEditorToolbar = ({
-  toolbarRef,
-  isMobile,
-  mobileView,
-  height,
   rectY,
-  onMobileViewChange,
-  sidebarWidth,
-  versionSidebarWidth,
-  onTriggerVersionHistory,
+
   view,
 }: SimpleEditorToolbarProps) => {
-  const { collapsed } = useEditorLayout();
+  const [mobileView, setMobileView] = useState<MobileView>("main");
+  const toolbarRef = useRef<HTMLDivElement | null>(null);
+  const { height } = useWindowSize();
+  const { collapsed } = useEditorLayoutState();
+  const { isMobile } = useLayoutMode();
+  const { expandedWidth } = useEditorLayoutTransient();
+  const { mode } = useLayoutMode();
+  const sidebarWidth = calculateSidebarWidth(mode, collapsed, expandedWidth);
+
+  useEffect(() => {
+    if (!isMobile && mobileView !== "main")
+      requestAnimationFrame(() => setMobileView("main"));
+  }, [isMobile, mobileView]);
 
   // Breakpoint selection. useIsMobile/useIsTablet come from the media-query
   // hook; the `isMobile` prop still drives the positioning offset below since
@@ -425,26 +415,9 @@ export const SimpleEditorToolbar = ({
   const isTabletBp = useIsTablet();
 
   const renderMain = () => {
-    if (isMobileBp)
-      return (
-        <MobileToolbarContent
-          view={view}
-          onTriggerVersionHistory={onTriggerVersionHistory}
-        />
-      );
-    if (isTabletBp)
-      return (
-        <TabletToolbarContent
-          view={view}
-          onTriggerVersionHistory={onTriggerVersionHistory}
-        />
-      );
-    return (
-      <DesktopToolbarContent
-        view={view}
-        onTriggerVersionHistory={onTriggerVersionHistory}
-      />
-    );
+    if (isMobileBp) return <MobileToolbarContent view={view} />;
+    if (isTabletBp) return <TabletToolbarContent view={view} />;
+    return <DesktopToolbarContent view={view} />;
   };
 
   return (
@@ -453,7 +426,6 @@ export const SimpleEditorToolbar = ({
       style={
         {
           "--sidebar-width": `${sidebarWidth}px`,
-          "--version-sidebar-width": `${versionSidebarWidth ?? 0}px`,
           padding: collapsed ? "10px 0px !important" : 10,
           ...(isMobile ? { bottom: `calc(100% - ${height - rectY}px)` } : {}),
         } as React.CSSProperties
@@ -464,7 +436,7 @@ export const SimpleEditorToolbar = ({
       ) : (
         <MobileSubToolbarContent
           type={mobileView === "highlighter" ? "highlighter" : "link"}
-          onBack={() => onMobileViewChange("main")}
+          onBack={() => setMobileView("main")}
         />
       )}
     </Toolbar>

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { SelectOption } from "src/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -15,12 +16,21 @@ interface MultiSelectCellDisplayProps {
   readonly?: boolean;
 }
 
+interface MultiSelectCellDisplayProps {
+  value: SelectOption[];
+  options: SelectOption[];
+  onChange?: (value: SelectOption[]) => void;
+  readonly?: boolean;
+}
+
 export function MultiSelectCellDisplay({
   value,
   options,
   onChange,
   readonly = false,
 }: MultiSelectCellDisplayProps) {
+  const [open, setOpen] = useState(false);
+
   function toggleOption(option: SelectOption) {
     if (!onChange) return;
     const isSelected = value.some((v) => v.id === option.id);
@@ -71,8 +81,28 @@ export function MultiSelectCellDisplay({
 
   if (readonly || !onChange) return trigger;
 
+  // Closed → plain trigger, no Radix Popover (leak/overhead source).
+  if (!open) {
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        style={{ display: "contents" }}
+        onClick={() => setOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
+      >
+        {trigger}
+      </div>
+    );
+  }
+
   return (
-    <Popover>
+    <Popover open onOpenChange={setOpen} defaultOpen>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent side="bottom" align="start" style={{ zIndex: "9999" }}>
         <Card

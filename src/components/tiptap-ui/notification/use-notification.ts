@@ -1,14 +1,10 @@
 import { useEffect } from "react";
-import { useNotificationContext } from "./use-notification-context";
+import { useNotificationActions } from "./notification-context";
 
 // PATCHED useMentionNotification — user mentions now target the MENTIONED
 // PERSON as recipient (so it lands in THEIR bell, cross-user), with a DB-level
 // dedupKey. Date reminders stay self-directed (no recipientId → defaults to the
 // current user in the provider). Merge over your existing use-notification.ts.
-
-export function useNotifications() {
-  return useNotificationContext();
-}
 
 export function useMentionNotification({
   mentionId,
@@ -29,8 +25,8 @@ export function useMentionNotification({
   targetNodeId?: string;
   remind?: string | null;
 }) {
-  const { addNotification, hasNotified, registerNotified } =
-    useNotificationContext();
+  const { hasNotified, addNotification, registerNotified } =
+    useNotificationActions();
 
   // ── User mention → notify the MENTIONED PERSON ──────────────────────────
   useEffect(() => {

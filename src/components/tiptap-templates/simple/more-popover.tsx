@@ -1,4 +1,4 @@
-import { Ellipsis, Timer } from "lucide-react";
+import { Ellipsis } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import {
@@ -13,7 +13,7 @@ import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { SettingsToggleButton } from "src/components/tiptap-ui/settings-toggle-button";
 import { ExportButtons } from "src/components/tiptap-ui/export-buttons/export-buttons";
 import { useCallback, useState } from "react";
-import { useActivePage } from "./context/active-page-context";
+import { useActivePageState } from "./context/active-page-context";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import { PageTemplateMenu } from "./components/page-template-menu";
@@ -25,17 +25,12 @@ import { PageCategorySelect } from "./components/page-category-select";
 import type { Page, PageCategory } from "src/types";
 
 export function MorePopover({
-  onTriggerVersionHistory,
-  // Overflow flags — set by the tablet/mobile toolbars so controls hidden from
-  // the bar render inside the popover instead. Absent on desktop (those
-  // controls stay on the bar), so this whole section renders nothing there.
   includeUndoRedo = false,
   includeTheme = false,
   includeNotifications = false,
   editedPage,
   category,
 }: {
-  onTriggerVersionHistory?: () => void;
   includeUndoRedo?: boolean;
   includeTheme?: boolean;
   includeNotifications?: boolean;
@@ -48,7 +43,7 @@ export function MorePopover({
   };
 }) {
   const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
-  const { activePage } = useActivePage();
+  const { activePage } = useActivePageState();
   const [fullWidth, setFullWidth] = useState<boolean>(
     activePage?.settings.width === "full",
   );
@@ -186,17 +181,6 @@ export function MorePopover({
             <CardItemGroup className="more-item">
               <PageTemplateMenu />
               <ExportButtons documentTitle="First Document" />
-              <Button
-                className="version-history-btn"
-                variant="ghost"
-                onClick={() => {
-                  setOpen(false);
-                  onTriggerVersionHistory?.();
-                }}
-              >
-                <Timer className="tiptap-button-icon" />
-                <span>Version History</span>
-              </Button>
             </CardItemGroup>
           </Card>
         </PopoverContent>

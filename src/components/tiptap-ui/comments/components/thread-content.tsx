@@ -11,7 +11,7 @@ import { patchComment } from "src/api/comments";
 import { patchThread } from "src/api/threads";
 import { usePersonNames } from "src/hooks/use-person-names";
 import { useCurrentPerson } from "src/hooks/use-session";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { CommentCard } from "./comment-card";
 import { ThreadComposer } from "./thread-composer";
 import "./thread-content.scss";
@@ -31,7 +31,7 @@ export function ThreadContent({
   const { data: comments = [] } = useCommentsByThread(thread.id);
   const resolveName = usePersonNames();
   const { person } = useCurrentPerson();
-  const { activePageId, activePage } = useActivePage();
+  const { activePageId, activePage } = useActivePageState();
 
   const updateComment = usePatchComment(({ id, patch }) =>
     patchComment(id, patch),

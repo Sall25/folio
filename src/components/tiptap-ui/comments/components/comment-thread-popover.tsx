@@ -9,7 +9,7 @@ import { Card } from "src/components/tiptap-ui-primitive/card";
 import { commentThreadPluginKey } from "../extensions";
 import { ThreadContent } from "./thread-content";
 import "./comment-thread-popover.scss";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { useThreadsByPage } from "src/hooks/use-threads";
 
 // Popover display mode for inline comments. Instead of positioned sidebar
@@ -22,7 +22,7 @@ import { useThreadsByPage } from "src/hooks/use-threads";
 export function CommentThreadPopover({ editor }: { editor: Editor | null }) {
   const [openThreadId, setOpenThreadId] = useState<string | null>(null);
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
-  const { activePageId } = useActivePage();
+  const { activePageId } = useActivePageState();
   const { data: threads = [] } = useThreadsByPage(activePageId);
 
   // Click a commented span → open its thread's popover, anchored to the span.

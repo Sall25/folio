@@ -1,4 +1,4 @@
-import { createContext, useContext, type RefObject } from "react";
+import { createContext, useContext } from "react";
 import type { PeekPhase } from "./editor-layout-provider";
 
 export const PADDING_LEFT = 230;
@@ -6,53 +6,86 @@ export const TRANSLATE_X = -80;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type LayoutMode = "mobile" | "tablet" | "desktop";
+export type CommentDisplayMode = "sidebar" | "popover";
+export type SidebarView = "pages" | "inbox" | "trash";
 
-interface EditorLayoutContextValue {
-  sidebarWidth: number;
-  collapsed: boolean;
-  versionHistoryOpen: boolean;
-  onVersionHistoryOpenChanged: (v: boolean) => void;
-  onCollapsedChange: (v: boolean) => void;
-  editorWrapperRef: RefObject<HTMLDivElement | null>;
-  editorLeft: number;
-  paddingLeft: number;
-  translateX: number;
-  isResizingSidebar: boolean;
+export interface EditorLayoutActions {
+  onCollapsedChange: (collapsed: boolean) => void;
   setSidebarWidth: (w: number) => void;
   onSidebarResizingChange: (resizing: boolean) => void;
-  mode: LayoutMode;
-  drawerWidth: number;
-  peeking: boolean;
   onPeekChange: (v: boolean) => void;
   collapseWithFloat: () => void;
-  peekPhase: PeekPhase;
   openPeek: () => void;
   closePeek: () => void;
-  discussionOpen: boolean;
+  setSidebarView: (v: SidebarView) => void;
+  setCommentDisplayMode: (m: CommentDisplayMode) => void;
   onDiscussionOpenChanged: (open: boolean) => void;
-  sidebarView: "pages" | "inbox" | "trash";
-  setSidebarView: (v: "pages" | "inbox" | "trash") => void;
-  commentDisplayMode: "sidebar" | "popover";
-  setCommentDisplayMode: (m: "sidebar" | "popover") => void;
-  sidebarHovered: boolean;
-  setSidebarHovered: (v: boolean) => void;
-  customizeSidebarOpen?: boolean;
-  setCustomizeSidebarOpen?: (v: boolean) => void;
+  setCustomizeSidebarOpen: (open: boolean) => void;
+  editorWrapperRef: React.RefObject<HTMLDivElement | null>;
+  translateX: number;
 }
 
-// ─── Context ──────────────────────────────────────────────────────────────────
+export interface EditorLayoutState {
+  collapsed: boolean;
+  sidebarView: SidebarView;
+  discussionOpen: boolean;
+  commentDisplayMode: CommentDisplayMode;
+  customizeSidebarOpen: boolean;
+}
 
-export const EditorLayoutContext =
-  createContext<EditorLayoutContextValue | null>(null);
+export interface EditorLayoutTransient {
+  isResizingSidebar: boolean;
+  peeking: boolean;
+  peekPhase: PeekPhase;
+  expandedWidth: number;
+}
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
+// ─── Contexts ──────────────────────────────────────────────────────────────────
+export const EditorLayoutActionsContext =
+  createContext<EditorLayoutActions | null>(null);
+export const EditorLayoutStateContext = createContext<EditorLayoutState | null>(
+  null,
+);
+export const EditorLayoutTransientContext =
+  createContext<EditorLayoutTransient | null>(null);
 
-export function useEditorLayout(): EditorLayoutContextValue {
-  const ctx = useContext(EditorLayoutContext);
-  if (!ctx) {
+// ─── Hooks ─────────────────────────────────────────────────────────────────────
+export function useEditorLayoutActions(): EditorLayoutActions {
+  const ctx = useContext(EditorLayoutActionsContext);
+  if (!ctx)
     throw new Error(
-      "useEditorLayout must be used within an EditorLayoutProvider",
+      "useEditorLayoutActions must be used within EditorLayoutProvider",
     );
-  }
   return ctx;
+}
+
+export function useEditorLayoutState(): EditorLayoutState {
+  const ctx = useContext(EditorLayoutStateContext);
+  if (!ctx)
+    throw new Error(
+      "useEditorLayoutState must be used within EditorLayoutProvider",
+    );
+  return ctx;
+}
+
+export function useEditorLayoutTransient(): EditorLayoutTransient {
+  const ctx = useContext(EditorLayoutTransientContext);
+  if (!ctx)
+    throw new Error(
+      "useEditorLayoutTransient must be used within EditorLayoutProvider",
+    );
+  return ctx;
+}
+
+// ── Back-compat shim (optional — eases migration) ────────────────────────────
+// Lets existing useEditorLayout() calls keep working during migration. It reads
+// ALL THREE contexts, so any component using it re-renders on any change — i.e.
+// it forfeits the optimization. Migrate consumers to the specific hooks, then
+// delete this. Keeping it temporarily avoids a big-bang rewrite of every caller.
+export function useEditorLayout() {
+  return {
+    ...useEditorLayoutActions(),
+    ...useEditorLayoutState(),
+    ...useEditorLayoutTransient(),
+  };
 }

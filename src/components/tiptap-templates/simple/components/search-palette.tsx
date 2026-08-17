@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import "./search-palette.scss";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { useSearch } from "../context/search-context";
-import { useActivePage } from "../context/active-page-context";
+import { useActivePageActions } from "../context/active-page-context";
 import { PageItemIcon } from "../page-item-icon";
 import type { ID, Page, PageCover } from "src/types";
 import type { JSONContent } from "@tiptap/core";
@@ -333,7 +333,7 @@ function PreviewBlocks({ content }: { content: JSONContent }) {
 export default function SearchPalette() {
   const { t, i18n } = useTranslation();
   const { data: pages } = usePages();
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId } = useActivePageActions();
   const { onOpenChange } = useSearch();
   const [query, setQuery] = useState("");
   const [titlesOnly, setTitlesOnly] = useState(false);

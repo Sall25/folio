@@ -3,11 +3,12 @@ import { createPortal } from "react-dom";
 import type { Page, PageCover, ID } from "src/types";
 import { FileText, Plus } from "lucide-react";
 import { PageItemIcon } from "../../page-item-icon";
-import { useActivePage } from "../../context/active-page-context";
+import { useActivePageActions } from "../../context/active-page-context";
 import { makePage } from "src/utils/make-page";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { useTranslation } from "react-i18next";
+import { useCurrentPerson } from "src/hooks/use-session";
 
 // ── People metadata (display contract) ──────────────────────────────────────
 // Page carries no author/usage data, so the parent supplies this from the real
@@ -161,7 +162,7 @@ export function TemplatesGallery({
   getTemplateMeta,
 }: TemplatesGalleryProps) {
   const createPage = useCreatePage();
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId } = useActivePageActions();
   const [query, setQuery] = useState("");
   const [hoveredId, setHoveredId] = useState<ID | null>(null);
   const { t } = useTranslation();
@@ -174,6 +175,8 @@ export function TemplatesGallery({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+
+  const { person } = useCurrentPerson();
 
   if (!open) return null;
 
@@ -196,10 +199,12 @@ export function TemplatesGallery({
   };
 
   const createBlankTemplate = () => {
+    if (!person) return;
     const template = makePage({
       title: t("templates.newTemplate"),
       parentId: null,
       category: "Template",
+      ownerId: person.id,
     });
     createPage.mutate(template);
     setActivePageId(template.id);

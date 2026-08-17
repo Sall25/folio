@@ -10,7 +10,7 @@ import { ThreadsProvider } from "../context/threadProvider";
 
 import type { ID, MeasuredThread, PositionedThread, Thread } from "src/types";
 import { useThreadsByPage } from "src/hooks/use-threads";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { mapThreads } from "../extensions/utils/mapThreads";
 import type { Transaction } from "@tiptap/pm/state";
 import { measureAllThreads } from "../extensions/utils/measureAllThreads";
@@ -34,7 +34,7 @@ export function ThreadSidebarBase({
   setHasThreads: (v: boolean) => void;
 }) {
   const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
-  const { activePageId } = useActivePage();
+  const { activePageId } = useActivePageState();
 
   const { data: threadsData /*isLoading*/ } = useThreadsByPage(activePageId);
   const threadsDataRef = useRef(threadsData);

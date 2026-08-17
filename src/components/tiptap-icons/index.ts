@@ -64,3 +64,5 @@ export * from "./split-icon";
 export * from "./triangle-chevron-icon";
 export * from "./settings-sliders-icon";
 export * from "./file-icon";
+export * from "./home-icon";
+export * from "./inbox-icon";

@@ -54,6 +54,8 @@ export interface RowTemplate {
   /** optional seed content for the row-page body */
   content?: JSONContent | null;
   createdAt: CreatedAt;
+  /** the editable template page (Model B) — open in center to customize */
+  pageId?: ID;
 }
 
 export type DataSourceRecord = Page["values"];
@@ -72,6 +74,8 @@ export interface DataSource {
   savedViews: SavedView[];
   views: DatabaseView[];
   rowTemplates: RowTemplate[];
+  /** which template is the default for new rows (the check mark) */
+  defaultTemplateId?: ID | null;
 }
 
 export type PropertyType =
@@ -375,6 +379,7 @@ interface BaseView {
   sorts: SortRule[];
   hiddenProperties: ID[];
   openPageIn?: OpenPageIn;
+  iconName?: string;
 }
 
 export interface TableView extends BaseView {

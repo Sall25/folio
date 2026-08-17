@@ -19,7 +19,7 @@ import { useDeleteComment } from "src/hooks/use-delete-comment.js";
 import { usePatchComment } from "src/hooks/use-patch-comment.js";
 import { patchComment } from "src/api/comments.js";
 import { usePersonNames } from "src/hooks/use-person-names.js";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context.js";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context.js";
 
 interface ThreadListItemProps {
   thread: Thread;
@@ -49,7 +49,7 @@ export const ThreadsListItem = ({
 
   const itemRef = useRef<HTMLDivElement | null>(null);
 
-  const { activePageId, activePage } = useActivePage();
+  const { activePageId, activePage } = useActivePageState();
 
   // Re-resolve collisions whenever this card's own height changes
   // (textarea auto-grow, a reply rendering, open/close). measureAllThreads

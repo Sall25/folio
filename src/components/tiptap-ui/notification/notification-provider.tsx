@@ -1,11 +1,11 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
-import { NotificationContext } from "./notification-context";
 import type { Notification } from "src/types";
 import {
   fetchNotifications,
@@ -16,6 +16,12 @@ import {
   type NotificationRecord,
 } from "src/api/notifications";
 import { useCurrentPerson } from "src/hooks/use-session";
+import {
+  NotificationActionsContext,
+  NotificationStateContext,
+  type NotificationActions,
+  type NotificationState,
+} from "./notification-context";
 
 function recordToNotification(r: NotificationRecord): Notification {
   return {
@@ -43,7 +49,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const notifiedKeys = useRef<Set<string>>(new Set());
 
-  // Load my notifications on mount / when the person resolves.
+  // Mirror notifications in a ref so markAllRead/dismissAll can read the current
+  // list WITHOUT depending on it — keeps those actions stable (Technique 3).
+  const notificationsRef = useRef(notifications);
+  useEffect(() => {
+    notificationsRef.current = notifications;
+  }, [notifications]);
+
   useEffect(() => {
     if (!person) return;
     let cancelled = false;
@@ -51,18 +63,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       .then((rows) => {
         if (!cancelled) setNotifications(rows.map(recordToNotification));
       })
-      .catch(() => {
-        /* connection issues — keep whatever we have */
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, [person]);
 
-  const hasNotified = useCallback((key: string) => {
-    return notifiedKeys.current.has(key);
-  }, []);
-
+  const hasNotified = useCallback(
+    (key: string) => notifiedKeys.current.has(key),
+    [],
+  );
   const registerNotified = useCallback((key: string) => {
     notifiedKeys.current.add(key);
   }, []);
@@ -115,7 +125,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     },
     [person],
   );
-
   const markRead = useCallback((id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
@@ -123,15 +132,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     patchNotification(id, { read: true }).catch(() => {});
   }, []);
 
+  // Read the list from the ref, NOT the dep — so this stays stable.
   const markAllRead = useCallback(() => {
-    const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id);
+    const unreadIds = notificationsRef.current
+      .filter((n) => !n.read)
+      .map((n) => n.id);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    // Per-id PATCH: the client shim's PATCH uses .single(), so a multi-row
-    // update would error — update each unread row individually instead.
     unreadIds.forEach((id) =>
       patchNotification(id, { read: true }).catch(() => {}),
     );
-  }, [notifications]);
+  }, []);
 
   const dismiss = useCallback((id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
@@ -139,28 +149,47 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const dismissAll = useCallback(() => {
-    const ids = notifications.map((n) => n.id);
+    const ids = notificationsRef.current.map((n) => n.id);
     setNotifications([]);
     ids.forEach((id) => deleteNotification(id).catch(() => {}));
-  }, [notifications]);
+  }, []);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  // Actions: now ALL stable → this object never rebuilds.
+  const actions = useMemo<NotificationActions>(
+    () => ({
+      addNotification,
+      markRead,
+      markAllRead,
+      dismiss,
+      dismissAll,
+      hasNotified,
+      registerNotified,
+    }),
+    [
+      addNotification,
+      markRead,
+      markAllRead,
+      dismiss,
+      dismissAll,
+      hasNotified,
+      registerNotified,
+    ],
+  );
+
+  // State: rebuilds when notifications change (unreadCount derived here).
+  const state = useMemo<NotificationState>(
+    () => ({
+      notifications,
+      unreadCount: notifications.filter((n) => !n.read).length,
+    }),
+    [notifications],
+  );
 
   return (
-    <NotificationContext.Provider
-      value={{
-        notifications,
-        unreadCount,
-        addNotification,
-        markAllRead,
-        markRead,
-        dismiss,
-        dismissAll,
-        hasNotified,
-        registerNotified,
-      }}
-    >
-      {children}
-    </NotificationContext.Provider>
+    <NotificationActionsContext.Provider value={actions}>
+      <NotificationStateContext.Provider value={state}>
+        {children}
+      </NotificationStateContext.Provider>
+    </NotificationActionsContext.Provider>
   );
 }

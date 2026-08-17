@@ -14,13 +14,34 @@
   --sidebar-bg-color: #1f1f1f;
   --sidebar-shadow-color: #0f0f0e0c;
   --sidebar-text-secondary: var(--tt-gray-dark-a-600);
-  
+
   // --sidebar-text-color: #e4e4e4;
   --sidebar-text-color: #e4e4e4b7;
   --sidebar-accent: #a78bfa;
   --sidebar-border-color: var(--tt-border-color);
   --sidebar-stroke-color: var(--sidebar-bg-color);
   --sidebar-fog-color: #1f1e1ec4;
+}
+.sidebar {
+  .sidebar-collapse-toggle {
+    opacity: 0;
+    transition: opacity 0.12s ease;
+  }
+
+  .sidebar-ws-name-cell {
+    max-width: fit-content;
+    transition: max-width 0.15s ease;
+  }
+
+  &:hover {
+    .sidebar-collapse-toggle {
+      opacity: 1;
+    }
+
+    .sidebar-ws-name-cell {
+      max-width: 150px;
+    }
+  }
 }
 
 .sidebar {
@@ -29,7 +50,11 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  font-family: Inter, -apple-system, system-ui, sans-serif;
+  font-family:
+    Inter,
+    -apple-system,
+    system-ui,
+    sans-serif;
   height: 100vh;
   overflow: hidden;
   color: var(--sidebar-text-color);
@@ -48,20 +73,19 @@
   }
 
   // top-down light wash — fades out before the lower nav items
- &::before {
+  &::before {
     content: "";
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 0;
     filter: blur(40px);
-    background:
-      radial-gradient(
-        120% 80% at 0% 100%,
-        color-mix(in srgb, var(--sidebar-accent) 14%, transparent) 5%,
-        color-mix(in srgb, var(--sidebar-accent) 5%, transparent) 5%,
-        transparent 40%
-      );
+    background: radial-gradient(
+      120% 80% at 0% 100%,
+      color-mix(in srgb, var(--sidebar-accent) 14%, transparent) 5%,
+      color-mix(in srgb, var(--sidebar-accent) 5%, transparent) 5%,
+      transparent 40%
+    );
   }
   // keep real content above the wash
   > * {
@@ -70,13 +94,12 @@
   }
 }
 .dark .sidebar::before {
-  background:
-    radial-gradient(
-      120% 80% at 0% 100%,
-      color-mix(in srgb, var(--sidebar-accent) 20%, transparent) 5%,
-      color-mix(in srgb, var(--sidebar-accent) 7%, transparent) 5%,
-      transparent 40%
-    );
+  background: radial-gradient(
+    120% 80% at 0% 100%,
+    color-mix(in srgb, var(--sidebar-accent) 20%, transparent) 5%,
+    color-mix(in srgb, var(--sidebar-accent) 7%, transparent) 5%,
+    transparent 40%
+  );
 }
 
 .sidebar-mobile > div:nth-child(2) {
@@ -85,11 +108,11 @@
 }
 
 .sidebar--floating {
-  background: var(--sidebar-bg-color) !important; // or whatever your solid surface token is
+  background: var(
+    --sidebar-bg-color
+  ) !important; 
   box-shadow: var(--tt-shadow-elevated-md);
-  .dark & {
-    box-shadow: var(--tt-shadow-elevated-sm);
-  }
+  border: 1px solid var(--tt-border-color);
 }
 
 /* Prevent the internal overlay from blocking clicks */
@@ -119,7 +142,7 @@
   transition: background 0.1s;
 
   &:hover {
-    background: var(--tt-gray-light-a-100, rgba(0,0,0,0.04));
+    background: var(--tt-gray-light-a-100, rgba(0, 0, 0, 0.04));
   }
 }
 
@@ -165,9 +188,11 @@
     width: 100%;
     justify-content: flex-start;
     border-radius: var(--tt-radius-md);
-  
-    transition: background 0.1s, color 0.1s;
-     min-height: 32px;
+
+    transition:
+      background 0.1s,
+      color 0.1s;
+    min-height: 32px;
     height: 30px;
     line-height: 1.5;
 
@@ -176,7 +201,7 @@
       color: var(--sidebar-text-color);
     }
 
-    .tiptap-button-icon{
+    .tiptap-button-icon {
       width: 18px;
       height: 18px;
       stroke-width: 1.5px;
@@ -184,14 +209,27 @@
 
     .tiptap-button-text {
       font-size: 14px;
-      font-weight: 500;            // 450 only exists if Inter is loaded as a variable font
-     // letter-spacing: -0.006em;    // Inter wants tight tracking, not loose
+      font-weight: 500; // 450 only exists if Inter is loaded as a variable font
+      // letter-spacing: -0.006em;    // Inter wants tight tracking, not loose
       color: inherit;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       line-height: 1.5;
-      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
-     -webkit-font-smoothing: auto;
+      font-family:
+        ui-sans-serif,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI Variable Display",
+        "Segoe UI",
+        Helvetica,
+        "Apple Color Emoji",
+        "Noto Sans Arabic",
+        "Noto Sans Hebrew",
+        Arial,
+        sans-serif,
+        "Segoe UI Emoji",
+        "Segoe UI Symbol";
+      -webkit-font-smoothing: auto;
     }
   }
 
@@ -200,7 +238,9 @@
   &.is-active .tiptap-button {
     background: var(--tt-gray-light-a-100, rgba(0, 0, 0, 0.04));
     color: var(--sidebar-text-color);
-    .tiptap-button-text { font-weight: 500; }
+    .tiptap-button-text {
+      font-weight: 500;
+    }
   }
 }
 
@@ -214,7 +254,6 @@
   padding: 0 10px 4px;
   margin-top: 8px;
   padding-left: 15px;
-  
 }
 
 .sidebar-empty {
@@ -225,7 +264,13 @@
 
 // ── Pages ──
 .sidebar-pages {
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 8px;
@@ -235,7 +280,7 @@
   overflow-y: auto;
   overflow-x: hidden !important;
   padding: 4px 8px 16px 10px; // ← extra bottom padding so last item isn't clipped
- 
+
   display: flex;
   flex-direction: column;
   justify-content: flex-start !important;
@@ -248,7 +293,6 @@
     flex-shrink: 0; // ← let it grow naturally, don't constrain
   }
   //scrollbar-color: var(--tt-border-color) transparent;
-
 
   // force all CardItemGroup children to not clip
   > * {
@@ -316,16 +360,14 @@
   }
 }
 
-
-
 // ── Collapsed state ──
 .sidebar--collapsed {
   background: transparent;
   border: none;
   position: relative;
- 
+
   .sidebar-nav {
-     padding: 1.5px 6px;
+    padding: 1.5px 6px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -354,21 +396,19 @@
   }
 }
 
-
-
 .tiptap-button-text {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: clip;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
 
-    transition:
-        opacity 120ms ease,
-        transform 120ms ease;
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
 }
 
 .sidebar--collapsed .tiptap-button-text {
-    opacity: 0;
-    transform: translateX(-8px);
+  opacity: 0;
+  transform: translateX(-8px);
 }
 
 // ── Page item tree ──
@@ -392,7 +432,9 @@
   cursor: pointer;
   color: var(--sidebar-text-secondary);
   border-radius: 3px;
-  transition: background 0.1s, color 0.1s;
+  transition:
+    background 0.1s,
+    color 0.1s;
 
   &:hover {
     background: var(--page-item-active-bg-color);
@@ -500,10 +542,10 @@
 
   transition: background-color 0.15s ease;
 
-  &:hover{
+  &:hover {
     background-color: var(--tt-gray-light-a-50);
-    .dark &{
-       background-color: var(--tt-gray-dark-a-50);
+    .dark & {
+      background-color: var(--tt-gray-dark-a-50);
     }
   }
 
@@ -543,11 +585,11 @@
   }
 }
 
-.use-button-group{
+.use-button-group {
   padding: 0 !important;
   height: 30px;
   border-radius: var(--tt-radius-lg);
-  &:hover{
+  &:hover {
     padding: 0 !important;
     background-color: var(--tt-gray-light-a-100);
     .dark & {
@@ -580,9 +622,9 @@
   transform: translate(0, 0);
 }
 
-.workspace-icon-button {   // whatever the trigger's class is
-  position: relative;      // anchor for the badge
- 
+.workspace-icon-button {
+  // whatever the trigger's class is
+  position: relative; // anchor for the badge
 }
 
 .workspace-notification-badge {

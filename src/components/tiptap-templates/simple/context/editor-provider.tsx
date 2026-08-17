@@ -12,7 +12,7 @@ import { EditorContext } from "@tiptap/react";
 import { EditorRefsContext } from "./editor-refs-context";
 import type { EditorExtensionRefs } from "./editor-extension-refs";
 import { useWhyDidYouRender } from "src/lib/useWhyDidYouRender";
-import { useActivePage } from "./active-page-context";
+import { useActivePageState } from "./active-page-context";
 import type { Transaction } from "@tiptap/pm/state";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
@@ -113,7 +113,7 @@ function colorForPersonId(id: string): string {
 interface EditorInstanceProps {
   page: Page;
   isDbPage: boolean;
-  ydoc: YDoc;
+  ydoc: YDoc | null;
   provider: HocuspocusProvider;
   baseExtensions: EditorExtensions;
   refsRef: React.RefObject<EditorExtensionRefs>;
@@ -211,31 +211,25 @@ function EditorInstance({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, page.id, createPage]);
 
-  // Baseline capture for db-page structure guard — same trailing-paragraph
-  // strip as before, just running once against the live (already-synced)
-  // editor doc instead of against freshly-set JSON.
+  // Baseline capture for the db-page structure guard.
+  // ── CHANGED: no longer DELETES anything from the doc. ──
+  // Deleting trailing paragraphs here mutated the shared Yjs doc at mount,
+  // racing sync and destroying real structure (data loss). Any structural
+  // normalization a db page needs must happen server-side in onLoadDocument,
+  // where it runs once against authoritative content. Here we only READ the
+  // synced structure as a baseline — we never write.
   useEffect(() => {
     if (!editor || !isDbPage) return;
-    let guardCount = 0;
-    let last = editor.state.doc.lastChild;
-    while (
-      last &&
-      last.type.name === "paragraph" &&
-      last.content.size === 0 &&
-      guardCount++ < 50
-    ) {
-      const size = editor.state.doc.content.size;
-      editor.commands.deleteRange({ from: size - last.nodeSize, to: size });
-      last = editor.state.doc.lastChild;
-    }
     frozenStructureRef.current = structuralTypes(editor.state.doc);
-    // Known gap: the old code also trimmed any nodes *after* the database
-    // node out of raw JSON before setContent, for db pages. That trimming
-    // assumed a JSON-load path that no longer exists (content now comes
-    // from the Yjs doc). Needs a fresh look for db pages specifically —
-    // not solved here, flagging rather than guessing at the right fix.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
+
+  // EditorInstance already has isDbPage as a prop (line 125) and the ref (135-136).
+  // Sync the paragraph extension's storage to it, per page.
+  useEffect(() => {
+    if (!editor) return;
+    editor.storage.paragraph.isDatabasePage = isDbPage;
+  }, [editor, isDbPage]);
 
   // ── Autosave — title only. Content persistence is now Yjs/Hocuspocus's
   // job entirely; patching editor.getJSON() back to json-server would be
@@ -287,7 +281,7 @@ function EditorInstance({
 // delegates the actual editor lifecycle to EditorInstance below.
 
 export function EditorProvider({ children }: { children: ReactNode }) {
-  const { /*activePageId,*/ activePage, isLoading } = useActivePage();
+  const { /*activePageId,*/ activePage, isLoading } = useActivePageState();
 
   const refsRef = useRef<EditorExtensionRefs>({
     setTocContent: () => {},

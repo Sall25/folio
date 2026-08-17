@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useInsertionEffect, useRef, useState } from "react";
 import { Maximize2 } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
@@ -8,6 +8,8 @@ import type {
   DatabaseAttrs,
   DatabaseProperty,
   DatabaseView,
+  ID,
+  RowTemplate,
   SortRule,
 } from "src/types";
 import { type FilterGroup } from "src/types";
@@ -16,15 +18,14 @@ import { DatabaseViewTabs } from "../database-view-tabs/database-view-tabs";
 import { FilterControl } from "./filter-control";
 import { SortControl } from "./sort-control";
 import { useDataSource } from "../../hooks/use-data-source";
-import { usePages } from "src/hooks/use-pages";
 import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
-import { makeRowTemplate } from "src/utils/make-row-template";
 import { DatabaseTitleBar } from "../database-title-bar";
 import "./database-toolbar.scss";
 import { useDatabaseContext } from "../../nodes/database-context";
 import { SearchButton } from "./search-button";
 import { NewRecordButton } from "./new-record-button";
 import { CollapseToggle } from "./collapse-toggle";
+import { useActivePageActions } from "src/components/tiptap-templates/simple/context/active-page-context";
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 function getActiveView(attrs: DatabaseAttrs): DatabaseView | undefined {
@@ -38,6 +39,7 @@ function totalFilterRules(filters: FilterGroup[]): number {
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
 const EMPTY_SORTS: SortRule[] = [];
 const EMPTY_FILTERS: FilterGroup[] = [];
+const EMPTY_TEMPLATES: RowTemplate[] = [];
 
 // Shared style for the small square control buttons (search/filter/sort).
 const CONTROL_BUTTON_STYLE: React.CSSProperties = {
@@ -59,6 +61,9 @@ function DatabaseToolbarImpl() {
     db,
   } = useDatabaseContext();
 
+  const databaseId = attrs.pageId;
+  const { setActivePageId } = useActivePageActions();
+
   const locked = !!attrs.locked;
   const activeView = getActiveView(attrs);
   const filters = activeView?.filters ?? EMPTY_FILTERS;
@@ -66,7 +71,6 @@ function DatabaseToolbarImpl() {
   const activeFilterCount = totalFilterRules(filters);
   const activeSortCount = sorts.length;
 
-  const { data: pages } = usePages();
   const { setTarget } = usePageView();
 
   // Collapsed toolbar — the control cluster folds behind the chevron, leaving
@@ -85,9 +89,13 @@ function DatabaseToolbarImpl() {
     [],
   );
 
-  const { addRecordAsync, addRowTemplateAsync, source } = useDataSource(
-    attrs.sourceId ?? null,
-  );
+  const {
+    addRecordAsync,
+    createRowTemplateAsync,
+    source,
+    deleteRowTemplateAsync,
+    setDefaultRowTemplateAsync,
+  } = useDataSource(attrs.sourceId ?? null);
 
   const properties = source?.properties ?? EMPTY_PROPERTIES;
   const isSingleView = attrs.views.length <= 1;
@@ -107,11 +115,6 @@ function DatabaseToolbarImpl() {
       .catch(() => console.log("Failed to create page"));
   }, [addRecordAsync, setTarget]);
 
-  const templates = useMemo(
-    () => (pages ?? []).filter((p) => p.category === "Template"),
-    [pages],
-  );
-
   const onToggle = useCallback(() => setCollapsed((v) => !v), []);
 
   const onAddView = useCallback(
@@ -121,11 +124,47 @@ function DatabaseToolbarImpl() {
     ) => db.addView(type, label),
     [db],
   );
-  const onCreateTemplate = useCallback(() => {
+
+  const onCreateTemplate = useCallback(async () => {
     onTemplateOpenChange(false);
-    if (!source) return;
-    addRowTemplateAsync(makeRowTemplate(source, { name: "New Template" }));
-  }, [source, onTemplateOpenChange, addRowTemplateAsync]);
+    const tpl = await createRowTemplateAsync("New Template");
+    if (tpl.pageId) setTarget({ pageId: tpl.pageId, view: "Center" });
+  }, [createRowTemplateAsync, onTemplateOpenChange, setTarget]);
+
+  const onDeleteTemplate = useCallback(
+    (id: ID) => deleteRowTemplateAsync(id),
+    [deleteRowTemplateAsync],
+  );
+  const templates = source?.rowTemplates ?? EMPTY_TEMPLATES;
+
+  function useEventCallback<Args extends unknown[], R>(
+    fn: (...args: Args) => R,
+  ) {
+    const ref = useRef(fn);
+    useInsertionEffect(() => {
+      ref.current = fn;
+    });
+    return useCallback((...args: Args) => ref.current(...args), []);
+  }
+
+  // usage:
+  const onOpenTemplate = useEventCallback((id: ID) => {
+    setTarget({ pageId: id, view: "Center" });
+  });
+  const onPickTemplate = useCallback(
+    (id: ID) =>
+      addRecordAsync({
+        templateId: id,
+      }).then(/* focus/open as you do for new rows */),
+    [addRecordAsync],
+  );
+
+  const onSetDefault = useCallback(
+    (id: ID | null) => setDefaultRowTemplateAsync(id),
+    [setDefaultRowTemplateAsync],
+  );
+
+  const defaultTemplateId = source?.defaultTemplateId ?? null;
 
   return (
     <CardItemGroup
@@ -197,7 +236,7 @@ function DatabaseToolbarImpl() {
                     size="small"
                     tooltip="Open page"
                     style={CONTROL_BUTTON_STYLE}
-                    onClick={() => onViewOptionsOpenChange(true)}
+                    onClick={() => databaseId && setActivePageId(databaseId)}
                   >
                     <Maximize2 className="tiptap-button-icon" size={14} />
                   </Button>
@@ -215,14 +254,20 @@ function DatabaseToolbarImpl() {
               <Spacer orientation="horizontal" size={1} />
 
               {/* New record + template dropdown — available even when locked. */}
+
               <NewRecordButton
                 collapsed={collapsed}
                 locked={locked}
                 templates={templates}
+                defaultTemplateId={defaultTemplateId}
                 open={templateOpen}
                 onOpenChange={onTemplateOpenChange}
                 onNewPage={handleNewPage}
+                onPickTemplate={onPickTemplate}
+                onOpenTemplate={onOpenTemplate}
+                onDeleteTemplate={onDeleteTemplate}
                 onCreateTemplate={onCreateTemplate}
+                onSetDefault={onSetDefault}
               />
             </div>
           </CardItemGroup>

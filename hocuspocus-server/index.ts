@@ -1,9 +1,34 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import "dotenv/config";
 import { Server } from "@hocuspocus/server";
 import { SQLite } from "@hocuspocus/extension-sqlite";
 import { TiptapTransformer } from "@hocuspocus/transformer";
 import { jwtVerify, createRemoteJWKSet } from "jose";
 import { seedExtensions } from "./seed-schema";
+
+// Guarantee the doc has a title as its first child. The client used to insert
+// this; now the server owns it, so every page is seeded with a title present.
+function ensureTitle(content: any) {
+  // No content at all → a minimal doc: title + empty paragraph.
+  if (!content || !content.content || content.content.length === 0) {
+    return {
+      type: "doc",
+      content: [
+        { type: "title", content: [] },
+        { type: "paragraph", content: [] },
+      ],
+    };
+  }
+  // Has content but the first node isn't a title → prepend an empty title.
+  if (content.content[0]?.type !== "title") {
+    return {
+      ...content,
+      content: [{ type: "title", content: [] }, ...content.content],
+    };
+  }
+  // Already has a title first → leave as-is.
+  return content;
+}
 
 // Separate Node process from the Vite app — run with `npx tsx index.ts` from
 // THIS folder (so dotenv finds ./.env). Needs its own env vars:
@@ -74,24 +99,32 @@ const server = new Server<AuthContext>({
       "isEmpty:",
       document.isEmpty("default"),
     );
+
+    // Not empty → the doc already has real content (from SQLite/prior edits).
+    // With the client no longer writing structure at mount, "not empty" now
+    // reliably means "stored content exists", so skipping the seed is correct.
     if (!document.isEmpty("default")) return;
 
     const pageId = documentName.startsWith("page:")
       ? documentName.slice("page:".length)
       : documentName;
 
-    // PostgREST returns an array; unwrap the single row.
     const rows = await sb<PageRecord[]>(
       `/pages?id=eq.${encodeURIComponent(pageId)}&select=id,content`,
     );
     const page = rows?.[0] ?? null;
-    if (!page || !page.content) return; // nothing to seed → stays empty
+
+    // Determine the content to seed. If Supabase has stored content, use it;
+    // otherwise start from a minimal doc. EITHER WAY, guarantee a title node
+    // exists as the first child — because the client no longer inserts one.
+    let content = (page?.content as any) ?? null;
+
+    content = ensureTitle(content); // ← guarantee a title first-child
 
     try {
       const seededYdoc = TiptapTransformer.toYdoc(
-        page.content,
+        content,
         "default",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         seedExtensions as any,
       );
       document.merge(seededYdoc);

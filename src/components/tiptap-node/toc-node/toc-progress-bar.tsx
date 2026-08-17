@@ -1,5 +1,5 @@
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { useToc } from "./use-toc";
+import { useTocActions, useTocContent, useTocUIState } from "./toc-context";
 
 const widths: Record<number, string> = {
   1: "16px",
@@ -11,7 +11,9 @@ const widths: Record<number, string> = {
 };
 
 export function TocProgress({ maxShowCount = 20 }: { maxShowCount?: number }) {
-  const { tocContent, open, showTocContent, activeId } = useToc();
+  const { showTocContent } = useTocActions();
+  const { tocContent } = useTocContent();
+  const { activeId, open } = useTocUIState();
 
   const items = tocContent.slice(0, maxShowCount);
   const activeIndex = items.findIndex((i) => i.id === activeId) ?? 0;

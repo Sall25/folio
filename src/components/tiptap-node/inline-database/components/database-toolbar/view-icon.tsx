@@ -7,8 +7,11 @@ import {
   List,
   Table,
 } from "lucide-react";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 export function ViewIcon({ view }: { view: DatabaseView }) {
+  if (view.iconName) return <DynamicIcon name={view.iconName} size={20} />;
+
   return (
     <>
       {view.type === "table" && <Table className="tiptap-button-icon" />}

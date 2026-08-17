@@ -1,10 +1,23 @@
 import Paragraph from "@tiptap/extension-paragraph";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
-import { ySyncPluginKey } from "y-prosemirror";
 
 const ensureTrailingParagraphKey = new PluginKey("EnsureTrailingParagraph");
 
+interface ParagraphStorage {
+  isDatabasePage: boolean;
+}
+
+declare module "@tiptap/core" {
+  interface Storage {
+    paragraph: ParagraphStorage;
+  }
+}
+
 export const ParagraphNode = Paragraph.extend({
+  addStorage() {
+    // Per-page flag, updated by the provider. False until told otherwise.
+    return { ...(this.parent?.() ?? {}), isDatabasePage: false };
+  },
   addProseMirrorPlugins() {
     const editor = this.editor;
     return [
@@ -70,22 +83,17 @@ export const ParagraphNode = Paragraph.extend({
           // doc, and since it fires on every mount, empty trailing paragraphs
           // accumulate and get persisted — one more per page switch. Only run
           // on genuine local edits (real user typing).
-          const isSyncOrigin = transactions.some(
-            (tr) => tr.getMeta(ySyncPluginKey) !== undefined,
-          );
-          if (isSyncOrigin) return null;
-
-          // Structured (database) pages are title + database node only — no
-          // free-text body. Detect this locally from the doc itself (a
-          // top-level `database` node present) rather than via cross-extension
-          // storage: synchronous, race-free, and correct on first load. Never
-          // append a trailing paragraph on such a page.
-          let hasTopLevelDatabase = false;
-          newState.doc.forEach((n) => {
-            if (n.type.name === "database") hasTopLevelDatabase = true;
+          const isSyncOrigin = transactions.some((tr) => {
+            const ySyncMeta = tr.getMeta("y-sync$");
+            return ySyncMeta?.isChangeOrigin === true;
           });
 
-          if (hasTopLevelDatabase) return null;
+          if (isSyncOrigin) return null;
+
+          // Database PAGE → no trailing paragraph. Page identity, read from
+          // storage (set per-page by the provider). NOT inferred from the doc,
+          // because an inline database in a normal page also has a database node.
+          if (editor.storage.paragraph?.isDatabasePage) return null;
 
           const { doc, schema, tr } = newState;
           let modified = false;

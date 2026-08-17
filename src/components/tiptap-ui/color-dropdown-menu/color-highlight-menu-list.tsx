@@ -95,7 +95,6 @@ export function ColorHighlightMenuList({
                 label,
                 type: "highlight",
               });
-              console.log("recent color added");
               onAction?.();
             }}
             mode={"node"}

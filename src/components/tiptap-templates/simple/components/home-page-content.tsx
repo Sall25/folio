@@ -2,7 +2,7 @@ import type { Page, PageCover } from "src/types";
 import type { TFunction } from "i18next";
 import { useRecentPages } from "src/hooks/use-pages";
 import { useCreatePage } from "src/hooks/use-create-page";
-import { useActivePage } from "../context/active-page-context";
+import { useActivePageActions } from "../context/active-page-context";
 import { makePage } from "src/utils/make-page";
 import { PageItemIcon } from "../page-item-icon";
 import { FileText, LayoutGrid, PenBox } from "lucide-react";
@@ -59,7 +59,7 @@ const todayLabel = (locale?: string) =>
 export function HomePageContent({ userName }: { userName?: string }) {
   const { t, i18n } = useTranslation();
   const { data, isPending } = useRecentPages();
-  const { setActivePageId } = useActivePage();
+  const { setActivePageId } = useActivePageActions();
   const createPage = useCreatePage();
 
   const recents = (data ?? []).filter((p) => p.category !== "Template");

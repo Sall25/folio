@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { memo, type CSSProperties } from "react";
 import "./scroll-fog.scss";
 
 export interface ScrollFogProps {
@@ -25,8 +25,12 @@ export interface ScrollFogProps {
  * The container should be the scroll region (position: relative if it isn't
  * already a positioned/scrolling box). Place <ScrollFog edge="top" /> as the
  * first child and/or <ScrollFog edge="bottom" /> as the last child.
+ *
+ * Memoized: it's a pure function of its props, so it should only re-render when
+ * one of them actually changes — not every time the scrolling parent does. This
+ * only pays off if the call site passes stable props; see the note below.
  */
-export function ScrollFog({
+export const ScrollFog = memo(function ScrollFog({
   edge,
   height = 28,
   color,
@@ -47,4 +51,4 @@ export function ScrollFog({
       }
     />
   );
-}
+});

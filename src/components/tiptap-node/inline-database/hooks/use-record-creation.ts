@@ -8,9 +8,12 @@ import type {
   CellValue,
   PropertyType,
   DatabaseProperty,
+  RowTemplate,
 } from "src/types";
 import { insertRecordNode } from "./use-database-seed";
 import { NONE_KEY, valueForGroupKey } from "../utils/group-records";
+
+const EMPTY_TEMPLATES: RowTemplate[] = [];
 
 export function useRecordCreation({
   editor,
@@ -53,13 +56,19 @@ export function useRecordCreation({
   );
 
   const onNewRecord = useCallback(() => {
-    addRecordAsync({ title: "" })
+    const templates = source?.rowTemplates ?? EMPTY_TEMPLATES;
+    const defaultTemplateId = source?.defaultTemplateId ?? null;
+    const useTemplate =
+      defaultTemplateId && templates.some((t) => t.id === defaultTemplateId)
+        ? defaultTemplateId
+        : undefined;
+    addRecordAsync(useTemplate ? { templateId: useTemplate } : { title: "" })
       .then((page) => {
         insertNode(page);
         setEditingRecordId(page.id);
       })
       .catch(() => console.log("Failed to create page"));
-  }, [addRecordAsync, insertNode, setEditingRecordId]);
+  }, [addRecordAsync, insertNode, setEditingRecordId, source]);
 
   const onNewRecordInGroup = useCallback(
     (groupKey: string) => {

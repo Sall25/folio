@@ -1,6 +1,6 @@
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { LayoutTemplate, FileText } from "lucide-react";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 
@@ -9,7 +9,7 @@ import { patchPage } from "src/api/pages";
 const DEFAULT_PAGE_CATEGORY = "Private";
 
 export function PageTemplateMenu() {
-  const { activePage } = useActivePage();
+  const { activePage } = useActivePageState();
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
 
   if (!activePage) return null;

@@ -1,74 +1,48 @@
-import { useCallback, type ReactNode } from "react";
+import { useCallback, useMemo, type ReactNode } from "react";
 import {
-  EditorLayoutContext,
-  PADDING_LEFT,
+  EditorLayoutActionsContext,
+  EditorLayoutStateContext,
+  EditorLayoutTransientContext,
   TRANSLATE_X,
+  type CommentDisplayMode,
+  type EditorLayoutActions,
+  type EditorLayoutState,
+  type EditorLayoutTransient,
   type LayoutMode,
+  type SidebarView,
 } from "./editor-layout-context";
 import { useEffect, useRef, useState } from "react";
-import { useMediaQuery } from "src/hooks/use-breakpoint";
+import { clampWidth, loadStoredWidth } from "src/lib/loadStoredWidth";
+import { SIDEBAR_WIDTH_KEY } from "src/lib/utils";
+import { useLayoutMode } from "../hooks/use-layout-mode";
 
 interface EditorLayoutProviderProps {
   children: ReactNode;
 }
 
-const SIDEBAR_COLLAPSED_WIDTH = 0;
-const SIDEBAR_DEFAULT_WIDTH = 290;
-const SIDEBAR_MIN_WIDTH = 220;
-const SIDEBAR_MAX_WIDTH = 480;
-const SIDEBAR_WIDTH_KEY = "editor-sidebar-width";
-
-// The drawer's on-screen width on mobile — near full-bleed but leaving a sliver
-// of the backdrop so it reads as an overlay, not a page.
-const SIDEBAR_MOBILE_WIDTH = 300;
-
-const clampWidth = (w: number) =>
-  Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, Math.round(w)));
-
-const loadStoredWidth = (): number => {
-  try {
-    const raw = localStorage.getItem(SIDEBAR_WIDTH_KEY);
-    const n = raw == null ? NaN : Number(raw);
-    return Number.isFinite(n) ? clampWidth(n) : SIDEBAR_DEFAULT_WIDTH;
-  } catch {
-    return SIDEBAR_DEFAULT_WIDTH;
-  }
-};
-
 export type PeekPhase = "hidden" | "entering" | "open" | "leaving";
 
 export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
-  // Breakpoints: <768 mobile, 768–1024 tablet, >=1024 desktop.
-  const isMobile = useMediaQuery("max", "md");
-  // const isTabletUp = useMediaQuery("min", "md");
-  const isDesktop = useMediaQuery("min", "lg");
-  const mode: LayoutMode = isMobile
-    ? "mobile"
-    : isDesktop
-      ? "desktop"
-      : "tablet";
-
+  const { mode } = useLayoutMode();
   const [collapsed, setCollapsed] = useState(false);
-  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const [expandedWidth, setExpandedWidth] = useState<number>(loadStoredWidth);
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   const [discussionOpen, setDiscussionOpen] = useState(false);
-  const [sidebarView, setSidebarView] = useState<"pages" | "inbox" | "trash">(
-    "pages",
-  );
-  const [commentModeOverride, setCommentModeOverride] = useState<
-    "sidebar" | "popover" | null
-  >(null);
+  const [sidebarView, setSidebarView] = useState<SidebarView>("pages");
+  const [commentModeOverride, setCommentModeOverride] =
+    useState<CommentDisplayMode | null>(null);
 
   const [customizeSidebarOpen, setCustomizeSidebarOpen] = useState(false);
 
-  const commentDisplayMode: "sidebar" | "popover" =
+  const commentDisplayMode: CommentDisplayMode =
     mode === "mobile" || mode === "tablet"
       ? "popover"
       : (commentModeOverride ?? "sidebar");
 
-  const setCommentDisplayMode = (m: "sidebar" | "popover") =>
-    setCommentModeOverride(m);
+  const setCommentDisplayMode = useCallback(
+    (m: CommentDisplayMode) => setCommentModeOverride(m),
+    [],
+  );
 
   // Auto-collapse when the viewport can't hold a persistent panel, and restore
   // when it can again — otherwise rotating a tablet leaves the sidebar covering
@@ -90,29 +64,9 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
     }
   }, [mode]);
 
-  // On mobile the sidebar is an OVERLAY — it must impose NO width on the editor
-  // (content goes full-bleed, drawer floats above). On desktop/tablet it's a
-  // panel that pushes the editor over by its width.
-  const sidebarWidth =
-    mode === "mobile"
-      ? SIDEBAR_COLLAPSED_WIDTH
-      : collapsed
-        ? SIDEBAR_COLLAPSED_WIDTH
-        : expandedWidth;
-
-  // The drawer's own rendered width — what the sidebar element is actually
-  // sized to when open. Separate from the offset above.
-  const drawerWidth = mode === "mobile" ? SIDEBAR_MOBILE_WIDTH : expandedWidth;
-
   const editorWrapperRef = useRef<HTMLDivElement>(null);
-  const [editorLeft, setEditorLeft] = useState(0);
-  const paddingLeft = collapsed ? 100 : PADDING_LEFT;
 
   const onCollapsedChange = useCallback((v: boolean) => setCollapsed(v), []);
-  const onVersionHistoryOpenChanged = useCallback(
-    (v: boolean) => setVersionHistoryOpen(v),
-    [],
-  );
 
   const setSidebarWidth = useCallback((w: number) => {
     setExpandedWidth(clampWidth(w));
@@ -131,19 +85,6 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
       });
     }
   }, []);
-
-  useEffect(() => {
-    if (!editorWrapperRef.current) return;
-
-    const raf = requestAnimationFrame(() => {
-      queueMicrotask(() => {
-        const { left } = editorWrapperRef.current!.getBoundingClientRect();
-        setEditorLeft(left);
-      });
-    });
-
-    return () => cancelAnimationFrame(raf);
-  }, [sidebarWidth, collapsed]);
 
   const [peeking, setPeeking] = useState(false);
   const peekTimer = useRef<number | null>(null);
@@ -200,44 +141,70 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
     leaveTimer.current = window.setTimeout(() => setPeekPhase("hidden"), 300);
   }, []);
 
-  const [sidebarHovered, setSidebarHovered] = useState(false);
+  // ── Actions: stable identities → this object effectively never rebuilds. ──
+  const actions = useMemo<EditorLayoutActions>(
+    () => ({
+      onCollapsedChange,
+      setSidebarWidth,
+      onSidebarResizingChange,
+      onPeekChange,
+      collapseWithFloat,
+      openPeek,
+      closePeek,
+      setSidebarView,
+      setCommentDisplayMode,
+      onDiscussionOpenChanged: setDiscussionOpen,
+      setCustomizeSidebarOpen,
+      editorWrapperRef,
+      translateX: TRANSLATE_X,
+    }),
+    [
+      onCollapsedChange,
+      setSidebarWidth,
+      onSidebarResizingChange,
+      onPeekChange,
+      collapseWithFloat,
+      openPeek,
+      closePeek,
+      setSidebarView,
+      setCommentDisplayMode,
+      setDiscussionOpen,
+      setCustomizeSidebarOpen,
+      editorWrapperRef,
+    ],
+  );
+
+  // ── General UI state: infrequent changes. ──
+  const state = useMemo<EditorLayoutState>(
+    () => ({
+      collapsed,
+      sidebarView,
+      discussionOpen,
+      commentDisplayMode,
+      customizeSidebarOpen,
+    }),
+    [
+      collapsed,
+      sidebarView,
+      discussionOpen,
+      commentDisplayMode,
+      customizeSidebarOpen,
+    ],
+  );
+
+  // ── Transient/hot state: resize drag + peek animation (per-frame changes). ──
+  const transient = useMemo<EditorLayoutTransient>(
+    () => ({ isResizingSidebar, peeking, peekPhase, expandedWidth }),
+    [isResizingSidebar, peeking, peekPhase, expandedWidth],
+  );
 
   return (
-    <EditorLayoutContext.Provider
-      value={{
-        mode,
-        sidebarWidth,
-        drawerWidth,
-        collapsed,
-        editorWrapperRef,
-        editorLeft,
-        paddingLeft,
-        translateX: TRANSLATE_X,
-        onCollapsedChange,
-        versionHistoryOpen,
-        onVersionHistoryOpenChanged,
-        isResizingSidebar,
-        setSidebarWidth,
-        onSidebarResizingChange,
-        peeking,
-        onPeekChange,
-        collapseWithFloat,
-        openPeek,
-        closePeek,
-        peekPhase,
-        discussionOpen,
-        onDiscussionOpenChanged: setDiscussionOpen,
-        sidebarView,
-        setSidebarView,
-        commentDisplayMode,
-        setCommentDisplayMode,
-        sidebarHovered,
-        setSidebarHovered,
-        customizeSidebarOpen,
-        setCustomizeSidebarOpen,
-      }}
-    >
-      {children}
-    </EditorLayoutContext.Provider>
+    <EditorLayoutActionsContext.Provider value={actions}>
+      <EditorLayoutStateContext.Provider value={state}>
+        <EditorLayoutTransientContext.Provider value={transient}>
+          {children}
+        </EditorLayoutTransientContext.Provider>
+      </EditorLayoutStateContext.Provider>
+    </EditorLayoutActionsContext.Provider>
   );
 }

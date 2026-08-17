@@ -14,8 +14,12 @@ import { FloatingMenu } from "@tiptap/react/menus";
 import { useCoverActions } from "./hooks/use-cover-actions";
 import { FloatingActions } from "./floating-actions";
 import type { Target } from "src/components/tiptap-ui/cover/types";
-import { useActivePage } from "./context/active-page-context";
-import { useEditorLayout } from "./context/editor-layout-context";
+import { useActivePageState } from "./context/active-page-context";
+import {
+  useEditorLayoutActions,
+  useEditorLayoutState,
+  useEditorLayoutTransient,
+} from "./context/editor-layout-context";
 import { useRecordPropertyPanel } from "./hooks/use-record-property-panel";
 import { useEditorSync } from "./context/editor-sync-context";
 import { EditorBodySkeleton } from "./components/skeletons";
@@ -23,6 +27,8 @@ import { usePageComment } from "./hooks/use-page-comment";
 import { DiscussionPane } from "src/components/tiptap-ui/discussion-pane";
 import { CommentThreadPopover } from "src/components/tiptap-ui/comments/components/comment-thread-popover";
 import { BlockCommentHandle } from "src/components/tiptap-ui/block-comment-handle";
+import { useLayoutMode } from "./hooks/use-layout-mode";
+import { calculatePaddingLeft, calculateSidebarWidth } from "src/lib/utils";
 
 // ============================================================
 // Memoized leaves
@@ -47,8 +53,8 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
   hasThreads: boolean;
 }) {
   const { editor } = useCurrentEditor();
-  const { activePage } = useActivePage();
-  const { collapsed } = useEditorLayout();
+  const { activePage } = useActivePageState();
+  const { collapsed } = useEditorLayoutState();
   const { isSyncing } = useEditorSync();
 
   useRecordPropertyPanel(editor, activePage ?? null);
@@ -142,19 +148,16 @@ const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
 // ============================================================
 
 const StableShell = React.memo(function StableShell() {
-  const {
-    editorWrapperRef,
-    paddingLeft,
-    translateX,
-    sidebarWidth,
-    collapsed,
-    mode,
-    discussionOpen,
-    onDiscussionOpenChanged,
-    commentDisplayMode,
-  } = useEditorLayout();
-  const isMobile = mode === "mobile";
-  const { activePage, activePageId } = useActivePage();
+  const { editorWrapperRef, translateX, onDiscussionOpenChanged } =
+    useEditorLayoutActions();
+  const { collapsed, discussionOpen, commentDisplayMode } =
+    useEditorLayoutState();
+  const { expandedWidth } = useEditorLayoutTransient();
+  const { isMobile, mode } = useLayoutMode();
+  const sidebarWidth = calculateSidebarWidth(mode, collapsed, expandedWidth);
+  const paddingLeft = calculatePaddingLeft(collapsed);
+
+  const { activePage, activePageId } = useActivePageState();
 
   const {
     open,
@@ -194,7 +197,7 @@ const StableShell = React.memo(function StableShell() {
             paddingLeft={isMobile ? 0 : paddingLeft}
             translateX={translateX}
             hasThreads={hasThreads}
-            marginLeft={isMobile ? 0 : sidebarWidth}
+            marginLeft={isMobile ? 0 : sidebarWidth / 2}
           />
         </div>
         <div
@@ -206,8 +209,8 @@ const StableShell = React.memo(function StableShell() {
                 ? 0
                 : activePage?.settings.width === "medium"
                   ? 280
-                  : sidebarWidth,
-              transition: "margin-left 0.2s ease, width 0.2s ease",
+                  : sidebarWidth / 2,
+              transition: "margin-left 0.15s ease, width 0.15s ease",
               paddingLeft: isMobile ? 0 : paddingLeft,
               "--x": `${translateX}px`,
             } as React.CSSProperties

@@ -12,8 +12,8 @@ import { CommentMentionEditor, type CommentEditorRef } from "../editor";
 import type { JSONContent } from "@tiptap/core";
 import { newId } from "src/lib/id";
 import { extractMentionIds } from "src/utils/extract-mention-ids";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
-import { useNotifications } from "../../notification";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useNotificationActions } from "../../notification/notification-context";
 
 function SubmitBtn({
   disabled,
@@ -42,8 +42,8 @@ export function ThreadComposerSubmit({ threadId }: { threadId: ID }) {
   );
   const [isEmpty, setIsEmpty] = useState(true);
   const editorRef = useRef<CommentEditorRef>(null);
-  const { activePageId, activePage } = useActivePage();
-  const { addNotification } = useNotifications();
+  const { activePageId, activePage } = useActivePageState();
+  const { addNotification } = useNotificationActions();
 
   const handleSubmit = (json: JSONContent) => {
     if (!person || !activePageId) return;
@@ -63,7 +63,6 @@ export function ThreadComposerSubmit({ threadId }: { threadId: ID }) {
 
     ids.forEach((personId) => {
       if (personId === person.id) return;
-      console.log("COMMENT notif recipient:", personId, "actor:", person.id);
       addNotification({
         type: "comment-mention",
         title: "Mentioned in a comment",

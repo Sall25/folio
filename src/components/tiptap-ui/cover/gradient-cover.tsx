@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import CoverControlsGroup from "./cover-controls";
 import type { Page } from "src/types";
 
@@ -31,7 +31,7 @@ export default function GradientCover({
       });
     }
   }, []);
-  const { activePage } = useActivePage();
+  const { activePage } = useActivePageState();
 
   const showControls = hovering || popoverOpen;
 

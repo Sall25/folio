@@ -3,7 +3,7 @@ import {
   usePageCapabilities,
   type PageCapabilities,
 } from "src/hooks/use-page-role";
-import { useActivePage } from "./active-page-context";
+import { useActivePageState } from "./active-page-context";
 
 // Provides the active page's capabilities to the whole editor subtree, so the
 // editor, toolbar, comment affordances, and menus all gate off one source
@@ -15,7 +15,7 @@ export function PageCapabilitiesProvider({
 }: {
   children: ReactNode;
 }) {
-  const { activePageId } = useActivePage();
+  const { activePageId } = useActivePageState();
   const caps = usePageCapabilities(activePageId);
   return (
     <PageCapabilitiesContext.Provider value={caps}>

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ID, PageRole } from "src/types";
 import { fetchPageRole } from "src/api/page-role";
+import { useMemo } from "react";
 
 // The current user's effective role on a page. Cached per page. Returns
 // undefined while loading; null if the user has no access at all.
@@ -56,5 +57,8 @@ export function usePageCapabilities(
   pageId: ID | null | undefined,
 ): PageCapabilities {
   const { data: role, isLoading } = usePageRole(pageId);
-  return capabilitiesFromRole(role, isLoading);
+  return useMemo(
+    () => capabilitiesFromRole(role, isLoading),
+    [role, isLoading],
+  );
 }
