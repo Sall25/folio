@@ -208,10 +208,11 @@ body,
 .simple-editor-wrapper {
   width: 100%;
   display: flex;
-  overflow: visible;
-   overflow-y:hidden;
+  overflow: hidden;
+  scrollbar-width: none;
+  overflow-y:scroll;
   transition: right 0.2s ease;
-   position: relative;
+  position: relative;
   inset: 0;
 }
 
@@ -248,6 +249,8 @@ body,
   overflow-x: hidden;
   margin-top: var(--tt-toolbar-height);
   padding-top: 0;
+  overflow-y: overlay;
+  margin-right: 0;
   &::-webkit-scrollbar { width: 6px; }
   &::-webkit-scrollbar-thumb {
     background: var(--tt-border-color);

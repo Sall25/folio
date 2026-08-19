@@ -56,6 +56,7 @@ export function RelationCell({
   readonly,
   unwrapped,
   recordId,
+  className
 }: CellProps<"relation"> & { recordId?: ID }) {
   // Called for its side effect: ensures the target source is loaded. Its
   // schema is no longer read here (titles come off the rows directly).
@@ -145,7 +146,7 @@ export function RelationCell({
 
   const trigger = (
     <div
-      className="db-cell"
+      className={className}
       data-wrap={unwrapped ? "false" : "true"}
       style={{
         display: "flex",

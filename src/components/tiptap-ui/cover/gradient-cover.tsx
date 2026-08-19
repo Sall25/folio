@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, memo } from "react";
 import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import CoverControlsGroup from "./cover-controls";
 import type { Page } from "src/types";
 
-export default function GradientCover({
+export const GradientCover = memo(function GradientCover({
   gradient,
   onRemoveCoverAsync,
   page,
@@ -61,4 +61,4 @@ export default function GradientCover({
       )}
     </div>
   );
-}
+});

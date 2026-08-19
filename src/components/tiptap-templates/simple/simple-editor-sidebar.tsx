@@ -1,14 +1,9 @@
 import {
   Search,
-  // Home,
-  Inbox,
-  Store,
   LibraryBig,
   ChevronsLeft,
-  PenBox,
   ChevronsRight,
   Shapes,
-  Archive,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -60,10 +55,6 @@ import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { InboxPanel } from "./components/inbox-panel";
 import { TrashPanel } from "./components/trash-panel";
 import { Bone } from "./components/skeletons";
-import {
-  Board,
-  BoardContent,
-} from "src/components/tiptap-ui-primitive/board/board";
 import { CustomizeSidebarPanel } from "./components/customize-sidebar-panel";
 import { useHiddenSections } from "./hooks/use-hidden-sections";
 import { useSectionOrder } from "./hooks/use-sidebar-order";
@@ -72,8 +63,13 @@ import {
   GridRow,
   GridCell,
 } from "src/components/tiptap-ui-primitive/grid";
-import { HouseIcon } from "src/components/tiptap-icons";
-import { ShortcutBadge } from "src/components/tiptap-ui-primitive/shortcut-badge";
+import {
+  HomeIcon,
+  InboxIcon,
+  ArchiveIcon,
+  MessageIcon,
+  PenIcon,
+} from "src/components/tiptap-icons";
 import { calculateDrawerWidth, calculateSidebarWidth } from "src/lib/utils";
 import { useLayoutMode } from "./hooks/use-layout-mode";
 import { useNotificationState } from "src/components/tiptap-ui/notification/notification-context";
@@ -92,6 +88,7 @@ const UserSkeleton = memo(() => {
     </div>
   );
 });
+UserSkeleton.displayName = "UserSkeleton";
 
 const User = memo(() => {
   const { person, isLoading } = useCurrentPerson();
@@ -181,12 +178,14 @@ const User = memo(() => {
     </>
   );
 });
+User.displayName = "User";
 
-const NewPageCard = memo(() => {
+const NewPageCard = memo(function NewPageCard() {
   const createPage = useCreatePage();
   const { setActivePageId, activePageId } = useActivePage();
   const { person } = useCurrentPerson();
   const { t } = useTranslation();
+
   const onCreatePage = () => {
     if (!person) return;
     const newPage = makePage({
@@ -200,69 +199,51 @@ const NewPageCard = memo(() => {
       .then((created) => setActivePageId(created.id))
       .catch(() => {
         if (activePageId) setActivePageId(activePageId);
-        console.log("failed to create new page");
       });
   };
+
+  const initial = person?.name?.[0]?.toUpperCase() ?? "?";
+
   return (
-    <Board
-      onClick={onCreatePage}
-      style={{
-        minHeight: 30,
-        height: 48,
-        boxShadow: "var(--tt-shadow-elevated-md)",
-        borderRadius: "300px !important",
-        background: "inherit",
-        border: "1px solid var(--tt-border-color)",
-        cursor: "pointer",
-      }}
-    >
-      <BoardContent
-        style={{
-          height: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "column",
-          cursor: "pointer",
-        }}
+    <div className="sidebar-footer">
+      <div className="sidebar-footer__avatar">{initial}</div>
+
+      <div className="sidebar-footer__info">
+        <div className="sidebar-footer__name">{person?.name ?? "—"}</div>
+        <div className="sidebar-footer__plan">{t("plan.free")}</div>
+      </div>
+
+      <button
+        className="new-page-btn"
+        onClick={onCreatePage}
+        aria-label={t("page.newPage")}
       >
-        <Button
-          variant="ghost"
-          // size="large"
-          style={{
-            background: "transparent",
-            color: "var(--tt-text-primary)",
-            cursor: "pointer",
-          }}
-        >
-          <PenBox
-            className="tiptap-button-icon"
-            style={{ color: "var(--tt-text-primary)" }}
-          />
-          <Spacer orientation="horizontal" size={5} />
-          <span
-            className="tiptap-button-text"
-            style={{ opacity: 1, display: "block" }}
-          >
-            {t("page.newPage")}
-          </span>
-          <Spacer orientation="horizontal" size={15} />
-          <ShortcutBadge shortcutKeys="Ctrl+I" />
-        </Button>
-      </BoardContent>
-    </Board>
+        <PenIcon
+          className="tiptap-button-icon"
+          style={{ strokeWidth: 2, width: 18, height: 18 }}
+        />
+      </button>
+    </div>
   );
 });
 
 const WorkspaceFooter = memo(() => {
   return (
-    <CardFooter style={{ paddingBottom: 10, width: "80%" }}>
-      <Spacer orientation="horizontal" size={15} />
+    <CardFooter
+      style={{
+        paddingBottom: 0,
+        paddingTop: 5,
+        paddingRight: 0,
+        width: "100%",
+      }}
+    >
+      {/* <Spacer orientation="horizontal" size={5} /> */}
       <NewPageCard />
-      <Spacer orientation="horizontal" size={15} />
+      {/* <Spacer orientation="horizontal" size={10} /> */}
     </CardFooter>
   );
 });
+WorkspaceFooter.displayName = "WorkspaceFooter";
 
 const WorkspaceHeader = memo(() => {
   const { t } = useTranslation();
@@ -330,6 +311,7 @@ const WorkspaceHeader = memo(() => {
     </CardItemGroup>
   );
 });
+WorkspaceHeader.displayName = "WorkspaceHeader";
 
 const NavItems = memo(() => {
   const { t } = useTranslation();
@@ -381,7 +363,7 @@ const NavItems = memo(() => {
             borderRadius: "var(--tt-radius-xl)",
           }}
         >
-          <HouseIcon size={32} strokeWidth={3} className="tiptap-button-icon" />
+          <HomeIcon size={32} strokeWidth={8} className="tiptap-button-icon" />
           {sidebarView === "pages" && (
             <>
               <Spacer orientation="horizontal" size={2} />
@@ -414,7 +396,11 @@ const NavItems = memo(() => {
             position: "relative",
           }}
         >
-          <Inbox size={34} strokeWidth={1.8} className="tiptap-button-icon" />
+          <InboxIcon
+            size={34}
+            strokeWidth={1.8}
+            className="tiptap-button-icon"
+          />
           {unreadCount > 0 && (
             <span className="sidebar-inbox-badge">{unreadCount}</span>
           )}
@@ -432,6 +418,26 @@ const NavItems = memo(() => {
         </Button>
 
         <Button
+          size="large"
+          variant="ghost"
+          style={{
+            fontWeight: 400,
+            color: "var(--tt-text-color)",
+            padding: 5,
+            minHeight: "fit-content",
+            height: "fit-content",
+            minWidth: "fit-content",
+            width: "fit-content",
+          }}
+          tooltip={t("sidebar.comment")}
+        >
+          <MessageIcon
+            size={32}
+            strokeWidth={1.8}
+            className="tiptap-button-icon"
+          />
+        </Button>
+        <Button
           variant="ghost"
           size="large"
           data-highlighted={sidebarView === "trash" ? "true" : "false"}
@@ -447,7 +453,11 @@ const NavItems = memo(() => {
           }}
           tooltip={t("sidebar.trash")}
         >
-          <Archive size={32} strokeWidth={1.8} className="tiptap-button-icon" />
+          <ArchiveIcon
+            size={32}
+            strokeWidth={1.8}
+            className="tiptap-button-icon"
+          />
           {sidebarView === "trash" && (
             <>
               <Spacer orientation="horizontal" size={2} />
@@ -459,22 +469,6 @@ const NavItems = memo(() => {
               </span>
             </>
           )}
-        </Button>
-        <Button
-          size="large"
-          variant="ghost"
-          style={{
-            fontWeight: 400,
-            color: "var(--tt-text-color)",
-            padding: 5,
-            minHeight: "fit-content",
-            height: "fit-content",
-            minWidth: "fit-content",
-            width: "fit-content",
-          }}
-          tooltip={t("sidebar.store")}
-        >
-          <Store size={32} strokeWidth={1.8} className="tiptap-button-icon" />
         </Button>
 
         <Spacer orientation="horizontal" />
@@ -502,6 +496,7 @@ const NavItems = memo(() => {
     </CardItemGroup>
   );
 });
+NavItems.displayName = "NavItems";
 
 const LibraryPaletteTrigger = memo(() => {
   const navigate = useNavigate();
@@ -528,6 +523,7 @@ const LibraryPaletteTrigger = memo(() => {
     </Button>
   );
 });
+LibraryPaletteTrigger.displayName = "LibraryPaletteTrigger";
 
 const TemplatePaletteTrigger = memo(() => {
   const { onOpenChange, open } = useTemplates();
@@ -550,6 +546,7 @@ const TemplatePaletteTrigger = memo(() => {
     </Button>
   );
 });
+TemplatePaletteTrigger.displayName = "TemplatePaletteTrigger";
 
 // type PeekPhase = "hidden" | "entering" | "open" | "leaving";
 

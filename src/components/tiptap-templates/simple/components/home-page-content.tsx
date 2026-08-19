@@ -16,6 +16,7 @@ import {
 } from "src/components/tiptap-ui-primitive/board/board";
 import { getPageExcerpt } from "src/lib/get-page-excerpt";
 import { useCurrentPerson } from "src/hooks/use-session";
+import "./home-page-content.scss";
 
 const GRID: React.CSSProperties = {
   display: "grid",

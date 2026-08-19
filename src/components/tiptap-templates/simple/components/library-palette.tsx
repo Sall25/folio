@@ -241,7 +241,7 @@ function RecentGrid({ rows }: { rows: Page[] }) {
     >
       <div style={headerStyle}>
         <Button variant="ghost">
-          <FileText className="tiptap-button-icon" />
+          <FileIcon className="tiptap-button-icon" />
           <span className="tiptap-button-text">
             {t("library.columns.page")}
           </span>
@@ -386,7 +386,6 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
         ) : (
           <div className="library-empty">
             <FileIcon className="library-empty__icon" />
-            {/* <FileText size={32} className="library-empty__icon" /> */}
             <p className="library-empty__text">{t(TAB_EMPTY[tab])}</p>
             {tab === "Recents" && pages.length === 0 && (
               <button

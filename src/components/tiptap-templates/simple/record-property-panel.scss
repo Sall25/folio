@@ -5,6 +5,8 @@
   padding: 8px 0 16px 0;
   padding-left: 0;
   width: 100%;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .record-prop-panel__row {
@@ -42,7 +44,8 @@
   display: flex;
   align-items: center;
   min-height: 32px;
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .record-prop-panel__value--text {

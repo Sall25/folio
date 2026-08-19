@@ -9,13 +9,14 @@ export function NumberCell({
   readonly,
   unwrapped,
   align,
+  className,
 }: CellProps<"number"> & { align?: "left" | "right" }) {
   const max =
     columnValues?.reduce<number>((m, v) => (v != null && v > m ? v : m), 0) ??
     0;
 
   return (
-    <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
+    <div className={className} data-wrap={unwrapped ? "false" : "true"}>
       <NumberCellDisplay
         value={value ?? 0}
         onChange={onChange}

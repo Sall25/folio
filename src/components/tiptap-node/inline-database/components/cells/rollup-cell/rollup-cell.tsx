@@ -33,10 +33,12 @@ export function RollupCell({
   config,
   record,
   properties,
+  className,
 }: {
   config: ConfigOf<"rollup">;
   record: Page;
   properties: DatabaseProperty[];
+  className?: string;
 }) {
   const relationProp = properties.find(
     (p) => p.id === config.relationPropertyId,
@@ -64,7 +66,7 @@ export function RollupCell({
   });
 
   return (
-    <div className="db-cell" data-wrap="false">
+    <div className={className} data-wrap="false">
       <span
         style={{
           display: "inline-flex",

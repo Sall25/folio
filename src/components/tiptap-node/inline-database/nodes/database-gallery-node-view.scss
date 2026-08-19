@@ -28,6 +28,7 @@
     gap: 12px;
     padding: 4px 10px;
     width: 100%;
+    align-items: stretch;
 
     // Narrow width → drop to 2 columns so cards don't get too thin.
     @container (max-width: 640px) {
@@ -40,9 +41,15 @@
     min-width: 0; // shrink within the track
     overflow: hidden; // clip long unbroken content (and round the bled cover)
    
+    height: 100%;              // fill the grid cell (which is stretched to row height)
+
 
     .db-board-card{
+      height: 100%;           
+      display: flex;
+      flex-direction: column;
       border-radius: var(--tt-radius-lg) !important;
+    
       background-color: var(--tt-gray-light-a-100);
       .dark & {
         background-color: var(--tt-gray-dark-a-50);

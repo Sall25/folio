@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import "./dynamic-icon.scss";
 
 type DynamicIconProps = {
@@ -46,7 +46,7 @@ function useFontReady(): boolean {
   return ready;
 }
 
-export const DynamicIcon = ({
+const DynamicIconImpl = ({
   name,
   size = 24,
   filled = true,
@@ -80,3 +80,5 @@ export const DynamicIcon = ({
     </span>
   );
 };
+
+export const DynamicIcon = memo(DynamicIconImpl);

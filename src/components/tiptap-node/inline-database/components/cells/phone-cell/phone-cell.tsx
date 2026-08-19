@@ -1,18 +1,15 @@
-import type { CellValue, PropertyConfig } from "src/types";
+import type { CellValue } from "src/types";
 import { PhoneCellDisplay } from "../../../primitives/phone-cell-display";
+import type { CellProps } from "../types";
 
 export function PhoneCell({
   value,
   onChange,
   readonly,
-}: {
-  value: CellValue<"phone"> | null;
-  config: Extract<PropertyConfig, { type: "phone" }>;
-  onChange: (value: CellValue<"phone"> | null) => void;
-  readonly?: boolean;
-}) {
+  className,
+}: CellProps<"phone">) {
   return (
-    <div className="db-cell">
+    <div className={className}>
       <PhoneCellDisplay
         value={(value as string) ?? ""}
         onChange={(v) => onChange((v || null) as CellValue<"phone"> | null)}

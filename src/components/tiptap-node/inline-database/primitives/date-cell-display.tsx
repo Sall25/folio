@@ -79,21 +79,23 @@ export function DateCellDisplay({
         background: "transparent",
         width: "100%",
         justifyContent: "flex-start",
-        fontSize: 14,
+        fontSize: "inherit",
         fontWeight: 400,
-        lineHeight: 1.4,
+        lineHeight: "inherit",
         color: "var(--tt-text-cell)",
         minWidth: 100,
-        minHeight: 34,
+        minHeight: "inherit",
+        height: "inherit",
         margin: 0,
         padding: 0,
-        paddingTop: 2,
+        // paddingTop: 2,
       }}
     >
       <span
         className={`tiptap-button-text db-cell-text__display${
           value ? "" : " db-cell-text__display--empty"
         }`}
+        style={{ lineHeight: "inherit" }}
       >
         {value
           ? formatForCell(date, format, timeFormat, includeTime)

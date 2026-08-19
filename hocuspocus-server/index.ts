@@ -30,6 +30,22 @@ function ensureTitle(content: any) {
   return content;
 }
 
+// A doc is "meaningful" if it has a doc node with at least one child that
+// carries content beyond an empty title/paragraph skeleton. This is the LAST
+// line of defense against writing an empty doc over real Supabase content.
+function isMeaningfulContent(content: unknown): boolean {
+  if (!content || typeof content !== "object") return false;
+  const doc = content as { type?: string; content?: unknown[] };
+  if (doc.type !== "doc" || !Array.isArray(doc.content)) return false;
+  // At least one node that isn't an empty title and isn't an empty paragraph.
+  return doc.content.some((node) => {
+    const n = node as { type?: string; content?: unknown[] };
+    const isEmpty = !n.content || n.content.length === 0;
+    if ((n.type === "title" || n.type === "paragraph") && isEmpty) return false;
+    return true;
+  });
+}
+
 // Separate Node process from the Vite app — run with `npx tsx index.ts` from
 // THIS folder (so dotenv finds ./.env). Needs its own env vars:
 //   SUPABASE_URL=https://<ref>.supabase.co
@@ -93,13 +109,6 @@ const server = new Server<AuthContext>({
   // doc is hydrated from stored content here, so by the time the client's
   // Collaboration extension and TitleNode see it, it's already correct.
   async onLoadDocument({ documentName, document }) {
-    console.log(
-      "[onLoadDocument]",
-      documentName,
-      "isEmpty:",
-      document.isEmpty("default"),
-    );
-
     // Not empty → the doc already has real content (from SQLite/prior edits).
     // With the client no longer writing structure at mount, "not empty" now
     // reliably means "stored content exists", so skipping the seed is correct.
@@ -174,13 +183,39 @@ const server = new Server<AuthContext>({
     return { personId };
   },
 
-  // Page.content stops being the source of truth once a page is collaborative.
-  // But the sidebar's "recently edited" sort still reads Page.updatedAt, so
-  // that one field keeps getting bumped here — nothing else on the row.
-  async onStoreDocument({ documentName }) {
+  // Persist the live document content back to Supabase. This is the DURABLE
+  // save: the Yjs doc lives in Hocuspocus's SQLite, but that SQLite is
+  // ephemeral (wiped on every redeploy/restart). Writing content here makes
+  // Supabase the source of truth again, so a lost SQLite re-seeds from CURRENT
+  // content (via onLoadDocument) instead of stale creation-time content.
+  async onStoreDocument({ documentName, document }) {
     const pageId = documentName.startsWith("page:")
       ? documentName.slice("page:".length)
       : documentName;
+
+    // Convert the live Yjs doc → JSON, using the SAME schema the seed uses.
+    // toYdoc (seed) and fromYdoc (this) MUST use the same extension set, or the
+    // round-trip loses/mangles nodes. seedExtensions is that shared schema.
+    let content: unknown;
+    try {
+      content = TiptapTransformer.fromYdoc(document, "default");
+    } catch (err) {
+      console.error(
+        `[onStoreDocument] fromYdoc failed for ${documentName}:`,
+        err,
+      );
+      return; // don't write garbage — bail, keep the last good Supabase content
+    }
+
+    // Guard: never persist an empty/again-skeleton doc over real content. If
+    // the doc somehow serialized to nothing, writing it would REINTRODUCE the
+    // wipe. Only write when there's actual content.
+    if (!isMeaningfulContent(content)) {
+      console.warn(
+        `[onStoreDocument] refusing to write empty content for ${documentName}`,
+      );
+      return;
+    }
 
     await fetch(`${REST}/pages?id=eq.${encodeURIComponent(pageId)}`, {
       method: "PATCH",
@@ -190,9 +225,14 @@ const server = new Server<AuthContext>({
         "Content-Type": "application/json",
         Prefer: "return=minimal",
       },
-      body: JSON.stringify({ updated_at: new Date().toISOString() }),
-    }).catch(() => {
-      // Best-effort — a missed updatedAt bump isn't worth crashing over.
+      body: JSON.stringify({
+        content, // ← the real content (the fix)
+        updated_at: new Date().toISOString(), // keep bumping the sort field
+      }),
+    }).catch((err) => {
+      // Best-effort, but log it — a failed content write means this edit only
+      // survives in SQLite until the next persist.
+      console.error(`[onStoreDocument] PATCH failed for ${documentName}:`, err);
     });
   },
 });

@@ -14,14 +14,7 @@ import { ThemeToggle } from "src/components/tiptap-templates/simple/theme-toggle
 import { MorePopover } from "./more-popover";
 import { useActivePageState } from "./context/active-page-context";
 import type { View } from "src/types";
-import {
-  Home,
-  LibraryBig,
-  Lock,
-  Menu,
-  MessageSquareText,
-  Star,
-} from "lucide-react";
+import { Home, LibraryBig, Menu, MessageSquareText } from "lucide-react";
 import { PageCategorySelect } from "./components/page-category-select";
 import { Breadcrumbs } from "./breadcrumbs";
 import { usePatchPage } from "src/hooks/use-patch-page";
@@ -42,6 +35,7 @@ import { ToolbarPresence } from "./components/toolbar-presence";
 import { useWindowSize } from "src/hooks/use-window-size";
 import { useLayoutMode } from "./hooks/use-layout-mode";
 import { calculateSidebarWidth } from "src/lib/utils";
+import { LockIcon, StarIcon } from "src/components/tiptap-icons";
 
 function Expand() {
   // const { t } = useTranslation();
@@ -105,7 +99,7 @@ function FavoriteToggle() {
         minHeight: "1.25rem",
       }}
     >
-      <Star
+      <StarIcon
         className="tiptap-button-icon"
         fill={isFavorite ? "currentColor" : "none"}
         style={{ color: isFavorite ? "var(--tt-brand-color-500)" : undefined }}
@@ -163,12 +157,12 @@ function ShareButton() {
           color: "var(--tt-text-primary)",
         }}
       >
-        <Lock
+        <LockIcon
           className="tiptap-button-icon"
           style={{
             width: 14,
             height: 14,
-            marginBottom: 4,
+            // marginBottom: 3,
             color: "var(--tt-text-primary)",
           }}
         />

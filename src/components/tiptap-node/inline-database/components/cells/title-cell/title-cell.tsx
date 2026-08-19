@@ -1,26 +1,17 @@
-import { usePage } from "src/hooks/use-pages";
 import type { JSONContent } from "@tiptap/core";
+import { usePage } from "src/hooks/use-pages";
 import { TitleCellDisplay } from "../../../primitives/title-cell-display";
-import type { DatabaseView, ID } from "src/types";
+import type { DatabaseView, ID, Page } from "src/types";
 import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { useActivePageActions } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import { useNewRowEdit } from "../../../nodes/new-row-edit-context";
 
-/**
- * The title cell is an ATOM: page.title is the single source of truth.
- *
- * It used to be a content cell, which meant the same string existed in three
- * places — page.title, the databaseCell node's inline content, and
- * values[titlePropId] — with no working sync between them. Typing in the cell
- * wrote to values[] (which nothing reads); renaming the page never reached the
- * cell. Now the cell simply READS page.title and WRITES page.title. No copies,
- * nothing to keep in sync, and a rename anywhere shows up everywhere.
- */
 export function TitleCell({
   value,
   pageId,
+  recordPage,
   templateId,
   readonly,
   unwrapped,
@@ -31,14 +22,24 @@ export function TitleCell({
   recordId: ID;
   view?: DatabaseView;
   pageId?: ID;
+  recordPage?: Page; // the record's own page, already loaded by the caller
   templateId?: ID;
   onChange: (value: string) => void;
   readonly?: boolean;
   unwrapped?: boolean;
   openVariant?: "open" | "edit";
 }) {
-  const { data: linkedPage } = usePage(pageId ?? null);
+  // The record's page is the SAME page as pageId — the caller already has it in
+  // resolvedRecords, so use it directly instead of re-fetching per row (that was
+  // an N+1: one usePage per title cell = one fetch per row, refetching on every
+  // view switch). Fall back to usePage only if no page was passed (defensive).
+  const { data: fetchedPage } = usePage(recordPage ? null : (pageId ?? null));
+  const linkedPage = recordPage ?? fetchedPage;
+
+  // Templates are few and shared across rows, so this query dedupes by key —
+  // one fetch per distinct template, not per row.
   const { data: templatePage } = usePage(templateId ?? null);
+
   const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const { setActivePageId } = useActivePageActions();
   const { setTarget } = usePageView();
@@ -51,9 +52,6 @@ export function TitleCell({
   function handleChange(next: string) {
     if (!linkedPage) return;
 
-    // The page's title also appears as the first node of its content (the
-    // editor's TitleNode), so both are patched together — the same thing the
-    // sidebar's rename does.
     const content = linkedPage.content as JSONContent;
     const updatedContent: JSONContent = content?.content?.length
       ? {
@@ -81,7 +79,6 @@ export function TitleCell({
         hasPage={pageId != null}
         onOpen={() => {
           if (pageId === null || pageId === undefined || !view) return;
-
           if (view.openPageIn === "Side") {
             setTarget({ pageId, view: "Peek" });
           } else if (view.openPageIn === "Center") {

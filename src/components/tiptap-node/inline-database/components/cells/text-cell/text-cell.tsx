@@ -1,9 +1,15 @@
+import { memo } from "react";
 import { TextCellDisplay } from "../../../primitives/text-cell-display";
 import type { CellProps } from "../types";
 
-export function TextCell({ value, onChange, unwrapped }: CellProps<"text">) {
+function TextCellImpl({
+  value,
+  onChange,
+  unwrapped,
+  className,
+}: CellProps<"text">) {
   return (
-    <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
+    <div className={className} data-wrap={unwrapped ? "false" : "true"}>
       <TextCellDisplay
         value={value || ""}
         onChange={onChange}
@@ -12,3 +18,4 @@ export function TextCell({ value, onChange, unwrapped }: CellProps<"text">) {
     </div>
   );
 }
+export const TextCell = memo(TextCellImpl);

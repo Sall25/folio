@@ -1,16 +1,16 @@
+import { forwardRef } from "react";
 import { ArrowUpDown, ChevronDown } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 
-export function SortChipButton({
-  count,
-  locked,
-}: {
-  count: number;
-  locked: boolean;
-}) {
+export const SortChipButton = forwardRef<
+  HTMLButtonElement,
+  { count: number; locked: boolean } & React.ComponentProps<typeof Button>
+>(({ count, locked, ...props }, ref) => {
   const label = count === 1 ? "1 sort" : `${count} sorts`;
   return (
     <Button
+      ref={ref}
+      {...props}
       variant="ghost"
       style={{
         height: 24,
@@ -24,6 +24,7 @@ export function SortChipButton({
         background:
           "color-mix(in srgb, var(--tt-brand-color-400) 14%, transparent)",
         cursor: locked ? "default" : undefined,
+        ...props.style, // let injected style merge, don't clobber
       }}
     >
       <ArrowUpDown
@@ -41,4 +42,6 @@ export function SortChipButton({
       )}
     </Button>
   );
-}
+});
+
+SortChipButton.displayName = "SortChipButton";

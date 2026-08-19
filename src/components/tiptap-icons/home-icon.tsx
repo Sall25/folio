@@ -1,17 +1,13 @@
 import { createLucideIcon } from "lucide-react";
 
-export const HouseIcon = createLucideIcon("house", [
-  ["path", { d: "M10.709 2.472a2 2 0 012.582 0", key: "1vn42z" }],
-  ["path", { d: "M19 21H5", key: "150jfl" }],
-  ["path", { d: "M1.5 19v-9", key: "1hsvjp" }],
-  ["path", { d: "M13.291 2.472 22.5 9", key: "s62g7i" }],
-  ["path", { d: "M15 21v-8a1 1 0 00-1-1h-4a1 1 0 00-1 1v8", key: "nd32n5" }],
-  ["path", { d: "m2 9 8-6.5", key: "13vk0l" }],
-  ["path", { d: "M20.646 8.772a1 1 0 01.354.764", key: "qhlfks" }],
-  ["path", { d: "M22.5 10v9", key: "12ux8g" }],
-  ["path", { d: "M22.5 19a2 2 0 01-2 2", key: "1n79mn" }],
-  ["path", { d: "M3 9.536a1 1 0 01.354-.764", key: "bp103d" }],
-  ["path", { d: "M3.5 21a2 2 0 01-2-2", key: "14r48a" }],
+export const HomeIcon = createLucideIcon("home", [
+  [
+    "path",
+    {
+      d: "M1.5 10 8.6 4.6a5.5 5.5 0 0 1 6.8 0l7.1 5.4a2.5 2.5 0 0 1 .5 1.6V19a3 3 0 0 1-3 3H4a3 3 0 0 1-3-3v-7.4a2.5 2.5 0 0 1 .5-1.6z",
+      key: "body",
+    },
+  ],
+  ["path", { d: "M9 22v-5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v5", key: "door" }],
 ]);
-
-HouseIcon.displayName = "HouseIcon";
+HomeIcon.displayName = "HomeIcon";

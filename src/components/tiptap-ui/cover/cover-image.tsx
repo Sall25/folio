@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, memo } from "react";
 import type { Page } from "src/types";
 import CoverControlsGroup from "./cover-controls";
 import { usePatchPage } from "src/hooks/use-patch-page";
@@ -6,7 +6,7 @@ import { patchPage } from "src/api/pages";
 import { Bone } from "src/components/tiptap-ui-primitive/bone";
 import { usePageCapabilities } from "src/hooks/use-page-role";
 
-export default function CoverImage({
+export const CoverImage = memo(function CoverImage({
   page,
   onRemoveCoverAsync,
 }: {
@@ -141,4 +141,4 @@ export default function CoverImage({
       )}
     </div>
   );
-}
+});

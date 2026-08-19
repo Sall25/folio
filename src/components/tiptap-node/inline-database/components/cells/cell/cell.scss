@@ -28,5 +28,18 @@
     align-items: flex-start;
     padding-top: 6px;
     padding-bottom: 6px;
+     // Same exception here — the wrap block also pins 34px + padding.
+    &.db-cell-board-view {
+      min-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
   }
+}
+.db-cell-board-view {
+  font-size: 12.5px !important;
+  height: fit-content !important;
+  min-height: fit-content !important;
+  line-height: 1.4 !important;   // ← THIS — was inheriting 34px from .db-cell
+  margin: 10px 0;
 }

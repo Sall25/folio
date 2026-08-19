@@ -13,4 +13,5 @@ export interface CellProps<T extends PropertyType = PropertyType> {
   readonly?: boolean;
   unwrapped?: boolean;
   property?: DatabaseProperty;
+  className?: string;
 }

@@ -6,10 +6,10 @@
    &__trigger{
     background-color: transparent;
     border: none;
-    margin: auto 0px;
+    margin: 0px;
      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol" !important;
     -webkit-font-smoothing: auto;
-    font-size: 14px;
+    font-size: inherit;
     line-height: 1.4;
     padding: 0;
   }
@@ -49,7 +49,7 @@
      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol" !important;
     -webkit-font-smoothing: auto;
     color: var(--tt-text-primary);
-    font-size: 14px;
+    font-size: inherit;
     line-height: 1.4;
     font-weight: 400;
   }

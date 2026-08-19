@@ -26,9 +26,9 @@ import "./filter-rule-chips.scss";
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
 
 export function FilterRuleChips() {
-  const { db, attrs } = useDatabaseContext();
+  const { db, visibleProperties, attrs } = useDatabaseContext();
   const activeView = db.activeView;
-  const properties = attrs.properties ?? EMPTY_PROPERTIES;
+  const properties = visibleProperties ?? EMPTY_PROPERTIES;
   const locked = !!attrs.locked;
 
   const group: FilterGroup = activeView?.filters?.[0] ?? {

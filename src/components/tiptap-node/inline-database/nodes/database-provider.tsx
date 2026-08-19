@@ -66,13 +66,21 @@ export function DatabaseProvider({
   setCellValue,
   visibleProperties,
 }: DatabaseProviderProps) {
-  const gridTemplateColumns = attrs.properties
-    ? attrs.properties.map((p) => `${p.width ?? 160}px`).join(" ")
-    : "1fr 1fr";
+  // Memoized — was recomputed (.map().join()) every render.
+  const gridTemplateColumns = useMemo(
+    () =>
+      attrs.properties
+        ? attrs.properties.map((p) => `${p.width ?? 160}px`).join(" ")
+        : "1fr 1fr",
+    [attrs.properties],
+  );
 
-  function getProperty(propertyId: ID): DatabaseProperty | undefined {
-    return attrs.properties?.find((p) => p.id === propertyId);
-  }
+  // useCallback — was a plain function (new identity every render).
+  const getProperty = useCallback(
+    (propertyId: ID): DatabaseProperty | undefined =>
+      attrs.properties?.find((p) => p.id === propertyId),
+    [attrs.properties],
+  );
 
   const { resolvedTitle: title, handleTitleChange: onTitleChange } =
     useDatabaseTitle({
@@ -83,47 +91,21 @@ export function DatabaseProvider({
       updateAttributes: (patch) => updateAttributes({ ...attrs, ...patch }),
     });
 
-  // Chip-visibility UI state
   const [showFilterChips, setShowFilterChips] = useState(false);
   const [showSortChips, setShowSortChips] = useState(false);
-  const onShowFilterChipsChange = useCallback(
-    (v: boolean) => setShowFilterChips(v),
-    [],
-  );
-  const onShowSortChipsChange = useCallback(
-    (v: boolean) => setShowSortChips(v),
-    [],
-  );
+  const onShowFilterChipsChange = useCallback((v: boolean) => setShowFilterChips(v), []);
+  const onShowSortChipsChange = useCallback((v: boolean) => setShowSortChips(v), []);
 
   const { editingRecordId } = useNewRowEdit();
 
-  // Records: filter → search → sort → pin-editing
-  const sortedRecords = useResolvedRecords(
-    resolvedRecords,
-    source,
-    db,
-    editingRecordId,
-  );
-
-  // Table grouping + row layout
+  const sortedRecords = useResolvedRecords(resolvedRecords, source, db, editingRecordId);
   const { tableLayout, groupProp } = useTableLayout(sortedRecords, source, db);
 
-  // New-record handlers
   const { onNewRecord, onNewRecordInGroup } = useRecordCreation({
-    editor,
-    attrs,
-    source,
-    groupProp,
-    addRecordAsync,
-    setCellValue,
-    setEditingRecordId,
+    editor, attrs, source, groupProp, addRecordAsync, setCellValue, setEditingRecordId,
   });
 
-  // Selection ∩ visible rows
-  const visibleSelection = useVisibleSelection(
-    attrs.id ?? null,
-    tableLayout.rowSlots,
-  );
+  const visibleSelection = useVisibleSelection(attrs.id ?? null, tableLayout.rowSlots);
   const selectedRecords = useMemo(
     () => sortedRecords.filter((r) => visibleSelection.includes(r.id)),
     [sortedRecords, visibleSelection],
@@ -137,32 +119,44 @@ export function DatabaseProvider({
     [db, activeView],
   );
 
+  // ── Memoize the value object (Technique 2) — the dominant win. ──
+  // Was a raw {} rebuilt every render → every consumer (all views, toolbar,
+  // headers, chips) re-rendered on every provider render.
+  const value = useMemo(
+    () => ({
+      attrs,
+      db,
+      editor,
+      getProperty,
+      gridTemplateColumns,
+      updateAttributes,
+      source,
+      showFilterChips,
+      onShowFilterChipsChange,
+      showSortChips,
+      onShowSortChipsChange,
+      title,
+      onTitleChange,
+      sortedRecords,
+      tableLayout,
+      onNewRecord,
+      onNewRecordInGroup,
+      visibleSelection,
+      selectedRecords,
+      onUpdateView,
+      visibleProperties,
+    }),
+    [
+      attrs, db, editor, getProperty, gridTemplateColumns, updateAttributes,
+      source, showFilterChips, onShowFilterChipsChange, showSortChips,
+      onShowSortChipsChange, title, onTitleChange, sortedRecords, tableLayout,
+      onNewRecord, onNewRecordInGroup, visibleSelection, selectedRecords,
+      onUpdateView, visibleProperties,
+    ],
+  );
+
   return (
-    <DatabaseContext.Provider
-      value={{
-        attrs,
-        db,
-        editor,
-        getProperty,
-        gridTemplateColumns,
-        updateAttributes,
-        source,
-        showFilterChips,
-        onShowFilterChipsChange,
-        showSortChips,
-        onShowSortChipsChange,
-        title,
-        onTitleChange,
-        sortedRecords,
-        tableLayout,
-        onNewRecord,
-        onNewRecordInGroup,
-        visibleSelection,
-        selectedRecords,
-        onUpdateView,
-        visibleProperties,
-      }}
-    >
+    <DatabaseContext.Provider value={value}>
       {children}
     </DatabaseContext.Provider>
   );

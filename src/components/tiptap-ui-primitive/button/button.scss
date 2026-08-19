@@ -1,6 +1,6 @@
 .tiptap-button {
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 14.5px; //0.875rem;
+  font-weight: 400;
   font-feature-settings:
     "salt" on,
     "cv01" on;
@@ -186,6 +186,18 @@
 
   &[data-size="small"] .tiptap-button-emoji {
     width: 0.875rem;
+  }
+}
+
+.tiptap-button-delete{
+  &:hover{
+    .tiptap-button-icon,
+    .tiptap-button-text{
+      color: var(--tt-color-red-dec-3) !important;
+      .dark & {
+        color: var(--tt-color-red-inc-3) !important;
+      }
+    }
   }
 }
 

@@ -1,10 +1,10 @@
 .tiptap-tooltip {
-  --tt-tooltip-bg: var(--white);
+  --tt-tooltip-bg: var(--tt-gray-light-100);
   --tt-tooltip-text: var(--tt-text-secondary);
   --tt-kbd: var(--tt-gray-dark-a-400);
 
   .dark & {
-    --tt-tooltip-bg: var(--black);
+    --tt-tooltip-bg: var(--tt-gray-dark-100);
     --tt-tooltip-text: var(--tt-text-secondary);
     --tt-kbd: var(--tt-gray-light-a-400);
   }
@@ -15,7 +15,8 @@
   overflow: hidden;
   border-radius: var(--tt-radius-md, 0.375rem);
   background-color: var(--tt-tooltip-bg);
-  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--tt-border-color);
+  padding: 0.275rem 0.5rem;
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--tt-tooltip-text);

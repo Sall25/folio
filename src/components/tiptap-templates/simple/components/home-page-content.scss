@@ -1,0 +1,6 @@
+.recent-card{
+  box-shadow: var(--tt-shadow-elevated-sm);
+  .dark & {
+    box-shadow: var(--tt-shadow-elevated-lg);
+  }
+}

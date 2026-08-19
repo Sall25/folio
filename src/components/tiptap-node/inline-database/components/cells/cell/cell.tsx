@@ -72,6 +72,7 @@ function CellImpl({
           value={record.title ?? ""}
           recordId={record.id}
           pageId={record.id}
+          recordPage={record}
           templateId={templateId}
           onChange={change}
           readonly={readonly}
@@ -95,6 +96,7 @@ function CellImpl({
           onChange={change}
           readonly={readonly}
           unwrapped={unwrapped}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
 
@@ -107,6 +109,7 @@ function CellImpl({
           readonly={readonly}
           unwrapped={unwrapped}
           recordId={record.id}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
 
@@ -116,6 +119,7 @@ function CellImpl({
           config={config}
           record={record}
           properties={properties ?? []}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
 
@@ -128,6 +132,7 @@ function CellImpl({
           onChange={change}
           readonly={readonly}
           align={view?.type === "table" ? "right" : "left"}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
 
@@ -138,6 +143,7 @@ function CellImpl({
           config={config}
           onChange={change}
           readonly={readonly}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
 
@@ -148,6 +154,7 @@ function CellImpl({
           config={config}
           onChange={change}
           readonly={readonly}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
 
@@ -158,6 +165,7 @@ function CellImpl({
           config={config}
           onChange={change}
           readonly={readonly}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
 
@@ -168,6 +176,7 @@ function CellImpl({
           config={config}
           onChange={change}
           readonly={readonly}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
 
@@ -178,6 +187,7 @@ function CellImpl({
           config={config}
           onChange={change}
           readonly={readonly}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
 
@@ -188,6 +198,7 @@ function CellImpl({
           config={config}
           onChange={change}
           readonly={readonly}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
 
@@ -198,6 +209,7 @@ function CellImpl({
           config={config}
           onChange={change}
           readonly={readonly}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
 
@@ -208,6 +220,7 @@ function CellImpl({
           config={config}
           onChange={change}
           readonly={readonly}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
 
@@ -223,6 +236,7 @@ function CellImpl({
           config={config}
           onChange={onChange as (v: CellValue<"formula"> | null) => void}
           unwrapped={unwrapped}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
     }
@@ -233,6 +247,7 @@ function CellImpl({
           value={record.createdAt as CellValue<"created_time"> | null}
           config={config}
           onChange={change}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
           readonly
         />
       );
@@ -243,6 +258,7 @@ function CellImpl({
           value={record.updatedAt as CellValue<"edited_time"> | null}
           config={config}
           onChange={change}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
           readonly
         />
       );
@@ -253,6 +269,7 @@ function CellImpl({
           config={config}
           onChange={change}
           readonly={readonly}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
 

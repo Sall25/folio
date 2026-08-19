@@ -6,9 +6,10 @@ export function UrlCell({
   onChange,
   readonly,
   unwrapped,
+  className,
 }: CellProps<"url">) {
   return (
-    <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
+    <div className={className} data-wrap={unwrapped ? "false" : "true"}>
       <UrlCellDisplay
         value={value ?? ""}
         onChange={onChange}

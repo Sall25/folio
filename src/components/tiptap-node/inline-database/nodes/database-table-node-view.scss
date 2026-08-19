@@ -1,10 +1,12 @@
 .db-table {
-  overflow-x: scroll;
-  max-width: var(--db-editor-width); /* bound the scroller so it overflows */
+   overflow-x: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--tt-scrollbar-color) transparent;
   margin-top: 4px;
-  scrollbar-width: auto;
+  // Was: max-width: var(--db-editor-width);
+  // Extend toward the viewport's right edge. Adjust the right gutter (48px)
+  // and account for your sidebar if 100vw includes it.
+  max-width: calc(100vw - var(--db-table-left, 0px) - 48px);
 
 
   // &:not(:hover) {
@@ -16,6 +18,27 @@
   // &:hover {
   //   scrollbar-width: thin;
   // }
+}
+// database-table-node-view.scss
+.db-table {
+  overflow-x: auto;
+  max-width: 100%;   // was var(--db-editor-width) — bound to parent so it scrolls, doesn't overflow/clip
+  width: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: var(--tt-scrollbar-color) transparent;
+  margin-top: 4px;
+}
+
+.db-header-row {
+  display: grid;
+  border-bottom: 1px solid var(--tt-border-color);
+  width: max-content;
+  min-width: 100%;
+}
+// ensure the body grid is also max-content so it scrolls with the header
+.db-node-grid {
+  width: max-content;
+  min-width: 100%;
 }
 
 .db-table {

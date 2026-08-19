@@ -1,4 +1,4 @@
-import { forwardRef, Fragment, useMemo } from "react";
+import { forwardRef, Fragment, memo, useMemo } from "react";
 
 // --- Tiptap UI Primitive ---
 import {
@@ -42,79 +42,83 @@ export const ShortcutDisplay: React.FC<{ shortcuts: string[] }> = ({
   );
 };
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      className,
-      children,
-      tooltip,
-      showTooltip = true,
-      shortcutKeys,
-      variant,
-      size,
-      ...props
-    },
-    ref,
-  ) => {
-    const shortcuts = useMemo<string[]>(
-      () => parseShortcutKeys({ shortcutKeys }),
-      [shortcutKeys],
-    );
-
-    if (!tooltip || !showTooltip) {
-      return (
-        <button
-          className={cn("tiptap-button", className)}
-          ref={ref}
-          data-style={variant}
-          data-size={size}
-          {...props}
-        >
-          {children}
-        </button>
+export const Button = memo(
+  forwardRef<HTMLButtonElement, ButtonProps>(
+    (
+      {
+        className,
+        children,
+        tooltip,
+        showTooltip = true,
+        shortcutKeys,
+        variant,
+        size,
+        ...props
+      },
+      ref,
+    ) => {
+      const shortcuts = useMemo<string[]>(
+        () => parseShortcutKeys({ shortcutKeys }),
+        [shortcutKeys],
       );
-    }
 
-    return (
-      <Tooltip delay={200}>
-        <TooltipTrigger
-          className={cn("tiptap-button", className)}
-          ref={ref}
-          data-style={variant}
-          data-size={size}
-          {...props}
-        >
-          {children}
-        </TooltipTrigger>
-        <TooltipContent>
-          {tooltip}
-          <ShortcutDisplay shortcuts={shortcuts} />
-        </TooltipContent>
-      </Tooltip>
-    );
-  },
+      if (!tooltip || !showTooltip) {
+        return (
+          <button
+            className={cn("tiptap-button", className)}
+            ref={ref}
+            data-style={variant}
+            data-size={size}
+            {...props}
+          >
+            {children}
+          </button>
+        );
+      }
+
+      return (
+        <Tooltip delay={200}>
+          <TooltipTrigger
+            className={cn("tiptap-button", className)}
+            ref={ref}
+            data-style={variant}
+            data-size={size}
+            {...props}
+          >
+            {children}
+          </TooltipTrigger>
+          <TooltipContent>
+            {tooltip}
+            <ShortcutDisplay shortcuts={shortcuts} />
+          </TooltipContent>
+        </Tooltip>
+      );
+    },
+  ),
 );
 
 Button.displayName = "Button";
 
-export const ButtonGroup = forwardRef<
-  HTMLDivElement,
-  React.ComponentProps<"div"> & {
-    orientation?: "horizontal" | "vertical";
-  }
->(({ className, children, orientation = "vertical", ...props }, ref) => {
-  return (
-    <div
-      ref={ref}
-      className={cn("tiptap-button-group", className)}
-      data-orientation={orientation}
-      role="group"
-      {...props}
-    >
-      {children}
-    </div>
-  );
-});
+export const ButtonGroup = memo(
+  forwardRef<
+    HTMLDivElement,
+    React.ComponentProps<"div"> & {
+      orientation?: "horizontal" | "vertical";
+    }
+  >(({ className, children, orientation = "vertical", ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn("tiptap-button-group", className)}
+        data-orientation={orientation}
+        role="group"
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  }),
+);
 ButtonGroup.displayName = "ButtonGroup";
 
 export default Button;

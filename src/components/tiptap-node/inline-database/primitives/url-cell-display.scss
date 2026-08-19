@@ -18,8 +18,8 @@
   display: flex;
   align-items: baseline;
   min-width: 0;
-  font-size: 14px;
-  line-height: 34px;
+  font-size: inherit;
+  line-height: inherit;
   text-decoration: underline;
   text-decoration-color: var(--tt-text-secondary);
   text-underline-offset: 2px;

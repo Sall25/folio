@@ -1,16 +1,16 @@
 import { ListFilter, ChevronDown } from "lucide-react";
+import { forwardRef } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 
-export function FilterChipButton({
-  count,
-  locked,
-}: {
-  count: number;
-  locked: boolean;
-}) {
+export const FilterChipButton = forwardRef<
+  HTMLButtonElement,
+  { count: number; locked: boolean } & React.ComponentProps<typeof Button>
+>(({ count, locked, ...props }, ref) => {
   const label = count === 1 ? "1 rule" : `${count} rules`;
   return (
     <Button
+      ref={ref}
+      {...props}
       variant="ghost"
       style={{
         height: 24,
@@ -41,4 +41,6 @@ export function FilterChipButton({
       )}
     </Button>
   );
-}
+});
+
+FilterChipButton.displayName = "FilterChipButton";

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, memo } from "react";
 import { DynamicIcon } from "./dynamic-icon";
 import "./cover-header.scss";
 import {
@@ -12,15 +12,15 @@ import type { Page } from "src/types";
 import { IconPickerCard } from "./icon-picker-card";
 import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { usePage } from "src/hooks/use-pages";
-import CoverImage from "./cover-image";
-import GradientCover from "./gradient-cover";
+import { CoverImage } from "./cover-image";
+import { GradientCover } from "./gradient-cover";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import { CoverHeaderSkeleton } from "src/components/tiptap-templates/simple/components/skeletons";
 import { usePageCapabilities } from "src/hooks/use-page-role";
 
-function IconButton({
+const IconButton = memo(function IconButton({
   open,
   onOpenChange,
   target,
@@ -180,7 +180,7 @@ function IconButton({
       )}
     </div>
   );
-}
+});
 
 // ============================================================
 // CoverHeader

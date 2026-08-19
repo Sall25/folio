@@ -7,6 +7,7 @@ import {
 import {
   Popover,
   PopoverContent,
+  PopoverPortal,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -32,10 +33,10 @@ const EMPTY_SORTS: SortRule[] = [];
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
 
 export function SortRuleChips() {
-  const { db, attrs } = useDatabaseContext();
+  const { db, visibleProperties } = useDatabaseContext();
   const activeView = db.activeView;
   const sorts = activeView?.sorts ?? EMPTY_SORTS;
-  const properties = attrs.properties ?? EMPTY_PROPERTIES;
+  const properties = visibleProperties ?? EMPTY_PROPERTIES;
   const locked = db.locked;
 
   const sensors = useSensors(
@@ -63,65 +64,72 @@ export function SortRuleChips() {
         <PopoverTrigger asChild>
           <SortChipButton count={sorts.length} locked={false} />
         </PopoverTrigger>
-        <PopoverContent side="bottom" align="start">
-          <Card
-            className="filter-chip--card"
-            style={{ padding: 6, minWidth: 420 }}
-          >
-            <CardItemGroup style={{ width: "100%", gap: 4 }}>
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={onDragEnd}
-              >
-                <SortableContext
-                  items={sorts.map((s) => s.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {sorts.map((sort) => (
-                    <SortRow
-                      key={sort.id}
-                      sort={sort}
-                      properties={properties}
-                      onUpdate={(patch) => updateSort(sort.id, patch)}
-                      onDelete={() => deleteSort(sort.id)}
-                    />
-                  ))}
-                </SortableContext>
-              </DndContext>
-            </CardItemGroup>
 
-            <CardFooter
-              style={{ width: "100%", flexDirection: "column", gap: 2 }}
+        <PopoverPortal container={document.getElementById("root")}>
+          <PopoverContent
+            side="bottom"
+            align="start"
+            style={{ position: "fixed", zIndex: 999 }}
+          >
+            <Card
+              className="filter-chip--card"
+              style={{ padding: 6, minWidth: 420 }}
             >
-              <Button
-                variant="ghost"
-                onClick={addSort}
-                disabled={sorts.length >= properties.length}
-                style={{
-                  justifyContent: "flex-start",
-                  width: "100%",
-                  fontSize: 12,
-                }}
+              <CardItemGroup style={{ width: "100%", gap: 4 }}>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={onDragEnd}
+                >
+                  <SortableContext
+                    items={sorts.map((s) => s.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {sorts.map((sort) => (
+                      <SortRow
+                        key={sort.id}
+                        sort={sort}
+                        properties={properties}
+                        onUpdate={(patch) => updateSort(sort.id, patch)}
+                        onDelete={() => deleteSort(sort.id)}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              </CardItemGroup>
+
+              <CardFooter
+                style={{ width: "100%", flexDirection: "column", gap: 2 }}
               >
-                <Plus className="tiptap-button-icon" size={14} />
-                <span className="tiptap-button-text">Add sort</span>
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={clearSorts}
-                style={{
-                  justifyContent: "flex-start",
-                  width: "100%",
-                  fontSize: 12,
-                }}
-              >
-                <Trash className="tiptap-button-icon" size={14} />
-                <span className="tiptap-button-text">Delete sort</span>
-              </Button>
-            </CardFooter>
-          </Card>
-        </PopoverContent>
+                <Button
+                  variant="ghost"
+                  onClick={addSort}
+                  disabled={sorts.length >= properties.length}
+                  style={{
+                    justifyContent: "flex-start",
+                    width: "100%",
+                    fontSize: 12,
+                  }}
+                >
+                  <Plus className="tiptap-button-icon" size={14} />
+                  <span className="tiptap-button-text">Add sort</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={clearSorts}
+                  style={{
+                    justifyContent: "flex-start",
+                    width: "100%",
+                    fontSize: 12,
+                  }}
+                >
+                  <Trash className="tiptap-button-icon" size={14} />
+                  <span className="tiptap-button-text">Delete sort</span>
+                </Button>
+              </CardFooter>
+            </Card>
+          </PopoverContent>
+        </PopoverPortal>
       </Popover>
     </div>
   );

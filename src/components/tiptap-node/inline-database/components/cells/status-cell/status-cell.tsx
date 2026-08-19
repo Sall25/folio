@@ -6,9 +6,10 @@ export function StatusCell({
   onChange,
   config,
   unwrapped,
+  className,
 }: CellProps<"status">) {
   return (
-    <div className="db-cell" data-wrap={unwrapped ? "false" : "true"}>
+    <div className={className} data-wrap={unwrapped ? "false" : "true"}>
       <StatusCellDisplay
         value={value}
         groups={config.groups}
