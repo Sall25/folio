@@ -1,0 +1,25 @@
+.operators-dropdown-trigger{
+  font-size: 12px;
+  font-weight: 500;
+  width: fit-content;
+  min-width: fit-content;
+  min-height: fit-content;
+  height: fit-content;
+  user-select: none;
+  caret-color: transparent;
+  padding: 0;
+  margin: 0;
+  gap: 1px;
+  .tiptap-button-icon-sub{
+    font-weight: 700;
+  }
+}
+
+.operators-dropdown-card{
+  padding: 5;
+  border: 1px solid var(--tt-border-color);
+}
+
+// .operators-dropdown-item{
+
+// }

@@ -29,6 +29,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { TemplateChoicePanel } from "./components/template-choice-panel";
 import { PageCenterSkeleton } from "./components/skeletons";
 import { usePageComment } from "./hooks/use-page-comment";
+import { FavoriteToggle } from "./favorite-toggle";
 
 // Backdrop overlay for the centered modal
 function ModalBackdrop({ onClose }: { onClose?: () => void }) {
@@ -308,20 +309,22 @@ function PageCenterEditor({
           orientation="horizontal"
           style={{ width: "100%", justifyContent: "flex-start" }}
         >
+          <Button
+            size="large"
+            variant="ghost"
+            onClick={() => {
+              setViewTarget(undefined);
+              setActivePageId(page.id);
+            }}
+            aria-label="Open full page"
+          >
+            <Maximize2 className="tiptap-button-icon" />
+          </Button>
           <Spacer orientation="horizontal" />
           <CardItemGroup orientation="horizontal">
-            <Button variant="ghost" aria-label="More options">
+            <FavoriteToggle page={page} />
+            <Button size="large" variant="ghost" aria-label="More options">
               <Ellipsis className="tiptap-button-icon" />
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setViewTarget(undefined);
-                setActivePageId(page.id);
-              }}
-              aria-label="Open full page"
-            >
-              <Maximize2 className="tiptap-button-icon" />
             </Button>
           </CardItemGroup>
         </CardItemGroup>

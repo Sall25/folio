@@ -131,11 +131,15 @@
     line-height: 1.4;
   }
 
+
   .db-node-cell--atom {
     justify-content: stretch;
     > * {
       width: 100%;
     }
+    height: calc(100% - 1px);
+    margin-bottom: 1px;
+    align-items: center;
   }
 
   .db-node-cell__content {
@@ -153,11 +157,11 @@
   }
 
   .db-cell[data-wrap="true"] {
-  align-items: flex-start;
-  height: auto;
-  overflow: visible;
-  white-space: normal;
-  padding: 4px 5px;   // was `auto 5px` — auto is invalid for padding, gets dropped
+    align-items: center;
+    height: auto;
+    overflow: visible;
+    white-space: normal;
+    padding: 4px 5px;   // was `auto 5px` — auto is invalid for padding, gets dropped
 
   .db-cell-editor__display {
     height: auto;

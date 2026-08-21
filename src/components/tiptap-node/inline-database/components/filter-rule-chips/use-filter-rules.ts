@@ -26,6 +26,7 @@ export function useFilterRules(
   }
 
   function updateRule(id: ID, patch: Partial<FilterRule>) {
+    console.log("updateRule: [patch]", patch);
     saveGroup({
       ...group,
       rules: rules.map((r) =>

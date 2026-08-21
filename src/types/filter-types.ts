@@ -110,18 +110,21 @@ export interface SelectFilterRule extends BaseFilterRule {
   propertyType: "select";
   operator: SelectOperator;
   value: string; // option id
+  label?: string; // actual value
 }
 
 export interface MultiSelectFilterRule extends BaseFilterRule {
   propertyType: "multi_select";
   operator: MultiSelectOperator;
   value: string; // option id
+  label?: string; // actual value
 }
 
 export interface StatusFilterRule extends BaseFilterRule {
   propertyType: "status";
   operator: StatusOperator;
-  value: string; // option id
+  value: string[]; // option ids
+  labels: string[]; // actual values
 }
 
 export interface CheckboxFilterRule extends BaseFilterRule {

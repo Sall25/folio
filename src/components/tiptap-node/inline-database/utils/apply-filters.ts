@@ -47,20 +47,19 @@ function matchesRule(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ruleValue = (rule as any).value;
+
+  const hasNoValue =
+    ruleValue == null ||
+    ruleValue === "" ||
+    (Array.isArray(ruleValue) && ruleValue.length === 0);
+
   if (
     (rule.propertyType === "select" ||
       rule.propertyType === "multi_select" ||
       rule.propertyType === "status") &&
-    (ruleValue == null || ruleValue === "")
+    hasNoValue
   ) {
     return true;
-  }
-
-  if (rule.propertyType === "select") {
-    const cellId =
-      value && typeof value === "object" && "id" in value
-        ? String((value as { id: unknown }).id)
-        : String(value ?? "");
   }
 
   if (rule.propertyType === "select" || rule.propertyType === "status") {
@@ -68,8 +67,28 @@ function matchesRule(
       value && typeof value === "object" && "id" in value
         ? String((value as { id: unknown }).id)
         : String(value ?? "");
-    if (op === "is") return cellId === String(ruleValue ?? "");
-    if (op === "is_not") return cellId !== String(ruleValue ?? "");
+
+    if (rule.propertyType === "select") {
+      if (op === "is") {
+        return cellId === String(ruleValue ?? "");
+      }
+
+      if (op === "is_not") {
+        return cellId !== String(ruleValue ?? "");
+      }
+    }
+
+    if (rule.propertyType === "status") {
+      const ruleIds = Array.isArray(ruleValue) ? ruleValue.map(String) : [];
+
+      if (op === "is") {
+        return ruleIds.includes(cellId);
+      }
+
+      if (op === "is_not") {
+        return !ruleIds.includes(cellId);
+      }
+    }
   }
 
   if (Array.isArray(value)) {

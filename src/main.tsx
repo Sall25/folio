@@ -4,6 +4,7 @@ import "../src/styles/_variables.scss";
 import "../src/styles/_keyframe-animations.scss";
 import "../src/styles/_utilities.scss";
 import "./i18n/config.ts";
+import "material-symbols/rounded.css";
 
 // import './styles/main.scss'
 import App from "./App.tsx";

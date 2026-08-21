@@ -11,7 +11,7 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import type { DatabaseProperty } from "src/types";
+import type { DatabaseProperty, ID, StatusFilterRule } from "src/types";
 import {
   type FilterRule,
   type FilterGroup,
@@ -22,6 +22,8 @@ import { FilterChipButton } from "./filter-chip-button";
 import { useFilterRules } from "./use-filter-rules";
 import { useDatabaseContext } from "../../nodes/database-context";
 import "./filter-rule-chips.scss";
+import { StatusFilterDropdown } from "./status-filter-dropdown";
+import { useCallback } from "react";
 
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
 
@@ -47,6 +49,15 @@ export function FilterRuleChips() {
     clearRules,
   } = useFilterRules(db, activeView?.id, group, rules, properties);
 
+  const property: DatabaseProperty | undefined = rules.length
+    ? properties.find((p) => p.id === rules[0].propertyId)
+    : undefined;
+
+  const onUpdateStatusRule = useCallback(
+    (id: ID, patch: Partial<StatusFilterRule>) => updateRule(id, patch),
+    [updateRule],
+  );
+
   if (!activeView) return null;
   if (rules.length === 0) return null;
 
@@ -54,7 +65,12 @@ export function FilterRuleChips() {
   if (locked) {
     return (
       <div className="db-filter-chips">
-        <FilterChipButton count={rules.length} locked />
+        <FilterChipButton
+          property={property}
+          rule={rules.length ? rules[0] : undefined}
+          count={rules.length}
+          locked
+        />
       </div>
     );
   }
@@ -63,60 +79,80 @@ export function FilterRuleChips() {
     <div className="db-filter-chips" contentEditable={false}>
       <Popover>
         <PopoverTrigger asChild>
-          <FilterChipButton count={rules.length} locked={false} />
+          <FilterChipButton
+            property={property}
+            rule={rules.length ? rules[0] : undefined}
+            count={rules.length}
+            locked={false}
+          />
         </PopoverTrigger>
         <PopoverContent side="bottom" align="start">
-          <Card
-            className="filter-chip--card"
-            style={{ padding: 6, minWidth: 560 }}
-          >
-            <CardItemGroup style={{ width: "100%", gap: 4 }}>
-              {rules.map((rule, i) => (
-                <FilterRow
-                  key={rule.id}
-                  rule={rule}
-                  index={i}
-                  groupOperator={group.operator}
-                  properties={properties}
-                  onChange={(patch) => updateRule(rule.id, patch)}
-                  onDelete={() => deleteRule(rule.id)}
-                  onPropertyChange={(propertyId) =>
-                    changeProperty(rule.id, propertyId)
-                  }
-                  onGroupOperatorChange={setGroupOperator}
-                />
-              ))}
-            </CardItemGroup>
+          <>
+            {property?.config.type === "status" ? (
+              <div key={"status-filter-dropdown"}>
+                {rules.length && (
+                  <StatusFilterDropdown
+                    property={property}
+                    rule={rules[0] as StatusFilterRule}
+                    onUpdate={onUpdateStatusRule}
+                  />
+                )}
+              </div>
+            ) : (
+              <Card
+                key={"filter-chip-card"}
+                className="filter-chip--card"
+                style={{ padding: 6, minWidth: 560 }}
+              >
+                <CardItemGroup style={{ width: "100%", gap: 4 }}>
+                  {rules.map((rule, i) => (
+                    <FilterRow
+                      key={rule.id}
+                      rule={rule}
+                      index={i}
+                      groupOperator={group.operator}
+                      properties={properties}
+                      onChange={(patch) => updateRule(rule.id, patch)}
+                      onDelete={() => deleteRule(rule.id)}
+                      onPropertyChange={(propertyId) =>
+                        changeProperty(rule.id, propertyId)
+                      }
+                      onGroupOperatorChange={setGroupOperator}
+                    />
+                  ))}
+                </CardItemGroup>
 
-            <CardFooter
-              style={{ width: "100%", flexDirection: "column", gap: 2 }}
-            >
-              <Button
-                variant="ghost"
-                onClick={addRule}
-                style={{
-                  justifyContent: "flex-start",
-                  width: "100%",
-                  fontSize: 12,
-                }}
-              >
-                <Plus className="tiptap-button-icon" size={14} />
-                <span className="tiptap-button-text">Add filter rule</span>
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={clearRules}
-                style={{
-                  justifyContent: "flex-start",
-                  width: "100%",
-                  fontSize: 12,
-                }}
-              >
-                <Trash className="tiptap-button-icon" size={14} />
-                <span className="tiptap-button-text">Delete filter</span>
-              </Button>
-            </CardFooter>
-          </Card>
+                <CardFooter
+                  style={{ width: "100%", flexDirection: "column", gap: 2 }}
+                >
+                  <Button
+                    variant="ghost"
+                    onClick={addRule}
+                    style={{
+                      justifyContent: "flex-start",
+                      width: "100%",
+                      fontSize: 12,
+                    }}
+                  >
+                    <Plus className="tiptap-button-icon" size={14} />
+                    <span className="tiptap-button-text">Add filter rule</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={clearRules}
+                    style={{
+                      justifyContent: "flex-start",
+                      width: "100%",
+                      fontSize: 12,
+                    }}
+                  >
+                    <Trash className="tiptap-button-icon" size={14} />
+                    <span className="tiptap-button-text">Delete filter</span>
+                  </Button>
+                </CardFooter>
+              </Card>
+            )}
+          </>
         </PopoverContent>
       </Popover>
     </div>

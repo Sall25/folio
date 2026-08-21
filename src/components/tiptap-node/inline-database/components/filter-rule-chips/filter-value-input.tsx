@@ -30,7 +30,9 @@ export function FilterValueInput({
       <OptionDropdown
         current={current}
         options={options.map((o) => ({ id: o.id, label: o.label }))}
-        onSelect={(id) => onChange({ value: id } as Partial<FilterRule>)}
+        onSelect={(id, label) =>
+          onChange({ value: id, label } as Partial<FilterRule>)
+        }
       />
     );
   }
@@ -47,7 +49,9 @@ export function FilterValueInput({
       <OptionDropdown
         current={current}
         options={options}
-        onSelect={(id) => onChange({ value: id } as Partial<FilterRule>)}
+        onSelect={(id, label) =>
+          onChange({ value: id, label } as Partial<FilterRule>)
+        }
       />
     );
   }

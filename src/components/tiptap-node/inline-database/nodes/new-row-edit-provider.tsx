@@ -1,3 +1,8 @@
-import { NewRowEditContext } from "./new-row-edit-context";
+import {
+  NewRowEditActionsContext,
+  NewRowEditStateContext,
+} from "./new-row-edit-context";
 
-export const NewRowEditProvider = NewRowEditContext.Provider;
+export const NewRowEditStateProvider = NewRowEditStateContext.Provider;
+
+export const NewRowEditActionsProvider = NewRowEditActionsContext.Provider;

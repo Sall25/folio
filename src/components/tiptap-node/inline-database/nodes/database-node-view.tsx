@@ -6,7 +6,7 @@
 //   - branch to the six view renderers (table is node-rendered; the other five
 //     are still imperative)
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { NodeViewProps } from "@tiptap/core";
 import { NodeViewWrapper } from "@tiptap/react";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
@@ -43,8 +43,12 @@ import { type DatabaseAttrs, type ID, type DatabaseProperty } from "src/types";
 import "./database-table-node-view.scss";
 import "./database-node.scss";
 import { SelectionToolbar } from "../components/selection-toolbar";
-import { NewRowEditProvider } from "./new-row-edit-provider";
+import {
+  NewRowEditActionsProvider,
+  NewRowEditStateProvider,
+} from "./new-row-edit-provider";
 import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { useActiveViewFromHash, useSyncViews } from "../hooks";
 
 const EMPTY_SOURCE = { properties: [] };
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
@@ -84,7 +88,6 @@ export function DatabaseNodeView({
   );
 
   const attrsRef = useRef(attrs);
-  attrsRef.current = attrs;
 
   const handleTitleUpdate = useCallback(
     (title: string) => updateAttributes({ ...attrsRef.current, title }),
@@ -116,40 +119,20 @@ export function DatabaseNodeView({
     editingRecordId,
   });
 
-  // ── View lifecycle effects ────────────────────────────────────────────────
-  // Register present views.
-  useEffect(() => {
-    if (!source) return;
-    registerViewsAsync(attrs.views);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attrs.views, source?.id, registerViewsAsync]);
-
-  // Prune saved views that were deleted from the node.
-  useEffect(() => {
-    if (!source) return;
-    const liveIds = new Set(attrs.views.map((v) => v.id));
-    const orphanIds = (source.savedViews ?? [])
-      .map((sv) => sv.id)
-      .filter((id) => !liveIds.has(id));
-    if (orphanIds.length) unregisterViewsAsync(orphanIds);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attrs.views, source?.id, unregisterViewsAsync]);
+  // ── View lifecycle  ────────────────────────────────────────────────
+  useSyncViews({
+    views: attrs.views,
+    source,
+    registerViewsAsync,
+    unregisterViewsAsync,
+  });
 
   // Activate a view from the URL hash (#view=…) once, on first load.
-  const hashActivatedRef = useRef(false);
-  useEffect(() => {
-    if (hashActivatedRef.current || db.views?.length === 0) return;
-    hashActivatedRef.current = true;
-    const viewId = window.location.hash.match(/view=([^&]+)/)?.[1];
-    if (
-      viewId &&
-      db.views.some((v) => v.id === viewId) &&
-      viewId !== attrs.activeViewId
-    ) {
-      db.setActiveView(viewId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [db.views?.length]);
+  useActiveViewFromHash({
+    views: db.views,
+    activeViewId: attrs.activeViewId,
+    setActiveViewId: db.setActiveView,
+  });
 
   const {
     draftWidths,
@@ -190,6 +173,7 @@ export function DatabaseNodeView({
     properties: source?.properties ?? [],
     ready: !isLoading && !!source,
   });
+
   useDatabaseCellSync({
     editor,
     databaseId: attrs.id ?? null,
@@ -208,6 +192,9 @@ export function DatabaseNodeView({
 
   const { activePageId } = useActivePageState();
   const isOwnPage = activePageId != null && activePageId === dbPageId;
+
+  const actions = useMemo(() => ({ cancelEmptyRecord }), [cancelEmptyRecord]);
+  const state = useMemo(() => ({ editingRecordId }), [editingRecordId]);
 
   // ── No source yet → picker ────────────────────────────────────────────────
   if (!attrs.sourceId) {
@@ -236,70 +223,72 @@ export function DatabaseNodeView({
 
   // ── Chrome wrapper shared by every view ───────────────────────────────────
   const chrome = (body: React.ReactNode) => (
-    <NewRowEditProvider value={{ editingRecordId, cancelEmptyRecord }}>
-      <NodeViewWrapper className="db-node">
-        <DatabaseProvider
-          resolvedRecords={resolvedRecords}
-          updateSourceMetaAsync={updateSourceMetaAsync}
-          attrs={attrs}
-          // Switch-aware db so view tabs anywhere downstream trigger the skeleton.
-          db={dbWithSwitch}
-          source={source}
-          editor={editor}
-          updateAttributes={updateAttributes}
-          addRecordAsync={addRecordAsync}
-          setCellValue={setCellValue}
-          setEditingRecordId={setEditingRecordId}
-          visibleProperties={visibleProperties}
-        >
-          <CardItemGroup>
-            {dbPage?.cover?.coverImage && (
-              <div className="db-cover">
-                <img
-                  src={dbPage.cover.coverImage}
-                  alt=""
-                  className="db-cover__img"
-                />
+    <NewRowEditActionsProvider value={actions}>
+      <NewRowEditStateProvider value={state}>
+        <NodeViewWrapper className="db-node">
+          <DatabaseProvider
+            resolvedRecords={resolvedRecords}
+            updateSourceMetaAsync={updateSourceMetaAsync}
+            attrs={attrs}
+            // Switch-aware db so view tabs anywhere downstream trigger the skeleton.
+            db={dbWithSwitch}
+            source={source}
+            editor={editor}
+            updateAttributes={updateAttributes}
+            addRecordAsync={addRecordAsync}
+            setCellValue={setCellValue}
+            setEditingRecordId={setEditingRecordId}
+            visibleProperties={visibleProperties}
+          >
+            <CardItemGroup>
+              {dbPage?.cover?.coverImage && (
+                <div className="db-cover">
+                  <img
+                    src={dbPage.cover.coverImage}
+                    alt=""
+                    className="db-cover__img"
+                  />
+                </div>
+              )}
+              {attrs.views.length > 1 && !isOwnPage && <DatabaseTitleBar />}
+              <div
+                style={{
+                  maxWidth: "var(--db-editor-width)",
+                  paddingRight: 20,
+                  position: "relative",
+                }}
+              >
+                <DatabaseToolbar />
+                {db.views?.length > 0 && (showFilterChips || showSortChips) && (
+                  <Separator orientation="horizontal" />
+                )}
+
+                {attrs.id && <SelectionToolbar />}
               </div>
-            )}
-            {attrs.views.length > 1 && !isOwnPage && <DatabaseTitleBar />}
-            <div
-              style={{
-                maxWidth: "var(--db-editor-width)",
-                paddingRight: 20,
-                position: "relative",
-              }}
-            >
-              <DatabaseToolbar />
-              {db.views?.length > 0 && (showFilterChips || showSortChips) && (
-                <Separator orientation="horizontal" />
+
+              {(showFilterChips || showSortChips) && (
+                <CardItemGroup orientation="horizontal">
+                  {showFilterChips && <FilterRuleChips />}
+                  {showFilterChips &&
+                    showSortChips &&
+                    filterRuleCount > 0 &&
+                    sortCount > 0 && (
+                      <>
+                        <Spacer orientation="horizontal" size={5} />
+                        <Separator orientation="vertical" />
+                        <Spacer orientation="horizontal" size={5} />
+                      </>
+                    )}
+                  {showSortChips && <SortRuleChips />}
+                </CardItemGroup>
               )}
 
-              {attrs.id && <SelectionToolbar />}
-            </div>
-
-            {(showFilterChips || showSortChips) && (
-              <CardItemGroup orientation="horizontal">
-                {showFilterChips && <FilterRuleChips />}
-                {showFilterChips &&
-                  showSortChips &&
-                  filterRuleCount > 0 &&
-                  sortCount > 0 && (
-                    <>
-                      <Spacer orientation="horizontal" size={5} />
-                      <Separator orientation="vertical" />
-                      <Spacer orientation="horizontal" size={5} />
-                    </>
-                  )}
-                {showSortChips && <SortRuleChips />}
-              </CardItemGroup>
-            )}
-
-            {body}
-          </CardItemGroup>
-        </DatabaseProvider>
-      </NodeViewWrapper>
-    </NewRowEditProvider>
+              {body}
+            </CardItemGroup>
+          </DatabaseProvider>
+        </NodeViewWrapper>
+      </NewRowEditStateProvider>
+    </NewRowEditActionsProvider>
   );
 
   // ── Switching views → skeleton in the body slot ───────────────────────────

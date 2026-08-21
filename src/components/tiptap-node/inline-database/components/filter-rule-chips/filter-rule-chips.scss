@@ -43,8 +43,6 @@
   background-color: transparent;
   overflow: hidden;
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif;
-  font-size: 11px;
-  line-height: 1.2px;
     
 
   &__trigger {
@@ -52,22 +50,22 @@
     border: none;
     cursor: pointer;
     font-family: inherit;
-    color: var(--tt-brand-color-400);
+    color: var(--tt-brand-color-500);
     white-space: nowrap;
     border-radius: var(--tt-radius-lg);
     font-size: 12px;
    
     .tiptap-button-icon{
-      color: var(--tt-brand-color-400);
+      color: var(--tt-brand-color-500);
     }
 
     &:hover {
-      background: color-mix(in srgb, var(--tt-brand-color-400) 12%, transparent);
+      background: color-mix(in srgb, var(--tt-brand-color-500) 12%, transparent);
     }
   }
 
   &__icon {
-    color: var(--tt-brand-color-400);
+    color: var(--tt-brand-color-500);
     flex-shrink: 0;
   }
 

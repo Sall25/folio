@@ -1,4 +1,5 @@
 import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import {
@@ -18,30 +19,36 @@ export function OptionDropdown({
   current: string;
   options: { id: string; label: string }[];
   includeAny?: boolean;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, label?: string) => void;
 }) {
   const selected = options.find((o) => o.id === current);
   const label = selected ? selected.label : includeAny ? "Any" : "Select…";
+  const [open, setOpen] = useState(false);
+
+  if (!open)
+    return (
+      <Button
+        contentEditable={false}
+        variant="ghost"
+        onClick={() => setOpen(true)}
+        className="option-dropdown-button"
+      >
+        <span className="tiptap-button-text">{label}</span>
+        <Spacer size={0.5} orientation="horizontal" />
+        <ChevronDown className="tiptap-button-icon-sub" />
+      </Button>
+    );
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           contentEditable={false}
           variant="ghost"
-          style={{
-            width: "100%",
-            borderRadius: "var(--tt-radius-sm)",
-            border: "1px solid var(--tt-border-color)",
-            padding: "3px 5px",
-            justifyContent: "flex-start",
-            fontSize: 12,
-            caretColor: "transparent",
-            userSelect: "none",
-          }}
+          className="option-dropdown-button"
         >
           <span className="tiptap-button-text">{label}</span>
-          <Spacer orientation="horizontal" />
+          <Spacer size={0.5} orientation="horizontal" />
           <ChevronDown className="tiptap-button-icon-sub" />
         </Button>
       </DropdownMenuTrigger>
@@ -65,7 +72,7 @@ export function OptionDropdown({
                   variant="ghost"
                   style={{ justifyContent: "flex-start", width: "100%" }}
                   data-active-state={current === "" ? "on" : "off"}
-                  onClick={() => onSelect("")}
+                  onClick={() => onSelect("", "any")}
                 >
                   <span className="tiptap-button-text">Any</span>
                 </Button>
@@ -77,7 +84,7 @@ export function OptionDropdown({
                   variant="ghost"
                   style={{ justifyContent: "flex-start", width: "100%" }}
                   data-active-state={current === o.id ? "on" : "off"}
-                  onClick={() => onSelect(o.id)}
+                  onClick={() => onSelect(o.id, o.label)}
                 >
                   <span className="tiptap-button-text">{o.label}</span>
                 </Button>

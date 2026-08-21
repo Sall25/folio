@@ -1,0 +1,10 @@
+.option-dropdown-button{
+  width: 100%;
+  border-radius: var(--tt-radius-sm);
+  border: 1px solid var(--tt-border-color);
+  padding: 3px 5px;
+  justify-content: flex-start;
+  font-size: 12;
+  caret-color: transparent;
+  user-select: none;
+}

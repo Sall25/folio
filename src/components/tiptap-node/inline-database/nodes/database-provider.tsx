@@ -13,7 +13,7 @@ import type {
 import type { UseDatabaseReturn } from "../hooks/use-database";
 import { DatabaseContext } from "./database-context";
 import { useDatabaseTitle } from "../hooks/use-database-title";
-import { useNewRowEdit } from "./new-row-edit-context";
+import { useNewRowEditState } from "./new-row-edit-context";
 import { useVisibleSelection } from "../hooks/use-visible-selection";
 import { useResolvedRecords } from "../hooks/use-resolved-records";
 import { useTableLayout } from "../hooks/use-table-layout";
@@ -93,19 +93,39 @@ export function DatabaseProvider({
 
   const [showFilterChips, setShowFilterChips] = useState(false);
   const [showSortChips, setShowSortChips] = useState(false);
-  const onShowFilterChipsChange = useCallback((v: boolean) => setShowFilterChips(v), []);
-  const onShowSortChipsChange = useCallback((v: boolean) => setShowSortChips(v), []);
+  const onShowFilterChipsChange = useCallback(
+    (v: boolean) => setShowFilterChips(v),
+    [],
+  );
+  const onShowSortChipsChange = useCallback(
+    (v: boolean) => setShowSortChips(v),
+    [],
+  );
 
-  const { editingRecordId } = useNewRowEdit();
+  const { editingRecordId } = useNewRowEditState();
 
-  const sortedRecords = useResolvedRecords(resolvedRecords, source, db, editingRecordId);
+  const sortedRecords = useResolvedRecords(
+    resolvedRecords,
+    source,
+    db,
+    editingRecordId,
+  );
   const { tableLayout, groupProp } = useTableLayout(sortedRecords, source, db);
 
   const { onNewRecord, onNewRecordInGroup } = useRecordCreation({
-    editor, attrs, source, groupProp, addRecordAsync, setCellValue, setEditingRecordId,
+    editor,
+    attrs,
+    source,
+    groupProp,
+    addRecordAsync,
+    setCellValue,
+    setEditingRecordId,
   });
 
-  const visibleSelection = useVisibleSelection(attrs.id ?? null, tableLayout.rowSlots);
+  const visibleSelection = useVisibleSelection(
+    attrs.id ?? null,
+    tableLayout.rowSlots,
+  );
   const selectedRecords = useMemo(
     () => sortedRecords.filter((r) => visibleSelection.includes(r.id)),
     [sortedRecords, visibleSelection],
@@ -147,11 +167,27 @@ export function DatabaseProvider({
       visibleProperties,
     }),
     [
-      attrs, db, editor, getProperty, gridTemplateColumns, updateAttributes,
-      source, showFilterChips, onShowFilterChipsChange, showSortChips,
-      onShowSortChipsChange, title, onTitleChange, sortedRecords, tableLayout,
-      onNewRecord, onNewRecordInGroup, visibleSelection, selectedRecords,
-      onUpdateView, visibleProperties,
+      attrs,
+      db,
+      editor,
+      getProperty,
+      gridTemplateColumns,
+      updateAttributes,
+      source,
+      showFilterChips,
+      onShowFilterChipsChange,
+      showSortChips,
+      onShowSortChipsChange,
+      title,
+      onTitleChange,
+      sortedRecords,
+      tableLayout,
+      onNewRecord,
+      onNewRecordInGroup,
+      visibleSelection,
+      selectedRecords,
+      onUpdateView,
+      visibleProperties,
     ],
   );
 
