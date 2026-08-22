@@ -109,15 +109,15 @@ export interface NumberFilterRule extends BaseFilterRule {
 export interface SelectFilterRule extends BaseFilterRule {
   propertyType: "select";
   operator: SelectOperator;
-  value: string; // option id
-  label?: string; // actual value
+  value: string[]; // option ids
+  labels?: string[];
 }
 
 export interface MultiSelectFilterRule extends BaseFilterRule {
   propertyType: "multi_select";
   operator: MultiSelectOperator;
-  value: string; // option id
-  label?: string; // actual value
+  value: string[]; // option ids
+  labels?: string[];
 }
 
 export interface StatusFilterRule extends BaseFilterRule {
@@ -178,6 +178,7 @@ export interface FilterGroup {
   id: ID;
   operator: FilterGroupOperator;
   rules: Array<FilterRule | FilterGroup>;
+  advanced?: boolean;
 }
 
 // Top-level filter stored on the view

@@ -58,7 +58,8 @@ function makeFilterRule(property: DatabaseProperty): FilterRule {
         propertyId: property.id,
         propertyType: "select",
         operator: "is",
-        value: "",
+        value: [""],
+        labels: ["Any"],
       };
     case "multi_select":
       return {
@@ -66,7 +67,8 @@ function makeFilterRule(property: DatabaseProperty): FilterRule {
         propertyId: property.id,
         propertyType: "multi_select",
         operator: "contains",
-        value: "",
+        value: [""],
+        labels: ["Any"],
       };
     case "status":
       return {
@@ -74,7 +76,8 @@ function makeFilterRule(property: DatabaseProperty): FilterRule {
         propertyId: property.id,
         propertyType: "status",
         operator: "is",
-        value: "",
+        value: [""],
+        labels: ["Any"],
       };
     case "relation":
       return {

@@ -96,7 +96,7 @@ function makeFilterRule(property: DatabaseProperty): FilterRule {
         propertyId: property.id,
         propertyType: "select",
         operator: "is",
-        value: "",
+        value: [""],
       };
     case "multi_select":
       return {
@@ -104,7 +104,7 @@ function makeFilterRule(property: DatabaseProperty): FilterRule {
         propertyId: property.id,
         propertyType: "multi_select",
         operator: "contains",
-        value: "",
+        value: [""],
       };
     case "status":
       return {
@@ -112,7 +112,8 @@ function makeFilterRule(property: DatabaseProperty): FilterRule {
         propertyId: property.id,
         propertyType: "status",
         operator: "is",
-        value: "",
+        value: [] as string[],
+        labels: [] as string[],
       };
     case "relation":
       return {
@@ -254,6 +255,7 @@ export function PropertyHeader({
     return () => observer.disconnect();
   }, [isResizing, nodeRef, prop.id]);
 
+  const [menuOpen, setMenuOpen] = useState(false);
   // The trigger button. When locked it carries no drag listeners and never
   // opens the edit popover — it's a plain, inert label.
   const triggerButton = (
@@ -262,6 +264,7 @@ export function PropertyHeader({
       className="db-th__trigger"
       {...(locked ? {} : attributes)}
       {...(locked ? {} : listeners)}
+      onClick={() => setMenuOpen(true)}
       style={{
         width: "100%",
         borderRadius: "var(--tt-radius-sm)",
@@ -369,7 +372,7 @@ export function PropertyHeader({
         e.preventDefault();
       }}
     >
-      {locked ? (
+      {locked || !menuOpen ? (
         // Locked: no popover, no edit surface — just the label.
         triggerButton
       ) : (

@@ -225,6 +225,7 @@ export function FilterRow({
               <DropdownMenuItem asChild>
                 <Button
                   variant="ghost"
+                  className="tiptap-delete-button"
                   onClick={onDelete}
                   style={{ justifyContent: "flex-start", width: "100%" }}
                 >

@@ -1,10 +1,4 @@
-import {
-  type DatabaseProperty,
-  type FilterRule,
-  type ID,
-  type PropertyConfig,
-  type SelectOption,
-} from "src/types";
+import { type DatabaseProperty, type FilterRule } from "src/types";
 import { OptionDropdown } from "./option-dropdown";
 
 export function FilterValueInput({
@@ -21,36 +15,29 @@ export function FilterValueInput({
   const current = (rule.value as string) ?? "";
 
   if (type === "select" || type === "multi_select") {
-    const options =
-      "options" in config
-        ? (config as Extract<PropertyConfig, { options: SelectOption[] }>)
-            .options
-        : [];
+    const options = "options" in config ? config.options : [];
     return (
       <OptionDropdown
-        current={current}
+        current={Array.isArray(current) ? current[0] : current} // read first from array
         options={options.map((o) => ({ id: o.id, label: o.label }))}
         onSelect={(id, label) =>
-          onChange({ value: id, label } as Partial<FilterRule>)
+          onChange({ value: [id], labels: [label] } as Partial<FilterRule>)
         }
       />
     );
   }
 
   if (type === "status") {
-    const groups =
-      "groups" in config
-        ? (config as { groups: { items: { id: ID; name: string }[] }[] }).groups
-        : [];
+    const groups = "groups" in config ? config.groups : [];
     const options = groups
       .flatMap((g) => g.items)
       .map((i) => ({ id: String(i.id), label: i.name }));
     return (
       <OptionDropdown
-        current={current}
+        current={Array.isArray(current) ? current[0] : current}
         options={options}
         onSelect={(id, label) =>
-          onChange({ value: id, label } as Partial<FilterRule>)
+          onChange({ value: [id], labels: [label] } as Partial<FilterRule>)
         }
       />
     );

@@ -12,18 +12,20 @@ export const FilterChipButton = forwardRef<
     locked: boolean;
     property?: DatabaseProperty;
     rule?: FilterRule;
+    advanced?: boolean;
   } & Omit<
     React.ComponentProps<typeof Button>,
-    "count" | "locked" | "property" | "rule"
+    "count" | "locked" | "property" | "rule" | "advanced"
   >
->(({ locked, property, rule, ...props }, ref) => {
+>(({ locked, property, rule, count, advanced = false, ...props }, ref) => {
   const hasOptions =
     rule?.propertyType === "select" ||
     rule?.propertyType === "multi_select" ||
     rule?.propertyType === "status";
   const iconName = PROPERTY_TYPE_ICONS[rule?.propertyType ?? "text"];
   const propName = property?.name ?? "Property";
-  const value = hasOptions ? rule.label : rule?.value;
+  const value = rule?.value;
+  const labels = hasOptions ? (rule.labels ?? []) : [];
 
   return (
     <Button
@@ -50,7 +52,18 @@ export const FilterChipButton = forwardRef<
         weight={200}
       />
       <span className="tiptap-button-text">
-        <b>{propName}</b> {": "} {value}
+        {!advanced && (
+          <>
+            <b>{propName}</b> {": "}{" "}
+          </>
+        )}
+        {advanced
+          ? `${count} ${count > 1 ? "rules" : "rule"}`
+          : hasOptions
+            ? labels.length > 0
+              ? labels.join(", ")
+              : "Any"
+            : value}
       </span>
 
       {!locked && (

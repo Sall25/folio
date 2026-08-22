@@ -2,8 +2,13 @@
 .db-filter-panel {
   min-width: 260px;
   padding: 6px;
-  border-radius: var(--tt-radius-sm);
-  box-shadow: var(--tt-shadow-elevated-sm);
+  box-shadow: var(--tt-shadow-elevated-md);
+  border-radius: var(--tt-radius-lg);
+  border: 1px solid var(--tt-border-color);
+  background: var(--tt-gray-light-50);
+  .dark & {
+    background: var(--tt-gray-dark-100);
+  }
   
   .tiptap-card-body{
     width: 100%;

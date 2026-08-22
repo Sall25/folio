@@ -1,11 +1,12 @@
 import { useMemo } from "react";
 import { StatusPill } from "../../ui/status/status-edit-display";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import type { DatabaseProperty, ID, StatusGroup } from "src/types";
+import type { DatabaseProperty, ID, StatusGroup, StatusItem } from "src/types";
 import type { StatusFilterRule } from "src/types/filter-types";
 import "./status-filter-dropdown.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { GroupIcon } from "./group-icon";
+import { FilterRuleHeader } from "./filter-rule-header";
 
 const EMPTY_STATUS_GROUPS: StatusGroup[] = [];
 
@@ -13,10 +14,14 @@ export function StatusFilterDropdown({
   property,
   rule,
   onUpdate,
+  onDelete,
+  onPromote,
 }: {
   property: DatabaseProperty;
   rule: StatusFilterRule;
   onUpdate: (id: ID, patch: Partial<StatusFilterRule>) => void;
+  onDelete: (id: ID) => void;
+  onPromote: () => void;
 }) {
   const groups =
     property.config.type === "status"
@@ -28,13 +33,23 @@ export function StatusFilterDropdown({
 
   const selectedIds = useMemo(() => new Set(rule.value ?? []), [rule.value]);
 
+  console.log("SELECTED IDS", selectedIds);
+
   // Rebuild value[] + the derived labels[] from a new id set. labels is display-
   // only and always derived from ids, so the two can never drift apart.
   function commit(nextIds: string[]) {
-    const nextLabels = nextIds.map(
-      (id) => allItems.find((it) => it.id === id)?.name ?? "",
-    );
-    onUpdate(rule.id, { value: nextIds, labels: nextLabels });
+    // Keep only ids that resolve to a real item — drops stale/unknown ids so
+    // value[] and labels[] stay consistent and no empty labels leak through.
+    const resolved = nextIds
+      .map((id) => allItems.find((it) => it.id === id))
+      .filter((it): it is StatusItem => it != null);
+
+    console.log("NEXT IDS", nextIds);
+
+    onUpdate(rule.id, {
+      value: resolved.map((it) => it.id),
+      labels: resolved.map((it) => it.name),
+    });
   }
 
   function toggleItem(itemId: string) {
@@ -62,6 +77,15 @@ export function StatusFilterDropdown({
 
   return (
     <div className="status-filter-dropdown">
+      <FilterRuleHeader
+        propertyName={property.name}
+        rule={rule}
+        onChange={(patch) =>
+          onUpdate(rule.id, patch as Partial<StatusFilterRule>)
+        }
+        onDelete={() => onDelete(rule.id)}
+        onPromote={onPromote}
+      />
       {groups.map((group) => {
         const groupItemIds = group.items.map((it) => it.id);
         const groupChecked =

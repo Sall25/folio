@@ -9,7 +9,7 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useLayoutEffect, useRef, useState } from "react";
 import "./database-view-tabs.scss";
 import { useDatabaseContext } from "../../nodes/database-context";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
@@ -49,6 +49,8 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
 
   const views = attrs.views;
   const activeId = attrs.activeViewId;
+
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Measure natural tab widths (from the hidden copy) and compute how many fit,
   // reserving room for the "N more" and "+" buttons.
@@ -122,37 +124,41 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
         );
       }
       return (
-        <ViewPopover
-          key={view.id}
-          attrs={attrs}
-          view={view}
-          onRename={() => onRename(true)}
-          onEdit={() => onRename(true)}
-          onDelete={() => db.deleteView(view.id)}
-          canDelete={attrs.views.length > 1}
-          active={isActive}
-          onShowDatabaseTitle={() =>
-            updateAttributes?.({ ...attrs, hideTitle: false })
-          }
-        />
+        <>
+          {!menuOpen ? (
+            <Button
+              variant="ghost"
+              key={view.id}
+              className="db-view-tab"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                db.setActiveView(view.id);
+              }}
+            >
+              <ViewIcon view={view} />
+              <span className="tiptap-button-text">{view.name}</span>
+            </Button>
+          ) : (
+            <ViewPopover
+              key={view.id}
+              attrs={attrs}
+              view={view}
+              onRename={() => onRename(true)}
+              onEdit={() => onRename(true)}
+              onDelete={() => db.deleteView(view.id)}
+              canDelete={attrs.views.length > 1}
+              active={isActive}
+              onShowDatabaseTitle={() =>
+                updateAttributes?.({ ...attrs, hideTitle: false })
+              }
+              open={menuOpen}
+              onOpenChange={setMenuOpen}
+            />
+          )}
+        </>
       );
     }
-
-    return (
-      <Button
-        variant="ghost"
-        key={view.id}
-        className="db-view-tab"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          db.setActiveView(view.id);
-        }}
-      >
-        <ViewIcon view={view} />
-        <span className="tiptap-button-text">{view.name}</span>
-      </Button>
-    );
   };
 
   return (
@@ -174,8 +180,10 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
         ))}
       </div>
 
-      {/* Visible tabs — your exact per-tab logic via renderTab. */}
-      {visibleViews.map(renderTab)}
+      {/* Visible tabs */}
+      {visibleViews.map((view) => (
+        <Fragment key={view.id}>{renderTab(view)}</Fragment>
+      ))}
 
       {/* Overflow → "N more" listing the hidden views (switch-only). */}
       {overflowViews.length > 0 && (

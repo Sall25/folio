@@ -17,7 +17,7 @@ export const PROPERTY_TYPE_ICONS: Record<PropertyType, string> = {
   checkbox: "check_box",
   select: "expand_circle_down",
   multi_select: "list",
-  status: "progress_activity",
+  status: "arrow_upload_progress",
   date: "calendar_today",
   person: "person",
   formula: "functions",

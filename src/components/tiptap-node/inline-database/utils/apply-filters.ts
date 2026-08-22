@@ -62,21 +62,40 @@ function matchesRule(
     return true;
   }
 
-  if (rule.propertyType === "select" || rule.propertyType === "status") {
+  if (rule.propertyType === "select" || rule.propertyType === "multi_select") {
+    const ruleIds = Array.isArray(ruleValue) ? ruleValue.map(String) : [];
+
+    if (rule.propertyType === "select") {
+      // cell holds ONE option {id} → matches if its id is among the selected ids
+      const cellId =
+        value && typeof value === "object" && "id" in value
+          ? String((value as { id: unknown }).id)
+          : String(value ?? "");
+      if (op === "is") return ruleIds.includes(cellId); // is any of
+      if (op === "is_not") return !ruleIds.includes(cellId);
+    }
+
+    if (rule.propertyType === "multi_select") {
+      // cell holds MULTIPLE options → matches if ANY overlaps the selected ids
+      const cellIds = Array.isArray(value)
+        ? value.map((v) =>
+            v && typeof v === "object" && "id" in v
+              ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                String((v as any).id)
+              : String(v),
+          )
+        : [];
+      const overlap = cellIds.some((id) => ruleIds.includes(id));
+      if (op === "contains") return overlap;
+      if (op === "does_not_contain") return !overlap;
+    }
+  }
+
+  if (rule.propertyType === "status") {
     const cellId =
       value && typeof value === "object" && "id" in value
         ? String((value as { id: unknown }).id)
         : String(value ?? "");
-
-    if (rule.propertyType === "select") {
-      if (op === "is") {
-        return cellId === String(ruleValue ?? "");
-      }
-
-      if (op === "is_not") {
-        return cellId !== String(ruleValue ?? "");
-      }
-    }
 
     if (rule.propertyType === "status") {
       const ruleIds = Array.isArray(ruleValue) ? ruleValue.map(String) : [];

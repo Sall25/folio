@@ -9,9 +9,9 @@ import {
 import "./trash-panel.scss";
 import { PageItemIcon } from "../../page-item-icon";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { type ID } from "src/types";
-import { DeletePageDialog } from "../delete-page-dialog";
+import { ConfirmDialog } from "../confirm-dialog";
 
 // Trash view: lists trashed pages (subtree roots) with restore / delete
 // permanently, and an empty-all action. Rendered in the sidebar like the inbox.
@@ -35,6 +35,7 @@ export function TrashPanel() {
     setConfirmOpen(false);
   };
   const pendingPage = roots.find((p) => p.id === pageId);
+  const onCancel = useCallback(() => setConfirmOpen(false), []);
 
   return (
     <>
@@ -110,10 +111,21 @@ export function TrashPanel() {
         </div>
       </div>
 
-      <DeletePageDialog
+      <ConfirmDialog
         open={confirmOpen}
-        pageTitle={pendingPage?.title || t("page.untitled", "Untitled")}
-        onCancel={() => setConfirmOpen(false)}
+        message={
+          <>
+            Are you sure you want to permanently delete{" "}
+            <strong
+              style={{ color: "var(--tt-brand-color-400)", fontWeight: 600 }}
+            >
+              {pendingPage?.title || t("page.untitled", "Untitled")}
+            </strong>
+            ?
+          </>
+        }
+        confirmLabel="Permanently delete"
+        onCancel={onCancel}
         onConfirm={handleConfirmDelete}
       />
     </>

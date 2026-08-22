@@ -6,7 +6,7 @@
 //   - branch to the six view renderers (table is node-rendered; the other five
 //     are still imperative)
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { NodeViewProps } from "@tiptap/core";
 import { NodeViewWrapper } from "@tiptap/react";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
@@ -39,7 +39,13 @@ import { useTableRecords } from "../hooks/use-table-records";
 import { useViewSwitch } from "../hooks/use-view-switch";
 import { useChipVisibility } from "../hooks/use-chip-visibility";
 
-import { type DatabaseAttrs, type ID, type DatabaseProperty } from "src/types";
+import {
+  type DatabaseAttrs,
+  type ID,
+  type DatabaseProperty,
+  type FilterGroup,
+  type FilterGroupOperator,
+} from "src/types";
 import "./database-table-node-view.scss";
 import "./database-node.scss";
 import { SelectionToolbar } from "../components/selection-toolbar";
@@ -49,6 +55,9 @@ import {
 } from "./new-row-edit-provider";
 import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { useActiveViewFromHash, useSyncViews } from "../hooks";
+import { newId } from "src/lib/id";
+import { makeFilterRule } from "../components/filter-rule-chips/utils";
+import { AddFilterButton } from "../components/add-filter-button";
 
 const EMPTY_SOURCE = { properties: [] };
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
@@ -88,6 +97,9 @@ export function DatabaseNodeView({
   );
 
   const attrsRef = useRef(attrs);
+  useEffect(() => {
+    attrsRef.current = attrs;
+  }, [attrs]);
 
   const handleTitleUpdate = useCallback(
     (title: string) => updateAttributes({ ...attrsRef.current, title }),
@@ -101,6 +113,11 @@ export function DatabaseNodeView({
     updatePropertiesAsync,
     handleTitleUpdate,
   );
+  const dbRef = useRef(db);
+  useEffect(() => {
+    dbRef.current = db;
+  }, [db]);
+
   const activeView = db.activeView;
 
   const dbPageId = source?.pageId ?? attrs.pageId ?? null;
@@ -152,7 +169,7 @@ export function DatabaseNodeView({
   useDatabaseBridgePublish({
     editor,
     attrs,
-    properties: source?.properties ?? [],
+    properties: source?.properties ?? EMPTY_PROPERTIES,
     activeView,
     locked,
     resolvedRecords,
@@ -195,6 +212,30 @@ export function DatabaseNodeView({
 
   const actions = useMemo(() => ({ cancelEmptyRecord }), [cancelEmptyRecord]);
   const state = useMemo(() => ({ editingRecordId }), [editingRecordId]);
+
+  const addFilterFor = useCallback(
+    (propertyId: ID, properties: DatabaseProperty[]) => {
+      const activeView = db.activeView;
+      if (!activeView) return;
+      const prop = properties.find((p) => p.id === propertyId);
+      if (!prop) return;
+      const newGroup: FilterGroup = {
+        id: newId(),
+        operator: "and",
+        rules: [makeFilterRule(prop)],
+      };
+      db.updateView(activeView.id, {
+        filters: [...(activeView.filters ?? []), newGroup],
+      });
+    },
+    [db],
+  );
+
+  const onPick = useCallback(
+    (propertyId: ID, properties: DatabaseProperty[]) =>
+      addFilterFor(propertyId, properties),
+    [addFilterFor],
+  );
 
   // ── No source yet → picker ────────────────────────────────────────────────
   if (!attrs.sourceId) {
@@ -280,6 +321,12 @@ export function DatabaseNodeView({
                       </>
                     )}
                   {showSortChips && <SortRuleChips />}
+                  {showFilterChips && (
+                    <>
+                      <Spacer orientation="horizontal" size={5} />
+                      <AddFilterButton onPick={onPick} />
+                    </>
+                  )}
                 </CardItemGroup>
               )}
 

@@ -40,7 +40,8 @@ export function makeFilterRule(property: DatabaseProperty): FilterRule {
         propertyId: property.id,
         propertyType: "select",
         operator: "is",
-        value: "",
+        value: [""],
+        labels: ["Any"],
       };
     case "multi_select":
       return {
@@ -48,7 +49,8 @@ export function makeFilterRule(property: DatabaseProperty): FilterRule {
         propertyId: property.id,
         propertyType: "multi_select",
         operator: OPERATORS_FOR_TYPE["multi_select"][0] as never,
-        value: "",
+        value: [""],
+        labels: ["Any"],
       };
     case "status":
       return {
@@ -56,7 +58,8 @@ export function makeFilterRule(property: DatabaseProperty): FilterRule {
         propertyId: property.id,
         propertyType: "status",
         operator: "is",
-        value: "",
+        value: [""],
+        labels: ["Any"],
       };
     default:
       return {

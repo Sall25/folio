@@ -1,0 +1,48 @@
+.filter-rule-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 4px 4px 8px;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  &__prop {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--tt-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__more {
+    flex-shrink: 0;
+    color: var(--tt-text-muted, var(--tt-text-secondary));
+  }
+
+  &__menu-card {
+    padding: 8px;
+    min-width: 160px;
+    box-shadow: var(--tt-shadow-elevated-md);
+    border-radius: var(--tt-radius-lg);
+    border: 1px solid var(--tt-border-color);
+    background: var(--tt-gray-light-50);
+    .dark & {
+      background: var(--tt-gray-dark-100);
+    }
+
+  }
+
+  &__menu-item {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+}

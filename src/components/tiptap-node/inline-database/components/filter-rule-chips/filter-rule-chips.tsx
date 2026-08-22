@@ -1,160 +1,113 @@
-import { nanoid } from "nanoid";
-import { Plus, Trash } from "lucide-react";
-import {
-  Card,
-  CardFooter,
-  CardItemGroup,
-} from "src/components/tiptap-ui-primitive/card";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { Button } from "src/components/tiptap-ui-primitive/button";
-import type { DatabaseProperty, ID, StatusFilterRule } from "src/types";
-import {
-  type FilterRule,
-  type FilterGroup,
-  type FilterGroupOperator,
-} from "src/types/filter-types";
-import { FilterRow } from "./filter-row";
+import type { DatabaseProperty, ID } from "src/types";
+import { type FilterRule, type FilterGroup } from "src/types/filter-types";
 import { FilterChipButton } from "./filter-chip-button";
 import { useFilterRules } from "./use-filter-rules";
 import { useDatabaseContext } from "../../nodes/database-context";
 import "./filter-rule-chips.scss";
-import { StatusFilterDropdown } from "./status-filter-dropdown";
-import { useCallback } from "react";
-
-const EMPTY_PROPERTIES: DatabaseProperty[] = [];
+import { AdvancedFilterBuilder } from "./advanced-filter-builder";
+import { SimpleFilterEditor } from "./simple-filter-editor";
+import type { UseDatabaseReturn } from "../../hooks";
 
 export function FilterRuleChips() {
-  const { db, visibleProperties, attrs } = useDatabaseContext();
+  const { db, attrs, visibleProperties: properties } = useDatabaseContext();
   const activeView = db.activeView;
-  const properties = visibleProperties ?? EMPTY_PROPERTIES;
   const locked = !!attrs.locked;
 
-  const group: FilterGroup = activeView?.filters?.[0] ?? {
-    id: nanoid(),
-    operator: "and" as FilterGroupOperator,
-    rules: [],
-  };
-  const rules = (group?.rules ?? []) as FilterRule[];
-
-  const {
-    addRule,
-    updateRule,
-    deleteRule,
-    changeProperty,
-    setGroupOperator,
-    clearRules,
-  } = useFilterRules(db, activeView?.id, group, rules, properties);
-
-  const property: DatabaseProperty | undefined = rules.length
-    ? properties.find((p) => p.id === rules[0].propertyId)
-    : undefined;
-
-  const onUpdateStatusRule = useCallback(
-    (id: ID, patch: Partial<StatusFilterRule>) => updateRule(id, patch),
-    [updateRule],
-  );
+  const filters = (activeView?.filters ?? []) as FilterGroup[];
 
   if (!activeView) return null;
-  if (rules.length === 0) return null;
-
-  // Locked → static badge, no popover.
-  if (locked) {
-    return (
-      <div className="db-filter-chips">
-        <FilterChipButton
-          property={property}
-          rule={rules.length ? rules[0] : undefined}
-          count={rules.length}
-          locked
-        />
-      </div>
-    );
-  }
+  if (filters.length === 0) return null;
 
   return (
     <div className="db-filter-chips" contentEditable={false}>
+      {filters.map((group) => (
+        <FilterChip
+          key={group.id}
+          db={db}
+          viewId={activeView.id}
+          group={group}
+          properties={properties}
+          locked={locked}
+        />
+      ))}
+    </div>
+  );
+}
+
+function FilterChip({
+  db,
+  viewId,
+  group,
+  properties,
+  locked,
+}: {
+  db: UseDatabaseReturn;
+  viewId: ID;
+  group: FilterGroup;
+  properties: DatabaseProperty[];
+  locked: boolean;
+}) {
+  const rules = (group.rules ?? []) as FilterRule[];
+  const ops = useFilterRules(db, viewId, group, rules, properties);
+
+  const isAdvanced = group.advanced === true || rules.length > 1;
+
+  if (locked) {
+    return <FilterChipButton count={rules.length} locked />;
+  }
+
+  // Advanced chip → one "N rules" summary button → advanced builder popover
+  if (isAdvanced) {
+    return (
       <Popover>
         <PopoverTrigger asChild>
           <FilterChipButton
-            property={property}
-            rule={rules.length ? rules[0] : undefined}
             count={rules.length}
             locked={false}
+            advanced={isAdvanced}
           />
         </PopoverTrigger>
         <PopoverContent side="bottom" align="start">
-          <>
-            {property?.config.type === "status" ? (
-              <div key={"status-filter-dropdown"}>
-                {rules.length && (
-                  <StatusFilterDropdown
-                    property={property}
-                    rule={rules[0] as StatusFilterRule}
-                    onUpdate={onUpdateStatusRule}
-                  />
-                )}
-              </div>
-            ) : (
-              <Card
-                key={"filter-chip-card"}
-                className="filter-chip--card"
-                style={{ padding: 6, minWidth: 560 }}
-              >
-                <CardItemGroup style={{ width: "100%", gap: 4 }}>
-                  {rules.map((rule, i) => (
-                    <FilterRow
-                      key={rule.id}
-                      rule={rule}
-                      index={i}
-                      groupOperator={group.operator}
-                      properties={properties}
-                      onChange={(patch) => updateRule(rule.id, patch)}
-                      onDelete={() => deleteRule(rule.id)}
-                      onPropertyChange={(propertyId) =>
-                        changeProperty(rule.id, propertyId)
-                      }
-                      onGroupOperatorChange={setGroupOperator}
-                    />
-                  ))}
-                </CardItemGroup>
-
-                <CardFooter
-                  style={{ width: "100%", flexDirection: "column", gap: 2 }}
-                >
-                  <Button
-                    variant="ghost"
-                    onClick={addRule}
-                    style={{
-                      justifyContent: "flex-start",
-                      width: "100%",
-                      fontSize: 12,
-                    }}
-                  >
-                    <Plus className="tiptap-button-icon" size={14} />
-                    <span className="tiptap-button-text">Add filter rule</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={clearRules}
-                    style={{
-                      justifyContent: "flex-start",
-                      width: "100%",
-                      fontSize: 12,
-                    }}
-                  >
-                    <Trash className="tiptap-button-icon" size={14} />
-                    <span className="tiptap-button-text">Delete filter</span>
-                  </Button>
-                </CardFooter>
-              </Card>
-            )}
-          </>
+          <AdvancedFilterBuilder
+            group={group}
+            rules={rules}
+            properties={properties}
+            {...ops}
+          />
         </PopoverContent>
       </Popover>
-    </div>
+    );
+  }
+
+  // Simple chip → shows the single rule's label → simple editor popover
+  const rule = rules[0];
+  const property = properties.find((p) => p.id === rule?.propertyId);
+  if (!rule || !property) return null;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <FilterChipButton
+          rule={rule}
+          property={property}
+          locked={false}
+          count={1}
+        />
+      </PopoverTrigger>
+      <PopoverContent side="bottom" align="start">
+        <SimpleFilterEditor
+          property={property}
+          rule={rule}
+          onUpdate={ops.updateRule}
+          onDelete={ops.clearRules}
+          onPromote={ops.promoteToAdvanced}
+        />
+      </PopoverContent>
+    </Popover>
   );
 }

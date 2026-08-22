@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "src/components/tiptap-ui-primitive/dropdown-menu";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import "./option-dropdown.scss";
 
 export function OptionDropdown({
   current,
@@ -31,7 +32,7 @@ export function OptionDropdown({
         contentEditable={false}
         variant="ghost"
         onClick={() => setOpen(true)}
-        className="option-dropdown-button"
+        className={`option-dropdown-button`}
       >
         <span className="tiptap-button-text">{label}</span>
         <Spacer size={0.5} orientation="horizontal" />

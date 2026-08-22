@@ -18,8 +18,16 @@
 .operators-dropdown-card{
   padding: 5;
   border: 1px solid var(--tt-border-color);
+  min-width: 100px;
+  .operator-dropdown-group{
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 
-// .operators-dropdown-item{
-
-// }
+.item-checked{
+  color: var(--tt-color-green-inc-2);
+  .dark & {
+    color: var(--tt-color-green-dec-2);
+  }
+}

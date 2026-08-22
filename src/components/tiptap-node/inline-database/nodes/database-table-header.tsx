@@ -192,9 +192,10 @@ export function DatabaseTableHeader({
 
       <CardItemGroup orientation="horizontal" className="db-header-cell ">
         {!locked && (
-          <Popover open={addOpen} onOpenChange={setAddOpen}>
-            <PopoverTrigger asChild>
+          <>
+            {!addOpen ? (
               <Button
+                key={"trigger"}
                 ref={triggerRef}
                 variant="ghost"
                 style={{ background: "transparent" }}
@@ -202,6 +203,7 @@ export function DatabaseTableHeader({
                   e.preventDefault();
                   e.stopPropagation();
                 }}
+                onClick={() => setAddOpen}
               >
                 <Plus className="tiptap-button-icon" />
                 <span
@@ -211,97 +213,119 @@ export function DatabaseTableHeader({
                   Add Property
                 </span>
               </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" sideOffset={sideOffset}>
-              {/* Name field — sits at the top, like Notion */}
-              <Input
-                ref={targetRef}
-                autoFocus
-                value={newPropName}
-                placeholder="Type property name..."
-                onChange={(e) => setNewPropName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    onAddProperty("text", e.currentTarget.value);
-                    setNewPropName("");
-                    setAddOpen(false);
-                  }
-                }}
-                style={{
-                  width: "100%",
-                  marginBottom: 8,
-                  background: "var(--tt-bg-color)",
-                  color: "var(--tt-text-primary)",
-                }}
-              />
-
-              <Card
-                className="table-header-popover-card"
-                style={{ maxHeight: 320, minWidth: 300 }}
-              >
-                <CardBody style={{ width: "100%" }}>
-                  {/* AI Autofill section intentionally omitted */}
-
-                  <CardItemGroup>
-                    <CardGroupLabel
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        width: "100%",
-                      }}
+            ) : (
+              <Popover key={"popover"} open onOpenChange={setAddOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    ref={triggerRef}
+                    variant="ghost"
+                    style={{ background: "transparent" }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
+                    <Plus className="tiptap-button-icon" />
+                    <span
+                      className="tiptap-button-text"
+                      style={{ fontWeight: 400 }}
                     >
-                      <span>Select type</span>
-                      <DynamicIcon
-                        name="search"
-                        size={16}
-                        className="tiptap-button-icon"
-                      />
-                    </CardGroupLabel>
+                      Add Property
+                    </span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" sideOffset={sideOffset}>
+                  {/* Name field — sits at the top, like Notion */}
+                  <Input
+                    ref={targetRef}
+                    autoFocus
+                    value={newPropName}
+                    placeholder="Type property name..."
+                    onChange={(e) => setNewPropName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        onAddProperty("text", e.currentTarget.value);
+                        setNewPropName("");
+                        setAddOpen(false);
+                      }
+                    }}
+                    style={{
+                      width: "100%",
+                      marginBottom: 8,
+                      background: "var(--tt-bg-color)",
+                      color: "var(--tt-text-primary)",
+                    }}
+                  />
 
-                    <Grid columns="1fr 1fr" gap={6}>
-                      {chunk(allPropertyTypes, 2).map((row, i) => (
-                        <GridRow key={i}>
-                          {row.map((t) => {
-                            const iconName = PROPERTY_TYPE_ICONS[t];
-                            return (
-                              <GridCell key={t}>
-                                <Button
-                                  variant="ghost"
-                                  style={{
-                                    borderRadius: "var(--tt-radius-sm)",
-                                    width: "100%",
-                                    justifyContent: "flex-start",
-                                    gap: 8,
-                                  }}
-                                  onClick={() => {
-                                    onAddProperty(t, newPropName);
-                                    setNewPropName("");
-                                    setAddOpen(false);
-                                  }}
-                                >
-                                  <DynamicIcon
-                                    name={iconName}
-                                    size={20}
-                                    filled={false}
-                                    className="tiptap-button-icon"
-                                  />
-                                  <span className="tiptap-button-text">
-                                    {propertyLabel(t)}
-                                  </span>
-                                </Button>
-                              </GridCell>
-                            );
-                          })}
-                        </GridRow>
-                      ))}
-                    </Grid>
-                  </CardItemGroup>
-                </CardBody>
-              </Card>
-            </PopoverContent>
-          </Popover>
+                  <Card
+                    className="table-header-popover-card"
+                    style={{ maxHeight: 320, minWidth: 300 }}
+                  >
+                    <CardBody style={{ width: "100%" }}>
+                      {/* AI Autofill section intentionally omitted */}
+
+                      <CardItemGroup>
+                        <CardGroupLabel
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            width: "100%",
+                          }}
+                        >
+                          <span>Select type</span>
+                          <DynamicIcon
+                            name="search"
+                            size={16}
+                            className="tiptap-button-icon"
+                          />
+                        </CardGroupLabel>
+
+                        <Grid columns="1fr 1fr" gap={6}>
+                          {chunk(allPropertyTypes, 2).map((row, i) => (
+                            <GridRow key={i}>
+                              {row.map((t) => {
+                                const iconName = PROPERTY_TYPE_ICONS[t];
+                                return (
+                                  <GridCell key={t}>
+                                    <Button
+                                      variant="ghost"
+                                      style={{
+                                        borderRadius: "var(--tt-radius-sm)",
+                                        width: "100%",
+                                        justifyContent: "flex-start",
+                                        gap: 8,
+                                      }}
+                                      onClick={() => {
+                                        onAddProperty(t, newPropName);
+                                        setNewPropName("");
+                                        setAddOpen(false);
+                                      }}
+                                    >
+                                      <DynamicIcon
+                                        name={iconName}
+                                        size={20}
+                                        filled={false}
+                                        className="tiptap-button-icon"
+                                      />
+                                      <span className="tiptap-button-text">
+                                        {propertyLabel(t)}
+                                      </span>
+                                    </Button>
+                                  </GridCell>
+                                );
+                              })}
+                            </GridRow>
+                          ))}
+                        </Grid>
+                      </CardItemGroup>
+                    </CardBody>
+                  </Card>
+                </PopoverContent>
+              </Popover>
+            )}
+          </>
         )}
         {/* {optionsMenu} */}
       </CardItemGroup>

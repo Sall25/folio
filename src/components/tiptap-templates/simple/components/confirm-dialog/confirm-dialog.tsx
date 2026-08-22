@@ -4,19 +4,29 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
-interface DeletePageDialogProps {
+interface ConfirmDialogProps {
   open: boolean;
-  pageTitle: string;
+  /** Main question/message. Either a plain string, or rich content (to bold a name). */
+  message: React.ReactNode;
+  /** Confirm button label. Defaults to "Confirm". */
+  confirmLabel?: string;
+  /** Cancel button label. Defaults to "Cancel". */
+  cancelLabel?: string;
+  /** Destructive styling (red outline) for the confirm button. Default true. */
+  destructive?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 }
 
-export function DeletePageDialog({
+export function ConfirmDialog({
   open,
-  pageTitle,
+  message,
+  confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
+  destructive = true,
   onCancel,
   onConfirm,
-}: DeletePageDialogProps) {
+}: ConfirmDialogProps) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -39,7 +49,7 @@ export function DeletePageDialog({
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(15, 15, 15, 0.4)",
+        background: "rgba(15, 15, 15, 0.6)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -49,8 +59,7 @@ export function DeletePageDialog({
       <div
         role="alertdialog"
         aria-modal="true"
-        aria-labelledby="delete-page-title"
-        aria-describedby="delete-page-desc"
+        aria-describedby="confirm-dialog-desc"
         onClick={(e) => e.stopPropagation()}
         style={{
           width: 380,
@@ -62,29 +71,21 @@ export function DeletePageDialog({
           background: "var(--tt-card-bg-color)",
           border: "0.5px solid var(--tt-border-color)",
           borderRadius: "var(--tt-radius-lg)",
-          boxShadow: "var(--tt-shadow-elavated-md)",
+          boxShadow: "var(--tt-shadow-elevated-lg)",
         }}
       >
-        <div>
-          <p
-            id="delete-page-desc"
-            style={{
-              margin: "8px 0 0",
-              fontSize: 16,
-              lineHeight: 1.4,
-              textAlign: "center",
-              color: "var(--tt-text-primary)",
-            }}
-          >
-            Are you sure you want to permanently delete{" "}
-            <strong
-              style={{ color: "var(--tt-brand-color-400)", fontWeight: 600 }}
-            >
-              {pageTitle || "Untitled"}
-            </strong>{" "}
-            ?
-          </p>
-        </div>
+        <p
+          id="confirm-dialog-desc"
+          style={{
+            margin: "8px 0 0",
+            fontSize: 16,
+            lineHeight: 1.4,
+            textAlign: "center",
+            color: "var(--tt-text-primary)",
+          }}
+        >
+          {message}
+        </p>
 
         <CardItemGroup orientation="vertical">
           <Button
@@ -95,10 +96,12 @@ export function DeletePageDialog({
             style={{
               padding: "6px 14px",
               borderRadius: "var(--tt-radius-md)",
-
-              border: "1px solid var(--tt-color-text-red, #ef4444)",
-              color: "var(--tt-color-text-red)",
-
+              border: destructive
+                ? "1px solid var(--tt-color-text-red, #ef4444)"
+                : "1px solid var(--tt-brand-color-400)",
+              color: destructive
+                ? "var(--tt-color-text-red, #ef4444)"
+                : "var(--tt-brand-color-400)",
               background: "transparent",
               cursor: "pointer",
             }}
@@ -107,8 +110,7 @@ export function DeletePageDialog({
               className="tiptap-button-text"
               style={{ fontWeight: 500, textAlign: "center" }}
             >
-              {" "}
-              Permanently delete
+              {confirmLabel}
             </span>
           </Button>
           <Spacer orientation="vertical" size={5} />
@@ -125,7 +127,7 @@ export function DeletePageDialog({
               border: "1px solid var(--tt-border-color)",
             }}
           >
-            Cancel
+            {cancelLabel}
           </Button>
         </CardItemGroup>
       </div>

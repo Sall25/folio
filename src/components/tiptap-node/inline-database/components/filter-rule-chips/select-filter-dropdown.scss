@@ -1,0 +1,101 @@
+.select-filter-dropdown {
+  display: flex;
+  flex-direction: column;
+  min-width: 260px;
+  padding: 6px;
+  box-shadow: var(--tt-shadow-elevated-md);
+  border-radius: var(--tt-radius-lg);
+  border: 1px solid var(--tt-border-color);
+  background: var(--tt-gray-light-50);
+  .dark & {
+    background: var(--tt-gray-dark-100);
+  }
+
+  &__search {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--tt-text-primary);
+    background: var(--tt-input-bg, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--tt-border-color);
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+    font-family: inherit;
+
+    &::placeholder {
+      color: var(--tt-text-muted, var(--tt-text-secondary));
+    }
+
+    // The focused blue ring from the screenshot.
+    &:focus,
+    &:focus-visible {
+      border-color: var(--tt-brand-color-400);
+      box-shadow: 0 0 0 2px
+        color-mix(in srgb, var(--tt-brand-color-400) 35%, transparent);
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--tt-scrollbar-color, rgba(255, 255, 255, 0.15)) transparent;
+  }
+
+  &__empty {
+    padding: 10px 8px;
+    font-size: 13px;
+    color: var(--tt-text-muted, var(--tt-text-secondary));
+    text-align: center;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 7px 8px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+
+    &:hover {
+      background: var(--tt-hover-bg, rgba(255, 255, 255, 0.05));
+    }
+  }
+
+  // Same checkbox as the status filter dropdown — square that fills when checked.
+  &__checkbox {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    border: 1.5px solid var(--tt-text-secondary, rgba(255, 255, 255, 0.25));
+    border-radius: 4px;
+    position: relative;
+    transition: background 0.12s ease, border-color 0.12s ease;
+
+    &[data-checked] {
+      background: var(--tt-brand-color-500);
+      border-color: var(--tt-brand-color-500);
+
+      &::after {
+        content: "";
+        position: absolute;
+        left: 4.5px;
+        top: 1.5px;
+        width: 4px;
+        height: 8px;
+        border: solid var(--tt-brand-on-color, #fff);
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+    }
+  }
+}

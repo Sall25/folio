@@ -1,0 +1,31 @@
+.advanced-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 420px;
+  padding: 6px;
+  box-shadow: var(--tt-shadow-elevated-md);
+  border-radius: var(--tt-radius-lg);
+  border: 1px solid var(--tt-border-color);
+  background: var(--tt-gray-light-50);
+  .dark & {
+    background: var(--tt-gray-dark-100);
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  &__add,
+  &__delete {
+    justify-content: flex-start;
+    font-size: 13px;
+    gap: 6px;
+    padding: 6px 8px;
+  }
+  &__delete {
+    color: var(--tt-text-secondary);
+    svg { color: var(--tt-text-secondary); }
+  }
+}
