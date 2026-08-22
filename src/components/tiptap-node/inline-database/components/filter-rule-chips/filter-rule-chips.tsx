@@ -12,13 +12,35 @@ import "./filter-rule-chips.scss";
 import { AdvancedFilterBuilder } from "./advanced-filter-builder";
 import { SimpleFilterEditor } from "./simple-filter-editor";
 import type { UseDatabaseReturn } from "../../hooks";
+import { useCallback } from "react";
+import { newId } from "src/lib/id";
+import { makeFilterRule } from "./utils";
+import { AddFilterButton } from "../add-filter-button";
 
 export function FilterRuleChips() {
   const { db, attrs, visibleProperties: properties } = useDatabaseContext();
   const activeView = db.activeView;
   const locked = !!attrs.locked;
-
   const filters = (activeView?.filters ?? []) as FilterGroup[];
+
+  // Row-level action: "+ Add filter" creates a NEW chip (a new group).
+  const addFilterFor = useCallback(
+    (propertyId: ID) => {
+      const view = db.activeView;
+      if (!view) return;
+      const prop = (properties ?? []).find((p) => p.id === propertyId);
+      if (!prop) return;
+      const newGroup: FilterGroup = {
+        id: newId(),
+        operator: "and",
+        rules: [makeFilterRule(prop)],
+      };
+      db.updateView(view.id, {
+        filters: [...(view?.filters ?? view.filters ?? []), newGroup],
+      });
+    },
+    [db, properties],
+  );
 
   if (!activeView) return null;
   if (filters.length === 0) return null;
@@ -35,6 +57,11 @@ export function FilterRuleChips() {
           locked={locked}
         />
       ))}
+
+      {/* Appended ONCE at the end of the row — not per chip */}
+      {!locked && (
+        <AddFilterButton properties={properties} onPick={addFilterFor} />
+      )}
     </div>
   );
 }
@@ -54,23 +81,17 @@ function FilterChip({
 }) {
   const rules = (group.rules ?? []) as FilterRule[];
   const ops = useFilterRules(db, viewId, group, rules, properties);
-
   const isAdvanced = group.advanced === true || rules.length > 1;
 
   if (locked) {
     return <FilterChipButton count={rules.length} locked />;
   }
 
-  // Advanced chip → one "N rules" summary button → advanced builder popover
   if (isAdvanced) {
     return (
       <Popover>
         <PopoverTrigger asChild>
-          <FilterChipButton
-            count={rules.length}
-            locked={false}
-            advanced={isAdvanced}
-          />
+          <FilterChipButton count={rules.length} locked={false} advanced />
         </PopoverTrigger>
         <PopoverContent side="bottom" align="start">
           <AdvancedFilterBuilder
@@ -84,7 +105,6 @@ function FilterChip({
     );
   }
 
-  // Simple chip → shows the single rule's label → simple editor popover
   const rule = rules[0];
   const property = properties.find((p) => p.id === rule?.propertyId);
   if (!rule || !property) return null;

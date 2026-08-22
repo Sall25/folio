@@ -10,16 +10,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { NodeViewProps } from "@tiptap/core";
 import { NodeViewWrapper } from "@tiptap/react";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { usePage } from "src/hooks/use-pages";
 import { useDataSource } from "../hooks/use-data-source";
 import { useDatabase } from "../hooks/use-database";
 import { DatabaseProvider } from "./database-provider";
 import { DatabaseToolbar } from "../components/database-toolbar";
 import { DatabaseTitleBar } from "../components/database-title-bar";
-import { FilterRuleChips } from "../components/filter-rule-chips";
-import { SortRuleChips } from "../components/sort-rule-chips/sort-rule-chips";
 import { DataSourcePicker } from "./data-source-picker";
 import { DatabaseBoardNodeView } from "./database-board-node-view";
 import { DatabaseGalleryNodeView } from "./database-gallery-node-view";
@@ -37,15 +33,8 @@ import {
 } from "../hooks/use-database-seed";
 import { useTableRecords } from "../hooks/use-table-records";
 import { useViewSwitch } from "../hooks/use-view-switch";
-import { useChipVisibility } from "../hooks/use-chip-visibility";
 
-import {
-  type DatabaseAttrs,
-  type ID,
-  type DatabaseProperty,
-  type FilterGroup,
-  type FilterGroupOperator,
-} from "src/types";
+import { type DatabaseAttrs, type ID, type DatabaseProperty } from "src/types";
 import "./database-table-node-view.scss";
 import "./database-node.scss";
 import { SelectionToolbar } from "../components/selection-toolbar";
@@ -55,9 +44,7 @@ import {
 } from "./new-row-edit-provider";
 import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { useActiveViewFromHash, useSyncViews } from "../hooks";
-import { newId } from "src/lib/id";
-import { makeFilterRule } from "../components/filter-rule-chips/utils";
-import { AddFilterButton } from "../components/add-filter-button";
+import { ChipsRow } from "../components/chips-row";
 
 const EMPTY_SOURCE = { properties: [] };
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
@@ -198,44 +185,11 @@ export function DatabaseNodeView({
     ready: !isLoading && !!source,
   });
 
-  // ── Chip-row visibility (auto-reveal when rules appear) ───────────────────
-  const filterRuleCount =
-    activeView?.filters?.reduce((n, g) => n + g.rules.length, 0) ?? 0;
-  const sortCount = activeView?.sorts?.length ?? 0;
-  const { showFilterChips, showSortChips } = useChipVisibility(
-    filterRuleCount,
-    sortCount,
-  );
-
   const { activePageId } = useActivePageState();
   const isOwnPage = activePageId != null && activePageId === dbPageId;
 
   const actions = useMemo(() => ({ cancelEmptyRecord }), [cancelEmptyRecord]);
   const state = useMemo(() => ({ editingRecordId }), [editingRecordId]);
-
-  const addFilterFor = useCallback(
-    (propertyId: ID, properties: DatabaseProperty[]) => {
-      const activeView = db.activeView;
-      if (!activeView) return;
-      const prop = properties.find((p) => p.id === propertyId);
-      if (!prop) return;
-      const newGroup: FilterGroup = {
-        id: newId(),
-        operator: "and",
-        rules: [makeFilterRule(prop)],
-      };
-      db.updateView(activeView.id, {
-        filters: [...(activeView.filters ?? []), newGroup],
-      });
-    },
-    [db],
-  );
-
-  const onPick = useCallback(
-    (propertyId: ID, properties: DatabaseProperty[]) =>
-      addFilterFor(propertyId, properties),
-    [addFilterFor],
-  );
 
   // ── No source yet → picker ────────────────────────────────────────────────
   if (!attrs.sourceId) {
@@ -300,35 +254,10 @@ export function DatabaseNodeView({
                 }}
               >
                 <DatabaseToolbar />
-                {db.views?.length > 0 && (showFilterChips || showSortChips) && (
-                  <Separator orientation="horizontal" />
-                )}
+                <ChipsRow />
 
                 {attrs.id && <SelectionToolbar />}
               </div>
-
-              {(showFilterChips || showSortChips) && (
-                <CardItemGroup orientation="horizontal">
-                  {showFilterChips && <FilterRuleChips />}
-                  {showFilterChips &&
-                    showSortChips &&
-                    filterRuleCount > 0 &&
-                    sortCount > 0 && (
-                      <>
-                        <Spacer orientation="horizontal" size={5} />
-                        <Separator orientation="vertical" />
-                        <Spacer orientation="horizontal" size={5} />
-                      </>
-                    )}
-                  {showSortChips && <SortRuleChips />}
-                  {showFilterChips && (
-                    <>
-                      <Spacer orientation="horizontal" size={5} />
-                      <AddFilterButton onPick={onPick} />
-                    </>
-                  )}
-                </CardItemGroup>
-              )}
 
               {body}
             </CardItemGroup>

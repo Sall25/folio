@@ -1,10 +1,10 @@
 import {
   ArrowUp,
   ArrowDown,
-  Trash,
   ChevronDown,
   GripVertical,
   Ellipsis,
+  Trash2,
 } from "lucide-react";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import {
@@ -52,7 +52,6 @@ export function SortRow({
     border: "1px solid var(--tt-border-color)",
     padding: "3px 6px",
     justifyContent: "flex-start",
-    fontSize: 12,
     height: 28,
     minHeight: 28,
   };
@@ -100,8 +99,7 @@ export function SortRow({
           <Card
             className="option-dropdown"
             style={{
-              padding: 5,
-              minWidth: 180,
+              padding: 8,
               maxHeight: 260,
               overflowY: "auto",
             }}
@@ -189,10 +187,11 @@ export function SortRow({
               <DropdownMenuItem asChild>
                 <Button
                   variant="ghost"
+                  className="tiptap-button-delete"
                   onClick={onDelete}
                   style={{ justifyContent: "flex-start", width: "100%" }}
                 >
-                  <Trash className="tiptap-button-icon" size={14} />
+                  <Trash2 className="tiptap-button-icon" />
                   <span className="tiptap-button-text">Delete rule</span>
                 </Button>
               </DropdownMenuItem>

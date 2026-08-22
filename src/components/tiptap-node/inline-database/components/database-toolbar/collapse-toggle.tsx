@@ -14,7 +14,7 @@ function CollapseToggleImpl({
   return (
     <Button
       variant="ghost"
-      size="large"
+      size="small"
       tooltip={collapsed ? "Show toolbar" : "Hide toolbar"}
       onClick={onToggle}
       style={{
@@ -29,13 +29,13 @@ function CollapseToggleImpl({
       {collapsed ? (
         <ChevronsLeft
           className="tiptap-button-icon"
-          style={{ width: 28, height: 24 }}
+          style={{ width: 24, height: 20 }}
           strokeWidth={1}
         />
       ) : (
         <ChevronsRight
           className="tiptap-button-icon"
-          style={{ width: 28, height: 24 }}
+          style={{ width: 24, height: 20 }}
           strokeWidth={1}
         />
       )}

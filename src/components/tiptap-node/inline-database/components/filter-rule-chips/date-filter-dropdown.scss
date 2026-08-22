@@ -1,0 +1,64 @@
+.date-filter-dropdown {
+  display: flex;
+  flex-direction: column;
+  min-width: 260px;
+  padding: 6px;
+  gap: 4px;
+  box-shadow: var(--tt-shadow-elevated-md);
+  border-radius: var(--tt-radius-lg);
+  border: 1px solid var(--tt-border-color);
+  background: var(--tt-gray-light-50);
+  .dark & {
+    background: var(--tt-gray-dark-100);
+  }
+
+  &__value {
+    padding: 2px;
+  }
+
+  &__date-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: var(--tt-text-primary);
+    background: var(--tt-input-bg, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--tt-border-color);
+    border-radius: 6px;
+    outline: none;
+    color-scheme: dark; // native date picker in dark UIs
+
+    &:focus,
+    &:focus-visible {
+      border-color: var(--tt-brand-color-400);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--tt-brand-color-400) 35%, transparent);
+    }
+  }
+
+  &__ranges {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__range {
+    display: flex;
+    align-items: center;
+    padding: 7px 8px;
+    font-size: 13px;
+    color: var(--tt-text-primary);
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+
+    &:hover {
+      background: var(--tt-hover-bg, rgba(255, 255, 255, 0.05));
+    }
+    &[data-active] {
+      background: color-mix(in srgb, var(--tt-brand-color-400) 14%, transparent);
+      color: var(--tt-brand-color-300);
+    }
+  }
+}

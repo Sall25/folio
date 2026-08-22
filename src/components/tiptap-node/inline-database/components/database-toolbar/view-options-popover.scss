@@ -5,10 +5,12 @@
   min-height: 400px;
   max-height: 600px;
   border-radius: var(--tt-radius-md);
+  border: 1px solid var(--tt-border-color);
   background-color: var(--tt-gray-light-50);
   .dark & {
     background-color: var(--tt-gray-dark-100);
   }
+  box-shadow: var(--tt-shadow-elevated-md);
 
   &__name-input{
     height: 30px;

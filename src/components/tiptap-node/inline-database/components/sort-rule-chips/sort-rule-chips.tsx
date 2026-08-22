@@ -53,7 +53,16 @@ export function SortRuleChips() {
   if (locked) {
     return (
       <div className="db-sort-chips">
-        <SortChipButton count={sorts.length} locked />
+        {sorts.length === 1 ? (
+          <SortChipButton
+            key={"count=1"}
+            count={sorts.length}
+            property={properties[0]}
+            locked
+          />
+        ) : (
+          <SortChipButton key={"count>1"} count={sorts.length} locked />
+        )}
       </div>
     );
   }
@@ -62,7 +71,16 @@ export function SortRuleChips() {
     <div className="db-sort-chips" contentEditable={false}>
       <Popover>
         <PopoverTrigger asChild>
-          <SortChipButton count={sorts.length} locked={false} />
+          {sorts.length === 1 ? (
+            <SortChipButton
+              key={"count=1"}
+              count={sorts.length}
+              property={properties[0]}
+              locked
+            />
+          ) : (
+            <SortChipButton key={"count>1"} count={sorts.length} locked />
+          )}
         </PopoverTrigger>
 
         <PopoverPortal container={document.getElementById("root")}>

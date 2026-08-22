@@ -495,9 +495,23 @@ export function ViewOptionsPopover({
     ) : null;
   }
 
+  if (!open) {
+    return (
+      <Button
+        variant="ghost"
+        tooltip="Settings"
+        size="small"
+        onClick={() => setOpen(true)}
+        style={{ background: "transparent" }}
+      >
+        <SettingsSlidersIcon className="tiptap-button-icon" />
+      </Button>
+    );
+  }
+
   return (
     <Popover
-      open={open}
+      open
       onOpenChange={(o) => {
         setOpen(o);
         db.resetPanel();

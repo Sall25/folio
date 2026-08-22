@@ -1,0 +1,11 @@
+.db-chips-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;        // the row itself can shrink within its parent
+  
+  // But its children (the + Filter button, chips) should NOT shrink below content
+  > * {
+    flex-shrink: 0;
+  }
+}

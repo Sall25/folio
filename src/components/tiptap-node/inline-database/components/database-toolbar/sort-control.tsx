@@ -55,6 +55,7 @@ function SortControlImpl({
         <Button
           tooltip="Sort"
           variant="ghost"
+          size="small"
           data-active-state="off"
           style={CONTROL_BUTTON_STYLE}
         >

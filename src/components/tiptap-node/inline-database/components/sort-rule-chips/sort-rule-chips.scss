@@ -2,6 +2,10 @@
   display: flex;
   align-items: center;
   user-select: none;
+  padding: 4px 0 8px;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif;
+ 
+ 
   .db-panel,
   .tiptap-card{
     box-shadow: var(--tt-shadow-elevated-sm);
@@ -19,13 +23,11 @@
   padding: 0 8px;
   gap: 5px;
   border-radius: var(--tt-radius-lg);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--tt-brand-color-400);
-  background: color-mix(in srgb, var(--tt-brand-color-400) 14%, transparent);
+  color: var(--tt-brand-color-500);
+  background: color-mix(in srgb, var(--tt-brand-color-500) 14%, transparent);
 
   &:hover {
-    background: color-mix(in srgb, var(--tt-brand-color-400) 22%, transparent);
+    background: color-mix(in srgb, var(--tt-brand-color-500) 22%, transparent);
   }
 }
 

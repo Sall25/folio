@@ -55,6 +55,7 @@ function FilterControlImpl({
         <Button
           variant="ghost"
           tooltip="Filter"
+          size="small"
           data-active-state="off"
           style={CONTROL_BUTTON_STYLE}
         >

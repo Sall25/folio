@@ -11,15 +11,15 @@ import {
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import type { DatabaseProperty, ID } from "src/types";
-import { useDatabaseContext } from "../../nodes/database-context";
 
 export function AddFilterButton({
   onPick,
+  properties,
 }: {
-  onPick: (propertyId: ID, properties: DatabaseProperty[]) => void;
+  properties: DatabaseProperty[];
+  onPick: (propertyId: ID) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const { visibleProperties: properties } = useDatabaseContext();
 
   // Closed: plain trigger. Mount the menu only when open (same lazy pattern
   // as the other dropdowns — avoids always-mounted Radix).
@@ -36,7 +36,7 @@ export function AddFilterButton({
         }}
       >
         <Plus className="tiptap-button-icon" size={14} />
-        <span className="tiptap-button-text">Add filter</span>
+        <span className="tiptap-button-text">Filter</span>
       </Button>
     );
   }
@@ -50,7 +50,7 @@ export function AddFilterButton({
           style={{ justifyContent: "flex-start", gap: 4 }}
         >
           <Plus className="tiptap-button-icon" size={14} />
-          <span className="tiptap-button-text">Add filter</span>
+          <span className="tiptap-button-text">Filter</span>
           <ChevronDown className="tiptap-button-icon-sub" size={12} />
         </Button>
       </DropdownMenuTrigger>
@@ -72,7 +72,7 @@ export function AddFilterButton({
                   variant="ghost"
                   style={{ justifyContent: "flex-start", width: "100%" }}
                   onClick={() => {
-                    onPick(p.id, properties);
+                    onPick(p.id);
                     setOpen(false);
                   }}
                 >

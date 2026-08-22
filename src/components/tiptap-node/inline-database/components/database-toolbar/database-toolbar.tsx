@@ -169,7 +169,7 @@ function DatabaseToolbarImpl() {
   return (
     <CardItemGroup
       style={{
-        marginBottom: 10,
+        marginBottom: 0,
         position: "relative",
         maxWidth: "var(--db-editor-width)",
       }}
@@ -198,52 +198,53 @@ function DatabaseToolbarImpl() {
               visible={showChevrons}
               onToggle={onToggle}
             />
-            <div
-              className="db-toolbar__collapsible"
-              data-collapsed={collapsed || undefined}
-              aria-hidden={collapsed}
-            >
-              {/* View-config controls — hidden when locked. */}
-              {!locked && (
-                <>
-                  <SearchButton db={db} />
-                  {/* <Spacer orientation="horizontal" size={1} /> */}
+            <CardItemGroup orientation="horizontal">
+              <div
+                className="db-toolbar__collapsible"
+                data-collapsed={collapsed || undefined}
+                aria-hidden={collapsed}
+              >
+                {/* View-config controls — hidden when locked. */}
+                {!locked && (
+                  <>
+                    <SearchButton db={db} />
+                    {/* <Spacer orientation="horizontal" size={1} /> */}
 
-                  <FilterControl
-                    db={db}
-                    activeView={activeView}
-                    properties={properties}
-                    activeFilterCount={activeFilterCount}
-                    showFilterChips={showFilterChips}
-                    onShowFilterChipsChange={onShowFilterChipsChange}
-                  />
-                  {/* <Spacer orientation="horizontal" size={1} /> */}
+                    <FilterControl
+                      db={db}
+                      activeView={activeView}
+                      properties={properties}
+                      activeFilterCount={activeFilterCount}
+                      showFilterChips={showFilterChips}
+                      onShowFilterChipsChange={onShowFilterChipsChange}
+                    />
+                    {/* <Spacer orientation="horizontal" size={1} /> */}
 
-                  <SortControl
-                    db={db}
-                    activeView={activeView}
-                    properties={properties}
-                    sorts={sorts}
-                    activeSortCount={activeSortCount}
-                    showSortChips={showSortChips}
-                    onShowSortChipsChange={onShowSortChipsChange}
-                  />
-                  {/* <Spacer orientation="horizontal" size={1} /> */}
+                    <SortControl
+                      db={db}
+                      activeView={activeView}
+                      properties={properties}
+                      sorts={sorts}
+                      activeSortCount={activeSortCount}
+                      showSortChips={showSortChips}
+                      onShowSortChipsChange={onShowSortChipsChange}
+                    />
+                    {/* <Spacer orientation="horizontal" size={1} /> */}
+                  </>
+                )}
 
-                  {/* View options */}
-                  <Button
-                    variant="ghost"
-                    size="small"
-                    tooltip="Open page"
-                    style={CONTROL_BUTTON_STYLE}
-                    onClick={() => databaseId && setActivePageId(databaseId)}
-                  >
-                    <Maximize2 className="tiptap-button-icon" size={14} />
-                  </Button>
-                </>
-              )}
+                <Spacer orientation="horizontal" size={1} />
 
-              {/* <Spacer orientation="horizontal" size={1} /> */}
+                <Button
+                  variant="ghost"
+                  size="small"
+                  tooltip="Open page"
+                  style={CONTROL_BUTTON_STYLE}
+                  onClick={() => databaseId && setActivePageId(databaseId)}
+                >
+                  <Maximize2 className="tiptap-button-icon" size={14} />
+                </Button>
+              </div>
               {activeView && (
                 <ViewOptionsPopover
                   properties={properties}
@@ -251,7 +252,6 @@ function DatabaseToolbarImpl() {
                   view={activeView}
                 />
               )}
-              <Spacer orientation="horizontal" size={1} />
 
               {/* New record + template dropdown — available even when locked. */}
 
@@ -269,7 +269,7 @@ function DatabaseToolbarImpl() {
                 onCreateTemplate={onCreateTemplate}
                 onSetDefault={onSetDefault}
               />
-            </div>
+            </CardItemGroup>
           </CardItemGroup>
         </div>
 
