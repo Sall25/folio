@@ -2,14 +2,13 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  overflow-x: auto;
-  min-width: 450px;
+  overflow: visible;
+  flex: 1 1 auto;     /* fill the toolbar region */
+  min-width: 0;       /* was min-width: 450px — remove the pin */
   margin-top: 8px;
   padding-bottom: 6px;
   scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  &::-webkit-scrollbar { display: none; }
 }
 
 // Base tab — inactive: bare icon + muted text, no background, no underline.
@@ -92,11 +91,11 @@
   }
 }
 
-.db-view-tabs {
-  position: relative;
-  overflow: visible;   // was overflow-x: auto — overflow into the menu, no scroll
-  max-width: 100%;
-}
+// .db-view-tabs {
+//   position: relative;
+//   overflow: visible;   // was overflow-x: auto — overflow into the menu, no scroll
+//   max-width: 100%;
+// }
 .db-view-tabs__measure {
   position: absolute;
   top: 0; left: 0;
@@ -113,7 +112,7 @@
 }
 
 .db-view-more {
-  min-width: 200px;
+  // min-width: 200px;
   
   padding: 4px;
   display: flex;

@@ -45,10 +45,10 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
-  const [visibleCount, setVisibleCount] = useState(attrs.views.length);
+  const [visibleCount, setVisibleCount] = useState(db.views.length);
 
-  const views = attrs.views;
-  const activeId = attrs.activeViewId;
+  const views = db.views;
+  const activeId = db.activeView.id;
 
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -57,21 +57,24 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
   useLayoutEffect(() => {
     const container = containerRef.current;
     const measure = measureRef.current;
-    if (!container || !measure) return;
+    if (!container?.parentElement || !measure) return;
 
     const recompute = () => {
-      const reserve =
-        (locked ? 0 : ADD_BUTTON_WIDTH) +
-        (views.length > 1 ? MORE_BUTTON_WIDTH : 0);
-      const available = container.offsetWidth - reserve;
-
+      const available =
+        container.parentElement!.offsetWidth - (locked ? 0 : ADD_BUTTON_WIDTH);
       const tabEls = Array.from(measure.children) as HTMLElement[];
-      let used = 0;
-      let count = 0;
+      const total = tabEls.reduce((s, el) => s + el.offsetWidth + TAB_GAP, 0);
+
+      if (total <= available) {
+        setVisibleCount(tabEls.length);
+        return;
+      }
+      const withMore = available - MORE_BUTTON_WIDTH;
+      let used = 0,
+        count = 0;
       for (const el of tabEls) {
-        const w = el.offsetWidth + TAB_GAP;
-        if (used + w > available) break;
-        used += w;
+        used += el.offsetWidth + TAB_GAP;
+        if (used > withMore) break;
         count++;
       }
       setVisibleCount(Math.max(1, count));
@@ -79,27 +82,29 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
 
     recompute();
     const ro = new ResizeObserver(recompute);
-    ro.observe(container);
+    ro.observe(container.parentElement);
     return () => ro.disconnect();
   }, [views, locked]);
 
-  // Split visible / overflow, then guarantee the ACTIVE view stays visible: if
-  // it fell into overflow, swap it into the last visible slot.
-  let visibleViews = views.slice(0, visibleCount);
-  let overflowViews = views.slice(visibleCount);
+  // Partition into visible + overflow, guaranteeing the active view is visible
+  // and NO view is ever dropped.
+  const visibleSet = views.slice(0, visibleCount);
+  let visibleViews: DatabaseView[];
+  let overflowViews: DatabaseView[];
 
-  if (overflowViews.some((v) => v.id === activeId) && visibleViews.length > 0) {
-    const activeView = overflowViews.find((v) => v.id === activeId)!;
-    const demoted = visibleViews[visibleViews.length - 1];
-    visibleViews = [...visibleViews.slice(0, -1), activeView];
-    overflowViews = [
-      demoted,
-      ...overflowViews.filter((v) => v.id !== activeId),
-    ];
+  if (visibleSet.some((v) => v.id === activeId)) {
+    // active already visible — simple split
+    visibleViews = visibleSet;
+    overflowViews = views.slice(visibleCount);
+  } else {
+    // active is in overflow — put active in the last visible slot, demote the
+    // last visible tab into overflow. Rebuild from the FULL list so nothing drops.
+    const active = views.find((v) => v.id === activeId)!;
+    visibleViews = [...views.slice(0, Math.max(0, visibleCount - 1)), active];
+    const visibleIds = new Set(visibleViews.map((v) => v.id));
+    overflowViews = views.filter((v) => !visibleIds.has(v.id)); // everything not visible
   }
 
-  // Your original per-view rendering, unchanged — extracted so both the visible
-  // row and (the inactive-tab form) the overflow menu can reuse it.
   const renderTab = (view: DatabaseView) => {
     const isActive = view.id === activeId;
     const iconName = view.iconName;
@@ -112,12 +117,11 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
             key={view.id}
             className="db-view-tab"
             data-highlighted
-            // data-active-state="on"
           >
             {iconName ? (
-              <DynamicIcon key={"dynamic-icon"} name={iconName} size={20} />
+              <DynamicIcon name={iconName} size={20} />
             ) : (
-              <ViewIcon key={"view-icon"} view={view} />
+              <ViewIcon view={view} />
             )}
             <span className="tiptap-button-text">{view.name}</span>
           </Button>
@@ -130,13 +134,18 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
               variant="ghost"
               key={view.id}
               className="db-view-tab"
+              data-active-state="on"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                db.setActiveView(view.id);
+                setMenuOpen(true); // ← open the popover, not re-activate
               }}
             >
-              <ViewIcon view={view} />
+              {iconName ? (
+                <DynamicIcon name={iconName} size={20} />
+              ) : (
+                <ViewIcon view={view} />
+              )}
               <span className="tiptap-button-text">{view.name}</span>
             </Button>
           ) : (
@@ -159,6 +168,26 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
         </>
       );
     }
+
+    return (
+      <Button
+        variant="ghost"
+        key={view.id}
+        className="db-view-tab"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          db.setActiveView(view.id);
+        }}
+      >
+        {iconName ? (
+          <DynamicIcon name={iconName} size={20} />
+        ) : (
+          <ViewIcon view={view} />
+        )}
+        <span className="tiptap-button-text">{view.name}</span>
+      </Button>
+    );
   };
 
   return (
