@@ -211,6 +211,7 @@ body,
   overflow: hidden;
   scrollbar-width: none;
   overflow-y:scroll;
+  overflow-x: auto;
   transition: right 0.2s ease;
   position: relative;
   inset: 0;
@@ -246,7 +247,7 @@ body,
   height: calc(100vh - var(--tt-toolbar-height));
   margin-right: -65px;
   overflow-y: visible;
-  overflow-x: hidden;
+  overflow-x: auto;
   margin-top: var(--tt-toolbar-height);
   padding-top: 0;
   overflow-y: overlay;
@@ -298,20 +299,24 @@ body,
   // phone viewport and clipping it.
   width: 100%;
   min-width: 0;
+  max-width: none;
 
   transition: transform 0.2s ease;
+  overflow-x: visible;
 
   &.has-threads {
     transform: translateX(var(--x));
   }
 
   &[data-size="medium"] {
-    max-width: 800px;
+    width: 800px;
+    // max-width: 800px;
     --db-editor-width: 800px;
   }
 
   &[data-size="full"] {
-    max-width: 1080px;
+     width: 1080px;
+    // max-width: 1080px;
     --db-editor-width: 1080px;
   }
 
@@ -324,18 +329,21 @@ body,
     user-select: none;
   }
 
+ 
+
   &[data-collapsed="true"] {
     &[data-size="medium"] {
-      max-width: 800px;
+     // max-width: 800px;
+     width: 800px;
       --db-editor-width: 800px;
     }
     &[data-size="full"] {
-      max-width: 1320px;
-      --db-editor-width: 1320px;
+      --db-editor-width: min(1320px, 100%);
+      max-width: min(1320px, 100%);
     }
   }
 
-  overflow-x: visible;
+  //overflow-x: visible;
 }
 
 // Below the tablet breakpoint, the content fills the viewport minus a small

@@ -165,6 +165,8 @@ export function DatabaseTableBody({
         className="db-node-grid"
         style={{
           display: "grid",
+          width: "max-content",
+          minWidth: "100%",
           gridTemplateColumns: `${bodyGridTemplateColumns} 1fr`,
         }}
       >

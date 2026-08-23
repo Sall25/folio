@@ -35,6 +35,8 @@
     background: var(--tt-bg-color);
     border-bottom: 1px solid var(--tt-border-color);
     margin-bottom: 0px !important;
+    width: 100%;
+   
   }
 
   // ── Selection ─────────────────────────────────────────────────────────────
@@ -441,5 +443,26 @@ body.db-row-dragselect {
     align-items: center;
     gap: 6px;
     font-size: 14px;
+  }
+}
+
+
+/* Ancestors must NOT scroll horizontally — kill the editor-level scrollbars. */
+.simple-editor-main {
+  overflow-x: hidden;       /* was: auto — this created the editor scrollbar */
+}
+.simple-editor-wrapper {
+  overflow-x: hidden;       /* was: auto */
+}
+
+.simple-editor-content[data-size=full] {
+  overflow-x: visible;
+  max-width: none;
+  width: 100%;
+}
+.simple-editor-content{
+  &[data-collapsed="true"][data-size="full"] {
+    --db-editor-width: min(1320px, 100%);
+    max-width: 100%;
   }
 }

@@ -59,27 +59,6 @@
   max-width: 100%;
 }
 
-/* Ensure the board scrolls */
-// .db-board {
-//   display: flex;
-//   overflow-x: auto;
-//   max-width: 100%;
-//   width: 100%;
-// }
-/**
-.tiptap-card-item-group[data-orientation=vertical] {
-  min-width: 0px;
-  width: 100%;
-  max-width: 100%;
-}
-
-.db-board:not(:hover) {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
-}
-*/
-
 .db-board {
   display: flex;
   flex-direction: row;       
@@ -204,4 +183,31 @@
   &__add{
     border: 1px solid var(--tt-border-color) !important;
   }
+}
+
+.db-board {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  overflow-x: auto;
+  width: 100%;
+  max-width: 100%;
+  /* scrollbar styling — same as the table */
+  &::-webkit-scrollbar { height: 12px; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--tt-scrollbar-thumb, rgba(255, 255, 255, 0.25));
+    border-radius: 8px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+}
+
+.db-board-col {
+  /* Each column keeps its fixed width and does NOT shrink — this is what
+     makes the row overflow .db-board so it scrolls (instead of columns
+     squishing to fit). */
+  flex: 0 0 var(--db-board-col-width, 280px);
+  width: var(--db-board-col-width, 280px);
+  min-width: var(--db-board-col-width, 280px);   /* the key: prevents flex shrink */
 }

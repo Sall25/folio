@@ -66,3 +66,42 @@
   font-size: 13px;
   pointer-events: none; // the row handles the click now
 }
+.db-table {
+  max-width: 100%;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: block;
+  position: relative;
+
+  /* Firefox — auto is the thicker option (thin is thinner); keep auto */
+  scrollbar-width: auto !important;
+  scrollbar-color: var(--tt-scrollbar-thumb, rgba(255,255,255,0.25)) transparent;
+
+  /* WebKit (Chrome/Edge/Safari) — explicit height makes it thicker */
+  &::-webkit-scrollbar {
+    height: 12px;                 /* ← the thickness; bump to 14/16 if you want fatter */
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--tt-scrollbar-thumb, rgba(255, 255, 255, 0.25));
+    border-radius: 8px;
+    /* a little inset so the thumb doesn't touch the edges */
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--tt-scrollbar-thumb-hover, rgba(255, 255, 255, 0.4));
+    background-clip: padding-box;
+  }
+}
+
+/* The inner grid/content is the WIDE thing that overflows the viewport above. */
+.db-table > .db-node-grid,
+.db-table > .db-table-header,      /* whatever the header class is */
+.db-table > .db-calculations {     /* and calc footer */
+  width: max-content;
+  min-width: 100%;
+}
