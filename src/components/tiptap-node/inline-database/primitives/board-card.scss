@@ -1,8 +1,37 @@
 .db-board-card {
+  position: relative;
   // The card must be allowed to shrink within its grid track; without this,
   // any intrinsically-wide child (cover image, long title, fixed input) sets
   // a min content width that the grid honors, pushing the row past the
   // container and clipping.
+  // Selection overlay — shown while the card's menu is open (and reuse this
+  // for actual selection too). Matches the tint in the design.
+  &[data-menu-open]::after,
+  &[data-selected="true"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: color-mix(in srgb, var(--tt-brand-color-400) 12%, transparent);
+    // box-shadow: inset 0 0 0 2px var(--tt-brand-color-400);
+    pointer-events: none;   // overlay doesn't block clicks
+    z-index: 3;             // above the card content, below the controls (z-index 2 → bump controls to 4)
+  }
+   outline: none;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+  }
+
+  // dnd-kit sets aria-pressed / data attributes while dragging; kill any
+  // outline/box-shadow it or the browser applies to the dragged node.
+  &[aria-pressed="true"],
+  &[data-dragging="true"] {
+    outline: none;
+    box-shadow: none;
+  }
+
   min-width: 0;
   width: 100%;
   overflow: hidden; // belt-and-suspenders: clip anything that still escapes
@@ -64,4 +93,11 @@
 .db-board-card__cover-wrap {
   position: relative;
   line-height: 0;
+}
+
+.db-board-card:focus {
+  outline: none;      // remove the always-on focus outline (mouse + keyboard)
+}
+.db-board-card:focus-visible {
+  outline: 2px solid var(--tt-brand-color-400);   // keep it for keyboard only
 }

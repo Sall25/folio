@@ -9,7 +9,7 @@ import type {
   Page,
 } from "src/types";
 import "./database-gallery-node-view.scss";
-import { memo, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -31,6 +31,9 @@ import { applyManualOrder } from "../utils/apply-manual-order";
 import { useDatabaseContext } from "./database-context";
 import { recordMatchesFilters } from "../utils/apply-filters";
 import { sortRecords } from "../utils/apply-sorts";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage } from "src/api/pages";
+import { useDebouncedCallback } from "use-debounce";
 
 // Pointer-based first (tolerant of slow drags over gaps), then fall back to
 // closestCenter so a release over padding still snaps to the nearest card.
@@ -92,6 +95,11 @@ function DatabaseGalleryNodeViewImpl() {
   const view = db.activeView;
   const { addRecordAsync, setCellValue } = useDataSource(attrs.sourceId);
 
+  const onChange = useCallback(
+    (propId: ID, v: CellValue, rec: Page) => setCellValue(rec.id, propId, v),
+    [setCellValue],
+  );
+
   const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
     attrs.views[0]) as GalleryView | undefined;
 
@@ -99,10 +107,15 @@ function DatabaseGalleryNodeViewImpl() {
   const coverFit = activeView?.coverFit ?? "cover";
   const cardCols = CARD_COLUMNS[cardSize];
 
-  const hidden = new Set(activeView?.hiddenProperties ?? []);
-  const cardProps =
-    source?.properties.filter((p) => !hidden.has(p.id)) ?? EMPTY_PROPERTIES;
-
+  const hidden = useMemo(
+    () => new Set(activeView?.hiddenProperties ?? []),
+    [activeView?.hiddenProperties],
+  );
+  const cardProps = useMemo(
+    () =>
+      source?.properties.filter((p) => !hidden.has(p.id)) ?? EMPTY_PROPERTIES,
+    [source?.properties, hidden],
+  );
   // Optimistic order held ONLY during a drag. null = not dragging, use persisted.
   const [dragOrder, setDragOrder] = useState<ID[] | null>(null);
 
@@ -198,6 +211,34 @@ function DatabaseGalleryNodeViewImpl() {
     setDragOrder(null);
   }
 
+  const { mutateAsync: patchPageAsync } = usePatchPage(({ id, patch }) =>
+    patchPage(id, patch),
+  );
+
+  // Debounced persist — only writes after drag settles (200ms idle), with a
+  // maxWait so a long continuous drag still flushes periodically. This is the
+  // network side; the visual side updates locally in the card (see below).
+  const persistCoverPosition = useDebouncedCallback(
+    (recordId: ID, positionY: number, page: Page) => {
+      patchPageAsync({
+        id: recordId,
+        patch: { cover: { ...(page.cover ?? {}), positionY } },
+      });
+    },
+    200,
+    { maxWait: 600 },
+  );
+
+  const handleCoverPositionChange = useCallback(
+    (recordId: ID, positionY: number, page: Page) =>
+      persistCoverPosition(recordId, positionY, page),
+    [persistCoverPosition],
+  );
+  const handleCoverPositionCommit = useCallback(
+    () => persistCoverPosition.flush(),
+    [persistCoverPosition],
+  );
+
   return (
     <div
       className="db-gallery"
@@ -226,9 +267,11 @@ function DatabaseGalleryNodeViewImpl() {
                   properties={cardProps}
                   cardPreview="cover"
                   sourceId={attrs.sourceId!}
-                  onChange={(propId, v) => setCellValue(rec.id, propId, v)}
+                  onChange={onChange}
                   view={view}
                   columnValuesByProp={columnValuesByProp}
+                  onCoverPositionChange={handleCoverPositionChange}
+                  onCoverPositionCommit={handleCoverPositionCommit}
                   disableDrag
                 />
               </SortableGalleryCard>

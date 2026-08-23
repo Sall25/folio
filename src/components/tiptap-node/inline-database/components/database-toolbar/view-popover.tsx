@@ -18,7 +18,6 @@ import {
 // import "./view-name-popover.scss";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { DuplicateIcon } from "src/components/tiptap-icons/duplicate-icon";
-import { useState } from "react";
 import { ViewIcon } from "./view-icon";
 
 interface ViewNamePopoverProps {
@@ -33,6 +32,8 @@ interface ViewNamePopoverProps {
   canDelete?: boolean;
   active?: boolean;
   attrs: DatabaseAttrs;
+  open: boolean
+  onOpenChange: (v: boolean)=>void
 }
 
 export function ViewPopover({
@@ -47,10 +48,11 @@ export function ViewPopover({
   canDelete = true,
   active = false,
   attrs,
+  open, 
+  onOpenChange
 }: ViewNamePopoverProps) {
-  const [open, setOpen] = useState(false);
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
         <Button
           data-active-state={active ? "on" : "off"}
@@ -77,7 +79,7 @@ export function ViewPopover({
             className="action-button"
             onClick={() => {
               onRename?.(true);
-              setOpen(false);
+              onOpenChange(false);
             }}
             style={{ width: "100%", justifyContent: "flex-start" }}
           >
@@ -89,7 +91,7 @@ export function ViewPopover({
             className="action-button"
             onClick={() => {
               onEdit?.();
-              setOpen(false);
+              onOpenChange(false);
             }}
             style={{ width: "100%", justifyContent: "flex-start" }}
           >
@@ -106,7 +108,7 @@ export function ViewPopover({
             className="action-button"
             onClick={() => {
               onCopyLink?.();
-              setOpen(false);
+              onOpenChange(false);
             }}
             style={{ width: "100%", justifyContent: "flex-start" }}
           >
@@ -118,7 +120,7 @@ export function ViewPopover({
             className="action-button"
             onClick={() => {
               onOpenAsFullPage?.();
-              setOpen(false);
+              onOpenChange(false);
             }}
             style={{ width: "100%", justifyContent: "flex-start" }}
           >
@@ -131,7 +133,7 @@ export function ViewPopover({
               className="action-button"
               onClick={() => {
                 onShowDatabaseTitle?.();
-                setOpen(false);
+                onOpenChange(false);
               }}
               style={{ width: "100%", justifyContent: "flex-start" }}
             >
@@ -145,7 +147,7 @@ export function ViewPopover({
             className="action-button"
             onClick={() => {
               onDuplicate?.();
-              setOpen(false);
+              onOpenChange(false);
             }}
             style={{ width: "100%", justifyContent: "flex-start" }}
           >
@@ -158,7 +160,7 @@ export function ViewPopover({
               className="action-button action-button--danger"
               onClick={() => {
                 onDelete?.();
-                setOpen(false);
+                onOpenChange(false);
               }}
               style={{ width: "100%", justifyContent: "flex-start" }}
             >

@@ -7,7 +7,8 @@
   align-items: center;
   gap: 2px;
   padding: 2px;
-  border-radius: var(--tt-radius-md);
+  border-radius: var(--tt-radius-sm);
+  border: 0.5px solid var(--tt-border-color);
   background: var(--tt-gray-light-50);
   .dark & {
     background: var(--tt-gray-dark-100);

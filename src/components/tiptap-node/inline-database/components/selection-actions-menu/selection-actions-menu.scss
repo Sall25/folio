@@ -2,7 +2,8 @@
   min-width: 260;
   min-width: 260px;
   padding: 0;
-  box-shadow: var(--tt-shadow-elevated-sm);
+  box-shadow: var(--tt-shadow-elevated-md);
+  border: 0.5px solid var(--tt-border-color);
   border-radius: var(--tt-radius-md);
   background-color: var(--tt-gray-light-50);
   .dark & {

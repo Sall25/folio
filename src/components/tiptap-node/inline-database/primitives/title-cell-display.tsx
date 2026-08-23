@@ -23,7 +23,9 @@ export interface TitleCellDisplayProps {
    */
   openVariant?: "open" | "edit";
   autoEdit?: boolean;
+  onEditingChange?: (editing: boolean) => void;
   onCancelEmpty?: () => void;
+  inline?: boolean;
 }
 
 export function TitleCellDisplay({
@@ -36,6 +38,8 @@ export function TitleCellDisplay({
   openVariant = "open",
   autoEdit,
   onCancelEmpty,
+  inline,
+  onEditingChange,
 }: TitleCellDisplayProps) {
   const [hover, setHover] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -60,6 +64,59 @@ export function TitleCellDisplay({
   };
 
   const showOpenButton = hasPage && onOpen && !editing;
+
+  // inline mode: autoEdit IS the editing state (owned by the card). No local
+  // state, no sync effect. Display reflects autoEdit; reports intent upward.
+  if (inline) {
+    return (
+      <div className="db-cell-title">
+        {icon && (
+          <span className="db-cell-title__icon">
+            <PageItemIcon
+              cover={icon}
+              styles={{ color: "var(--tt-text-primary)" }}
+              usePrimaryColor
+            />
+          </span>
+        )}
+
+        {autoEdit ? (
+          <input
+            ref={(el) => {
+              if (el) {
+                el.focus();
+                const len = el.value.length;
+                el.setSelectionRange(len, len); // caret after the text
+              }
+            }}
+            className="db-cell-title__input"
+            defaultValue={value}
+            onChange={(e) => onChange(e.target.value)}
+            onBlur={() => onEditingChange?.(false)} // report exit up
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === "Escape") {
+                e.preventDefault();
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <span
+            className="db-cell-title__text"
+            data-empty={!value ? "true" : undefined}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditingChange?.(true); // report enter up
+            }}
+          >
+            {value || "New Page"}
+          </span>
+        )}
+      </div>
+    );
+  }
 
   return (
     <CardItemGroup

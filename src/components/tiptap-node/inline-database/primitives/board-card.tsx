@@ -1,4 +1,4 @@
-import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
+import { usePageViewActions } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { Cell } from "../components/cells/cell";
 import { BoardCardCover } from "../primitives/board-card-cover";
 import { BoardCardContent } from "../primitives/board-card-content";
@@ -11,7 +11,8 @@ import type {
 import "./board-card.scss";
 import { useDraggable } from "@dnd-kit/core";
 import { BoardCardControls } from "../components/board-card-controls/board-card-controls";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useActivePageActions } from "src/components/tiptap-templates/simple/context/active-page-context";
 
 // A card hides properties that have no value (Notion behavior), so cards size
 // to their real content instead of showing empty boxes. Checkbox is excluded:
@@ -26,6 +27,8 @@ function isEmptyCellValue(
   if (Array.isArray(value)) return value.length === 0;
   return false;
 }
+const EMPTY_CELL_VALUES: CellValue[] = [];
+
 export function BoardCard({
   record: linkedPage,
   properties,
@@ -36,6 +39,7 @@ export function BoardCard({
   onDelete,
   onDuplicate,
   onCoverPositionChange,
+  onCoverPositionCommit,
   onLayout,
   onPropertyVisibility,
   disableDrag = false,
@@ -44,12 +48,17 @@ export function BoardCard({
   properties: DatabaseProperty[];
   cardPreview: "none" | "cover" | "content";
   sourceId: string;
-  onChange: (propertyId: string, value: CellValue | null) => void;
+  onChange: (propertyId: string, value: CellValue | null, record: Page) => void;
   view: DatabaseView;
   columnValuesByProp?: Record<string, CellValue[]>;
   onDelete?: (recordId: string) => void;
   onDuplicate?: (recordId: string) => void;
-  onCoverPositionChange?: (recordId: string, positionY: number) => void;
+  onCoverPositionChange?: (
+    recordId: string,
+    positionY: number,
+    record: Page,
+  ) => void;
+  onCoverPositionCommit?: () => void;
   /** View-level card layout (cover fit, size) — opens the layout panel. */
   onLayout?: () => void;
   /** View-level property visibility — opens the properties panel. */
@@ -57,11 +66,15 @@ export function BoardCard({
   disableDrag?: boolean;
 }) {
   const [repositioning, setRepositioning] = useState(false);
-  const { setTarget } = usePageView();
+  const { setTarget } = usePageViewActions();
+  const { setActivePageId } = useActivePageActions();
   // When a parent (e.g. the gallery's SortableContext) owns the drag, don't
   // register our own — two dnd nodes with the same id cancel each other out
   // and the drop never resolves.
-  const draggable = useDraggable({ id: linkedPage.id });
+  const draggable = useDraggable({
+    id: linkedPage.id,
+    disabled: disableDrag || repositioning,
+  });
   const setNodeRef = disableDrag ? undefined : draggable.setNodeRef;
   const attributes = disableDrag ? undefined : draggable.attributes;
   const listeners = disableDrag ? undefined : draggable.listeners;
@@ -76,11 +89,39 @@ export function BoardCard({
     const v = (linkedPage.values?.[p.id] ?? null) as CellValue | null;
     return !isEmptyCellValue(v, p);
   });
+  // a shared open helper, matching the title cell's logic:
+  const openRecord = useCallback(() => {
+    const pageId = linkedPage.id;
+    if (pageId == null || !view) return;
+    if (view.openPageIn === "Side") {
+      setTarget({ pageId, view: "Peek" });
+    } else if (view.openPageIn === "Center") {
+      setTarget({ pageId, view: "Center" });
+    } else if (view.openPageIn === "Full") {
+      setActivePageId(pageId);
+    } else {
+      // gallery/board default → Center (or Peek — match your title-cell default)
+      setTarget({ pageId, view: "Center" });
+    }
+  }, [linkedPage.id, setTarget, setActivePageId, view]);
+  const [editing, setEditing] = useState(false);
+
+  // title-editing enable = set editing true → title cell focuses
+  const enableEdit = useCallback(() => setEditing(true), []);
+
+  const onPositionChange = useCallback(
+    (positionY: number) =>
+      onCoverPositionChange?.(linkedPage.id, positionY, linkedPage),
+    [linkedPage, onCoverPositionChange],
+  );
+
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div
       ref={setNodeRef}
       className="db-board-card"
+      data-menu-open={menuOpen || undefined}
       style={{
         transform: transform
           ? `translate(${transform.x}px, ${transform.y}px)`
@@ -95,8 +136,8 @@ export function BoardCard({
       {...listeners}
       onClick={() => {
         if (isDragging) return;
-        if (linkedPage.id != null)
-          setTarget({ pageId: linkedPage.id, view: "Center" });
+        if (repositioning) return; // ← don't open while repositioning
+        openRecord();
       }}
     >
       {cardPreview === "cover" && (
@@ -106,7 +147,8 @@ export function BoardCard({
             recordId={linkedPage.id}
             height={120}
             repositioning={repositioning}
-            onPositionChange={(y) => onCoverPositionChange?.(linkedPage.id, y)}
+            onPositionChange={onPositionChange}
+            onPositionCommit={onCoverPositionCommit}
           />
           <BoardCardControls
             record={linkedPage}
@@ -114,7 +156,7 @@ export function BoardCard({
             repositioning={repositioning}
             onReposition={() => setRepositioning((v) => !v)}
             onSetValue={(propertyId, value) =>
-              onChange(propertyId, value as CellValue | null)
+              onChange(propertyId, value as CellValue | null, linkedPage)
             }
             onDelete={() => onDelete?.(linkedPage.id)}
             onDuplicate={
@@ -122,6 +164,11 @@ export function BoardCard({
             }
             onLayout={onLayout}
             onPropertyVisibility={onPropertyVisibility}
+            menuOpen={menuOpen}
+            onMenuOpenChange={setMenuOpen}
+            editing={editing}
+            onEnableEdit={enableEdit}
+            onOpenRecord={openRecord}
           />
         </div>
       )}
@@ -138,12 +185,16 @@ export function BoardCard({
               (linkedPage.values?.[titleProp.id] ?? null) as CellValue | null
             }
             record={linkedPage}
-            onChange={(v) => onChange(titleProp.id, v)}
+            onChange={(v) => onChange(titleProp.id, v, linkedPage)}
             view={view}
             properties={properties}
             columnValues={
-              !columnValuesByProp ? [] : columnValuesByProp[titleProp.id]
+              !columnValuesByProp
+                ? EMPTY_CELL_VALUES
+                : columnValuesByProp[titleProp.id]
             }
+            autoEdit={editing}
+            onEditingChange={setEditing}
           />
         </div>
       )}
@@ -159,11 +210,13 @@ export function BoardCard({
               property={prop}
               value={(linkedPage.values?.[prop.id] ?? null) as CellValue | null}
               record={linkedPage}
-              onChange={(v) => onChange(prop.id, v)}
+              onChange={(v) => onChange(prop.id, v, linkedPage)}
               view={view}
               properties={properties}
               columnValues={
-                !columnValuesByProp ? [] : columnValuesByProp[prop.id]
+                !columnValuesByProp
+                  ? EMPTY_CELL_VALUES
+                  : columnValuesByProp[prop.id]
               }
             />
           ))}

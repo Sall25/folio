@@ -4,6 +4,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Shapes,
+  Home,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -64,7 +65,6 @@ import {
   GridCell,
 } from "src/components/tiptap-ui-primitive/grid";
 import {
-  HomeIcon,
   InboxIcon,
   ArchiveIcon,
   MessageIcon,
@@ -363,7 +363,7 @@ const NavItems = memo(() => {
             borderRadius: "var(--tt-radius-xl)",
           }}
         >
-          <HomeIcon size={32} strokeWidth={8} className="tiptap-button-icon" />
+          <Home size={32} strokeWidth={8} className="tiptap-button-icon" />
           {sidebarView === "pages" && (
             <>
               <Spacer orientation="horizontal" size={2} />

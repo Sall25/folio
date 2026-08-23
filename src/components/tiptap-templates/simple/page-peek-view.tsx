@@ -25,7 +25,10 @@ import { PeekEditorProvider } from "./context/peek-editor-provider";
 import { useDebouncedCallback } from "use-debounce";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
-import { usePageView } from "./context/page-view-context";
+import {
+  usePageViewActions,
+  usePageViewState,
+} from "./context/page-view-context";
 import { usePage } from "src/hooks/use-pages";
 import "./page-peek-view.scss";
 import { usePageComment } from "./hooks/use-page-comment";
@@ -104,7 +107,7 @@ function getTitleChange(
 // ever created with real content; keying by page.id remounts it (fresh content)
 // when the peek target changes.
 export function PagePeekView({ onClose }: { onClose?: () => void }) {
-  const { target: viewTarget } = usePageView();
+  const { target: viewTarget } = usePageViewState();
   const { data: page, isLoading } = usePage(viewTarget?.pageId ?? null);
 
   if (isLoading || !page) return null; // peek has no skeleton; render nothing until loaded
@@ -120,7 +123,7 @@ function PagePeekEditor({
   page: Page;
   onClose?: () => void;
 }) {
-  const { setTarget: setViewTarget } = usePageView();
+  const { setTarget: setViewTarget } = usePageViewActions();
   const { setActivePageId } = useActivePageActions();
   const { extensions } = usePeekEditorExtensions(setActivePageId);
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));

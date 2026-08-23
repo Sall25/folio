@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { useMemo, useRef, useState, useCallback, memo } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
+import { usePageViewActions } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { useDataSource } from "../hooks/use-data-source";
 import type { TimelineView } from "src/types";
 import "./database-timeline-node-view.scss";
@@ -151,7 +151,7 @@ const TIMEFRAMES: Timeframe[] = ["day", "week", "month", "quarter", "year"];
 
 export function DatabaseTimelineNodeViewImpl() {
   const { attrs, source, onUpdateView } = useDatabaseContext();
-  const { setTarget } = usePageView();
+  const { setTarget } = usePageViewActions();
   const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
     attrs.sourceId,
   );

@@ -16,7 +16,7 @@ import type { Target } from "src/components/tiptap-ui/cover/types";
 import { FloatingMenu } from "@tiptap/react/menus";
 import { FloatingActions } from "./floating-actions";
 import { CoverHeader } from "src/components/tiptap-ui/cover";
-import { usePageView } from "./context/page-view-context";
+import { usePageView, usePageViewActions } from "./context/page-view-context";
 import {
   stripPropertyPanels,
   useRecordPropertyPanel,
@@ -160,7 +160,7 @@ function PageCenterEditor({
   onClose?: () => void;
   onCreated?: (page: Page) => void;
 }) {
-  const { setTarget: setViewTarget } = usePageView();
+  const { setTarget: setViewTarget } = usePageViewActions();
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const { setActivePageId } = useActivePageActions();
   const { extensions } = usePeekEditorExtensions(setActivePageId);

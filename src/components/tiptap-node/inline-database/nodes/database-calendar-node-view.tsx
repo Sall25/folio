@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { memo, useEffect, useMemo, useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
+import { usePageViewActions } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { useDataSource } from "../hooks/use-data-source";
 import { CalendarChip } from "../components/calendar-chip";
 import type {
@@ -40,7 +40,7 @@ export function DatabaseCalendarNodeViewImpl() {
     onUpdateView,
     sortedRecords: resolvedRecords,
   } = useDatabaseContext();
-  const { setTarget } = usePageView();
+  const { setTarget } = usePageViewActions();
   const { addRecordAsync, setCellValue } = useDataSource(attrs.sourceId);
 
   const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??

@@ -2,7 +2,7 @@ import type { JSONContent } from "@tiptap/core";
 import { usePage } from "src/hooks/use-pages";
 import { TitleCellDisplay } from "../../../primitives/title-cell-display";
 import type { DatabaseView, ID, Page } from "src/types";
-import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
+import { usePageViewActions } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { useActivePageActions } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
@@ -17,17 +17,21 @@ export function TitleCell({
   unwrapped,
   view,
   openVariant,
+  autoEdit,
+  onEditingChange,
 }: {
   value: string;
   recordId: ID;
   view?: DatabaseView;
   pageId?: ID;
-  recordPage?: Page; // the record's own page, already loaded by the caller
+  recordPage?: Page;
   templateId?: ID;
   onChange: (value: string) => void;
   readonly?: boolean;
   unwrapped?: boolean;
   openVariant?: "open" | "edit";
+  autoEdit?: boolean;
+  onEditingChange?: (editing: boolean) => void;
 }) {
   // The record's page is the SAME page as pageId — the caller already has it in
   // resolvedRecords, so use it directly instead of re-fetching per row (that was
@@ -42,7 +46,7 @@ export function TitleCell({
 
   const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const { setActivePageId } = useActivePageActions();
-  const { setTarget } = usePageView();
+  const { setTarget } = usePageViewActions();
 
   const { editingRecordId, cancelEmptyRecord } = useNewRowEdit();
   const isNewlyCreated = editingRecordId != null && editingRecordId === pageId;
@@ -93,10 +97,12 @@ export function TitleCell({
         }}
         readonly={readonly}
         openVariant={openVariant}
-        autoEdit={isNewlyCreated}
+        autoEdit={isNewlyCreated || autoEdit}
         onCancelEmpty={
           isNewlyCreated && pageId ? () => cancelEmptyRecord(pageId) : undefined
         }
+        inline={view?.type !== "table" && view?.type !== "list"}
+        onEditingChange={onEditingChange}
       />
     </div>
   );

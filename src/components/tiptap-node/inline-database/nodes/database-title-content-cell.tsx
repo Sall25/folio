@@ -4,7 +4,7 @@ import { NodeViewContent } from "@tiptap/react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 import { usePage } from "src/hooks/use-pages";
-import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
+import { usePageViewActions } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { useActivePageActions } from "src/components/tiptap-templates/simple/context/active-page-context";
 import type { DatabaseView, ID } from "src/types";
 import "./database-title-content-cell.scss";
@@ -38,7 +38,7 @@ export function DatabaseTitleContentCell({
   const { data: linkedPage } = usePage(pageId ?? null);
   const { data: templatePage } = usePage(templateId ?? null);
   const { setActivePageId } = useActivePageActions();
-  const { setTarget } = usePageView();
+  const { setTarget } = usePageViewActions();
 
   const icon = templatePage?.cover ?? linkedPage?.cover ?? null;
   const hasPage = pageId != null;

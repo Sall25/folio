@@ -42,6 +42,8 @@ function CellImpl({
   readonly,
   unwrapped,
   view,
+  autoEdit,
+  onEditingChange,
 }: {
   property: DatabaseProperty;
   properties?: DatabaseProperty[];
@@ -55,6 +57,8 @@ function CellImpl({
   onChange: (value: CellValue | null) => void;
   readonly?: boolean;
   unwrapped?: boolean;
+  autoEdit?: boolean;
+  onEditingChange?: (editing: boolean) => void;
 }) {
   const { config } = property;
 
@@ -85,6 +89,8 @@ function CellImpl({
               ? "edit"
               : "open"
           }
+          autoEdit={autoEdit}
+          onEditingChange={onEditingChange}
         />
       );
 

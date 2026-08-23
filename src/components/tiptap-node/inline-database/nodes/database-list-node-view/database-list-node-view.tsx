@@ -11,7 +11,7 @@ import type {
   DatabaseProperty,
 } from "src/types";
 import "./database-list-node-view.scss";
-import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
+import { usePageViewActions } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { memo, useCallback, useMemo } from "react";
 import { ListRow } from "./list-row";
 import { useListRecords } from "../../hooks/use-list-records";
@@ -29,7 +29,7 @@ function DatabaseListNodeViewImpl() {
   } = useDatabaseContext();
   const view = db.activeView;
   const { addRecordAsync, setCellValue } = useDataSource(attrs.sourceId);
-  const { setTarget } = usePageView();
+  const { setTarget } = usePageViewActions();
 
   const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
     attrs.views[0]) as ListView | undefined;

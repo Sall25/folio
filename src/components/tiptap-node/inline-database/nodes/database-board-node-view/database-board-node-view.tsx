@@ -1,5 +1,5 @@
 import { Plus } from "lucide-react";
-import { memo, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { useDataSource } from "../../hooks/use-data-source";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
@@ -13,6 +13,7 @@ import type {
   StatusGroup,
   CellValue,
   DatabaseProperty,
+  ID,
 } from "src/types";
 import "./database-board-node-view.scss";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
@@ -27,6 +28,7 @@ import { columnKeyFor, getColumnDefs } from "./utils";
 import { SortableBoardCard } from "./sortable-board-card";
 import { useBoardDnd } from "./use-board-dnd";
 import { useDatabaseContext } from "../database-context";
+import { removeRecordNode } from "../../hooks/use-database-seed";
 
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
 
@@ -41,12 +43,10 @@ interface ColumnDef {
 function DatabaseBoardNodeViewImpl({
   onLayout,
   onPropertyVisibility,
-  onDeleteRecord,
   onDuplicateRecord,
 }: {
   onLayout?: () => void;
   onPropertyVisibility?: () => void;
-  onDeleteRecord?: (recordId: string) => void;
   onDuplicateRecord?: (recordId: string) => void;
 }) {
   const {
@@ -55,10 +55,21 @@ function DatabaseBoardNodeViewImpl({
     source,
     onUpdateView,
     sortedRecords: resolvedRecords,
+    editor,
   } = useDatabaseContext();
   const view = db.activeView;
 
-  const { addRecordAsync, setCellValue } = useDataSource(attrs.sourceId);
+  const { addRecordAsync, setCellValue, removeRecordAsync } = useDataSource(
+    attrs.sourceId,
+  );
+  const onDeleteRecord = useCallback(
+    (recId: ID) => {
+      removeRecordAsync(recId);
+      removeRecordNode(editor, attrs.id, recId);
+    },
+    [editor, attrs.id, removeRecordAsync],
+  );
+
   const { mutateAsync: patchPageAsync } = usePatchPage(({ id, patch }) =>
     patchPage(id, patch),
   );
@@ -150,6 +161,21 @@ function DatabaseBoardNodeViewImpl({
 
   const colWidth = 260;
   const activeRecord = activeId ? (recordById.get(activeId) ?? null) : null;
+
+  const onChange = useCallback(
+    (propId: ID, v: CellValue, rec: Page) => setCellValue(rec.id, propId, v),
+    [setCellValue],
+  );
+  const onCoverPositionChange = useCallback(
+    (recordId: ID, positionY: number, rec: Page) =>
+      patchPageAsync({
+        id: recordId,
+        patch: {
+          cover: { ...(rec.cover ?? {}), positionY },
+        },
+      }),
+    [patchPageAsync],
+  );
 
   if (!groupByPropertyId || columnDefs.length === 0) {
     return (
@@ -246,19 +272,10 @@ function DatabaseBoardNodeViewImpl({
                         properties={cardProps}
                         cardPreview={activeView?.cardPreview ?? "none"}
                         sourceId={attrs.sourceId!}
-                        onChange={(propId, v) =>
-                          setCellValue(rec.id, propId, v)
-                        }
+                        onChange={onChange}
                         view={view}
                         columnValuesByProp={columnValuesByProp}
-                        onCoverPositionChange={(recordId, positionY) =>
-                          patchPageAsync({
-                            id: recordId,
-                            patch: {
-                              cover: { ...(rec.cover ?? {}), positionY },
-                            },
-                          })
-                        }
+                        onCoverPositionChange={onCoverPositionChange}
                         onDelete={onDeleteRecord}
                         onDuplicate={onDuplicateRecord}
                         onLayout={onLayout}
@@ -279,7 +296,7 @@ function DatabaseBoardNodeViewImpl({
                 }}
               >
                 <Plus className="tiptap-button-icon" />
-                <span className="tiptap-button-text">New</span>
+                <span className="tiptap-button-text">New Page</span>
               </Button>
             </div>
           );

@@ -1,13 +1,13 @@
 .db-board-card__title {
-    padding: 5px 0px !important;
+  padding: 5px 0px !important;
 }
+
 .node-titleCell {
-  
   margin: auto 5px;
 }
 
 .db-cell-title {
-   display: flex;
+  display: flex;
   align-items: center;
   width: 100%;
   min-width: 0;
@@ -31,13 +31,13 @@
     font-weight: 500;
     font-size: 15px;
     line-height: 1.4;
-    // line-height: 34px;
     font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
     -webkit-font-smoothing: auto;
     color: var(--tt-theme-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: inline-block;
 
      &[data-empty="true"] {
       color: var(--tt-theme-muted, var(--tt-text-secondary));
@@ -198,4 +198,31 @@ input.db-cell-title__field {
     box-shadow: none;
     border-color: transparent;
   }
+}
+
+.db-cell-title__input {
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;                  
+  color: var(--tt-text-primary);
+  line-height: inherit;
+  font-size: 15px;
+  line-height: 1.4;
+  flex: 1 1 auto;
+  display: inline-block;
+  
+  &::placeholder {
+    color: var(--tt-text-secondary);
+  }
+}
+
+.db-cell[data-wrap=true] .db-cell-title {
+  align-items: center;
+}
+
+.db-cell-title__text {
+  display: inline-block;
 }

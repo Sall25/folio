@@ -18,7 +18,7 @@ import { DatabaseViewTabs } from "../database-view-tabs/database-view-tabs";
 import { FilterControl } from "./filter-control";
 import { SortControl } from "./sort-control";
 import { useDataSource } from "../../hooks/use-data-source";
-import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
+import { usePageViewActions } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { DatabaseTitleBar } from "../database-title-bar";
 import "./database-toolbar.scss";
 import { useDatabaseContext } from "../../nodes/database-context";
@@ -71,7 +71,7 @@ function DatabaseToolbarImpl() {
   const activeFilterCount = totalFilterRules(filters);
   const activeSortCount = sorts.length;
 
-  const { setTarget } = usePageView();
+  const { setTarget } = usePageViewActions();
 
   // Collapsed toolbar — the control cluster folds behind the chevron, leaving
   // just New. Local (per-session UI), not synced view attrs.
