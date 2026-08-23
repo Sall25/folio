@@ -20,11 +20,15 @@ import { useDatabaseContext } from "../database-context";
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
 
 function DatabaseListNodeViewImpl() {
-  const { attrs, source, onUpdateView, db } = useDatabaseContext();
+  const {
+    attrs,
+    source,
+    onUpdateView,
+    db,
+    sortedRecords: resolvedRecords,
+  } = useDatabaseContext();
   const view = db.activeView;
-  const { addRecordAsync, setCellValue, resolvedRecords } = useDataSource(
-    attrs.sourceId,
-  );
+  const { addRecordAsync, setCellValue } = useDataSource(attrs.sourceId);
   const { setTarget } = usePageView();
 
   const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??

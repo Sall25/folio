@@ -1,0 +1,37 @@
+.db-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &--inline {
+    // Sits in the toolbar row; expands to a comfortable width.
+    width: 220px;               // or animate from 0 — see note
+    padding: 4px 8px;
+    border-radius: var(--tt-radius-md, 6px);
+    background: var(--tt-bg-color, rgba(255, 255, 255, 0.04));
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    color: var(--tt-text-muted, var(--tt-text-secondary));
+  }
+
+  &__input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 13px;
+    color: var(--tt-text-primary);
+
+    &::placeholder {
+      color: var(--tt-text-muted, var(--tt-text-secondary));
+    }
+  }
+
+  &__clear {
+    flex-shrink: 0;
+    padding: 2px;
+  }
+}

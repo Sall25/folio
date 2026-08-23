@@ -185,6 +185,7 @@ function DatabaseToolbarImpl() {
 
         {/* Hover-revealed control cluster. */}
         <div
+          className="db-toolbar-controls"
           style={revealStyle}
           onMouseOver={() => setShowChevrons(true)}
           onMouseLeave={() => setShowChevrons(false)}

@@ -34,11 +34,14 @@ function isoToMonthDay(iso: string) {
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
 
 export function DatabaseCalendarNodeViewImpl() {
-  const { attrs, source, onUpdateView } = useDatabaseContext();
+  const {
+    attrs,
+    source,
+    onUpdateView,
+    sortedRecords: resolvedRecords,
+  } = useDatabaseContext();
   const { setTarget } = usePageView();
-  const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
-    attrs.sourceId,
-  );
+  const { addRecordAsync, setCellValue } = useDataSource(attrs.sourceId);
 
   const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
     attrs.views[0]) as CalendarView | undefined;

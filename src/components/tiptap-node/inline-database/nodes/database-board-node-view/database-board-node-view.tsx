@@ -49,12 +49,16 @@ function DatabaseBoardNodeViewImpl({
   onDeleteRecord?: (recordId: string) => void;
   onDuplicateRecord?: (recordId: string) => void;
 }) {
-  const { attrs, db, source, onUpdateView } = useDatabaseContext();
+  const {
+    attrs,
+    db,
+    source,
+    onUpdateView,
+    sortedRecords: resolvedRecords,
+  } = useDatabaseContext();
   const view = db.activeView;
 
-  const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
-    attrs.sourceId,
-  );
+  const { addRecordAsync, setCellValue } = useDataSource(attrs.sourceId);
   const { mutateAsync: patchPageAsync } = usePatchPage(({ id, patch }) =>
     patchPage(id, patch),
   );

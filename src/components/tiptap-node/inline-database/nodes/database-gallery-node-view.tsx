@@ -82,11 +82,15 @@ function SortableGalleryCard({
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
 
 function DatabaseGalleryNodeViewImpl() {
-  const { attrs, source, onUpdateView, db } = useDatabaseContext();
+  const {
+    attrs,
+    source,
+    onUpdateView,
+    db,
+    sortedRecords: resolvedRecords,
+  } = useDatabaseContext();
   const view = db.activeView;
-  const { resolvedRecords, addRecordAsync, setCellValue } = useDataSource(
-    attrs.sourceId,
-  );
+  const { addRecordAsync, setCellValue } = useDataSource(attrs.sourceId);
 
   const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
     attrs.views[0]) as GalleryView | undefined;

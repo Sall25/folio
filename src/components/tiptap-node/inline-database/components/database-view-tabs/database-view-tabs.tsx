@@ -59,9 +59,20 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
     const measure = measureRef.current;
     if (!container?.parentElement || !measure) return;
 
+    const parent = container.parentElement;
+
     const recompute = () => {
-      const available =
-        container.parentElement!.offsetWidth - (locked ? 0 : ADD_BUTTON_WIDTH);
+      // The controls cluster shares the row and grows when search expands inline.
+      // Subtract its width so the tabs measure the space ACTUALLY available to
+      // them (row − controls), and collapse into "more" when search takes room.
+      const controls = parent.querySelector(
+        ".db-toolbar-controls",
+      ) as HTMLElement | null;
+      const controlsW = controls?.getBoundingClientRect().width ?? 0;
+
+      const addReserve = locked ? 0 : ADD_BUTTON_WIDTH;
+      const available = parent.offsetWidth - controlsW - addReserve;
+
       const tabEls = Array.from(measure.children) as HTMLElement[];
       const total = tabEls.reduce((s, el) => s + el.offsetWidth + TAB_GAP, 0);
 
@@ -69,6 +80,7 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
         setVisibleCount(tabEls.length);
         return;
       }
+
       const withMore = available - MORE_BUTTON_WIDTH;
       let used = 0,
         count = 0;
@@ -81,8 +93,15 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
     };
 
     recompute();
+
+    // Observe BOTH the row (parent) and the controls cluster. When search expands
+    // inline, the controls cluster grows → RO fires → tabs recompute and collapse
+    // to make room, so they never overlap.
     const ro = new ResizeObserver(recompute);
-    ro.observe(container.parentElement);
+    ro.observe(parent);
+    const controls = parent.querySelector(".db-toolbar-controls");
+    if (controls) ro.observe(controls);
+
     return () => ro.disconnect();
   }, [views, locked]);
 
