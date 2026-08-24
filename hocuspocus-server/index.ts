@@ -217,23 +217,42 @@ const server = new Server<AuthContext>({
       return;
     }
 
-    await fetch(`${REST}/pages?id=eq.${encodeURIComponent(pageId)}`, {
-      method: "PATCH",
-      headers: {
-        apikey: SERVICE_ROLE!,
-        Authorization: `Bearer ${SERVICE_ROLE!}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal",
-      },
-      body: JSON.stringify({
-        content, // ← the real content (the fix)
-        updated_at: new Date().toISOString(), // keep bumping the sort field
-      }),
-    }).catch((err) => {
-      // Best-effort, but log it — a failed content write means this edit only
-      // survives in SQLite until the next persist.
-      console.error(`[onStoreDocument] PATCH failed for ${documentName}:`, err);
-    });
+    try {
+      const res = await fetch(
+        `${REST}/pages?id=eq.${encodeURIComponent(pageId)}`,
+        {
+          method: "PATCH",
+          headers: {
+            apikey: SERVICE_ROLE!,
+            Authorization: `Bearer ${SERVICE_ROLE!}`,
+            "Content-Type": "application/json",
+            Prefer: "return=minimal",
+          },
+          body: JSON.stringify({
+            content,
+            updated_at: Date.now(),
+          }),
+        },
+      );
+
+      // fetch does NOT throw on 4xx/5xx — a 403 (RLS), 400 (bad payload), etc.
+      // returns a response. Without this check those failures look like success
+      // and the write is silently lost. res.ok covers 200–299.
+      if (!res.ok) {
+        const body = await res.text();
+        console.error(
+          `[onStoreDocument] PATCH ${res.status} ${res.statusText} for ${documentName}: ${body}`,
+        );
+        return;
+      }
+
+      console.log(
+        `[onStoreDocument] PATCH ${res.status} OK for ${documentName}`,
+      );
+    } catch (err) {
+      // Only network-level throws reach here now (DNS, connection refused, etc).
+      console.error(`[onStoreDocument] PATCH threw for ${documentName}:`, err);
+    }
   },
 });
 
