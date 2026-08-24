@@ -15,13 +15,13 @@ function Tab({ active, onActive, target, label }: TabProps) {
       variant="ghost"
       style={{
         borderBottom: active
-          ? "2px solid var(--tt-brand-color-500)"
-          : "2px solid transparent",
+          ? "2px solid var(--tt-text-primary)"
+          : "1px solid var(--tt-border-color)",
         borderRadius: 0,
       }}
       onClick={() => onActive(target)}
     >
-      {label}
+      <span className="tiptap-button-text">{label}</span>
     </Button>
   );
 }
@@ -34,8 +34,8 @@ export function Tabs({
   onActive: (target: Target) => void;
 }) {
   return (
-    <CardItemGroup style={{ width: "100%", margin: "10px 0px" }}>
-      <ButtonGroup orientation="horizontal">
+    <CardItemGroup>
+      <ButtonGroup orientation="horizontal" style={{ gap: 0 }}>
         <Tab
           active={target == "Emoji"}
           onActive={onActive}

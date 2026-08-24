@@ -1,14 +1,12 @@
 import { lazy, Suspense } from "react";
-import { Card, CardFooter } from "src/components/tiptap-ui-primitive/card";
+import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Tabs } from "./tabs";
 import { EmojiPicker } from "./emoji-picker";
 import { UploadIconTab } from "./upload-icon-tab";
 import type { Target } from "./types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import { useIconRecents } from "src/components/tiptap-templates/simple/hooks/use-icon-recents";
-import { RecentIconRow } from "src/components/tiptap-templates/simple/components/recent-icon-row";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
 const IconPicker = lazy(() =>
   import("./icon-picker").then((m) => ({ default: m.IconPicker })),
@@ -25,8 +23,7 @@ export function IconPickerCard({
   onSelect: (name: string, color?: string, target?: Target) => void;
   onRemove?: () => void;
 }) {
-  const { recents, setTab, recordEmoji, recordIcon, recordUpload } =
-    useIconRecents();
+  const { setTab, recordEmoji, recordIcon, recordUpload } = useIconRecents();
 
   const handleTargetChange = (t: Target) => {
     setTab(t);
@@ -46,22 +43,31 @@ export function IconPickerCard({
   return (
     <Card
       style={{
-        padding: "10px 15px",
-        minWidth: 250,
+        padding: "10px 0px",
+        minWidth: 400,
         minHeight: 40,
-        maxWidth: 380,
+        maxWidth: 500,
         overflow: "hidden",
+        borderRadius: "var(--tt-radius-md)",
         border: "1px solid var(--tt-border-color)",
         boxShadow: "var(--tt-shadow-elevated-md)",
       }}
     >
-      <Tabs target={target} onActive={handleTargetChange} />
-
-      <RecentIconRow
-        target={target}
-        recents={recents}
-        onSelect={handleSelect}
-      />
+      <Spacer orientation="vertical" size={4} />
+      <CardItemGroup orientation="horizontal" style={{ width: "100%" }}>
+        <Spacer orientation="horizontal" size={4} />
+        <Tabs target={target} onActive={handleTargetChange} />
+        <Spacer orientation="horizontal" />
+        <Button
+          variant="ghost"
+          className="tiptap-button-delete"
+          onClick={onRemove}
+        >
+          <span className="tiptap-button-text">Remove</span>
+        </Button>
+        <Spacer orientation="horizontal" size={4} />
+      </CardItemGroup>
+      <Spacer orientation="vertical" size={6} />
 
       {target === "Emoji" && <EmojiPicker onSelect={handleSelect} />}
       {target === "Icons" && (
@@ -85,36 +91,6 @@ export function IconPickerCard({
       )}
       {target === "Upload" && (
         <UploadIconTab onSelect={(url) => handleSelect(url)} />
-      )}
-
-      <Separator orientation="horizontal" style={{ height: 0.5 }} />
-
-      {onRemove && (
-        <CardFooter
-          style={{
-            marginTop: 8,
-            paddingTop: 8,
-            width: "100%",
-            justifyContent: "flex-start",
-          }}
-        >
-          <Button
-            variant="ghost"
-            onClick={onRemove}
-            style={{
-              fontSize: 13,
-              color: "var(--tt-danger-color, #e03e3e)",
-            }}
-          >
-            <DynamicIcon
-              className="tiptap-button-icon"
-              name="delete"
-              size={18}
-              style={{ color: "#e03e3e" }}
-            />
-            <span className="tiptap-button-text">Remove icon</span>
-          </Button>
-        </CardFooter>
       )}
     </Card>
   );

@@ -48,7 +48,11 @@ export function RecentIconRow({
               <DynamicIcon
                 name={it.name}
                 size={18}
-                style={{ color: it.color ?? "var(--tt-text-primary)" }}
+                style={{
+                  color: it.color ?? "var(--tt-text-primary)",
+                  width: 20,
+                  height: 20,
+                }}
               />
             </Button>
           ))}

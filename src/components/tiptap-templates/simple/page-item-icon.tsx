@@ -16,7 +16,7 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
     return (
       <span
         className="page-icon"
-        style={{ ...styles, fontSize: 15.5 }}
+        style={{ ...styles, fontSize: 16.5 }}
         aria-hidden="true"
       >
         {cover.iconName}
@@ -36,13 +36,11 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
                   : cover.color,
             }}
             name={cover.iconName!}
-            size={20}
-            weight={400}
-            filled={true}
+            size={37}
           />
         ) : (
           <FileText
-            size={36}
+            size={37}
             style={{
               width: 32,
               height: 32,

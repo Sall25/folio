@@ -62,7 +62,7 @@ export function UploadIconTab({ onSelect }: UploadIconTabProps) {
         display: "flex",
         flexDirection: "column",
         gap: 10,
-        padding: "4px 0",
+        padding: "4px 0px",
       }}
     >
       {/* Drop zone */}
@@ -84,6 +84,7 @@ export function UploadIconTab({ onSelect }: UploadIconTabProps) {
           overflow: "hidden",
           minHeight: preview ? 0 : 90,
           transition: "border-color 0.15s",
+          margin: 4,
         }}
       >
         {preview ? (

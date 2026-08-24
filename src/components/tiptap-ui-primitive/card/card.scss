@@ -17,7 +17,7 @@
   border-radius: calc(var(--padding) + var(--tt-radius-lg));
   box-shadow: var(--tt-shadow-elevated-md);
   background-color: var(--tiptap-card-bg-color);
-  border: 1px solid var(--tiptap-card-border-color);
+  border: 1px solid var(--tt-border-color); //var(--tiptap-card-border-color);
   display: flex;
   flex-direction: column;
   outline: none;

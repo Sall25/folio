@@ -215,6 +215,7 @@ body,
   transition: right 0.2s ease;
   position: relative;
   inset: 0;
+  scrollbar-width: none;
 }
 
 
@@ -248,6 +249,7 @@ body,
   margin-right: -65px;
   overflow-y: visible;
   overflow-x: auto;
+  scrollbar-width: none;
   margin-top: var(--tt-toolbar-height);
   padding-top: 0;
   overflow-y: overlay;
@@ -303,6 +305,7 @@ body,
 
   transition: transform 0.2s ease;
   overflow-x: visible;
+  scrollbar-width: none;
 
   &.has-threads {
     transform: translateX(var(--x));

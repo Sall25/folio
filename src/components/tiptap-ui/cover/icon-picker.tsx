@@ -3,6 +3,7 @@ import { ICON_COLORS, getIconList, type IconName } from "./data/icon-list.js";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
+  CardBody,
   CardGroupLabel,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
@@ -15,6 +16,9 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover/popover.js";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { RecentIconRow } from "src/components/tiptap-templates/simple/components/recent-icon-row/recent-icon-row.js";
+import { useIconRecents } from "src/components/tiptap-templates/simple/hooks/use-icon-recents.js";
+import { Input } from "src/components/tiptap-ui-primitive/input/input.js";
 
 interface IconPopoverProps {
   name: string;
@@ -23,7 +27,7 @@ interface IconPopoverProps {
 }
 
 const COLORS_PER_ROW = 5;
-const ICONS_PER_ROW = 8;
+const ICONS_PER_ROW = 9;
 
 const colorRows = Array.from(
   { length: Math.ceil(ICON_COLORS.length / COLORS_PER_ROW) },
@@ -32,15 +36,24 @@ const colorRows = Array.from(
 
 function IconPopover({ name, color, onSelect }: IconPopoverProps) {
   const [open, setOpen] = useState(false);
+  if (!open)
+    return (
+      <Button variant="ghost" tooltip={name} onClick={() => setOpen(true)}>
+        <DynamicIcon
+          className="tiptap-button-icon"
+          name={name}
+          style={{ color, width: 20, height: 20 }}
+        />
+      </Button>
+    );
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" tooltip={name}>
           <DynamicIcon
             className="tiptap-button-icon"
             name={name}
-            size={22}
-            style={{ color }}
+            style={{ color, width: 20, height: 20 }}
           />
         </Button>
       </PopoverTrigger>
@@ -66,7 +79,7 @@ function IconPopover({ name, color, onSelect }: IconPopoverProps) {
                       <DynamicIcon
                         className="tiptap-button-icon"
                         name={name}
-                        size={22}
+                        size={36}
                         style={{ color: c.value }}
                       />
                     </Button>
@@ -93,6 +106,8 @@ export function IconPicker({
   const scrollRef = useRef<HTMLDivElement>(null);
   const deferred = useDeferredValue(query);
   const isStale = query !== deferred;
+
+  const { recents } = useIconRecents();
 
   const filtered = useMemo(
     () =>
@@ -124,86 +139,84 @@ export function IconPicker({
   }, []);
 
   return (
-    <CardItemGroup orientation="vertical">
-      <input
-        ref={inputRef}
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search icons…"
-        style={{
-          width: "100%",
-          padding: "6px 10px",
-          border: "1px solid var(--tt-border-color)",
-          borderRadius: 6,
-          fontSize: 13,
-          outline: "none",
-          boxSizing: "border-box",
-          background: "var(--tt-theme-bg)",
-          color: "var(--tt-text-color)",
-        }}
-      />
+    <CardItemGroup orientation="vertical" style={{ width: "100%" }}>
+      <Spacer orientation="vertical" size={8} />
+      <CardItemGroup orientation="horizontal">
+        <Spacer orientation="horizontal" size={5} />
+        <Input
+          ref={inputRef}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search icons…"
+        />
+        <Spacer orientation="horizontal" size={5} />
+      </CardItemGroup>
       <Spacer orientation="vertical" />
-      <CardGroupLabel>Icons</CardGroupLabel>
-
-      <div
+      <CardBody
         ref={scrollRef}
         style={{
-          minWidth: 350,
-          height: 250,
+          height: 290,
           overflowY: "auto",
           opacity: isStale ? 0.6 : 1,
           transition: "opacity 0.1s",
         }}
       >
-        {filtered.length === 0 ? (
-          <span
-            style={{
-              textAlign: "center",
-              fontSize: 13,
-              color: "var(--tt-text-color)",
-              padding: "16px 0",
-              display: "block",
-            }}
-          >
-            No icons found
-          </span>
-        ) : (
-          <div
-            style={{
-              height: virtualizer.getTotalSize(),
-              position: "relative",
-            }}
-          >
-            {virtualizer.getVirtualItems().map((virtualRow) => {
-              const row = rows[virtualRow.index];
-              return (
-                <div
-                  key={virtualRow.key}
-                  style={{
-                    position: "absolute",
-                    top: virtualRow.start,
-                    left: 0,
-                    right: 0,
-                    display: "flex",
-                    width: "100%",
+        <RecentIconRow target="Icons" recents={recents} onSelect={onSelect} />
+        <Spacer orientation="vertical" size={5} />
+        <CardGroupLabel>Icons</CardGroupLabel>
+        <Spacer orientation="vertical" size={2} />
 
-                    justifyContent: "space-between",
-                  }}
-                >
-                  {row.map(({ name, color }) => (
-                    <IconPopover
-                      key={name}
-                      name={name}
-                      color={color}
-                      onSelect={onSelect}
-                    />
-                  ))}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+        <div>
+          {filtered.length === 0 ? (
+            <span
+              style={{
+                textAlign: "center",
+                fontSize: 13,
+                color: "var(--tt-text-color)",
+                padding: "16px 0",
+                display: "block",
+              }}
+            >
+              No icons found
+            </span>
+          ) : (
+            <div
+              style={{
+                height: virtualizer.getTotalSize(),
+                position: "relative",
+              }}
+            >
+              {virtualizer.getVirtualItems().map((virtualRow) => {
+                const row = rows[virtualRow.index];
+                return (
+                  <div
+                    key={virtualRow.key}
+                    style={{
+                      position: "absolute",
+                      top: virtualRow.start,
+                      left: 0,
+                      right: 0,
+                      display: "flex",
+                      width: "100%",
+
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    {row.map(({ name, color }) => (
+                      <IconPopover
+                        key={name}
+                        name={name}
+                        color={color}
+                        onSelect={onSelect}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </CardBody>
     </CardItemGroup>
   );
 }

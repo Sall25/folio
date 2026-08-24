@@ -139,13 +139,13 @@ function PageItemView({
         ) : (
           <PageItemIcon
             cover={page.cover}
-            styles={{
-              width: 15,
-              height: 15,
-              opacity: 1,
-              fontSize: 15,
-              color: "inherit",
-            }}
+            // styles={{
+            //   width: 15,
+            //   height: 15,
+            //   opacity: 1,
+            //   fontSize: 15,
+            //   color: "inherit",
+            // }}
           />
         )}
 
@@ -204,6 +204,7 @@ function PageItemView({
             style={{ maxWidth: shouldShow ? "fit-content" : 0 }}
           >
             <PageItemOptions
+              shouldShow={shouldShow}
               onOpenChange={(v) => setShouldShow(v)}
               page={page}
               onRenameAsync={async () => setEditing(true)}
