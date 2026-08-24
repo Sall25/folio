@@ -6,6 +6,7 @@ import type { Page } from "src/types";
 
 const HOCUSPOCUS_URL =
   import.meta.env.VITE_HOCUSPOCUS_URL ?? "ws://localhost:1234";
+console.log("HOCUSPOCUS_URL =", HOCUSPOCUS_URL);
 
 interface UseCollabDocResult {
   ydoc: Y.Doc | null;

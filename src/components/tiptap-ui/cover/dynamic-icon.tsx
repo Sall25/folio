@@ -1,84 +1,64 @@
-import { memo, useEffect, useState } from "react";
-import "./dynamic-icon.scss";
+import {
+  CaseSensitive, // match_case (title)
+  AlignLeft, // notes (text)
+  Hash, // tag (number)
+  SquareCheck, // check_box (checkbox)
+  CircleChevronDown, // expand_circle_down (select)
+  List, // list (multi_select)
+  LoaderCircle, // arrow_upload_progress (status)
+  Calendar, // calendar_today (date)
+  User, // person
+  FunctionSquare, // functions (formula)
+  ArrowLeftRight, // sync_alt (relation)
+  ArrowUpDown, // swap_vert (rollup)
+  Link, // link (url)
+  Phone, // call (phone)
+  Mail, // mail (email)
+  Clock, // schedule (created_time / edited_time)
+  UserPlus, // person_add (created_by)
+  Pencil, // edit (edited_by)
+  FileText, // fallback
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { memo } from "react";
 
-type DynamicIconProps = {
-  /** Material Symbols name, e.g. "home", "chevron_right", "favorite". */
-  name: string;
-  /** px size — also drives the optical-size axis. */
-  size?: number;
-  /** Filled (Notion look) vs outlined. */
-  filled?: boolean;
-  /** Stroke weight, 100–700. */
-  weight?: number;
-} & React.HTMLAttributes<HTMLSpanElement>;
+// Keys = the exact strings in PROPERTY_TYPE_ICONS (the old Material names).
+const ICON_MAP: Record<string, LucideIcon> = {
+  match_case: CaseSensitive,
+  notes: AlignLeft,
+  tag: Hash,
+  check_box: SquareCheck,
+  expand_circle_down: CircleChevronDown,
+  list: List,
+  arrow_upload_progress: LoaderCircle,
+  calendar_today: Calendar,
+  person: User,
+  functions: FunctionSquare,
+  sync_alt: ArrowLeftRight,
+  swap_vert: ArrowUpDown,
+  link: Link,
+  call: Phone,
+  mail: Mail,
+  schedule: Clock,
+  person_add: UserPlus,
+  edit: Pencil,
+};
 
-// Module-level: the font loads ONCE for the whole app, so every icon can share
-// the result. Without this each DynamicIcon would run its own check.
-let fontReady = false;
-const listeners = new Set<() => void>();
-
-if (typeof document !== "undefined" && "fonts" in document) {
-  document.fonts
-    .load('24px "Material Symbols Rounded"')
-    .then(() => {
-      fontReady = true;
-      listeners.forEach((fn) => fn());
-      listeners.clear();
-    })
-    .catch(() => {
-      // Font failed — show the glyphs anyway rather than hiding them forever.
-      fontReady = true;
-      listeners.forEach((fn) => fn());
-      listeners.clear();
-    });
-}
-
-function useFontReady(): boolean {
-  const [ready, setReady] = useState(fontReady);
-  useEffect(() => {
-    if (fontReady) return;
-    const fn = () => setReady(true);
-    listeners.add(fn);
-    return () => {
-      listeners.delete(fn);
-    };
-  }, []);
-  return ready;
-}
-
-const DynamicIconImpl = ({
+function DynamicIconImpl({
   name,
-  size = 24,
-  filled = true,
-  weight = 400,
+  size = 16,
   className,
   style,
-  ...props
-}: DynamicIconProps) => {
-  const opsz = Math.min(48, Math.max(20, size));
-  const ready = useFontReady();
-
-  return (
-    <span
-      className={`material-symbols-rounded${className ? ` ${className}` : ""}`}
-      style={{
-        fontSize: size,
-        fontVariationSettings: `'FILL' ${filled ? 1 : 0}, 'wght' ${weight}, 'GRAD' 0, 'opsz' ${opsz}`,
-        // The glyph is a LIGATURE — until the font loads, the browser renders
-        // the literal name ("home") in a fallback face. Reserve the box but hide
-        // the text, so there's no flash of the icon's name and no layout shift
-        // when it resolves.
-        width: size,
-        height: size,
-        visibility: ready ? undefined : "hidden",
-        ...style,
-      }}
-      aria-hidden="true"
-      {...props}
-    >
-      {name}
-    </span>
-  );
-};
+}: {
+  name?: string;
+  size?: number;
+  className?: string;
+  style?: React.CSSProperties;
+  weight?: number; // ignored (was a Material font axis)
+  filled?: boolean; // ignored
+}) {
+  const Icon = (name && ICON_MAP[name]) || FileText;
+  return <Icon size={size} className={className} style={style} />;
+}
 
 export const DynamicIcon = memo(DynamicIconImpl);
