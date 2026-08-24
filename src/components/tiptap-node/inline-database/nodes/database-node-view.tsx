@@ -45,6 +45,7 @@ import {
 import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { useActiveViewFromHash, useSyncViews } from "../hooks";
 import { ChipsRow } from "../components/chips-row";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
 const EMPTY_SOURCE = { properties: [] };
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
@@ -258,6 +259,7 @@ export function DatabaseNodeView({
 
                 {attrs.id && <SelectionToolbar />}
               </div>
+              <Spacer orientation="vertical" size={5} />
 
               {body}
             </CardItemGroup>

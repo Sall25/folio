@@ -136,7 +136,7 @@ export function makeDatabasePage(opts: {
     cover: {
       iconName: "table",
       coverImage: null,
-      target: null,
+      target: "Icons",
       color: null,
       gradient: null,
       positionY: null,

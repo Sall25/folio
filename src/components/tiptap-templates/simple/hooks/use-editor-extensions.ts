@@ -114,8 +114,6 @@ export function useEditorExtensions(
         placeholder: ({ editor, node, pos }) => {
           if (node.type.name === "appendixSummary") return "Untitled";
 
-          // Paragraphs inside an appendix body get their own quiet prompt
-          // instead of the generic one. Walk ancestors from the node's position.
           if (node.type.name === "paragraph") {
             const $pos = editor.state.doc.resolve(pos);
             for (let d = $pos.depth; d > 0; d--) {
@@ -126,12 +124,10 @@ export function useEditorExtensions(
           }
 
           if (node.type.name === "title") return "New Page";
+
           if (["tableCell", "tableHeader", "table"].includes(node.type.name))
             return "";
-          // Blank the prompt on a dedicated DATABASE PAGE only (title +
-          // database, no body). Uses page-level detection via the guard's
-          // storage — NOT "doc contains a database node", so a normal page
-          // that embeds an inline database keeps its normal placeholders.
+
           const isDbPage =
             editor.storage.structuredPageGuard?.isStructuredActivePage?.() ===
             true;
@@ -139,6 +135,8 @@ export function useEditorExtensions(
           if (editor.state.tr.getMeta("/Filter")) return "/Filter";
           return "Write, type '/' from commands...";
         },
+        showOnlyCurrent: true,
+        showOnlyWhenEditable: true,
       }),
       // --- Lists ---
       BulletList,

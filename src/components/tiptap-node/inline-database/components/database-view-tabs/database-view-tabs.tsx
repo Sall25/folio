@@ -138,7 +138,11 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
             data-highlighted
           >
             {iconName ? (
-              <DynamicIcon name={iconName} size={20} />
+              <DynamicIcon
+                className="tiptap-button-icon"
+                name={iconName}
+                size={18}
+              />
             ) : (
               <ViewIcon view={view} />
             )}
@@ -161,7 +165,11 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
               }}
             >
               {iconName ? (
-                <DynamicIcon name={iconName} size={20} />
+                <DynamicIcon
+                  className="tiptap-button-icon"
+                  name={iconName}
+                  size={20}
+                />
               ) : (
                 <ViewIcon view={view} />
               )}
@@ -200,7 +208,11 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
         }}
       >
         {iconName ? (
-          <DynamicIcon name={iconName} size={20} />
+          <DynamicIcon
+            className="tiptap-button-icon"
+            name={iconName}
+            size={20}
+          />
         ) : (
           <ViewIcon view={view} />
         )}

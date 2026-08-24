@@ -5,6 +5,14 @@
   --placeholder-color: var(--tt-gray-dark-a-50);
 }
 
+.tiptap h1[data-type="title"].is-empty::before {
+  content: "New Page";
+  color: var(--tt-text-secondary);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
 h1[data-type='title'] br:only-child ~ ::before,
 h1[data-type='title']:has(br:only-child)::before {
   content: 'New Page';
@@ -28,4 +36,12 @@ h1[data-type='title']:has(br:only-child)::before {
 h1[data-type='title'] {
   position: relative;
   margin-bottom: 1rem !important;
+}
+.tiptap h1[data-type="title"].is-empty::before,
+.tiptap h1[data-type="title"]:empty::before {
+  content: "New Page";
+  color: var(--tt-text-secondary);
+  pointer-events: none;
+  float: left;
+  height: 0;
 }

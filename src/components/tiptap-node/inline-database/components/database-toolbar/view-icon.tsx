@@ -10,7 +10,14 @@ import {
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 export function ViewIcon({ view }: { view: DatabaseView }) {
-  if (view.iconName) return <DynamicIcon name={view.iconName} size={20} />;
+  if (view.iconName)
+    return (
+      <DynamicIcon
+        className="tiptap-button-icon"
+        name={view.iconName}
+        size={20}
+      />
+    );
 
   return (
     <>
