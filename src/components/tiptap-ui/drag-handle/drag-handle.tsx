@@ -17,6 +17,7 @@ import { Node } from "@tiptap/pm/model";
 import type { NormalizedNestedOptions } from "@tiptap/extension-drag-handle";
 import { createPortal } from "react-dom";
 import { recordSelection } from "src/components/tiptap-node/inline-database/utils/record-selection-store";
+import { RecordDragMenu } from "src/components/tiptap-node/inline-database/components/record-drag-menu";
 
 const NODE_LABELS: Record<string, string> = {
   paragraph: "Text",
@@ -93,6 +94,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
   const isDraggingRef = useRef(false);
   const targetRef = useRef(target);
   const posRef = useRef(-1);
+  const gripRef = useRef<HTMLButtonElement>(null);
 
   // Hide the drag handle while a column is being resized to avoid
   // it flickering or repositioning during the resize interaction
@@ -130,9 +132,20 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
 
   const menu = useMemo(
     () =>
-      open
-        ? createPortal(
+      open ? (
+        target === "Record" ? (
+          // Record menu: its OWN Popover (anchored to the grip), NOT the
+          // DropdownMenu — its nested sub-popovers (icon/property/move) can't
+          // open inside a Radix DropdownMenu's dismiss scope.
+          <RecordDragMenu
+            key={"record-drag-menu"}
+            anchorRef={gripRef}
+            onAction={onAction}
+          />
+        ) : (
+          createPortal(
             <DragHandleMenu
+              key={"drag-handle-menu"}
               onAction={onAction}
               target={target}
               editor={editor!}
@@ -141,7 +154,8 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
             />,
             document.body,
           )
-        : null,
+        )
+      ) : null,
     [open, onAction, target, editor],
   );
 
@@ -149,7 +163,9 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
 
   return (
     <TiptapDragHandle
-      className={`drag-handle ${isColumnResizing ? "hide" : "show"}`}
+      className={`drag-handle ${isColumnResizing ? "hide" : "show"} ${
+        target === "Record" ? "is-record" : ""
+      }`}
       editor={editor}
       computePositionConfig={{
         placement: "left-start",
@@ -383,6 +399,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
               variant="ghost"
               role="button"
               size="large"
+              ref={gripRef}
               className="grip-button"
               tabIndex={-1}
               onPointerDown={() => {

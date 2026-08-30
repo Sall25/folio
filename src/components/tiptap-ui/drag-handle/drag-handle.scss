@@ -4,9 +4,11 @@
   transform: translateX(-15px);
   gap: 0px;
   transition: top 0.25s ease-out, left 0.25s ease-out, visibility 0.25s ease;
-  // transition-property: top;
-  //   transition-duration: .25s;
-  //   transition-timing-function: ease-out;
+ 
+   &.is-record {
+    // Nudge left to clear the row's selection checkbox.
+    transform: translateX(-28px);   // tune: -15px minus ~checkbox width+gap
+  }
 
   &.hide{
     visibility: hidden;
@@ -21,6 +23,7 @@
     width: 15px;
     min-height: 20px;
     height: 25px;
+    align-self: center;
     opacity: 0.6;
     color: var(--tt-color-text-gray);
   }
