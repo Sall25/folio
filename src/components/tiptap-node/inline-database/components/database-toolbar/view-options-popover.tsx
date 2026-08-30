@@ -3,10 +3,10 @@ import {
   Bell,
   ChevronLeft,
   Copy,
-  Filter,
   Group,
-  LayoutTemplate,
+  Layout,
   Link as LinkIcon,
+  ListFilter,
   ListTree,
   Lock,
   SlidersHorizontal,
@@ -49,6 +49,9 @@ import { GroupPanel } from "../group-panel";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import { IconPickerPopover } from "src/components/tiptap-ui/cover";
 import { MenuRow } from "../menu-row";
+import { usePanelTransition } from "../../hooks/use-panel-transition";
+import { SpinnerRing } from "src/components/tiptap-ui-primitive/spinner-ring";
+import { PanelSlide } from "../panel-slide";
 
 const PANEL_TITLES: Record<Exclude<PanelView["type"], "main">, string> = {
   properties: "Properties",
@@ -73,13 +76,27 @@ function SubPanelHeader({
     <CardHeader>
       <Button
         variant="ghost"
-        className="view-options__back"
+        // className="view-options__back"
         onClick={onBack}
-        style={{ background: "transparent" }}
+        style={{
+          background: "transparent",
+        }}
       >
         <ChevronLeft size={16} className="tiptap-button-icon" />
       </Button>
-      <CardGroupLabel>{title}</CardGroupLabel>
+      <Button
+        variant="ghost"
+        style={{
+          background: "transparent",
+          paddingLeft: 0,
+          marginLeft: 0,
+          minWidth: "fit-content",
+          width: "fit-content",
+          color: "var(--tt-text-primary)",
+        }}
+      >
+        <span className="tiptap-button-text">{title}</span>
+      </Button>
       <Spacer orientation="horizontal" />
       {onClose && (
         <Button
@@ -142,55 +159,89 @@ function ViewOptionsContent({
   const groupLabel =
     properties.find((p) => p.id === groupByPropertyId)?.name ?? "None";
 
-  console.log("PANEL TYPE", panel.type);
+  // includeInitial=true → spinner also covers the first open (Rename / Edit view).
+  const transitioning = usePanelTransition(panel.type, 180, true);
 
   // ── Sub-panel: replace the body, add a back header ──────────────────────
   if (panel.type !== "main") {
     return (
-      <Card className="view-options">
+      <Card
+        className="view-options"
+        style={{
+          maxHeight: "var(--radix-popover-content-available-height, 80vh)",
+          overflowY: "auto",
+          overscrollBehavior: "contain",
+        }}
+      >
         <SubPanelHeader
           title={PANEL_TITLES[panel.type] ?? "Options"}
           onBack={db.popPanel}
           onClose={onClose}
         />
-        <CardBody style={{ width: "100%", padding: "5px 10px" }}>
-          {panel.type === "properties" && (
-            <PropertiesPanel
-              bare
-              properties={properties}
-              db={db}
-              activeView={view}
-            />
-          )}
-          {panel.type === "group" && (
-            <GroupPanel
-              bare
-              properties={properties}
-              db={db}
-              activeView={view}
-            />
-          )}
-          {panel.type === "filter" && (
-            <FilterPanel
-              bare
-              properties={properties}
-              db={db}
-              activeView={view}
-            />
-          )}
-          {panel.type === "sort" && (
-            <SortPanel
-              bare
-              sorts={view.sorts}
-              properties={properties}
-              db={db}
-              activeView={view}
-            />
-          )}
-          {panel.type === "layout" && <LayoutPanel bare view={view} db={db} />}
-          {panel.type === "open-pages-in" && <OpenPagesInPanel bare db={db} />}
-          {/* group / sub-items land here once their panels exist */}
-        </CardBody>
+        {transitioning ? (
+          <div
+            key={"div-transitioning"}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              padding: "24px 0",
+            }}
+          >
+            <SpinnerRing />
+          </div>
+        ) : (
+          <CardBody
+            key={"card-body"}
+            style={{
+              width: "100%",
+              padding: "5px 10px",
+              scrollbarWidth: "thin",
+            }}
+          >
+            <PanelSlide panelKey={panel.type}>
+              {panel.type === "properties" && (
+                <PropertiesPanel
+                  bare
+                  properties={properties}
+                  db={db}
+                  activeView={view}
+                />
+              )}
+              {panel.type === "group" && (
+                <GroupPanel
+                  bare
+                  properties={properties}
+                  db={db}
+                  activeView={view}
+                />
+              )}
+              {panel.type === "filter" && (
+                <FilterPanel
+                  bare
+                  properties={properties}
+                  db={db}
+                  activeView={view}
+                />
+              )}
+              {panel.type === "sort" && (
+                <SortPanel
+                  bare
+                  sorts={view.sorts}
+                  properties={properties}
+                  db={db}
+                  activeView={view}
+                />
+              )}
+              {panel.type === "layout" && (
+                <LayoutPanel bare view={view} db={db} />
+              )}
+              {panel.type === "open-pages-in" && (
+                <OpenPagesInPanel bare db={db} />
+              )}
+            </PanelSlide>
+            {/* group / sub-items land here once their panels exist */}
+          </CardBody>
+        )}
       </Card>
     );
   }
@@ -211,138 +262,157 @@ function ViewOptionsContent({
           </Button>
         )}
       </CardHeader>
-      <CardBody style={{ width: "100%", padding: "5px 10px" }}>
-        <CardItemGroup className="view-options__name" orientation="horizontal">
-          <IconPickerPopover
-            onSelect={(name, color, target) => {
-              db.updateView(view.id, {
-                ...view,
-                iconName: name,
-                color,
-                target,
-              });
-            }}
+      {transitioning ? (
+        <div
+          key={"div-transitioning-main"}
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "24px 0",
+          }}
+        >
+          <SpinnerRing />
+        </div>
+      ) : (
+        <CardBody
+          key={"main-body"}
+          style={{ width: "100%", padding: "5px 10px" }}
+        >
+          <CardItemGroup
+            className="view-options__name"
+            orientation="horizontal"
           >
-            <Button
-              variant="ghost"
-              data-active-state="on"
-              style={{ background: "transparent" }}
+            <IconPickerPopover
+              onSelect={(name, color, target) => {
+                db.updateView(view.id, {
+                  ...view,
+                  iconName: name,
+                  color,
+                  target,
+                });
+              }}
             >
-              {view.target === "Emoji" ? (
-                <span key={"emoji"} className="tiptap-button-icon">
-                  {view.iconName}
-                </span>
-              ) : (
-                <DynamicIcon
-                  key={"dynamic-icon"}
-                  className="tiptap-button-icon"
-                  name={view.iconName}
-                  size={20}
-                  style={{ color: view.color }}
-                />
-              )}
-            </Button>
-          </IconPickerPopover>
-          <Input
-            className="view-options__name-input"
-            autoFocus
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={locked}
-            onBlur={() =>
-              !locked &&
-              db.updateView(db.activeView.id, { ...db.activeView, name })
-            }
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.stopPropagation();
-                if (!locked)
-                  db.updateView(db.activeView.id, {
-                    ...db.activeView,
-                    name,
-                  });
+              <Button
+                variant="ghost"
+                data-active-state="on"
+                style={{ background: "transparent" }}
+              >
+                {view.target === "Emoji" ? (
+                  <span key={"emoji"} className="tiptap-button-icon">
+                    {view.iconName}
+                  </span>
+                ) : (
+                  <DynamicIcon
+                    key={"dynamic-icon"}
+                    className="tiptap-button-icon"
+                    name={view.iconName}
+                    size={20}
+                    style={{ color: view.color }}
+                  />
+                )}
+              </Button>
+            </IconPickerPopover>
+            <Input
+              className="view-options__name-input"
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={locked}
+              onBlur={() =>
+                !locked &&
+                db.updateView(db.activeView.id, { ...db.activeView, name })
               }
-            }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.stopPropagation();
+                  if (!locked)
+                    db.updateView(db.activeView.id, {
+                      ...db.activeView,
+                      name,
+                    });
+                }
+              }}
+            />
+          </CardItemGroup>
+
+          <MenuRow
+            Icon={Layout}
+            label="Layouts"
+            sub={view.type.charAt(0).toUpperCase() + view.type.slice(1)}
+            navigable
+            onClick={() => db.pushPanel({ type: "layout" })}
+            disabled={locked}
           />
-        </CardItemGroup>
+          <MenuRow
+            Icon={SlidersHorizontal}
+            label="Properties"
+            sub={`${shownCount} shown`}
+            navigable
+            onClick={() => db.pushPanel({ type: "properties" })}
+            disabled={locked}
+          />
+          <MenuRow
+            Icon={ListFilter}
+            label="Filter"
+            sub={filterCount === 1 ? "1 filter" : `${filterCount} filters`}
+            navigable
+            onClick={() => db.pushPanel({ type: "filter" })}
+            disabled={locked}
+          />
+          <MenuRow
+            Icon={ArrowUpDown}
+            label="Sort"
+            sub={sortCount === 1 ? "1 sort" : `${sortCount} sorts`}
+            navigable
+            onClick={() => db.pushPanel({ type: "sort" })}
+            disabled={locked}
+          />
+          <MenuRow
+            Icon={Group}
+            label="Group"
+            sub={groupLabel}
+            navigable
+            onClick={() => db.pushPanel({ type: "group" })}
+            disabled={locked}
+          />
+          <MenuRow
+            Icon={ListTree}
+            label="Sub-items"
+            onClick={locked ? undefined : () => {}}
+            disabled={locked}
+          />
 
-        <MenuRow
-          Icon={LayoutTemplate}
-          label="Layouts"
-          sub={view.type.charAt(0).toUpperCase() + view.type.slice(1)}
-          navigable
-          onClick={() => db.pushPanel({ type: "layout" })}
-          disabled={locked}
-        />
-        <MenuRow
-          Icon={SlidersHorizontal}
-          label="Properties"
-          sub={`${shownCount} shown`}
-          navigable
-          onClick={() => db.pushPanel({ type: "properties" })}
-          disabled={locked}
-        />
-        <MenuRow
-          Icon={Filter}
-          label="Filter"
-          sub={filterCount === 1 ? "1 filter" : `${filterCount} filters`}
-          navigable
-          onClick={() => db.pushPanel({ type: "filter" })}
-          disabled={locked}
-        />
-        <MenuRow
-          Icon={ArrowUpDown}
-          label="Sort"
-          sub={sortCount === 1 ? "1 sort" : `${sortCount} sorts`}
-          navigable
-          onClick={() => db.pushPanel({ type: "sort" })}
-          disabled={locked}
-        />
-        <MenuRow
-          Icon={Group}
-          label="Group"
-          sub={groupLabel}
-          navigable
-          onClick={() => db.pushPanel({ type: "group" })}
-          disabled={locked}
-        />
-        <MenuRow
-          Icon={ListTree}
-          label="Sub-items"
-          onClick={locked ? undefined : () => {}}
-          disabled={locked}
-        />
+          <Separator orientation="horizontal" />
 
-        <Separator orientation="horizontal" />
+          <MenuRow Icon={Bell} label="Slack notifications" onClick={() => {}} />
 
-        <MenuRow Icon={Bell} label="Slack notifications" onClick={() => {}} />
+          <MenuRow
+            Icon={Lock}
+            label={locked ? "Unlock database" : "Lock database"}
+            onClick={() => db.toggleLock()}
+          />
 
-        <MenuRow
-          Icon={Lock}
-          label={locked ? "Unlock database" : "Lock database"}
-          onClick={() => db.toggleLock()}
-        />
+          <MenuRow
+            Icon={LinkIcon}
+            label={copied ? "Copied!" : "Copy link to view"}
+            onClick={handleCopy}
+          />
 
-        <MenuRow
-          Icon={LinkIcon}
-          label={copied ? "Copied!" : "Copy link to view"}
-          onClick={handleCopy}
-        />
-
-        <MenuRow
-          Icon={Copy}
-          label="Duplicate view"
-          onClick={locked ? undefined : () => {}}
-          disabled={locked}
-        />
-        <MenuRow
-          Icon={Trash2}
-          label="Delete view"
-          onClick={locked ? undefined : () => {}}
-          disabled={locked}
-          danger
-        />
-      </CardBody>
+          <MenuRow
+            Icon={Copy}
+            label="Duplicate view"
+            onClick={locked ? undefined : () => {}}
+            disabled={locked}
+          />
+          <MenuRow
+            Icon={Trash2}
+            label="Delete view"
+            onClick={locked ? undefined : () => {}}
+            disabled={locked}
+            danger
+          />
+        </CardBody>
+      )}
     </Card>
   );
 }
@@ -405,10 +475,14 @@ export function ViewOptionsPopover({
         ref={panelRef}
         style={{
           position: "absolute",
-          right: 0,
-          top: "-26px",
+          right: 68,
+          top: -20,
           zIndex: 999,
           marginTop: 4,
+          // Cap to the space below the trigger and scroll, so it never runs off-screen.
+          maxHeight: "calc(100vh - var(--trigger-bottom, 120px) - 16px)",
+          overflowY: "auto",
+          overscrollBehavior: "contain",
         }}
       >
         <ViewOptionsContent
@@ -459,18 +533,14 @@ export function ViewOptionsPopover({
           align="end"
           sideOffset={-26}
           avoidCollisions
-          collisionPadding={16}
-          style={{ width: 280, padding: 0, zIndex: 999 }}
+          collisionPadding={4}
+          style={{ zIndex: 999 }}
         >
           <ViewOptionsContent
             properties={properties}
             view={view}
             db={db}
             onCopyLink={onCopyLink}
-            onClose={() => {
-              setOpen(false);
-              db.resetPanel();
-            }}
           />
         </PopoverContent>
       </PopoverPortal>

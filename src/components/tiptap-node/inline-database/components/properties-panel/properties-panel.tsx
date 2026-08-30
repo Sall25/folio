@@ -1,4 +1,4 @@
-import { GripVertical, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
@@ -60,12 +60,7 @@ export function PropertiesPanel({
     const isVisible = !hidden.has(p.id);
 
     return (
-      <GridRow key={p.id} style={{ padding: "3px 10px" }}>
-        <GridCell>
-          <Button variant="ghost" style={{ background: "transparent" }}>
-            <GripVertical size={13} className="tiptap-button-icon" />
-          </Button>
-        </GridCell>
+      <GridRow key={p.id} style={{ padding: "3px 10px", width: "100%" }}>
         <GridCell>
           <Button variant="ghost" style={{ background: "transparent" }}>
             <DynamicIcon
@@ -98,7 +93,7 @@ export function PropertiesPanel({
 
   const body = (
     <CardBody style={{ width: "100%" }}>
-      <Grid columns="20px 3fr 1fr" style={{ width: "100%" }}>
+      <Grid columns="1fr 30px" style={{ width: "100%" }}>
         {visibleProperties.length > 0 && (
           <>
             <CardItemGroup
@@ -117,7 +112,7 @@ export function PropertiesPanel({
                   color: "var(--tt-brand-color-400)",
                 }}
               >
-                Show all
+                <span className="tiptap-button-text">Show all</span>
               </Button>
             </CardItemGroup>
             {visibleProperties.map(renderRow)}
@@ -135,14 +130,12 @@ export function PropertiesPanel({
                 variant="ghost"
                 onClick={hideAll}
                 style={{
-                  width: "100%",
-                  justifyContent: "flex-start",
                   fontSize: 12,
                   fontWeight: 600,
                   color: "var(--tt-brand-color-400)",
                 }}
               >
-                Hide all
+                <span className="tiptap-button-text">Hide all</span>
               </Button>
             </CardItemGroup>
             {hiddenProperties.map(renderRow)}

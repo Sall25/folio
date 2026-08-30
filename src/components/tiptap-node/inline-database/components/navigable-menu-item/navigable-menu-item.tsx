@@ -33,15 +33,30 @@ export function NavigableMenuItem({
   Icon,
   label,
   shortcut,
+  sub,
   children,
   container,
+  side = "right",
+  align = "start",
+  sideOffset = 4,
+  alignOffset = 0,
 }: {
-  Icon: ComponentType<{ className?: string; size?: number }>;
+  Icon?: ComponentType<{ className?: string; size?: number }>;
   label: string;
   shortcut?: string;
+  /** Trailing sub-label (e.g. the current value, like "Page content"). */
+  sub?: string;
   /** The submenu content shown in the flyout. */
   children: ReactNode;
   container?: HTMLElement | null;
+  /** Which side of the row the flyout opens on. Default "right". */
+  side?: "top" | "right" | "bottom" | "left";
+  /** Alignment along that side. Default "start". */
+  align?: "start" | "center" | "end";
+  /** Gap between the row and the flyout. */
+  sideOffset?: number;
+  /** Shift along the align axis (e.g. negative to nudge a right flyout up). */
+  alignOffset?: number;
 }) {
   const [open, setOpen] = useState(false);
   const openTimer = useRef<number | undefined>(undefined);
@@ -101,14 +116,21 @@ export function NavigableMenuItem({
             setOpen((v) => !v);
           }}
         >
-          <MenuRow Icon={Icon} label={label} shortcut={shortcut} navigable />
+          <MenuRow
+            Icon={Icon}
+            label={label}
+            shortcut={shortcut}
+            sub={sub}
+            navigable
+          />
         </div>
       </PopoverAnchor>
       <PopoverPortal container={portalContainer}>
         <PopoverContent
-          side="right"
-          align="start"
-          sideOffset={4}
+          side={side}
+          align={align}
+          sideOffset={sideOffset}
+          alignOffset={alignOffset}
           // Mouse on the flyout → cancel the pending close ("on this one").
           // Leaving the flyout → schedule close (leaving both closes it).
           onPointerEnter={cancelClose}

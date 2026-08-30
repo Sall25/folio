@@ -1,4 +1,12 @@
+
 .view-options {
+ max-height: min(
+    var(--radix-popover-content-available-height, 80vh),
+    80vh
+  );
+  overflow-y: auto;
+  overflow-x: visible;   // ← but this WON'T work with overflow-y: auto (spec forces it)
+  overscroll-behavior: contain;
   width: 300px;
   display: flex;
   flex-direction: column;
@@ -11,6 +19,20 @@
     background-color: var(--tt-gray-dark-100);
   }
   box-shadow: var(--tt-shadow-elevated-md);
+
+   // Reuse the thin scrollbar pattern (matches the editor's scroll areas),
+  // overriding the thick 0.8rem global default.
+  scrollbar-width: thin !important;
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--tt-border-color);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
   &__name-input{
     height: 30px;

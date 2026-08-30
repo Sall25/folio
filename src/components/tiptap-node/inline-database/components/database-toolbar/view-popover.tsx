@@ -19,6 +19,7 @@ import {
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { DuplicateIcon } from "src/components/tiptap-icons/duplicate-icon";
 import { ViewIcon } from "./view-icon";
+import { MenuRow } from "../menu-row";
 
 interface ViewNamePopoverProps {
   view: DatabaseView;
@@ -32,8 +33,8 @@ interface ViewNamePopoverProps {
   canDelete?: boolean;
   active?: boolean;
   attrs: DatabaseAttrs;
-  open: boolean
-  onOpenChange: (v: boolean)=>void
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
 }
 
 export function ViewPopover({
@@ -48,19 +49,18 @@ export function ViewPopover({
   canDelete = true,
   active = false,
   attrs,
-  open, 
-  onOpenChange
+  open,
+  onOpenChange,
 }: ViewNamePopoverProps) {
+  const close = () => onOpenChange(false);
+
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
         <Button
+          className="db-view-tab"
           data-active-state={active ? "on" : "off"}
           variant="ghost"
-          style={{
-            borderRadius: "var(--tt-radius-xl)",
-            padding: "5px 15px",
-          }}
         >
           <ViewIcon view={view} />
           <span className="tiptap-button-text">{view.name}</span>
@@ -69,104 +69,83 @@ export function ViewPopover({
       <PopoverContent>
         <Card
           style={{
-            padding: "5px 15px",
+            padding: "5px 10px",
             boxShadow: "var(--tt-shadow-elevated-md)",
+            border: "1px solid var(--tt-border-color)",
+            borderRadius: "var(--tt-radius-sm)",
             minWidth: 220,
           }}
         >
-          <Button
-            variant="ghost"
-            className="action-button"
+          <MenuRow
+            Icon={Edit}
+            label="Rename"
             onClick={() => {
               onRename?.(true);
-              onOpenChange(false);
+              close();
             }}
-            style={{ width: "100%", justifyContent: "flex-start" }}
-          >
-            <Edit className="tiptap-button-icon" />
-            <span className="tiptap-button-text">Rename</span>
-          </Button>
-          <Button
-            variant="ghost"
-            className="action-button"
+          />
+          <MenuRow
+            Icon={SlidersHorizontal}
+            label="Edit view"
             onClick={() => {
               onEdit?.();
-              onOpenChange(false);
+              close();
             }}
-            style={{ width: "100%", justifyContent: "flex-start" }}
-          >
-            <SlidersHorizontal className="tiptap-button-icon" />
-            <span className="tiptap-button-text">Edit view</span>
-          </Button>
+          />
+
           <Separator
             orientation="horizontal"
             className="sep"
             style={{ height: 0.5 }}
           />
-          <Button
-            variant="ghost"
-            className="action-button"
+
+          <MenuRow
+            Icon={Link}
+            label="Copy link to view"
             onClick={() => {
               onCopyLink?.();
-              onOpenChange(false);
+              close();
             }}
-            style={{ width: "100%", justifyContent: "flex-start" }}
-          >
-            <Link className="tiptap-button-icon" />
-            <span className="tiptap-button-text">Copy link to view</span>
-          </Button>
-          <Button
-            variant="ghost"
-            className="action-button"
+          />
+          <MenuRow
+            Icon={Maximize2}
+            label="Open as full page"
             onClick={() => {
               onOpenAsFullPage?.();
-              onOpenChange(false);
+              close();
             }}
-            style={{ width: "100%", justifyContent: "flex-start" }}
-          >
-            <Maximize2 className="tiptap-button-icon" />
-            <span className="tiptap-button-text">Open as full page</span>
-          </Button>
+          />
           {attrs.hideTitle && (
-            <Button
-              variant="ghost"
-              className="action-button"
+            <MenuRow
+              Icon={Eye}
+              label="Show database title"
               onClick={() => {
                 onShowDatabaseTitle?.();
-                onOpenChange(false);
+                close();
               }}
-              style={{ width: "100%", justifyContent: "flex-start" }}
-            >
-              <Eye className="tiptap-button-icon" />
-              <span className="tiptap-button-text">Show database title</span>
-            </Button>
+            />
           )}
+
           <Separator orientation="horizontal" className="sep" />
-          <Button
-            variant="ghost"
-            className="action-button"
+
+          <MenuRow
+            Icon={DuplicateIcon}
+            label="Duplicate"
             onClick={() => {
               onDuplicate?.();
-              onOpenChange(false);
+              close();
             }}
-            style={{ width: "100%", justifyContent: "flex-start" }}
-          >
-            <DuplicateIcon className="tiptap-button-icon" />
-            <span className="tiptap-button-text">Duplicate</span>
-          </Button>
+          />
           {canDelete && (
-            <Button
-              variant="ghost"
-              className="action-button action-button--danger"
+            <MenuRow
+              Icon={Trash2}
+              label="Delete view"
+              danger
               onClick={() => {
                 onDelete?.();
-                onOpenChange(false);
+                close();
               }}
-              style={{ width: "100%", justifyContent: "flex-start" }}
-            >
-              <Trash2 className="tiptap-button-icon" />
-              <span className="tiptap-button-text">Delete view</span>
-            </Button>
+            />
           )}
         </Card>
       </PopoverContent>

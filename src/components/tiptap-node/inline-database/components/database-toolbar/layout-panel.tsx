@@ -6,14 +6,8 @@ import type {
 } from "src/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
-  Calendar,
   ChevronRight,
-  Columns3,
   Image,
-  LayoutGrid,
-  List,
-  Table,
-  ChartGantt,
   PanelRight,
   Check,
   SquareSquare,
@@ -33,7 +27,6 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import { Toggle } from "src/components/tiptap-ui-primitive/toggle";
 import { type UseDatabaseReturn } from "../../hooks";
 import { useCurrentEditor } from "@tiptap/react";
 import {
@@ -41,59 +34,9 @@ import {
   GridCell,
   GridRow,
 } from "src/components/tiptap-ui-primitive/grid";
-
-function ViewPallette({
-  type,
-  active,
-  onSelect,
-}: {
-  type: DatabaseView["type"];
-  active?: boolean;
-  onSelect: (type: DatabaseView["type"]) => void;
-}) {
-  const label = type.charAt(0).toUpperCase() + type.slice(1); // table → Table, etc.
-
-  const Icon =
-    type === "table"
-      ? Table
-      : type === "list"
-        ? List
-        : type === "board"
-          ? Columns3
-          : type === "gallery"
-            ? LayoutGrid
-            : type === "calendar"
-              ? Calendar
-              : ChartGantt; // timeline
-
-  return (
-    <div
-      onClick={() => onSelect(type)}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        width: 96,
-        height: 64,
-        margin: 4,
-        cursor: "pointer",
-        borderRadius: "var(--tt-radius-lg)",
-        border: `1.5px solid ${
-          active
-            ? "var(--tt-brand-color-400)"
-            : "var(--tt-border-color, rgba(255,255,255,0.12))"
-        }`,
-        color: active ? "var(--tt-brand-color-400)" : "var(--tt-text-primary)",
-        transition: "border-color 0.12s ease, color 0.12s ease",
-      }}
-    >
-      <Icon size={20} />
-      <span style={{ fontSize: 12, lineHeight: 1 }}>{label}</span>
-    </div>
-  );
-}
+import { MenuRow } from "../menu-row";
+import { NavigableMenuItem } from "../navigable-menu-item";
+import { ViewPalette } from "./view-palette";
 
 interface LayoutPanelProps {
   view: DatabaseView;
@@ -137,47 +80,48 @@ export function LayoutPanel({
 
   const content = (
     <div className="w-full mt-2">
-      <Grid columns="1fr 1fr 1fr">
-        <GridRow>
+      <Grid columns="1fr 1fr 1fr" gap={5} style={{ gap: 10 }}>
+        <GridRow style={{ gap: 10 }}>
           <GridCell>
-            <ViewPallette
+            <ViewPalette
               onSelect={onSelect}
               active={view.type === "table"}
               type="table"
             />
           </GridCell>
+
           <GridCell>
-            <ViewPallette
+            <ViewPalette
               onSelect={onSelect}
               active={view.type === "list"}
               type="list"
             />
           </GridCell>
           <GridCell>
-            <ViewPallette
+            <ViewPalette
               onSelect={onSelect}
               active={view.type === "board"}
               type="board"
             />
           </GridCell>
         </GridRow>
-        <GridRow>
+        <GridRow style={{ gap: 10, marginTop: 10 }}>
           <GridCell>
-            <ViewPallette
+            <ViewPalette
               onSelect={onSelect}
               active={view.type === "gallery"}
               type="gallery"
             />
           </GridCell>
           <GridCell>
-            <ViewPallette
+            <ViewPalette
               onSelect={onSelect}
               active={view.type === "calendar"}
               type="calendar"
             />
           </GridCell>
           <GridCell>
-            <ViewPallette
+            <ViewPalette
               onSelect={onSelect}
               active={view.type === "timeline"}
               type="timeline"
@@ -209,7 +153,12 @@ export function LayoutPanel({
                   <ChevronRight className="tiptap-button-icon-sub" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent side="right" align="start">
+              <PopoverContent
+                avoidCollisions
+                collisionPadding={8}
+                side="right"
+                align="start"
+              >
                 <Card className="p-2" style={{ minWidth: 140 }}>
                   <CardItemGroup>
                     {(
@@ -248,197 +197,133 @@ export function LayoutPanel({
         </>
       )}
 
-      <CardItemGroup className="w-full justify-start" orientation="horizontal">
-        <Button variant="ghost" style={{ background: "transparent" }}>
-          <span className="tiptap-button-text">Show database title</span>
-        </Button>
-        <Spacer orientation="horizontal" />
-        <Toggle
-          checked={showDbTitle}
-          onChangeAsync={async () => onToggleShowDbTitle?.()}
-        />
-      </CardItemGroup>
-      <CardItemGroup className="w-full justify-start" orientation="horizontal">
-        <Button variant="ghost" style={{ background: "transparent" }}>
-          <span className="tiptap-button-text">Show vertical lines</span>
-        </Button>
-        <Spacer orientation="horizontal" />
-        <Toggle
-          checked={showVLines}
-          onChangeAsync={async () => onToggleShowVLines?.()}
-        />
-      </CardItemGroup>
-      <CardItemGroup className="w-full justify-start" orientation="horizontal">
-        <Button variant="ghost" style={{ background: "transparent" }}>
-          <span className="tiptap-button-text">Wrap all columns</span>
-        </Button>
-        <Spacer orientation="horizontal" />
-        <Toggle
-          checked={wrapAllCols}
-          onChangeAsync={async () => onToggleWrapAllCols?.()}
-        />
-      </CardItemGroup>
-
+      <MenuRow
+        label="Show database title"
+        toggle
+        checked={showDbTitle}
+        onToggle={() => onToggleShowDbTitle?.()}
+      />
+      <MenuRow
+        label="Show vertical lines"
+        toggle
+        checked={showVLines}
+        onToggle={async () => onToggleShowVLines?.()}
+      />
+      <MenuRow
+        label="Wrap all columns"
+        toggle
+        checked={wrapAllCols}
+        onToggle={() => onToggleWrapAllCols?.()}
+      />
       {view.type === "gallery" && (
         <>
-          <Separator orientation="horizontal" />
-
-          {/* Card preview */}
-          <CardItemGroup
-            className="w-full justify-start"
-            orientation="horizontal"
+          <Separator orientation="horizontal" style={{ height: 0.5 }} />
+          <NavigableMenuItem
+            // Icon={LayoutPanelTop}
+            label="Card Preview"
+            sub={
+              (view as GalleryView).cardPreview === "none"
+                ? "None"
+                : (view as GalleryView).cardPreview === "cover"
+                  ? "Page cover"
+                  : "Page content"
+            }
+            side="right"
+            align="center"
+            alignOffset={6}
           >
-            <span className="tiptap-button-text">Card preview</span>
-            <Spacer orientation="horizontal" />
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" style={{ fontSize: 11 }}>
-                  <span className="opacity-85">
-                    {(view as GalleryView).cardPreview === "none"
-                      ? "None"
-                      : (view as GalleryView).cardPreview === "cover"
-                        ? "Page cover"
-                        : "Page content"}
-                  </span>
-                  <ChevronRight className="tiptap-button-icon-sub" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent side="right" align="start">
-                <Card className="p-2" style={{ minWidth: 140 }}>
-                  <CardItemGroup>
-                    {(
-                      [
-                        { value: "none", label: "None" },
-                        { value: "cover", label: "Page cover" },
-                        { value: "content", label: "Page content" },
-                      ] as const
-                    ).map(({ value, label }) => (
-                      <Button
-                        key={value}
-                        variant="ghost"
-                        style={{
-                          justifyContent: "flex-start",
-                          width: "100%",
-                          fontWeight:
-                            (view as GalleryView).cardPreview === value
-                              ? 600
-                              : 400,
-                        }}
-                        onClick={() =>
-                          db.updateView(view.id, {
-                            cardPreview: value,
-                          } as Partial<GalleryView>)
-                        }
-                      >
-                        <span className="tiptap-button-text">{label}</span>
-                      </Button>
-                    ))}
-                  </CardItemGroup>
-                </Card>
-              </PopoverContent>
-            </Popover>
-          </CardItemGroup>
-
-          {/* Card size */}
-          <CardItemGroup
-            className="w-full justify-start"
-            orientation="horizontal"
+            <Card
+              style={{
+                width: "fit-content",
+                padding: "2px",
+                borderRadius: "var(--tt-radius-sm)",
+              }}
+            >
+              {(
+                [
+                  { value: "none", label: "None" },
+                  { value: "cover", label: "Page cover" },
+                  { value: "content", label: "Page content" },
+                ] as const
+              ).map(({ value, label }) => (
+                <MenuRow
+                  key={value}
+                  selected={
+                    (db.activeView as GalleryView).cardPreview == value ||
+                    ((db.activeView as GalleryView).cardPreview === undefined &&
+                      value === "none")
+                  }
+                  label={label}
+                  onClick={() =>
+                    db.updateView(view.id, {
+                      cardPreview: value,
+                    } as Partial<GalleryView>)
+                  }
+                />
+              ))}
+            </Card>
+          </NavigableMenuItem>
+          <NavigableMenuItem
+            label="Card size"
+            sub={
+              (view as GalleryView).cardSize === "small"
+                ? "Small"
+                : (view as GalleryView).cardSize === "medium"
+                  ? "Medium"
+                  : "Large"
+            }
+            side="right"
+            align="center"
+            alignOffset={6}
           >
-            <span className="tiptap-button-text">Card size</span>
-            <Spacer orientation="horizontal" />
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" style={{ fontSize: 11 }}>
-                  <span className="opacity-85">
-                    {(view as GalleryView).cardSize === "small"
-                      ? "Small"
-                      : (view as GalleryView).cardSize === "medium"
-                        ? "Medium"
-                        : "Large"}
-                  </span>
-                  <ChevronRight className="tiptap-button-icon-sub" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent side="right" align="start">
-                <Card className="p-2" style={{ minWidth: 140 }}>
-                  <CardItemGroup>
-                    {(
-                      [
-                        { value: "small", label: "Small" },
-                        { value: "medium", label: "Medium" },
-                        { value: "large", label: "Large" },
-                      ] as const
-                    ).map(({ value, label }) => (
-                      <Button
-                        key={value}
-                        variant="ghost"
-                        style={{
-                          justifyContent: "flex-start",
-                          width: "100%",
-                          fontWeight:
-                            (view as GalleryView).cardSize === value
-                              ? 600
-                              : 400,
-                        }}
-                        onClick={() =>
-                          db.updateView(view.id, {
-                            cardSize: value,
-                          } as Partial<GalleryView>)
-                        }
-                      >
-                        <span className="tiptap-button-text">{label}</span>
-                      </Button>
-                    ))}
-                  </CardItemGroup>
-                </Card>
-              </PopoverContent>
-            </Popover>
-          </CardItemGroup>
+            <Card
+              style={{
+                width: "fit-content",
+                padding: "2px",
+                borderRadius: "var(--tt-radius-sm)",
+              }}
+            >
+              {(
+                [
+                  { value: "small", label: "Small" },
+                  { value: "medium", label: "Medium" },
+                  { value: "large", label: "Large" },
+                ] as const
+              ).map(({ value, label }) => (
+                <MenuRow
+                  key={value}
+                  selected={(view as GalleryView).cardSize === value}
+                  label={label}
+                  onClick={() =>
+                    db.updateView(view.id, {
+                      cardSize: value,
+                    } as Partial<GalleryView>)
+                  }
+                />
+              ))}
+            </Card>
+          </NavigableMenuItem>
 
-          {/* Fit image */}
-          <CardItemGroup
-            className="w-full justify-start"
-            orientation="horizontal"
-          >
-            <Button variant="ghost" style={{ background: "transparent" }}>
-              <span className="tiptap-button-text">Fit image</span>
-            </Button>
-            <Spacer orientation="horizontal" />
-            <Toggle
-              checked={(view as GalleryView).coverFit == "contain"}
-              onChangeAsync={async () =>
-                db.updateView(view.id, {
-                  fitImage: !(view as GalleryView).coverFit,
-                } as Partial<GalleryView>)
-              }
-            />
-          </CardItemGroup>
-
-          <Separator orientation="horizontal" />
+          <MenuRow
+            label="Fit image"
+            toggle
+            checked={(view as GalleryView).coverFit == "contain"}
+            onToggle={async () =>
+              db.updateView(view.id, {
+                fitImage: !(view as GalleryView).coverFit,
+              } as Partial<GalleryView>)
+            }
+          />
+          <Separator orientation="horizontal" style={{ height: 0.5 }} />
         </>
       )}
-
-      {/* Open pages in → pushes a sub-panel onto the stack */}
-      <CardItemGroup>
-        <Button
-          variant="ghost"
-          onClick={() => db.pushPanel({ type: "open-pages-in" })}
-          style={{ width: "100%", justifyContent: "flex-start" }}
-        >
-          <span className="tiptap-button-text">Open pages in</span>
-          <Spacer orientation="horizontal" />
-          <span className="tiptap-button-text opacity-85">{openInLabel}</span>
-          <ChevronRight className="tiptap-button-icon-sub" />
-        </Button>
-
-        <CardItemGroup orientation="horizontal">
-          <Button variant="ghost" style={{ background: "transparent" }}>
-            <span className="tiptap-button-text">Show page icon</span>
-          </Button>
-          <Spacer />
-          <Toggle checked={true} />
-        </CardItemGroup>
-      </CardItemGroup>
+      <MenuRow
+        label="Open pages in"
+        sub={openInLabel}
+        onClick={() => db.pushPanel({ type: "open-pages-in" })}
+        navigable
+      />
+      <MenuRow label="Show page icon" toggle />
     </div>
   );
 
@@ -477,7 +362,7 @@ export function OpenPagesInPanel({
     value: OpenPageIn,
     isDefault?: boolean,
   ) => (
-    <Grid columns="34px 150px 34px">
+    <Grid columns="34px 1fr 34px" style={{ width: "100%" }}>
       <GridRow
         style={{ cursor: "pointer" }}
         onClick={() => onOpenInChange(value)}
@@ -493,11 +378,12 @@ export function OpenPagesInPanel({
             <span
               style={{
                 display: "block",
-                width: "150px",
+                width: "100%",
                 textWrap: "balance",
                 fontSize: 12,
                 paddingLeft: "10px",
                 color: "var(--tt-text-secondary)",
+                fontFamily: "inherit",
               }}
             >
               {desc}

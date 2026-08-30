@@ -1,7 +1,6 @@
 .db-properties-panel {
-  min-width: 260px;
   padding: 6px 0;
-  box-shadow: var(--tt-shadow-elevated-sm);
+ 
 
   &__group-label {
     display: block;
@@ -9,7 +8,7 @@
     font-weight: 500;
     // text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--tt-text-color);
+    color: var(--tt-text-primary);
     padding: 8px 12px 4px;
     // text-align: center;
   }
@@ -33,13 +32,7 @@
 
   }
 
-  &__drag {
-    color: var(--tt-text-color);
-    cursor: grab;
-    opacity: 1;
-    transition: opacity 100ms;
-  }
-
+ 
   &__icon {
     color: var(--tt-text-color);
     flex-shrink: 0;

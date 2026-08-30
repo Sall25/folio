@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { nanoid } from "nanoid";
 import { Plus } from "lucide-react";
-import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
   CardBody,
@@ -20,6 +19,8 @@ import type { UseDatabaseReturn } from "../../hooks/use-database";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import "./filter-panel.scss";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
+import { MenuRow } from "../menu-row";
+import { Input } from "src/components/tiptap-ui-primitive/input";
 
 // ── makeFilterRule ─────────────────────────────────────────────────────────
 
@@ -163,7 +164,7 @@ export function FilterPanel({
   const body = (
     <>
       <div className="db-filter-panel__search">
-        <input
+        <Input
           autoFocus
           className="db-filter-panel__search-input"
           placeholder="Filter by..."
@@ -180,26 +181,19 @@ export function FilterPanel({
             filtered.map((p) => {
               const iconName = PROPERTY_TYPE_ICONS[p.config.type];
               return (
-                <Button
+                <MenuRow
                   key={p.id}
-                  variant="ghost"
-                  style={{
-                    justifyContent: "flex-start",
-                    width: "100%",
-                    borderRadius: "var(--tt-radius-sm)",
-                  }}
-                  onClick={() => addRuleFor(p)}
-                >
-                  {iconName && (
+                  Icon={({ className, size }) => (
                     <DynamicIcon
                       name={iconName}
-                      size={20}
+                      size={size ?? 20}
                       filled={false}
-                      className="tiptap-button-icon"
+                      className={className}
                     />
                   )}
-                  <span className="tiptap-button-text">{p.name}</span>
-                </Button>
+                  label={p.name}
+                  onClick={() => addRuleFor(p)}
+                />
               );
             })
           )}
@@ -207,21 +201,14 @@ export function FilterPanel({
       </CardBody>
 
       <CardFooter style={{ width: "100%", padding: "5px 10px" }}>
-        <Button
-          variant="ghost"
+        <MenuRow
+          Icon={Plus}
+          label="Add advanced filter"
           onClick={() => {
             const first = properties[0];
             if (first) addRuleFor(first);
           }}
-          style={{
-            justifyContent: "flex-start",
-            width: "100%",
-            borderRadius: "var(--tt-radius-sm)",
-          }}
-        >
-          <Plus className="tiptap-button-icon" />
-          <span className="tiptap-button-text">Add advanced filter</span>
-        </Button>
+        />
       </CardFooter>
     </>
   );

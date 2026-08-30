@@ -1,0 +1,87 @@
+// ─── View palette tile ──────────────────────────────────────────────────────
+// The layout picker tiles (Table / Board / Gallery / …). Class-based so hover,
+// active, and focus states are real states, not inline one-offs. Active reads as
+// a filled, selected chip — a soft brand-tinted surface + brand ring — rather
+// than just a border colour change, so the current layout is obvious at a glance.
+
+.view-palette {
+  // reset button chrome
+  appearance: none;
+  background: transparent;
+  font: inherit;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  width: 96px;
+  height: 66px;
+  padding: 0;
+
+  cursor: pointer;
+  border-radius: var(--tt-radius-lg, 10px);
+  border: 1.5px solid var(--tt-border-color, rgba(255, 255, 255, 0.1));
+  color: var(--tt-text-primary);
+
+  // colour-only transitions keep it cheap and calm
+  transition:
+    border-color 0.14s ease,
+    background-color 0.14s ease,
+    color 0.14s ease,
+    transform 0.08s ease;
+
+  &__icon {
+    display: inline-flex;
+    color: var(--tt-text-muted, var(--tt-text-secondary));
+    transition: color 0.14s ease;
+  }
+
+  &__label {
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  // ── Hover: lift the surface slightly, warm the icon ─────────────────────
+  &:hover:not([data-active]) {
+    border-color: var(--tt-border-color-strong, rgba(255, 255, 255, 0.2));
+    background-color: color-mix(
+      in srgb,
+      var(--tt-text-primary) 4%,
+      transparent
+    );
+
+    .view-palette__icon {
+      color: var(--tt-text-primary);
+    }
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  // ── Selected: brand-tinted fill + ring, icon + label take brand colour ──
+  &[data-active] {
+    border-color: var(--tt-brand-color-400);
+    background-color: color-mix(
+      in srgb,
+      var(--tt-brand-color-400) 12%,
+      transparent
+    );
+    color: var(--tt-brand-color-400);
+
+    .view-palette__icon {
+      color: var(--tt-brand-color-400);
+    }
+  }
+
+  // ── Keyboard focus: visible ring that doesn't fight the active state ────
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--tt-brand-color-400) 45%, transparent);
+  }
+}

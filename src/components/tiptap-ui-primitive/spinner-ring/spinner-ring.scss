@@ -1,0 +1,22 @@
+// A minimal ring spinner: a circle with one transparent quadrant that rotates.
+// Theme-adaptive via --tt tokens; respects reduced-motion.
+.spinner-ring {
+  display: inline-block;
+  border-radius: 50%;
+  border: 2px solid
+    color-mix(in srgb, var(--tt-text-primary) 15%, transparent);
+  border-top-color: var(--tt-brand-color-400, var(--tt-text-primary));
+  animation: spinner-ring-rotate 0.6s linear infinite;
+}
+
+@keyframes spinner-ring-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner-ring {
+    animation-duration: 1.2s;
+  }
+}

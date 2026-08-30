@@ -1,15 +1,19 @@
 import { lazy, Suspense } from "react";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Tabs } from "./tabs";
-import { EmojiPicker } from "./emoji-picker";
 import { UploadIconTab } from "./upload-icon-tab";
 import type { Target } from "./types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { useIconRecents } from "src/components/tiptap-templates/simple/hooks/use-icon-recents";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { SpinnerRing } from "src/components/tiptap-ui-primitive/spinner-ring";
 
 const IconPicker = lazy(() =>
   import("./icon-picker").then((m) => ({ default: m.IconPicker })),
+);
+
+const EmojiPicker = lazy(() =>
+  import("./emoji-picker").then((m) => ({ default: m.EmojiPicker })),
 );
 
 export function IconPickerCard({
@@ -69,21 +73,35 @@ export function IconPickerCard({
       </CardItemGroup>
       <Spacer orientation="vertical" size={6} />
 
-      {target === "Emoji" && <EmojiPicker onSelect={handleSelect} />}
+      {target === "Emoji" && (
+        <Suspense
+          fallback={
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                padding: "24px 0",
+              }}
+            >
+              <SpinnerRing />
+            </div>
+          }
+        >
+          <EmojiPicker onSelect={handleSelect} />
+        </Suspense>
+      )}
       {target === "Icons" && (
         <Suspense
           fallback={
-            <span
+            <div
               style={{
-                fontSize: 13,
-                color: "var(--tt-text-color)",
-                padding: "16px 0",
-                display: "block",
-                textAlign: "center",
+                display: "flex",
+                justifyContent: "center",
+                padding: "24px 0",
               }}
             >
-              Loading icons…
-            </span>
+              <SpinnerRing />
+            </div>
           }
         >
           <IconPicker onSelect={handleSelect} />

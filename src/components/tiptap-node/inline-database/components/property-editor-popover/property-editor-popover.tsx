@@ -9,6 +9,9 @@
 // — so each property type gets its real editor (status dropdown, select dropdown,
 // text field, stars, date picker…) plus the "Edit property" footer.
 //
+// A brief SpinnerRing covers the beat when the editor opens (or switches to a
+// different property), matching the view-options popover.
+//
 // This is deliberately NOT CellEditorPopover: that one is purpose-built to anchor
 // OVER a table cell (trigger = the cell, sideOffset -36). Here the editor is
 // opened programmatically and anchored to an external element (•••), so it mirrors
@@ -21,6 +24,8 @@ import {
   PopoverPortal,
 } from "src/components/tiptap-ui-primitive/popover";
 import { EditPropertyValue } from "../edit-property-list/edit-property-value";
+import { SpinnerRing } from "src/components/tiptap-ui-primitive/spinner-ring";
+import { usePanelTransition } from "../../hooks/use-panel-transition";
 import type {
   CellValue,
   DatabaseProperty,
@@ -57,6 +62,15 @@ export function PropertyEditorPopover({
   onEditProperty: (propertyId: ID) => void;
   container?: HTMLElement | null;
 }) {
+  // Hook must run before any early return. Key on the property id (falls back to
+  // a sentinel when none) so switching properties re-triggers; includeInitial
+  // covers the first open.
+  const transitioning = usePanelTransition(
+    property?.id ?? "__none__",
+    180,
+    true,
+  );
+
   if (!property) return null;
 
   const portalContainer =
@@ -73,16 +87,28 @@ export function PropertyEditorPopover({
           style={{ position: "fixed", zIndex: 999 }}
           className="db-property-editor__popover"
         >
-          <Card style={{ padding: "5px 10px" }}>
-            <EditPropertyValue
-              property={property}
-              record={record}
-              properties={properties}
-              view={view}
-              columnValues={columnValues}
-              onChange={onChange}
-              onEditProperty={onEditProperty}
-            />
+          <Card>
+            {transitioning ? (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  padding: "24px 0",
+                }}
+              >
+                <SpinnerRing />
+              </div>
+            ) : (
+              <EditPropertyValue
+                property={property}
+                record={record}
+                properties={properties}
+                view={view}
+                columnValues={columnValues}
+                onChange={onChange}
+                onEditProperty={onEditProperty}
+              />
+            )}
           </Card>
         </PopoverContent>
       </PopoverPortal>
