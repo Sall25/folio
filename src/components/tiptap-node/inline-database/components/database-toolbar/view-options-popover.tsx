@@ -1,22 +1,15 @@
 import {
   ArrowUpDown,
   Bell,
-  Calendar,
   ChevronLeft,
-  ChevronRight,
-  Columns3,
   Copy,
   Filter,
-  GanttChart,
   Group,
-  LayoutGrid,
   LayoutTemplate,
   Link as LinkIcon,
-  List,
   ListTree,
   Lock,
   SlidersHorizontal,
-  Table,
   Trash2,
   X,
 } from "lucide-react";
@@ -31,6 +24,7 @@ import {
 import {
   Popover,
   PopoverContent,
+  PopoverPortal,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
@@ -41,13 +35,7 @@ import type {
   PanelView,
   TableView,
 } from "src/types";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ComponentType,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, useState } from "react";
 import "./view-options-popover.scss";
 import type { UseDatabaseReturn } from "../../hooks";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
@@ -58,31 +46,9 @@ import { SortPanel } from "../sort-panel";
 import { Input } from "src/components/tiptap-ui-primitive/input";
 import { SettingsSlidersIcon } from "src/components/tiptap-icons";
 import { GroupPanel } from "../group-panel";
-import { IconPicker } from "src/components/tiptap-ui/cover/icon-picker";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
-
-type LucideIcon = ComponentType<{ className?: string; size?: number }>;
-
-function layoutMeta(type: DatabaseView["type"]): {
-  Icon: LucideIcon;
-  label: string;
-} {
-  switch (type) {
-    case "board":
-      return { Icon: Columns3, label: "Board" };
-    case "list":
-      return { Icon: List, label: "List" };
-    case "gallery":
-      return { Icon: LayoutGrid, label: "Gallery" };
-    case "calendar":
-      return { Icon: Calendar, label: "Calendar" };
-    case "timeline":
-      return { Icon: GanttChart, label: "Timeline" };
-    case "table":
-    default:
-      return { Icon: Table, label: "Table" };
-  }
-}
+import { IconPickerPopover } from "src/components/tiptap-ui/cover";
+import { MenuRow } from "../menu-row";
 
 const PANEL_TITLES: Record<Exclude<PanelView["type"], "main">, string> = {
   properties: "Properties",
@@ -93,45 +59,6 @@ const PANEL_TITLES: Record<Exclude<PanelView["type"], "main">, string> = {
   group: "Group",
   "sub-items": "Sub-items",
 };
-
-function OptionRow({
-  Icon,
-  label,
-  sub,
-  onClick,
-  disabled = false,
-  navigable = false,
-}: {
-  Icon: LucideIcon;
-  label: string;
-  sub?: string | ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  navigable?: boolean;
-}) {
-  return (
-    <Button
-      variant="ghost"
-      onClick={disabled ? undefined : onClick}
-      disabled={disabled}
-      style={{
-        width: "100%",
-        justifyContent: "flex-start",
-        opacity: disabled ? 0.5 : 1,
-      }}
-    >
-      <Icon className="tiptap-button-icon" />
-      <span className="tiptap-button-text">{label}</span>
-      <Spacer orientation="horizontal" />
-      {navigable && sub !== undefined && (
-        <span className="view-options__row-value">{sub}</span>
-      )}
-      {navigable && (
-        <ChevronRight className="tiptap-button-icon-sub" size={14} />
-      )}
-    </Button>
-  );
-}
 
 function SubPanelHeader({
   title,
@@ -199,8 +126,6 @@ function ViewOptionsContent({
   const filterCount = v.filters?.length ?? 0;
   const sortCount = v.sorts?.length ?? 0;
 
-  const { Icon: LayoutIcon } = layoutMeta(view.type);
-
   const handleCopy = () => {
     onCopyLink?.();
     setCopied(true);
@@ -216,6 +141,8 @@ function ViewOptionsContent({
 
   const groupLabel =
     properties.find((p) => p.id === groupByPropertyId)?.name ?? "None";
+
+  console.log("PANEL TYPE", panel.type);
 
   // ── Sub-panel: replace the body, add a back header ──────────────────────
   if (panel.type !== "main") {
@@ -286,37 +213,36 @@ function ViewOptionsContent({
       </CardHeader>
       <CardBody style={{ width: "100%", padding: "5px 10px" }}>
         <CardItemGroup className="view-options__name" orientation="horizontal">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                data-active-state="on"
-                style={{ background: "transparent" }}
-              >
-                {view.iconName ? (
-                  <DynamicIcon
-                    key={"dynamic-icon"}
-                    name={view.iconName}
-                    size={20}
-                  />
-                ) : (
-                  <LayoutIcon
-                    key={"layout-icon"}
-                    className="tiptap-button-icon"
-                  />
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent side="bottom" align="start">
-              <Card style={{ padding: "5px 10px", minWidth: 360 }}>
-                <IconPicker
-                  onSelect={(iconName) => {
-                    db.updateView(view.id, { ...view, iconName });
-                  }}
+          <IconPickerPopover
+            onSelect={(name, color, target) => {
+              db.updateView(view.id, {
+                ...view,
+                iconName: name,
+                color,
+                target,
+              });
+            }}
+          >
+            <Button
+              variant="ghost"
+              data-active-state="on"
+              style={{ background: "transparent" }}
+            >
+              {view.target === "Emoji" ? (
+                <span key={"emoji"} className="tiptap-button-icon">
+                  {view.iconName}
+                </span>
+              ) : (
+                <DynamicIcon
+                  key={"dynamic-icon"}
+                  className="tiptap-button-icon"
+                  name={view.iconName}
+                  size={20}
+                  style={{ color: view.color }}
                 />
-              </Card>
-            </PopoverContent>
-          </Popover>
+              )}
+            </Button>
+          </IconPickerPopover>
           <Input
             className="view-options__name-input"
             autoFocus
@@ -340,7 +266,7 @@ function ViewOptionsContent({
           />
         </CardItemGroup>
 
-        <OptionRow
+        <MenuRow
           Icon={LayoutTemplate}
           label="Layouts"
           sub={view.type.charAt(0).toUpperCase() + view.type.slice(1)}
@@ -348,7 +274,7 @@ function ViewOptionsContent({
           onClick={() => db.pushPanel({ type: "layout" })}
           disabled={locked}
         />
-        <OptionRow
+        <MenuRow
           Icon={SlidersHorizontal}
           label="Properties"
           sub={`${shownCount} shown`}
@@ -356,7 +282,7 @@ function ViewOptionsContent({
           onClick={() => db.pushPanel({ type: "properties" })}
           disabled={locked}
         />
-        <OptionRow
+        <MenuRow
           Icon={Filter}
           label="Filter"
           sub={filterCount === 1 ? "1 filter" : `${filterCount} filters`}
@@ -364,7 +290,7 @@ function ViewOptionsContent({
           onClick={() => db.pushPanel({ type: "filter" })}
           disabled={locked}
         />
-        <OptionRow
+        <MenuRow
           Icon={ArrowUpDown}
           label="Sort"
           sub={sortCount === 1 ? "1 sort" : `${sortCount} sorts`}
@@ -372,7 +298,7 @@ function ViewOptionsContent({
           onClick={() => db.pushPanel({ type: "sort" })}
           disabled={locked}
         />
-        <OptionRow
+        <MenuRow
           Icon={Group}
           label="Group"
           sub={groupLabel}
@@ -380,7 +306,7 @@ function ViewOptionsContent({
           onClick={() => db.pushPanel({ type: "group" })}
           disabled={locked}
         />
-        <OptionRow
+        <MenuRow
           Icon={ListTree}
           label="Sub-items"
           onClick={locked ? undefined : () => {}}
@@ -389,31 +315,32 @@ function ViewOptionsContent({
 
         <Separator orientation="horizontal" />
 
-        <OptionRow Icon={Bell} label="Slack notifications" onClick={() => {}} />
+        <MenuRow Icon={Bell} label="Slack notifications" onClick={() => {}} />
 
-        <OptionRow
+        <MenuRow
           Icon={Lock}
           label={locked ? "Unlock database" : "Lock database"}
           onClick={() => db.toggleLock()}
         />
 
-        <OptionRow
+        <MenuRow
           Icon={LinkIcon}
           label={copied ? "Copied!" : "Copy link to view"}
           onClick={handleCopy}
         />
 
-        <OptionRow
+        <MenuRow
           Icon={Copy}
           label="Duplicate view"
           onClick={locked ? undefined : () => {}}
           disabled={locked}
         />
-        <OptionRow
+        <MenuRow
           Icon={Trash2}
           label="Delete view"
           onClick={locked ? undefined : () => {}}
           disabled={locked}
+          danger
         />
       </CardBody>
     </Card>
@@ -438,9 +365,9 @@ export function ViewOptionsPopover({
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (providedOpen) db.resetPanel();
-  }, [providedOpen, db.resetPanel]);
+  // useEffect(() => {
+  //   if (providedOpen) db.resetPanel();
+  // }, [providedOpen, db.resetPanel]);
 
   const closeControlled = () => {
     db.resetPanel();
@@ -479,7 +406,7 @@ export function ViewOptionsPopover({
         style={{
           position: "absolute",
           right: 0,
-          top: "100%",
+          top: "-26px",
           zIndex: 999,
           marginTop: 4,
         }}
@@ -526,20 +453,27 @@ export function ViewOptionsPopover({
           <SettingsSlidersIcon className="tiptap-button-icon" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        side="bottom"
-        align="end"
-        avoidCollisions
-        collisionPadding={16}
-        style={{ width: 280, padding: 0 }}
-      >
-        <ViewOptionsContent
-          properties={properties}
-          view={view}
-          db={db}
-          onCopyLink={onCopyLink}
-        />
-      </PopoverContent>
+      <PopoverPortal container={document.getElementById("root")}>
+        <PopoverContent
+          side="bottom"
+          align="end"
+          sideOffset={-26}
+          avoidCollisions
+          collisionPadding={16}
+          style={{ width: 280, padding: 0, zIndex: 999 }}
+        >
+          <ViewOptionsContent
+            properties={properties}
+            view={view}
+            db={db}
+            onCopyLink={onCopyLink}
+            onClose={() => {
+              setOpen(false);
+              db.resetPanel();
+            }}
+          />
+        </PopoverContent>
+      </PopoverPortal>
     </Popover>
   );
 }

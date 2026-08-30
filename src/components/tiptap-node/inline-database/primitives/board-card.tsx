@@ -13,6 +13,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { BoardCardControls } from "../components/board-card-controls/board-card-controls";
 import { useCallback, useState } from "react";
 import { useActivePageActions } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
 // A card hides properties that have no value (Notion behavior), so cards size
 // to their real content instead of showing empty boxes. Checkbox is excluded:
@@ -36,13 +37,10 @@ export function BoardCard({
   onChange,
   view,
   columnValuesByProp = {},
-  onDelete,
-  onDuplicate,
   onCoverPositionChange,
   onCoverPositionCommit,
-  onLayout,
-  onPropertyVisibility,
   disableDrag = false,
+  coverHeight = 140,
 }: {
   record: Page;
   properties: DatabaseProperty[];
@@ -51,19 +49,14 @@ export function BoardCard({
   onChange: (propertyId: string, value: CellValue | null, record: Page) => void;
   view: DatabaseView;
   columnValuesByProp?: Record<string, CellValue[]>;
-  onDelete?: (recordId: string) => void;
-  onDuplicate?: (recordId: string) => void;
   onCoverPositionChange?: (
     recordId: string,
     positionY: number,
     record: Page,
   ) => void;
   onCoverPositionCommit?: () => void;
-  /** View-level card layout (cover fit, size) — opens the layout panel. */
-  onLayout?: () => void;
-  /** View-level property visibility — opens the properties panel. */
-  onPropertyVisibility?: () => void;
   disableDrag?: boolean;
+  coverHeight?: number;
 }) {
   const [repositioning, setRepositioning] = useState(false);
   const { setTarget } = usePageViewActions();
@@ -140,39 +133,49 @@ export function BoardCard({
         openRecord();
       }}
     >
-      {cardPreview === "cover" && (
-        <div className="db-board-card__cover-wrap">
-          <BoardCardCover
-            page={linkedPage}
-            recordId={linkedPage.id}
-            height={120}
-            repositioning={repositioning}
-            onPositionChange={onPositionChange}
-            onPositionCommit={onCoverPositionCommit}
-          />
-          <BoardCardControls
-            record={linkedPage}
-            properties={properties}
-            repositioning={repositioning}
-            onReposition={() => setRepositioning((v) => !v)}
-            onSetValue={(propertyId, value) =>
-              onChange(propertyId, value as CellValue | null, linkedPage)
-            }
-            onDelete={() => onDelete?.(linkedPage.id)}
-            onDuplicate={
-              onDuplicate ? () => onDuplicate(linkedPage.id) : undefined
-            }
-            onLayout={onLayout}
-            onPropertyVisibility={onPropertyVisibility}
-            menuOpen={menuOpen}
-            onMenuOpenChange={setMenuOpen}
-            editing={editing}
-            onEnableEdit={enableEdit}
-            onOpenRecord={openRecord}
-          />
-        </div>
+      {cardPreview === "cover" ? (
+        <>
+          <div className="db-board-card__cover-wrap">
+            <BoardCardCover
+              page={linkedPage}
+              recordId={linkedPage.id}
+              height={coverHeight}
+              repositioning={repositioning}
+              onPositionChange={onPositionChange}
+              onPositionCommit={onCoverPositionCommit}
+            />
+            <BoardCardControls
+              key={"reposition-card"}
+              record={linkedPage}
+              repositioning={repositioning}
+              onReposition={() => setRepositioning((v) => !v)}
+              menuOpen={menuOpen}
+              onMenuOpenChange={setMenuOpen}
+              editing={editing}
+              onEnableEdit={enableEdit}
+              onOpenRecord={openRecord}
+            />
+          </div>
+          <Spacer orientation="vertical" size={10} />
+        </>
+      ) : (
+        <BoardCardControls
+          key={"no-reposition-card"}
+          record={linkedPage}
+          menuOpen={menuOpen}
+          onMenuOpenChange={setMenuOpen}
+          editing={editing}
+          onEnableEdit={enableEdit}
+          onOpenRecord={openRecord}
+        />
       )}
-      {cardPreview === "content" && <BoardCardContent page={linkedPage} />}
+
+      {cardPreview === "content" && (
+        <>
+          <BoardCardContent page={linkedPage} />
+          <Spacer orientation="vertical" size={10} />
+        </>
+      )}
 
       {titleProp && (
         <div

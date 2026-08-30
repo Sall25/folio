@@ -84,7 +84,7 @@ export default function ColorDropdownMenu({
         <DropdownMenuTrigger ref={triggerRef} asChild>
           <Button className={className} role="menuitem" variant="ghost">
             <PaintBucket className="tiptap-button-icon" />
-            <span>{t("colors.label")}</span>
+            <span className="tiptap-button-text">{t("colors.label")}</span>
             <Spacer orientation="horizontal" />
             <ChevronRight className="tiptap-button-icon chevron" />
           </Button>

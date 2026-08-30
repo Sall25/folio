@@ -380,6 +380,8 @@ interface BaseView {
   hiddenProperties: ID[];
   openPageIn?: OpenPageIn;
   iconName?: string;
+  target?: Target;
+  color?: string;
 }
 
 export interface TableView extends BaseView {
@@ -409,6 +411,10 @@ export interface BoardView extends BaseView {
    *  fall through in sorted order. Flat across columns — per-column order is
    *  derived by filtering this to the column's records. */
   manualOrder?: ID[];
+  /** Column/group ids hidden from the board (the "No {group}" column uses the
+   *  NONE_COLUMN_ID sentinel). Hidden groups are filtered out of the rendered
+   *  columns and surfaced in Edit groups for un-hiding. */
+  hiddenGroups?: ID[];
 }
 
 export interface GalleryView extends BaseView {
@@ -458,6 +464,7 @@ export interface DatabaseUIState {
   openPropertyId: ID | null;
   searchQuery: string;
   panelStack: PanelView[];
+  viewOptionsOpen: boolean;
 }
 export type PanelView =
   | { type: "main" }

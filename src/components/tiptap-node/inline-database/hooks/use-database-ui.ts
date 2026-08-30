@@ -22,6 +22,7 @@ export function useDatabaseUI(
     openPropertyId: null,
     searchQuery: "",
     panelStack: [{ type: "main" }],
+    viewOptionsOpen: false,
   });
 
   const patchUI = useCallback(
@@ -174,6 +175,28 @@ export function useDatabaseUI(
     [updateAttributes],
   );
 
+  const setViewOptionsOpen = useCallback(
+    (open: boolean) =>
+      setUIState((prev) => ({
+        ...prev,
+        viewOptionsOpen: open,
+        panelStack: open ? prev.panelStack : [{ type: "main" }],
+      })),
+    [],
+  );
+
+  // Open the view-options popover directly on a given panel. Layout, Property
+  // visibility, Edit-property config and Edit groups all route through this.
+  const openViewOptionsAt = useCallback(
+    (panel: PanelView) =>
+      setUIState((prev) => ({
+        ...prev,
+        viewOptionsOpen: true,
+        panelStack: [{ type: "main" }, panel],
+      })),
+    [],
+  );
+
   return useMemo(
     () => ({
       activeView,
@@ -198,6 +221,9 @@ export function useDatabaseUI(
       locked: !!attrs.locked,
       toggleLock,
       setLocked,
+      viewOptionsOpen: uiState.viewOptionsOpen,
+      setViewOptionsOpen,
+      openViewOptionsAt,
     }),
     [
       activeView,
@@ -222,6 +248,9 @@ export function useDatabaseUI(
       attrs.locked,
       toggleLock,
       setLocked,
+      uiState.viewOptionsOpen,
+      setViewOptionsOpen,
+      openViewOptionsAt,
     ],
   );
 }

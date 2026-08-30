@@ -1,6 +1,6 @@
 .editor-skeleton-overlay {
   position: absolute;
-  top: 44px;              // ← your toolbar height; overlay starts below it
+  top: 44px;              
   left: 50px;
   right: 0;
   bottom: 0;
@@ -31,7 +31,7 @@
 
 .es-content-col {
   width: 100%;
-  max-width: 720px;       // ← match editor column max-width
+  max-width: var(--db-editor-width);       //  match editor column max-width
   margin: 0 auto;
   padding: 0 3.5rem;      // ← match editor column horizontal padding
   display: flex;

@@ -10,6 +10,7 @@ export function RepositionButton({
   return (
     <Button
       variant="ghost"
+      size="small"
       className="db-card-controls__btn"
       data-active-state={repositioning ? "on" : undefined}
       onClick={(e) => {

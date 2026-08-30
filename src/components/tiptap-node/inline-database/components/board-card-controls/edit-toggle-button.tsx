@@ -15,6 +15,7 @@ export function EditToggleButton({
     <Button
       variant="ghost"
       className="db-card-controls__btn"
+      size="small"
       data-active-state={editing ? "on" : undefined}
       tooltip={editing ? "Open page" : "Edit title"}
       onClick={(e) => {

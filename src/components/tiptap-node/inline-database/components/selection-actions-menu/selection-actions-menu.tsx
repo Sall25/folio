@@ -1,19 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Copy,
-  CornerUpRight,
-  Link as LinkIcon,
-  List,
-  MessageSquare,
-  Smile,
-  Star,
-  Trash2,
-  ArrowUpRight,
-  Layout,
-  Eye,
-} from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ListIcon } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
@@ -24,57 +10,29 @@ import {
 } from "src/components/tiptap-ui-primitive/card";
 import { Input } from "src/components/tiptap-ui-primitive/input";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
-import type { DatabaseProperty } from "src/types";
+import type { DatabaseProperty, ID } from "src/types";
 import "./selection-actions-menu.scss";
+import {
+  AddToFavoritesItem,
+  CommentItem,
+  CopyLinkItem,
+  DuplicateRecordItem,
+  EditIconItem,
+  LayoutItem,
+  MoveToItem,
+  MoveToTrashItem,
+  PropertyVisibilityItem,
+} from "../record-action-items";
+import { EditPropertyList } from "../edit-property-list";
+import { NavigableMenuItem } from "../navigable-menu-item";
+import { OpenInFlyout, type OpenInMode } from "../open-in-flyout";
 
 type Panel =
   | { type: "main" }
   | { type: "properties" }
   | { type: "property"; propertyId: string };
-
-type LucideIcon = React.ComponentType<{ className?: string; size?: number }>;
-
-function MenuRow({
-  Icon,
-  label,
-  shortcut,
-  navigable,
-  onClick,
-  danger,
-}: {
-  Icon: LucideIcon;
-  label: string;
-  shortcut?: string;
-  navigable?: boolean;
-  onClick?: () => void;
-  danger?: boolean;
-}) {
-  return (
-    <Button
-      variant="ghost"
-      onClick={onClick}
-      className={danger ? "db-actions-menu__row--danger" : undefined}
-      style={{
-        width: "100%",
-        justifyContent: "flex-start",
-        borderRadius: "var(--tt-radius-sm)",
-      }}
-    >
-      <Icon className="tiptap-button-icon" size={16} />
-      <span className="tiptap-button-text">{label}</span>
-      <Spacer orientation="horizontal" />
-      {shortcut && (
-        <span className="db-actions-menu__shortcut">{shortcut}</span>
-      )}
-      {navigable && (
-        <ChevronRight className="tiptap-button-icon-sub" size={14} />
-      )}
-    </Button>
-  );
-}
 
 /** Types with an enumerable value set — the ones a bulk edit can set directly. */
 function isBulkEditable(prop: DatabaseProperty) {
@@ -110,14 +68,17 @@ export function SelectionActionsMenu({
   onCopyLink,
   onAddToFavorites,
   onEditIcon,
-  onComment,
-  onMoveTo,
+  // onComment,
+  // onMoveTo,
   onOpenIn,
   onLayout,
   onPropertyVisibility,
   lastEditedBy,
   lastEditedAt,
   onClose,
+  isFavorite,
+  onPickProperty,
+  //  onOpenEditProperty
 }: {
   recordIds: string[];
   properties: DatabaseProperty[];
@@ -128,8 +89,13 @@ export function SelectionActionsMenu({
   onAddToFavorites?: () => void;
   onEditIcon?: () => void;
   onComment?: () => void;
-  onMoveTo?: () => void;
-  onOpenIn?: () => void;
+  onMoveTo?: (
+    recordId: string,
+    newParentId: string | null,
+    category?: string | undefined,
+  ) => void;
+  onOpenIn?: (mode: OpenInMode) => void;
+  onOpenEditProperty?: (propertyId: string) => void;
   /** Card layout options (cover fit, size) — board/gallery only. */
   onLayout?: () => void;
   /** Which properties show on the card — board/gallery only. */
@@ -137,6 +103,8 @@ export function SelectionActionsMenu({
   lastEditedBy?: string;
   lastEditedAt?: string;
   onClose: () => void;
+  isFavorite?: boolean;
+  onPickProperty?: (id: ID) => void;
 }) {
   const [panel, setPanel] = useState<Panel>({ type: "main" });
   const [query, setQuery] = useState("");
@@ -160,8 +128,6 @@ export function SelectionActionsMenu({
     fn?.();
     onClose();
   };
-
-  const match = (label: string) => !q || label.toLowerCase().includes(q);
 
   // ── Property value panel ────────────────────────────────────────────────
   if (panel.type === "property" && activeProp) {
@@ -297,102 +263,40 @@ export function SelectionActionsMenu({
       <CardBody style={{ width: "100%" }}>
         <CardItemGroup>
           <CardGroupLabel>{plural ? "Pages" : "Page"}</CardGroupLabel>
-          {match("Add to Favorites") && (
-            <MenuRow
-              Icon={Star}
-              label="Add to Favorites"
-              onClick={() => run(onAddToFavorites)}
+          <AddToFavoritesItem
+            isFavorite={isFavorite}
+            onToggle={() => onAddToFavorites?.()}
+          />
+          <EditIconItem onOpen={() => run(() => onEditIcon?.())} />
+          <NavigableMenuItem Icon={ListIcon} label="Edit property">
+            <EditPropertyList
+              properties={properties}
+              onPick={(propertyId) => run(() => onPickProperty?.(propertyId))}
             />
-          )}
-          {match("Edit icon") && (
-            <MenuRow
-              Icon={Smile}
-              label="Edit icon"
-              onClick={() => run(onEditIcon)}
-            />
-          )}
-          {match("Edit property") && (
-            <MenuRow
-              Icon={List}
-              label="Edit property"
-              navigable
-              onClick={() => setPanel({ type: "properties" })}
-            />
-          )}
+          </NavigableMenuItem>
         </CardItemGroup>
 
         <Separator orientation="horizontal" />
 
         <CardItemGroup>
-          {match("Layout") && onLayout && (
-            <MenuRow
-              Icon={Layout}
-              label="Layout"
-              onClick={() => run(onLayout)}
-            />
-          )}
-          {match("Property visibility") && onPropertyVisibility && (
-            <MenuRow
-              Icon={Eye}
-              label="Property visibility"
-              onClick={() => run(onPropertyVisibility)}
-            />
-          )}
+          <LayoutItem onOpen={() => run(onLayout)} />
+          <PropertyVisibilityItem onOpen={() => run(onPropertyVisibility)} />
         </CardItemGroup>
+        <Separator orientation="horizontal" style={{ height: 0.5 }} />
         <CardItemGroup>
-          {match("Open in") && (
-            <MenuRow
-              Icon={ArrowUpRight}
-              label="Open in"
-              navigable
-              onClick={() => run(onOpenIn)}
-            />
-          )}
-          {match("Comment") && (
-            <MenuRow
-              Icon={MessageSquare}
-              label="Comment"
-              shortcut="Ctrl+⇧+M"
-              onClick={() => run(onComment)}
-            />
-          )}
+          <NavigableMenuItem Icon={ArrowUpRight} label="Open in">
+            <OpenInFlyout onOpen={(mode) => run(() => onOpenIn?.(mode))} />
+          </NavigableMenuItem>
+          <CommentItem onComment={() => {}} />
         </CardItemGroup>
 
         <Separator orientation="horizontal" />
 
         <CardItemGroup>
-          {match("Copy link") && (
-            <MenuRow
-              Icon={LinkIcon}
-              label="Copy link"
-              onClick={() => run(onCopyLink)}
-            />
-          )}
-          {match("Duplicate") && (
-            <MenuRow
-              Icon={Copy}
-              label="Duplicate"
-              shortcut="Ctrl+D"
-              onClick={() => run(onDuplicate)}
-            />
-          )}
-          {match("Move to") && (
-            <MenuRow
-              Icon={CornerUpRight}
-              label="Move to"
-              shortcut="Ctrl+⇧+P"
-              onClick={() => run(onMoveTo)}
-            />
-          )}
-          {match("Move to Trash") && (
-            <MenuRow
-              Icon={Trash2}
-              label="Move to Trash"
-              shortcut="Del"
-              danger
-              onClick={() => run(onDelete)}
-            />
-          )}
+          <CopyLinkItem onCopyLink={() => onCopyLink?.()} />
+          <DuplicateRecordItem onDuplicate={() => onDuplicate?.()} />
+          <MoveToItem onOpen={() => {}} />
+          <MoveToTrashItem onDelete={() => onDelete?.()} />
         </CardItemGroup>
       </CardBody>
 

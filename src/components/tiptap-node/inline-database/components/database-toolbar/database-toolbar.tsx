@@ -60,6 +60,8 @@ function DatabaseToolbarImpl() {
     attrs,
     db,
   } = useDatabaseContext();
+  const viewOptionsOpen = db.viewOptionsOpen;
+  const setViewOptionsOpen = db.setViewOptionsOpen;
 
   const databaseId = attrs.pageId;
   const { setActivePageId } = useActivePageActions();
@@ -76,7 +78,6 @@ function DatabaseToolbarImpl() {
   // Collapsed toolbar — the control cluster folds behind the chevron, leaving
   // just New. Local (per-session UI), not synced view attrs.
   const [collapsed, setCollapsed] = useState(false);
-  const [viewOptionsOpen, setViewOptionsOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [showChevrons, setShowChevrons] = useState(false);
 

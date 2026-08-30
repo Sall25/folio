@@ -28,9 +28,11 @@ import { columnKeyFor, getColumnDefs } from "./utils";
 import { SortableBoardCard } from "./sortable-board-card";
 import { useBoardDnd } from "./use-board-dnd";
 import { useDatabaseContext } from "../database-context";
-import { removeRecordNode } from "../../hooks/use-database-seed";
+import { BoardColumnMenu } from "../../components/board-column-menu";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
+const EMPTY_ARRAY: unknown[] = [];
 
 const NONE_COLUMN_ID = "__none__";
 
@@ -40,35 +42,17 @@ interface ColumnDef {
   color?: string;
 }
 
-function DatabaseBoardNodeViewImpl({
-  onLayout,
-  onPropertyVisibility,
-  onDuplicateRecord,
-}: {
-  onLayout?: () => void;
-  onPropertyVisibility?: () => void;
-  onDuplicateRecord?: (recordId: string) => void;
-}) {
+function DatabaseBoardNodeViewImpl() {
   const {
     attrs,
     db,
     source,
     onUpdateView,
     sortedRecords: resolvedRecords,
-    editor,
   } = useDatabaseContext();
   const view = db.activeView;
 
-  const { addRecordAsync, setCellValue, removeRecordAsync } = useDataSource(
-    attrs.sourceId,
-  );
-  const onDeleteRecord = useCallback(
-    (recId: ID) => {
-      removeRecordAsync(recId);
-      removeRecordNode(editor, attrs.id, recId);
-    },
-    [editor, attrs.id, removeRecordAsync],
-  );
+  const { addRecordAsync, setCellValue } = useDataSource(attrs.sourceId);
 
   const { mutateAsync: patchPageAsync } = usePatchPage(({ id, patch }) =>
     patchPage(id, patch),
@@ -79,14 +63,15 @@ function DatabaseBoardNodeViewImpl({
   const groupByPropertyId = activeView?.groupByPropertyId ?? "";
   const groupProp = source?.properties.find((p) => p.id === groupByPropertyId);
   const columnDefs = useMemo(() => getColumnDefs(groupProp), [groupProp]);
-
-  const allColumns: ColumnDef[] = useMemo(
-    () => [
+  const hiddenGroups = activeView?.hiddenGroups ?? EMPTY_ARRAY;
+  const allColumns: ColumnDef[] = useMemo(() => {
+    const cols = [
       { id: NONE_COLUMN_ID, label: `No ${groupProp?.name ?? ""}` },
       ...columnDefs,
-    ],
-    [columnDefs, groupProp?.name],
-  );
+    ];
+    // Hide groups the view has hidden.
+    return cols.filter((c) => !hiddenGroups.includes(c.id));
+  }, [columnDefs, groupProp?.name, hiddenGroups]);
 
   const recordById = useMemo(
     () => new Map(resolvedRecords.map((r) => [r.id, r])),
@@ -177,6 +162,70 @@ function DatabaseBoardNodeViewImpl({
     [patchPageAsync],
   );
 
+  // Create a new record in a specific column — adds the record, then sets its
+  // group value so it lands in that column. Reused by the header "+" button, the
+  // column menu, and the footer "New" button.
+  const newRecordInColumn = useCallback(
+    async (columnId: string) => {
+      const row = await addRecordAsync({ title: "" });
+      setGroupValue(row.id, columnId);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [addRecordAsync],
+  );
+
+  // Set a board column's color = update the underlying group option's color in
+  // the grouped property's config, then persist the property.
+  const setColumnColor = useCallback(
+    (columnId: string, color: string) => {
+      if (!groupProp) return;
+      const cfg = groupProp.config;
+      const newColor = color === "default" ? null : color;
+
+      let nextConfig;
+      if (cfg.type === "select" || cfg.type === "multi_select") {
+        nextConfig = {
+          ...cfg,
+          options: cfg.options.map((o) =>
+            o.id === columnId ? { ...o, color: newColor } : o,
+          ),
+        };
+      } else if (cfg.type === "status") {
+        // Status: the column id maps to an item within a group. Update the item's
+        // color (or the group's — depending on how col.id maps; see note below).
+        nextConfig = {
+          ...cfg,
+          groups: cfg.groups.map((g) => ({
+            ...g,
+            items: g.items.map((it) =>
+              it.id === columnId ? { ...it, color: newColor } : it,
+            ),
+          })),
+        };
+      } else {
+        return; // checkbox / no-color group types
+      }
+
+      db.updateProperty(groupProp.id, {
+        config: nextConfig as DatabaseProperty["config"],
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [groupProp, db.updateProperty],
+  );
+
+  const hideGroup = useCallback(
+    (columnId: string) => {
+      if (!activeView) return;
+      const current = activeView.hiddenGroups ?? [];
+      if (current.includes(columnId)) return;
+      db.updateView(activeView.id, {
+        hiddenGroups: [...current, columnId],
+      } as Partial<BoardView>);
+    },
+    [db, activeView],
+  );
+
   if (!groupByPropertyId || columnDefs.length === 0) {
     return (
       <div className="db-board-empty">
@@ -258,6 +307,32 @@ function DatabaseBoardNodeViewImpl({
                     {col.label}
                   </span>
                 )}
+                <Spacer orientation="horizontal" size={1} />
+                <span className="db-board-col-header__count">
+                  {recs.length}
+                </span>
+                <Spacer orientation="horizontal" />
+                {/* Column controls */}
+                <div
+                  className="db-board-col-header__controls"
+                  contentEditable={false}
+                >
+                  <BoardColumnMenu
+                    columnId={col.id}
+                    columnColor={col.color}
+                    onSetColor={setColumnColor}
+                    onMoveToTrash={/* if applicable */ undefined}
+                    onHideGroup={hideGroup}
+                  />
+                  <Button
+                    variant="ghost"
+                    className="db-board-col-header__add"
+                    tooltip="Add a card"
+                    onClick={() => newRecordInColumn(col.id)}
+                  >
+                    <Plus className="tiptap-button-icon" size={14} />
+                  </Button>
+                </div>
               </div>
 
               <SortableContext
@@ -276,10 +351,6 @@ function DatabaseBoardNodeViewImpl({
                         view={view}
                         columnValuesByProp={columnValuesByProp}
                         onCoverPositionChange={onCoverPositionChange}
-                        onDelete={onDeleteRecord}
-                        onDuplicate={onDuplicateRecord}
-                        onLayout={onLayout}
-                        onPropertyVisibility={onPropertyVisibility}
                         disableDrag
                       />
                     </SortableBoardCard>

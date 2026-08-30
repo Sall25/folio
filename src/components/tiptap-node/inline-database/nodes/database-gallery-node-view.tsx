@@ -45,7 +45,7 @@ const galleryCollision: CollisionDetection = (args) => {
 
 const CARD_COLUMNS = {
   small: 5,
-  medium: 4,
+  medium: 3,
   large: 3,
 } as const;
 
@@ -272,6 +272,7 @@ function DatabaseGalleryNodeViewImpl() {
                   columnValuesByProp={columnValuesByProp}
                   onCoverPositionChange={handleCoverPositionChange}
                   onCoverPositionCommit={handleCoverPositionCommit}
+                  coverHeight={cardSize === "small" ? 130 : 180}
                   disableDrag
                 />
               </SortableGalleryCard>

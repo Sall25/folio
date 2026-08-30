@@ -1,0 +1,88 @@
+.board-column-menu {
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--tt-shadow-elevated-md);
+  border-radius: var(--tt-radius-lg);
+  border: 1px solid var(--tt-border-color);
+  background: var(--tt-gray-light-50);
+  .dark & {
+    background: var(--tt-gray-dark-100);
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: flex-start;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: transparent;
+  }
+
+  &__section-label {
+    padding: 6px 8px 4px;
+    font-size: 12px;
+    text-align: left;
+    justify-content: flex-start;
+    width: 100%;
+    color: var(--tt-text-secondary);
+  }
+
+  &__color {
+    position: relative;
+  }
+
+  &__swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    flex-shrink: 0;
+    border: 1px solid color-mix(in srgb, var(--tt-text-primary) 12%, transparent);
+
+    &[data-default] {
+      background: transparent;
+      border: 1px solid var(--tt-border-color);
+    }
+  }
+
+  &__check {
+    margin-left: auto;
+    color: var(--tt-text-secondary);
+  }
+
+  &__item[data-active] {
+    background: var(--tt-hover-bg, rgba(255, 255, 255, 0.05));
+  }
+}
+
+.board-column-menu__color {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+
+  &:hover {
+    background: var(--tt-hover-bg, rgba(255, 255, 255, 0.06));
+  }
+}
+
+.board-column-menu__swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  flex-shrink: 0;
+
+  // The fill uses the SAME color the pills use, so the swatch matches the
+  // actual column tint. Pills are usually a soft tinted bg, not the raw text
+  // color — so mix the color with transparent for the swatch fill, and use the
+  // solid color for the border/ring. This reads as a "chip", not a raw block.
+  background: color-mix(in srgb, var(--swatch-color) 25%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--swatch-color) 55%, transparent);
+
+  &[data-default] {
+    background: transparent;
+    border: 1.5px solid var(--tt-border-color);
+  }
+}

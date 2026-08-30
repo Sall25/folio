@@ -18,17 +18,33 @@ import "./menu.scss";
 import { DropdownMenuItem } from "src/components/tiptap-ui-primitive/dropdown-menu";
 import { CommentButton } from "../comment-button";
 import { useTranslation } from "react-i18next";
+import { RecordDragMenu } from "src/components/tiptap-node/inline-database/components/record-drag-menu";
 
 export function Menu({
   title,
   editor,
   onAction,
+  target,
 }: {
   title: string;
   editor: Editor;
   onAction?: () => void;
+  /** NODE_LABELS value from the drag handle (e.g. "Record" for a
+   *  databaseRecord row). Selects which menu to show. */
+  target?: string;
 }) {
   const { t } = useTranslation();
+
+  // ── Database record row → the rich record menu (same as board/gallery) ────
+  // The row is a databaseRecord node; its actions are RECORD actions, not node
+  // formatting. Menu stays editor-generic and delegates to the database-world
+  // RecordDragMenu, which resolves the hovered record + handlers and renders
+  // SelectionActionsMenu. One menu, every view.
+  if (target === "Record") {
+    return <RecordDragMenu onAction={onAction} />;
+  }
+
+  // ── Regular node → the node-formatting menu (unchanged) ───────────────────
   return (
     <Card className="menu">
       <CardGroupLabel className="title">{title}</CardGroupLabel>
@@ -54,7 +70,7 @@ export function Menu({
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <ResetFormattingButton
-            text={t("blockMenu.resetFormatting")} //"Reset formatting"
+            text={t("blockMenu.resetFormatting")}
             hideWhenUnavailable={true}
             editor={editor}
             onResetAllFormatting={onAction}

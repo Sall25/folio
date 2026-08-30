@@ -35,7 +35,6 @@
   min-width: 0;
   width: 100%;
   overflow: hidden; // belt-and-suspenders: clip anything that still escapes
-  border: 1px solid var(--tt-border-color);
   &__title {
     padding: 10px 15px;
     min-width: 0;

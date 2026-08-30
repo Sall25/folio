@@ -13,6 +13,9 @@ import {
   Board,
   BoardContent,
   BoardCover,
+  BoardIcon,
+  BoardMeta,
+  BoardTitle,
 } from "src/components/tiptap-ui-primitive/board/board";
 import { getPageExcerpt } from "src/lib/get-page-excerpt";
 import { useCurrentPerson } from "src/hooks/use-session";
@@ -196,27 +199,18 @@ function RecentCard({ page, onOpen }: { page: Page; onOpen: () => void }) {
   return (
     <Board onClick={onOpen}>
       <BoardCover
-        style={{
-          height: 64,
-          background: coverBackground(page.cover),
-        }}
+        height={68}
+        style={{ background: coverBackground(page.cover) }}
       />
-      <BoardContent>
+      <BoardIcon hang size={20} align="start">
         <PageItemIcon cover={page.cover} styles={{ width: 18, height: 18 }} />
-        <div
-          style={{
-            fontSize: 14,
-            fontWeight: 500,
-            color: "var(--tt-text-color)",
-            marginTop: 6,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            fontFamily: "inherit",
-          }}
-        >
+      </BoardIcon>
+
+      <BoardContent>
+        <BoardTitle style={{ fontSize: 14, fontWeight: 500 }}>
           {page.title || t("page.untitled")}
-        </div>
+        </BoardTitle>
+
         <span
           style={{
             fontSize: 11,
@@ -224,20 +218,12 @@ function RecentCard({ page, onOpen }: { page: Page; onOpen: () => void }) {
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
-            fontFamily: "inherit",
           }}
         >
           {getPageExcerpt(page)}
         </span>
-        <div
-          style={{
-            fontSize: 12,
-            color: "var(--tt-text-secondary)",
-            marginTop: 2,
-            whiteSpace: "nowrap",
-            fontFamily: "inherit",
-          }}
-        >
+
+        <BoardMeta>
           {t("home.edited", {
             time: formatRelative(
               page.updatedAt ?? page.createdAt,
@@ -245,7 +231,7 @@ function RecentCard({ page, onOpen }: { page: Page; onOpen: () => void }) {
               i18n.language,
             ),
           })}
-        </div>
+        </BoardMeta>
       </BoardContent>
     </Board>
   );

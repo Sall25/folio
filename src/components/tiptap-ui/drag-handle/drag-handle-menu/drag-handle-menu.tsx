@@ -23,7 +23,15 @@ export function DragHandleMenu(props: DragHandleMenuProps) {
       sideOffset={sideOffset}
       //side={side ?? "left"}
     >
-      <Menu onAction={onAction} editor={editor} title={target} />
+      {/* `target` is both the human label (title) AND the branch key: Menu shows
+          the record menu when target is the databaseRecord label ("Record"),
+          and the node-formatting menu otherwise. */}
+      <Menu
+        onAction={onAction}
+        editor={editor}
+        title={target}
+        target={target}
+      />
     </DropdownMenuContent>
   );
 }

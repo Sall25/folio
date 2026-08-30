@@ -16,12 +16,9 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
-import { IconPickerCard } from "src/components/tiptap-ui/cover/icon-picker-card";
-import { useLocalStorage } from "src/components/tiptap-templates/simple/hooks/use-local-storage";
-import type { Target } from "src/components/tiptap-ui/cover/types";
+import { IconPickerPopover } from "src/components/tiptap-ui/cover";
 
 const DEFAULT_EMOJI = "🔔";
-const DEFAULT_ICON = "Bell";
 
 export function CalloutNodeView({ node, updateAttributes }: NodeViewProps) {
   const attrs = node.attrs as CalloutAttrs & {
@@ -31,12 +28,7 @@ export function CalloutNodeView({ node, updateAttributes }: NodeViewProps) {
     showIcon?: boolean;
     bordered?: boolean;
   };
-  const [open, setOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
-  const [lastTab, setLastTab] = useLocalStorage<Target>(
-    "folio:icon-picker:tab",
-    "Emoji",
-  );
 
   // Defaults preserve every existing callout: icon shown, grey background,
   // no border.
@@ -60,67 +52,39 @@ export function CalloutNodeView({ node, updateAttributes }: NodeViewProps) {
       >
         {/* ── Icon (only when enabled) ── */}
         {showIcon && (
-          <div className="callout-icon-wrap" style={{ position: "relative" }}>
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="callout-icon-btn"
-                  style={{ fontSize: 20 }}
-                >
-                  {attrs.target === "Emoji" && attrs.iconName}
-                  {attrs.target === "Icons" && attrs.iconName && (
-                    <DynamicIcon
-                      name={attrs.iconName}
-                      size={22}
-                      weight={500}
-                      style={{ color: attrs.color }}
-                    />
-                  )}
-                  {attrs.target === "Upload" && attrs.iconName && (
-                    <img
-                      src={attrs.iconName}
-                      alt="icon"
-                      style={{
-                        width: 20,
-                        height: 20,
-                        objectFit: "contain",
-                        borderRadius: 4,
-                        display: "block",
-                      }}
-                    />
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverPortal container={document.getElementById("root")}>
-                <PopoverContent
-                  style={{ position: "fixed", zIndex: 999 }}
-                  side="bottom"
-                  align="start"
-                >
-                  <IconPickerCard
-                    target={open ? lastTab : (attrs.target ?? "Emoji")}
-                    onTargetChange={(target) => {
-                      setLastTab(target);
-                      updateAttributes({
-                        target,
-                        iconName:
-                          target === "Emoji" ? DEFAULT_EMOJI : DEFAULT_ICON,
-                      });
-                    }}
-                    onSelect={(name, color) =>
-                      updateAttributes({
-                        iconName: name,
-                        color,
-                        target: lastTab,
-                        showIcon: true,
-                      })
-                    }
-                  />
-                </PopoverContent>
-              </PopoverPortal>
-            </Popover>
-          </div>
+          <IconPickerPopover
+            onSelect={(name, color, target) => {
+              updateAttributes({ iconName: name, color, target: target });
+            }}
+          >
+            <Button
+              variant="ghost"
+              className="callout-icon-btn"
+              style={{ fontSize: 20 }}
+            >
+              {attrs.target === "Emoji" && attrs.iconName}
+              {attrs.target === "Icons" && attrs.iconName && (
+                <DynamicIcon
+                  name={attrs.iconName}
+                  size={22}
+                  style={{ color: attrs.color }}
+                />
+              )}
+              {attrs.target === "Upload" && attrs.iconName && (
+                <img
+                  src={attrs.iconName}
+                  alt="icon"
+                  style={{
+                    width: 20,
+                    height: 20,
+                    objectFit: "contain",
+                    borderRadius: 4,
+                    display: "block",
+                  }}
+                />
+              )}
+            </Button>
+          </IconPickerPopover>
         )}
 
         {/* ── Content ── */}

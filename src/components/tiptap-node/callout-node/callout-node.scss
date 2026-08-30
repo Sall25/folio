@@ -5,7 +5,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 .node-callout{
   margin-bottom: 20px;
+  width: var(--db-editor-width);
 }
+
 .callout-root {
   display: flex;
   align-items: flex-start;

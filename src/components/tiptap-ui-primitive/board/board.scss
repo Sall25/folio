@@ -1,29 +1,55 @@
+// Board primitive
+// ----------------
+// Root does not clip — the cover clips its own image so BoardIcon can hang past
+// the seam. Gutter drives the horizontal inset shared by content and a hanging
+// icon so the icon lines up with the title beneath it.
+
 .tiptap-board {
+  --tt-board-gutter: 14px;
+
+  position: relative;
   display: flex;
   flex-direction: column;
-  border-radius: var(--tt-radius-lg, 10px);
-  border: 0.5px solid var(--tt-border-color, rgba(0, 0, 0, 0.08));
-  background: var(--tiptap-card-bg-color, #fff);
-  overflow: hidden;
-  cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  min-width: 0;
 
-  &:hover {
-    border-color: var(--tt-gray-light-a-200);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  // Card chrome — stripped for the plain (page-header) variant.
+  &[data-variant="card"] {
+    border-radius: var(--tt-radius-lg, 10px);
+//    border: 0.5px solid var(--tt-border-color, rgba(0, 0, 0, 0.08));
+    background: var(--tiptap-card-bg-color, #fff);
+  }
+
+  &[data-interactive] {
+    cursor: pointer;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+
+    &:hover {
+      border-color: var(--tt-gray-light-a-200);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
   }
 }
 
+// ── Cover ──────────────────────────────────────────────────────────────────
 .tiptap-board-cover {
+  position: relative;
   width: 100%;
   flex-shrink: 0;
-  position: relative;
-  overflow: hidden;
+  overflow: hidden; // clip the image, not the whole board
   background: var(--tt-gray-light-100, #f5f5f5);
   display: flex;
   align-items: center;
   justify-content: center;
 
+  // Match the card's top corners so the clipped image tucks under the border.
+  .tiptap-board[data-variant="card"] & {
+    border-top-left-radius: var(--tt-radius-lg, 10px);
+    border-top-right-radius: var(--tt-radius-lg, 10px);
+  }
+
+  // Bare <img> children still get covered, so BoardCoverImage is optional.
   img {
     position: absolute;
     inset: 0;
@@ -33,10 +59,116 @@
   }
 }
 
+.tiptap-board-cover-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+// ── Controls (cover overlay) ─────────────────────────────────────────────────
+.tiptap-board-controls {
+  position: absolute;
+  top: 2px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--tt-radius-md, 8px);
+  background: color-mix(in srgb, #0a0a0a 55%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #fff;
+
+  // Let the host's buttons ride on the translucent group.
+  .tiptap-button {
+    color: inherit;
+    background: transparent;
+  }
+
+  &[data-align="end"] {
+    right: 8px;
+  }
+  &[data-align="start"] {
+    left: 8px;
+  }
+}
+
+// ── Icon ─────────────────────────────────────────────────────────────────────
+.tiptap-board-icon {
+  --tt-board-icon-size: 64px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--tt-board-icon-size);
+  height: var(--tt-board-icon-size);
+  font-size: calc(var(--tt-board-icon-size) * 0.92);
+  line-height: 1;
+
+  // Scale down direct icon/image children to the box.
+  svg,
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  // Hanging: straddle the cover's bottom edge. Pulled up half its height and
+  // inset by the gutter so it aligns with the title below. Sits above the cover.
+  &[data-hang] {
+    position: relative;
+    z-index: 1;
+    margin-top: calc(var(--tt-board-icon-size) / -2);
+    margin-bottom: 4px;
+
+    &[data-align="start"] {
+      margin-left: var(--tt-board-gutter);
+    }
+    &[data-align="center"] {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    &[data-align="end"] {
+      margin-left: auto;
+      margin-right: var(--tt-board-gutter);
+    }
+  }
+}
+
+// ── Content ──────────────────────────────────────────────────────────────────
 .tiptap-board-content {
   display: flex;
   flex-direction: column;
-  padding: 10px 12px 12px;
   gap: 4px;
   flex: 1;
+  min-width: 0;
+  padding: 10px var(--tt-board-gutter) 12px;
+}
+
+.tiptap-board-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--tt-text-color, #1a1a1a);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tiptap-board-meta {
+  font-size: 12px;
+  line-height: 1.3;
+  color: color-mix(in srgb, var(--tt-text-color, #1a1a1a) 55%, transparent);
+}
+
+.tiptap-board-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
 }

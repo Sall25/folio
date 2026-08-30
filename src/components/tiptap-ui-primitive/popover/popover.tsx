@@ -14,6 +14,12 @@ function PopoverPortal({
   return <PopoverPrimitive.Portal {...props} />;
 }
 
+function PopoverAnchor({
+  ...props
+}: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
+  return <PopoverPrimitive.Anchor {...props} />;
+}
+
 function PopoverTrigger({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
@@ -38,4 +44,10 @@ function PopoverContent({
   );
 }
 
-export { Popover, PopoverTrigger, PopoverContent, PopoverPortal };
+export {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverPortal,
+  PopoverAnchor,
+};

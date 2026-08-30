@@ -1,10 +1,10 @@
 .view-options {
-  width: 280px;
+  width: 300px;
   display: flex;
   flex-direction: column;
   min-height: 400px;
   max-height: 600px;
-  border-radius: var(--tt-radius-md);
+  border-radius: var(--tt-radius-lg);
   border: 1px solid var(--tt-border-color);
   background-color: var(--tt-gray-light-50);
   .dark & {

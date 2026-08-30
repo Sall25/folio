@@ -178,7 +178,8 @@ export const DatabaseRecordNode = Node.create({
 
 export const DatabaseCellNode = Node.create({
   name: "databaseCell",
-  content: "inline*",
+  // content: "inline*",
+  atom: true,
   isolating: true,
   selectable: true,
   draggable: false,

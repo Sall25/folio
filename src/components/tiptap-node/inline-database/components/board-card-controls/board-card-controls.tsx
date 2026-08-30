@@ -1,22 +1,16 @@
 import { RepositionButton } from "./reposition-button";
 import { AspectButton } from "./aspect-button";
 import { CardActionsMenu } from "./card-actions-menu";
-import type { Page, DatabaseProperty } from "src/types";
+import type { Page } from "src/types";
 import "./board-card-controls.scss";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { EditToggleButton } from "./edit-toggle-button";
+import { useState } from "react";
 
 export function BoardCardControls({
   record,
-  properties,
   onReposition,
   onAspect,
-  onSetValue,
-  onDelete,
-  onDuplicate,
-  onLayout,
-  onPropertyVisibility,
-  onOpenIn,
   lastEditedBy,
   lastEditedAt,
   repositioning,
@@ -27,15 +21,8 @@ export function BoardCardControls({
   onOpenRecord,
 }: {
   record: Page;
-  properties: DatabaseProperty[];
   onReposition?: () => void;
   onAspect?: () => void;
-  onSetValue: (propertyId: string, value: unknown) => void;
-  onDelete: () => void;
-  onDuplicate?: () => void;
-  onLayout?: () => void;
-  onPropertyVisibility?: () => void;
-  onOpenIn?: () => void;
   lastEditedBy?: string;
   lastEditedAt?: string;
   repositioning?: boolean;
@@ -45,6 +32,7 @@ export function BoardCardControls({
   onEnableEdit: () => void;
   onOpenRecord: () => void;
 }) {
+  const [preventClose, setPreventClose] = useState(false);
   return (
     <div
       className="db-card-controls"
@@ -52,16 +40,19 @@ export function BoardCardControls({
       onPointerDown={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
-      data-open={menuOpen || undefined}
+      data-open={menuOpen || (!menuOpen && preventClose) || undefined}
     >
       {onReposition && (
-        <RepositionButton
-          repositioning={repositioning}
-          onReposition={onReposition}
-        />
+        <>
+          <RepositionButton
+            repositioning={repositioning}
+            onReposition={onReposition}
+          />
+          <Separator orientation="vertical" />
+        </>
       )}
       {onAspect && <AspectButton onAspect={onAspect} />}
-      <Separator orientation="vertical" />
+
       <EditToggleButton
         editing={editing}
         onEnableEdit={onEnableEdit}
@@ -70,15 +61,9 @@ export function BoardCardControls({
       <Separator orientation="vertical" />
       <CardActionsMenu
         record={record}
-        properties={properties}
         open={menuOpen}
         onOpenChange={onMenuOpenChange}
-        onSetValue={onSetValue}
-        onDelete={onDelete}
-        onDuplicate={onDuplicate}
-        onLayout={onLayout}
-        onPropertyVisibility={onPropertyVisibility}
-        onOpenIn={onOpenIn}
+        onPreventClose={setPreventClose}
         lastEditedBy={lastEditedBy}
         lastEditedAt={lastEditedAt}
       />

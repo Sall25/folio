@@ -18,6 +18,7 @@ import { useVisibleSelection } from "../hooks/use-visible-selection";
 import { useResolvedRecords } from "../hooks/use-resolved-records";
 import { useTableLayout } from "../hooks/use-table-layout";
 import { useRecordCreation } from "../hooks/use-record-creation";
+import { CardActionsProvider } from "../context";
 
 // ── Provider ───────────────────────────────────────────────────────────────
 
@@ -193,7 +194,7 @@ export function DatabaseProvider({
 
   return (
     <DatabaseContext.Provider value={value}>
-      {children}
+      <CardActionsProvider>{children}</CardActionsProvider>
     </DatabaseContext.Provider>
   );
 }
