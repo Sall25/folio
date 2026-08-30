@@ -30,6 +30,7 @@ import { TemplateChoicePanel } from "./components/template-choice-panel";
 import { PageCenterSkeleton } from "./components/skeletons";
 import { usePageComment } from "./hooks/use-page-comment";
 import { FavoriteToggle } from "./favorite-toggle";
+import { ShareButton } from "./components/share-button";
 
 // Backdrop overlay for the centered modal
 function ModalBackdrop({ onClose }: { onClose?: () => void }) {
@@ -322,8 +323,11 @@ function PageCenterEditor({
           </Button>
           <Spacer orientation="horizontal" />
           <CardItemGroup orientation="horizontal">
+            <ShareButton />
+            <Spacer orientation="horizontal" size={2} />
             <FavoriteToggle page={page} />
-            <Button size="large" variant="ghost" aria-label="More options">
+            <Spacer orientation="horizontal" size={2} />
+            <Button variant="ghost">
               <Ellipsis className="tiptap-button-icon" />
             </Button>
           </CardItemGroup>

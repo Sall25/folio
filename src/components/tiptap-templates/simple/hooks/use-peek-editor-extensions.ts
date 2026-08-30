@@ -41,6 +41,7 @@ import {
 import { AudioExtension } from "src/components/tiptap-node/audio-node";
 import { RecordPropertyPanelNode } from "../record-property-panel-node";
 import type { ID } from "src/types";
+import { PageComment } from "src/components/tiptap-node/page-comment-node";
 
 export function usePeekEditorExtensions(onNavigate?: (pageId: ID) => void) {
   const extensions = useMemo(
@@ -116,6 +117,7 @@ export function usePeekEditorExtensions(onNavigate?: (pageId: ID) => void) {
       CalloutExtension,
       AudioExtension,
       RecordPropertyPanelNode,
+      PageComment,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

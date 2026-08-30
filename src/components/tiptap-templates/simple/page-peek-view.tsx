@@ -33,6 +33,7 @@ import { usePage } from "src/hooks/use-pages";
 import "./page-peek-view.scss";
 import { usePageComment } from "./hooks/use-page-comment";
 import { FavoriteToggle } from "./favorite-toggle";
+import { ShareButton } from "./components/share-button";
 
 const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
   open,
@@ -271,7 +272,10 @@ function PagePeekEditor({
         </CardItemGroup>
         <Spacer orientation="horizontal" />
         <CardItemGroup orientation="horizontal">
+          <ShareButton />
+          <Spacer orientation="horizontal" size={2} />
           <FavoriteToggle page={page} />
+          <Spacer orientation="horizontal" size={2} />
           <Button variant="ghost">
             <Ellipsis className="tiptap-button-icon" />
           </Button>
