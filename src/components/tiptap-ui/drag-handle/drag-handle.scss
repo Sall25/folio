@@ -3,7 +3,7 @@
   pointer-events: auto;
   transform: translateX(-15px);
   gap: 0px;
-  transition: top 0.25s ease-out, left 0.25s ease-out, visibility 0.25s ease;
+  transition: top 0.15s ease-out, left 0.15s ease-out, visibility 0.15s ease;
  
    &.is-record {
     // Nudge left to clear the row's selection checkbox.

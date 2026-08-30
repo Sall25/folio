@@ -94,7 +94,12 @@ export function RecordDragMenu({
     <>
       <Popover
         open={menuActionsOpen}
-        onOpenChange={(o) => setMenuActionsOpen(o)}
+        onOpenChange={(o) => {
+          setMenuActionsOpen(o);
+          if (!o) {
+            onAction?.();
+          }
+        }}
       >
         <PopoverAnchor virtualRef={anchorRef as any} />
         <PopoverPortal container={document.getElementById("root")}>

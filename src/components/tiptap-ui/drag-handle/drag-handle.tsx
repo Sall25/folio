@@ -113,6 +113,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
   useEffect(() => () => recordSelection.setHovered(null), []);
 
   const onAction = useCallback(() => {
+    console.log("onAction fired");
     setOpen(false);
     editor?.commands.unlockDragHandle();
   }, [editor]);
