@@ -62,7 +62,13 @@ function SortControlImpl({
           <ArrowUpDown className="tiptap-button-icon" size={14} />
         </Button>
       </PopoverTrigger>
-      <PopoverContent side="bottom" align="start" className="db-panel">
+      <PopoverContent
+        side="bottom"
+        align="end"
+        className="db-panel"
+        avoidCollisions
+        alignOffset={6}
+      >
         <SortPanel
           properties={properties}
           db={db}

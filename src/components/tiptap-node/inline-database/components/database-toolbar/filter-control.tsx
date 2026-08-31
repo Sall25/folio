@@ -62,7 +62,13 @@ function FilterControlImpl({
           <ListFilter className="tiptap-button-icon" size={14} />
         </Button>
       </PopoverTrigger>
-      <PopoverContent side="bottom" align="start" className="db-panel">
+      <PopoverContent
+        side="bottom"
+        align="end"
+        className="db-panel"
+        avoidCollisions
+        collisionPadding={8}
+      >
         <FilterPanel properties={properties} db={db} activeView={activeView} />
       </PopoverContent>
     </Popover>
