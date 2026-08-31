@@ -20,21 +20,32 @@
     display: block;
     width: 100%;
     box-sizing: border-box;
-    padding: 7px 8px;
-    // textarea defaults to monospace; inherit the app stack instead.
-    font-family: inherit;
-    font-size: 14px;
-    line-height: 1.4;
-    border: none;
-    outline: none;
+    padding: 2px 8px;
+    min-height: calc(var(--radix-popover-trigger-height) + 4px); 
+   // font-size: 14px;
+    // line-height: 1.4;
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+   -webkit-font-smoothing: auto;
+
+    outline: none !important;
     background: transparent;
+    box-shadow: none;
+    border: none !important;
     color: var(--tt-text-primary);
     resize: none;
+    
+    border-radius: 0 !important;
+    background: var(--tt-gray-light-50);
+    .dark & {
+      background: var(--tt-gray-dark-100);
+    }
 
     &:focus,
     &:focus-visible {
-      box-shadow: none;
-      border-color: transparent;
+      box-shadow: none !important;
+      border-color: transparent !important;
+      outline: 2px solid var(--tt-border-color) !important;
+      border: none !important;
     }
   }
 }
@@ -60,29 +71,6 @@
     color: var(--tt-text-tertiary);
   }
 
-  &__field {
-    // An inline-level textarea sits on the text baseline and reserves
-    // descender space beneath it — that's the gap under the editor.
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 7px 8px;
-    // textarea defaults to monospace; inherit the app stack instead.
-    font-family: inherit;
-    font-size: 14px;
-    line-height: 1.4;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: var(--tt-text-primary);
-    resize: none;
-
-    &:focus,
-    &:focus-visible {
-      box-shadow: none;
-      border-color: transparent;
-    }
-  }
 }
 
 // The box supplies the border and background; the textarea supplies the height.
@@ -94,12 +82,3 @@
   align-items: stretch;
 }
 
-textarea.db-cell-text__field {
-  border: none;
-  background: transparent;
-  &:focus,
-  &:focus-visible {
-    box-shadow: none;
-    border-color: transparent;
-  }
-}

@@ -97,6 +97,7 @@
       var(--tt-text-primary) 4%,
       var(--tt-bg-color)
     );
+  
     box-shadow: inset 0 0 0 1px var(--tt-border-color);
     border-radius: 3px;
   }
@@ -165,61 +166,74 @@
     white-space: normal;
     padding: 4px 5px;   // was `auto 5px` — auto is invalid for padding, gets dropped
 
-  .db-cell-editor__display {
-    height: auto;
-    align-items: flex-start;
-  }
-
-  // the text run itself — where the ellipsis is
-  .db-cell-text__display,
-  .db-cell-title__text {
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-  }
-
-  .tiptap-button {
-    height: auto;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    margin: 5px 0;
-    padding: 0 !important;
-  }
-}
-
-}
-
-.react-renderer.node-databaseRecord{
-  .ProseMirror-selectednode{
-    .db-node-cell--atom,
-    .db-node-cell{
-      background-color: var(--tt-selection-color) !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
+    .db-cell-editor__display {
+      height: auto;
+      align-items: flex-start;
     }
-    .db-cell{
-       .db-cell-editor{
-        &__display{
+
+    // the text run itself — where the ellipsis is
+    .db-cell-text__display,
+    .db-cell-title__text {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .tiptap-button {
+      height: auto;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin: 5px 0;
+      padding: 0 !important;
+    }
+  }
+}
+
+// ── PM node-selected record (single-cell / node selection path) ─────────────
+// Inset ring + corner dot, matching the Notion cell look. Was an outset border
+// with squared corners, which shifted layout and read as a flat outline.
+.react-renderer.node-databaseRecord {
+  .ProseMirror-selectednode {
+    .db-node-cell--atom,
+    .db-node-cell {
+      position: relative;
+      background-color: transparent !important;
+      // box-shadow: inset 0 0 0 2px var(--tt-brand-color-500) !important;
+      border: none !important;
+      border-radius: 3px !important;
+    }
+
+    .db-cell {
+      .db-cell-editor {
+        &__display {
           background-color: transparent !important;
         }
       }
-      .tiptap-card-item-group{
+      .tiptap-card-item-group {
         background-color: transparent !important;
       }
     }
-   
-    //  FIX SMALL DOT
-    .db-node-cell.db-node-cell--atom::after {
-      opacity: 0;
-    }
-    .db-node-cell.db-node-cell--atom:hover::after {
-      opacity: 1; /* Show on hover if needed */
+
+    // Corner handle dot, bottom-right — always visible on the selected cell.
+    .db-node-cell::after,
+    .db-node-cell--atom::after {
+      content: "";
+      position: absolute;
+      right: 1px;
+      bottom: 1px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--tt-selection-color);
+      border: 2px solid var(--tt-bg-color);
+      pointer-events: none;
+      z-index: 3;
+      opacity: 1;
     }
   }
 }
-
 
 // ── Record selection checkbox ───────────────────────────────────────────────
 // The ROW BOX is the renderer div (.db-record is display:contents and generates
@@ -244,14 +258,17 @@
 // :checked state. The checkbox is portaled to document.body, so it shares no
 // ancestor with the row and can never be a CSS ancestor of it.
 // .db-record is display:contents (paints nothing), so the cells carry the tint.
+// This is the LAST + highest-specificity selection rule, so it's the one that
+// actually renders — the ring + dot live here.
 .react-renderer.node-databaseRecord:has(> .db-record[data-selected]) {
   border-bottom: 1px solid var(--tt-bg-color);
 
   .db-node-cell--atom,
   .db-node-cell {
-    background-color: var(--tt-selection-color) !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
+    position: relative;
+    background-color: transparent !important;
+    box-shadow: inset 0 0 0 2px var(--tt-selection-color) !important;
+    border-radius: 3px !important;
   }
 
 
@@ -264,11 +281,20 @@
     }
   }
 
-  // FIX SMALL DOT
-  .db-node-cell.db-node-cell--atom::after {
-    opacity: 0;
-  }
-  .db-node-cell.db-node-cell--atom:hover::after {
+  // Corner handle dot, bottom-right — always visible on the selected cell.
+  .db-node-cell::after,
+  .db-node-cell--atom::after {
+    content: "";
+    position: absolute;
+    right: -3px;
+    bottom: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--tt-selection-color);
+    border: 2px solid var(--tt-bg-color);
+    pointer-events: none;
+    z-index: 3;
     opacity: 1;
   }
 }
@@ -464,5 +490,43 @@ body.db-row-dragselect {
   &[data-collapsed="true"][data-size="full"] {
     --db-editor-width: min(1320px, 100%);
     max-width: 100%;
+  }
+}
+
+// ── Active cell (decoration) ────────────────────────────────────────────────
+// Class lands on the .react-renderer wrapper (display:contents); style its
+// .db-node-cell child — the real box.
+.react-renderer.node-databaseCell.db-cell-active .db-node-cell {
+  .db-title-content,
+  .db-node-cell__content,
+  .tiptap-card-item-group {
+    background: transparent !important;
+  }
+  position: relative;
+  overflow: visible;
+  background: color-mix(
+    in srgb,
+    var(--tt-brand-color-400) 12%,
+    var(--tt-bg-color)
+  ) !important;
+  // Hide the cell's own borders while active so only the ring shows.
+  border-color: transparent;
+  outline: 3px solid var(--tt-brand-color-400);
+  outline-offset: -3px;
+  //box-shadow: inset 0 0 0 2px var(--tt-brand-color-400);
+ 
+  &::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 8px;
+    height: 8px;
+    transform: translate(50%, 50%);
+    border-radius: 50%;
+    background: var(--tt-brand-color-300);
+    border: 2px solid var(--tt-brand-color-500);
+    pointer-events: none;
+    z-index: 3;
   }
 }

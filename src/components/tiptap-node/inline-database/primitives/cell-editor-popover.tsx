@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCurrentEditor } from "@tiptap/react";
 import {
   Popover,
   PopoverContent,
@@ -14,6 +15,8 @@ export interface CellEditorPopoverProps {
   readonly?: boolean;
   /** Width of the floating editor box. */
   width?: number | string;
+  /** Minimum height of the floating editor box. */
+  minHeight?: number | string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -27,12 +30,41 @@ export function CellEditorPopover({
   children,
   readonly,
   width,
+  minHeight,
   open: controlledOpen,
   onOpenChange,
 }: CellEditorPopoverProps) {
   const [uncontrolled, setUncontrolled] = useState(false);
+  const { editor } = useCurrentEditor();
+  const rootRef = useRef<HTMLDivElement>(null);
+
   const open = controlledOpen ?? uncontrolled;
   const setOpen = onOpenChange ?? setUncontrolled;
+
+  // Sync the active-cell decoration with edit state. Runs AFTER render (effect),
+  // so reading rootRef here is safe — never in the render path.
+  //   open  → clear the ring (the open editor box is signal enough)
+  //   close → restore the ring on this cell (Notion resting "selected" state)
+  useEffect(() => {
+    if (!editor || editor.isDestroyed) return;
+
+    if (open) {
+      editor.commands.clearActiveCell();
+      return;
+    }
+
+    const el = rootRef.current;
+    if (!el) return;
+    const pos = editor.view.posAtDOM(el, 0);
+    if (pos < 0) return;
+    const $pos = editor.state.doc.resolve(pos);
+    for (let depth = $pos.depth; depth > 0; depth--) {
+      if ($pos.node(depth).type.name === "databaseCell") {
+        editor.commands.setActiveCell($pos.before(depth));
+        return;
+      }
+    }
+  }, [open, editor]);
 
   if (readonly) {
     return <div className="db-cell-editor__display">{trigger}</div>;
@@ -47,6 +79,7 @@ export function CellEditorPopover({
   if (!open) {
     return (
       <div
+        ref={rootRef}
         className="db-cell-editor__display"
         role="button"
         tabIndex={0}
@@ -68,7 +101,9 @@ export function CellEditorPopover({
     <Popover open onOpenChange={setOpen} defaultOpen>
       <PopoverTrigger asChild>
         <div
+          ref={rootRef}
           className="db-cell-editor__display"
+          data-editing="true"
           role="button"
           tabIndex={0}
           onClick={() => setOpen(true)}
@@ -79,16 +114,18 @@ export function CellEditorPopover({
       <PopoverContent
         side="bottom"
         align="start"
-        sideOffset={-36}
-        alignOffset={-4}
+        sideOffset={-38}
+        alignOffset={-2}
         avoidCollisions={false}
         onOpenAutoFocus={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
         onFocusOutside={(e) => e.preventDefault()}
         className="db-cell-editor__popover"
         style={{
-          width: width ?? "calc(var(--radix-popover-trigger-width) + 8px)",
+          width: width ?? "calc(var(--radix-popover-trigger-width) + 4px)",
           minWidth: "var(--radix-popover-trigger-width)",
+          minHeight:
+            minHeight ?? "calc(var(--radix-popover-trigger-height) + 4px)",
         }}
       >
         <div className="db-cell-editor__box">

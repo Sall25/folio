@@ -5,12 +5,18 @@
   min-width: 100px;
   
 
-  &__display, &__num { font-variant-numeric: tabular-nums; font-size: inherit;  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
-    -webkit-font-smoothing: auto; }
+  &__display, &__num { 
+    font-variant-numeric: tabular-nums;
+     font-size: inherit;  
+     font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+    -webkit-font-smoothing: auto; 
+  
+  }
   &__input {
     min-width: 100px;
     background: none; border: none; outline: none;
-    font-size: inherit; color: inherit; width: 120px; text-align: right;
+    font-size: inherit; color: inherit; width: 120px;
+     text-align: right;
     caret-color: currentColor; font-variant-numeric: tabular-nums;
     font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
     -webkit-font-smoothing: auto;
@@ -45,8 +51,6 @@
   // Align the input's text exactly where the display had it, or the number
   // visibly jumps sideways the moment the editor opens. type="number" right-
   // aligns by default in some browsers, which is what caused the shift.
-  width: 100%;
-  min-width: 100px;
   text-align: left;
   border: none;
   outline: none;
@@ -54,8 +58,8 @@
   color: var(--tt-text-primary);
   font-family: inherit;
   font-size: inherit;
-  line-height: 1.5;
-  padding: 0;
+  padding: 2px 8px;
+
 
   // Kill the spinner arrows — they steal width and shift the text again.
   appearance: textfield;
@@ -85,15 +89,14 @@
 input.num-cell__input {
   display: block;
   width: 100%;
-  height: inherit;
-  min-height: inherit;
   padding: 0 8px;
   font-family: inherit;
   font-size: inherit;
   border: none;
   background: transparent;
   // Numbers read right-aligned, matching the bar/ring display variants.
-  text-align: right;
+ // text-align: right;
+  min-height: calc(var(--radix-popover-trigger-height) + 4px); 
 
   &:focus,
   &:focus-visible {

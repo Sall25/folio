@@ -178,8 +178,7 @@ export const DatabaseRecordNode = Node.create({
 
 export const DatabaseCellNode = Node.create({
   name: "databaseCell",
-  // content: "inline*",
-  atom: true,
+  content: "inline*",
   isolating: true,
   selectable: true,
   draggable: false,
@@ -202,6 +201,24 @@ export const DatabaseCellNode = Node.create({
       mergeAttributes(HTMLAttributes, { "data-type": "database-cell" }),
       0,
     ];
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      // Enter while editing inside a cell → commit and mark this cell active
+      // (ring + dot), Notion-style. Uses the active-cell DECORATION, not a
+      // NodeSelection, so it doesn't fight the editor's selection/focus.
+      Enter: ({ editor }) => {
+        const { $from } = editor.state.selection;
+        for (let depth = $from.depth; depth > 0; depth--) {
+          if ($from.node(depth).type.name === "databaseCell") {
+            const pos = $from.before(depth);
+            return editor.commands.setActiveCell(pos);
+          }
+        }
+        return false; // not in a cell → normal Enter
+      },
+    };
   },
 
   addNodeView() {

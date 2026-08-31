@@ -134,6 +134,8 @@ export function TitleCellDisplay({
         readonly={readonly}
         open={editing}
         onOpenChange={setEditing}
+        width="calc(var(--radix-popover-trigger-width) + 8px)"
+        minHeight="calc(var(--radix-popover-trigger-height) + 4px)"
         trigger={
           <div className="db-cell-title">
             {icon && (

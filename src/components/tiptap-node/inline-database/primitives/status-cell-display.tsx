@@ -9,6 +9,11 @@ import {
 import { Input } from "src/components/tiptap-ui-primitive/input";
 import { StatusPill } from "../ui/status/status-edit-display";
 import "./status-cell-display.scss";
+import {
+  Card,
+  CardBody,
+  CardHeader,
+} from "src/components/tiptap-ui-primitive/card";
 
 interface StatusCellDisplayProps {
   value: string | null; // StatusItem.id
@@ -41,7 +46,11 @@ export function StatusCellDisplay({
     .filter((g) => g.items.length > 0);
 
   const trigger = (
-    <button className="status-cell__trigger" contentEditable={false}>
+    <button
+      className="status-cell__trigger"
+      contentEditable={false}
+      onClick={() => setOpen(true)}
+    >
       {selectedItem ? (
         <StatusPill name={selectedItem.name} color={selectedItem.color} />
       ) : (
@@ -50,7 +59,7 @@ export function StatusCellDisplay({
     </button>
   );
 
-  if (readonly || !onChange) return trigger;
+  if (readonly || !onChange || !open) return trigger;
 
   return (
     <Popover
@@ -82,47 +91,49 @@ export function StatusCellDisplay({
       <PopoverContent
         side="bottom"
         align="start"
-        className="status-dropdown"
+        avoidCollisions
+        collisionPadding={8}
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <div className="status-dropdown__search">
-          <Input
-            autoFocus
-            value={search}
-            placeholder="Search..."
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ height: 28 }}
-          />
-        </div>
-
-        <div className="status-dropdown__list">
-          {filteredGroups.length === 0 ? (
-            <span className="status-dropdown__empty">No statuses found</span>
-          ) : (
-            filteredGroups.map((group) => (
-              <div key={group.id} className="status-dropdown__group">
-                <span className="status-dropdown__group-label">
-                  {group.label}
-                </span>
-                {group.items.map((item) => (
-                  <button
-                    key={item.id}
-                    className="status-dropdown__option"
-                    onClick={() => {
-                      onChange(item);
-                      setOpen(false);
-                    }}
-                  >
-                    <StatusPill name={item.name} color={item.color} />
-                    {item.id === value && (
-                      <Check size={14} className="status-dropdown__check" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            ))
-          )}
-        </div>
+        <Card style={{ padding: "5px", borderRadius: "var(--tt-radius-sm)" }}>
+          <CardHeader>
+            <Input
+              autoFocus
+              value={search}
+              placeholder="Search..."
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ height: 28 }}
+            />
+          </CardHeader>
+          <CardBody style={{ width: "100%" }}>
+            {filteredGroups.length === 0 ? (
+              <span className="status-dropdown__empty">No statuses found</span>
+            ) : (
+              filteredGroups.map((group) => (
+                <div key={group.id} className="status-dropdown__group">
+                  <span className="status-dropdown__group-label">
+                    {group.label}
+                  </span>
+                  {group.items.map((item) => (
+                    <button
+                      key={item.id}
+                      className="status-dropdown__option"
+                      onClick={() => {
+                        onChange(item);
+                        setOpen(false);
+                      }}
+                    >
+                      <StatusPill name={item.name} color={item.color} />
+                      {item.id === value && (
+                        <Check size={14} className="status-dropdown__check" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              ))
+            )}
+          </CardBody>
+        </Card>
       </PopoverContent>
     </Popover>
   );

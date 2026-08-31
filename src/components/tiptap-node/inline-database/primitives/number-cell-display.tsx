@@ -164,7 +164,7 @@ export function NumberCellDisplay({
         />
       </span>
     ) : (
-      <span className="num-cell__display">{display}</span>
+      <span className={`num-cell__display`}>{display}</span>
     );
 
   const alignClass = showAs === "number" ? "" : " num-cell--right";
@@ -173,6 +173,8 @@ export function NumberCellDisplay({
 
   return (
     <CellEditorPopover
+      width="calc(var(--radix-popover-trigger-width) + 8px)"
+      minHeight="calc(var(--radix-popover-trigger-height) + 4px)"
       trigger={
         <div
           className={`num-cell${alignClass}`}
@@ -206,16 +208,20 @@ export function NumberCellDisplay({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={() => commit(close)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              commit(close);
-            }
-            if (e.key === "Escape") {
-              e.preventDefault();
-              setDraft(value !== null ? String(value) : "");
-              close();
-            }
+          // onKeyDown={(e) => {
+          //   if (e.key === "Enter") {
+          //     e.preventDefault();
+          //     commit(close);
+          //   }
+          //   if (e.key === "Escape") {
+          //     e.preventDefault();
+          //     setDraft(value !== null ? String(value) : "");
+          //     close();
+          //   }
+          // }}
+          style={{
+            justifyContent: align === "left" ? "flex-start" : "flex-end",
+            textAlign: "right",
           }}
         />
       )}

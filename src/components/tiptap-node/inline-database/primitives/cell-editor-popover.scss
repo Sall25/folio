@@ -23,7 +23,7 @@
   border-radius: var(--tt-radius-sm);
   background: var(--tt-gray-light-100);
   .dark & {
-    background: var(--tt-gray-dark-100);
+    background: var(--tt-gray-dark-50);
   }
   box-shadow: var(--tt-shadow-elevated-xs);
  // box-shadow: var(--tt-shadow-elevated-xs);//0 1px 4px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -34,9 +34,11 @@
  
 }
 
+
 .db-cell-editor__box {
-  padding: 6px 8px;
-  min-height: 30px;
+  // padding: 6px 8px;
+  min-height: inherit;
   display: flex;
   align-items: flex-start;
+  z-index: 9999;
 }

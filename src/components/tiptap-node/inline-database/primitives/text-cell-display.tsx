@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CellEditorPopover } from "./cell-editor-popover";
-import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 import "./text-cell-display.scss";
+import { Input } from "src/components/tiptap-ui-primitive/input";
 
 interface TextCellDisplayProps {
   value: string | null | undefined;
@@ -16,7 +16,7 @@ export function TextCellDisplay({
   onChange,
   placeholder = "Empty",
   readonly,
-  maxRows = 8,
+  // maxRows = 8,
 }: TextCellDisplayProps) {
   const text = value ?? "";
   const [draft, setDraft] = useState(text);
@@ -38,7 +38,8 @@ export function TextCellDisplay({
       readonly={readonly || !onChange}
       // Match the column exactly — the default adds 8px, which spills the box
       // past the cell edge.
-      width="var(--radix-popover-trigger-width)"
+      width="calc(var(--radix-popover-trigger-width) + 8px)"
+      minHeight="calc(var(--radix-popover-trigger-height) + 8px)"
       trigger={
         <span
           className={`db-cell-text__display${
@@ -50,11 +51,11 @@ export function TextCellDisplay({
       }
     >
       {(close) => (
-        <TextareaAutosize
+        <Input
           autoFocus
           className="db-cell-text__field"
           value={draft}
-          maxRows={maxRows}
+          // maxRows={maxRows}
           placeholder={placeholder}
           // Event-based, unlike AutoTextarea which handed back a string.
           onChange={(e) => setDraft(e.target.value)}

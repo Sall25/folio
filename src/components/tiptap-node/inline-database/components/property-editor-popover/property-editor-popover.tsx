@@ -84,10 +84,12 @@ export function PropertyEditorPopover({
         <PopoverContent
           side="bottom"
           align="start"
-          style={{ position: "fixed", zIndex: 999 }}
+          style={{ zIndex: 999 }}
           className="db-property-editor__popover"
         >
-          <Card>
+          <Card
+            style={{ padding: "5px 10px", borderRadius: "var(--tt-radius-sm)" }}
+          >
             {transitioning ? (
               <div
                 style={{
