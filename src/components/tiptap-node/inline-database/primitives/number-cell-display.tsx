@@ -208,17 +208,17 @@ export function NumberCellDisplay({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={() => commit(close)}
-          // onKeyDown={(e) => {
-          //   if (e.key === "Enter") {
-          //     e.preventDefault();
-          //     commit(close);
-          //   }
-          //   if (e.key === "Escape") {
-          //     e.preventDefault();
-          //     setDraft(value !== null ? String(value) : "");
-          //     close();
-          //   }
-          // }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commit(close);
+            }
+            if (e.key === "Escape") {
+              e.preventDefault();
+              setDraft(value !== null ? String(value) : "");
+              close();
+            }
+          }}
           style={{
             justifyContent: align === "left" ? "flex-start" : "flex-end",
             textAlign: "right",

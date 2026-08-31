@@ -73,13 +73,12 @@ function setCachedEmojiSupport(value: boolean): void {
 }
 
 // ---------------------------------------------------------------------------
-// Emoji dataset — deferred. @emoji-mart/data is ~567KB and was previously
-// imported at module scope, landing in the editor-create (boot) bundle even
-// though emoji are only ever SEARCHED behind an explicit ":" keystroke.
-// Existing emoji nodes render fine without it (EmojiNodeView reads attrs.src),
-// so the dataset is loaded lazily on first picker open, then cached for the
-// rest of the session. ensureEmojiData() is idempotent and de-dupes concurrent
-// calls via the shared promise.
+// Emoji dataset — now sourced from the LOCAL cover dataset (EMOJI_CATEGORIES)
+// instead of @emoji-mart/data. No network, no 567KB chunk: the picker and this
+// ":" suggestion share one dataset. Still built lazily behind ensureEmojiData()
+// so the flatten + index work stays off the boot path, and de-duped via the
+// shared promise. The dynamic import pulls in the cover data module only when
+// first needed.
 // ---------------------------------------------------------------------------
 type EmojiEntry = {
   emoji: string;
@@ -102,39 +101,43 @@ let emojiDataPromise: Promise<void> | null = null;
 function ensureEmojiData(): Promise<void> {
   if (emojiDataLoaded) return Promise.resolve();
   if (!emojiDataPromise) {
-    emojiDataPromise = import("@emoji-mart/data").then((mod) => {
-      const data = ((mod as any).default ?? mod) as any;
+    emojiDataPromise =
+      import("src/components/tiptap-ui/cover/data/emoji-data").then((mod) => {
+        // Flatten every category's emojis into the extension's entry shape.
+        emojiList = mod.EMOJI_CATEGORIES.flatMap((cat) =>
+          cat.emojis.map((e) => ({
+            emoji: e.native,
+            name: e.name,
+            id: e.id,
+            // id doubles as the primary shortcode; the search haystack becomes
+            // the tag list so prefix lookup below works the same as before.
+            shortcodes: [e.id],
+            tags: e.search.split(/\s+/).filter(Boolean),
+            group: cat.id,
+            emoticons: [],
+            version: 0,
+            src: toAppleEmojiUrl(e.native),
+          })),
+        );
 
-      emojiList = Object.values(data.emojis).map((emoji: any) => ({
-        emoji: emoji.skins[0].native,
-        name: emoji.name,
-        id: emoji.id,
-        shortcodes: [emoji.id, ...(emoji.aliases ?? [])],
-        tags: emoji.keywords ?? [],
-        group: emoji.category ?? "",
-        emoticons: [],
-        version: emoji.version ?? 0,
-        src: toAppleEmojiUrl(emoji.skins[0].native),
-      }));
-
-      // Pre-index shortcodes and tags for O(1) prefix lookup — built once,
-      // when the dataset first loads.
-      const sIdx = new Map<string, EmojiEntry[]>();
-      const tIdx = new Map<string, EmojiEntry[]>();
-      for (const e of emojiList) {
-        for (const sc of e.shortcodes) {
-          if (!sIdx.has(sc)) sIdx.set(sc, []);
-          sIdx.get(sc)!.push(e);
+        // Pre-index shortcodes and tags for O(1) prefix lookup — built once,
+        // when the dataset first loads.
+        const sIdx = new Map<string, EmojiEntry[]>();
+        const tIdx = new Map<string, EmojiEntry[]>();
+        for (const e of emojiList) {
+          for (const sc of e.shortcodes) {
+            if (!sIdx.has(sc)) sIdx.set(sc, []);
+            sIdx.get(sc)!.push(e);
+          }
+          for (const tag of e.tags) {
+            if (!tIdx.has(tag)) tIdx.set(tag, []);
+            tIdx.get(tag)!.push(e);
+          }
         }
-        for (const tag of e.tags) {
-          if (!tIdx.has(tag)) tIdx.set(tag, []);
-          tIdx.get(tag)!.push(e);
-        }
-      }
-      shortcodeIndex = sIdx;
-      tagIndex = tIdx;
-      emojiDataLoaded = true;
-    });
+        shortcodeIndex = sIdx;
+        tagIndex = tIdx;
+        emojiDataLoaded = true;
+      });
   }
   return emojiDataPromise;
 }
@@ -205,8 +208,8 @@ export const EmojiExtension = Emoji.extend({
   onCreate() {
     // Prefetch the emoji dataset in idle time — off the critical boot path,
     // so it never blocks startup or first paint, but is usually ready by the
-    // time the user types ":". The dynamic import keeps the 567KB chunk out
-    // of the editor-create bundle either way.
+    // time the user types ":". The dynamic import keeps the cover data module
+    // out of the editor-create bundle either way.
     const idlePrefetch = () => void ensureEmojiData();
     if (typeof requestIdleCallback !== "undefined") {
       requestIdleCallback(idlePrefetch, { timeout: 4000 });
