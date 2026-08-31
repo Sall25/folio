@@ -19,10 +19,13 @@ import "./select-options-editor.scss";
 import {
   Popover,
   PopoverContent,
+  PopoverPortal,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { ColorHighlightList } from "./color-highlight-list";
 import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
+import { MenuRow } from "../../../components/menu-row";
+import { Input } from "src/components/tiptap-ui-primitive/input";
 
 const TAG_TEXT_COLORS: Record<string, string> = {
   "var(--tt-color-highlight-gray-contrast)":
@@ -148,12 +151,7 @@ export function SelectOptionsEditor({
   };
 
   return (
-    <Card
-      style={{
-        width: 230,
-        padding: "3px 10px",
-      }}
-    >
+    <Card style={{ padding: 5, borderRadius: "var(--tt-radius-sm)" }}>
       <CardItemGroup>
         <SortDropdown sort={sort} onSelect={(s) => setSort(s as SortType)} />
       </CardItemGroup>
@@ -261,56 +259,55 @@ export function SelectOptionsEditor({
                     <ChevronRight className="tiptap-button-icon-sub" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent side="top" align="center">
-                  <Card
-                    style={{
-                      padding: "5px 10px",
-                      gap: 2,
-                      justifyContent: "flex-start",
-                      alignItems: "flex-start",
-                      minWidth: 220,
-                    }}
+                <PopoverPortal>
+                  <PopoverContent
+                    side="top"
+                    align="center"
+                    style={{ zIndex: 1000 }}
                   >
-                    <CardHeader>
-                      <CardItemGroup
-                        orientation="vertical"
-                        style={{ width: "100%" }}
-                      >
-                        <TextareaAutosize
-                          value={option.label}
-                          maxRows={1}
-                          onChange={(e) => {
-                            if (e.target.value.length > 0) {
-                              handleLabelUpdate(option.id, e.target.value);
-                            }
-                          }}
-                          style={{ height: "auto !important" }}
-                        />
-                        <Button
-                          variant="ghost"
-                          style={{
-                            borderRadius: "var(--tt-radius-sm)",
-                            width: "100%",
-                            justifyContent: "flex-start",
-                          }}
+                    <Card
+                      style={{
+                        gap: 2,
+                        justifyContent: "flex-start",
+                        alignItems: "flex-start",
+                        minWidth: 260,
+                        borderRadius: "var(--tt-radius-sm)",
+                      }}
+                    >
+                      <CardHeader>
+                        <CardItemGroup
+                          orientation="vertical"
+                          style={{ width: "100%", padding: "5px", gap: 5 }}
                         >
-                          <Trash2 className="tiptap-button-icon" />
-                          <span className="tiptap-button-text">
-                            Delete option
-                          </span>
-                        </Button>
-                      </CardItemGroup>
-                    </CardHeader>
-                    <CardBody style={{ padding: 0 }}>
-                      <CardGroupLabel>Colors</CardGroupLabel>
-                      <ColorHighlightList
-                        onAction={(color) =>
-                          handleColorUpdate(option.id, color)
-                        }
-                      />
-                    </CardBody>
-                  </Card>
-                </PopoverContent>
+                          <Input
+                            value={option.label}
+                            onChange={(e) => {
+                              if (e.target.value.length > 0) {
+                                handleLabelUpdate(option.id, e.target.value);
+                              }
+                            }}
+                            autoFocus
+                          />
+                          <MenuRow Icon={Trash2} label="Delete option" />
+                        </CardItemGroup>
+                      </CardHeader>
+                      <CardBody
+                        style={{
+                          padding: "5px 10px",
+                          width: "100%",
+                          scrollbarWidth: "thin",
+                        }}
+                      >
+                        <CardGroupLabel>Colors</CardGroupLabel>
+                        <ColorHighlightList
+                          onAction={(color) =>
+                            handleColorUpdate(option.id, color)
+                          }
+                        />
+                      </CardBody>
+                    </Card>
+                  </PopoverContent>
+                </PopoverPortal>
               </Popover>
             </CardItemGroup>
           ))}

@@ -33,7 +33,7 @@ export function NumberEditDisplay({
   onChange,
 }: NumberEditDisplayProps) {
   return (
-    <Card style={{ padding: "5px 10px" }}>
+    <Card style={{ padding: "5px", borderRadius: "var(--tt-radius-sm)" }}>
       <CardItemGroup style={{ gap: 5 }}>
         <NumberFormatDropdown format={format} onSelect={onNumberSelect} />
         <NumberDecimalDropdown decimal={decimal} onSelect={onDecimalSelect} />

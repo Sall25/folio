@@ -168,7 +168,8 @@ function ViewOptionsContent({
       <Card
         className="view-options"
         style={{
-          maxHeight: "var(--radix-popover-content-available-height, 80vh)",
+          maxHeight:
+            "min(600px, var(--radix-popover-content-available-height))",
           overflowY: "auto",
           overscrollBehavior: "contain",
         }}
@@ -195,6 +196,8 @@ function ViewOptionsContent({
             style={{
               width: "100%",
               padding: "5px 10px",
+              maxHeight:
+                "min(600px, var(--radix-popover-content-available-height))",
               scrollbarWidth: "thin",
             }}
           >

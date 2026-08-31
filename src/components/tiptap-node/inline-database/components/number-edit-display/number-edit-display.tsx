@@ -1,6 +1,3 @@
-import { ChevronRight } from "lucide-react";
-import { useState } from "react";
-import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
   CardBody,
@@ -12,13 +9,9 @@ import {
   GridCell,
   GridRow,
 } from "src/components/tiptap-ui-primitive/grid";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "src/components/tiptap-ui-primitive/popover";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { MenuRow } from "src/components/tiptap-node/inline-database/components/menu-row";
+import { NavigableMenuItem } from "src/components/tiptap-node/inline-database/components/navigable-menu-item";
 import type {
   ConfigOf,
   DatabaseProperty,
@@ -65,116 +58,71 @@ export function NumberEditDisplay({
   const decimals = config.decimalPlaces ?? "default";
   const showAs = config.showAs ?? "number";
 
-  const [formatOpen, setFormatOpen] = useState(false);
-  const [decimalsOpen, setDecimalsOpen] = useState(false);
-
   return (
     <Card
-      style={{ padding: "5px 10px", boxShadow: "var(--tt-shadow-elevated-sm)" }}
+      style={{
+        padding: "5px",
+        boxShadow: "var(--tt-shadow-elevated-md)",
+        border: "1px solid var(--tt-border-color)",
+        minWidth: 360,
+      }}
     >
-      <CardBody>
+      <CardBody style={{ width: "100%" }}>
         <CardItemGroup>
           {/* Number format */}
-          <Popover open={formatOpen} onOpenChange={setFormatOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                style={{ width: "100%", justifyContent: "flex-start" }}
-              >
-                <span className="tiptap-button-text">Number format</span>
-                <Spacer orientation="horizontal" />
-                <span
-                  className="tiptap-button-text"
-                  style={{ color: "var(--tt-gray-light-500)" }}
-                >
-                  {FORMAT_LABEL[format]}
-                </span>
-                <ChevronRight className="tiptap-button-icon-sub" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent side="left" align="start">
-              <Card
-                style={{
-                  padding: "5px 10px",
-                  boxShadow: "var(--tt-shadow-elevated-sm)",
-                  maxHeight: 280,
-                  overflowY: "auto",
-                  minWidth: 200,
-                }}
-              >
-                <CardItemGroup>
-                  {(Object.keys(FORMAT_LABEL) as NumberFormat[]).map((f) => (
-                    <Button
-                      key={f}
-                      variant="ghost"
-                      style={{
-                        justifyContent: "flex-start",
-                        width: "100%",
-                        fontWeight: f === format ? 600 : 400,
-                      }}
-                      onClick={() => {
-                        onChange({ format: f });
-                        setFormatOpen(false);
-                      }}
-                    >
-                      <span className="tiptap-button-text">
-                        {FORMAT_LABEL[f]}
-                      </span>
-                    </Button>
-                  ))}
-                </CardItemGroup>
-              </Card>
-            </PopoverContent>
-          </Popover>
+          <NavigableMenuItem
+            label="Number format"
+            sub={FORMAT_LABEL[format]}
+            side="left"
+          >
+            <Card
+              style={{
+                padding: "5px",
+                border: "1px solid var(--tt-border-color)",
+                // maxHeight: 280,
+                overflowY: "auto",
+                scrollbarWidth: "thin",
+              }}
+            >
+              <CardItemGroup>
+                {(Object.keys(FORMAT_LABEL) as NumberFormat[]).map((f) => (
+                  <MenuRow
+                    key={f}
+                    label={FORMAT_LABEL[f]}
+                    selected={f === format}
+                    onClick={() => onChange({ format: f })}
+                  />
+                ))}
+              </CardItemGroup>
+            </Card>
+          </NavigableMenuItem>
 
           {/* Decimal places */}
-          <Popover open={decimalsOpen} onOpenChange={setDecimalsOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                style={{ width: "100%", justifyContent: "flex-start" }}
-              >
-                <span className="tiptap-button-text">Decimal places</span>
-                <Spacer orientation="horizontal" />
-                <span
-                  className="tiptap-button-text"
-                  style={{ color: "var(--tt-gray-light-500)" }}
-                >
-                  {decimals === "default" ? "Default" : String(decimals)}
-                </span>
-                <ChevronRight className="tiptap-button-icon-sub" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent side="left" align="start">
-              <Card
-                style={{
-                  padding: "5px 10px",
-                  boxShadow: "var(--tt-shadow-elevated-sm)",
-                  minWidth: 160,
-                }}
-              >
-                <CardItemGroup>
-                  {DECIMAL_OPTIONS.map((opt) => (
-                    <Button
-                      key={String(opt.value)}
-                      variant="ghost"
-                      style={{
-                        justifyContent: "flex-start",
-                        width: "100%",
-                        fontWeight: opt.value === decimals ? 600 : 400,
-                      }}
-                      onClick={() => {
-                        onChange({ decimalPlaces: opt.value });
-                        setDecimalsOpen(false);
-                      }}
-                    >
-                      <span className="tiptap-button-text">{opt.label}</span>
-                    </Button>
-                  ))}
-                </CardItemGroup>
-              </Card>
-            </PopoverContent>
-          </Popover>
+          <NavigableMenuItem
+            label="Decimal places"
+            sub={decimals === "default" ? "Default" : String(decimals)}
+            side="left"
+          >
+            <Card
+              style={{
+                padding: "5px",
+                border: "1px solid var(--tt-border-color)",
+                boxShadow: "var(--tt-shadow-elevated-sm)",
+                scrollbarWidth: "thin",
+              }}
+            >
+              <CardItemGroup>
+                {DECIMAL_OPTIONS.map((opt) => (
+                  <MenuRow
+                    key={String(opt.value)}
+                    label={opt.label}
+                    selected={opt.value === decimals}
+                    onClick={() => onChange({ decimalPlaces: opt.value })}
+                  />
+                ))}
+              </CardItemGroup>
+            </Card>
+          </NavigableMenuItem>
 
           <Separator orientation="horizontal" />
 

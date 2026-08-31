@@ -1,15 +1,19 @@
 import { useMemo, type CSSProperties } from "react";
+import { Check } from "lucide-react";
 import {
   pickHighlightColorsByValue,
   type HighlightColor,
 } from "../../../../../tiptap-ui/color-highlight-button";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
 export interface ColorHighlightMenuListProps {
   colors?: HighlightColor[];
   useColorValue?: boolean;
   onAction?: (color?: string) => void;
+  /** The currently applied color value — the matching row shows a check. */
+  selectedValue?: string;
 }
 
 function HighlightButton({
@@ -17,11 +21,13 @@ function HighlightButton({
   style,
   onClick,
   text,
+  selected,
 }: {
   highlightColor: string;
   style: CSSProperties;
   onClick?: () => void;
   text: string;
+  selected?: boolean;
 }) {
   const buttonStyle = useMemo(
     () =>
@@ -38,12 +44,17 @@ function HighlightButton({
       style={buttonStyle}
       className="color-highlight-button"
       onClick={onClick}
+      data-selected={selected ? "true" : undefined}
     >
       <span
         className="tiptap-button-highlight"
         style={{ "--highlight-color": highlightColor } as React.CSSProperties}
       />
-      <span style={{ marginLeft: 5 }}> {text}</span>
+      <Spacer orientation="horizontal" size={4} />
+      <span className="color-highlight-button__label">{text}</span>
+      {selected && (
+        <Check className="tiptap-button-icon-sub color-highlight-button__check" />
+      )}
     </Button>
   );
 }
@@ -61,6 +72,7 @@ export function ColorHighlightList({
     "var(--tt-color-highlight-gray)",
   ]),
   onAction,
+  selectedValue,
 }: ColorHighlightMenuListProps) {
   return (
     <>
@@ -71,6 +83,7 @@ export function ColorHighlightList({
             style={{ width: "100%", justifyContent: "flex-start" }}
             onClick={() => onAction?.(color.value)}
             text={color.label}
+            selected={selectedValue === color.value}
           />
         </CardItemGroup>
       ))}

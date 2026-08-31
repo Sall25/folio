@@ -6,13 +6,10 @@ import {
 } from "react";
 import {
   DEFAULT_CONFIGS,
-  OPERATORS_FOR_TYPE,
   type DatabaseProperty,
   type FilterGroup,
   type FilterGroupOperator,
   type FilterRule,
-  type PropertyConfig,
-  type SelectOption,
   type SortRule,
 } from "src/types";
 import {
@@ -26,8 +23,6 @@ import {
   CardBody,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
-import { PropertyEditPopover } from "../property-edit-popover";
-import { SelectOptionsEditor } from "../../ui/select/select-options-editor";
 import { useDatabaseContext } from "../../nodes/database-context";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
@@ -37,155 +32,24 @@ import { FreezePropertyButton } from "../freeze-property-button";
 import { UnwrapPropertyButton } from "../unwrap-property-button";
 import { HidePropertyButton } from "../hide-property-button";
 import { useResizableNode } from "src/components/tiptap-node/figure-node";
-import FormulaEditor from "../formula-editor/formula-editor";
-import { NumberEditDisplay } from "../number-edit-display";
-import { DateEditDisplay } from "../date-edit-display/date-edit-display";
-import { PersonEditDisplay } from "../person-edit-display";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { IconPicker } from "src/components/tiptap-ui/cover/icon-picker.js";
-import { RelationEditDisplay } from "../relation-edit-display";
-import { RollupEditDisplay } from "../rollup-edit-display";
 import { useDataSource } from "../../hooks/use-data-source";
-import { PROPERTY_TYPE_META } from "src/types/property-type-meta";
 import { PropertyTypeChangePopover } from "../property-type-change-popover";
-import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import "./property-header.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Input } from "src/components/tiptap-ui-primitive/input";
-import { StatusEditDisplay } from "../../ui/status/status-edit-display";
-import { PropertyMenuRow } from "../property-menu-row";
 import { ListFilter, SortAscIcon } from "lucide-react";
 import { InsertPropertyButton } from "../insert-property-button";
 
 import { nanoid } from "nanoid";
-
-// ── makeFilterRule ─────────────────────────────────────────────────────────
-function makeFilterRule(property: DatabaseProperty): FilterRule {
-  const type = property.config.type;
-  const operator = OPERATORS_FOR_TYPE[type]?.[0];
-  switch (type) {
-    case "number":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: type,
-        operator: operator as never,
-        value: 0,
-      };
-    case "checkbox":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: "checkbox",
-        operator: "is_checked",
-      };
-    case "date":
-    case "created_time":
-    case "edited_time":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: type,
-        operator: operator as never,
-        value: null,
-      };
-    case "select":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: "select",
-        operator: "is",
-        value: [""],
-      };
-    case "multi_select":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: "multi_select",
-        operator: "contains",
-        value: [""],
-      };
-    case "status":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: "status",
-        operator: "is",
-        value: [] as string[],
-        labels: [] as string[],
-      };
-    case "relation":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: "relation",
-        operator: "contains",
-        value: "",
-      };
-    case "formula":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: "formula",
-        operator: "contains",
-        value: "",
-      };
-    case "person":
-    case "created_by":
-    case "edited_by":
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: type,
-        operator: "contains",
-        value: "",
-      };
-    default:
-      return {
-        id: nanoid(),
-        propertyId: property.id,
-        propertyType: type as "title",
-        operator: "contains",
-        value: "",
-      };
-  }
-}
-
-/**
- * Resolves a property's icon and renders it. A custom `iconName` is resolved
- * lazily via DynamicIcon (which loads the lucide namespace on demand, out of
- * boot); with no custom name we render the type's fallback icon directly.
- */
-
-const ULTIMATE_FALLBACK_ICON = "category"; // Material Symbols name
-
-/**
- * Resolves a property's icon and renders it. A custom `iconName` (a Material
- * Symbols ligature) wins when set; otherwise the property type's fallback name
- * is used. A bad/unknown custom name renders a blank glyph rather than the
- * fallback — acceptable, and the font handles it without forcing anything.
- */
-function PropertyIcon({
-  iconName,
-  fallback,
-  color,
-  style,
-  ...rest
-}: {
-  iconName?: string;
-  fallback: string; // Material Symbols name for this property type
-  color?: string;
-} & Omit<React.ComponentProps<typeof DynamicIcon>, "name">) {
-  const name = iconName || fallback || ULTIMATE_FALLBACK_ICON;
-  return (
-    <DynamicIcon
-      name={name}
-      style={color ? { color, ...style } : style}
-      {...rest}
-    />
-  );
-}
+import { MenuRow } from "../menu-row";
+import { NavigableMenuItem } from "../navigable-menu-item";
+import { makeFilterRule } from "../filter-rule-chips/utils";
+import { PropertyIcon } from "./property-icon";
+import { PropertyTypeList } from "./property-type-list";
+import { PropertyConfigEditor } from "./property-config-editor";
+import { IconPickerPopover } from "src/components/tiptap-ui/cover";
 
 export function PropertyHeader({
   prop,
@@ -199,7 +63,6 @@ export function PropertyHeader({
   locked?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const [iconOpen, setIconOpen] = useState(false);
   const {
     attributes,
     listeners,
@@ -210,8 +73,7 @@ export function PropertyHeader({
   } = useSortable({ id: prop.id, disabled: locked });
 
   const { db, attrs } = useDatabaseContext();
-  const { changePropertyTypeAsync, updatePropertiesAsync, source } =
-    useDataSource(attrs.sourceId);
+  const { updatePropertiesAsync, source } = useDataSource(attrs.sourceId);
 
   /** Insert a new text property beside this one. Cells are created by
    *  useDatabaseCellSync once the property lands. */
@@ -264,7 +126,10 @@ export function PropertyHeader({
       className="db-th__trigger"
       {...(locked ? {} : attributes)}
       {...(locked ? {} : listeners)}
-      onClick={() => setMenuOpen(true)}
+      onClick={() => {
+        setMenuOpen(true);
+        setOpen(true);
+      }}
       style={{
         width: "100%",
         borderRadius: "var(--tt-radius-sm)",
@@ -312,9 +177,10 @@ export function PropertyHeader({
   // offset so input center == header center
   const centerOffset = -(triggerH / 2 + inputCenterFromTop);
 
-  const statusConfig = prop.config.type === "status" ? prop.config : null;
-
   const view = db.activeView;
+
+  /** Current sort on this property, if any — drives the check in the flyout. */
+  const currentSort = view.sorts?.find((s) => s.propertyId === prop.id);
 
   /** Same construction FilterPanel.addRuleFor uses — appends to the first
    *  filter group, creating it if the view has none. */
@@ -387,50 +253,42 @@ export function PropertyHeader({
               }}
             >
               <CardBody>
-                <CardItemGroup>
-                  <Spacer orientation="vertical" size={5} />
+                <CardItemGroup style={{ gap: 3 }}>
                   <CardItemGroup orientation="horizontal">
                     {/* Icon button → icon picker popover */}
-                    <Popover open={iconOpen} onOpenChange={setIconOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          tooltip="Change icon"
+                    <IconPickerPopover
+                      onSelect={(iconName, color) => {
+                        db.updateProperty(prop.id, {
+                          ...prop,
+                          icon: iconName,
+                          iconColor: color,
+                        });
+                      }}
+                    >
+                      <Button
+                        variant="ghost"
+                        tooltip="Change icon"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        <PropertyIcon
+                          iconName={prop.icon}
+                          fallback={typeIconName}
+                          color={prop.iconColor}
+                          className="tiptap-button-icon"
+                          filled={false}
+                          size={20}
                           style={{
-                            display: "flex",
+                            display: "inline-flex",
                             alignItems: "center",
+                            justifyContent: "center",
                           }}
-                        >
-                          <PropertyIcon
-                            iconName={prop.icon}
-                            fallback={typeIconName}
-                            color={prop.iconColor}
-                            className="tiptap-button-icon"
-                            filled={false}
-                            size={20}
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent side="bottom" align="start">
-                        <Card style={{ padding: "5px 10px", minWidth: 360 }}>
-                          <IconPicker
-                            onSelect={(iconName, color) => {
-                              db.updateProperty(prop.id, {
-                                ...prop,
-                                icon: iconName,
-                                iconColor: color,
-                              });
-                              setIconOpen(false);
-                            }}
-                          />
-                        </Card>
-                      </PopoverContent>
-                    </Popover>
+                        />
+                      </Button>
+                    </IconPickerPopover>
+
                     <Input
                       value={name}
                       placeholder="Property name"
@@ -457,215 +315,16 @@ export function PropertyHeader({
                       style={{ minHeight: 20, height: 30 }}
                     />
                   </CardItemGroup>
-                  <Spacer orientation="vertical" size={4} />
+                  <Spacer size={3} />
                   <PropertyTypeChangePopover>
-                    <CardItemGroup
-                      style={{
-                        // maxHeight: 280,
-                        // overflowY: "auto",
-                        width: "100%",
-                        marginTop: 10,
-                        scrollbarWidth: "thin",
-                      }}
-                    >
-                      {PROPERTY_TYPE_META.filter((m) => m.type !== "title").map(
-                        (m) => {
-                          const iconName = PROPERTY_TYPE_ICONS[m.type];
-                          return (
-                            <Button
-                              key={m.type}
-                              variant="ghost"
-                              onClick={async () => {
-                                const newProp = {
-                                  ...prop,
-                                  config: DEFAULT_CONFIGS[m.type],
-                                };
-                                await changePropertyTypeAsync(prop.id, newProp);
-                              }}
-                              style={{
-                                justifyContent: "flex-start",
-                                width: "100%",
-                                gap: 8,
-                              }}
-                            >
-                              <DynamicIcon
-                                name={iconName}
-                                className="tiptap-button-icon"
-                                size={14}
-                              />
-                              <span className="tiptap-button-text">
-                                {m.label}
-                              </span>
-                              {prop.config.type === m.type && (
-                                <DynamicIcon
-                                  name="check"
-                                  size={14}
-                                  style={{
-                                    marginLeft: "auto",
-                                    color: "var(--tt-brand-color-400)",
-                                  }}
-                                />
-                              )}
-                            </Button>
-                          );
-                        },
-                      )}
-                    </CardItemGroup>
+                    <PropertyTypeList prop={prop} />
                   </PropertyTypeChangePopover>
-                  {prop.config.type === "select" && (
-                    <PropertyEditPopover>
-                      <SelectOptionsEditor
-                        options={prop.config.options}
-                        onEditOption={(option) =>
-                          db.updateProperty(prop.id, {
-                            ...prop,
-                            config: {
-                              ...prop.config,
-                              options: (
-                                prop.config as {
-                                  type: typeof prop.config.type;
-                                  options: SelectOption[];
-                                }
-                              ).options.map((o) =>
-                                o.id !== option.id ? o : option,
-                              ),
-                            } as PropertyConfig,
-                          })
-                        }
-                        onChange={(options) =>
-                          db.updateProperty(prop.id, {
-                            ...prop,
-                            config: {
-                              ...(prop.config as {
-                                type: "select";
-                                options: SelectOption[];
-                              }),
-                              options,
-                            },
-                          })
-                        }
-                      />
-                    </PropertyEditPopover>
-                  )}
-                  {statusConfig && (
-                    <PropertyEditPopover>
-                      <StatusEditDisplay
-                        groups={statusConfig.groups}
-                        onChange={(groups) =>
-                          db.updateProperty(prop.id, {
-                            ...prop,
-                            config: { ...statusConfig, groups },
-                          })
-                        }
-                      />
-                    </PropertyEditPopover>
-                  )}
-                  {prop.config.type === "multi_select" && (
-                    <PropertyEditPopover>
-                      <SelectOptionsEditor
-                        options={prop.config.options}
-                        onEditOption={(option) =>
-                          db.updateProperty(prop.id, {
-                            ...prop,
-                            config: {
-                              ...prop.config,
-                              options: (
-                                prop.config as {
-                                  type: typeof prop.config.type;
-                                  options: SelectOption[];
-                                }
-                              ).options.map((o) =>
-                                o.id !== option.id ? o : option,
-                              ),
-                            } as PropertyConfig,
-                          })
-                        }
-                        onChange={(options) =>
-                          db.updateProperty(prop.id, {
-                            ...prop,
-                            config: {
-                              ...(prop.config as {
-                                type: "select";
-                                options: SelectOption[];
-                              }),
-                              options,
-                            },
-                          })
-                        }
-                      />
-                    </PropertyEditPopover>
-                  )}
-                  {prop.config.type === "relation" && (
-                    <PropertyEditPopover>
-                      <RelationEditDisplay
-                        prop={prop}
-                        source={source ?? undefined}
-                        onChange={(config, name) =>
-                          db.updateProperty(prop.id, {
-                            ...prop,
-                            config,
-                            ...(name ? { name } : {}),
-                          })
-                        }
-                      />
-                    </PropertyEditPopover>
-                  )}
-                  {prop.config.type === "rollup" && (
-                    <PropertyEditPopover>
-                      <RollupEditDisplay
-                        prop={prop}
-                        properties={source?.properties ?? []}
-                        onChange={(config) =>
-                          db.updateProperty(prop.id, { ...prop, config })
-                        }
-                      />
-                    </PropertyEditPopover>
-                  )}
-                  {prop.config.type === "formula" && (
-                    <PropertyEditPopover>
-                      <FormulaEditor
-                        propertyId={prop.id}
-                        properties={source?.properties ?? []}
-                        onDone={() => setOpen(false)}
-                      />
-                    </PropertyEditPopover>
-                  )}
-                  {prop.config.type === "number" && (
-                    <PropertyEditPopover>
-                      <NumberEditDisplay
-                        prop={prop}
-                        onChange={(patch) => {
-                          if (prop.config.type !== "number") return;
-                          db.updateProperty(prop.id, {
-                            ...prop,
-                            config: { ...prop.config, ...patch },
-                          });
-                        }}
-                      />
-                    </PropertyEditPopover>
-                  )}
-                  {prop.config.type === "date" && (
-                    <PropertyEditPopover>
-                      <DateEditDisplay
-                        prop={prop}
-                        onChange={(config) =>
-                          db.updateProperty(prop.id, { ...prop, config })
-                        }
-                      />
-                    </PropertyEditPopover>
-                  )}
-                  {prop.config.type === "person" && (
-                    <PropertyEditPopover>
-                      <PersonEditDisplay
-                        prop={prop}
-                        onChange={(config) =>
-                          db.updateProperty(prop.id, { ...prop, config })
-                        }
-                      />
-                    </PropertyEditPopover>
-                  )}
+                  <PropertyConfigEditor
+                    prop={prop}
+                    onClose={() => setOpen(false)}
+                  />
                 </CardItemGroup>
-                <CardItemGroup>
+                <CardItemGroup style={{ gap: 3 }}>
                   <FreezePropertyButton
                     isFrozen={db.isFrozen(db.activeView.id, prop.id)}
                     onFreeze={() => {
@@ -686,58 +345,33 @@ export function PropertyHeader({
                     }
                   />
                 </CardItemGroup>
-                <CardItemGroup>
-                  <PropertyMenuRow
-                    icon={ListFilter}
+                <CardItemGroup style={{ gap: 3 }}>
+                  <MenuRow
+                    Icon={ListFilter}
                     label="Filter"
                     onClick={addFilter}
                   />
 
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <div>
-                        <PropertyMenuRow
-                          icon={SortAscIcon}
-                          label="Sort"
-                          navigable
+                  <NavigableMenuItem Icon={SortAscIcon} label="Sort">
+                    <Card style={{ padding: "5px 10px" }}>
+                      <CardItemGroup>
+                        <MenuRow
+                          label="Ascending"
+                          selected={currentSort?.direction === "asc"}
+                          onClick={() => addSort("asc")}
                         />
-                      </div>
-                    </PopoverTrigger>
-                    <PopoverContent side="right" align="start">
-                      <Card style={{ padding: 5, minWidth: 160 }}>
-                        <CardItemGroup>
-                          <Button
-                            variant="ghost"
-                            style={{
-                              justifyContent: "flex-start",
-                              width: "100%",
-                            }}
-                            onClick={() => addSort("asc")}
-                          >
-                            <span className="tiptap-button-text">
-                              Ascending
-                            </span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            style={{
-                              justifyContent: "flex-start",
-                              width: "100%",
-                            }}
-                            onClick={() => addSort("desc")}
-                          >
-                            <span className="tiptap-button-text">
-                              Descending
-                            </span>
-                          </Button>
-                        </CardItemGroup>
-                      </Card>
-                    </PopoverContent>
-                  </Popover>
+                        <MenuRow
+                          label="Descending"
+                          selected={currentSort?.direction === "desc"}
+                          onClick={() => addSort("desc")}
+                        />
+                      </CardItemGroup>
+                    </Card>
+                  </NavigableMenuItem>
                 </CardItemGroup>
 
                 {prop.config.type !== "title" && (
-                  <CardItemGroup>
+                  <CardItemGroup style={{ gap: 3 }}>
                     <Separator orientation="horizontal" />
                     <InsertPropertyButton
                       side="left"

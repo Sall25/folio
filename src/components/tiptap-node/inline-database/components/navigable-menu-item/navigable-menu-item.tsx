@@ -40,6 +40,8 @@ export function NavigableMenuItem({
   align = "start",
   sideOffset = 4,
   alignOffset = 0,
+  avoidCollisions = true,
+  collisionPadding,
 }: {
   Icon?: ComponentType<{ className?: string; size?: number }>;
   label: string;
@@ -57,6 +59,14 @@ export function NavigableMenuItem({
   sideOffset?: number;
   /** Shift along the align axis (e.g. negative to nudge a right flyout up). */
   alignOffset?: number;
+  /** When false, the flyout keeps the requested side/align even if it would
+   *  overflow the viewport (Radix won't flip or shift it). Default true. */
+  avoidCollisions?: boolean;
+  /** Padding kept between the flyout and the viewport edge when collisions
+   *  are on. */
+  collisionPadding?:
+    | number
+    | Partial<Record<"top" | "right" | "bottom" | "left", number>>;
 }) {
   const [open, setOpen] = useState(false);
   const openTimer = useRef<number | undefined>(undefined);
@@ -131,13 +141,15 @@ export function NavigableMenuItem({
           align={align}
           sideOffset={sideOffset}
           alignOffset={alignOffset}
+          avoidCollisions={avoidCollisions}
+          collisionPadding={collisionPadding}
           // Mouse on the flyout → cancel the pending close ("on this one").
           // Leaving the flyout → schedule close (leaving both closes it).
           onPointerEnter={cancelClose}
           onPointerLeave={scheduleClose}
           // Don't steal focus / close on the interactions inside.
           onOpenAutoFocus={(e) => e.preventDefault()}
-          style={{ position: "fixed", zIndex: 999 }}
+          style={{ zIndex: 999 }}
           className="db-actions-menu__flyout"
         >
           {children}

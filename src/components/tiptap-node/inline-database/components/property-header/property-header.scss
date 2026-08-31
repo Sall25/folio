@@ -4,4 +4,6 @@
   .dark & {
     background-color: var(--tt-gray-dark-100);
   }
+  box-shadow: var(--tt-shadow-elevated-md);
+  border: 1px solid var(--tt-border-color);
 }
