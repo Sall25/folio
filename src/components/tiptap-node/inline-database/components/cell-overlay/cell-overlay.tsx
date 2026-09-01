@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Check, MessageSquareText } from "lucide-react";
+import { Copy, Check, MessageSquareText, PanelRightOpen } from "lucide-react";
 import "./cell-overlay.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 
@@ -7,15 +7,32 @@ export function CellOverlay({
   copiable,
   getCopyText,
   onComment,
+  onOpen,
 }: {
-  /** Show the copy button (false for non-copiable types like status/select). */
   copiable: boolean;
-  /** Lazily resolve the text to copy — called on click so it's always fresh. */
   getCopyText: () => string;
-  /** Comment handler — wired later; the button shows regardless. */
   onComment?: () => void;
+  /** When set, renders an "Open page" button (used for the title cell). */
+  onOpen?: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+
+  if (onOpen)
+    return (
+      <Button
+        type="button"
+        className="db-cell-overlay-open"
+        aria-label="Open page"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onOpen();
+        }}
+      >
+        <PanelRightOpen className="tiptap-button-icon" size={14} />
+        <span className="tiptap-button-text">Open</span>
+      </Button>
+    );
 
   const doCopy = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -28,7 +45,12 @@ export function CellOverlay({
   };
 
   return (
-    <div className="db-cell-overlay" contentEditable={false} aria-hidden>
+    <div
+      className="db-cell-overlay"
+      style={{ width: onOpen ? "fit-content" : "auto" }}
+      contentEditable={false}
+      aria-hidden
+    >
       <Button
         type="button"
         className="db-cell-overlay__btn"

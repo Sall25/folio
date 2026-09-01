@@ -110,6 +110,8 @@ export function DatabaseNodeView({
 
   const dbPageId = source?.pageId ?? attrs.pageId ?? null;
   const { data: dbPage } = usePage(dbPageId);
+  // Template page fetched here (once per database node), not in each cell.
+  const { data: templatePage } = usePage(attrs.templateId ?? null);
 
   const tableRef = useRef<HTMLDivElement>(null);
 
@@ -167,6 +169,7 @@ export function DatabaseNodeView({
     hasSource: !!source,
     setCellValue: (recordId, propertyId, value) =>
       setCellValue(recordId, propertyId, value as never),
+    templateCover: templatePage?.cover ?? null,
   });
 
   // Seed record/cell nodes once at creation; keep cells matching properties.

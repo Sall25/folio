@@ -1,3 +1,31 @@
+.db-cell-overlay-open{
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: fit-content !important;  
+  min-height: 26px;
+  height: 27px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease;
+  z-index: 4;
+  .db-node-cell:hover & {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  background-color: var(--tt-gray-light-50);
+  .dark & {
+    background-color: var(--tt-gray-dark-100);
+  }
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-sm);
+  box-shadow: var(--tt-shadow-elevated-md);
+  
+}
 // Hover overlay pinned to the right of a cell. Hidden until the cell is
 // hovered; the parent .db-node-cell provides the hover boundary.
 .db-cell-overlay {
@@ -5,7 +33,7 @@
   top: 50%;
   right: 6px;
   transform: translateY(-50%);
-  width: auto !important;
+  // width: auto !important;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -26,6 +54,10 @@
   .db-node-cell:hover & {
     opacity: 1;
     pointer-events: auto;
+  }
+
+  &__open{
+    background: transparent;
   }
 
   &__btn {

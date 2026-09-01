@@ -11,6 +11,7 @@ import type {
   DatabaseProperty,
   DatabaseView,
   Page,
+  PageCover,
 } from "src/types";
 import { usePublishDatabaseData } from "./use-database-bridge-data";
 import type { DatabaseBridgeData } from "../utils/database-bridge";
@@ -27,6 +28,9 @@ interface Params {
   hasSource: boolean;
   setCellValue: (recordId: string, propertyId: string, value: unknown) => void;
   rowSlots: string[];
+  /** Template page cover, fetched once by the database node view and passed in
+   *  — the fallback title icon. No per-cell (or per-hook) fetch. */
+  templateCover: PageCover | null;
 }
 
 export function useDatabaseBridgePublish({
@@ -41,6 +45,7 @@ export function useDatabaseBridgePublish({
   hasSource,
   setCellValue,
   rowSlots,
+  templateCover,
 }: Params) {
   const recordsById = useMemo(
     () => new Map((hasSource ? resolvedRecords : []).map((r) => [r.id, r])),
@@ -97,6 +102,7 @@ export function useDatabaseBridgePublish({
       view: activeView,
       locked,
       templateId: attrs.templateId,
+      templateCover,
       recordsById,
       columnWidthByProp,
       sortedRecordIds: rowSlots,
@@ -109,6 +115,7 @@ export function useDatabaseBridgePublish({
     [
       attrs.sourceId,
       attrs.templateId,
+      templateCover,
       properties,
       activeView,
       locked,

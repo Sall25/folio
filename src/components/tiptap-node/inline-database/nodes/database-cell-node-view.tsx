@@ -6,44 +6,20 @@ import { Cell } from "../components/cells/cell";
 import type { CellValue, DatabaseProperty, ID } from "src/types";
 import { CellOverlay } from "../components/cell-overlay";
 import { isCopiableType } from "./database-board-node-view/utils";
+import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
+import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
 const EMPTY_COLUMN_VALUES: CellValue[] = [];
 
-/**
- * databaseCell NodeView. ONE node type for every property type, and every cell is
- * now an ATOM — a React widget reading its value from the DataSource (via the
- * editor-storage bridge, since React context can't cross the NodeView boundary).
- *
- * WHY NO CONTENT CELLS ANYMORE
- *
- * Title and text used to be "content cells": their value WAS the node's inline
- * ProseMirror content, mirrored into values[] by a debounced write-through. That
- * gave each of them two sources of truth, and it meant neither could use the
- * overlay editor — ProseMirror owns that DOM and fights an <input> for the caret.
- * Title's real home is page.title; text's is values[]. Both are atoms now, so
- * every cell reads one source, writes one source, and gets CellEditorPopover.
- *
- * The cost, stated plainly: in-cell text edits are a debounced patch rather than
- * a live Yjs merge, so two people editing the SAME cell simultaneously is
- * last-write-wins instead of character-merged. Cell-level, not document-level —
- * the page body is still fully collaborative.
- *
- * VIEW vs SCHEMA
- *
- * Hiding and freezing are per-VIEW: another client (or another view of the same
- * database) may show a column this view hides, or freeze a different one. So the
- * cell node always STAYS in the shared document and the view decides only how it
- * renders — display:none when hidden, position:sticky when frozen. (Column
- * REORDER, by contrast, really does rewrite source.properties, so it moves the
- * nodes — see use-database-seed.ts.)
- */
 export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
   const recordId = node.attrs.recordId as ID | null;
   const propertyId = node.attrs.propertyId as ID | null;
   const databaseId = node.attrs.databaseId as string | null;
 
   const data = useDatabaseBridgeData(editor, databaseId);
+  const { setTarget } = usePageView();
+  const { setActivePageId } = useActivePage();
 
   const properties = data?.properties ?? EMPTY_PROPERTIES;
   const property = useMemo(
@@ -51,7 +27,6 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
     [properties, propertyId],
   );
 
-  // ── View-driven presentation ──────────────────────────────────────────────
   const isHidden = !!(
     propertyId && data?.view?.hiddenProperties?.includes(propertyId)
   );
@@ -63,8 +38,6 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
     if (sticky) {
       style.position = "sticky";
       style.left = sticky.left;
-      // Below the header (z 8), so a sticky header cell still wins where they
-      // overlap.
       style.zIndex = 4;
       style.background = "var(--tt-bg-color)";
       if (sticky.isBoundary) {
@@ -74,7 +47,6 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
     return style;
   }, [isHidden, sticky]);
 
-  // derive wrap from the view/property — pick whichever your model uses
   const unwrapped = !!(
     propertyId &&
     data?.view?.type === "table" &&
@@ -90,8 +62,24 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
     [setCellValue, recordId, propertyId],
   );
 
-  // Data not published yet, or unresolvable cell → empty grid cell. No content
-  // hole: nothing in this node is ProseMirror-owned anymore.
+  // Open routing — moved here from TitleCell, since the Open button now lives
+  // in the overlay this NodeView renders. Only used for the title cell.
+  const view = data?.view;
+  const handleOpen = useCallback(() => {
+    if (!recordId || !view) return;
+    if (view.openPageIn === "Side") {
+      setTarget({ pageId: recordId, view: "Peek" });
+    } else if (view.openPageIn === "Center") {
+      setTarget({ pageId: recordId, view: "Center" });
+    } else if (view.openPageIn === "Full") {
+      setActivePageId(recordId);
+    } else if (view.type === "gallery" || view.type === "board") {
+      setTarget({ pageId: recordId, view: "Center" });
+    } else {
+      setTarget({ pageId: recordId, view: "Peek" });
+    }
+  }, [recordId, view, setTarget, setActivePageId]);
+
   if (!data || !property || !recordId || !propertyId) {
     return (
       <NodeViewWrapper
@@ -106,6 +94,7 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
 
   const record = data.recordsById.get(recordId) ?? null;
   const value = record?.values?.[propertyId] ?? null;
+  const isTitle = property.config.type === "title";
 
   return (
     <NodeViewWrapper
@@ -126,16 +115,17 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
           columnValues={
             data.columnValuesByProp[propertyId] ?? EMPTY_COLUMN_VALUES
           }
-          templateId={data.templateId}
+          templateCover={data.templateCover ?? null}
           readonly={data.locked}
           onChange={handleChange}
           unwrapped={unwrapped}
         />
       )}
-      {!data.locked && property.config.type !== "title" && (
+      {!data.locked && (
         <CellOverlay
-          copiable={isCopiableType(property.config.type)}
+          copiable={!isTitle && isCopiableType(property.config.type)}
           getCopyText={() => (value == null ? "" : String(value))}
+          onOpen={isTitle ? handleOpen : undefined}
         />
       )}
     </NodeViewWrapper>

@@ -2,8 +2,8 @@ import type {
   CellValue,
   DatabaseProperty,
   DatabaseView,
-  ID,
   Page,
+  PageCover,
 } from "src/types";
 import { TitleCell } from "../title-cell";
 import { TextCell } from "../text-cell";
@@ -37,13 +37,13 @@ function CellImpl({
   value,
   record,
   columnValues,
-  templateId,
   onChange,
   readonly,
   unwrapped,
   view,
-  autoEdit,
-  onEditingChange,
+  // autoEdit,
+  //onEditingChange,
+  templateCover,
 }: {
   property: DatabaseProperty;
   properties?: DatabaseProperty[];
@@ -53,12 +53,12 @@ function CellImpl({
   /** all values in this column — only number bar/ring uses it */
   columnValues?: CellValue[];
   /** parent database templateId — title uses it for the template icon */
-  templateId?: ID;
   onChange: (value: CellValue | null) => void;
   readonly?: boolean;
   unwrapped?: boolean;
   autoEdit?: boolean;
   onEditingChange?: (editing: boolean) => void;
+  templateCover?: PageCover | null;
 }) {
   const { config } = property;
 
@@ -73,24 +73,14 @@ function CellImpl({
     case "title":
       return (
         <TitleCell
-          value={record.title ?? ""}
+          value={typeof value === "string" ? value : ""}
           recordId={record.id}
+          record={record}
           pageId={record.id}
-          recordPage={record}
-          templateId={templateId}
           onChange={change}
           readonly={readonly}
           unwrapped={unwrapped}
-          view={view}
-          openVariant={
-            view?.type === "list" ||
-            view?.type === "board" ||
-            view?.type === "gallery"
-              ? "edit"
-              : "open"
-          }
-          autoEdit={autoEdit}
-          onEditingChange={onEditingChange}
+          icon={record.cover ?? templateCover ?? null}
         />
       );
 
