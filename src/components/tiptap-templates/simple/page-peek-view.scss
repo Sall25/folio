@@ -1,3 +1,23 @@
 .page-peek{
   overflow-x: hidden !important;
 }
+.page-peek__resize {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 20;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0 2px;
+    background: transparent;
+    transition: background 0.12s ease;
+  }
+  &:hover::after {
+    background: var(--tt-brand-color-400);
+  }
+}

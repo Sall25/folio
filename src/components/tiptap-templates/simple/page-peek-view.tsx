@@ -30,6 +30,7 @@ import {
   usePageViewState,
 } from "./context/page-view-context";
 import { usePage } from "src/hooks/use-pages";
+import { useLocalStorage } from "./hooks/use-local-storage";
 import "./page-peek-view.scss";
 import { usePageComment } from "./hooks/use-page-comment";
 import { FavoriteToggle } from "./favorite-toggle";
@@ -138,6 +139,47 @@ function PagePeekEditor({
     pageRef.current = page;
   }, [page]);
 
+  // ── Resize ────────────────────────────────────────────────────────────────
+  // Left-edge drag handle widens/narrows the right-anchored peek. Width persists
+  // via useLocalStorage. During the drag we write straight to the card's DOM (no
+  // per-move re-render — the live editor would stutter otherwise) and commit the
+  // final width to storage on release.
+  const PEEK_MIN = 380;
+  const PEEK_DEFAULT = 480; // ← set to your current .page-peek width
+
+  const [width, setWidth] = useLocalStorage<number>("peek-width", PEEK_DEFAULT);
+
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const resizingRef = useRef(false);
+  const liveWidthRef = useRef(width);
+
+  const clampWidth = (w: number) =>
+    Math.min(Math.max(w, PEEK_MIN), Math.round(window.innerWidth * 0.9));
+
+  const onResizeStart = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    resizingRef.current = true;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  }, []);
+
+  const onResizeMove = useCallback((e: React.PointerEvent) => {
+    if (!resizingRef.current || !cardRef.current) return;
+    // Right-anchored: width = distance from pointer to the viewport's right edge.
+    const next = clampWidth(window.innerWidth - e.clientX);
+    liveWidthRef.current = next;
+    cardRef.current.style.width = `${next}px`; // DOM only — no re-render
+  }, []);
+
+  const onResizeEnd = useCallback(
+    (e: React.PointerEvent) => {
+      if (!resizingRef.current) return;
+      resizingRef.current = false;
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      setWidth(liveWidthRef.current); // commit once — persists + re-renders
+    },
+    [setWidth],
+  );
+
   // page.content is guaranteed real here — the editor never inits empty.
   const editor = useEditor({
     extensions,
@@ -233,16 +275,28 @@ function PagePeekEditor({
 
   return (
     <Card
+      ref={cardRef}
       className="page-peek"
       style={{
         position: "fixed",
         borderRadius: 0,
         top: 0,
         bottom: 0,
+        right: 0,
+        width,
         border: "1px solid var(--tt-border-color)",
         boxShadow: "var(--tt-shadow-elevated-md)",
       }}
     >
+      {/* Left-edge resize handle */}
+      <div
+        className="page-peek__resize"
+        onPointerDown={onResizeStart}
+        onPointerMove={onResizeMove}
+        onPointerUp={onResizeEnd}
+        onPointerCancel={onResizeEnd}
+      />
+
       <CardItemGroup
         orientation="horizontal"
         style={{ width: "100%", justifyContent: "flex-start" }}
