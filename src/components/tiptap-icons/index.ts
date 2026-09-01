@@ -75,3 +75,4 @@ export * from "./teamspace-icon";
 export * from "./pen-box-icon";
 export * from "./star-icon";
 export * from "./file-text-icon";
+export * from "./grip-vertical-icon";

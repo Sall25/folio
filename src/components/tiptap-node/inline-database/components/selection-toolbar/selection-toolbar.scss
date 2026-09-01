@@ -8,7 +8,10 @@
   padding: 0px 4px !important;
   border: 1px solid var(--tt-border-color);
   border-radius: var(--tt-radius-md) !important;
-  background: var(--tt-card-bg-color);
+  background: var(--tt-gray-light-50);
+  .dark & {
+    background: var(--tt-gray-dark-100);
+  }
   box-shadow: var(--tt-shadow-elevated-md);
   width: max-content;
   max-width: 100%;
@@ -112,8 +115,8 @@
     background: transparent;
     font: inherit;
     font-size: 13px;
-    font-weight: 450;
-    line-height: 1;
+    font-weight: 400;
+    line-height: 1.4;
     white-space: nowrap;
     color: var(--tt-text-primary);
     cursor: pointer;
@@ -150,4 +153,31 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+}
+
+.db-selection-toolbar__row {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  gap: 8px;
+  width: 100%;
+  min-width: 0; // lets the middle region actually shrink
+}
+
+.db-selection-toolbar__lead,
+.db-selection-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto; // fixed — never shrink, never scroll
+}
+
+.db-selection-toolbar__scroll {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  /* no overflow — nothing clips the chip dropdowns */
 }

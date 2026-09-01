@@ -7,7 +7,8 @@
  
    &.is-record {
     // Nudge left to clear the row's selection checkbox.
-    transform: translateX(-28px);   // tune: -15px minus ~checkbox width+gap
+    transform: translateX(-28px);   // tune: -28px minus ~checkbox width+gap
+    margin-top: 4px;   
   }
 
   &.hide{

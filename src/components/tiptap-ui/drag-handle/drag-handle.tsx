@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragHandleMenu } from "./drag-handle-menu/drag-handle-menu";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { GripVertical, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -18,6 +18,7 @@ import type { NormalizedNestedOptions } from "@tiptap/extension-drag-handle";
 import { createPortal } from "react-dom";
 import { recordSelection } from "src/components/tiptap-node/inline-database/utils/record-selection-store";
 import { RecordDragMenu } from "src/components/tiptap-node/inline-database/components/record-drag-menu";
+import { GripVerticalIcon } from "src/components/tiptap-icons";
 
 const NODE_LABELS: Record<string, string> = {
   paragraph: "Text",
@@ -418,7 +419,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
                 pointerEvents: open ? "none" : "auto",
               }}
             >
-              <GripVertical className="tiptap-button-icon" />
+              <GripVerticalIcon className="tiptap-button-icon" />
             </Button>
 
             {menu}

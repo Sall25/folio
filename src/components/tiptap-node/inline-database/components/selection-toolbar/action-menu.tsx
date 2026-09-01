@@ -35,7 +35,12 @@ function ActionMenuImpl({
           <Ellipsis className="tiptap-button-icon" size={16} />
         </Button>
       </PopoverTrigger>
-      <PopoverContent side="bottom" align="end">
+      <PopoverContent
+        side="bottom"
+        align="end"
+        avoidCollisions
+        collisionPadding={8}
+      >
         <SelectionActionsMenu
           recordIds={recordIds}
           properties={properties}

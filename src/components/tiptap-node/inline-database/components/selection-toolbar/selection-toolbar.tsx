@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
+import { Card } from "src/components/tiptap-ui-primitive/card";
 import type { DatabaseProperty, ID } from "src/types";
 import { recordSelection } from "../../utils/record-selection-store";
 import "./selection-toolbar.scss";
@@ -11,6 +11,7 @@ import { PropertyControls } from "./property-controls";
 import { DeleteButton } from "./delete-button";
 import { ActionMenu } from "./action-menu";
 import { ClearSelectionButton } from "./clear-selection-button";
+import { Separator } from "src/components/tiptap-ui-primitive/separator";
 
 /** Computed — never editable. */
 const READONLY_TYPES = [
@@ -95,32 +96,44 @@ export function SelectionToolbar({
       onPointerDown={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
     >
-      <CardItemGroup orientation="horizontal">
-        <SelectionCount count={recordIds.length} />
+      <div className="db-selection-toolbar__row">
+        {/* Fixed left — never scrolls */}
+        <div className="db-selection-toolbar__lead">
+          <SelectionCount count={recordIds.length} />
+        </div>
+        <Separator orientation="vertical" />
 
-        <PropertyControls
-          properties={editable}
-          records={records}
-          editingId={editingId}
-          draft={draft}
-          onDraftChange={setDraft}
-          onEdit={setEditingId}
-          onSetValue={onSetValue}
-        />
-        <DeleteButton onDelete={onDeleteSelection} />
+        {/* Scrollable middle — property chips grow here and scroll when they
+            overflow, so they never collide with the trailing actions. */}
+        <div className="db-selection-toolbar__scroll">
+          <PropertyControls
+            properties={editable}
+            records={records}
+            editingId={editingId}
+            draft={draft}
+            onDraftChange={setDraft}
+            onEdit={setEditingId}
+            onSetValue={onSetValue}
+          />
+        </div>
 
-        <ActionMenu
-          open={menuOpen}
-          onOpenChange={setMenuOpen}
-          recordIds={recordIds}
-          properties={properties}
-          onSetValue={onSetValue}
-          onDelete={onDelete}
-          onDuplicate={onDuplicate}
-        />
-
-        <ClearSelectionButton onClick={onClearSelection} />
-      </CardItemGroup>
+        {/* Fixed right — always visible */}
+        <div className="db-selection-toolbar__actions">
+          <DeleteButton onDelete={onDeleteSelection} />
+          <Separator orientation="vertical" />
+          <ActionMenu
+            open={menuOpen}
+            onOpenChange={setMenuOpen}
+            recordIds={recordIds}
+            properties={properties}
+            onSetValue={onSetValue}
+            onDelete={onDelete}
+            onDuplicate={onDuplicate}
+          />
+          <Separator orientation="vertical" />
+          <ClearSelectionButton onClick={onClearSelection} />
+        </div>
+      </div>
     </Card>
   );
 }

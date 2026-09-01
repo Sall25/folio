@@ -1,5 +1,5 @@
 import { Check } from "lucide-react";
-import { memo, useMemo, useRef } from "react";
+import { Fragment, memo, useMemo, useRef } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
@@ -97,132 +97,142 @@ function PropertyControlsImpl({
 
   return (
     <div className="db-selection-toolbar__props">
-      {properties.map((prop) => {
+      {properties.map((prop, index) => {
         const isEditing = editingId === prop.id;
         const { mixed, value } = sharedValue(prop);
 
         // ── Inline text editor ──────────────────────────────────────
         if (isEditing && TEXT_TYPES.includes(prop.config.type)) {
           return (
-            <Input
-              key={prop.id}
-              autoFocus
-              ref={inputRef}
-              className="db-selection-toolbar__input"
-              value={draft}
-              placeholder={mixed ? "Mixed values" : prop.name}
-              type={prop.config.type === "number" ? "number" : "text"}
-              onChange={(e) => onDraftChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  commitText(prop);
-                }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  onEdit(null);
-                }
-              }}
-              onBlur={() => commitText(prop)}
-            />
+            <Fragment key={prop.id}>
+              {index > 0 && <Separator orientation="vertical" />}
+              <Input
+                autoFocus
+                ref={inputRef}
+                className="db-selection-toolbar__input"
+                value={draft}
+                placeholder={mixed ? "Mixed values" : prop.name}
+                type={prop.config.type === "number" ? "number" : "text"}
+                onChange={(e) => onDraftChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    commitText(prop);
+                  }
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    onEdit(null);
+                  }
+                }}
+                onBlur={() => commitText(prop)}
+              />
+            </Fragment>
           );
         }
 
         // ── Inline option picker ────────────────────────────────────
         if (isEditing && OPTION_TYPES.includes(prop.config.type)) {
           return (
-            <Popover
-              key={prop.id}
-              open
-              onOpenChange={(o) => !o && onEdit(null)}
-            >
-              <PopoverTrigger asChild>
-                <span className="db-selection-toolbar__chip db-selection-toolbar__chip--active">
-                  <DynamicIcon
-                    name={PROPERTY_TYPE_ICONS[prop.config.type]}
-                    size={16}
-                    filled={false}
-                    className="tiptap-button-icon"
-                  />
-                  <span className="db-selection-toolbar__chip-name">
-                    {prop.name}
+            <Fragment key={prop.id}>
+              {index > 0 && <Separator orientation="vertical" />}
+              <Popover open onOpenChange={(o) => !o && onEdit(null)}>
+                <PopoverTrigger asChild>
+                  <span className="db-selection-toolbar__chip db-selection-toolbar__chip--active">
+                    <DynamicIcon
+                      name={PROPERTY_TYPE_ICONS[prop.config.type]}
+                      size={16}
+                      filled={false}
+                      className="tiptap-button-icon"
+                    />
+                    <span className="db-selection-toolbar__chip-name">
+                      {prop.name}
+                    </span>
                   </span>
-                </span>
-              </PopoverTrigger>
-              <PopoverContent side="bottom" align="start">
-                <Card style={{ padding: 5, minWidth: 180 }}>
-                  <CardBody style={{ width: "100%" }}>
-                    <CardItemGroup>
-                      {optionsOf(prop)?.length === 0 ? (
-                        <span className="db-panel__empty">No options</span>
-                      ) : (
-                        optionsOf(prop).map((o) => (
-                          <Button
-                            key={o.id}
-                            variant="ghost"
-                            style={{
-                              justifyContent: "flex-start",
-                              width: "100%",
-                              borderRadius: "var(--tt-radius-sm)",
-                            }}
-                            onClick={() => {
-                              onSetValue(prop.id, o.id);
-                              onEdit(null);
-                            }}
-                          >
-                            <span className="tiptap-button-text">{o.name}</span>
-                            {!mixed && value === o.id && (
-                              <Check size={14} style={{ marginLeft: "auto" }} />
-                            )}
-                          </Button>
-                        ))
-                      )}
-                      <Separator orientation="horizontal" />
-                      <Button
-                        variant="ghost"
-                        style={{
-                          justifyContent: "flex-start",
-                          width: "100%",
-                          borderRadius: "var(--tt-radius-sm)",
-                        }}
-                        onClick={() => {
-                          onSetValue(prop.id, null);
-                          onEdit(null);
-                        }}
-                      >
-                        <span className="tiptap-button-text">Clear</span>
-                      </Button>
-                    </CardItemGroup>
-                  </CardBody>
-                </Card>
-              </PopoverContent>
-            </Popover>
+                </PopoverTrigger>
+                <PopoverContent side="bottom" align="start">
+                  <Card style={{ padding: 5, minWidth: 180 }}>
+                    <CardBody style={{ width: "100%" }}>
+                      <CardItemGroup>
+                        {optionsOf(prop)?.length === 0 ? (
+                          <span className="db-panel__empty">No options</span>
+                        ) : (
+                          optionsOf(prop).map((o) => (
+                            <Button
+                              key={o.id}
+                              variant="ghost"
+                              style={{
+                                justifyContent: "flex-start",
+                                width: "100%",
+                                borderRadius: "var(--tt-radius-sm)",
+                              }}
+                              onClick={() => {
+                                onSetValue(prop.id, o.id);
+                                onEdit(null);
+                              }}
+                            >
+                              <span className="tiptap-button-text">
+                                {o.name}
+                              </span>
+                              {!mixed && value === o.id && (
+                                <Check
+                                  size={14}
+                                  style={{ marginLeft: "auto" }}
+                                />
+                              )}
+                            </Button>
+                          ))
+                        )}
+                        <Separator orientation="horizontal" />
+                        <Button
+                          variant="ghost"
+                          style={{
+                            justifyContent: "flex-start",
+                            width: "100%",
+                            borderRadius: "var(--tt-radius-sm)",
+                          }}
+                          onClick={() => {
+                            onSetValue(prop.id, null);
+                            onEdit(null);
+                          }}
+                        >
+                          <span className="tiptap-button-text">Clear</span>
+                        </Button>
+                      </CardItemGroup>
+                    </CardBody>
+                  </Card>
+                </PopoverContent>
+              </Popover>
+            </Fragment>
           );
         }
 
         // ── Collapsed chip ──────────────────────────────────────────
         return (
-          <button
-            key={prop.id}
-            type="button"
-            className="db-selection-toolbar__chip"
-            title={prop.name}
-            onClick={() => {
-              if (prop.config.type === "checkbox") {
-                onSetValue(prop.id, !(value === true));
-                return;
-              }
-              openEditor(prop);
-            }}
-          >
-            <DynamicIcon
-              name={PROPERTY_TYPE_ICONS[prop.config.type]}
-              size={16}
-              filled={false}
-              className="tiptap-button-icon"
-            />
-            <span className="db-selection-toolbar__chip-name">{prop.name}</span>
-          </button>
+          <Fragment key={prop.id}>
+            {index > 0 && <Separator orientation="vertical" />}
+            <button
+              type="button"
+              className="db-selection-toolbar__chip"
+              title={prop.name}
+              onClick={() => {
+                if (prop.config.type === "checkbox") {
+                  onSetValue(prop.id, !(value === true));
+                  return;
+                }
+                openEditor(prop);
+              }}
+            >
+              <DynamicIcon
+                name={PROPERTY_TYPE_ICONS[prop.config.type]}
+                size={16}
+                filled={false}
+                className="tiptap-button-icon"
+              />
+              <span className="db-selection-toolbar__chip-name">
+                {prop.name}
+              </span>
+            </button>
+          </Fragment>
         );
       })}
     </div>
