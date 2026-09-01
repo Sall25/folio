@@ -4,6 +4,8 @@ import type { NodeViewProps } from "@tiptap/core";
 import { useDatabaseBridgeData } from "../hooks/use-database-bridge-data";
 import { Cell } from "../components/cells/cell";
 import type { CellValue, DatabaseProperty, ID } from "src/types";
+import { CellOverlay } from "../components/cell-overlay";
+import { isCopiableType } from "./database-board-node-view/utils";
 
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
 const EMPTY_COLUMN_VALUES: CellValue[] = [];
@@ -128,6 +130,12 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
           readonly={data.locked}
           onChange={handleChange}
           unwrapped={unwrapped}
+        />
+      )}
+      {!data.locked && property.config.type !== "title" && (
+        <CellOverlay
+          copiable={isCopiableType(property.config.type)}
+          getCopyText={() => (value == null ? "" : String(value))}
         />
       )}
     </NodeViewWrapper>

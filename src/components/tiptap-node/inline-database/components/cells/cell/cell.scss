@@ -1,3 +1,6 @@
+.db-node-cell{
+  position: relative;
+}
 .db-cell {
 //   width: 100%;
 //   // overflow: visible;
@@ -7,6 +10,7 @@
   min-height: 34px;
   line-height: 34px;
   padding: 0 !important;
+ 
   
 
   // --- Wrap mode -------------------------------------------------------

@@ -1,0 +1,48 @@
+// Hover overlay pinned to the right of a cell. Hidden until the cell is
+// hovered; the parent .db-node-cell provides the hover boundary.
+.db-cell-overlay {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  width: auto !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease;
+  z-index: 4;
+  background-color: var(--tt-gray-light-50);
+  .dark & {
+    background-color: var(--tt-gray-dark-100);
+  }
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-sm);
+  box-shadow: var(--tt-shadow-elevated-md);
+  padding: 2px 5px;
+
+  .db-node-cell:hover & {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0;
+    margin: 0;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    .tiptap-button-icon{
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
