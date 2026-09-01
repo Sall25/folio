@@ -252,6 +252,7 @@ export interface DatabaseProperty {
   wrap?: boolean;
   icon?: string;
   iconColor?: string;
+  description?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

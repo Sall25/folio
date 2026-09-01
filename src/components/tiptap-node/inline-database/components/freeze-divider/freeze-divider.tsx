@@ -87,16 +87,24 @@ export function FreezeDivider({
     [containerRef],
   );
 
-  /** Park on the current boundary. */
+  /** Park on the current boundary. When nothing is frozen, park at the table's
+   *  left edge (the start of the body) rather than the first column's right
+   *  edge — otherwise the divider sits after column 1 and reads as though that
+   *  column were frozen. */
   const settle = useCallback(() => {
     if (draggingRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
     const bounds = measure();
     if (bounds.length === 0) return;
-    const target = frozenPropertyId
-      ? bounds.find((b) => b.propId === frozenPropertyId)
-      : bounds[0];
-    place(target?.x ?? bounds[0].x);
-  }, [frozenPropertyId, measure, place]);
+    if (frozenPropertyId) {
+      const target = bounds.find((b) => b.propId === frozenPropertyId);
+      place(target?.x ?? bounds[0].x);
+    } else {
+      // Unfrozen: sit at the very start of the table body.
+      place(container.getBoundingClientRect().left);
+    }
+  }, [frozenPropertyId, measure, place, containerRef]);
 
   // Pushes to the DOM, never setState — no cascading render.
   useLayoutEffect(settle, [settle]);
@@ -161,7 +169,7 @@ export function FreezeDivider({
     // settle() runs from the layout effect once frozenPropertyId updates; if
     // it didn't change, snap back here since no re-render is coming.
     if (next !== frozenPropertyId) onFreeze(next);
-    else place(nearest.x);
+    else settle();
   };
 
   return createPortal(

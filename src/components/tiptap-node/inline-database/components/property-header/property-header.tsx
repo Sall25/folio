@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useLayoutEffect,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import {
   DEFAULT_CONFIGS,
   type DatabaseProperty,
@@ -99,6 +94,26 @@ export function PropertyHeader({
   const { nodeRef, handleResizeStart, isResizing } = useResizableNode();
   const [name, setName] = useState(prop.name);
 
+  // Description editor: opens from the name Input's info icon. Shown when the
+  // user clicks the icon, or whenever a description already exists.
+  const [descOpen, setDescOpen] = useState(false);
+  const [desc, setDesc] = useState(prop.description ?? "");
+
+  // Adopt external description changes while idle (popover reopened, another
+  // editor updated it).
+  const [prevDesc, setPrevDesc] = useState(prop.description ?? "");
+  if ((prop.description ?? "") !== prevDesc) {
+    setPrevDesc(prop.description ?? "");
+    setDesc(prop.description ?? "");
+  }
+
+  const commitDesc = (value: string) => {
+    const next = value.trim();
+    if (next !== (prop.description ?? "")) {
+      db.updateProperty(prop.id, { ...prop, description: next || undefined });
+    }
+  };
+
   useEffect(() => {
     if (!isResizing || !nodeRef) return;
     const el = nodeRef.current;
@@ -132,18 +147,16 @@ export function PropertyHeader({
       }}
       style={{
         width: "100%",
-        borderRadius: "var(--tt-radius-sm)",
+        borderRadius: 0,
         gap: 4,
         display: "flex",
         alignItems: "center",
         padding: "0",
+        margin: 0,
         justifyContent: "flex-start",
         overflow: "hidden",
         background: "transparent !important",
-        fontSize: 14,
         color: "var(--tt-text-color)",
-        lineHeight: 1.4,
-        fontWeight: 400,
         cursor: locked ? "default" : undefined,
       }}
     >
@@ -158,24 +171,6 @@ export function PropertyHeader({
       <span className="tiptap-button-text">{prop.name}</span>
     </Button>
   );
-
-  const [triggerH, setTriggerH] = useState(34);
-
-  useLayoutEffect(() => {
-    if (open && nodeRef?.current) {
-      setTriggerH(nodeRef.current.getBoundingClientRect().height);
-    }
-  }, [open]);
-
-  // geometry of the input row inside the card
-  const CARD_PAD_TOP = 10; // top padding of your Card/CardBody
-  const INPUT_H = 30; // matches your Input style={{ height: 30 }}
-
-  // distance from content top → input's vertical center
-  const inputCenterFromTop = CARD_PAD_TOP + INPUT_H / 2;
-
-  // offset so input center == header center
-  const centerOffset = -(triggerH / 2 + inputCenterFromTop);
 
   const view = db.activeView;
 
@@ -213,6 +208,8 @@ export function PropertyHeader({
     setOpen(false);
   };
 
+  const showDescField = descOpen;
+
   return (
     <div
       className="db-th"
@@ -244,15 +241,20 @@ export function PropertyHeader({
       ) : (
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
-          <PopoverContent side="bottom" align="start" sideOffset={centerOffset}>
+          <PopoverContent
+            side="bottom"
+            align="start"
+            avoidCollisions
+            collisionPadding={8}
+          >
             <Card
               className="property-header-dropdown"
               style={{
                 boxShadow: "var(--tt-shadow-elevated-md)",
-                minWidth: 60,
+                minWidth: 260,
               }}
             >
-              <CardBody>
+              <CardBody style={{ scrollbarWidth: "thin" }}>
                 <CardItemGroup style={{ gap: 3 }}>
                   <CardItemGroup orientation="horizontal">
                     {/* Icon button → icon picker popover */}
@@ -266,11 +268,14 @@ export function PropertyHeader({
                       }}
                     >
                       <Button
-                        variant="ghost"
                         tooltip="Change icon"
+                        variant="ghost"
                         style={{
                           display: "flex",
                           alignItems: "center",
+                          border: "1px solid var(--tt-border-color)",
+                          minHeight: 20,
+                          height: 30,
                         }}
                       >
                         <PropertyIcon
@@ -313,8 +318,46 @@ export function PropertyHeader({
                         });
                       }}
                       style={{ minHeight: 20, height: 30 }}
+                      description={prop.description || undefined}
+                      onInfoClick={() => setDescOpen((v) => !v)}
                     />
                   </CardItemGroup>
+
+                  {/* Description editor — opens from the name info icon, or
+                      stays visible whenever a description already exists. */}
+                  {showDescField && (
+                    <>
+                      <Spacer size={1} />
+                      <CardItemGroup orientation="horizontal">
+                        <Spacer orientation="horizontal" size={15} />
+                        <Input
+                          autoFocus={descOpen}
+                          value={desc}
+                          placeholder="Add a description..."
+                          onChange={(e) => setDesc(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              commitDesc(e.currentTarget.value);
+                              e.currentTarget.blur();
+                              setDescOpen(false);
+                            }
+                            if (e.key === "Escape") {
+                              e.preventDefault();
+                              setDesc(prop.description ?? "");
+                              setDescOpen(false);
+                            }
+                          }}
+                          onBlur={(e) => {
+                            commitDesc(e.currentTarget.value);
+                            setDescOpen(false);
+                          }}
+                          style={{ minHeight: 20, height: 24 }}
+                        />
+                      </CardItemGroup>
+                    </>
+                  )}
+
                   <Spacer size={3} />
                   <PropertyTypeChangePopover>
                     <PropertyTypeList prop={prop} />

@@ -82,3 +82,44 @@
   display: block;         // avoids the inline baseline gap under the control
   overflow-y: auto;
 }
+
+// Wrapper used only when the Input has a description (floating info icon).
+.tiptap-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  .tiptap-input {
+    // Room so the value never slides under the icon.
+    padding-right: 2rem;
+  }
+}
+
+.tiptap-input__info {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tt-text-secondary, rgba(55, 53, 47, 0.4));
+  cursor: help;
+  border-radius: 50%;
+  outline: none;
+  transition: color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--tt-input-border-focus, #2383e2);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--tt-input-ring, rgba(35, 131, 226, 0.28));
+  }
+}
+
+.tiptap-input__info[data-clickable] {
+  cursor: pointer;
+}
