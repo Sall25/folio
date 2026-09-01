@@ -87,10 +87,11 @@ export function FreezeDivider({
     [containerRef],
   );
 
-  /** Park on the current boundary. When nothing is frozen, park at the table's
-   *  left edge (the start of the body) rather than the first column's right
-   *  edge — otherwise the divider sits after column 1 and reads as though that
-   *  column were frozen. */
+  /** Park on the current boundary. When nothing is frozen, park at the first
+   *  column's LEFT edge — the start of the columns, past the drag-handle gutter
+   *  that sits to the left of it. Parking at the container's left edge instead
+   *  put the divider's hit strip on top of that gutter, swallowing the row
+   *  hover and hiding the row drag handle. */
   const settle = useCallback(() => {
     if (draggingRef.current) return;
     const container = containerRef.current;
@@ -101,10 +102,20 @@ export function FreezeDivider({
       const target = bounds.find((b) => b.propId === frozenPropertyId);
       place(target?.x ?? bounds[0].x);
     } else {
-      // Unfrozen: sit at the very start of the table body.
-      place(container.getBoundingClientRect().left);
+      // Unfrozen: park at the first column's left edge, not the table's left
+      // edge — clears the drag-handle gutter.
+      const firstProp = visibleProperties[0];
+      const firstEl = firstProp
+        ? container.querySelector<HTMLElement>(
+            `.db-th[data-prop-id="${firstProp.id}"]`,
+          )
+        : null;
+      const startX = firstEl
+        ? firstEl.getBoundingClientRect().left
+        : container.getBoundingClientRect().left;
+      place(startX);
     }
-  }, [frozenPropertyId, measure, place, containerRef]);
+  }, [frozenPropertyId, measure, place, containerRef, visibleProperties]);
 
   // Pushes to the DOM, never setState — no cascading render.
   useLayoutEffect(settle, [settle]);
@@ -171,6 +182,10 @@ export function FreezeDivider({
     if (next !== frozenPropertyId) onFreeze(next);
     else settle();
   };
+
+  // Nothing frozen → no divider at all. A freeze is created from the property
+  // menu; the divider only exists to show/adjust an existing freeze.
+  if (!frozenPropertyId) return null;
 
   return createPortal(
     <div
