@@ -46,6 +46,7 @@ import { useActivePageState } from "src/components/tiptap-templates/simple/conte
 import { useActiveViewFromHash, useSyncViews } from "../hooks";
 import { ChipsRow } from "../components/chips-row";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { usePageViewState } from "src/components/tiptap-templates/simple/context/page-view-context";
 
 const EMPTY_SOURCE = { properties: [] };
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
@@ -114,6 +115,17 @@ export function DatabaseNodeView({
   const { data: templatePage } = usePage(attrs.templateId ?? null);
 
   const tableRef = useRef<HTMLDivElement>(null);
+
+  // ── Record open in peek/center view decoration
+  const { target } = usePageViewState();
+  useEffect(() => {
+    if (!editor) return;
+    const openId = target?.pageId ?? null;
+    editor.commands.setOpenRecord(openId);
+    // A record is open → the active-cell ring is redundant/noisy; clear it.
+    // (It returns on the next cell click, or you could re-set it on close.)
+    if (openId) editor.commands.clearActiveCell();
+  }, [editor, target?.pageId]);
 
   // ── View switching (skeleton while a new view type mounts) ────────────────
   const { switchingTo, dbWithSwitch } = useViewSwitch(db, attrs.activeViewId);

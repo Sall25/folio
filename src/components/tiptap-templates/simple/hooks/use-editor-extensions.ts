@@ -74,7 +74,10 @@ import {
   AppendixSummary,
 } from "src/components/tiptap-node/appendix-node";
 import { PageComment } from "src/components/tiptap-node/page-comment-node";
-import { DatabaseActiveCell } from "src/components/tiptap-node/inline-database/extensions";
+import {
+  DatabaseActiveCell,
+  DatabaseOpenRecord,
+} from "src/components/tiptap-node/inline-database/extensions";
 
 export function useEditorExtensions(
   refsRef: React.RefObject<EditorExtensionRefs>,
@@ -221,6 +224,7 @@ export function useEditorExtensions(
       DiffExtension,
       DragHandleExtension,
       DatabaseActiveCell,
+      DatabaseOpenRecord,
       DatabaseCellNode,
       DatabaseRecordNode,
       DatabaseNode,

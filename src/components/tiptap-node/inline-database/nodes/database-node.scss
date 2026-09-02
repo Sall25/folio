@@ -475,6 +475,12 @@ body.db-row-dragselect {
   }
 }
 
+.db-node-cell {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
 // ── Active cell (decoration) ────────────────────────────────────────────────
 // Class lands on the .react-renderer wrapper (display:contents); style its
 // .db-node-cell child — the real box.
@@ -510,5 +516,29 @@ body.db-row-dragselect {
     border: 2px solid var(--tt-brand-color-500);
     pointer-events: none;
     z-index: 3;
+  }
+}
+
+// ── Active record (decoration) ────────────────────────────────────────────────
+// The open record (viewing its page in peek/center) — tint the row so it's
+// clear which record the side panel belongs to. Class lands on the record's
+// renderer wrapper (display:contents), so tint the cells inside.
+.react-renderer.node-databaseRecord.db-record-open {
+  .db-node-cell {
+    background: color-mix(
+      in srgb,
+      var(--tt-brand-color-400) 12%,
+      var(--tt-bg-color)
+    ) !important;
+    // Hide the cell's own borders while active so only the ring shows.
+    border-color: transparent;
+    border-top: 2px solid var(--tt-brand-color-400);
+    border-bottom: 2px solid var(--tt-brand-color-400);
+    border-right: 0.5px solid var(--tt-brand-color-400);
+  }
+  .db-title-content,
+  .db-node-cell__content,
+  .tiptap-card-item-group {
+    background: transparent !important;
   }
 }
