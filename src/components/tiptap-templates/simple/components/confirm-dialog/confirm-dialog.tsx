@@ -49,7 +49,7 @@ export function ConfirmDialog({
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(15, 15, 15, 0.6)",
+        background: "rgba(15, 15, 15, 0.81)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -62,7 +62,7 @@ export function ConfirmDialog({
         aria-describedby="confirm-dialog-desc"
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: 380,
+          width: 300,
           maxWidth: "90vw",
           padding: 20,
           display: "flex",
