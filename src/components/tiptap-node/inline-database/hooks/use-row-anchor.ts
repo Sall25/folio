@@ -8,6 +8,11 @@ export type AnchorRect = { top: number; left: number; height: number } | null;
  * (.simple-editor-main overflow-x:hidden, and the paint containment implied by
  * content-visibility:auto on .tiptap.ProseMirror).
  *
+ * `top`/`height` track the ROW (so the checkbox follows it vertically), but
+ * `left` is pinned to the TABLE container's left edge, not the row's — so on
+ * horizontal scroll the checkbox stays frozen at the left instead of sliding
+ * off with the row's scrolling left edge.
+ *
  * `enabled` gates all listeners so unhovered/unselected rows cost nothing.
  *
  * The stored value carries the element it was measured from, so a rect
@@ -29,8 +34,15 @@ export function useRowAnchor(
     const box = node.closest(".react-renderer.node-databaseRecord") ?? node;
     const r = box.getBoundingClientRect();
     if (r.height === 0) return;
+
+    // Horizontal anchor: the TABLE container's left edge, which does NOT move
+    // during horizontal scroll — so the checkbox stays frozen at the left.
+    // Fall back to the row's left if the container isn't found.
+    const table = node.closest<HTMLElement>(".db-table");
+    const left = table ? table.getBoundingClientRect().left : r.left;
+
     setMeasured((prev) => {
-      const next = { top: r.top, left: r.left, height: r.height };
+      const next = { top: r.top, left, height: r.height };
       if (
         prev &&
         prev.el === node &&

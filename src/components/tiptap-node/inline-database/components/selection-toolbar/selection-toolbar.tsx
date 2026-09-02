@@ -119,7 +119,7 @@ export function SelectionToolbar({
 
         {/* Fixed right — always visible */}
         <div className="db-selection-toolbar__actions">
-          <DeleteButton onDelete={onDeleteSelection} />
+          <DeleteButton count={recordIds.length} onDelete={onDeleteSelection} />
           <Separator orientation="vertical" />
           <ActionMenu
             open={menuOpen}
