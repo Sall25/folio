@@ -41,11 +41,14 @@ export function useDatabaseColumnLayout({
     [draftWidths],
   );
 
-  // Header grid: property columns + trailing 1fr for the actions (+/...) cell.
+  // Header grid: property columns + a FIXED trailing track for the actions
+  // (+ / …) cell. Must be fixed, not 1fr — under width:max-content a 1fr track
+  // collapses to 0, so the actions cell contributes no scrollable width and the
+  // horizontal scrollbar stops before it.
   const gridTemplateColumns =
-    visibleProperties.map((p) => `${widthFor(p)}px`).join(" ") + " 1fr";
+    visibleProperties.map((p) => `${widthFor(p)}px`).join(" ") + " 300px";
 
-  // Body grid: EXACTLY one column per property (no trailing 1fr — see note).
+  // Body grid: EXACTLY one column per property (no trailing 1fr).
   const bodyGridTemplateColumns = visibleProperties
     .map((p) => `${widthFor(p)}px`)
     .join(" ");

@@ -104,7 +104,7 @@ export function DatabaseTableBody({
   // The body grid has exactly one track per property (no trailing 1fr — that's
   // header-only). The placeholder rows add their own trailing track so they
   // reach the table's right edge.
-  const placeholderGridTemplateColumns = `${bodyGridTemplateColumns} 1fr`;
+  const placeholderGridTemplateColumns = `${bodyGridTemplateColumns} 300px`;
 
   const toggleGroup = (key: string) => {
     const current = (activeView as TableView)?.collapsedGroups ?? [];
@@ -167,7 +167,7 @@ export function DatabaseTableBody({
           display: "grid",
           width: "max-content",
           minWidth: "100%",
-          gridTemplateColumns: `${bodyGridTemplateColumns} 1fr`,
+          gridTemplateColumns: `${bodyGridTemplateColumns} 300px`,
         }}
       >
         {headers.map((h) => {
@@ -259,6 +259,9 @@ export function DatabaseTableBody({
           style={{
             opacity: 1,
             pointerEvents: "auto",
+            position: "sticky",
+            left: 0,
+            width: "fit-content",
           }}
         >
           <Button
