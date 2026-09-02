@@ -10,6 +10,7 @@
     var(--tt-transition-easing-default);
   margin: auto 0px;
   border-radius: var(--tt-radius-sm);
+  font-size: inherit;
 
   &:hover {
     // Lifts on any fill, light or dark — no second token needed.

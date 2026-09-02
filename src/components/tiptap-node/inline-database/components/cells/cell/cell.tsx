@@ -81,6 +81,7 @@ function CellImpl({
           readonly={readonly}
           unwrapped={unwrapped}
           icon={record.cover ?? templateCover ?? null}
+          config={config}
         />
       );
 

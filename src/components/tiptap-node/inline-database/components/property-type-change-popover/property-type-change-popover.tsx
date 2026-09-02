@@ -12,7 +12,7 @@ export function PropertyTypeChangePopover({
   return (
     <NavigableMenuItem
       Icon={ArrowLeftRight}
-      label="Change property type"
+      label="Change type"
       side="right"
       align="start"
       avoidCollisions

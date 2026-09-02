@@ -185,7 +185,7 @@ export type DateNotifications =
   | "2_days_before";
 
 export type PropertyConfig =
-  | { type: "title" }
+  | { type: "title"; showPageIcon?: boolean }
   | { type: "text" }
   | { type: "checkbox" }
   | { type: "created_time" }
@@ -229,7 +229,7 @@ export type PropertyConfig =
       targetPropertyId: ID; // a property on the related source
       aggregation: AggregationFunction;
     }
-  | { type: "url" }
+  | { type: "url"; showFullUrl?: boolean }
   | { type: "phone" }
   | { type: "email" };
 
@@ -368,6 +368,30 @@ export interface SortRule {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Calculation types
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type CalcType =
+  | "none"
+  | "count_all"
+  | "count_values"
+  | "count_unique"
+  | "count_empty"
+  | "count_not_empty"
+  | "percent_empty"
+  | "percent_not_empty"
+  | "earliest_date"
+  | "latest_date"
+  | "date_range"
+  | "sum"
+  | "average"
+  | "median"
+  | "min"
+  | "max"
+  | "range";
+
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Views
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -379,6 +403,9 @@ interface BaseView {
   filters: FilterGroup[];
   sorts: SortRule[];
   hiddenProperties: ID[];
+  /** Selected calculation per property (footer/summary row). Keyed by
+   *  propertyId; absent or "none" means no calculation. */
+  calculations?: Record<ID, CalcType>;
   openPageIn?: OpenPageIn;
   iconName?: string;
   target?: Target;

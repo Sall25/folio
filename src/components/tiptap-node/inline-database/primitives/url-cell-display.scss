@@ -5,6 +5,11 @@
   width: 100%;
   min-width: 0;
 }
+.db-cell-link{
+  text-decoration: underline;
+  text-decoration-color: var(--tt-text-secondary) !important;
+  color:var(--tt-text-secondary) !important;
+}
 
 .db-cell-link--url {
   // NOT flex:1 — the link must leave room beside it. It stops propagation, so
@@ -23,6 +28,7 @@
   text-decoration: underline;
   text-decoration-color: var(--tt-text-secondary);
   text-underline-offset: 2px;
+  color:var(--tt-text-secondary);
 
   &:hover {
     text-decoration-color: var(--tt-text-primary);

@@ -1,251 +1,75 @@
 import { useState } from "react";
+import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { Button } from "src/components/tiptap-ui-primitive/button";
-import type { DatabaseProperty, Page } from "src/types";
+import type { DatabaseProperty, Page, CalcType } from "src/types";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
+import {
+  CALC_LABEL,
+  getCalcGroups,
+  getCellValue,
+  runCalc,
+} from "../../utils/calc-utils";
 import "./database-calculations.scss";
+import { useDatabaseContext } from "../../nodes/database-context";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
-// ── Calculation types ──────────────────────────────────────────────────────
-
-type CalcType =
-  | "none"
-  | "count_all"
-  | "count_values"
-  | "count_unique"
-  | "count_empty"
-  | "count_not_empty"
-  | "percent_empty"
-  | "percent_not_empty"
-  | "earliest_date"
-  | "latest_date"
-  | "date_range"
-  | "sum"
-  | "average"
-  | "median"
-  | "min"
-  | "max"
-  | "range";
-
-const CALC_LABEL: Record<CalcType, string> = {
-  none: "Calculate",
-  count_all: "Count all",
-  count_values: "Count values",
-  count_unique: "Count unique",
-  count_empty: "Count empty",
-  count_not_empty: "Count not empty",
-  percent_empty: "Percent empty",
-  percent_not_empty: "Percent not empty",
-  earliest_date: "Earliest date",
-  latest_date: "Latest date",
-  date_range: "Date range",
-  sum: "Sum",
-  average: "Average",
-  median: "Median",
-  min: "Min",
-  max: "Max",
-  range: "Range",
-};
-
-const BASE_CALCS: CalcType[] = [
-  "count_all",
-  "count_values",
-  "count_unique",
-  "count_empty",
-  "count_not_empty",
-  "percent_empty",
-  "percent_not_empty",
-];
-
-const DATE_CALCS: CalcType[] = ["earliest_date", "latest_date", "date_range"];
-const NUMBER_CALCS: CalcType[] = [
-  "sum",
-  "average",
-  "median",
-  "min",
-  "max",
-  "range",
-];
-
-type CalcGroup = { label: string; calcs: CalcType[] };
-
-function getCalcGroups(prop: DatabaseProperty): CalcGroup[] | null {
-  const type = prop.config.type;
-  if (
-    type === "title" ||
-    type === "text" ||
-    type === "url" ||
-    type === "email" ||
-    type === "phone" ||
-    type === "formula" ||
-    type === "relation" ||
-    type === "rollup" ||
-    type === "person" ||
-    type === "created_by" ||
-    type === "edited_by"
-  )
-    return null;
-  const groups: CalcGroup[] = [{ label: "Count", calcs: BASE_CALCS }];
-  if (type === "number") groups.push({ label: "Number", calcs: NUMBER_CALCS });
-  if (type === "date" || type === "created_time" || type === "edited_time")
-    groups.push({ label: "Date", calcs: DATE_CALCS });
-  return groups;
-}
-
-// ── Calculation logic ──────────────────────────────────────────────────────
-function getCellValue(record: Page, propertyId: string): unknown {
-  return record.values?.[propertyId] ?? null;
-}
-function runCalc(calc: CalcType, values: unknown[]): string {
-  if (calc === "none") return "";
-  const total = values.length;
-  const nonEmpty = values.filter((v) => v != null && v !== "" && v !== false);
-  const empty = total - nonEmpty.length;
-
-  switch (calc) {
-    case "count_all":
-      return String(total);
-    case "count_values":
-      return String(nonEmpty.length);
-    case "count_unique":
-      return String(new Set(nonEmpty.map(String)).size);
-    case "count_empty":
-      return String(empty);
-    case "count_not_empty":
-      return String(nonEmpty.length);
-    case "percent_empty":
-      return total === 0 ? "0%" : `${Math.round((empty / total) * 100)}%`;
-    case "percent_not_empty":
-      return total === 0
-        ? "0%"
-        : `${Math.round((nonEmpty.length / total) * 100)}%`;
-    case "earliest_date": {
-      const dates = nonEmpty
-        .map((v) => new Date(String(v)))
-        .filter((d) => !isNaN(d.getTime()));
-      if (!dates.length) return "";
-      return new Date(
-        Math.min(...dates.map((d) => d.getTime())),
-      ).toLocaleDateString();
-    }
-    case "latest_date": {
-      const dates = nonEmpty
-        .map((v) => new Date(String(v)))
-        .filter((d) => !isNaN(d.getTime()));
-      if (!dates.length) return "";
-      return new Date(
-        Math.max(...dates.map((d) => d.getTime())),
-      ).toLocaleDateString();
-    }
-    case "date_range": {
-      const dates = nonEmpty
-        .map((v) => new Date(String(v)))
-        .filter((d) => !isNaN(d.getTime()));
-      if (dates.length < 2) return "";
-      const min = Math.min(...dates.map((d) => d.getTime()));
-      const max = Math.max(...dates.map((d) => d.getTime()));
-      const days = Math.round((max - min) / 86400000);
-      return `${days} day${days !== 1 ? "s" : ""}`;
-    }
-    case "sum": {
-      const nums = nonEmpty.map(Number).filter((n) => !isNaN(n));
-      return String(nums.reduce((a, b) => a + b, 0));
-    }
-    case "average": {
-      const nums = nonEmpty.map(Number).filter((n) => !isNaN(n));
-      if (!nums.length) return "";
-      return (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(2);
-    }
-    case "median": {
-      const nums = nonEmpty
-        .map(Number)
-        .filter((n) => !isNaN(n))
-        .sort((a, b) => a - b);
-      if (!nums.length) return "";
-      const mid = Math.floor(nums.length / 2);
-      return String(
-        nums.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2,
-      );
-    }
-    case "min": {
-      const nums = nonEmpty.map(Number).filter((n) => !isNaN(n));
-      return nums.length ? String(Math.min(...nums)) : "";
-    }
-    case "max": {
-      const nums = nonEmpty.map(Number).filter((n) => !isNaN(n));
-      return nums.length ? String(Math.max(...nums)) : "";
-    }
-    case "range": {
-      const nums = nonEmpty.map(Number).filter((n) => !isNaN(n));
-      return nums.length ? String(Math.max(...nums) - Math.min(...nums)) : "";
-    }
-    default:
-      return "";
-  }
-}
-
-// ── useCalcAvailable hook ──────────────────────────────────────────────────
-
-function useCalcAvailable(
-  prop: DatabaseProperty,
-  hideWhenUnavailable = true,
-): boolean {
-  // Available when the property type supports at least one calculation group
-  return hideWhenUnavailable ? getCalcGroups(prop) !== null : true;
-}
-
-// ── Per-column calc cell ───────────────────────────────────────────────────
 interface CalcCellProps {
   prop: DatabaseProperty;
   records: Page[];
   calc: CalcType;
   onChange: (calc: CalcType) => void;
-  hideWhenUnavailable?: boolean;
 }
 
-function CalcCell({
-  prop,
-  records,
-  calc,
-  onChange,
-  hideWhenUnavailable = true,
-}: CalcCellProps) {
-  const isAvailable = useCalcAvailable(prop, hideWhenUnavailable);
+function CalcCell({ prop, records, calc, onChange }: CalcCellProps) {
+  const [open, setOpen] = useState(false);
   const groups = getCalcGroups(prop);
 
-  if (!isAvailable || !groups) {
+  if (!groups) {
     return <div className="db-calc-cell db-calc-cell--empty" />;
   }
 
   const values = records.map((r) => getCellValue(r, prop.id));
   const result = runCalc(calc, values);
-  const Icon = PROPERTY_TYPE_ICONS[prop.config.type];
+  const iconName = PROPERTY_TYPE_ICONS[prop.config.type];
+
+  // The button is identical open or closed; only the Popover wrapper differs.
+  const button = (
+    <button
+      className={`db-calc-cell ${calc !== "none" ? "db-calc-cell--active" : ""}`}
+      onClick={() => setOpen(true)}
+    >
+      {calc === "none" ? (
+        <span className="db-calc-cell__placeholder">Calculate</span>
+      ) : (
+        <span className="db-calc-cell__result">
+          <span className="db-calc-cell__label">{CALC_LABEL[calc]}</span>
+          <span className="db-calc-cell__value">{result}</span>
+        </span>
+      )}
+    </button>
+  );
+
+  // Closed → bare button, NO Radix Popover mounted. The popover (and its
+  // dismiss-layer listeners + portal) exists only for the one cell being
+  // picked, not all N result cells.
+  if (!open) return button;
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          className={`db-calc-cell ${calc !== "none" ? "db-calc-cell--active" : ""}`}
-        >
-          {calc === "none" ? (
-            <span className="db-calc-cell__placeholder">Calculate</span>
-          ) : (
-            <span className="db-calc-cell__result">
-              <span className="db-calc-cell__label">{CALC_LABEL[calc]}</span>
-              <span className="db-calc-cell__value">{result}</span>
-            </span>
-          )}
-        </button>
-      </PopoverTrigger>
+    <Popover open onOpenChange={setOpen} defaultOpen>
+      <PopoverTrigger asChild>{button}</PopoverTrigger>
       <PopoverContent side="top" align="start" className="db-panel">
         <Card style={{ padding: "5px 10px", minWidth: 200 }}>
-          {/* Header showing property context */}
           <div className="db-calc-popover-header">
-            <Icon size={12} className="db-calc-popover-header__icon" />
+            <DynamicIcon
+              name={iconName}
+              size={12}
+              className="db-calc-popover-header__icon"
+            />
             <span className="db-calc-popover-header__name">{prop.name}</span>
           </div>
           <CardItemGroup>
@@ -256,7 +80,10 @@ function CalcCell({
                 width: "100%",
                 fontWeight: calc === "none" ? 600 : 400,
               }}
-              onClick={() => onChange("none")}
+              onClick={() => {
+                onChange("none");
+                setOpen(false);
+              }}
             >
               <span className="tiptap-button-text">None</span>
             </Button>
@@ -269,7 +96,10 @@ function CalcCell({
                     variant="ghost"
                     data-active-state={calc === c ? "on" : "off"}
                     style={{ justifyContent: "flex-start", width: "100%" }}
-                    onClick={() => onChange(c)}
+                    onClick={() => {
+                      onChange(c);
+                      setOpen(false);
+                    }}
                   >
                     <span className="tiptap-button-text">{CALC_LABEL[c]}</span>
                   </Button>
@@ -284,6 +114,8 @@ function CalcCell({
 }
 
 // ── Main calculations row ──────────────────────────────────────────────────
+// Selected calcs now persist per-VIEW (view.calculations), so the row and the
+// header CalcMenuItem stay in sync and survive reloads. No local state.
 export function DatabaseCalculations({
   properties,
   records,
@@ -293,11 +125,16 @@ export function DatabaseCalculations({
   records: Page[];
   gridTemplateColumns: string;
 }) {
-  const [calcs, setCalcs] = useState<Record<string, CalcType>>({});
+  const { db } = useDatabaseContext();
+  const view = db.activeView;
+  const calcs = (view?.calculations ?? {}) as Record<string, CalcType>;
 
-  function setCalc(propId: string, calc: CalcType) {
-    setCalcs((prev) => ({ ...prev, [propId]: calc }));
-  }
+  const setCalc = (propId: string, calc: CalcType) => {
+    if (!view) return;
+    db.updateView(view.id, {
+      calculations: { ...calcs, [propId]: calc },
+    });
+  };
 
   return (
     <div className="db-calculations" style={{ gridTemplateColumns }}>

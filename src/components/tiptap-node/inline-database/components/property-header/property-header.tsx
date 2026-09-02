@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import {
   DEFAULT_CONFIGS,
+  type CalcType,
   type DatabaseProperty,
   type FilterGroup,
   type FilterGroupOperator,
@@ -45,6 +46,7 @@ import { PropertyIcon } from "./property-icon";
 import { PropertyTypeList } from "./property-type-list";
 import { PropertyConfigEditor } from "./property-config-editor";
 import { IconPickerPopover } from "src/components/tiptap-ui/cover";
+import { CalcMenuItem } from "../calc-menu-item";
 
 export function PropertyHeader({
   prop,
@@ -251,7 +253,7 @@ export function PropertyHeader({
               className="property-header-dropdown"
               style={{
                 boxShadow: "var(--tt-shadow-elevated-md)",
-                minWidth: 260,
+                minWidth: 180,
               }}
             >
               <CardBody style={{ scrollbarWidth: "thin" }}>
@@ -359,14 +361,15 @@ export function PropertyHeader({
                   )}
 
                   <Spacer size={3} />
-                  <PropertyTypeChangePopover>
-                    <PropertyTypeList prop={prop} />
-                  </PropertyTypeChangePopover>
                   <PropertyConfigEditor
                     prop={prop}
                     onClose={() => setOpen(false)}
                   />
+                  <PropertyTypeChangePopover>
+                    <PropertyTypeList prop={prop} />
+                  </PropertyTypeChangePopover>
                 </CardItemGroup>
+                <Separator orientation="horizontal" />
                 <CardItemGroup style={{ gap: 3 }}>
                   <FreezePropertyButton
                     isFrozen={db.isFrozen(db.activeView.id, prop.id)}
@@ -394,7 +397,6 @@ export function PropertyHeader({
                     label="Filter"
                     onClick={addFilter}
                   />
-
                   <NavigableMenuItem Icon={SortAscIcon} label="Sort">
                     <Card style={{ padding: "5px 10px" }}>
                       <CardItemGroup>
@@ -411,6 +413,15 @@ export function PropertyHeader({
                       </CardItemGroup>
                     </Card>
                   </NavigableMenuItem>
+                  <CalcMenuItem
+                    prop={prop}
+                    calc={(view.calculations?.[prop.id] ?? "none") as CalcType}
+                    onChange={(c) =>
+                      db.updateView(view.id, {
+                        calculations: { ...view.calculations, [prop.id]: c },
+                      })
+                    }
+                  />
                 </CardItemGroup>
 
                 {prop.config.type !== "title" && (

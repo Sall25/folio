@@ -1,3 +1,30 @@
+// Kill the shared textarea shell's blue focus ring for the text-cell editor.
+// The className lands on the inner .ta-input; the ring is on the .ta-field
+// shell above it, so reach up via :has().
+// The shell and the popover box don't paint — only the field does.
+.ta-field:has(.db-cell-text__field) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.db-cell-editor__box:has(.db-cell-text__field) {
+  padding: 0;
+  min-height: 0;
+  line-height: 0;
+  display: flex;
+  align-items: stretch;
+  background: transparent; // the field owns the background, not the box
+}
+
+.db-cell-text__field {
+  min-height: 0 !important; // was calc(...trigger-height + 4px) — forced it tall
+  background: var(--tt-gray-light-50) !important;
+  .dark & {
+    background: var(--tt-gray-dark-100) !important;
+  }
+}
+
 .db-cell-text {
   &__display {
     display: block;
@@ -28,23 +55,19 @@
    -webkit-font-smoothing: auto;
 
     outline: none !important;
-    background: transparent;
     box-shadow: none;
     border: none !important;
     color: var(--tt-text-primary);
     resize: none;
     
     border-radius: 0 !important;
-    background: var(--tt-gray-light-50);
-    .dark & {
-      background: var(--tt-gray-dark-100);
-    }
-
+    
     &:focus,
+    &:focus-within,
     &:focus-visible {
       box-shadow: none !important;
       border-color: transparent !important;
-      outline: 2px solid var(--tt-border-color) !important;
+      outline: none !important;
       border: none !important;
     }
   }
@@ -82,3 +105,11 @@
   align-items: stretch;
 }
 
+
+.db-cell-editor__popover:has(.db-cell-text__field) {
+  background: var(--tt-gray-light-100);
+  .dark & {
+    background: var(--tt-gray-dark-100);
+  } 
+  padding: 0;
+}

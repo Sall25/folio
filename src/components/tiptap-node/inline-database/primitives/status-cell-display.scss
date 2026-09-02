@@ -3,6 +3,7 @@
 @use "../utils/pill-colors" as pill;
 
 .status-cell{
+  font-size: inherit;
    &__trigger{
     background-color: transparent;
     border: none;
@@ -23,6 +24,7 @@
     var(--tt-transition-easing-default);
   padding: 2px 8px !important;
   margin: auto 0px;
+  font-size: inherit;
   
   &:hover {
     filter: brightness(1.08);

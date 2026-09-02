@@ -11,6 +11,7 @@ import {
 } from "src/types";
 
 export * from "./cover-placeholder";
+export * from "./calc-utils";
 
 // Notion parity: a freshly created list view shows only the first few
 // properties; the rest start hidden (the user can unhide them). The title is

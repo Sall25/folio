@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CellEditorPopover } from "./cell-editor-popover";
 import "./text-cell-display.scss";
-import { Input } from "src/components/tiptap-ui-primitive/input";
+import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 
 interface TextCellDisplayProps {
   value: string | null | undefined;
@@ -51,8 +51,8 @@ export function TextCellDisplay({
       }
     >
       {(close) => (
-        <Input
-          autoFocus
+        <TextareaAutosize
+          autoFocusEnd
           className="db-cell-text__field"
           value={draft}
           // maxRows={maxRows}

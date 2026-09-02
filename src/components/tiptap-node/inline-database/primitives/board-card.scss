@@ -36,10 +36,11 @@
   width: 100%;
   overflow: hidden; // belt-and-suspenders: clip anything that still escapes
   &__title {
-    padding: 10px 15px;
+    padding: 0px 15px;
     min-width: 0;
     overflow: hidden;
-
+    height: 34px;
+    min-height: 34px;
     .db-cell {
       display: contents !important;
     }

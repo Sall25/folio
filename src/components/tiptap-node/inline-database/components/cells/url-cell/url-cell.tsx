@@ -7,6 +7,7 @@ export function UrlCell({
   readonly,
   unwrapped,
   className,
+  config,
 }: CellProps<"url">) {
   return (
     <div className={className} data-wrap={unwrapped ? "false" : "true"}>
@@ -14,6 +15,7 @@ export function UrlCell({
         value={value ?? ""}
         onChange={onChange}
         readonly={readonly}
+        showFullUrl={config.showFullUrl}
       />
     </div>
   );

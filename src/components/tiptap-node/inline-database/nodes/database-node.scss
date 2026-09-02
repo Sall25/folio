@@ -494,7 +494,7 @@ body.db-row-dragselect {
   overflow: visible;
   background: color-mix(
     in srgb,
-    var(--tt-brand-color-400) 12%,
+    var(--tt-brand-color-400) 10%,
     var(--tt-bg-color)
   ) !important;
   // Hide the cell's own borders while active so only the ring shows.
@@ -527,7 +527,7 @@ body.db-row-dragselect {
   .db-node-cell {
     background: color-mix(
       in srgb,
-      var(--tt-brand-color-400) 12%,
+      var(--tt-brand-color-400) 10%,
       var(--tt-bg-color)
     ) !important;
     // Hide the cell's own borders while active so only the ring shows.

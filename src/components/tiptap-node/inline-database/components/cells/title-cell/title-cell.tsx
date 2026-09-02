@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import type { JSONContent } from "@tiptap/core";
 import { TitleCellDisplay } from "../../../primitives/title-cell-display";
-import type { ID, Page, PageCover } from "src/types";
+import type { ID, Page, PageCover, PropertyConfig } from "src/types";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 
@@ -13,6 +13,7 @@ export function TitleCell({
   readonly,
   unwrapped,
   icon,
+  config,
 }: {
   value: string;
   recordId: ID;
@@ -22,6 +23,7 @@ export function TitleCell({
   readonly?: boolean;
   unwrapped?: boolean;
   icon?: PageCover | null;
+  config?: Extract<PropertyConfig, { type: "title" }>;
 }) {
   const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
 
@@ -57,6 +59,7 @@ export function TitleCell({
         onChange={handleChange}
         icon={icon ?? null}
         readonly={readonly}
+        showPageIcon={config?.showPageIcon ?? true}
       />
     </div>
   );

@@ -10,7 +10,7 @@ import type {
   DateFilterRule,
   DateWithinRange,
 } from "./filter-types";
-import type { CellValue, Page } from "./types.js";
+import type { CellValue, Page, SelectOption } from "./types.js";
 
 // ── Date range helpers ─────────────────────────────────────────────────────
 
@@ -102,11 +102,17 @@ function evaluateNumber(rule: NumberFilterRule, value: CellValue): boolean {
 }
 
 function evaluateSelect(rule: SelectFilterRule, value: CellValue): boolean {
+  // value is a single SelectOption (or null); compare by id.
+  const id =
+    value && typeof value === "object" && "id" in value
+      ? (value as SelectOption).id
+      : null;
+
   switch (rule.operator) {
     case "is":
-      return value === rule.value;
+      return id !== null && rule.value.includes(id);
     case "is_not":
-      return value !== rule.value;
+      return id === null || !rule.value.includes(id);
     case "is_empty":
       return isEmpty(value);
     case "is_not_empty":
@@ -122,9 +128,9 @@ function evaluateMultiSelect(
 
   switch (rule.operator) {
     case "contains":
-      return arr.includes(rule.value);
+      return rule.value.some((v) => arr.includes(v));
     case "does_not_contain":
-      return !arr.includes(rule.value);
+      return !rule.value.some((v) => arr.includes(v));
     case "is_empty":
       return arr.length === 0;
     case "is_not_empty":

@@ -13,6 +13,7 @@
   align-items: center;
   width: 100%;
   min-width: 0;
+  font-size: inherit;
   // The link must NOT fill the cell, or there's nowhere to click that isn't the
   // link — and since the link stops propagation, the editor could never open.
   // The gap to its right is the trigger's hit area.
@@ -20,6 +21,7 @@
 }
 
 .db-cell-email {
+  font-size: inherit;
   &__link {
     margin: 0;
     padding: 0;
@@ -28,9 +30,9 @@
     min-width: 0;
     flex: 0 1 auto;
     font-family: inherit;
-    font-size: 14px !important;
+    font-size: inherit;
     font-weight: 400;
-    line-height: 34px; // row height — centres the single line in the cell
+    line-height: inherit; // row height — centres the single line in the cell
     color: var(--tt-text-primary) !important;
     // text-decoration: none !important;
     white-space: nowrap;

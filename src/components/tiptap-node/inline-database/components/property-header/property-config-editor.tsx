@@ -15,6 +15,8 @@ import FormulaEditor from "../formula-editor/formula-editor";
 import { NumberEditDisplay } from "../number-edit-display";
 import { DateEditDisplay } from "../date-edit-display/date-edit-display";
 import { PersonEditDisplay } from "../person-edit-display";
+import { MenuRow } from "../menu-row";
+import { MoveHorizontal, Smile } from "lucide-react";
 
 // the parent header popover.
 export function PropertyConfigEditor({
@@ -177,6 +179,36 @@ export function PropertyConfigEditor({
             }
           />
         </PropertyEditPopover>
+      )}
+      {prop.config.type === "url" && (
+        <MenuRow
+          Icon={MoveHorizontal}
+          label="Show full url"
+          checked={prop.config.showFullUrl}
+          onToggle={(checked) =>
+            void db.updateProperty(prop.id, {
+              config: { type: "url", showFullUrl: checked },
+            })
+          }
+          toggle
+        />
+      )}
+      {prop.config.type === "title" && (
+        <MenuRow
+          Icon={Smile}
+          label="Show page icon"
+          checked={
+            prop.config.showPageIcon === undefined
+              ? true
+              : prop.config.showPageIcon
+          }
+          onToggle={(checked) =>
+            void db.updateProperty(prop.id, {
+              config: { type: "title", showPageIcon: checked },
+            })
+          }
+          toggle
+        />
       )}
     </>
   );

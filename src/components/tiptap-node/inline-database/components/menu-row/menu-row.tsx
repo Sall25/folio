@@ -50,7 +50,7 @@ export function MenuRow({
   disabled?: boolean;
   toggle?: boolean;
   checked?: boolean;
-  onToggle?: () => void | Promise<void>;
+  onToggle?: (checked?: boolean) => void | Promise<void>;
   selected?: boolean;
 }) {
   const iconEl: ReactNode = Icon ? (
@@ -96,9 +96,9 @@ export function MenuRow({
         </Button>
         <Toggle
           checked={!!checked}
-          onChangeAsync={async () => {
+          onChangeAsync={async (checked) => {
             if (disabled) return;
-            await onToggle?.();
+            await onToggle?.(checked);
           }}
         />
       </CardItemGroup>
