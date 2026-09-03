@@ -47,6 +47,7 @@ import { useActiveViewFromHash, useSyncViews } from "../hooks";
 import { ChipsRow } from "../components/chips-row";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { usePageViewState } from "src/components/tiptap-templates/simple/context/page-view-context";
+import { getColumnHint, setColumnHint } from "../utils/skeleton-hints";
 
 const EMPTY_SOURCE = { properties: [] };
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
@@ -168,6 +169,11 @@ export function DatabaseNodeView({
     updatePropertiesAsync,
   });
 
+  // Record the real count as we render it
+  if (source && visibleProperties.length) {
+    setColumnHint(attrs.sourceId, visibleProperties.length);
+  }
+
   useDatabaseBridgePublish({
     editor,
     attrs,
@@ -228,8 +234,23 @@ export function DatabaseNodeView({
       </NodeViewWrapper>
     );
   }
+
+  // Skeleton shape, derived from what's available on the NODE (instant) plus the
+  // cached column hint — no dependency on `source` having loaded.
+  //   type    ← attrs.views (view definitions live on the node)
+  //   columns ← last-known count for this source (falls back to the skeleton's
+  //             own default when we've never successfully loaded it before)
+  const skeletonView = attrs.views.find((v) => v.id === attrs.activeViewId);
+  const skeletonType = skeletonView?.type ?? activeView?.type ?? "table";
+  // Real count wins whenever we have it; the hint only fills the pre-source gap.
+  const skeletonColumns = source
+    ? visibleProperties.length || undefined
+    : (getColumnHint(attrs.sourceId) ?? undefined);
+
   if (isLoading || !source) {
-    return <DatabaseLoadingSkeleton type={activeView?.type ?? "table"} />;
+    return (
+      <DatabaseLoadingSkeleton type={skeletonType} columns={skeletonColumns} />
+    );
   }
 
   // ── Chrome wrapper shared by every view ───────────────────────────────────
@@ -286,10 +307,16 @@ export function DatabaseNodeView({
 
   // ── Switching views → skeleton in the body slot ───────────────────────────
   // Chrome stays mounted so the toolbar and tabs don't flash. The skeleton uses
-  // the TARGET view's shape, so it already looks like where you're going.
+  // the TARGET view's shape, so it already looks like where you're going. Source
+  // is loaded here, so the real column count is known — use it.
   if (switchingTo) {
     const target = attrs.views.find((v) => v.id === switchingTo);
-    return chrome(<DatabaseLoadingSkeleton type={target?.type ?? "table"} />);
+    return chrome(
+      <DatabaseLoadingSkeleton
+        type={target?.type ?? "table"}
+        columns={visibleProperties.length || skeletonColumns}
+      />,
+    );
   }
 
   // ── View branches ─────────────────────────────────────────────────────────
