@@ -30,16 +30,14 @@ export function useRowAnchor(
   const frame = useRef<number | null>(null);
 
   const measure = useCallback((node: HTMLElement) => {
-    // .db-record is display:contents (no box) — measure the row box above it.
     const box = node.closest(".react-renderer.node-databaseRecord") ?? node;
     const r = box.getBoundingClientRect();
     if (r.height === 0) return;
 
-    // Horizontal anchor: the TABLE container's left edge, which does NOT move
-    // during horizontal scroll — so the checkbox stays frozen at the left.
-    // Fall back to the row's left if the container isn't found.
-    const table = node.closest<HTMLElement>(".db-table");
-    const left = table ? table.getBoundingClientRect().left : r.left;
+    // Pin `left` to the scroll container's edge so the checkbox stays put
+    // during horizontal scroll. Table uses .db-table; list uses .db-list.
+    const container = node.closest<HTMLElement>(".db-table, .db-list");
+    const left = container ? container.getBoundingClientRect().left : r.left;
 
     setMeasured((prev) => {
       const next = { top: r.top, left, height: r.height };
@@ -50,7 +48,7 @@ export function useRowAnchor(
         prev.rect.left === next.left &&
         prev.rect.height === next.height
       ) {
-        return prev; // no-op update — bail out of the re-render
+        return prev;
       }
       return { el: node, rect: next };
     });

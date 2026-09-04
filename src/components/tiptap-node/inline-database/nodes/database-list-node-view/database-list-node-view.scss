@@ -1,16 +1,15 @@
 .db-list {
   width: 100%;
+  max-width: var(--db-editor-width);
   min-width: 0;
 
   &__body {
     display: flex;
     flex-direction: column;
-    // Wide lists scroll horizontally instead of crushing the columns.
     overflow-x: auto;
     overflow-y: hidden;
   }
 }
-
 // The group IS the grid that owns the shared column tracks. Its
 // grid-template-columns is set inline (per list) from the visible-property
 // count: `minmax(220px, 1fr) repeat(N, max-content)`. Every row subgrids onto

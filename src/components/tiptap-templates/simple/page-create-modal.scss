@@ -5,13 +5,13 @@
   --background-drop: rgba(216, 211, 211, 0.3);
 }
 .dark{
-  --background-drop: rgba(15, 15, 15, 0.127);
+  --background-drop: rgba(15, 15, 15, 0.39);
 }
 
 .page-create-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 150;
   background: var(--background-drop);
   backdrop-filter: blur(1px);
   -webkit-backdrop-filter: blur(1px);

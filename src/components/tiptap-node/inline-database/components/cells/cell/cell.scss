@@ -72,3 +72,61 @@
     z-index: 3;
   }
 }
+
+.db-cell-title--inline {
+  gap: 6px;
+  position: relative;
+
+  .db-cell-title__text--editable {
+    flex: 1;
+    min-width: 0;
+    outline: none;
+    border-radius: var(--tt-radius-sm);
+    padding: 2px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:focus {
+      white-space: normal;       // let it wrap while editing
+      overflow: visible;
+      background: var(--tt-gray-light-a-50);
+      .dark & { background: var(--tt-gray-dark-a-50); }
+    }
+
+    &[data-empty]::before {
+      content: "Untitled";
+      color: var(--tt-text-tertiary);
+    }
+  }
+
+  .db-cell-title__toggle {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-sm);
+    background: var(--tt-bg-color);
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.12s ease, color 0.12s ease;
+
+    &:hover { color: var(--tt-text-color); }
+  }
+
+  // Show the toggle on row hover (or while editing).
+  .db-list-row:hover &,
+  .db-cell-title__text--editable:focus ~ .db-cell-title__toggle {
+    .db-cell-title__toggle { opacity: 1; }
+  }
+}
+
+// simpler: always show the toggle when the row is hovered or title focused
+.db-list-row:hover .db-cell-title__toggle,
+.db-cell-title--inline:focus-within .db-cell-title__toggle {
+  opacity: 1;
+}

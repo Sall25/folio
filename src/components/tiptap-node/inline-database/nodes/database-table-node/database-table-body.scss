@@ -1,15 +1,21 @@
 .db-group-header {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0px;
   min-height: 34px;
-  padding: 4px 6px;
+  padding: 4px 0px;
+  margin-top: 20px;
+
+  &:first-of-type {
+    margin-top: 0;
+  }
   cursor: pointer;
   background: var(--tt-bg-color);
-  border-bottom: 1px solid var(--tt-border-color);
+ // border-bottom: 1px solid var(--tt-border-color);
 
   &__label {
-    font-size: 13px;
+    font-size: 15px;
+    list-style: 1.4;
     font-weight: 600;
     color: var(--tt-text-primary);
   }
@@ -104,4 +110,52 @@
 .db-table > .db-calculations {     /* and calc footer */
   width: max-content;
   min-width: 100%;
+}
+
+
+.db-skeleton-row {
+  min-height: 34px;
+}
+
+.db-skeleton-cell {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  min-height: 34px;
+  border-right: 1px solid var(--tt-border-color);
+  border-bottom: 1px solid var(--tt-border-color);
+}
+
+.db-skeleton-bar {
+  height: 12px;
+  width: 60%;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--tt-gray-light-a-100) 25%,
+    var(--tt-gray-light-a-200) 37%,
+    var(--tt-gray-light-a-100) 63%
+  );
+  background-size: 400% 100%;
+  animation: db-skeleton-shimmer 1.4s ease infinite;
+
+  .dark & {
+    background: linear-gradient(
+      90deg,
+      var(--tt-gray-dark-a-100) 25%,
+      var(--tt-gray-dark-a-200) 37%,
+      var(--tt-gray-dark-a-100) 63%
+    );
+    background-size: 400% 100%;
+  }
+}
+
+@keyframes db-skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.db-node-grid > .db-header-row {
+  width: auto;
+  min-width: 0;
 }

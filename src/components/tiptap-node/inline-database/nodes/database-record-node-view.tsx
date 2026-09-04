@@ -65,8 +65,10 @@ export default function DatabaseRecordNodeView({
   }, [wrapperEl, order]);
 
   const [pointerOnCheckbox, setPointerOnCheckbox] = useState(false);
+  const isTableView = data?.view?.type === "table";
 
   const showCheckbox =
+    isTableView &&
     !!recordId &&
     !!databaseId &&
     !isFilteredOut &&

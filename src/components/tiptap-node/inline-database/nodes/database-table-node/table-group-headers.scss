@@ -1,0 +1,25 @@
+.db-group-columns {
+  &__cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    font-size: 13px;
+    color: var(--tt-text-secondary);
+    border-bottom: 1px solid var(--tt-border-color);
+    overflow: hidden;
+  }
+  &__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.db-group-header__ring {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  margin-right: 2px;
+  flex: 0 0 auto;
+}

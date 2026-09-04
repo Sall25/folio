@@ -23,7 +23,7 @@ import { DatabaseListNodeView } from "./database-list-node-view/database-list-no
 import { DatabaseCalendarNodeView } from "./database-calendar-node-view";
 import { DatabaseTimelineNodeView } from "./database-timeline-node-view";
 import { DatabaseLoadingSkeleton } from "../components/database-loading-skeleton";
-import { DatabaseTableBody } from "./database-table-body";
+import { DatabaseTableBody } from "./database-table-node";
 import { useDatabaseColumnLayout } from "../hooks/use-database-column-layout";
 import { useDatabaseBridgePublish } from "../hooks/use-database-bridge-publish";
 import {

@@ -93,6 +93,7 @@
 .db-board-card__cover-wrap {
   position: relative;
   line-height: 0;
+  border: 0.5px solid var(--tt-border-color);
 }
 
 .db-board-card:focus {

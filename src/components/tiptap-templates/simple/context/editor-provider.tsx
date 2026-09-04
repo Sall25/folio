@@ -298,7 +298,12 @@ export function EditorProvider({ children }: { children: ReactNode }) {
 
   const { ydoc, provider, isSynced } = useCollabDoc(activePage ?? null);
 
-  useWhyDidYouRender("editor-provider", { extensions, refsRef });
+  useWhyDidYouRender("editor-provider", {
+    extensions,
+    refsRef,
+    dataSources,
+    dbPageIds,
+  });
 
   const isDbPage = !!activePage && dbPageIds.has(activePage.id);
 

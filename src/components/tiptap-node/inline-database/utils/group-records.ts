@@ -48,8 +48,14 @@ export function groupLabel(key: string, prop: DatabaseProperty): string {
       cfg.groups.flatMap((g) => g.items).find((i) => i.id === key)?.name ?? key
     );
   if (cfg.type === "checkbox") return key === "true" ? "Checked" : "Unchecked";
+  if (cfg.type === "date") {
+    // key is an ISO string; show a readable date.
+    const d = new Date(key);
+    return isNaN(d.getTime()) ? key : d.toLocaleDateString();
+  }
   return key;
 }
+
 
 export interface RecordGroup {
   key: string;

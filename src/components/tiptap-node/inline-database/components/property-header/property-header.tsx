@@ -1,12 +1,17 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import {
   DEFAULT_CONFIGS,
+  isGroupableProperty,
+  type BoardView,
   type CalcType,
   type DatabaseProperty,
+  type DatabaseView,
   type FilterGroup,
   type FilterGroupOperator,
   type FilterRule,
+  type ListView,
   type SortRule,
+  type TableView,
 } from "src/types";
 import {
   Popover,
@@ -35,7 +40,7 @@ import { PropertyTypeChangePopover } from "../property-type-change-popover";
 import "./property-header.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Input } from "src/components/tiptap-ui-primitive/input";
-import { ListFilter, SortAscIcon } from "lucide-react";
+import { Group, ListFilter, SortAscIcon } from "lucide-react";
 import { InsertPropertyButton } from "../insert-property-button";
 
 import { nanoid } from "nanoid";
@@ -413,6 +418,23 @@ export function PropertyHeader({
                       </CardItemGroup>
                     </Card>
                   </NavigableMenuItem>
+                  {isGroupableProperty(prop.config.type) && (
+                    <MenuRow
+                      Icon={Group}
+                      label="Group"
+                      selected={
+                        (view as TableView | ListView | BoardView)
+                          .groupByPropertyId === prop.id
+                      }
+                      onClick={() => {
+                        const current = (view as TableView).groupByPropertyId;
+                        db.updateView(view.id, {
+                          groupByPropertyId:
+                            current === prop.id ? null : prop.id,
+                        } as Partial<DatabaseView>);
+                      }}
+                    />
+                  )}
                   <CalcMenuItem
                     prop={prop}
                     calc={(view.calculations?.[prop.id] ?? "none") as CalcType}

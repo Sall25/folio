@@ -19,7 +19,8 @@
 .es-content {
   display: flex;
   flex-direction: column;
-  width: 100%;
+  width: var(--db-editor-width);
+   max-width: var(--db-editor-width);
   height: 100%;          // fill the overlay so body can extend down
 }
 

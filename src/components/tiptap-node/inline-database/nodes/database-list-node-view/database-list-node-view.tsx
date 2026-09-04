@@ -109,6 +109,7 @@ function DatabaseListNodeViewImpl() {
                   <ListRow
                     key={rec.id}
                     record={rec}
+                    databaseId={attrs.id}
                     inlineProperties={inlineProperties}
                     titleProp={titleProp}
                     onChange={onChange}

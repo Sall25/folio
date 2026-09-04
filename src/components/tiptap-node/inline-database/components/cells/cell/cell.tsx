@@ -82,6 +82,7 @@ function CellImpl({
           unwrapped={unwrapped}
           icon={record.cover ?? templateCover ?? null}
           config={config}
+          view={view}
         />
       );
 

@@ -37,14 +37,20 @@ interface Props {
   locked: boolean;
   gridTemplateColumns: string;
   widthFor: (p: DatabaseProperty) => number;
+  optionsMenu?: React.ReactNode;
   onReorder: (orderedIds: string[]) => void;
-  onAddProperty: (type: PropertyType, propertyName?: string) => void;
+  onAddProperty: (type: PropertyType) => void;
   onCommitColumnWidth: (
     ref: { current: HTMLElement | null } | undefined,
     width: number,
   ) => void;
+  /** When true, the header lays out as a SUBGRID row of a parent grid (used
+   *  per-group in grouped tables) rather than its own standalone grid, so its
+   *  columns align to the parent's record columns. */
+  subgrid?: boolean;
+  /** The parent grid row to occupy when subgrid (a group's columnsRow). */
+  gridRow?: number;
 }
-
 export function DatabaseTableHeader({
   visibleProperties,
   allProperties,
@@ -55,6 +61,8 @@ export function DatabaseTableHeader({
   onReorder,
   onAddProperty,
   onCommitColumnWidth,
+  subgrid,
+  gridRow,
 }: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -108,7 +116,18 @@ export function DatabaseTableHeader({
     <div
       className="db-header-row"
       contentEditable={false}
-      style={{ gridTemplateColumns }}
+      style={
+        subgrid
+          ? {
+              gridColumn: "1 / -1",
+              gridRow,
+              display: "grid",
+              gridTemplateColumns: "subgrid",
+            }
+          : {
+              gridTemplateColumns,
+            }
+      }
     >
       <DndContext
         sensors={locked ? [] : sensors}

@@ -555,13 +555,9 @@ export function isReadOnlyProperty(type: PropertyType): boolean {
 }
 
 export function isGroupableProperty(type: PropertyType): boolean {
-  return (
-    type === "select" ||
-    type === "status" ||
-    type === "multi_select" ||
-    type === "checkbox" ||
-    type === "person"
-  );
+  // Group by any property except ones where every row is its own group
+  // (title = the row name) or that have no stable value to bucket by.
+  return type !== "title";
 }
 
 export function isContentBasedCell(
