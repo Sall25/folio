@@ -1,23 +1,65 @@
 import { useState } from "react";
-import { Copy, Check, MessageSquareText, PanelRightOpen } from "lucide-react";
+import {
+  Copy,
+  Check,
+  MessageSquareText,
+  PanelRightOpen,
+  Pencil,
+} from "lucide-react";
 import "./cell-overlay.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+import type { DatabaseView } from "src/types";
 
 export function CellOverlay({
   copiable,
   getCopyText,
   onComment,
   onOpen,
+  viewType = "table",
+  // List title toggle: pencil (focus to edit) ↔ panel (open page).
+  editing,
+  onEdit,
 }: {
   copiable: boolean;
   getCopyText: () => string;
   onComment?: () => void;
-  /** When set, renders an "Open page" button (used for the title cell). */
   onOpen?: () => void;
+  viewType?: DatabaseView["type"];
+  /** List title only: whether the title is currently being edited. */
+  editing?: boolean;
+  /** List title only: focus the title inline to start editing. */
+  onEdit?: () => void;
 }) {
   const [copied, setCopied] = useState(false);
 
-  if (onOpen)
+  // ── List view: only the title cell shows an overlay — the two-state toggle.
+  if (viewType === "list") {
+    // Only render for the title cell (the one given an open/edit handler).
+    if (!onOpen && !onEdit) return null;
+    return (
+      <Button
+        type="button"
+        className="db-cell-overlay-open"
+        aria-label={editing ? "Open page" : "Edit title"}
+        // pointerdown, not click: while editing, a click blurs the field first.
+        onPointerDown={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (editing) onOpen?.();
+          else onEdit?.();
+        }}
+      >
+        {editing ? (
+          <PanelRightOpen className="tiptap-button-icon" size={14} />
+        ) : (
+          <Pencil className="tiptap-button-icon" size={14} />
+        )}
+      </Button>
+    );
+  }
+
+  // ── Table view: Open button on the title cell.
+  if (onOpen) {
     return (
       <Button
         type="button"
@@ -33,7 +75,9 @@ export function CellOverlay({
         <span className="tiptap-button-text">Open</span>
       </Button>
     );
+  }
 
+  // ── Table view: comment + copy on non-title cells.
   const doCopy = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -45,12 +89,7 @@ export function CellOverlay({
   };
 
   return (
-    <div
-      className="db-cell-overlay"
-      style={{ width: onOpen ? "fit-content" : "auto" }}
-      contentEditable={false}
-      aria-hidden
-    >
+    <div className="db-cell-overlay" contentEditable={false} aria-hidden>
       <Button
         type="button"
         className="db-cell-overlay__btn"

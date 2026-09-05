@@ -61,8 +61,14 @@ export default function DatabaseRecordNodeView({
       ".react-renderer.node-databaseRecord",
     );
     if (!box) return;
-    box.style.gridRow = order !== undefined ? String(order + 1) : "";
-  }, [wrapperEl, order]);
+    if (isFilteredOut) {
+      box.style.setProperty("display", "none", "important");
+      box.style.gridRow = "";
+    } else {
+      box.style.removeProperty("display"); // let scss display:grid take over
+      box.style.gridRow = order !== undefined ? String(order + 1) : "";
+    }
+  }, [wrapperEl, order, isFilteredOut]);
 
   const [pointerOnCheckbox, setPointerOnCheckbox] = useState(false);
   const isTableView = data?.view?.type === "table";

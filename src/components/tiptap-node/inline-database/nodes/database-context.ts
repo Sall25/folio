@@ -41,7 +41,8 @@ interface DatabaseContextValue {
 
   sortedRecords: Page[];
 
-  tableLayout: GroupedRowLayout;
+  tableLayout: GroupedRowLayout<"table">;
+  listLayout: GroupedRowLayout<"list">;
 
   onNewRecord: () => void;
   onNewRecordInGroup: (groupKeys: ID) => void;

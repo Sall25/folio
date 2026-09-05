@@ -47,9 +47,10 @@
     background-color: var(--tt-gray-dark-100);
   }
   border: 1px solid var(--tt-border-color);
-  border-radius: var(--tt-radius-sm);
+  border-radius: var(--tt-radius-md);
   box-shadow: var(--tt-shadow-elevated-md);
-  padding: 2px 5px;
+  padding: 5px 5px;
+  width: fit-content !important;
 
   .db-node-cell:hover & {
     opacity: 1;

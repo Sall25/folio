@@ -45,6 +45,7 @@ import { useActivePageState } from "src/components/tiptap-templates/simple/conte
 import {
   useActiveViewFromHash,
   useDatabaseAlign,
+  useListLayout,
   useMeasureViewDims,
   useSyncViews,
 } from "../hooks";
@@ -53,6 +54,7 @@ import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { usePageViewState } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { setColumnHint } from "../utils/skeleton-hints";
 import { DatabaseLoadingSkeletonWithDims } from "./database-loading-skeleton-with-dims";
+import { useTableLayout } from "../hooks/use-table-layout";
 
 const EMPTY_SOURCE = { properties: [] };
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
@@ -140,7 +142,7 @@ export function DatabaseNodeView({
   const { switchingTo, dbWithSwitch } = useViewSwitch(db, attrs.activeViewId);
 
   // ── Filtered → searched → sorted → grouped records + row layout ───────────
-  const { sortedRecords, collapsedKeys, rowSlots } = useTableRecords({
+  const { sortedRecords, collapsedKeys } = useTableRecords({
     resolvedRecords,
     source,
     db,
@@ -182,6 +184,16 @@ export function DatabaseNodeView({
     setColumnHint(attrs.sourceId, visibleProperties.length);
   }
 
+  // Both run (Rules of Hooks); the inactive one returns a flat/empty layout
+  // cheaply since its view-type guard fails.
+  const { tableLayout } = useTableLayout(sortedRecords, source ?? null, db);
+  const { listLayout } = useListLayout(sortedRecords, source ?? null, db);
+
+  // Publish the ACTIVE view's rowSlots so record nodes position correctly in
+  // whichever view is hosting them (table or list — both node-render records).
+  const activeRowSlots =
+    activeView?.type === "list" ? listLayout.rowSlots : tableLayout.rowSlots;
+
   useDatabaseBridgePublish({
     editor,
     attrs,
@@ -191,7 +203,7 @@ export function DatabaseNodeView({
     resolvedRecords,
     sortedRecords,
     draftWidths,
-    rowSlots,
+    rowSlots: activeRowSlots,
     hasSource: !!source,
     setCellValue: (recordId, propertyId, value) =>
       setCellValue(recordId, propertyId, value as never),

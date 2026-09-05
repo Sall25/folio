@@ -1,143 +1,115 @@
-import { Plus, ChevronDown, ChevronRight } from "lucide-react";
-import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Badge } from "src/components/tiptap-ui-primitive/badge";
-import { useDataSource } from "../../hooks/use-data-source";
-import type {
-  ListView,
-  CellValue,
-  Page,
-  ID,
-  PropertyType,
-  DatabaseProperty,
-} from "src/types";
-import "./database-list-node-view.scss";
-import { usePageViewActions } from "src/components/tiptap-templates/simple/context/page-view-context";
-import { memo, useCallback, useMemo } from "react";
-import { ListRow } from "./list-row";
-import { useListRecords } from "../../hooks/use-list-records";
+import { useCallback } from "react";
+import { Plus } from "lucide-react";
+import { NodeViewContent } from "@tiptap/react";
+import type { ListView } from "src/types";
+import { recordSelection } from "../../utils/record-selection-store";
 import { useDatabaseContext } from "../database-context";
+import { useListLayout } from "../../hooks";
+import { useNewRecordSkeleton } from "../database-table-node/use-new-record-skeleton";
+import { GroupHeaders } from "../group-headers";
+import "./database-list-node-view.scss";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 
-const EMPTY_PROPERTIES: DatabaseProperty[] = [];
-
-function DatabaseListNodeViewImpl() {
+export function DatabaseListNodeView() {
   const {
+    db,
     attrs,
     source,
-    onUpdateView,
-    db,
-    sortedRecords: resolvedRecords,
+    sortedRecords,
+    visibleProperties,
+    onNewRecord,
+    onNewRecordInGroup,
   } = useDatabaseContext();
-  const view = db.activeView;
-  const { addRecordAsync, setCellValue } = useDataSource(attrs.sourceId);
-  const { setTarget } = usePageViewActions();
 
-  const activeView = (attrs.views.find((v) => v.id === attrs.activeViewId) ??
-    attrs.views[0]) as ListView | undefined;
+  const databaseId = attrs.id;
+  const activeView = db.activeView as ListView | undefined;
 
-  const titleProp = useMemo(
-    () => source?.properties.find((p) => p.config.type === "title"),
-    [source],
-  );
-  const inlineProperties =
-    useMemo(() => {
-      const hidden = new Set(activeView?.hiddenProperties ?? []);
-      return source?.properties.filter(
-        (p) => p.config.type !== "title" && !hidden.has(p.id),
-      );
-    }, [source?.properties, activeView?.hiddenProperties]) ?? EMPTY_PROPERTIES;
+  // List layout — same rowSlots/headers machinery as the table, minus the
+  // per-group column strip. Records self-position via grid-row from the
+  // bridge's sortedRecordIds, which is published as THIS layout's rowSlots.
+  const { listLayout } = useListLayout(sortedRecords, source ?? null, db);
+  const { headers } = listLayout;
 
-  const groupProp = activeView?.groupByPropertyId
-    ? source?.properties.find((p) => p.id === activeView.groupByPropertyId)
-    : undefined;
-  const collapsed = new Set(activeView?.collapsedGroups ?? []);
-  const ungrouped = !groupProp;
+  const collapsedKeys = new Set(activeView?.collapsedGroups ?? []);
 
-  const gridTemplateColumns = `minmax(220px, 1fr) repeat(${inlineProperties.length}, max-content)`;
+  const gridTemplateColumns = `minmax(220px, 1fr) repeat(${visibleProperties.length}, max-content)`;
 
-  const { groups, columnValuesByProp } = useListRecords(
-    resolvedRecords,
-    source!,
-    activeView,
-    groupProp,
+  const toggleGroup = useCallback(
+    (key: string) => {
+      if (!activeView) return;
+      const current = activeView.collapsedGroups ?? [];
+      db.updateView(activeView.id, {
+        collapsedGroups: current.includes(key)
+          ? current.filter((k) => k !== key)
+          : [...current, key],
+      } as Partial<ListView>);
+    },
+    [activeView, db],
   );
 
-  const onChange = useCallback(
-    (rec: Page, propId: ID, v: CellValue<PropertyType>) =>
-      setCellValue(rec.id, propId, v),
-    [setCellValue],
+  const { creating, start: handleNewRecord } = useNewRecordSkeleton(
+    sortedRecords.length,
+    onNewRecord,
   );
 
-  function toggleCollapse(key: string) {
-    if (!activeView) return;
-    const next = collapsed.has(key)
-      ? [...collapsed].filter((k) => k !== key)
-      : [...collapsed, key];
-    onUpdateView({ collapsedGroups: next });
-  }
+  const isEmpty = sortedRecords.length === 0;
 
   return (
-    <div className="db-list" data-type="database-list">
-      <div className="db-list__body">
-        {groups.map((group) => {
-          const isCollapsed = !ungrouped && collapsed.has(group.key);
-          return (
-            <div
-              key={group.key}
-              className="db-list-group"
-              style={{ gridTemplateColumns }}
-            >
-              {!ungrouped && (
-                <div className="db-list-group__header">
-                  <Button
-                    variant="ghost"
-                    onClick={() => toggleCollapse(group.key)}
-                  >
-                    {isCollapsed ? (
-                      <ChevronRight className="tiptap-button-icon" size={13} />
-                    ) : (
-                      <ChevronDown className="tiptap-button-icon" size={13} />
-                    )}
-                    <span className="tiptap-button-text">{group.label}</span>
-                  </Button>
-                  <Badge data-style="gray" size="small">
-                    <span>{group.records.length}</span>
-                  </Badge>
-                </div>
-              )}
-              {!isCollapsed &&
-                group.records.map((rec) => (
-                  <ListRow
-                    key={rec.id}
-                    record={rec}
-                    databaseId={attrs.id}
-                    inlineProperties={inlineProperties}
-                    titleProp={titleProp}
-                    onChange={onChange}
-                    view={view}
-                    columnValuesByProp={columnValuesByProp}
-                  />
-                ))}
-            </div>
-          );
-        })}
-        <button
+    <div
+      className="db-list"
+      data-type="database-list"
+      data-database-id={databaseId}
+      onPointerDown={(e) => {
+        const t = e.target as HTMLElement;
+        if (t.closest(".db-record") || !databaseId) return;
+        recordSelection.clear(databaseId);
+      }}
+    >
+      {/* One flat grid — ProseMirror fills __body with the databaseRecord
+          nodes; each positions itself on its grid-row from sortedRecordIds
+          (this view's rowSlots). GroupHeaders sit at the label/new rows. */}
+      <div
+        className="db-list-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns,
+          width: "100%",
+        }}
+      >
+        <GroupHeaders
+          headers={headers}
+          collapsedKeys={collapsedKeys}
+          onToggle={toggleGroup}
+          onNewInGroup={onNewRecordInGroup}
+          classPrefix="db-list-group"
+        />
+
+        <NodeViewContent as="div" className="db-list-grid__body" />
+
+        {creating && (
+          <div
+            className="db-list-skeleton-row"
+            contentEditable={false}
+            style={{ gridColumn: "1 / -1" }}
+          >
+            <span className="db-skeleton-bar" style={{ width: "40%" }} />
+          </div>
+        )}
+      </div>
+
+      {/* Ungrouped gets one trailing New page; grouped views get one per group
+          from GroupHeaders. */}
+      {headers.length === 0 && !isEmpty && (
+        <Button
           type="button"
           className="db-new-row"
           contentEditable={false}
-          onClick={() => {
-            addRecordAsync({ title: "" })
-              .then((page) => setTarget({ pageId: page.id, view: "Peek" }))
-              .catch(() => console.log("failed to add page to list"));
-          }}
+          onClick={handleNewRecord}
         >
-          <span className="db-new-row__label">
-            <Plus size={16} />
-            <span>New page</span>
-          </span>
-        </button>
-      </div>
+          <Plus size={16} className="tiptap-button-icon" />
+          <span className="tiptap-button-text">New Page</span>
+        </Button>
+      )}
     </div>
   );
 }
-
-export const DatabaseListNodeView = memo(DatabaseListNodeViewImpl);

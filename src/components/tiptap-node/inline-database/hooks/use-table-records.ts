@@ -3,8 +3,7 @@ import type { DataSource, ID, Page, TableView } from "src/types";
 import type { UseDatabaseReturn } from "./use-database";
 import { recordMatchesFilters } from "../utils/apply-filters";
 import { sortRecords } from "../utils/apply-sorts";
-import { buildGroupedRows } from "../utils/group-rows";
-import { groupRecords } from "../utils/group-records";
+import { useTableLayout } from "./use-table-layout";
 
 export function useTableRecords({
   resolvedRecords,
@@ -71,15 +70,8 @@ export function useTableRecords({
     [activeView],
   );
 
-  const { rowSlots, headers } = useMemo(() => {
-    if (!groupProp)
-      return { rowSlots: sortedRecords.map((r) => r.id), headers: [] };
-    return buildGroupedRows(
-      groupRecords(sortedRecords, groupProp),
-      collapsedKeys,
-      (activeView as TableView)?.showEmptyGroups ?? false,
-    );
-  }, [sortedRecords, groupProp, collapsedKeys, activeView]);
+  const { tableLayout } = useTableLayout(sortedRecords, source ?? null, db);
+  const { rowSlots, headers } = tableLayout;
 
   return { sortedRecords, groupProp, collapsedKeys, rowSlots, headers };
 }

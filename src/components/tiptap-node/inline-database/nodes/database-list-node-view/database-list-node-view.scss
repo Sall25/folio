@@ -1,76 +1,37 @@
-.db-list {
-  width: 100%;
-  max-width: var(--db-editor-width);
-  min-width: 0;
 
-  &__body {
-    display: flex;
-    flex-direction: column;
-    overflow-x: auto;
-    overflow-y: hidden;
+// Below the record, keep the chain flattened so cells reach the record's subgrid.
+.db-list-grid .db-record,
+.db-list-grid .db-record__cells,
+.db-list-grid .react-renderer.node-databaseCell {
+  display: contents;
+}
+.db-record__cells > div {
+  grid-auto-flow: column;
+  white-space: inherit;
+  display: grid;
+  grid-auto-columns: max-content;    // each auto-created column hugs its content
+  grid-template-columns: minmax(200px, 1fr);  // first column (title) flexible
+  gap: 15px;
+ 
+  transition: background-color 0.15s ease;
+  .db-cell{
+    font-size: 13px;
   }
-}
-
-// The group IS the grid that owns the shared column tracks. Its
-// grid-template-columns is set inline (per list) from the visible-property
-// count: `minmax(220px, 1fr) repeat(N, max-content)`. Every row subgrids onto
-// these tracks, so property N lines up straight down the whole group — a grid
-// with invisible lines. column-gap here is the (invisible) gutter; subgrids
-// inherit it.
-.db-list-group {
-  display: grid;
-  align-content: start;
-  column-gap: 24px;
-  min-width: 0;
-}
-
-.db-list-group__header {
-  grid-column: 1 / -1; // span every column
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding-top: 10px;
-  border-bottom: 1px solid var(--tt-border-color);
-}
-
-.db-list-row {
-  grid-column: 1 / -1; // occupy one full row of the group grid
-  display: grid;
-  grid-template-columns: subgrid; // inherit the group's tracks + gutter
-  align-items: center;
-  height: 34px;
-  min-width: 0;
-  border-radius: var(--tt-radius-sm);
-  transition: background 80ms ease;
-  cursor: pointer;
-
-  &:hover {
-    background: var(--tt-gray-light-a-100);
+  &:hover{
+  
+    background-color: var(--tt-gray-light-a-50);
     .dark & {
       background-color: var(--tt-gray-dark-a-50);
     }
-    .tiptap-card-item-group{
-      background-color: transparent !important;
-    }
   }
+}
 
-  &__title {
-    grid-column: 1;
-    min-width: 0;
-    overflow: hidden;
+.db-list-grid__body{
+  .node-databaseRecord{
+    margin: 0;
   }
+}
 
-  &__props {
-    grid-column: 2 / -1; // spans every property column
-    display: grid;
-    grid-template-columns: subgrid; // each cell drops into its own column
-    align-items: center;
-    min-width: 0;
-
-    // Cells hug their column and truncate rather than push the grid wider.
-    > * {
-      min-width: 0;
-      overflow: hidden;
-    }
-  }
+.db-new-row{
+  padding-left: 0;
 }

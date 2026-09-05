@@ -19,6 +19,7 @@ import { useResolvedRecords } from "../hooks/use-resolved-records";
 import { useTableLayout } from "../hooks/use-table-layout";
 import { useRecordCreation } from "../hooks/use-record-creation";
 import { CardActionsProvider } from "../context";
+import { useListLayout } from "../hooks";
 
 // ── Provider ───────────────────────────────────────────────────────────────
 
@@ -113,6 +114,8 @@ export function DatabaseProvider({
   );
   const { tableLayout, groupProp } = useTableLayout(sortedRecords, source, db);
 
+  const { listLayout } = useListLayout(sortedRecords, source, db);
+
   const { onNewRecord, onNewRecordInGroup } = useRecordCreation({
     editor,
     attrs,
@@ -160,6 +163,7 @@ export function DatabaseProvider({
       onTitleChange,
       sortedRecords,
       tableLayout,
+      listLayout,
       onNewRecord,
       onNewRecordInGroup,
       visibleSelection,
@@ -183,6 +187,7 @@ export function DatabaseProvider({
       onTitleChange,
       sortedRecords,
       tableLayout,
+      listLayout,
       onNewRecord,
       onNewRecordInGroup,
       visibleSelection,

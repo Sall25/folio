@@ -159,3 +159,17 @@
   width: auto;
   min-width: 0;
 }
+
+
+.db-node-grid__body {
+  .node-databaseRecord {
+    margin: 0;
+  }
+}
+
+.db-node-grid{
+  .react-renderer.node-databaseRecord:not([style*="grid-row"]) {
+    display: none;
+    
+  }
+}

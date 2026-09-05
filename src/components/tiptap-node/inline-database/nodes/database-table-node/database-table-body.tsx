@@ -17,10 +17,10 @@ import { useDatabaseContext } from "./../database-context";
 import "./database-table-body.scss";
 import { useDataSource } from "../../hooks/use-data-source";
 import { useNewRecordSkeleton } from "./use-new-record-skeleton";
-import { TableGroupHeaders } from "./table-group-headers";
 import { TablePlaceholder } from "./table-placeholder";
 import { TableSkeletonRow } from "./table-skeleton-row";
 import "./database-table-body.scss";
+import { GroupHeaders } from "../group-headers";
 
 type PropertyType = PropertyConfig["type"];
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
@@ -154,11 +154,12 @@ export function DatabaseTableBody({
           gridTemplateColumns: trailingGrid,
         }}
       >
-        <TableGroupHeaders
+        <GroupHeaders
           headers={headers}
           collapsedKeys={collapsedKeys}
           onToggle={toggleGroup}
           onNewInGroup={onNewRecordInGroup}
+          classPrefix="db-group"
         />
 
         {/* Full interactive column header per (expanded) group, subgrid-aligned

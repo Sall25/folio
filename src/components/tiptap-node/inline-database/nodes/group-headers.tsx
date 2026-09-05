@@ -3,23 +3,29 @@ import { Plus } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Chevron } from "src/components/tiptap-ui-primitive/chevron";
 import { SpinnerRing } from "src/components/tiptap-ui-primitive/spinner-ring";
-import type { GroupHeaderSlot } from "../../utils/group-rows";
-import "./table-group-headers.scss";
+import type { GroupHeaderSlot } from "../utils/group-rows";
+import "./group-headers.scss";
 
-export function TableGroupHeaders({
+export function GroupHeaders({
   headers,
   collapsedKeys,
   onToggle,
   onNewInGroup,
+  classPrefix = "db-group",
 }: {
+  /** Union type — this component only reads base fields (key/label/row/newRow),
+   *  never columnsRow, so it works for both table and list slots. */
   headers: GroupHeaderSlot[];
   collapsedKeys: Set<string>;
   onToggle: (key: string) => void;
   onNewInGroup: (key: string) => void;
+  /** Class prefix so table and list can style their group chrome separately:
+   *  "db-group" (table) → .db-group-header / .db-group-new
+   *  "db-list-group" (list) → .db-list-group-header / .db-list-group-new */
+  classPrefix?: string;
 }) {
-  // The group mid-toggle: show a ring on its chevron until the collapse has
-  // actually applied AND painted, so the click feels instant whether the lag
-  // is the state round-trip or the grid reflow.
+  // Ring on the toggled group until the collapse applies AND paints, so the
+  // click feels instant whether the lag is the state update or the reflow.
   const [pendingKey, setPendingKey] = useState<string | null>(null);
 
   const handleToggle = (key: string) => {
@@ -27,8 +33,6 @@ export function TableGroupHeaders({
     onToggle(key);
   };
 
-  // Clear after the collapsed layout has painted (double rAF = after the next
-  // paint), so the ring spans the reflow, not just the state update.
   useEffect(() => {
     if (pendingKey === null) return;
     const raf = requestAnimationFrame(() =>
@@ -45,13 +49,16 @@ export function TableGroupHeaders({
         return (
           <div
             key={h.key}
-            className="db-group-header"
+            className={`${classPrefix}-header`}
             style={{ gridColumn: "1 / -1", gridRow: h.row, border: "none" }}
             contentEditable={false}
             onClick={() => handleToggle(h.key)}
           >
             {pending ? (
-              <SpinnerRing size={16} className="db-group-header__ring" />
+              <SpinnerRing
+                size={16}
+                className={`${classPrefix}-header__ring`}
+              />
             ) : (
               <Chevron
                 expanded={expanded}
@@ -75,7 +82,7 @@ export function TableGroupHeaders({
         return expanded ? (
           <div
             key={`new-${h.key}`}
-            className="db-group-new"
+            className={`${classPrefix}-new`}
             style={{ gridColumn: "1 / -1", gridRow: h.newRow }}
             contentEditable={false}
           >
