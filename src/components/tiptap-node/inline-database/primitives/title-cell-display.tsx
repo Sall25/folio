@@ -6,6 +6,7 @@ import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { CellEditorPopover } from "./cell-editor-popover";
 import "./title-cell-display.scss";
 import { Input } from "src/components/tiptap-ui-primitive/input";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 
 export interface TitleCellDisplayProps {
   value: string;
@@ -93,7 +94,7 @@ export function TitleCellDisplay({
         </div>
 
         {!readonly && (
-          <button
+          <Button
             type="button"
             className="db-cell-title__toggle"
             // Pencil (not editing) → focus to edit. Open-panel (editing) →
@@ -121,8 +122,12 @@ export function TitleCellDisplay({
               }
             }}
           >
-            {editing ? <PanelRight size={15} /> : <Pencil size={14} />}
-          </button>
+            {editing ? (
+              <PanelRight className="tiptap-button-icon" size={15} />
+            ) : (
+              <Pencil className="tiptap-button-icon" size={14} />
+            )}
+          </Button>
         )}
       </CardItemGroup>
     );

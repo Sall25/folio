@@ -194,7 +194,9 @@ export function DatabaseProvider({
 
   return (
     <DatabaseContext.Provider value={value}>
-      <CardActionsProvider>{children}</CardActionsProvider>
+      <CardActionsProvider>
+        <div className="db-container">{children}</div>
+      </CardActionsProvider>
     </DatabaseContext.Provider>
   );
 }

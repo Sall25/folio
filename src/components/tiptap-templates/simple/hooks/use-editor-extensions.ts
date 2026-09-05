@@ -29,6 +29,7 @@ import {
   NodeClearContents,
   NodeColor,
   NodeFit,
+  TopLevelClassExtension,
 } from "src/components/tiptap-extension";
 
 import { ImageUploadNode } from "src/components/tiptap-node/image-upload-node/image-upload-node-extension";
@@ -245,6 +246,7 @@ export function useEditorExtensions(
       Appendix,
       AppendixSummary,
       AppendixContent,
+      TopLevelClassExtension,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

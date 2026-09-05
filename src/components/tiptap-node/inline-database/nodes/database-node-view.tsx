@@ -22,7 +22,6 @@ import { DatabaseGalleryNodeView } from "./database-gallery-node-view";
 import { DatabaseListNodeView } from "./database-list-node-view/database-list-node-view";
 import { DatabaseCalendarNodeView } from "./database-calendar-node-view";
 import { DatabaseTimelineNodeView } from "./database-timeline-node-view";
-import { DatabaseLoadingSkeleton } from "../components/database-loading-skeleton";
 import { DatabaseTableBody } from "./database-table-node";
 import { useDatabaseColumnLayout } from "../hooks/use-database-column-layout";
 import { useDatabaseBridgePublish } from "../hooks/use-database-bridge-publish";
@@ -43,11 +42,17 @@ import {
   NewRowEditStateProvider,
 } from "./new-row-edit-provider";
 import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
-import { useActiveViewFromHash, useSyncViews } from "../hooks";
+import {
+  useActiveViewFromHash,
+  useDatabaseAlign,
+  useMeasureViewDims,
+  useSyncViews,
+} from "../hooks";
 import { ChipsRow } from "../components/chips-row";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { usePageViewState } from "src/components/tiptap-templates/simple/context/page-view-context";
-import { getColumnHint, setColumnHint } from "../utils/skeleton-hints";
+import { setColumnHint } from "../utils/skeleton-hints";
+import { DatabaseLoadingSkeletonWithDims } from "./database-loading-skeleton-with-dims";
 
 const EMPTY_SOURCE = { properties: [] };
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
@@ -128,6 +133,9 @@ export function DatabaseNodeView({
     if (openId) editor.commands.clearActiveCell();
   }, [editor, target?.pageId]);
 
+  // ── Database alignment
+  useDatabaseAlign();
+
   // ── View switching (skeleton while a new view type mounts) ────────────────
   const { switchingTo, dbWithSwitch } = useViewSwitch(db, attrs.activeViewId);
 
@@ -207,6 +215,12 @@ export function DatabaseNodeView({
     ready: !isLoading && !!source,
   });
 
+  useMeasureViewDims(
+    attrs.id,
+    activeView?.type ?? "table",
+    !isLoading && !!source,
+  );
+
   const { activePageId } = useActivePageState();
   const isOwnPage = activePageId != null && activePageId === dbPageId;
 
@@ -242,14 +256,13 @@ export function DatabaseNodeView({
   //             own default when we've never successfully loaded it before)
   const skeletonView = attrs.views.find((v) => v.id === attrs.activeViewId);
   const skeletonType = skeletonView?.type ?? activeView?.type ?? "table";
-  // Real count wins whenever we have it; the hint only fills the pre-source gap.
-  const skeletonColumns = source
-    ? visibleProperties.length || undefined
-    : (getColumnHint(attrs.sourceId) ?? undefined);
 
   if (isLoading || !source) {
     return (
-      <DatabaseLoadingSkeleton type={skeletonType} columns={skeletonColumns} />
+      <DatabaseLoadingSkeletonWithDims
+        databaseId={attrs.id}
+        type={skeletonType}
+      />
     );
   }
 
@@ -257,7 +270,13 @@ export function DatabaseNodeView({
   const chrome = (body: React.ReactNode) => (
     <NewRowEditActionsProvider value={actions}>
       <NewRowEditStateProvider value={state}>
-        <NodeViewWrapper className="db-node">
+        <NodeViewWrapper
+          className="db-node"
+          as="div"
+          data-type="database"
+          data-database-id={attrs.id}
+          contentEditable={false}
+        >
           <DatabaseProvider
             resolvedRecords={resolvedRecords}
             updateSourceMetaAsync={updateSourceMetaAsync}
@@ -312,9 +331,10 @@ export function DatabaseNodeView({
   if (switchingTo) {
     const target = attrs.views.find((v) => v.id === switchingTo);
     return chrome(
-      <DatabaseLoadingSkeleton
+      <DatabaseLoadingSkeletonWithDims
+        databaseId={attrs.id}
         type={target?.type ?? "table"}
-        columns={visibleProperties.length || skeletonColumns}
+        switching={true}
       />,
     );
   }

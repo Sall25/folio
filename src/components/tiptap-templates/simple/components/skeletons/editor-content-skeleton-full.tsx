@@ -12,7 +12,7 @@ import "./editor-content-skeleton-full.scss";
  */
 export function EditorContentSkeletonFull() {
   return (
-    <div className="editor-skeleton-full" role="presentation">
+    <div className="editor-skeleton-full top-level-block" role="presentation">
       <EditorContentSkeleton />
     </div>
   );

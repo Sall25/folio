@@ -205,13 +205,15 @@ const StableShell = React.memo(function StableShell() {
           style={
             {
               width: isMobile ? "100%" : `calc(100vw)`,
-              marginLeft: isMobile
-                ? 0
+              // Drive block indentation via vars — the wrapper no longer
+              // shifts as a whole (so the database can stay full-width).
+              "--block-margin-left": isMobile
+                ? "0px"
                 : activePage?.settings.width === "medium"
-                  ? 280
-                  : sidebarWidth / 2,
-              transition: "margin-left 0.15s ease, width 0.15s ease",
-              paddingLeft: isMobile ? 0 : paddingLeft,
+                  ? "280px"
+                  : `${sidebarWidth / 2}px`,
+              "--block-padding-left": isMobile ? "0px" : `${paddingLeft}px`,
+              "--sidebar-width": `${sidebarWidth}px`,
               "--x": `${translateX}px`,
             } as React.CSSProperties
           }

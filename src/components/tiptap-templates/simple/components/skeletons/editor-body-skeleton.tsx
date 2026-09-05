@@ -202,7 +202,7 @@ export const EditorBodySkeleton: React.FC<{
 
   return (
     <div
-      className={`simple-editor-content ebs-root ${hasThreads ? "has-threads" : ""}`}
+      className={`top-level-block ebs-root ${hasThreads ? "has-threads" : ""}`}
       data-size={size}
       data-text={text}
       data-collapsed={collapsed ? "true" : "false"}

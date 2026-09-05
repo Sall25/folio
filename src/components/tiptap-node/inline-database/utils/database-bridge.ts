@@ -13,6 +13,7 @@ import type {
   DatabaseView,
   ID,
   Page,
+  PageCover,
 } from "src/types";
 
 export interface DatabaseBridgeData {
@@ -21,6 +22,8 @@ export interface DatabaseBridgeData {
   view: DatabaseView | undefined;
   locked: boolean;
   templateId?: ID;
+  /** Template page cover, fetched ONCE per database as a fallback title icon. */
+  templateCover?: PageCover | null;
   recordsById: Map<ID, Page>;
   columnWidthByProp: Record<ID, number>;
   // Records after the active view's filters and sorts, in display order. Record

@@ -22,7 +22,6 @@ import { readStorage, writeStorage } from "src/lib/local-storage";
 
 import "./section.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import type { PageCategory } from "src/types";
 
 // ── menu close context ───────────────────────────────────────────────────────
 // Lets SectionMenuItem close the popover after a click without the consumer

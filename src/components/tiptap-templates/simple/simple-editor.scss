@@ -263,8 +263,24 @@ body,
  
 }
 
+.simple-editor{
+  overflow-x: visible;
+}
+
 .react-renderer{
   margin: 0;
+}
+
+.top-level-block {
+  transform: translateX(
+    calc(var(--block-margin-left, 0px) + var(--block-padding-left, 0px))
+  );
+  width: var(--db-editor-width);
+
+  // width: calc(
+  //   100% - var(--block-margin-left, 0px) - var(--block-padding-left, 0px)
+  // );
+  transition: transform 0.15s ease, width 0.15s ease;
 }
 
 
@@ -312,13 +328,13 @@ body,
   }
 
   &[data-size="medium"] {
-    width: 800px;
+    // width: 800px;
     // max-width: 800px;
     --db-editor-width: 800px;
   }
 
   &[data-size="full"] {
-     width: 1080px;
+    //  width: 1080px;
     // max-width: 1080px;
     --db-editor-width: 1080px;
   }
@@ -337,12 +353,12 @@ body,
   &[data-collapsed="true"] {
     &[data-size="medium"] {
      // max-width: 800px;
-     width: 800px;
+    // width: 800px;
       --db-editor-width: 800px;
     }
     &[data-size="full"] {
       --db-editor-width: min(1320px, 100%);
-      max-width: min(1320px, 100%);
+      //max-width: min(1320px, 100%);
     }
   }
 
@@ -385,13 +401,13 @@ z-index: 0;
 
 .simple-editor-content .tiptap.ProseMirror.simple-editor {
   flex: 1;
-  padding: 1.1rem 2rem 30vh;
+  padding: 0;
   padding-top: 0;
 }
 
 @media screen and (max-width: 480px) {
   .simple-editor-content .tiptap.ProseMirror.simple-editor {
-    padding: 1rem 1.5rem 30vh;
+    padding: 0;
     padding-top: 5px;
   }
 }

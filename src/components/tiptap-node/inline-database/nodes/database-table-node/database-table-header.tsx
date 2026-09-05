@@ -17,8 +17,8 @@ import {
   SortableContext,
 } from "@dnd-kit/sortable";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { PropertyHeader } from "../components/property-header";
-import { ResizableNodeProvider } from "../../figure-node";
+import { PropertyHeader } from "../../components/property-header";
+import { ResizableNodeProvider } from "../../../figure-node";
 import {
   type DatabaseProperty,
   type DatabaseView,
@@ -26,7 +26,7 @@ import {
 } from "src/types";
 import type { TableView } from "src/types";
 import "./database-table-header.scss";
-import { AddPropertyPopover } from "../components/add-property-popover";
+import { AddPropertyPopover } from "../../components/add-property-popover";
 
 type PropertyType = PropertyConfig["type"];
 

@@ -74,46 +74,6 @@ function deleteNode(editor: Editor | null): boolean {
   return true;
 }
 
-// function deleteNode(editor: Editor | null): boolean {
-//   if (!editor) return false;
-
-//   const { state, dispatch } = editor.view;
-//   const { selection } = state;
-
-//   // Walk up from anchor to find tableWrapper at any depth
-//   const { $anchor } = selection;
-//   for (let depth = $anchor.depth; depth >= 0; depth--) {
-//     const node = $anchor.node(depth);
-//     if (node.type.name === "tableWrapper") {
-//       const pos = $anchor.before(depth);
-//       dispatch(state.tr.delete(pos, pos + node.nodeSize));
-//       editor.view.focus();
-//       return true;
-//     }
-//   }
-
-//   // Case 2: any other NodeSelection
-//   if (selection instanceof NodeSelection) {
-//     console.log("case 2");
-//     const tr = state.tr.deleteSelection();
-//     dispatch(tr);
-//     editor.view.focus();
-//     return true;
-//   }
-
-//   // Case 3: Otherwise, delete the block/node the cursor is inside
-//   //const { $anchor } = selection;
-//   const pos = $anchor.before($anchor.depth); // start of parent block
-//   const node = $anchor.node($anchor.depth); // the parent node itself
-
-//   if (!node) return false;
-
-//   const tr = state.tr.delete(pos, pos + node.nodeSize);
-//   dispatch(tr);
-//   editor.view.focus();
-//   return true;
-// }
-
 interface DeleteNodeButtonProps extends Pick<
   ButtonProps,
   "tooltip" | "showTooltip"

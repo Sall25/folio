@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { NodeViewWrapper, NodeViewContent } from "@tiptap/react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { DatabaseCalculations } from "../../components/database-calculations";
-import { DatabaseTableHeader } from "./../database-table-header";
+import { DatabaseTableHeader } from "./database-table-header";
 import {
   DEFAULT_CONFIGS,
   type DatabaseProperty,

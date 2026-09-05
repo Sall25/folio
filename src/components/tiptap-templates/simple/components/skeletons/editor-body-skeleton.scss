@@ -147,6 +147,20 @@
 .ebs-toc > * {
   animation: ebs-pulse 1.4s ease-in-out infinite;
 }
+.ebs-root{
+   &[data-size="medium"] {
+    // width: 800px;
+    // max-width: 800px;
+    --db-editor-width: 800px;
+  }
+
+  &[data-size="full"] {
+    //  width: 1080px;
+    // max-width: 1080px;
+    --db-editor-width: 1080px;
+  }
+  width: var(--db-editor-width, 600px) !important;
+}
 
 @keyframes ebs-pulse {
   0%,

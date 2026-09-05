@@ -10,7 +10,7 @@ import "./editor-content-skeleton.scss";
 export const EditorContentSkeleton: React.FC = () => (
   <div className="es-content-col">
     {/* Add cover / Comment affordances */}
-    <div className="es-content-affordances">
+    <div className="es-content-affordances top-level-block">
       <Bone width={84} height={12} />
       <Bone width={74} height={12} />
     </div>
@@ -19,7 +19,7 @@ export const EditorContentSkeleton: React.FC = () => (
     <Bone width="52%" height={40} rounded className="es-title" />
 
     {/* Body — enough lines to fill the column height */}
-    <div className="es-content-body">
+    <div className="es-content-body top-level-block">
       <Bone width="100%" height={15} />
       <Bone width="97%" height={15} />
       <Bone width="90%" height={15} />

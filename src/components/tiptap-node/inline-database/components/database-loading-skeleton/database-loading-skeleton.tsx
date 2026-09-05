@@ -8,12 +8,14 @@ type DatabaseLoadingSkeletonProps = {
   type?: DatabaseView["type"];
   rows?: number;
   columns?: number;
+  switching?: boolean;
 };
 
 export function DatabaseLoadingSkeleton({
   type = "table",
   rows = 6,
-  columns = 4,
+  columns = 6,
+  switching = false,
 }: DatabaseLoadingSkeletonProps) {
   // Use a neutral fixed default width matching the real fallback (160px),
   // so the column geometry is close to what loads in.
@@ -152,29 +154,33 @@ export function DatabaseLoadingSkeleton({
   })();
 
   return (
-    <NodeViewWrapper className="db-node" contentEditable={false}>
+    <NodeViewWrapper className="db-container" contentEditable={false}>
       <div
         className="db-skeleton"
         aria-label="Loading database"
         aria-busy="true"
         aria-live="polite"
       >
-        {/* Toolbar (view tabs + add-view) — shared by every view type */}
-        <div className="db-skeleton__toolbar">
-          <Bone width={64} height={26} rounded />
-          <Bone width={48} height={26} rounded />
-          <Bone width={26} height={26} rounded />
-        </div>
+        {!switching && (
+          <>
+            {/* Toolbar (view tabs + add-view) — shared by every view type */}
+            <div className="db-skeleton__toolbar">
+              <Bone width={64} height={26} rounded />
+              <Bone width={48} height={26} rounded />
+              <Bone width={26} height={26} rounded />
+            </div>
 
-        {/* Title bar */}
-        <Bone
-          width="32%"
-          height={28}
-          rounded
-          style={{ margin: "12px 0 4px" }}
-        />
+            {/* Title bar */}
+            <Bone
+              width="32%"
+              height={28}
+              rounded
+              style={{ margin: "12px 0 4px" }}
+            />
+          </>
+        )}
 
-        {body}
+        <div>{body}</div>
       </div>
     </NodeViewWrapper>
   );
