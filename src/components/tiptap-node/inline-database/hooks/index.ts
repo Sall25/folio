@@ -5,3 +5,4 @@ export * from "./use-active-view-from-hash";
 export * from "./use-database-align";
 export * from "./use-view-skeleton-dims";
 export * from "./use-list-layout";
+export * from "./use-board-layout";

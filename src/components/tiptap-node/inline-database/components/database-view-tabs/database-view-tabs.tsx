@@ -188,8 +188,6 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
               onShowDatabaseTitle={() =>
                 updateAttributes?.({ ...attrs, hideTitle: false })
               }
-              open={menuOpen}
-              onOpenChange={setMenuOpen}
             />
           )}
         </>

@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useMemo } from "react";
-import { ChevronRight, Plus, Trash2 } from "lucide-react";
+import { Check, ChevronRight, GripVertical, Plus, Trash2 } from "lucide-react";
 import { v4 as uuid } from "uuid";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -22,35 +22,15 @@ import {
   PopoverPortal,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { ColorHighlightList } from "./color-highlight-list";
 import { TextareaAutosize } from "src/components/tiptap-ui-primitive/textarea-auto-size";
 import { MenuRow } from "../../../components/menu-row";
 import { Input } from "src/components/tiptap-ui-primitive/input";
-
-const TAG_TEXT_COLORS: Record<string, string> = {
-  "var(--tt-color-highlight-gray-contrast)":
-    "var(--tt-color-text-gray-contrast)",
-  "var(--tt-color-highlight-brown-contrast)":
-    "var(--tt-color-text-brown-contrast)",
-  "var(--tt-color-highlight-orange-contrast)":
-    "var(--tt-color-text-orange-contrast)",
-  "var(--tt-color-highlight-yellow-contrast)":
-    "var(--tt-color-text-yellow-contrast)",
-  "var(--tt-color-highlight-green-contrast)":
-    "var(--tt-color-text-green-contrast)",
-  "var(--tt-color-highlight-blue-contrast)":
-    "var(--tt-color-text-blue-contrast)",
-  "var(--tt-color-highlight-purple-contrast)":
-    "var(--tt-color-text-purple-contrast)",
-  "var(--tt-color-highlight-pink-contrast)":
-    "var(--tt-color-text-pink-contrast)",
-  "var(--tt-color-highlight-red-contrast)": "var(--tt-color-text-red-contrast)",
-};
+import { COLOR_OPTIONS } from "../../../components/board-column-menu/utils";
 
 function getTagStyle(colorValue: string): React.CSSProperties {
   return {
-    background: colorValue,
-    color: TAG_TEXT_COLORS[colorValue] ?? "var(--tt-color-text-gray)",
+    background: `var(--tt-color-highlight-${colorValue})`,
+    color: "var(--tt-text-primary)", //TAG_TEXT_COLORS[colorValue] ?? "var(--tt-color-text-gray)",
   };
 }
 
@@ -151,12 +131,12 @@ export function SelectOptionsEditor({
   };
 
   return (
-    <Card style={{ padding: 5, borderRadius: "var(--tt-radius-sm)" }}>
+    <Card style={{ padding: "5px 10px", borderRadius: "var(--tt-radius-sm)" }}>
       <CardItemGroup>
         <SortDropdown sort={sort} onSelect={(s) => setSort(s as SortType)} />
       </CardItemGroup>
 
-      <Separator orientation="horizontal" />
+      <Separator orientation="horizontal" style={{ height: 0.5 }} />
 
       {/* options label */}
       <CardItemGroup
@@ -167,12 +147,19 @@ export function SelectOptionsEditor({
           alignItems: "center",
         }}
       >
-        <span style={{ fontSize: 12, paddingLeft: 6 }}>Options</span>
+        <CardGroupLabel>Options</CardGroupLabel>
         <Spacer orientation="horizontal" />
-        <Button variant="ghost" onClick={handleClick} style={{ marginTop: 2 }}>
+        <Button
+          variant="ghost"
+          size="small"
+          onClick={handleClick}
+          style={{ marginTop: 5 }}
+        >
           <Plus className="tiptap-button-icon" />
         </Button>
       </CardItemGroup>
+
+      <Spacer orientation="vertical" size={5} />
 
       {/* new option input */}
       <CardItemGroup
@@ -227,28 +214,11 @@ export function SelectOptionsEditor({
                     }}
                     onClick={() => onEditOption(option)}
                   >
-                    {/* drag handle — only shown in manual sort */}
-                    {sort === "Manual" && (
-                      <span className="tiptap-button-icon" aria-hidden>
-                        <svg
-                          width="12"
-                          height="12"
-                          viewBox="0 0 12 12"
-                          fill="none"
-                        >
-                          <circle cx="4" cy="3" r="1" fill="currentColor" />
-                          <circle cx="4" cy="6" r="1" fill="currentColor" />
-                          <circle cx="4" cy="9" r="1" fill="currentColor" />
-                          <circle cx="8" cy="3" r="1" fill="currentColor" />
-                          <circle cx="8" cy="6" r="1" fill="currentColor" />
-                          <circle cx="8" cy="9" r="1" fill="currentColor" />
-                        </svg>
-                      </span>
-                    )}
+                    <GripVertical className="tiptap-button-icon" />
 
                     {/* tag */}
                     <span
-                      className="sel-opts__tag"
+                      className="sel-opts__tag tiptap-button-text"
                       style={getTagStyle(option.color)}
                     >
                       {option.label}
@@ -299,11 +269,43 @@ export function SelectOptionsEditor({
                         }}
                       >
                         <CardGroupLabel>Colors</CardGroupLabel>
-                        <ColorHighlightList
+                        {COLOR_OPTIONS.map((c) => (
+                          <Button
+                            key={c.id}
+                            variant="ghost"
+                            className="board-column-menu__item board-column-menu__color"
+                            data-active={option.color === c.id || undefined}
+                            onClick={() => {
+                              handleColorUpdate(option.id, c.id);
+                            }}
+                          >
+                            <span
+                              className="select-options-menu__swatch"
+                              data-default={c.id === "default" || undefined}
+                              style={
+                                c.id === "default"
+                                  ? undefined
+                                  : ({
+                                      "--swatch-color": `var(--tt-color-text-${c.id})`,
+                                    } as React.CSSProperties)
+                              }
+                            />
+                            <span className="tiptap-button-text">
+                              {c.label}
+                            </span>
+                            {option.color === c.id && (
+                              <Check
+                                className="select-options-menu__check"
+                                size={14}
+                              />
+                            )}
+                          </Button>
+                        ))}
+                        {/* <ColorHighlightList
                           onAction={(color) =>
                             handleColorUpdate(option.id, color)
                           }
-                        />
+                        /> */}
                       </CardBody>
                     </Card>
                   </PopoverContent>

@@ -19,6 +19,7 @@ export function BoardCardControls({
   editing,
   onEnableEdit,
   onOpenRecord,
+  color,
 }: {
   record: Page;
   onReposition?: () => void;
@@ -31,11 +32,15 @@ export function BoardCardControls({
   editing: boolean;
   onEnableEdit: () => void;
   onOpenRecord: () => void;
+  color?: string;
 }) {
   const [preventClose, setPreventClose] = useState(false);
   return (
     <div
       className="db-card-controls"
+      style={{
+        backgroundColor: `color-mix(in srgb, ${color} 10%, transparent)`,
+      }}
       contentEditable={false}
       onPointerDown={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}

@@ -44,6 +44,7 @@ import {
 import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import {
   useActiveViewFromHash,
+  useBoardLayout,
   useDatabaseAlign,
   useListLayout,
   useMeasureViewDims,
@@ -188,6 +189,7 @@ export function DatabaseNodeView({
   // cheaply since its view-type guard fails.
   const { tableLayout } = useTableLayout(sortedRecords, source ?? null, db);
   const { listLayout } = useListLayout(sortedRecords, source ?? null, db);
+  const { boardLayout } = useBoardLayout(sortedRecords, source ?? null, db);
 
   // Publish the ACTIVE view's rowSlots so record nodes position correctly in
   // whichever view is hosting them (table or list — both node-render records).
@@ -208,6 +210,7 @@ export function DatabaseNodeView({
     setCellValue: (recordId, propertyId, value) =>
       setCellValue(recordId, propertyId, value as never),
     templateCover: templatePage?.cover ?? null,
+    boardLayout,
   });
 
   // Seed record/cell nodes once at creation; keep cells matching properties.

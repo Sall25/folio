@@ -118,3 +118,14 @@
   display: flex;
   flex-direction: column;
 }
+
+.db-board-grid[data-card-size="small"] {
+  .db-board-card { padding: 8px; font-size: 13px; }
+}
+.db-board-grid[data-card-size="large"] {
+  .db-board-card { padding: 14px; font-size: 15px; }
+}
+
+.db-board-grid[data-card-size="small"] .db-board-card-cover { height: 90px; }
+.db-board-grid[data-card-size="medium"] .db-board-card-cover { height: 120px; }
+.db-board-grid[data-card-size="large"] .db-board-card-cover { height: 160px; }

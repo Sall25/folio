@@ -2,249 +2,144 @@
 
 @include pill.pill-tint-variants(".db-board-col");
 
-// Colored column: faint wash on the column, stronger header, cards raised above it.
-.db-board-col[data-colored="true"] {
-  color: var(--tt-text-color);                                   // kill inherited pill ink
-  border-radius: var(--tt-radius-lg) !important;
-  background: color-mix(in srgb, var(--col-ink) 8%, transparent) !important;
-  padding: 10px;
-    
-  .db-board-card__title{
-    padding: 0 !important;
+.db-board-grid {
+  --db-lane-tint: 8%;
+}
+
+.db-board-grid {
+  // display:contents chain so record nodes are direct grid items
+  .db-board-grid__body,
+  .db-board-grid__body > [data-node-view-content-react],
+  .react-renderer.node-databaseRecord {
+    display: contents;
   }
 
-  .db-board-col-header {
+  // Each card = a grid item at its (col, row). It's a real box, not contents.
+  .react-renderer.node-databaseRecord {
+    display: block !important; // override the table's display:grid
+  }
+  .db-record {
+    display: block;
+    background: var(--tt-gray-light-a-100);
+    .dark & { background: var(--tt-gray-dark-a-50); }
+    border-radius: var(--tt-radius-lg);
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+  // cells inside a card stack vertically (title, then props)
+  .db-record__cells,
+  .db-record__cells > div {
+    display: block;
+  }
+  .db-node-cell {
+    display: block;
+  }
+
+  .db-board-col[data-colored="true"] {
+    padding: 8px;
+    font-weight: 600;
+    border-radius: var(--tt-radius-lg);
     background: color-mix(in srgb, var(--col-ink) 14%, transparent);
     border-bottom: none !important;
-    // border-bottom-color: color-mix(in srgb, var(--col-ink) 30%, var(--tt-border-color));
-    // border-radius: var(--tt-radius-md) var(--tt-radius-md) 0 0;
-    // margin-bottom: 0;
   }
-
-  // Card sits LIGHTER/stronger than the column → reads as a raised surface (Notion).
-  .db-board-card {
-    background: color-mix(in srgb, var(--col-ink) 16%, var(--tt-bg-color));
-    border-radius: var(--tt-radius-lg) !important;
-    border: none !important;
-    border-color: none !important; //color-mix(in srgb, var(--col-ink) 24%, var(--tt-border-color)) !important;
-
-  }
-
-   .tiptap-card-item-group{
-      background: transparent !important;
-    }
-    .db-cell-editor{
-      &__display{
-       .db-title-cell{
-          margin: 0 !important;
-        }
-      }
-      
-    }
-}
-
-// Uncolored "No <prop>" column → neutral elevated card.
-.db-board-col:not([data-colored="true"]) .db-board-card {
-  background: var(--tt-gray-light-100);
-  .dark & { background: var(--tt-gray-dark-100); }
-}
-
-.node-database > [data-node-view-wrapper] {
-  // (intentionally empty — overflow lives on .db-board)
-}
-
-/* Fix the parent container */
-.tiptap-card-item-group {
-  min-width: 0 !important; /* Overrides the max-content that was forcing expansion */
-  max-width: 100%;
-}
-
-.db-board {
-  display: flex;
-  flex-direction: row;       
-  align-items: flex-start;    // each column sizes to its own height
-  gap: 12px;
-  overflow-x: auto !important;
-  width: 100%;          // fill the container...
-  max-width: 100%; 
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-  padding-bottom: 10px;
-
-  scrollbar-width: auto;
-
- 
-
-  .db-board-card {
-    padding: 5px 10px !important;
-    width: auto;
-    // min-width: fit-content;
-
-    .status-badge,
-    .select-badge{
-      margin: 0 !important;
-    }
-
-    &__props{
+    
+  .db-record--card,
+  .db-board-col{
+    margin: 5px 10px; 
+    padding: 0px 5px;
+    .db-board-card__props{
       padding: 0;
     }
+    background: transparent !important;
   }
 }
+
+.db-board-lane {
+  border-radius: var(--tt-radius-lg);
+  z-index: 0;           // behind cards
+  pointer-events: none; // clicks pass through to cards
+  align-self: stretch;
+  // background: color-mix(in srgb, var(--col-ink) 18%, transparent);
+}
+
+.db-board-grid .react-renderer.node-databaseRecord,
 .db-board-col {
-  display: flex;
-  flex-direction: column;     // header → cards → footer stack within a column
-  flex: 0 0 auto;             // honor inline colWidth, don't shrink
-  gap: 8px;
-  flex-shrink: 0;
-  // e.g. ~28% of the editor width, clamped so it never gets tiny or huge
-  width: clamp(200px, calc(var(--db-editor-width) * 0.24), 300px);
+  position: relative;
+  z-index: 1;           // cards + headers above the lane
 }
 
-
-// ── Column header ───────────────────────────────────────────────────────────
-.db-board-col-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--tt-text-color);
-  border-bottom: none;
-  margin-bottom: 4px;
+.db-board-grid{
+ .react-renderer.node-databaseRecord{
+  margin: 0;
+ }
+  .react-renderer.node-databaseRecord:not([style*="grid-area"]) {
+    display: none !important;
+     background-color: red;
+     height: 0px !important;
+  }
+  .react-renderer.node-databaseRecord:not([style*="grid-row"]) {
+    display: none;
+  }
+    .react-renderer.node-databaseRecord:not([style*="grid-col"]) {
+     display: none;
+  }
 }
 
-.db-board-col-header__dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.db-board-col-header__label {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 500;
-  line-height: 1.5;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  // neutral grey pill — same recipe your select/status "gray" pill uses
-  background: color-mix(in srgb, var(--tt-color-text-gray) 18%, transparent);
-  color: var(--tt-text-primary);
-}
-
-// ── Column footer ───────────────────────────────────────────────────────────
 .db-board-col-footer__add {
-  justify-content: flex-start;
-  width: 100%;
-  border-radius: var(--tt-radius-sm);
-  color: var(--tt-text-tertiary);
-}
-
-// ── Empty state ───────────────────────────────────────────────────────────
-.db-board-empty {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  color: var(--tt-text-tertiary);
-  font-size: 13px;
-  text-align: center;
-}
-
-.db-board-col__cards{
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.db-board-col[data-colored="true"] {
-  border-radius: var(--tt-radius-md);
-  // faint column wash — the option color at low alpha over the surface
-  background: color-mix(in srgb, var(--col-color) 8%, transparent);
-
-  .db-board-col-header {
-    // a touch stronger so the header reads as the group
-    background: color-mix(in srgb, var(--col-color) 14%, transparent);
-    border-bottom-color: color-mix(in srgb, var(--col-color) 30%, var(--tt-border-color));
-    border-radius: var(--tt-radius-md) var(--tt-radius-md) 0 0;
-    margin-bottom: 0;
-  }
-}
-
-.db-board-col-footer{
-  &__add{
-    border: 1px solid var(--tt-border-color) !important;
-  }
-}
-
-.db-board {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 12px;
-  overflow-x: auto;
+  gap: 8px;
   width: 100%;
-  max-width: 100%;
-  /* scrollbar styling — same as the table */
-  &::-webkit-scrollbar { height: 12px; }
-  &::-webkit-scrollbar-thumb {
-    background: var(--tt-scrollbar-thumb, rgba(255, 255, 255, 0.25));
-    border-radius: 8px;
-    border: 3px solid transparent;
-    background-clip: padding-box;
+  padding:8px 12px;
+  margin-top: 4px;
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-lg);   // match card radius
+  background: transparent;
+  color: var(--tt-text-secondary);
+  font-size: 14px;
+  font-weight: 400;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 80ms ease;
+
+  &:hover {
+    background: var(--tt-gray-light-a-100);
+    .dark & { background: var(--tt-gray-dark-a-50); }
   }
+
+  .tiptap-button-icon { width: 16px; height: 16px; flex-shrink: 0; }
 }
 
-.db-board-col {
-  /* Each column keeps its fixed width and does NOT shrink — this is what
-     makes the row overflow .db-board so it scrolls (instead of columns
-     squishing to fit). */
-  flex: 0 0 var(--db-board-col-width, 280px);
-  width: var(--db-board-col-width, 280px);
-  min-width: var(--db-board-col-width, 280px);   /* the key: prevents flex shrink */
+.db-board-col-footer__add{
+   margin: 0px 10px; 
+   width: 92%; 
+   height: fit-content;
+}
+.db-board-col-footer__add {
+  margin-top: -4px;   // tighten the gap to the last card
 }
 
-.db-board-col-header {
+.db-board-col-header{
   display: flex;
+  gap: 4px;
+  color: var(--tt-text-secondary);
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 4px 2px;
-
-  &__main {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
+  margin: 0 10px;
+   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  -webkit-font-smoothing: auto;
+  font-size: 14px;
+  z-index: 5;
+  .db-node-cell{
+    font-family: inherit;
   }
-
-  &__count {
+  .db-cell,
+  .db-cell-text__display{
+    font-size: 14px !important;
+     font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  -webkit-font-smoothing: auto;
+  }
+  &__count{
     font-size: 12px;
-    color: var(--tt-text-secondary);
+    font-weight: 500;
   }
-
-  &__controls {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    opacity: 0;
-    transition: opacity 0.12s ease;
-  }
-
-  // reveal controls on column hover (Notion-style)
-  .db-board-col:hover &__controls {
-    opacity: 1;
-  }
-}
-
-.tiptap-board-controls {
-  top: 2px !important;
 }

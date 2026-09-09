@@ -102,6 +102,10 @@
     background: var(--tt-scrollbar-thumb-hover, rgba(255, 255, 255, 0.4));
     background-clip: padding-box;
   }
+
+  .db-cell{
+    font-size: 14px !important;
+  }
 }
 
 /* The inner grid/content is the WIDE thing that overflows the viewport above. */

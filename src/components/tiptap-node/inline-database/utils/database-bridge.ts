@@ -40,6 +40,7 @@ export interface DatabaseBridgeData {
   // database NodeView. Not serialized; storage just holds the references.
   setCellValue: (recordId: ID, propertyId: ID, value: CellValue | null) => void;
   columnValuesByProp: Record<ID, CellValue[]>;
+  boardPlacement?: Record<string, { col: number; row: number; color?: string }>;
 }
 
 interface DatabaseEntry {

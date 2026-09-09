@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Ellipsis, LayoutGrid, EyeOff, Trash2, Check } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -10,21 +9,7 @@ import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import "./board-column-menu.scss";
 import type { ID } from "src/types";
-
-// The color list shown in the menu (matches the design — a curated subset).
-// "default" renders no fill (theme default). The rest map to --tt-color-text-*.
-const COLOR_OPTIONS: { id: string; label: string }[] = [
-  { id: "default", label: "Default" },
-  { id: "gray", label: "Gray" },
-  { id: "brown", label: "Brown" },
-  { id: "orange", label: "Orange" },
-  { id: "yellow", label: "Yellow" },
-  { id: "green", label: "Green" },
-  { id: "blue", label: "Blue" },
-  { id: "purple", label: "Purple" },
-  { id: "pink", label: "Pink" },
-  { id: "red", label: "Red" },
-];
+import { COLOR_OPTIONS } from "./utils";
 
 export function BoardColumnMenu({
   columnId,
@@ -35,7 +20,11 @@ export function BoardColumnMenu({
   onMoveToTrash,
   onSetColor,
   aggregationHidden,
+  open,
+  setOpen,
 }: {
+  open: boolean;
+  setOpen: (v: boolean) => void;
   columnId: ID;
   columnColor?: string | null;
   onEditGroups?: () => void;
@@ -45,8 +34,6 @@ export function BoardColumnMenu({
   onSetColor?: (columnId: ID, color: string) => void;
   aggregationHidden?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-
   if (!open) {
     return (
       <Button
@@ -69,7 +56,13 @@ export function BoardColumnMenu({
           <Ellipsis className="tiptap-button-icon" size={14} />
         </Button>
       </PopoverTrigger>
-      <PopoverContent side="right" align="center" sideOffset={6}>
+      <PopoverContent
+        side="right"
+        // align="center"
+        avoidCollisions
+        collisionPadding={8}
+        // sideOffset={6}
+      >
         <Card
           className="board-column-menu"
           style={{ padding: 4, minWidth: 200 }}

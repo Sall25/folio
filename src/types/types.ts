@@ -433,6 +433,8 @@ export interface BoardView extends BaseView {
   type: "board";
   groupByPropertyId: ID;
   showEmptyGroups: boolean;
+  cardSize: "small" | "medium" | "large";
+  coverFit: "cover" | "contain";
   cardPreview?: "none" | "cover" | "content";
   /** Record ids in user-arranged order. Applied after `sorts`; ids not present
    *  fall through in sorted order. Flat across columns — per-column order is

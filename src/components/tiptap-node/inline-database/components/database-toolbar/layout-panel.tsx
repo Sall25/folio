@@ -5,14 +5,7 @@ import type {
   OpenPageIn,
 } from "src/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import {
-  ChevronRight,
-  Image,
-  PanelRight,
-  Check,
-  SquareSquare,
-  Square,
-} from "lucide-react";
+import { PanelRight, Check, SquareSquare, Square } from "lucide-react";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import {
   Card,
@@ -21,11 +14,6 @@ import {
   CardHeader,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "src/components/tiptap-ui-primitive/popover";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { type UseDatabaseReturn } from "../../hooks";
 import { useCurrentEditor } from "@tiptap/react";
@@ -130,73 +118,6 @@ export function LayoutPanel({
         </GridRow>
       </Grid>
 
-      {/* Card preview — board view only */}
-      {view.type === "board" && (
-        <>
-          <CardItemGroup
-            className="w-full justify-start"
-            orientation="horizontal"
-          >
-            <Image size={14} className="tiptap-button-icon" />
-            <span className="tiptap-button-text">Card preview</span>
-            <Spacer orientation="horizontal" />
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" style={{ fontSize: 11 }}>
-                  <span className="tiptap-button-text">
-                    {(view as BoardView).cardPreview === "none"
-                      ? "None"
-                      : (view as BoardView).cardPreview === "cover"
-                        ? "Page cover"
-                        : "Page content"}
-                  </span>
-                  <ChevronRight className="tiptap-button-icon-sub" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                avoidCollisions
-                collisionPadding={8}
-                side="right"
-                align="start"
-              >
-                <Card className="p-2" style={{ minWidth: 140 }}>
-                  <CardItemGroup>
-                    {(
-                      [
-                        { value: "none", label: "None" },
-                        { value: "cover", label: "Page cover" },
-                        { value: "content", label: "Page content" },
-                      ] as const
-                    ).map(({ value, label }) => (
-                      <Button
-                        key={value}
-                        variant="ghost"
-                        style={{
-                          justifyContent: "flex-start",
-                          width: "100%",
-                          fontWeight:
-                            (view as BoardView).cardPreview === value
-                              ? 600
-                              : 400,
-                        }}
-                        onClick={() =>
-                          db.updateView(view.id, {
-                            cardPreview: value,
-                          } as Partial<BoardView>)
-                        }
-                      >
-                        <span className="tiptap-button-text">{label}</span>
-                      </Button>
-                    ))}
-                  </CardItemGroup>
-                </Card>
-              </PopoverContent>
-            </Popover>
-          </CardItemGroup>
-          <Separator orientation="horizontal" />
-        </>
-      )}
-
       <MenuRow
         label="Show database title"
         toggle
@@ -215,7 +136,7 @@ export function LayoutPanel({
         checked={wrapAllCols}
         onToggle={() => onToggleWrapAllCols?.()}
       />
-      {view.type === "gallery" && (
+      {(view.type === "gallery" || view.type === "board") && (
         <>
           <Separator orientation="horizontal" style={{ height: 0.5 }} />
           <NavigableMenuItem
@@ -257,7 +178,7 @@ export function LayoutPanel({
                   onClick={() =>
                     db.updateView(view.id, {
                       cardPreview: value,
-                    } as Partial<GalleryView>)
+                    } as Partial<GalleryView | BoardView>)
                   }
                 />
               ))}
@@ -266,9 +187,9 @@ export function LayoutPanel({
           <NavigableMenuItem
             label="Card size"
             sub={
-              (view as GalleryView).cardSize === "small"
+              (view as GalleryView | BoardView).cardSize === "small"
                 ? "Small"
-                : (view as GalleryView).cardSize === "medium"
+                : (view as GalleryView | BoardView).cardSize === "medium"
                   ? "Medium"
                   : "Large"
             }
@@ -297,7 +218,7 @@ export function LayoutPanel({
                   onClick={() =>
                     db.updateView(view.id, {
                       cardSize: value,
-                    } as Partial<GalleryView>)
+                    } as Partial<GalleryView | BoardView>)
                   }
                 />
               ))}
@@ -307,11 +228,11 @@ export function LayoutPanel({
           <MenuRow
             label="Fit image"
             toggle
-            checked={(view as GalleryView).coverFit == "contain"}
+            checked={(view as GalleryView | BoardView).coverFit == "contain"}
             onToggle={async () =>
               db.updateView(view.id, {
-                fitImage: !(view as GalleryView).coverFit,
-              } as Partial<GalleryView>)
+                fitImage: !(view as GalleryView | BoardView).coverFit,
+              } as Partial<GalleryView | BoardView>)
             }
           />
           <Separator orientation="horizontal" style={{ height: 0.5 }} />

@@ -15,6 +15,7 @@ import type {
 } from "src/types";
 import { usePublishDatabaseData } from "./use-database-bridge-data";
 import type { DatabaseBridgeData } from "../utils/database-bridge";
+import type { BoardLayout } from "./use-board-layout";
 
 interface Params {
   editor: Editor | null;
@@ -31,6 +32,7 @@ interface Params {
   /** Template page cover, fetched once by the database node view and passed in
    *  — the fallback title icon. No per-cell (or per-hook) fetch. */
   templateCover: PageCover | null;
+  boardLayout: BoardLayout;
 }
 
 export function useDatabaseBridgePublish({
@@ -46,6 +48,7 @@ export function useDatabaseBridgePublish({
   setCellValue,
   rowSlots,
   templateCover,
+  boardLayout,
 }: Params) {
   const recordsById = useMemo(
     () => new Map((hasSource ? resolvedRecords : []).map((r) => [r.id, r])),
@@ -111,6 +114,8 @@ export function useDatabaseBridgePublish({
         setCellValue(recordId, propertyId, value as never),
       columnValuesByProp:
         columnValuesByProp as DatabaseBridgeData["columnValuesByProp"],
+      boardPlacement:
+        activeView?.type === "board" ? boardLayout.placement : undefined,
     }),
     [
       attrs.sourceId,
@@ -125,6 +130,7 @@ export function useDatabaseBridgePublish({
       stickyByProp,
       columnValuesByProp,
       setCellValue,
+      boardLayout.placement,
     ],
   );
 
