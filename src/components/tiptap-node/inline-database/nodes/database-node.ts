@@ -149,7 +149,7 @@ export const DatabaseRecordNode = Node.create({
   content: "databaseCell*",
   isolating: true,
   selectable: true,
-  draggable: false,
+  draggable: true,
 
   addAttributes() {
     return {

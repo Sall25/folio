@@ -19,7 +19,7 @@ export function BoardCardControls({
   editing,
   onEnableEdit,
   onOpenRecord,
-  color,
+  // color,
 }: {
   record: Page;
   onReposition?: () => void;
@@ -38,9 +38,6 @@ export function BoardCardControls({
   return (
     <div
       className="db-card-controls"
-      style={{
-        backgroundColor: `color-mix(in srgb, ${color} 10%, transparent)`,
-      }}
       contentEditable={false}
       onPointerDown={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
@@ -63,7 +60,7 @@ export function BoardCardControls({
         onEnableEdit={onEnableEdit}
         onOpen={onOpenRecord}
       />
-      <Separator orientation="vertical" />
+      <Separator orientation="vertical" style={{ width: 0.5 }} />
       <CardActionsMenu
         record={record}
         open={menuOpen}

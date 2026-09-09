@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pencil, PanelRight } from "lucide-react";
 import { PageItemIcon } from "src/components/tiptap-templates/simple/page-item-icon";
 import type { PageCover } from "src/types";
@@ -21,6 +21,8 @@ export interface TitleCellDisplayProps {
   /** Open the page in peek/center — used by the inline variant's toggle button
    *  once the title is in edit mode. */
   onOpen?: () => void;
+  autoEdit?: boolean;
+  onEditingChange?: (editing: boolean) => void;
 }
 
 export function TitleCellDisplay({
@@ -31,6 +33,8 @@ export function TitleCellDisplay({
   showPageIcon = true,
   variant = "popover",
   onOpen,
+  autoEdit,
+  onEditingChange,
 }: TitleCellDisplayProps) {
   const [draft, setDraft] = useState(value);
 
@@ -50,10 +54,28 @@ export function TitleCellDisplay({
   const editRef = useRef<HTMLDivElement | null>(null);
   const [editing, setEditing] = useState(false);
 
+  useEffect(() => {
+    if (autoEdit && editRef.current) {
+      const element = editRef.current;
+
+      element.focus();
+
+      const selection = window.getSelection();
+      const range = document.createRange();
+
+      range.selectNodeContents(element);
+      range.collapse(false);
+
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    }
+  }, [autoEdit]);
+
   if (variant === "inline") {
     const commitInline = () => {
       const next = editRef.current?.textContent ?? "";
       if (next !== value) onChange(next);
+      onEditingChange?.(false);
       setEditing(false);
     };
 
@@ -76,7 +98,11 @@ export function TitleCellDisplay({
           suppressContentEditableWarning
           spellCheck={false}
           data-empty={!value || undefined}
-          onFocus={() => setEditing(true)}
+          onFocus={() => () => {
+            setEditing(true);
+            onEditingChange?.(true);
+          }}
+          onDragStart={(e)=>e.preventDefault()}
           onBlur={commitInline}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -93,7 +119,7 @@ export function TitleCellDisplay({
           {value}
         </div>
 
-        {!readonly && (
+        {/* {!readonly && (
           <Button
             type="button"
             className="db-cell-title__toggle"
@@ -128,7 +154,7 @@ export function TitleCellDisplay({
               <Pencil className="tiptap-button-icon" size={14} />
             )}
           </Button>
-        )}
+        )} */}
       </CardItemGroup>
     );
   }

@@ -171,7 +171,8 @@ function DatabaseToolbarImpl() {
     <CardItemGroup
       style={{
         marginBottom: 0,
-        position: "relative",
+        position: "sticky",
+        top: "0px",
         maxWidth: "var(--db-editor-width)",
       }}
       contentEditable={false}

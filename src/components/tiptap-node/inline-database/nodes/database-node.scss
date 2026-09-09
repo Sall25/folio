@@ -565,6 +565,7 @@ body.db-row-dragselect {
   min-width: 100%;
   transition: margin-left 0.15s ease;
   margin-right: 100px;
+  position: relative;
 }
 
 // .db-node:has(.db-gallery) {

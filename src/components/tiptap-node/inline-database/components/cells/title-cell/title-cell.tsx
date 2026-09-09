@@ -23,6 +23,8 @@ export function TitleCell({
   icon,
   config,
   view,
+  autoEdit,
+  onEditingChange,
 }: {
   value: string;
   recordId: ID;
@@ -34,6 +36,8 @@ export function TitleCell({
   icon?: PageCover | null;
   config?: Extract<PropertyConfig, { type: "title" }>;
   view?: DatabaseView;
+  autoEdit?: boolean;
+  onEditingChange?: (editing: boolean) => void;
 }) {
   const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const { setTarget } = usePageView();
@@ -87,6 +91,8 @@ export function TitleCell({
         showPageIcon={config?.showPageIcon ?? true}
         variant={variant} //"popover" //{variant}
         onOpen={openPage}
+        autoEdit={autoEdit}
+        onEditingChange={onEditingChange}
       />
     </div>
   );

@@ -25,7 +25,7 @@ export interface BoardColumn {
 
 export interface BoardLayout {
   columns: BoardColumn[];
-  placement: Record<string, { col: number; row: number }>;
+  placement: Record<string, { col: number; row: number; columnKey: string }>;
   groupProp: DatabaseProperty | undefined;
 }
 
@@ -129,7 +129,7 @@ export function useBoardLayout(
 
     const placement: Record<
       string,
-      { col: number; row: number; color?: string }
+      { col: number; row: number; color?: string; columnKey: string }
     > = {};
     columns.forEach((c) => {
       const recs = [...(byColumn.get(c.key) ?? [])].sort((a, b) => {
@@ -138,7 +138,12 @@ export function useBoardLayout(
         return ia - ib;
       });
       recs.forEach((rec, row) => {
-        placement[rec.id] = { col: c.col, row, color: c.color };
+        placement[rec.id] = {
+          col: c.col,
+          row,
+          color: c.color,
+          columnKey: c.key,
+        };
       });
     });
 

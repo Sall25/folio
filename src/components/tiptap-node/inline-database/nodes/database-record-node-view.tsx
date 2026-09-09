@@ -62,6 +62,9 @@ export default function DatabaseRecordNodeView({
         box.style.display = "";
         box.style.gridColumn = String(bp.col + 1);
         box.style.gridRow = String(bp.row + 2);
+
+        box.setAttribute("data-col-key", bp.columnKey);
+        box.setAttribute("draggable", "true");
         box.removeAttribute("data-filtered");
       } else {
         // Board view but not placed (filtered out / hidden group) → hide.
@@ -73,7 +76,9 @@ export default function DatabaseRecordNodeView({
       return;
     }
 
-    // table/list logic (unchanged)
+    // table/list (unchanged) — also clear board attrs
+    box.removeAttribute("data-col-key");
+    box.removeAttribute("draggable");
     const index = recordId
       ? (data?.sortedRecordIds?.indexOf(recordId) ?? -1)
       : -1;
@@ -89,6 +94,7 @@ export default function DatabaseRecordNodeView({
   }, [wrapperEl, isBoard, recordId, data]);
 
   // ── TABLE / LIST: node-rendered cells via NodeViewContent  ──
+
   const isTableView = data?.view?.type === "table";
   const [pointerOnCheckbox, setPointerOnCheckbox] = useState(false);
   const showCheckbox =
@@ -123,10 +129,10 @@ export default function DatabaseRecordNodeView({
         data-type="database-record"
         data-record-id={recordId ?? undefined}
         className="db-record db-record--card"
-        style={{ display: isFilteredOut ? "none" : undefined }}
+        style={{ display: isFilteredOut ? "none" : undefined, zIndex: 30 }}
         // The drag is handled by the board-drag PM extension; the node is
         // draggable at the PM level, not via dnd-kit.
-        draggable
+        draggable="true"
       >
         <BoardCardBody
           record={record}

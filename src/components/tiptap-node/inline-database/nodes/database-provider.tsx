@@ -1,6 +1,13 @@
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import type { Editor } from "@tiptap/core";
 import type {
+  BoardView,
   CellValue,
   DatabaseAttrs,
   DatabaseProperty,
@@ -20,6 +27,8 @@ import { useTableLayout } from "../hooks/use-table-layout";
 import { useRecordCreation } from "../hooks/use-record-creation";
 import { CardActionsProvider } from "../context";
 import { useListLayout } from "../hooks";
+import type { BoardDragStorage, BoardDropInfo } from "../extensions";
+import { groupValueForColumn } from "../utils/group-value-for-column";
 
 // ── Provider ───────────────────────────────────────────────────────────────
 
@@ -142,6 +151,47 @@ export function DatabaseProvider({
     },
     [db, activeView],
   );
+
+  // a stable onDrop via ref so it always sees current db/source:
+  useEffect(() => {
+    if (!editor) return;
+    const storage = editor.storage.boardDrag as BoardDragStorage;
+
+    // eslint-disable-next-line react-hooks/immutability
+    storage.isBoardActive = () => db.activeView?.type === "board";
+
+    storage.onDrop = ({
+      recordId,
+      targetColumnKey,
+      beforeRecordId,
+    }: BoardDropInfo) => {
+      const view = db.activeView as BoardView;
+      if (view?.type !== "board") return;
+      const groupProp = source?.properties.find(
+        (p) => p.id === view.groupByPropertyId,
+      );
+      if (!groupProp) return;
+
+      // 1) move column
+      setCellValue(
+        recordId,
+        groupProp.id,
+        groupValueForColumn(groupProp, targetColumnKey),
+      );
+
+      // 2) reorder
+      const order = [...(view.manualOrder ?? [])].filter(
+        (id) => id !== recordId,
+      );
+      if (beforeRecordId) {
+        const i = order.indexOf(beforeRecordId);
+        order.splice(i === -1 ? order.length : i, 0, recordId);
+      } else {
+        order.push(recordId);
+      }
+      db.updateView(view.id, { manualOrder: order } as Partial<BoardView>);
+    };
+  }, [editor, db, source, setCellValue]);
 
   // ── Memoize the value object (Technique 2) — the dominant win. ──
   // Was a raw {} rebuilt every render → every consumer (all views, toolbar,

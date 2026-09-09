@@ -41,8 +41,8 @@ function CellImpl({
   readonly,
   unwrapped,
   view,
-  // autoEdit,
-  //onEditingChange,
+  autoEdit,
+  onEditingChange,
   templateCover,
 }: {
   property: DatabaseProperty;
@@ -83,6 +83,8 @@ function CellImpl({
           icon={record.cover ?? templateCover ?? null}
           config={config}
           view={view}
+          autoEdit={autoEdit}
+          onEditingChange={onEditingChange}
         />
       );
 

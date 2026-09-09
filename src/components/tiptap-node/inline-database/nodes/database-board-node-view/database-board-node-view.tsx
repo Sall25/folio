@@ -1,8 +1,8 @@
 import { Plus } from "lucide-react";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import "./database-board-node-view.scss";
 import { useBoardLayout } from "../../hooks";
-import { NodeViewContent } from "@tiptap/react";
+import { NodeViewContent, useCurrentEditor } from "@tiptap/react";
 import { useDatabaseContext } from "../database-context";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Cell } from "../../components/cells/cell";
@@ -10,6 +10,7 @@ import { makePage } from "src/utils/make-page";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { BoardColumnMenu } from "../../components/board-column-menu";
 import type { BoardView, DatabaseProperty, ID } from "src/types";
+import type { BoardDragStorage } from "../../extensions";
 
 const syntheticRecord = makePage({ ownerId: null });
 
@@ -87,6 +88,69 @@ export function DatabaseBoardNodeViewImpl() {
     [db, activeView],
   );
 
+  const { editor } = useCurrentEditor();
+  const EDGE = 60;
+  const SPEED = 14;
+  const scrollRAF = useRef<number | null>(null);
+
+  const autoScroll = useCallback((x: number, y: number) => {
+    const scroller = document.querySelector<HTMLElement>(".db-node");
+    if (!scroller) return;
+
+    const r = scroller.getBoundingClientRect();
+    let dx = 0;
+    if (x < r.left + EDGE) dx = -SPEED;
+    else if (x > r.right - EDGE) dx = SPEED;
+
+    let dy = 0;
+    if (y < EDGE) dy = -SPEED;
+    else if (y > window.innerHeight - EDGE) dy = SPEED;
+    console.log({
+      x,
+      right: r.right,
+      dx,
+      scrollLeft: scroller.scrollLeft,
+      scrollWidth: scroller.scrollWidth,
+      clientWidth: scroller.clientWidth,
+    });
+
+    if (dx === 0 && dy === 0) {
+      if (scrollRAF.current) {
+        cancelAnimationFrame(scrollRAF.current);
+        scrollRAF.current = null;
+      }
+      return;
+    }
+    if (scrollRAF.current) return;
+
+    const step = () => {
+      scroller.scrollLeft += dx;
+      if (dy !== 0) window.scrollBy(0, dy);
+      scrollRAF.current = requestAnimationFrame(step);
+    };
+    scrollRAF.current = requestAnimationFrame(step);
+  }, []);
+
+  const stopAutoScroll = useCallback(() => {
+    if (scrollRAF.current) {
+      cancelAnimationFrame(scrollRAF.current);
+      scrollRAF.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    const scroller = document.querySelector<HTMLElement>(".db-node");
+    if (!scroller) return;
+    const onOver = (e: DragEvent) => {
+      const storage = editor?.storage.boardDrag as BoardDragStorage;
+      if (!storage?.isBoardActive() || !storage.draggingId) return;
+      e.preventDefault();
+      autoScroll(e.clientX, e.clientY);
+    };
+    scroller.addEventListener("dragover", onOver);
+    return () => scroller.removeEventListener("dragover", onOver);
+  }, [editor, autoScroll]);
+
   if (columns.length === 0) {
     return <div className="db-board-empty">No groups to display</div>;
   }
@@ -103,6 +167,23 @@ export function DatabaseBoardNodeViewImpl() {
         alignItems: "start",
         gap: "0 8px",
       }}
+      onDragOver={(event) => {
+        if (!editor) return;
+        const storage = editor.storage.boardDrag as BoardDragStorage;
+        if (!storage.isBoardActive() || !storage.draggingId) return;
+        event.preventDefault();
+        autoScroll(event.clientX, event.clientY);
+      }}
+      // onDragOver={(event) => {
+      //   if (!editor) return;
+      //   const storage = editor.storage.boardDrag as BoardDragStorage;
+      //   if (!storage.isBoardActive() || !storage.draggingId) return false;
+      //   event.preventDefault();
+      //   if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+      //   autoScroll(event.clientX, event.clientY);
+      // }}
+      onDrop={stopAutoScroll}
+      onDragEnd={stopAutoScroll}
     >
       {/* Column lane backgrounds — span the full column height, behind cards. */}
       {columns.map((c) =>
@@ -131,6 +212,7 @@ export function DatabaseBoardNodeViewImpl() {
       {columns.map((c) => (
         <div
           key={c.key}
+          data-col-key={c.key}
           className="db-board-col-header"
           style={{ gridColumn: c.col + 1, gridRow: 1 }}
           onMouseOver={() => {

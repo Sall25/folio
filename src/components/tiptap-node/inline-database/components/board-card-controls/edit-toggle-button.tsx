@@ -18,13 +18,11 @@ export function EditToggleButton({
       size="small"
       data-active-state={editing ? "on" : undefined}
       tooltip={editing ? "Open page" : "Edit title"}
-      onClick={(e) => {
+      onPointerDown={(e) => {
+        e.preventDefault(); // prevent the title from blurring
         e.stopPropagation();
-        if (editing) {
-          onOpen(); // editing mode → open the page
-        } else {
-          onEnableEdit(); // default → turn on title editing (focus title)
-        }
+        if (editing) onOpen();
+        else onEnableEdit();
       }}
     >
       {editing ? (

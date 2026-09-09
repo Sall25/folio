@@ -76,6 +76,7 @@ import {
 } from "src/components/tiptap-node/appendix-node";
 import { PageComment } from "src/components/tiptap-node/page-comment-node";
 import {
+  BoardDrag,
   DatabaseActiveCell,
   DatabaseOpenRecord,
 } from "src/components/tiptap-node/inline-database/extensions";
@@ -229,7 +230,7 @@ export function useEditorExtensions(
       DatabaseCellNode,
       DatabaseRecordNode,
       DatabaseNode,
-
+      BoardDrag,
       AudioExtension,
       YoutubeExtension,
       BookmarkNode,

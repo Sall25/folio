@@ -10,6 +10,8 @@ import { BoardCardContent } from "./board-card-content";
 import { Cell } from "../components/cells/cell";
 import { BoardCardControls } from "../components/board-card-controls/board-card-controls";
 import { useState } from "react";
+import { useCurrentEditor } from "@tiptap/react";
+import type { BoardDragStorage } from "../extensions";
 
 export function BoardCardBody({
   record,
@@ -39,16 +41,32 @@ export function BoardCardBody({
   const { setTarget } = usePageView();
   const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { editor } = useCurrentEditor();
 
   if (!recordId) return null;
 
   return (
     <div
       className="db-board-card"
+      data-record-id={recordId ?? undefined}
+      data-type="database-record"
+      draggable
       style={{
         backgroundColor: `color-mix(in srgb, ${color} 14%, transparent)`,
         borderRadius: "var(--tt-radius-lg)",
         padding: "3px 10px",
+      }}
+      onDragStart={(event) => {
+        if (!editor) return;
+        console.log("dragstart", editor.storage.boardDrag.isBoardActive());
+        const storage = editor.storage.boardDrag as BoardDragStorage;
+        if (!storage.isBoardActive()) return false;
+        // eslint-disable-next-line react-hooks/immutability
+        storage.draggingId = recordId;
+        if (storage.draggingId && event.dataTransfer) {
+          event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData("text/plain", storage.draggingId);
+        }
       }}
       onClick={() => setTarget({ pageId: recordId, view: "Center" })}
     >
