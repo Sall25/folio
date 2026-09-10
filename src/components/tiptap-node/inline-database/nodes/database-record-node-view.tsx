@@ -60,8 +60,20 @@ export default function DatabaseRecordNodeView({
     );
     if (!box) return;
 
+    const gp = recordId ? data?.galleryPlacement?.[recordId] : undefined;
+
     if (isGallery) {
-      box.style.setProperty("display", "block", "important");
+      if (gp) {
+        box.style.setProperty("display", "block", "important");
+        box.style.setProperty("order", String(gp.order), "important");
+        box.removeAttribute("data-filtered");
+      } else {
+        box.style.setProperty("display", "none", "important");
+        box.style.removeProperty("order");
+        box.setAttribute("data-filtered", "true");
+      }
+
+      //      box.style.setProperty("display", "block", "important");
       box.style.setProperty("background", "transparent", "important");
       box.style.setProperty("grid-row", "", "important");
       box.style.setProperty("grid-column", "", "important");

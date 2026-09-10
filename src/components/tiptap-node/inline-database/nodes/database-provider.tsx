@@ -13,6 +13,7 @@ import type {
   DatabaseProperty,
   DatabaseView,
   DataSource,
+  GalleryView,
   ID,
   Page,
   PropertyType,
@@ -27,7 +28,7 @@ import { useTableLayout } from "../hooks/use-table-layout";
 import { useRecordCreation } from "../hooks/use-record-creation";
 import { CardActionsProvider } from "../context";
 import { useListLayout } from "../hooks";
-import type { BoardDragStorage, BoardDropInfo } from "../extensions";
+import type { DragStorage, DropInfo } from "../extensions";
 import { groupValueForColumn } from "../utils/group-value-for-column";
 
 // ── Provider ───────────────────────────────────────────────────────────────
@@ -155,7 +156,7 @@ export function DatabaseProvider({
   // a stable onDrop via ref so it always sees current db/source:
   useEffect(() => {
     if (!editor) return;
-    const storage = editor.storage.boardDrag as BoardDragStorage;
+    const storage = editor.storage.boardDrag as DragStorage;
 
     // eslint-disable-next-line react-hooks/immutability
     storage.isBoardActive = () => db.activeView?.type === "board";
@@ -164,34 +165,68 @@ export function DatabaseProvider({
       recordId,
       targetColumnKey,
       beforeRecordId,
-    }: BoardDropInfo) => {
-      const view = db.activeView as BoardView;
-      if (view?.type !== "board") return;
+    }: DropInfo) => {
+      const view = db.activeView;
+
+      if (view.type === "gallery") {
+        const currentOrder =
+          view.manualOrder ?? sortedRecords.map((record) => record.id);
+
+        const order = currentOrder.filter((id) => id !== recordId);
+
+        if (beforeRecordId) {
+          const index = order.indexOf(beforeRecordId);
+          order.splice(index === -1 ? order.length : index, 0, recordId);
+        } else {
+          order.push(recordId);
+        }
+
+        db.updateView(view.id, {
+          manualOrder: order,
+        } as Partial<GalleryView>);
+
+        console.log("manulOrder should update");
+
+        return;
+      }
+
+      if (view.type !== "board") return;
+
       const groupProp = source?.properties.find(
         (p) => p.id === view.groupByPropertyId,
       );
+
       if (!groupProp) return;
 
-      // 1) move column
-      setCellValue(
-        recordId,
-        groupProp.id,
-        groupValueForColumn(groupProp, targetColumnKey),
-      );
+      // Move to another column.
+      if (targetColumnKey) {
+        setCellValue(
+          recordId,
+          groupProp.id,
+          groupValueForColumn(groupProp, targetColumnKey),
+        );
+      }
 
-      // 2) reorder
-      const order = [...(view.manualOrder ?? [])].filter(
-        (id) => id !== recordId,
-      );
+      // Reorder.
+      const currentOrder =
+        view.manualOrder ?? sortedRecords.map((record) => record.id);
+
+      const order = currentOrder.filter((id) => id !== recordId);
+
       if (beforeRecordId) {
-        const i = order.indexOf(beforeRecordId);
-        order.splice(i === -1 ? order.length : i, 0, recordId);
+        const index = order.indexOf(beforeRecordId);
+        order.splice(index === -1 ? order.length : index, 0, recordId);
       } else {
         order.push(recordId);
       }
-      db.updateView(view.id, { manualOrder: order } as Partial<BoardView>);
+
+      db.updateView(view.id, {
+        manualOrder: order,
+      } as Partial<BoardView>);
     };
-  }, [editor, db, source, setCellValue]);
+
+    storage.getActiveView = () => db.activeView.type;
+  }, [editor, db, source, setCellValue, sortedRecords]);
 
   // ── Memoize the value object (Technique 2) — the dominant win. ──
   // Was a raw {} rebuilt every render → every consumer (all views, toolbar,

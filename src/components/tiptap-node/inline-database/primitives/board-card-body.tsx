@@ -11,7 +11,7 @@ import { Cell } from "../components/cells/cell";
 import { BoardCardControls } from "../components/board-card-controls/board-card-controls";
 import { useState } from "react";
 import { useCurrentEditor } from "@tiptap/react";
-import type { BoardDragStorage } from "../extensions";
+import type { DragStorage } from "../extensions";
 import "./board-card-body.scss";
 
 export function BoardCardBody({
@@ -63,8 +63,8 @@ export function BoardCardBody({
       onDragStart={(event) => {
         if (!editor) return;
         console.log("dragstart", editor.storage.boardDrag.isBoardActive());
-        const storage = editor.storage.boardDrag as BoardDragStorage;
-        if (!storage.isBoardActive()) return false;
+        const storage = editor.storage.boardDrag as DragStorage;
+        // if (!storage.isBoardActive()) return false;
         // eslint-disable-next-line react-hooks/immutability
         storage.draggingId = recordId;
         if (storage.draggingId && event.dataTransfer) {

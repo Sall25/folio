@@ -10,7 +10,7 @@ import { makePage } from "src/utils/make-page";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { BoardColumnMenu } from "../../components/board-column-menu";
 import type { BoardView, DatabaseProperty, ID } from "src/types";
-import type { BoardDragStorage } from "../../extensions";
+import type { DragStorage } from "../../extensions";
 
 const syntheticRecord = makePage({ ownerId: null });
 
@@ -142,7 +142,7 @@ export function DatabaseBoardNodeViewImpl() {
     const scroller = document.querySelector<HTMLElement>(".db-node");
     if (!scroller) return;
     const onOver = (e: DragEvent) => {
-      const storage = editor?.storage.boardDrag as BoardDragStorage;
+      const storage = editor?.storage.boardDrag as DragStorage;
       if (!storage?.isBoardActive() || !storage.draggingId) return;
       e.preventDefault();
       autoScroll(e.clientX, e.clientY);
@@ -169,7 +169,7 @@ export function DatabaseBoardNodeViewImpl() {
       }}
       onDragOver={(event) => {
         if (!editor) return;
-        const storage = editor.storage.boardDrag as BoardDragStorage;
+        const storage = editor.storage.boardDrag as DragStorage;
         if (!storage.isBoardActive() || !storage.draggingId) return;
         event.preventDefault();
         autoScroll(event.clientX, event.clientY);

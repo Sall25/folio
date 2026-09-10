@@ -4,7 +4,7 @@
 // live outside this React tree and can't receive context — can access it, keyed
 // by the database node id.
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import type { Editor } from "@tiptap/react";
 import type {
   DatabaseAttrs,
@@ -15,7 +15,8 @@ import type {
 } from "src/types";
 import { usePublishDatabaseData } from "./use-database-bridge-data";
 import type { DatabaseBridgeData } from "../utils/database-bridge";
-import type { BoardLayout } from "./use-board-layout";
+import type { BoardLayout, BoardPlacement } from "./use-board-layout";
+import type { GalleryLayout, GalleryPlacement } from "./use-gallery-layout";
 
 interface Params {
   editor: Editor | null;
@@ -33,7 +34,11 @@ interface Params {
    *  — the fallback title icon. No per-cell (or per-hook) fetch. */
   templateCover: PageCover | null;
   boardLayout: BoardLayout;
+  galleryLayout: GalleryLayout;
 }
+
+const EMPTY_GALLERY_PLACEMENT: Record<string, GalleryPlacement> = {};
+const EMPTY_BOARD_PLACEMENT: BoardPlacement = {};
 
 export function useDatabaseBridgePublish({
   editor,
@@ -49,7 +54,15 @@ export function useDatabaseBridgePublish({
   rowSlots,
   templateCover,
   boardLayout,
+  galleryLayout,
 }: Params) {
+  const bridgeSetCellValue = useCallback(
+    (recordId: string, propertyId: string, value: unknown) => {
+      setCellValue(recordId, propertyId, value as never);
+    },
+    [setCellValue],
+  );
+
   const recordsById = useMemo(
     () => new Map((hasSource ? resolvedRecords : []).map((r) => [r.id, r])),
     [resolvedRecords, hasSource],
@@ -110,12 +123,17 @@ export function useDatabaseBridgePublish({
       columnWidthByProp,
       sortedRecordIds: rowSlots,
       stickyByProp,
-      setCellValue: (recordId, propertyId, value) =>
-        setCellValue(recordId, propertyId, value as never),
+      setCellValue: bridgeSetCellValue,
       columnValuesByProp:
         columnValuesByProp as DatabaseBridgeData["columnValuesByProp"],
       boardPlacement:
-        activeView?.type === "board" ? boardLayout.placement : undefined,
+        activeView?.type === "board"
+          ? boardLayout.placement
+          : EMPTY_BOARD_PLACEMENT,
+      galleryPlacement:
+        activeView?.type === "gallery"
+          ? galleryLayout.placement
+          : EMPTY_GALLERY_PLACEMENT,
     }),
     [
       attrs.sourceId,
@@ -129,8 +147,9 @@ export function useDatabaseBridgePublish({
       rowSlots,
       stickyByProp,
       columnValuesByProp,
-      setCellValue,
-      boardLayout.placement,
+      bridgeSetCellValue,
+      boardLayout,
+      galleryLayout,
     ],
   );
 

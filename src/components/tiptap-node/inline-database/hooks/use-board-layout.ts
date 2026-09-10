@@ -23,9 +23,14 @@ export interface BoardColumn {
   newRow: number;
 }
 
+export type BoardPlacement = Record<
+  string,
+  { col: number; row: number; columnKey: string }
+>;
+
 export interface BoardLayout {
   columns: BoardColumn[];
-  placement: Record<string, { col: number; row: number; columnKey: string }>;
+  placement: BoardPlacement;
   groupProp: DatabaseProperty | undefined;
 }
 

@@ -15,6 +15,7 @@ import type {
   Page,
   PageCover,
 } from "src/types";
+import type { GalleryPlacement } from "../hooks/use-gallery-layout";
 
 export interface DatabaseBridgeData {
   sourceId: ID | null;
@@ -44,6 +45,7 @@ export interface DatabaseBridgeData {
     string,
     { col: number; row: number; color?: string; columnKey: string }
   >;
+  galleryPlacement?: Record<string, GalleryPlacement>;
 }
 
 interface DatabaseEntry {

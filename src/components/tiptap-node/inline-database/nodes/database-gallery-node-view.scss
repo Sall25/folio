@@ -129,3 +129,16 @@
 .react-renderer.node-databaseRecord {
   display: contents;
 }
+
+.db-gallery-drop-indicator {
+  position: absolute;
+  width: 2px;
+  pointer-events: none;
+  display: none;
+  z-index: 100;
+
+  border-radius: 999px;
+  background: var(--tt-brand-color-400);
+
+  transform: translate3d(0, 0, 0);
+}
