@@ -7,6 +7,7 @@
        border: 0.3px solid color-mix(in srgb,  var(--tt-gray-dark-500) 12.5%, transparent); //var(--tt-border-color);
     }
   }
+
   &[data-view-type="gallery"]{
     background-color: var(--tt-gray-light-50);
     box-shadow: var(--tt-shadow-elevated-sm);

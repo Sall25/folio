@@ -97,22 +97,16 @@ export function DatabaseBoardNodeViewImpl() {
     const scroller = document.querySelector<HTMLElement>(".db-node");
     if (!scroller) return;
 
-    const r = scroller.getBoundingClientRect();
     let dx = 0;
-    if (x < r.left + EDGE) dx = -SPEED;
-    else if (x > r.right - EDGE) dx = SPEED;
 
+    if (x < EDGE) {
+      dx = -SPEED;
+    } else if (x > window.innerWidth - EDGE) {
+      dx = SPEED;
+    }
     let dy = 0;
     if (y < EDGE) dy = -SPEED;
     else if (y > window.innerHeight - EDGE) dy = SPEED;
-    console.log({
-      x,
-      right: r.right,
-      dx,
-      scrollLeft: scroller.scrollLeft,
-      scrollWidth: scroller.scrollWidth,
-      clientWidth: scroller.clientWidth,
-    });
 
     if (dx === 0 && dy === 0) {
       if (scrollRAF.current) {

@@ -156,6 +156,7 @@ export const DatabaseRecordNode = Node.create({
       recordId: { default: null },
       sourceId: { default: null },
       databaseId: { default: null },
+      hideHandle: { default: false },
     };
   },
 

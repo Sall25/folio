@@ -42,6 +42,7 @@ export function BoardCardBody({
   const { setTarget } = usePageView();
   const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const { editor } = useCurrentEditor();
 
   if (!recordId) return null;
@@ -52,6 +53,7 @@ export function BoardCardBody({
       data-record-id={recordId ?? undefined}
       data-type="database-record"
       data-view-type={view.type}
+      data-dragging={dragging}
       draggable
       style={{
         // backgroundColor: `color-mix(in srgb, ${color} 14%, transparent)`,
@@ -62,7 +64,7 @@ export function BoardCardBody({
       }}
       onDragStart={(event) => {
         if (!editor) return;
-        console.log("dragstart", editor.storage.boardDrag.isBoardActive());
+        setDragging(true);
         const storage = editor.storage.boardDrag as DragStorage;
         // if (!storage.isBoardActive()) return false;
         // eslint-disable-next-line react-hooks/immutability
@@ -72,6 +74,7 @@ export function BoardCardBody({
           event.dataTransfer.setData("text/plain", storage.draggingId);
         }
       }}
+      onDrop={() => setDragging(false)}
       onClick={() => setTarget({ pageId: recordId, view: "Center" })}
     >
       {cardPreview === "cover" && (

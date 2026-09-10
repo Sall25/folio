@@ -92,6 +92,7 @@ const nestedOptions = {
 export function DragHandle({ editor }: { editor: Editor | null }) {
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState("paragraph");
+  const [hideHandle, setHideHandle] = useState(false);
   const isDraggingRef = useRef(false);
   const targetRef = useRef(target);
   const posRef = useRef(-1);
@@ -114,7 +115,6 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
   useEffect(() => () => recordSelection.setHovered(null), []);
 
   const onAction = useCallback(() => {
-    console.log("onAction fired");
     setOpen(false);
     editor?.commands.unlockDragHandle();
   }, [editor]);
@@ -167,7 +167,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
     <TiptapDragHandle
       className={`drag-handle ${isColumnResizing ? "hide" : "show"} ${
         target === "Record" ? "is-record" : ""
-      }`}
+      } ${hideHandle ? "hide" : ""}`}
       editor={editor}
       computePositionConfig={{
         placement: "left-start",
@@ -180,6 +180,12 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
         }
 
         const newTarget = NODE_LABELS[node.type.name] ?? "paragraph";
+
+        if (newTarget === "Record") {
+          const hideHandle = node.attrs.hideHandle as boolean;
+          console.log("HIDE HANDLE", hideHandle);
+          setHideHandle(hideHandle);
+        }
 
         // Publish which database record the handle is currently anchored to.
         // The handle already resolves nested-node ambiguity via nestedOptions,

@@ -67,8 +67,8 @@ export const BoardDrag = Extension.create<unknown, DragStorage>({
                 const grid = target.closest<HTMLElement>(".db-board-grid");
 
                 if (!grid) {
-                  storage.draggingId = null;
-                  return false;
+                  event.preventDefault();
+                  return true;
                 }
 
                 event.preventDefault();
@@ -126,10 +126,9 @@ export const BoardDrag = Extension.create<unknown, DragStorage>({
 
                 // The drag is outside every gallery.
                 if (!gallery) {
-                  storage.draggingId = null;
-                  return false;
+                  event.preventDefault();
+                  return true;
                 }
-
                 // IMPORTANT:
                 // We own this drop. ProseMirror must NOT process it.
                 event.preventDefault();
@@ -148,8 +147,6 @@ export const BoardDrag = Extension.create<unknown, DragStorage>({
 
                 storage.draggingId = null;
 
-                console.log("return true");
-
                 return true;
               }
 
@@ -157,30 +154,30 @@ export const BoardDrag = Extension.create<unknown, DragStorage>({
               return false;
             },
             dragover(_view, event) {
-              const storage = ext.storage as DragStorage;
-              const activeView = storage.getActiveView();
+              // const storage = ext.storage as DragStorage;
+              // const activeView = storage.getActiveView();
 
-              if (activeView !== "gallery" || !storage.draggingId) {
-                return false;
-              }
+              // if (activeView !== "gallery" || !storage.draggingId) {
+              //   return false;
+              // }
 
-              const galleries =
-                document.querySelectorAll<HTMLElement>(".db-board-grid");
+              // const galleries =
+              //   document.querySelectorAll<HTMLElement>(".db-board-grid");
 
-              const gallery = Array.from(galleries).find((candidate) => {
-                const rect = candidate.getBoundingClientRect();
+              // const gallery = Array.from(galleries).find((candidate) => {
+              //   const rect = candidate.getBoundingClientRect();
 
-                return (
-                  event.clientX >= rect.left &&
-                  event.clientX <= rect.right &&
-                  event.clientY >= rect.top &&
-                  event.clientY <= rect.bottom
-                );
-              });
+              //   return (
+              //     event.clientX >= rect.left &&
+              //     event.clientX <= rect.right &&
+              //     event.clientY >= rect.top &&
+              //     event.clientY <= rect.bottom
+              //   );
+              // });
 
-              if (!gallery) {
-                return false;
-              }
+              // if (!gallery) {
+              //   return false;
+              // }
 
               // IMPORTANT:
               // This prevents ProseMirror's dropcursor/default drag handling
