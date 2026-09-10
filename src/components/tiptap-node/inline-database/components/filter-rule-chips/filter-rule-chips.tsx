@@ -17,8 +17,11 @@ import { newId } from "src/lib/id";
 import { makeFilterRule } from "./utils";
 import { AddFilterButton } from "../add-filter-button";
 
+const EMPTY_PROPERTIES: DatabaseProperty[] = [];
+
 export function FilterRuleChips() {
-  const { db, attrs, visibleProperties: properties } = useDatabaseContext();
+  const { db, attrs, source } = useDatabaseContext();
+  const properties = source?.properties ?? EMPTY_PROPERTIES;
   const activeView = db.activeView;
   const locked = !!attrs.locked;
   const filters = (activeView?.filters ?? []) as FilterGroup[];
@@ -106,8 +109,11 @@ function FilterChip({
   }
 
   const rule = rules[0];
+  console.log("properties", properties);
+  console.log("rule", rule);
   const property = properties.find((p) => p.id === rule?.propertyId);
-  if (!rule || !property) return null;
+
+  if (!property) return null;
 
   return (
     <Popover>

@@ -12,6 +12,7 @@
   grid-auto-columns: max-content;    // each auto-created column hugs its content
   grid-template-columns: minmax(200px, 1fr);  // first column (title) flexible
   gap: 15px;
+  width: var(--db-editor-width);
  
   transition: background-color 0.15s ease;
   .db-cell{

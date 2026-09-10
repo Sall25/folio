@@ -71,7 +71,7 @@ function makeFilterRule(property: DatabaseProperty): FilterRule {
         value: [""],
         labels: ["Any"],
       };
-    case "status":
+    case "status": {
       return {
         id: nanoid(),
         propertyId: property.id,
@@ -80,6 +80,7 @@ function makeFilterRule(property: DatabaseProperty): FilterRule {
         value: [""],
         labels: ["Any"],
       };
+    }
     case "relation":
       return {
         id: nanoid(),
