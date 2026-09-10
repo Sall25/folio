@@ -250,7 +250,8 @@ export function DatabaseProvider({
   return (
     <DatabaseContext.Provider value={value}>
       <CardActionsProvider>
-        <div className="db-container">{children}</div>
+        {children}
+        {/* <div className="db-container">{children}</div> */}
       </CardActionsProvider>
     </DatabaseContext.Provider>
   );

@@ -100,15 +100,21 @@
 
 .db-new-card--gallery {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 120px;            // match your gallery card height
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 auto;
   border: 1px solid var(--tt-border-color);
+  min-height: 50px;
   border-radius: var(--tt-radius-lg);   // gallery cards use radius-lg
   background: transparent;
   color: var(--tt-text-secondary);
   cursor: pointer;
   transition: background 80ms ease;
+  .tiptap-button-text{
+    flex:none !important;
+    min-width: 100px !important;
+    width: 100px !important;
+  }
 
   &:hover {
     background: var(--tt-gray-light-a-100);
@@ -116,4 +122,10 @@
       background: var(--tt-gray-dark-a-50);
     }
   }
+}
+
+.db-board-grid__body,
+.db-board-grid__body > [data-node-view-content-react],
+.react-renderer.node-databaseRecord {
+  display: contents;
 }

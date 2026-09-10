@@ -174,14 +174,6 @@ export function DatabaseBoardNodeViewImpl() {
         event.preventDefault();
         autoScroll(event.clientX, event.clientY);
       }}
-      // onDragOver={(event) => {
-      //   if (!editor) return;
-      //   const storage = editor.storage.boardDrag as BoardDragStorage;
-      //   if (!storage.isBoardActive() || !storage.draggingId) return false;
-      //   event.preventDefault();
-      //   if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-      //   autoScroll(event.clientX, event.clientY);
-      // }}
       onDrop={stopAutoScroll}
       onDragEnd={stopAutoScroll}
     >

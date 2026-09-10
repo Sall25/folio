@@ -12,6 +12,7 @@ import { BoardCardControls } from "../components/board-card-controls/board-card-
 import { useState } from "react";
 import { useCurrentEditor } from "@tiptap/react";
 import type { BoardDragStorage } from "../extensions";
+import "./board-card-body.scss";
 
 export function BoardCardBody({
   record,
@@ -50,11 +51,14 @@ export function BoardCardBody({
       className="db-board-card"
       data-record-id={recordId ?? undefined}
       data-type="database-record"
+      data-view-type={view.type}
       draggable
       style={{
-        backgroundColor: `color-mix(in srgb, ${color} 14%, transparent)`,
+        // backgroundColor: `color-mix(in srgb, ${color} 14%, transparent)`,
         borderRadius: "var(--tt-radius-lg)",
-        padding: "3px 10px",
+        padding: 0,
+        margin: view.type === "gallery" ? "0px !important" : undefined,
+        height: view.type === "board" ? "fit-content" : "100%",
       }}
       onDragStart={(event) => {
         if (!editor) return;
@@ -71,7 +75,18 @@ export function BoardCardBody({
       onClick={() => setTarget({ pageId: recordId, view: "Center" })}
     >
       {cardPreview === "cover" && (
-        <BoardCardCover page={record} recordId={recordId} height={120} />
+        <>
+          <BoardCardCover page={record} recordId={recordId} height={120} />
+          <BoardCardControls
+            record={record}
+            onOpenRecord={() => setTarget({ pageId: recordId, view: "Center" })}
+            editing={editing}
+            onEnableEdit={() => setEditing(true)}
+            menuOpen={menuOpen}
+            onMenuOpenChange={setMenuOpen}
+            color={color}
+          />
+        </>
       )}
       {cardPreview === "content" && <BoardCardContent page={record} />}
       {titleProp && (
@@ -91,15 +106,19 @@ export function BoardCardBody({
             autoEdit={editing}
           />
 
-          <BoardCardControls
-            record={record}
-            onOpenRecord={() => setTarget({ pageId: recordId, view: "Center" })}
-            editing={editing}
-            onEnableEdit={() => setEditing(true)}
-            menuOpen={menuOpen}
-            onMenuOpenChange={setMenuOpen}
-            color={color}
-          />
+          {cardPreview !== "cover" && (
+            <BoardCardControls
+              record={record}
+              onOpenRecord={() =>
+                setTarget({ pageId: recordId, view: "Center" })
+              }
+              editing={editing}
+              onEnableEdit={() => setEditing(true)}
+              menuOpen={menuOpen}
+              onMenuOpenChange={setMenuOpen}
+              color={color}
+            />
+          )}
         </div>
       )}
       <div

@@ -26,7 +26,7 @@ export function getColumnDefs(prop: DatabaseProperty | undefined): ColumnDef[] {
         id: i.id,
         label: i.name,
         color: i.color,
-        value: g.id,
+        value: i.id, //g.id,
       })),
     );
   }

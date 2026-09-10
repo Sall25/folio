@@ -307,31 +307,35 @@ export function DatabaseNodeView({
             visibleProperties={visibleProperties}
           >
             <CardItemGroup>
-              {dbPage?.cover?.coverImage && (
-                <div className="db-cover">
-                  <img
-                    src={dbPage.cover.coverImage}
-                    alt=""
-                    className="db-cover__img"
-                  />
+              <CardItemGroup className="top-level-block">
+                {dbPage?.cover?.coverImage && (
+                  <div className="db-cover">
+                    <img
+                      src={dbPage.cover.coverImage}
+                      alt=""
+                      className="db-cover__img"
+                    />
+                  </div>
+                )}
+                {attrs.views.length > 1 && !isOwnPage && <DatabaseTitleBar />}
+              </CardItemGroup>
+              <CardItemGroup className="db-container">
+                <div
+                  style={{
+                    maxWidth: "var(--db-editor-width)",
+                    paddingRight: 20,
+                    position: "relative",
+                  }}
+                >
+                  <DatabaseToolbar />
+                  <ChipsRow />
+
+                  {attrs.id && <SelectionToolbar />}
                 </div>
-              )}
-              {attrs.views.length > 1 && !isOwnPage && <DatabaseTitleBar />}
-              <div
-                style={{
-                  maxWidth: "var(--db-editor-width)",
-                  paddingRight: 20,
-                  position: "relative",
-                }}
-              >
-                <DatabaseToolbar />
-                <ChipsRow />
+                <Spacer orientation="vertical" size={5} />
 
-                {attrs.id && <SelectionToolbar />}
-              </div>
-              <Spacer orientation="vertical" size={5} />
-
-              {body}
+                {body}
+              </CardItemGroup>
             </CardItemGroup>
           </DatabaseProvider>
         </NodeViewWrapper>

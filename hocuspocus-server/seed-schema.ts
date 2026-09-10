@@ -190,6 +190,21 @@ const Column = Node.create({
   addAttributes: () => attrs(["id", "width"]),
 });
 
+// ── Page comment ───────────────────────────────────────────────────────────────
+const PageComment = Node.create({
+  name: "pageComment",
+  group: "block",
+  atom: true,
+  selectable: false,
+  draggable: false,
+
+  addAttributes() {
+    return {
+      pageId: { default: null },
+    };
+  },
+});
+
 // ── Tables ────────────────────────────────────────────────────────────────
 // tableWrapper wraps table per the app's table-node structure.
 const TableWrapper = Node.create({
@@ -305,4 +320,5 @@ export const seedExtensions = [
   Highlight,
   Link,
   TextStyle,
+  PageComment,
 ];

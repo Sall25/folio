@@ -33,11 +33,15 @@ export default function DatabaseRecordNodeView({
   const [wrapperEl, setWrapperEl] = useState<HTMLElement | null>(null);
 
   const isBoard = data?.view?.type === "board";
+  const isGallery = data?.view?.type === "gallery";
   const record = recordId ? (data?.recordsById.get(recordId) ?? null) : null;
 
   // ── Grid placement (board = 2D via boardPlacement; else 1D via rowSlots) ────
   const { isFilteredOut, boardPlace } = useMemo(() => {
     if (!data || !recordId) {
+      return { isFilteredOut: false, boardPlace: undefined, order: undefined };
+    }
+    if (isGallery) {
       return { isFilteredOut: false, boardPlace: undefined, order: undefined };
     }
     const bp = data.boardPlacement?.[recordId];
@@ -48,13 +52,24 @@ export default function DatabaseRecordNodeView({
       boardPlace: undefined,
       order: index === -1 ? undefined : index,
     };
-  }, [data, recordId]);
+  }, [data, recordId, isGallery]);
 
   useLayoutEffect(() => {
     const box = wrapperEl?.closest<HTMLElement>(
       ".react-renderer.node-databaseRecord",
     );
     if (!box) return;
+
+    if (isGallery) {
+      box.style.setProperty("display", "block", "important");
+      box.style.setProperty("background", "transparent", "important");
+      box.style.setProperty("grid-row", "", "important");
+      box.style.setProperty("grid-column", "", "important");
+      box.style.setProperty("min-height", "fit-content", "important");
+      box.style.setProperty("height", "100%", "important");
+      box.style.setProperty("margin", "0px", "important");
+      return;
+    }
 
     if (isBoard) {
       const bp = recordId ? data?.boardPlacement?.[recordId] : undefined;
@@ -91,7 +106,7 @@ export default function DatabaseRecordNodeView({
       box.style.gridRow = String(index + 1);
       box.style.gridColumn = "";
     }
-  }, [wrapperEl, isBoard, recordId, data]);
+  }, [wrapperEl, isBoard, isGallery, recordId, data]);
 
   // ── TABLE / LIST: node-rendered cells via NodeViewContent  ──
 
@@ -105,8 +120,8 @@ export default function DatabaseRecordNodeView({
     (isHovered || isSelected || pointerOnCheckbox);
   const anchor = useRowAnchor(wrapperEl, showCheckbox);
 
-  // ── BOARD: render as a card (React cells, no NodeViewContent) ──────────────
-  if (isBoard && record && data) {
+  // ── BOARD / Gallery: render as a card (React cells, no NodeViewContent) ──────────────
+  if ((isBoard || isGallery) && record && data) {
     const properties = data.properties;
     const view = data.view!;
     const cardPreview =
@@ -129,7 +144,13 @@ export default function DatabaseRecordNodeView({
         data-type="database-record"
         data-record-id={recordId ?? undefined}
         className="db-record db-record--card"
-        style={{ display: isFilteredOut ? "none" : undefined, zIndex: 30 }}
+        style={{
+          display: isFilteredOut ? "none" : undefined,
+          zIndex: 30,
+          height: view.type === "gallery" ? "100%" : undefined,
+          margin: view.type === "gallery" ? "0px" : undefined,
+          padding: view.type === "gallery" ? "0px" : undefined,
+        }}
         // The drag is handled by the board-drag PM extension; the node is
         // draggable at the PM level, not via dnd-kit.
         draggable="true"
