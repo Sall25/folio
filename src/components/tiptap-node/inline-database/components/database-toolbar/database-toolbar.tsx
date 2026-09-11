@@ -26,6 +26,7 @@ import { SearchButton } from "./search-button";
 import { NewRecordButton } from "./new-record-button";
 import { CollapseToggle } from "./collapse-toggle";
 import { useActivePageActions } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { NoDatePanel } from "../no-date-panel";
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 function getActiveView(attrs: DatabaseAttrs): DatabaseView | undefined {
@@ -210,6 +211,7 @@ function DatabaseToolbarImpl() {
                 {/* View-config controls — hidden when locked. */}
                 {!locked && (
                   <>
+                    <NoDatePanel />
                     <SearchButton db={db} />
                     {/* <Spacer orientation="horizontal" size={1} /> */}
 

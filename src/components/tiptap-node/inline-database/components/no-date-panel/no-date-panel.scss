@@ -1,0 +1,134 @@
+.db-no-date-trigger {
+  font-size: 13px;
+  color: var(--tt-gray-light-a-700);
+  background: var(--tt-gray-light-a-100);
+  border-radius: var(--tt-radius-md);
+  padding: 4px 10px;
+
+  .dark & {
+    color: var(--tt-gray-dark-a-700);
+    background: var(--tt-gray-dark-a-100);
+  }
+}
+
+.panel-container{
+  padding-top: 10px;
+  background-color: var(--tt-gray-light-50);
+  .dark & {
+     background-color: var(--tt-gray-dark-100);
+  }
+}
+
+.db-no-date-panel {
+  width: 320px;
+  padding: 10px;
+  z-index: 50;
+
+  .dark & {
+    background: var(--tt-gray-dark-100);
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-md);
+    padding: 6px 10px;
+    margin-bottom: 10px;
+
+    &:focus-within {
+      border-color: var(--tt-selection-color);
+    }
+  }
+
+  &__search-icon {
+    color: var(--tt-gray-light-a-500);
+    flex-shrink: 0;
+  }
+
+  &__search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 14px;
+
+    &::placeholder {
+      color: var(--tt-gray-light-a-500);
+    }
+  }
+
+  &__hint {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tt-text-secondary);
+    margin: 0;
+    margin: 3px !important;
+    padding-left: 15px;
+    text-align: start;
+    width: 100%;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+
+  &__empty {
+    font-size: 13px;
+    color: var(--tt-gray-light-a-500);
+    padding: 8px 4px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 4px;
+    border-radius: var(--tt-radius-md);
+    cursor: grab;
+
+    &:hover {
+      background: var(--tt-gray-light-a-100);
+
+      .dark & {
+        background: var(--tt-gray-dark-a-100);
+      }
+    }
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tt-gray-light-a-500);
+    flex-shrink: 0;
+  }
+
+  &__title {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__open {
+    font-size: 13px;
+    color: var(--tt-selection-color);
+    padding: 2px 8px;
+  }
+
+  &__arrow {
+    fill: var(--tt-bg-color);
+  }
+}

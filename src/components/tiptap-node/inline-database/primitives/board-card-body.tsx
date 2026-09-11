@@ -74,7 +74,7 @@ export function BoardCardBody({
           event.dataTransfer.setData("text/plain", storage.draggingId);
         }
       }}
-      onDrop={() => setDragging(false)}
+      onDragEnd={() => setDragging(false)}
       onClick={() => setTarget({ pageId: recordId, view: "Center" })}
     >
       {cardPreview === "cover" && (

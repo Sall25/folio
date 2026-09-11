@@ -5,6 +5,8 @@ import {
   useCalendarViewState,
 } from "../../context/calendar-view-context";
 import { memo } from "react";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 
 function CalendarNavImpl() {
   const { prevMonth, nextMonth, goToday } = useCalendarViewActions();
@@ -15,7 +17,16 @@ function CalendarNavImpl() {
   });
 
   return (
-    <div className="db-calendar__nav">
+    <CardItemGroup orientation="horizontal" className="db-calendar__nav">
+      <Button
+        size="large"
+        className="month-label"
+        variant="ghost"
+        data-highlighted={true}
+      >
+        <span className="tiptap-button-text">{monthLabel}</span>
+      </Button>
+      <Spacer orientation="horizontal" />
       <Button
         variant="ghost"
         onClick={prevMonth}
@@ -23,9 +34,15 @@ function CalendarNavImpl() {
       >
         <ChevronLeft className="tiptap-button-icon" />
       </Button>
-      <button className="db-calendar__month-label" onClick={goToday}>
-        {monthLabel}
-      </button>
+      <Button
+        variant="ghost"
+        size="large"
+        className="db-calendar__month-label"
+        data-highlighted={true}
+        onClick={goToday}
+      >
+        <span className="tiptap-button-text">Today</span>
+      </Button>
       <Button
         variant="ghost"
         onClick={nextMonth}
@@ -33,7 +50,7 @@ function CalendarNavImpl() {
       >
         <ChevronRight className="tiptap-button-icon" />
       </Button>
-    </div>
+    </CardItemGroup>
   );
 }
 

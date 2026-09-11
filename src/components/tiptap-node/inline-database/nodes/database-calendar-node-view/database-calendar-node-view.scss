@@ -10,18 +10,27 @@
   width: 100%;
 
   &__nav {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 6px 0;
+    width: var(--db-editor-width);
+    .month-label{
+      background-color: transparent !important;
+      font-weight: 500;
+    }
+    .tiptap-button{
+      text-transform: capitalize;
+       background-color: transparent !important;
+    }
+  
+    // display: flex;
+    // align-items: center;
+    // justify-content: center;
+    // gap: 8px;
+    // padding: 6px 0;
+
   }
 
   &__month-label {
     background: transparent;
     border: none;
-    color: var(--tt-text-primary);
-    font-weight: 600;
     cursor: pointer;
   }
 
@@ -194,6 +203,15 @@
       background: var(--tt-bg-color);
       cursor: pointer;
     }
+  }
+
+  &__nav-btn{
+    min-width: fit-content !important;
+    width: fit-content !important;
+    padding: 0;
+    margin: 0;
+    background-color: transparent !important;
+    cursor: pointer;
   }
 }
 
