@@ -4,6 +4,12 @@ import { CalendarLanes } from "./calendar-lanes";
 import { memo } from "react";
 import { useCalendarViewState } from "../../context/calendar-view-context";
 
+function toISODate(year: number, month: number, day: number): string {
+  const mm = String(month + 1).padStart(2, "0");
+  const dd = String(day).padStart(2, "0");
+  return `${year}-${mm}-${dd}`;
+}
+
 function CalendarGridImpl({ weekHeights }: { weekHeights: number[] }) {
   const { firstDow, daysInMonth, totalCells, today, year, month } =
     useCalendarViewState();
@@ -37,6 +43,7 @@ function CalendarGridImpl({ weekHeights }: { weekHeights: number[] }) {
             dayNum={dayNum}
             isCurrentMonth={isCurrentMonth}
             isToday={isToday}
+            date={isCurrentMonth ? toISODate(year, month, dayNum) : undefined}
             style={{
               gridColumn: column + 1,
               gridRow: row + 1,
@@ -44,6 +51,8 @@ function CalendarGridImpl({ weekHeights }: { weekHeights: number[] }) {
                 column === 0 || column === 6
                   ? "var(--calendar-column-highlight)"
                   : "transparent",
+              borderRight:
+                column === 0 ? "1px solid var(--tt-border-color)" : undefined,
             }}
           />
         );

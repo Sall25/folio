@@ -9,6 +9,7 @@ interface CalendarCellProps {
   dayNum: number;
   isCurrentMonth: boolean;
   isToday: boolean;
+  date?: string; // ISO "YYYY-MM-DD" — set for current-month cells, used as the drop target
   style: CSSProperties;
 }
 
@@ -16,6 +17,7 @@ function CalendarCellImpl({
   dayNum,
   isCurrentMonth,
   isToday,
+  date,
   style,
 }: CalendarCellProps) {
   const { addOnDay: onAdd } = useCalendarViewActions();
@@ -29,6 +31,7 @@ function CalendarCellImpl({
         .filter(Boolean)
         .join(" ")}
       style={style}
+      data-date={isCurrentMonth ? date : undefined}
     >
       {isCurrentMonth && (
         <div className="db-calendar__cell-header">

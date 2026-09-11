@@ -4,6 +4,7 @@ import type { DatabaseView } from "src/types";
 import {
   beforeCardAtPoint,
   beforeGalleryCardAtPoint,
+  beforeRecordAtPoint,
   columnKeyAtPoint,
   hideGalleryDropIndicator,
 } from "./utils";
@@ -12,6 +13,7 @@ export interface DropInfo {
   recordId: string;
   beforeRecordId: string | null;
   targetColumnKey?: string;
+  targetDate?: string; // ISO date, calendar drops only
 }
 
 export interface DragStorage {
@@ -47,7 +49,6 @@ export const BoardDrag = Extension.create<unknown, DragStorage>({
     // Capture the extension instance so the plugin reads live storage.
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const ext = this;
-    //let draggingId: string | null = null;
 
     return [
       new Plugin({
@@ -103,10 +104,6 @@ export const BoardDrag = Extension.create<unknown, DragStorage>({
               if (view === "gallery") {
                 let gallery = target.closest<HTMLElement>(".db-board-grid");
 
-                // When dropping in the empty area of the gallery, event.target
-                // may be the editor instead of the gallery/card.
-                //
-                // So fall back to checking which gallery contains the pointer.
                 if (!gallery) {
                   const galleries =
                     document.querySelectorAll<HTMLElement>(".db-board-grid");
@@ -124,13 +121,11 @@ export const BoardDrag = Extension.create<unknown, DragStorage>({
                     }) ?? null;
                 }
 
-                // The drag is outside every gallery.
                 if (!gallery) {
                   event.preventDefault();
                   return true;
                 }
-                // IMPORTANT:
-                // We own this drop. ProseMirror must NOT process it.
+
                 event.preventDefault();
 
                 const beforeRecordId = beforeGalleryCardAtPoint(
@@ -150,43 +145,52 @@ export const BoardDrag = Extension.create<unknown, DragStorage>({
                 return true;
               }
 
+              if (view === "calendar") {
+                // Each CalendarCell carries data-date="YYYY-MM-DD" (added below) —
+                // no need for a column-key lookup, we read the date straight off
+                // the cell under the pointer.
+                const dayCell = target.closest<HTMLElement>(
+                  ".db-calendar__cell[data-date]",
+                );
+
+                if (!dayCell) {
+                  event.preventDefault();
+                  return true;
+                }
+
+                event.preventDefault();
+
+                const targetDate = dayCell.dataset.date;
+
+                if (!targetDate) {
+                  storage.draggingId = null;
+                  return false;
+                }
+
+                const beforeRecordId = beforeRecordAtPoint(
+                  dayCell,
+                  event.clientY,
+                  draggingId,
+                );
+
+                storage.onDrop({
+                  recordId: draggingId,
+                  targetDate,
+                  beforeRecordId,
+                });
+
+                storage.draggingId = null;
+
+                return true;
+              }
+
               storage.draggingId = null;
               return false;
             },
             dragover(_view, event) {
-              // const storage = ext.storage as DragStorage;
-              // const activeView = storage.getActiveView();
-
-              // if (activeView !== "gallery" || !storage.draggingId) {
-              //   return false;
-              // }
-
-              // const galleries =
-              //   document.querySelectorAll<HTMLElement>(".db-board-grid");
-
-              // const gallery = Array.from(galleries).find((candidate) => {
-              //   const rect = candidate.getBoundingClientRect();
-
-              //   return (
-              //     event.clientX >= rect.left &&
-              //     event.clientX <= rect.right &&
-              //     event.clientY >= rect.top &&
-              //     event.clientY <= rect.bottom
-              //   );
-              // });
-
-              // if (!gallery) {
-              //   return false;
-              // }
-
-              // IMPORTANT:
-              // This prevents ProseMirror's dropcursor/default drag handling
-              // from taking over.
               event.preventDefault();
-
               return true;
             },
-
             dragend() {
               ext.storage.draggingId = null;
               document

@@ -87,6 +87,27 @@ export function beforeGalleryCardAtPoint(
   return null;
 }
 
+export function beforeRecordAtPoint(
+  container: HTMLElement,
+  clientY: number,
+  draggingId: string,
+): string | null {
+  const cards = Array.from(
+    container.querySelectorAll<HTMLElement>("[data-record-id]"),
+  ).filter((el) => el.dataset.recordId !== draggingId);
+
+  for (const card of cards) {
+    const rect = card.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+
+    if (clientY < midpoint) {
+      return card.dataset.recordId ?? null;
+    }
+  }
+
+  return null;
+}
+
 function getNextVisualCard(
   cards: HTMLElement[],
   current: HTMLElement,

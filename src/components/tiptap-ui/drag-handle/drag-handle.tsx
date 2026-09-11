@@ -183,7 +183,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
 
         if (newTarget === "Record") {
           const hideHandle = node.attrs.hideHandle as boolean;
-          console.log("HIDE HANDLE", hideHandle);
+
           setHideHandle(hideHandle);
         }
 

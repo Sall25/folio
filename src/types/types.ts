@@ -461,6 +461,7 @@ export interface GalleryView extends BaseView {
 export interface CalendarView extends BaseView {
   type: "calendar";
   datePropertyId: string;
+  manualOrder?: ID[];
 }
 
 export interface TimelineView extends BaseView {

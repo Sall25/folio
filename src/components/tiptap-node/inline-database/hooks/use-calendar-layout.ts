@@ -49,7 +49,7 @@ function isoToLocalDate(iso: string) {
   };
 }
 
-export const RECORD_HEIGHT = 55;
+export const RECORD_HEIGHT = 40;
 export const CELL_HEADER_HEIGHT = 40;
 export const WEEKDAY_HEADER_HEIGHT = 40;
 export const CELL_PADDING = 8;
@@ -84,6 +84,8 @@ export function useCalendarLayout(
     );
   }, [source, activeView]);
 
+  const manualOrder = activeView?.manualOrder;
+
   const calendarLayout = useMemo<CalendarLayout>(() => {
     if (!dateProp) {
       return {
@@ -104,8 +106,13 @@ export function useCalendarLayout(
 
     const rowCount = totalCell / 7;
 
-    const placement: Record<ID, CalendarPlacement> = {};
-    const recordCountByDay = new Map<number, number>();
+    // Manual order (flat, same convention as board/gallery) — records
+    // unlisted keep their existing sorted order within the day.
+    const orderIndex = new Map<string, number>();
+    (manualOrder ?? []).forEach((id, i) => orderIndex.set(id, i));
+
+    // Group records by day first, so manual order can be applied per-day.
+    const recordsByDay = new Map<number, Page[]>();
     for (const record of sortedRecords) {
       const raw = record.values?.[dateProp.id];
 
@@ -115,27 +122,35 @@ export function useCalendarLayout(
 
       if (!parsed) continue;
 
-      // This record doesn't belong to the currently displayed month.
       if (parsed.year !== year || parsed.month !== month) {
         continue;
       }
 
-      const dayIndex = firstDow + parsed.day - 1;
+      const list = recordsByDay.get(parsed.day) ?? [];
+      list.push(record);
+      recordsByDay.set(parsed.day, list);
+    }
 
+    const placement: Record<ID, CalendarPlacement> = {};
+    const recordCountByDay = new Map<number, number>();
+
+    recordsByDay.forEach((records, day) => {
+      const dayIndex = firstDow + day - 1;
       const col = dayIndex % 7;
       const row = Math.floor(dayIndex / 7) - 1;
 
-      const indexInDay = recordCountByDay.get(parsed.day) ?? 0;
+      const sorted = [...records].sort((a, b) => {
+        const ia = orderIndex.get(a.id) ?? Infinity;
+        const ib = orderIndex.get(b.id) ?? Infinity;
+        return ia - ib;
+      });
 
-      recordCountByDay.set(parsed.day, indexInDay + 1);
+      sorted.forEach((record, indexInDay) => {
+        placement[record.id] = { col, row, day, indexInDay };
+      });
 
-      placement[record.id] = {
-        col,
-        row,
-        day: parsed.day,
-        indexInDay,
-      };
-    }
+      recordCountByDay.set(day, sorted.length);
+    });
 
     const weeks = [];
 
@@ -167,6 +182,7 @@ export function useCalendarLayout(
         CELL_HEADER_HEIGHT + CELL_PADDING + maxRecords * RECORD_HEIGHT,
       );
     });
+
     return {
       placement,
       rowCount,
@@ -176,7 +192,7 @@ export function useCalendarLayout(
       totalCell,
       weekHeights,
     };
-  }, [sortedRecords, dateProp, year, month]);
+  }, [sortedRecords, dateProp, year, month, manualOrder]);
 
   return { calendarLayout };
 }

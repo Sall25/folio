@@ -8,6 +8,7 @@ import {
 import type { Editor } from "@tiptap/core";
 import type {
   BoardView,
+  CalendarView,
   CellValue,
   DatabaseAttrs,
   DatabaseProperty,
@@ -79,7 +80,6 @@ export function DatabaseProvider({
   setCellValue,
   visibleProperties,
 }: DatabaseProviderProps) {
-  // Memoized — was recomputed (.map().join()) every render.
   const gridTemplateColumns = useMemo(
     () =>
       attrs.properties
@@ -88,7 +88,6 @@ export function DatabaseProvider({
     [attrs.properties],
   );
 
-  // useCallback — was a plain function (new identity every render).
   const getProperty = useCallback(
     (propertyId: ID): DatabaseProperty | undefined =>
       attrs.properties?.find((p) => p.id === propertyId),
@@ -165,6 +164,7 @@ export function DatabaseProvider({
     storage.onDrop = ({
       recordId,
       targetColumnKey,
+      targetDate,
       beforeRecordId,
     }: DropInfo) => {
       const view = db.activeView;
@@ -186,7 +186,40 @@ export function DatabaseProvider({
           manualOrder: order,
         } as Partial<GalleryView>);
 
-        console.log("manulOrder should update");
+        return;
+      }
+
+      if (view.type === "calendar") {
+        const dateProp = source?.properties.find(
+          (p) =>
+            p.id === (view as CalendarView).datePropertyId &&
+            p.config.type === "date",
+        );
+
+        const resolvedDateProp =
+          dateProp ?? source?.properties.find((p) => p.config.type === "date");
+
+        if (!resolvedDateProp || !targetDate) return;
+
+        // Move to another day.
+        setCellValue(recordId, resolvedDateProp.id, targetDate);
+
+        // Reorder within the day (same flat manualOrder convention as board).
+        const currentOrder =
+          view.manualOrder ?? sortedRecords.map((record) => record.id);
+
+        const order = currentOrder.filter((id) => id !== recordId);
+
+        if (beforeRecordId) {
+          const index = order.indexOf(beforeRecordId);
+          order.splice(index === -1 ? order.length : index, 0, recordId);
+        } else {
+          order.push(recordId);
+        }
+
+        db.updateView(view.id, {
+          manualOrder: order,
+        } as Partial<CalendarView>);
 
         return;
       }
@@ -199,7 +232,6 @@ export function DatabaseProvider({
 
       if (!groupProp) return;
 
-      // Move to another column.
       if (targetColumnKey) {
         setCellValue(
           recordId,
@@ -208,7 +240,6 @@ export function DatabaseProvider({
         );
       }
 
-      // Reorder.
       const currentOrder =
         view.manualOrder ?? sortedRecords.map((record) => record.id);
 
@@ -229,9 +260,6 @@ export function DatabaseProvider({
     storage.getActiveView = () => db.activeView.type;
   }, [editor, db, source, setCellValue, sortedRecords]);
 
-  // ── Memoize the value object (Technique 2) — the dominant win. ──
-  // Was a raw {} rebuilt every render → every consumer (all views, toolbar,
-  // headers, chips) re-rendered on every provider render.
   const value = useMemo(
     () => ({
       attrs,

@@ -25,6 +25,25 @@ function isEmptyCellValue(
   return false;
 }
 
+// Every inline style/attr any view branch below can set on `box`. Reset all
+// of these before applying the current view's overrides, so switching views
+// (calendar -> board -> gallery -> table -> ...) never leaves a stale value
+// from a previous view lingering on the shared DOM node.
+function resetBoxOverrides(box: HTMLElement) {
+  box.style.removeProperty("display");
+  box.style.removeProperty("grid-column");
+  box.style.removeProperty("grid-row");
+  box.style.removeProperty("margin");
+  box.style.removeProperty("height");
+  box.style.removeProperty("min-height");
+  box.style.removeProperty("background");
+  box.style.removeProperty("order");
+  box.style.transform = "none";
+  box.removeAttribute("data-col-key");
+  box.removeAttribute("data-filtered");
+  box.removeAttribute("draggable");
+}
+
 export default function DatabaseRecordNodeView({
   node,
   editor,
@@ -65,6 +84,8 @@ export default function DatabaseRecordNodeView({
     );
     if (!box) return;
 
+    resetBoxOverrides(box);
+
     const gp = recordId ? data?.galleryPlacement?.[recordId] : undefined;
     const cp = recordId ? data?.calendarPlacement?.[recordId] : undefined;
 
@@ -74,13 +95,13 @@ export default function DatabaseRecordNodeView({
         box.style.setProperty("grid-column", String(cp.col + 1), "important");
         box.style.setProperty("grid-row", String(cp.row + 2), "important");
         box.style.setProperty("margin", "0px 4px", "important");
-        // box.style.gridColumn = String(cp.col + 1);
-        // box.style.gridRow = String(cp.row + 2);
+        box.style.setProperty("height", "fit-content", "important");
+        box.setAttribute("draggable", "true");
+
         box.style.transform = `translateY(${cp.indexInDay * RECORD_HEIGHT + CELL_HEADER_HEIGHT}px)`;
       } else {
         box.style.setProperty("display", "none", "important");
-        box.style.setProperty("grid-column", "", "important");
-        box.style.setProperty("grid-row", "", "important");
+        box.setAttribute("data-filtered", "true");
       }
       return;
     }
@@ -89,60 +110,43 @@ export default function DatabaseRecordNodeView({
       if (gp) {
         box.style.setProperty("display", "block", "important");
         box.style.setProperty("order", String(gp.order), "important");
-        box.removeAttribute("data-filtered");
+        box.setAttribute("draggable", "true");
       } else {
         box.style.setProperty("display", "none", "important");
-        box.style.removeProperty("order");
         box.setAttribute("data-filtered", "true");
       }
 
-      //      box.style.setProperty("display", "block", "important");
       box.style.setProperty("background", "transparent", "important");
-      box.style.setProperty("grid-row", "", "important");
-      box.style.setProperty("grid-column", "", "important");
       box.style.setProperty("min-height", "fit-content", "important");
       box.style.setProperty("height", "100%", "important");
       box.style.setProperty("margin", "0px", "important");
-      box.style.transform = "none";
       return;
     }
 
     if (isBoard) {
       const bp = recordId ? data?.boardPlacement?.[recordId] : undefined;
       if (bp) {
-        box.style.display = "";
         box.style.gridColumn = String(bp.col + 1);
         box.style.gridRow = String(bp.row + 2);
 
         box.setAttribute("data-col-key", bp.columnKey);
         box.setAttribute("draggable", "true");
-        box.removeAttribute("data-filtered");
       } else {
         // Board view but not placed (filtered out / hidden group) → hide.
         box.style.setProperty("display", "none", "important");
-        box.style.gridColumn = "";
-        box.style.gridRow = "";
         box.setAttribute("data-filtered", "true");
       }
-      box.style.transform = "none";
       return;
     }
 
-    // table/list (unchanged) — also clear board attrs
-    box.removeAttribute("data-col-key");
-    box.removeAttribute("draggable");
-    box.style.transform = `none`;
+    // table/list (already reset above — just apply index-based placement).
     const index = recordId
       ? (data?.sortedRecordIds?.indexOf(recordId) ?? -1)
       : -1;
     if (index === -1) {
       box.style.setProperty("display", "none", "important");
-      box.style.gridRow = "";
-      box.style.gridColumn = "";
     } else {
-      box.style.removeProperty("display");
       box.style.gridRow = String(index + 1);
-      box.style.gridColumn = "";
     }
   }, [wrapperEl, isBoard, isGallery, isCalendar, recordId, data]);
 
@@ -158,7 +162,7 @@ export default function DatabaseRecordNodeView({
     (isHovered || isSelected || pointerOnCheckbox);
   const anchor = useRowAnchor(wrapperEl, showCheckbox);
 
-  // ── BOARD / Gallery: render as a card (React cells, no NodeViewContent) ──────────────
+  // ── BOARD / Gallery / Calendar: render as a card (React cells, no NodeViewContent) ──────────────
   if ((isBoard || isGallery || isCalendar) && record && data) {
     const properties = data.properties;
     const view = data.view!;

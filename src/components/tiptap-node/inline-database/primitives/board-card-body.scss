@@ -19,6 +19,13 @@
       box-shadow: none;
     }
   }
+  &[data-view-type="calendar"]{
+    box-shadow: var(--tt-shadow-elevated-sm);
+     .dark & {
+      background-color: var(--tt-gray-dark-200);
+      box-shadow: none;
+    }
+  }
 
   &__title,
   &__props{
