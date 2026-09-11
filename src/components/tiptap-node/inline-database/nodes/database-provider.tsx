@@ -30,6 +30,7 @@ import { CardActionsProvider } from "../context";
 import { useListLayout } from "../hooks";
 import type { DragStorage, DropInfo } from "../extensions";
 import { groupValueForColumn } from "../utils/group-value-for-column";
+import { CalendarViewProvider } from "../context/calendar-view-provider";
 
 // ── Provider ───────────────────────────────────────────────────────────────
 
@@ -285,8 +286,7 @@ export function DatabaseProvider({
   return (
     <DatabaseContext.Provider value={value}>
       <CardActionsProvider>
-        {children}
-        {/* <div className="db-container">{children}</div> */}
+        <CalendarViewProvider>{children}</CalendarViewProvider>
       </CardActionsProvider>
     </DatabaseContext.Provider>
   );

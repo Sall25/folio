@@ -32,6 +32,13 @@
     align-items: flex-start;
     padding-top: 6px;
     padding-bottom: 6px;
+
+    .db-cell-title{
+      min-width: 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
      // Same exception here — the wrap block also pins 34px + padding.
     &.db-cell-board-view {
       min-height: 0;

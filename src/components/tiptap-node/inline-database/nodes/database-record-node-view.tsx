@@ -9,6 +9,10 @@ import { beginRowDragSelect } from "../utils/row-drag-select";
 import { useRowAnchor } from "../hooks/use-row-anchor";
 import type { CellValue, DatabaseProperty } from "src/types";
 import { BoardCardBody } from "../primitives/board-card-body";
+import {
+  CELL_HEADER_HEIGHT,
+  RECORD_HEIGHT,
+} from "../hooks/use-calendar-layout";
 
 function isEmptyCellValue(
   value: CellValue | null,
@@ -34,6 +38,7 @@ export default function DatabaseRecordNodeView({
 
   const isBoard = data?.view?.type === "board";
   const isGallery = data?.view?.type === "gallery";
+  const isCalendar = data?.view?.type === "calendar";
   const record = recordId ? (data?.recordsById.get(recordId) ?? null) : null;
 
   // ── Grid placement (board = 2D via boardPlacement; else 1D via rowSlots) ────
@@ -41,7 +46,7 @@ export default function DatabaseRecordNodeView({
     if (!data || !recordId) {
       return { isFilteredOut: false, boardPlace: undefined, order: undefined };
     }
-    if (isGallery) {
+    if (isGallery || isCalendar) {
       return { isFilteredOut: false, boardPlace: undefined, order: undefined };
     }
     const bp = data.boardPlacement?.[recordId];
@@ -52,7 +57,7 @@ export default function DatabaseRecordNodeView({
       boardPlace: undefined,
       order: index === -1 ? undefined : index,
     };
-  }, [data, recordId, isGallery]);
+  }, [data, recordId, isGallery, isCalendar]);
 
   useLayoutEffect(() => {
     const box = wrapperEl?.closest<HTMLElement>(
@@ -61,6 +66,24 @@ export default function DatabaseRecordNodeView({
     if (!box) return;
 
     const gp = recordId ? data?.galleryPlacement?.[recordId] : undefined;
+    const cp = recordId ? data?.calendarPlacement?.[recordId] : undefined;
+
+    if (isCalendar) {
+      if (cp) {
+        box.style.setProperty("display", "block", "important");
+        box.style.setProperty("grid-column", String(cp.col + 1), "important");
+        box.style.setProperty("grid-row", String(cp.row + 2), "important");
+        box.style.setProperty("margin", "0px 4px", "important");
+        // box.style.gridColumn = String(cp.col + 1);
+        // box.style.gridRow = String(cp.row + 2);
+        box.style.transform = `translateY(${cp.indexInDay * RECORD_HEIGHT + CELL_HEADER_HEIGHT}px)`;
+      } else {
+        box.style.setProperty("display", "none", "important");
+        box.style.setProperty("grid-column", "", "important");
+        box.style.setProperty("grid-row", "", "important");
+      }
+      return;
+    }
 
     if (isGallery) {
       if (gp) {
@@ -80,6 +103,7 @@ export default function DatabaseRecordNodeView({
       box.style.setProperty("min-height", "fit-content", "important");
       box.style.setProperty("height", "100%", "important");
       box.style.setProperty("margin", "0px", "important");
+      box.style.transform = "none";
       return;
     }
 
@@ -100,12 +124,14 @@ export default function DatabaseRecordNodeView({
         box.style.gridRow = "";
         box.setAttribute("data-filtered", "true");
       }
+      box.style.transform = "none";
       return;
     }
 
     // table/list (unchanged) — also clear board attrs
     box.removeAttribute("data-col-key");
     box.removeAttribute("draggable");
+    box.style.transform = `none`;
     const index = recordId
       ? (data?.sortedRecordIds?.indexOf(recordId) ?? -1)
       : -1;
@@ -118,7 +144,7 @@ export default function DatabaseRecordNodeView({
       box.style.gridRow = String(index + 1);
       box.style.gridColumn = "";
     }
-  }, [wrapperEl, isBoard, isGallery, recordId, data]);
+  }, [wrapperEl, isBoard, isGallery, isCalendar, recordId, data]);
 
   // ── TABLE / LIST: node-rendered cells via NodeViewContent  ──
 
@@ -133,7 +159,7 @@ export default function DatabaseRecordNodeView({
   const anchor = useRowAnchor(wrapperEl, showCheckbox);
 
   // ── BOARD / Gallery: render as a card (React cells, no NodeViewContent) ──────────────
-  if ((isBoard || isGallery) && record && data) {
+  if ((isBoard || isGallery || isCalendar) && record && data) {
     const properties = data.properties;
     const view = data.view!;
     const cardPreview =

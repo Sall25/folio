@@ -16,6 +16,7 @@ import type {
   PageCover,
 } from "src/types";
 import type { GalleryPlacement } from "../hooks/use-gallery-layout";
+import type { CalendarPlacement } from "../hooks/use-calendar-layout";
 
 export interface DatabaseBridgeData {
   sourceId: ID | null;
@@ -46,6 +47,7 @@ export interface DatabaseBridgeData {
     { col: number; row: number; color?: string; columnKey: string }
   >;
   galleryPlacement?: Record<string, GalleryPlacement>;
+  calendarPlacement?: Record<string, CalendarPlacement>;
 }
 
 interface DatabaseEntry {

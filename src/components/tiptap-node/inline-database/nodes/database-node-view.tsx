@@ -7,7 +7,7 @@
 //     are still imperative)
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { NodeViewProps } from "@tiptap/core";
+import type { Editor, NodeViewProps } from "@tiptap/core";
 import { NodeViewWrapper } from "@tiptap/react";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { usePage } from "src/hooks/use-pages";
@@ -57,9 +57,136 @@ import { setColumnHint } from "../utils/skeleton-hints";
 import { DatabaseLoadingSkeletonWithDims } from "./database-loading-skeleton-with-dims";
 import { useTableLayout } from "../hooks/use-table-layout";
 import { useGalleryLayout } from "../hooks/use-gallery-layout";
+import { useDatabaseContext } from "./database-context";
+import { useNewRowEditState } from "./new-row-edit-context";
+import { useCalendarLayout } from "../hooks/use-calendar-layout";
+import { useCalendarViewState } from "../context/calendar-view-context";
 
 const EMPTY_SOURCE = { properties: [] };
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
+
+function DatabaseNodeViewBody({
+  locked,
+  editor,
+  attrs,
+}: {
+  locked: boolean;
+  editor: Editor;
+  attrs: DatabaseAttrs;
+}) {
+  const { db, source, sortedRecords } = useDatabaseContext();
+  const activeView = db.activeView;
+  const tableRef = useRef<HTMLDivElement>(null);
+  const { updatePropertiesAsync, resolvedRecords, isLoading, setCellValue } =
+    useDataSource(source?.id);
+
+  const { data: templatePage } = usePage(attrs.templateId ?? null);
+
+  const {
+    widthFor,
+    draftWidths,
+    gridTemplateColumns,
+    bodyGridTemplateColumns,
+    commitColumnWidth,
+  } = useDatabaseColumnLayout({
+    properties: source?.properties ?? EMPTY_PROPERTIES,
+    activeView,
+    locked,
+    tableRef,
+    updatePropertiesAsync,
+  });
+
+  const { editingRecordId } = useNewRowEditState();
+
+  // ── Filtered → searched → sorted → grouped records + row layout ───────────
+  const { collapsedKeys } = useTableRecords({
+    resolvedRecords,
+    source: source ?? undefined,
+    db,
+    editingRecordId,
+  });
+
+  // Both run (Rules of Hooks); the inactive one returns a flat/empty layout
+  // cheaply since its view-type guard fails.
+  const { tableLayout } = useTableLayout(sortedRecords, source ?? null, db);
+  const { listLayout } = useListLayout(sortedRecords, source ?? null, db);
+  const { boardLayout } = useBoardLayout(sortedRecords, source ?? null, db);
+  const { galleryLayout } = useGalleryLayout(sortedRecords, db);
+  const { year, month } = useCalendarViewState();
+  const { calendarLayout } = useCalendarLayout(
+    sortedRecords,
+    source ?? null,
+    db,
+    year,
+    month,
+  );
+
+  // Publish the ACTIVE view's rowSlots so record nodes position correctly in
+  // whichever view is hosting them (table or list — both node-render records).
+  const activeRowSlots =
+    activeView?.type === "list" ? listLayout.rowSlots : tableLayout.rowSlots;
+
+  useDatabaseBridgePublish({
+    editor,
+    attrs,
+    properties: source?.properties ?? EMPTY_PROPERTIES,
+    activeView,
+    locked,
+    resolvedRecords,
+    sortedRecords,
+    draftWidths,
+    rowSlots: activeRowSlots,
+    hasSource: !!source,
+    setCellValue: (recordId, propertyId, value) =>
+      setCellValue(recordId, propertyId, value as never),
+    templateCover: templatePage?.cover ?? null,
+    boardLayout,
+    galleryLayout,
+    calendarLayout,
+  });
+
+  // Seed record/cell nodes once at creation; keep cells matching properties.
+  useDatabaseSeed({
+    editor,
+    databaseId: attrs.id ?? null,
+    sourceId: attrs.sourceId ?? null,
+    records: resolvedRecords,
+    properties: source?.properties ?? [],
+    ready: !isLoading && !!source,
+  });
+
+  useDatabaseCellSync({
+    editor,
+    databaseId: attrs.id ?? null,
+    properties: source?.properties ?? [],
+    ready: !isLoading && !!source,
+  });
+
+  useMeasureViewDims(
+    attrs.id,
+    activeView?.type ?? "table",
+    !isLoading && !!source,
+  );
+
+  // ── View branches ─────────────────────────────────────────────────────────
+  if (activeView?.type === "board") return <DatabaseBoardNodeView />;
+  if (activeView?.type === "gallery") return <DatabaseGalleryNodeView />;
+  if (activeView?.type === "list") return <DatabaseListNodeView />;
+  if (activeView?.type === "calendar") return <DatabaseCalendarNodeView />;
+  if (activeView?.type === "timeline") return <DatabaseTimelineNodeView />;
+
+  // ── Table view (node-rendered) ────────────────────────────────────────────
+  return (
+    <DatabaseTableBody
+      tableRef={tableRef}
+      gridTemplateColumns={gridTemplateColumns}
+      bodyGridTemplateColumns={bodyGridTemplateColumns}
+      widthFor={widthFor}
+      onCommitColumnWidth={commitColumnWidth}
+      collapsedKeys={collapsedKeys}
+    />
+  );
+}
 
 export function DatabaseNodeView({
   node,
@@ -121,8 +248,6 @@ export function DatabaseNodeView({
 
   const dbPageId = source?.pageId ?? attrs.pageId ?? null;
   const { data: dbPage } = usePage(dbPageId);
-  // Template page fetched here (once per database node), not in each cell.
-  const { data: templatePage } = usePage(attrs.templateId ?? null);
 
   const tableRef = useRef<HTMLDivElement>(null);
 
@@ -143,14 +268,6 @@ export function DatabaseNodeView({
   // ── View switching (skeleton while a new view type mounts) ────────────────
   const { switchingTo, dbWithSwitch } = useViewSwitch(db, attrs.activeViewId);
 
-  // ── Filtered → searched → sorted → grouped records + row layout ───────────
-  const { sortedRecords, collapsedKeys } = useTableRecords({
-    resolvedRecords,
-    source,
-    db,
-    editingRecordId,
-  });
-
   // ── View lifecycle  ────────────────────────────────────────────────
   useSyncViews({
     views: attrs.views,
@@ -166,14 +283,7 @@ export function DatabaseNodeView({
     setActiveViewId: db.setActiveView,
   });
 
-  const {
-    draftWidths,
-    visibleProperties,
-    widthFor,
-    gridTemplateColumns,
-    bodyGridTemplateColumns,
-    commitColumnWidth,
-  } = useDatabaseColumnLayout({
+  const { visibleProperties } = useDatabaseColumnLayout({
     properties: source?.properties ?? EMPTY_PROPERTIES,
     activeView,
     locked,
@@ -185,59 +295,6 @@ export function DatabaseNodeView({
   if (source && visibleProperties.length) {
     setColumnHint(attrs.sourceId, visibleProperties.length);
   }
-
-  // Both run (Rules of Hooks); the inactive one returns a flat/empty layout
-  // cheaply since its view-type guard fails.
-  const { tableLayout } = useTableLayout(sortedRecords, source ?? null, db);
-  const { listLayout } = useListLayout(sortedRecords, source ?? null, db);
-  const { boardLayout } = useBoardLayout(sortedRecords, source ?? null, db);
-  const { galleryLayout } = useGalleryLayout(sortedRecords, db);
-
-  // Publish the ACTIVE view's rowSlots so record nodes position correctly in
-  // whichever view is hosting them (table or list — both node-render records).
-  const activeRowSlots =
-    activeView?.type === "list" ? listLayout.rowSlots : tableLayout.rowSlots;
-
-  useDatabaseBridgePublish({
-    editor,
-    attrs,
-    properties: source?.properties ?? EMPTY_PROPERTIES,
-    activeView,
-    locked,
-    resolvedRecords,
-    sortedRecords,
-    draftWidths,
-    rowSlots: activeRowSlots,
-    hasSource: !!source,
-    setCellValue: (recordId, propertyId, value) =>
-      setCellValue(recordId, propertyId, value as never),
-    templateCover: templatePage?.cover ?? null,
-    boardLayout,
-    galleryLayout,
-  });
-
-  // Seed record/cell nodes once at creation; keep cells matching properties.
-  useDatabaseSeed({
-    editor,
-    databaseId: attrs.id ?? null,
-    sourceId: attrs.sourceId ?? null,
-    records: resolvedRecords,
-    properties: source?.properties ?? [],
-    ready: !isLoading && !!source,
-  });
-
-  useDatabaseCellSync({
-    editor,
-    databaseId: attrs.id ?? null,
-    properties: source?.properties ?? [],
-    ready: !isLoading && !!source,
-  });
-
-  useMeasureViewDims(
-    attrs.id,
-    activeView?.type ?? "table",
-    !isLoading && !!source,
-  );
 
   const { activePageId } = useActivePageState();
   const isOwnPage = activePageId != null && activePageId === dbPageId;
@@ -362,24 +419,7 @@ export function DatabaseNodeView({
   }
 
   // ── View branches ─────────────────────────────────────────────────────────
-  if (activeView?.type === "board") return chrome(<DatabaseBoardNodeView />);
-  if (activeView?.type === "gallery")
-    return chrome(<DatabaseGalleryNodeView />);
-  if (activeView?.type === "list") return chrome(<DatabaseListNodeView />);
-  if (activeView?.type === "calendar")
-    return chrome(<DatabaseCalendarNodeView />);
-  if (activeView?.type === "timeline")
-    return chrome(<DatabaseTimelineNodeView />);
-
-  // ── Table view (node-rendered) ────────────────────────────────────────────
   return chrome(
-    <DatabaseTableBody
-      tableRef={tableRef}
-      gridTemplateColumns={gridTemplateColumns}
-      bodyGridTemplateColumns={bodyGridTemplateColumns}
-      widthFor={widthFor}
-      onCommitColumnWidth={commitColumnWidth}
-      collapsedKeys={collapsedKeys}
-    />,
+    <DatabaseNodeViewBody editor={editor} locked={locked} attrs={attrs} />,
   );
 }

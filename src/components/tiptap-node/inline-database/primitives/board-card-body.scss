@@ -8,7 +8,9 @@
     }
   }
 
-  &[data-view-type="gallery"]{
+
+  &[data-view-type="gallery"],
+  &[data-view-type="calendar"]{
     background-color: var(--tt-gray-light-50);
     box-shadow: var(--tt-shadow-elevated-sm);
     height: 100% !important;

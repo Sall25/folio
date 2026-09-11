@@ -1,3 +1,11 @@
+:root{
+  --calendar-column-highlight: var(--tt-gray-light-a-50);
+}
+
+.dark {
+  --calendar-column-highlight: var(--tt-gray-dark-a-50);
+}
+
 .db-calendar {
   width: 100%;
 
@@ -39,6 +47,14 @@
     font-size: 12px;
     color: var(--tt-text-secondary);
     text-align: left;
+    // &[data-type="Sun"],
+    // &[data-type="Sat"]{
+    //   background-color: var(--tt-gray-light-a-50);
+    //   .dark & {
+    //     background-color: var(--tt-gray-dark-a-50);
+    //   }
+    // }
+    z-index: 5;
   }
 
   // ── Grid: 7 columns split the width evenly, uniform row height ─────────
@@ -62,11 +78,14 @@
       background: var(--tt-bg-subtle, transparent);
     }
     &--today .db-calendar__day-num {
-      background: var(--tt-brand-color-400);
-      color: #fff;
+      background: var(--tt-color-red-inc-2);
+      .dark & {
+        background: var(--tt-color-red-inc-1);
+      }
+      color: var(--black);
       border-radius: 999px;
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -182,4 +201,12 @@
   padding: 24px;
   text-align: center;
   color: var(--tt-text-secondary);
+  
+}
+
+.db-calendar__grid__body, 
+.db-calendar__grid__body > div{
+  display: contents;
+  position: absolute;
+  inset: 0;
 }

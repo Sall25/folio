@@ -107,9 +107,10 @@ export function BoardCardBody({
             properties={properties}
             onEditingChange={setEditing}
             autoEdit={editing}
+            unwrapped={false}
           />
 
-          {cardPreview !== "cover" && (
+          {cardPreview !== "cover" && view.type !== "calendar" && (
             <BoardCardControls
               record={record}
               onOpenRecord={() =>
@@ -124,22 +125,24 @@ export function BoardCardBody({
           )}
         </div>
       )}
-      <div
-        className="db-board-card__props"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {otherProps.map((p) => (
-          <Cell
-            key={p.id}
-            property={p}
-            value={(record.values?.[p.id] ?? null) as CellValue | null}
-            record={record}
-            onChange={(v) => setCellValue(recordId, p.id, v)}
-            view={view}
-            properties={properties}
-          />
-        ))}
-      </div>
+      {view.type !== "calendar" && (
+        <div
+          className="db-board-card__props"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {otherProps.map((p) => (
+            <Cell
+              key={p.id}
+              property={p}
+              value={(record.values?.[p.id] ?? null) as CellValue | null}
+              record={record}
+              onChange={(v) => setCellValue(recordId, p.id, v)}
+              view={view}
+              properties={properties}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
