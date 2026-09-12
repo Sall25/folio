@@ -91,6 +91,7 @@ function DatabaseGalleryNodeViewImpl() {
         alignItems: "start",
         gap: "8px",
         position: "relative",
+        marginTop: 5,
       }}
       onDragOver={(event) => {
         if (!editor) return;
