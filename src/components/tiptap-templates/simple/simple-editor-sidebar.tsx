@@ -5,6 +5,12 @@ import {
   ChevronsRight,
   Shapes,
   Home,
+  PanelLeft,
+  ChevronsUpDown,
+  Plus,
+  Layers,
+  Network,
+  CirclePile,
 } from "lucide-react";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -244,6 +250,102 @@ const WorkspaceFooter = memo(() => {
   );
 });
 WorkspaceFooter.displayName = "WorkspaceFooter";
+
+const Header = memo(() => {
+  return (
+    <CardItemGroup style={{ width: "100%", padding: "0px 5px" }}>
+      <CardItemGroup orientation="horizontal" style={{ width: "100%" }}>
+        <Button
+          variant="ghost"
+          data-highlighted="true"
+          size="large"
+          style={{ background: "transparent" }}
+        >
+          <CirclePile className="tiptap-button-icon" />
+        </Button>
+        <span
+          style={{
+            fontFamily: "Lora, serif",
+            fontWeight: 500,
+            fontSize: 28,
+            lineHeight: 1,
+            letterSpacing: -0.5,
+          }}
+        >
+          Folio
+        </span>
+        <Spacer orientation="horizontal" />
+        <Button variant="ghost" size="large">
+          <PanelLeft className="tiptap-button-icon" />
+        </Button>
+      </CardItemGroup>
+      <Spacer orientation="vertical" size={20} />
+      <CardItemGroup
+        orientation="horizontal"
+        style={{
+          width: "100%",
+          // background: "var(--tt-bg-color)",
+          border: "1px solid var(--tt-border-color)",
+          padding: "10px",
+          borderRadius: "var(--tt-radius-md)",
+        }}
+      >
+        <Button
+          data-highlighted={true}
+          size="small"
+          style={{ borderRadius: "var(--tt-radius-sm)" }}
+        >
+          <span className="tiptap-button-icon">S</span>
+        </Button>
+        <Spacer orientation="horizontal" size={3} />
+        <span
+          style={{
+            // fontFamily:
+            //   'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"',
+            fontSize: 14,
+            lineHeight: 1.4,
+            color: "var(--tt-text-primary)",
+          }}
+        >
+          Souleymane Sall's Space
+        </span>
+        <Spacer orientation="horizontal" />
+        <Button variant="ghost" size="small" style={{ borderRadius: "50%" }}>
+          <ChevronsUpDown className="tiptap-button-icon" />
+        </Button>
+      </CardItemGroup>
+      <Spacer orientation="vertical" size={10} />
+      <CardItemGroup>
+        <Button variant="ghost" size="large">
+          <Search className="tiptap-button-icon" />
+          <Spacer orientation="horizontal" size={3} />
+          <span className="tiptap-button-text">Search</span>
+        </Button>
+        <Button variant="ghost" size="large">
+          <Home className="tiptap-button-icon" />
+          <Spacer orientation="horizontal" size={3} />
+          <span className="tiptap-button-text">Home</span>
+        </Button>
+        <Button variant="ghost" size="large">
+          <InboxIcon className="tiptap-button-icon" />
+          <Spacer orientation="horizontal" size={3} />
+          <span className="tiptap-button-text">Inbox</span>
+        </Button>
+        <Button variant="ghost" size="large">
+          <Plus
+            className="tiptap-button-icon"
+            style={{
+              background: "var(--tt-button-active-bg-color-subdued)",
+              borderRadius: "var(--tt-radius-xl)",
+            }}
+          />
+          <Spacer orientation="horizontal" size={3} />
+          <span className="tiptap-button-text">New Page</span>
+        </Button>
+      </CardItemGroup>
+    </CardItemGroup>
+  );
+});
 
 const WorkspaceHeader = memo(() => {
   const { t } = useTranslation();
@@ -724,9 +826,10 @@ export function SimpleEditorSidebar() {
           style={{ border: "none" }}
         >
           <CardItemGroup orientation="vertical" style={{ width: "100%" }}>
-            <WorkspaceHeader />
+            <Header />
+            {/* <WorkspaceHeader />
             <Spacer orientation="vertical" size={6} />
-            <NavItems />
+            <NavItems /> */}
           </CardItemGroup>
         </CardHeader>
       )}
@@ -763,7 +866,7 @@ export function SimpleEditorSidebar() {
             {!peeking && (
               <>
                 <ScrollFog edge="top" color="var(--sidebar-fog-color)" />
-                <Spacer orientation="vertical" size={15} />
+                <Spacer orientation="vertical" size={12} />
               </>
             )}
 
@@ -810,7 +913,7 @@ export function SimpleEditorSidebar() {
         />
       )}
 
-      <WorkspaceFooter />
+      {/* <WorkspaceFooter /> */}
 
       {createTeamspaceOpen && (
         <CreateTeamspaceModal

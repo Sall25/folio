@@ -1,7 +1,7 @@
 // Right-edge grab strip. 8px hit area, 2px visible line that fades in on
 // hover and stays lit while dragging.
 .sidebar-resize-handle {
-  position: absolute;
+  position: absolute !important;
   top: 0;
   right: -4px; // straddle the edge: half inside, half outside
   width: 8px;
