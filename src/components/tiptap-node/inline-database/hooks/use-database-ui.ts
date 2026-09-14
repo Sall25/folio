@@ -6,6 +6,7 @@ import type {
   CellAddress,
   PanelView,
   DatabaseUIState,
+  DatabaseProperty,
 } from "src/types";
 import { makeDefaultView } from "../utils";
 
@@ -14,6 +15,7 @@ export type UseDatabaseUIReturn = ReturnType<typeof useDatabaseUI>;
 export function useDatabaseUI(
   attrs: DatabaseAttrs,
   updateAttributes: (attrs: Record<string, unknown>) => void,
+  properties: DatabaseProperty[],
 ) {
   // ── Ephemeral UI state ─────────────────────────────────────────────────
   const [uiState, setUIState] = useState<DatabaseUIState>({
@@ -115,13 +117,13 @@ export function useDatabaseUI(
 
   const addView = useCallback(
     (type: DatabaseView["type"], name: string) => {
-      const newView = makeDefaultView(type, name);
+      const newView = makeDefaultView(type, name, properties);
       updateAttributes({
         views: [...attrs.views, newView],
         activeViewId: newView.id,
       });
     },
-    [attrs.views, updateAttributes],
+    [attrs.views, properties, updateAttributes],
   );
 
   const updateView = useCallback(

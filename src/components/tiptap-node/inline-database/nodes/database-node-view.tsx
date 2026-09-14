@@ -61,6 +61,8 @@ import { useDatabaseContext } from "./database-context";
 import { useNewRowEditState } from "./new-row-edit-context";
 import { useCalendarLayout } from "../hooks/use-calendar-layout";
 import { useCalendarViewState } from "../context/calendar-view-context";
+import { useTimelineViewState } from "../context";
+import { useTimelineLayout } from "../hooks/use-timeline-layout";
 
 const EMPTY_SOURCE = { properties: [] };
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
@@ -121,10 +123,23 @@ function DatabaseNodeViewBody({
     month,
   );
 
+  const { year: tlYear, month: tlMonth } = useTimelineViewState();
+  const { timelineLayout } = useTimelineLayout(
+    sortedRecords,
+    source ?? null,
+    db,
+    tlYear,
+    tlMonth,
+  );
+
   // Publish the ACTIVE view's rowSlots so record nodes position correctly in
-  // whichever view is hosting them (table or list — both node-render records).
+  // whichever view is hosting them (table/list/timeline all node-render records).
   const activeRowSlots =
-    activeView?.type === "list" ? listLayout.rowSlots : tableLayout.rowSlots;
+    activeView?.type === "list"
+      ? listLayout.rowSlots
+      : activeView?.type === "timeline"
+        ? sortedRecords.map((r) => r.id)
+        : tableLayout.rowSlots;
 
   useDatabaseBridgePublish({
     editor,
@@ -143,6 +158,7 @@ function DatabaseNodeViewBody({
     boardLayout,
     galleryLayout,
     calendarLayout,
+    timelineLayout,
   });
 
   // Seed record/cell nodes once at creation; keep cells matching properties.

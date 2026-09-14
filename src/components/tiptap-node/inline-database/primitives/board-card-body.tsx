@@ -3,6 +3,7 @@ import type {
   CellValue,
   DatabaseProperty,
   DatabaseView,
+  ID,
   Page,
 } from "src/types";
 import { BoardCardCover } from "./board-card-cover";
@@ -45,6 +46,16 @@ export function BoardCardBody({
   const [dragging, setDragging] = useState(false);
   const { editor } = useCurrentEditor();
 
+  const onOpenRecord = (recordId: ID) => {
+    if (view.openPageIn === "Center") {
+      setTarget({ pageId: recordId, view: "Center" });
+    } else if (view.openPageIn === "Side") {
+      setTarget({ pageId: recordId, view: "Peek" });
+    } else {
+      setTarget({ pageId: recordId, view: "Full" });
+    }
+  };
+
   if (!recordId) return null;
 
   return (
@@ -75,14 +86,14 @@ export function BoardCardBody({
         }
       }}
       onDragEnd={() => setDragging(false)}
-      onClick={() => setTarget({ pageId: recordId, view: "Center" })}
+      onClick={() => onOpenRecord(recordId)}
     >
       {cardPreview === "cover" && (
         <>
           <BoardCardCover page={record} recordId={recordId} height={120} />
           <BoardCardControls
             record={record}
-            onOpenRecord={() => setTarget({ pageId: recordId, view: "Center" })}
+            onOpenRecord={() => onOpenRecord(recordId)}
             editing={editing}
             onEnableEdit={() => setEditing(true)}
             menuOpen={menuOpen}

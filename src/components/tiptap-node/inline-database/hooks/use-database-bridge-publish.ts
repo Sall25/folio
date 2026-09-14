@@ -18,6 +18,7 @@ import type { DatabaseBridgeData } from "../utils/database-bridge";
 import type { BoardLayout, BoardPlacement } from "./use-board-layout";
 import type { GalleryLayout, GalleryPlacement } from "./use-gallery-layout";
 import type { CalendarLayout, CalendarPlacement } from "./use-calendar-layout";
+import type { TimelineLayout, TimelinePlacement } from "./use-timeline-layout";
 
 interface Params {
   editor: Editor | null;
@@ -37,11 +38,13 @@ interface Params {
   boardLayout: BoardLayout;
   galleryLayout: GalleryLayout;
   calendarLayout: CalendarLayout;
+  timelineLayout: TimelineLayout;
 }
 
 const EMPTY_GALLERY_PLACEMENT: Record<string, GalleryPlacement> = {};
 const EMPTY_BOARD_PLACEMENT: BoardPlacement = {};
 const EMPTY_CALENDAR_PLACEMENT: Record<string, CalendarPlacement> = {};
+const EMPTY_TIMELINE_PLACEMENT: Record<string, TimelinePlacement> = {};
 
 export function useDatabaseBridgePublish({
   editor,
@@ -59,6 +62,7 @@ export function useDatabaseBridgePublish({
   boardLayout,
   galleryLayout,
   calendarLayout,
+  timelineLayout,
 }: Params) {
   const bridgeSetCellValue = useCallback(
     (recordId: string, propertyId: string, value: unknown) => {
@@ -142,6 +146,10 @@ export function useDatabaseBridgePublish({
         activeView?.type === "calendar"
           ? calendarLayout.placement
           : EMPTY_CALENDAR_PLACEMENT,
+      timelinePlacement:
+        activeView?.type === "timeline"
+          ? timelineLayout.placement
+          : EMPTY_TIMELINE_PLACEMENT,
     }),
     [
       attrs.sourceId,
@@ -159,6 +167,7 @@ export function useDatabaseBridgePublish({
       boardLayout,
       galleryLayout,
       calendarLayout,
+      timelineLayout,
     ],
   );
 

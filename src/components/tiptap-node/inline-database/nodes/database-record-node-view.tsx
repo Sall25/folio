@@ -7,12 +7,14 @@ import { useRecordRowState } from "../utils/record-selection-store";
 import { recordSelection } from "../utils/record-selection-store";
 import { beginRowDragSelect } from "../utils/row-drag-select";
 import { useRowAnchor } from "../hooks/use-row-anchor";
-import type { CellValue, DatabaseProperty } from "src/types";
+import type { CellValue, DatabaseProperty, TimelineView } from "src/types";
 import { BoardCardBody } from "../primitives/board-card-body";
 import {
   CELL_HEADER_HEIGHT,
   RECORD_HEIGHT,
 } from "../hooks/use-calendar-layout";
+import { ROW_HEIGHT as TL_ROW_HEIGHT } from "../hooks/use-timeline-layout";
+import { TimelineCardBody } from "./timeline-card-body";
 
 function isEmptyCellValue(
   value: CellValue | null,
@@ -25,16 +27,16 @@ function isEmptyCellValue(
   return false;
 }
 
-// Every inline style/attr any view branch below can set on `box`. Reset all
-// of these before applying the current view's overrides, so switching views
-// (calendar -> board -> gallery -> table -> ...) never leaves a stale value
-// from a previous view lingering on the shared DOM node.
 function resetBoxOverrides(box: HTMLElement) {
   box.style.removeProperty("display");
+  box.style.removeProperty("position");
+  box.style.removeProperty("top");
+  box.style.removeProperty("left");
+  box.style.removeProperty("width");
+  box.style.removeProperty("height");
   box.style.removeProperty("grid-column");
   box.style.removeProperty("grid-row");
   box.style.removeProperty("margin");
-  box.style.removeProperty("height");
   box.style.removeProperty("min-height");
   box.style.removeProperty("background");
   box.style.removeProperty("order");
@@ -58,14 +60,14 @@ export default function DatabaseRecordNodeView({
   const isBoard = data?.view?.type === "board";
   const isGallery = data?.view?.type === "gallery";
   const isCalendar = data?.view?.type === "calendar";
+  const isTimeline = data?.view?.type === "timeline";
   const record = recordId ? (data?.recordsById.get(recordId) ?? null) : null;
 
-  // ── Grid placement (board = 2D via boardPlacement; else 1D via rowSlots) ────
   const { isFilteredOut, boardPlace } = useMemo(() => {
     if (!data || !recordId) {
       return { isFilteredOut: false, boardPlace: undefined, order: undefined };
     }
-    if (isGallery || isCalendar) {
+    if (isGallery || isCalendar || isTimeline) {
       return { isFilteredOut: false, boardPlace: undefined, order: undefined };
     }
     const bp = data.boardPlacement?.[recordId];
@@ -76,7 +78,7 @@ export default function DatabaseRecordNodeView({
       boardPlace: undefined,
       order: index === -1 ? undefined : index,
     };
-  }, [data, recordId, isGallery, isCalendar]);
+  }, [data, recordId, isGallery, isCalendar, isTimeline]);
 
   useLayoutEffect(() => {
     const box = wrapperEl?.closest<HTMLElement>(
@@ -88,6 +90,26 @@ export default function DatabaseRecordNodeView({
 
     const gp = recordId ? data?.galleryPlacement?.[recordId] : undefined;
     const cp = recordId ? data?.calendarPlacement?.[recordId] : undefined;
+    const tp = recordId ? data?.timelinePlacement?.[recordId] : undefined;
+
+    if (isTimeline) {
+      const index = recordId
+        ? (data?.sortedRecordIds?.indexOf(recordId) ?? -1)
+        : -1;
+      if (tp && index !== -1) {
+        box.style.setProperty("display", "block", "important");
+        box.style.setProperty("position", "absolute", "important");
+        box.style.setProperty("top", `${index * TL_ROW_HEIGHT}px`, "important");
+        box.style.setProperty("left", `${tp.left}px`, "important");
+        box.style.setProperty("width", `${tp.width}px`, "important");
+        box.style.setProperty("height", `${TL_ROW_HEIGHT}px`, "important");
+        box.removeAttribute("draggable");
+      } else {
+        box.style.setProperty("display", "none", "important");
+        box.setAttribute("data-filtered", "true");
+      }
+      return;
+    }
 
     if (isCalendar) {
       if (cp) {
@@ -132,14 +154,12 @@ export default function DatabaseRecordNodeView({
         box.setAttribute("data-col-key", bp.columnKey);
         box.setAttribute("draggable", "true");
       } else {
-        // Board view but not placed (filtered out / hidden group) → hide.
         box.style.setProperty("display", "none", "important");
         box.setAttribute("data-filtered", "true");
       }
       return;
     }
 
-    // table/list (already reset above — just apply index-based placement).
     const index = recordId
       ? (data?.sortedRecordIds?.indexOf(recordId) ?? -1)
       : -1;
@@ -148,9 +168,7 @@ export default function DatabaseRecordNodeView({
     } else {
       box.style.gridRow = String(index + 1);
     }
-  }, [wrapperEl, isBoard, isGallery, isCalendar, recordId, data]);
-
-  // ── TABLE / LIST: node-rendered cells via NodeViewContent  ──
+  }, [wrapperEl, isBoard, isGallery, isCalendar, isTimeline, recordId, data]);
 
   const isTableView = data?.view?.type === "table";
   const [pointerOnCheckbox, setPointerOnCheckbox] = useState(false);
@@ -162,7 +180,31 @@ export default function DatabaseRecordNodeView({
     (isHovered || isSelected || pointerOnCheckbox);
   const anchor = useRowAnchor(wrapperEl, showCheckbox);
 
-  // ── BOARD / Gallery / Calendar: render as a card (React cells, no NodeViewContent) ──────────────
+  // ── TIMELINE: render as a bar (own body, own drag/resize) ──────────────
+  if (isTimeline && record && data && recordId) {
+    const tp = data.timelinePlacement?.[recordId];
+    if (!tp) return null;
+    const view = data.view as TimelineView;
+
+    return (
+      <NodeViewWrapper
+        as="div"
+        ref={setWrapperEl}
+        data-type="database-record"
+        data-record-id={recordId}
+        style={{ zIndex: 20 }}
+      >
+        <TimelineCardBody
+          record={record}
+          view={view}
+          geo={{ left: 0, width: tp.width }}
+          setCellValue={data.setCellValue}
+        />
+      </NodeViewWrapper>
+    );
+  }
+
+  // ── BOARD / Gallery / Calendar: render as a card ──────────────
   if ((isBoard || isGallery || isCalendar) && record && data) {
     const properties = data.properties;
     const view = data.view!;
@@ -193,8 +235,6 @@ export default function DatabaseRecordNodeView({
           margin: view.type === "gallery" ? "0px" : undefined,
           padding: view.type === "gallery" ? "0px" : undefined,
         }}
-        // The drag is handled by the board-drag PM extension; the node is
-        // draggable at the PM level, not via dnd-kit.
         draggable="true"
       >
         <BoardCardBody

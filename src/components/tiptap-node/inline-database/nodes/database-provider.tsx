@@ -27,7 +27,7 @@ import { useVisibleSelection } from "../hooks/use-visible-selection";
 import { useResolvedRecords } from "../hooks/use-resolved-records";
 import { useTableLayout } from "../hooks/use-table-layout";
 import { useRecordCreation } from "../hooks/use-record-creation";
-import { CardActionsProvider } from "../context";
+import { CardActionsProvider, TimelineViewProvider } from "../context";
 import { useListLayout } from "../hooks";
 import type { DragStorage, DropInfo } from "../extensions";
 import { groupValueForColumn } from "../utils/group-value-for-column";
@@ -314,7 +314,9 @@ export function DatabaseProvider({
   return (
     <DatabaseContext.Provider value={value}>
       <CardActionsProvider>
-        <CalendarViewProvider>{children}</CalendarViewProvider>
+        <CalendarViewProvider>
+          <TimelineViewProvider>{children}</TimelineViewProvider>
+        </CalendarViewProvider>
       </CardActionsProvider>
     </DatabaseContext.Provider>
   );

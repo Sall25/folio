@@ -17,6 +17,7 @@ import type {
 } from "src/types";
 import type { GalleryPlacement } from "../hooks/use-gallery-layout";
 import type { CalendarPlacement } from "../hooks/use-calendar-layout";
+import type { TimelinePlacement } from "../hooks/use-timeline-layout";
 
 export interface DatabaseBridgeData {
   sourceId: ID | null;
@@ -48,6 +49,7 @@ export interface DatabaseBridgeData {
   >;
   galleryPlacement?: Record<string, GalleryPlacement>;
   calendarPlacement?: Record<string, CalendarPlacement>;
+  timelinePlacement?: Record<string, TimelinePlacement>;
 }
 
 interface DatabaseEntry {

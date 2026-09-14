@@ -7,33 +7,19 @@
 }
 
 // ── Secondary nav bar ──────────────────────────────────────────────────────
-.db-tl-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 0 8px;
-  gap: 8px;
+.db-tl-nav{
+  justify-content: flex-start;
+  max-width: var(--db-editor-width);
 }
-
 .db-tl-nav__left {
-  display: flex;
-  align-items: center;
-  width: 40px;
-  flex-shrink: 0;
+  width: fit-content !important;
+  min-width: fit-content !important;
 }
 
-.db-tl-nav__center {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
 
 .db-tl-nav__label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--tt-text-color, #111);
-  min-width: 160px;
-  text-align: center;
+  background: transparent !important;
+  text-transform: capitalize;
 }
 
 .db-tl-nav__arrow,
@@ -45,9 +31,8 @@
 }
 
 .db-tl-nav__right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  width: fit-content !important;
+  min-width: fit-content !important;
 }
 
 // ── Timeframe switcher ─────────────────────────────────────────────────────
@@ -85,8 +70,8 @@
 // ── Two-panel layout ───────────────────────────────────────────────────────
 .db-tl-layout {
   display: flex;
-  border: 1px solid var(--tt-border-color, #e5e7eb);
-  border-radius: var(--tt-radius-sm, 4px);
+  // border: 1px solid var(--tt-border-color, #e5e7eb);
+  // border-radius: var(--tt-radius-sm, 4px);
   // overflow: hidden;
   overflow-x: auto;
   height: 460px; // fixed height so both panels can scroll independently
@@ -264,12 +249,16 @@
 .db-tl-gantt__body-scroll {
   flex: 1;
   overflow: auto;
+  overflow-y: hidden !important;
   // hide scrollbar on table side (synced)
 }
 
 .db-tl-gantt__body {
   position: relative;
+  overflow-y: hidden !important;
   min-height: 100%;
+  border-top: 1px solid var(--tt-border-color);
+  border-bottom: 1px solid var(--tt-border-color);
 }
 
 // ── Grid lines ─────────────────────────────────────────────────────────────
@@ -430,4 +419,215 @@
   top: 0;
   z-index: 10;
   background: var(--tt-bg-color, #fff);
+}
+
+.db-tl-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+
+  &__groups {
+    display: flex;
+  }
+
+  // &__group {
+  //   flex-shrink: 0;
+  //   padding: 6px 8px;
+  //   font-size: 12px;
+  //   font-weight: 600;
+  //   color: var(--tt-gray-light-a-700);
+  
+  //   box-sizing: border-box;
+
+  //   .dark & {
+  //     color: var(--tt-gray-dark-a-700);
+  //   }
+  // }
+
+  &__days {
+    position: relative;
+    height: 24px;
+  }
+
+  &__day {
+    position: absolute;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--tt-gray-light-a-500);
+    box-sizing: border-box;
+
+    .dark & {
+      color: var(--tt-gray-dark-a-500);
+    }
+  }
+}
+
+.db-tl-day-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  &__col {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+//    border-right: 1px solid var(--tt-border-color);
+    box-sizing: border-box;
+
+    &--weekend {
+      background: var(--calendar-column-highlight);
+    }
+  }
+}
+
+.db-tl-bar {
+  cursor: pointer;
+}
+
+.db-tl-viewport {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.db-tl-scroll {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.db-tl-indicators {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.db-tl-indicator {
+  position: absolute;
+  transform: translateY(-50%);
+  min-width: 16px !important;
+  width: 18px !important;
+  min-height: 17px !important;
+  height: 17px !important;
+  border: none;
+  border-radius: 5px !important; //var(--tt-radius-sm);
+  background: rgba(244, 240, 240, 0.812);
+  .dark {
+    background: rgba(225, 220, 220, 0.812); //rgb(60, 58, 58);
+  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  color: var(--tt-gray-light-a-700);
+
+  &:hover{
+    background-color: rgba(225, 220, 220, 0.549) !important;
+  }
+ 
+  .tiptap-button-icon{
+    color: var(--tt-gray-dark-200) !important;
+    .dark & {
+       color: var(--black) !important;
+    }
+  }
+
+  &--left {
+    left: 8px;
+  }
+
+  &--right {
+    right: 8px;
+  }
+}
+
+.db-tl-viewport {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  max-height: 480px;
+  overflow: hidden;
+  width: var(--db-editor-width);
+  max-width: var(--db-editor-width);
+}
+
+.db-tl-scroll {
+  height: fit-content;
+  overflow: auto;
+  width: 100%;
+}
+
+.db-tl-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--tt-bg-color);
+}
+
+.db-tl-header__groups {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  background: var(--tt-bg-color);
+  margin-bottom: 5px;
+}
+
+.db-tl-header__group {
+  flex-shrink: 0;
+  position: relative;
+  box-sizing: border-box;
+ // border-right: 1px solid var(--tt-border-color);
+}
+
+.db-tl-header__group-label {
+  position: sticky;
+  left: 8px;
+  display: inline-block;
+  padding: 4px 0;
+  font-size: 14px;
+  text-transform: capitalize;
+  font-weight: 400;
+  color: var(--tt-text-color, var(--tt-gray-light-a-900));
+  white-space: nowrap;
+
+  .dark & {
+    color: var(--tt-gray-dark-a-900);
+  }
+}
+
+.db-tl-toprow {
+  display: flex;
+  align-items: flex-start;
+}
+
+.db-tl-nav-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--tt-bg-color) 24px
+  );
+}
+
+.db-tl-nav-controls {
+  display: flex;
+  align-items: center;
+}
+
+.db-tl-toggle-slot {
+  display: flex;
+  align-items: center;
 }

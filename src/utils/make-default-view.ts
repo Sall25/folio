@@ -170,6 +170,8 @@ export function makeDefaultView(
         groupByPropertyId: groupProp?.id ?? "",
         showEmptyGroups: false,
         cardPreview: "none",
+        cardSize: "medium",
+        coverFit: "cover",
       } satisfies BoardView;
     }
 

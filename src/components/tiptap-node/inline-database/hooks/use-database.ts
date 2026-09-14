@@ -12,7 +12,7 @@ export function useDatabase(
   updatePropertiesAsync: (properties: DatabaseProperty[]) => Promise<unknown>,
   onUpdateTitle?: (title: string) => void,
 ) {
-  const ui = useDatabaseUI(attrs, updateAttributes);
+  const ui = useDatabaseUI(attrs, updateAttributes, source.properties);
 
   // Property/view-config edits (freeze, hide, unwrap, sort, filter, group)
   // write through the SAME per-node updateView the node renders from.
