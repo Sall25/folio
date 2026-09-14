@@ -61,6 +61,7 @@ export const User = memo(() => {
                     minHeight: 24,
                     padding: 0,
                     borderRadius: "var(--tt-radius-sm)",
+
                     cursor: "pointer",
                   }}
                 >
@@ -95,8 +96,10 @@ export const User = memo(() => {
             <span
               style={{
                 color: "var(--tt-text-primary)",
-                fontSize: 14,
-                fontWeight: 600,
+                fontSize: 15,
+                fontFamily:
+                  'ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"',
+                fontWeight: 500,
                 lineHeight: 1.15,
                 overflow: "hidden",
                 textOverflow: "ellipsis",

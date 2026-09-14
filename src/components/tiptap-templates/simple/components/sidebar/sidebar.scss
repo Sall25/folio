@@ -472,6 +472,10 @@
 
 .name-initial {
   padding: 2px;
+  background: rgba(241, 237, 230, 0.842) !important;
+  .dark & {
+    background: var(--tt-gray-dark-300) !important;
+  }
 }
 
 .sidebar-section__header {
@@ -736,5 +740,14 @@
     &::before {
       transform: scaleX(1);
     }
+  }
+}
+
+.workspace-switcher{
+  background-color: rgba(241, 237, 230, 0.341);
+  border: 1px solid rgba(241, 237, 230, 0.553);
+  .dark & {
+    background-color: var(--tt-gray-dark-a-50);
+     border: 1px solid rgba(32, 32, 31, 0.553);
   }
 }

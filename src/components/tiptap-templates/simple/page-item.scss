@@ -52,7 +52,7 @@
     .page-item-title{
        max-width: calc(var(--sidebar-width, 290px) - 124px);
        line-height: 1.4;
-       font-weight: 400;
+       font-weight: 500;
     }
     background: var(--page-item-active-bg-color);
     color: var(--tt-text-primary) !important;
@@ -137,7 +137,7 @@
   padding: 0;
   line-height: 1.4;
   // letter-spacing: -0.01em;
-  font-weight: 500 !important;
+  font-weight: 400;
   
   // line-height: 1.1;
   cursor: pointer;

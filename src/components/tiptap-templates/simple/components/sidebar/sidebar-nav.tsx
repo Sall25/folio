@@ -53,17 +53,32 @@ export const SidebarNav = memo(() => {
       >
         <Search className="tiptap-button-icon" />
         <Spacer orientation="horizontal" size={3} />
-        <span className="tiptap-button-text">{t("sidebar.search")}</span>
+        <span
+          className="tiptap-button-text"
+          style={{ opacity: 1, display: "block" }}
+        >
+          {t("sidebar.search")}
+        </span>
       </Button>
       <Button onClick={handleHomeClick} variant="ghost" size="large">
         <Home className="tiptap-button-icon" />
         <Spacer orientation="horizontal" size={3} />
-        <span className="tiptap-button-text">{t("sidebar.home")}</span>
+        <span
+          className="tiptap-button-text"
+          style={{ opacity: 1, display: "block" }}
+        >
+          {t("sidebar.home")}
+        </span>
       </Button>
       <Button variant="ghost" size="large">
         <InboxIcon className="tiptap-button-icon" />
         <Spacer orientation="horizontal" size={3} />
-        <span className="tiptap-button-text">{t("sidebar.inbox")}</span>
+        <span
+          className="tiptap-button-text"
+          style={{ opacity: 1, display: "block" }}
+        >
+          {t("sidebar.inbox")}
+        </span>
         {unreadCount > 0 && (
           <>
             <Spacer orientation="horizontal" size={6} />
@@ -80,7 +95,12 @@ export const SidebarNav = memo(() => {
           }}
         />
         <Spacer orientation="horizontal" size={3} />
-        <span className="tiptap-button-text">{t("page.newPage")}</span>
+        <span
+          className="tiptap-button-text"
+          style={{ opacity: 1, display: "block" }}
+        >
+          {t("page.newPage")}
+        </span>
       </Button>
     </CardItemGroup>
   );
