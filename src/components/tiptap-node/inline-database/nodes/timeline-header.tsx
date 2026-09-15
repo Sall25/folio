@@ -5,11 +5,29 @@ import {
   HEADER_HEIGHT,
   GROUP_ROW_HEIGHT,
 } from "../hooks/use-timeline-layout";
-import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
-function TimelineHeaderImpl({ range }: { range: TimelineRange }) {
+interface HighlightRange {
+  left: number;
+  width: number;
+  tone: "hover" | "selected";
+}
+
+function TimelineHeaderImpl({
+  range,
+  highlights,
+}: {
+  range: TimelineRange;
+  highlights: HighlightRange[];
+}) {
   const gridWidth = range.days.length * DAY_WIDTH;
+
+  const today = new Date();
+  const todayIdx = range.days.findIndex(
+    (d) =>
+      d.getFullYear() === today.getFullYear() &&
+      d.getMonth() === today.getMonth() &&
+      d.getDate() === today.getDate(),
+  );
 
   let dayCursor = 0;
   const groupsWithYear = range.headerGroups.map((group) => {
@@ -38,28 +56,38 @@ function TimelineHeaderImpl({ range }: { range: TimelineRange }) {
             className="db-tl-header__group"
             style={{ width: group.days * DAY_WIDTH }}
           >
-            <Button
-              variant="ghost"
-              className=" db-tl-header__group-label"
-              style={{ background: "transparent" }}
-            >
-              <span className="tiptap-button-text">
-                {group.label}
-                {group.year != null ? ` ${group.year}` : ""}
-              </span>
-            </Button>
+            <span className="db-tl-header__group-label">
+              {group.label}
+              {group.year != null ? ` ${group.year}` : ""}
+            </span>
           </div>
         ))}
       </div>
-      <Spacer orientation="vertical" size={5} />
+
       <div className="db-tl-header__days" style={{ height: HEADER_HEIGHT }}>
+        {highlights.map((h, i) => (
+          <div
+            key={i}
+            className={`db-tl-header__highlight db-tl-header__highlight--${h.tone}`}
+            style={{ left: h.left, width: h.width }}
+            aria-hidden
+          />
+        ))}
+
         {range.days.map((day, i) => (
           <div
             key={i}
             className="db-tl-header__day"
             style={{ left: i * DAY_WIDTH, width: DAY_WIDTH }}
           >
-            {day.getDate()}
+            <span
+              className={
+                "db-tl-header__day-num" +
+                (i === todayIdx ? " db-tl-header__day-num--today" : "")
+              }
+            >
+              {day.getDate()}
+            </span>
           </div>
         ))}
       </div>
@@ -68,3 +96,4 @@ function TimelineHeaderImpl({ range }: { range: TimelineRange }) {
 }
 
 export const TimelineHeader = memo(TimelineHeaderImpl);
+export type { HighlightRange };

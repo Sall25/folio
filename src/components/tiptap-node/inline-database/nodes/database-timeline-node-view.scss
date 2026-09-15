@@ -285,7 +285,7 @@
   top: 0;
   bottom: 0;
   width: 2px;
-  background: var(--tt-destructive-color, #ef4444);
+  background: var(--tt-color-red-inc-1, #ef4444);
   opacity: 0.7;
   pointer-events: none;
   transform: translateX(-50%);
@@ -429,20 +429,6 @@
   &__groups {
     display: flex;
   }
-
-  // &__group {
-  //   flex-shrink: 0;
-  //   padding: 6px 8px;
-  //   font-size: 12px;
-  //   font-weight: 600;
-  //   color: var(--tt-gray-light-a-700);
-  
-  //   box-sizing: border-box;
-
-  //   .dark & {
-  //     color: var(--tt-gray-dark-a-700);
-  //   }
-  // }
 
   &__days {
     position: relative;
@@ -630,4 +616,70 @@
 .db-tl-toggle-slot {
   display: flex;
   align-items: center;
+}
+
+.db-tl-header__days {
+  position: relative;
+}
+
+.db-tl-header__day {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.db-tl-header__day-num {
+  font-size: 12px;
+  color: var(--tt-gray-light-a-500);
+
+  .dark & {
+    color: var(--tt-gray-dark-a-500);
+  }
+
+  &--today {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background:  var(--tt-color-red-inc-1); //#dc2626;
+    color: #ffffff !important;
+    font-weight: 700;
+    position: relative;
+
+    // Short stub connecting the badge down into the grid below — the full
+    // vertical guide line through the gantt body is a separate element
+    // (db-tl-today-line), this just visually bridges the gap to it.
+    &::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      width: 2px;
+      height: 8px;
+      background: var(--tt-color-red-inc-1);
+      transform: translateX(-50%);
+    }
+  }
+}
+
+.db-tl-header__highlight {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 1;
+
+  &--hover {
+    background: color-mix(in srgb, var(--tt-selection-color) 12%, transparent);
+  }
+
+  &--selected {
+    background: color-mix(in srgb, var(--tt-selection-color) 20%, transparent);
+  }
 }

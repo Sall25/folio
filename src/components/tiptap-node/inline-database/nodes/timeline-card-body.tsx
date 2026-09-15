@@ -5,6 +5,7 @@ import type { CellValue, DatabaseView, ID, Page } from "src/types";
 import "./timeline-card-body.scss";
 import { ROW_HEIGHT } from "../hooks/use-timeline-layout";
 import { useResizableNode } from "../../figure-node";
+import { recordSelection } from "../utils/record-selection-store";
 
 interface TimelineCardBodyProps {
   view: DatabaseView;
@@ -41,12 +42,6 @@ export function TimelineCardBody({
     }
   };
 
-  // Plain div, not <Card> — Card clips its children internally (an inner
-  // wrapper we don't have visibility into) and that clipping survived
-  // overriding overflow both via className and inline style on the outer
-  // element, meaning it's not reachable from outside. .db-tl-bar below
-  // already supplies the background/radius/hover Card would have given us,
-  // so there's nothing lost by not using it here.
   return (
     <div
       className="db-tl-bar"
@@ -54,9 +49,11 @@ export function TimelineCardBody({
         position: "absolute",
         inset: 0,
         width: geo.width,
-        height: ROW_HEIGHT - 1,
+        height: ROW_HEIGHT - 2,
       }}
       onClick={() => onOpenRecord(record.id)}
+      onMouseEnter={() => recordSelection.setHovered(record.id)}
+      onMouseLeave={() => recordSelection.setHovered(null)}
     >
       {clippedLeft && (
         <span

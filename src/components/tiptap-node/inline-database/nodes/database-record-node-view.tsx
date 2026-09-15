@@ -291,7 +291,7 @@ export default function DatabaseRecordNodeView({
           <TimelineCardBody
             record={record}
             view={view}
-            geo={{ left: 0, width: tp.width }}
+            geo={{ left: tp.left, width: tp.width }}
             setCellValue={data.setCellValue}
             clippedLeft={tp.clippedLeft}
             clippedRight={tp.clippedRight}

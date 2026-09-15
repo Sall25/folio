@@ -8,7 +8,14 @@ import {
   ChevronsRight,
   Plus,
 } from "lucide-react";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { NodeViewContent } from "@tiptap/react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { usePageViewActions } from "src/components/tiptap-templates/simple/context/page-view-context";
@@ -27,7 +34,7 @@ import {
   useTimelineViewActions,
   useTimelineViewState,
 } from "../context/timeline-view-context";
-import { TimelineHeader } from "./timeline-header";
+import { TimelineHeader, type HighlightRange } from "./timeline-header";
 import { TimelineDayGrid } from "./timeline-day-grid";
 import {
   Popover,
@@ -37,6 +44,19 @@ import {
 import { Card } from "src/components/tiptap-ui-primitive/card";
 import { MenuRow } from "../components/menu-row";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import {
+  recordSelection,
+  subscribe as subscribeSelection,
+  useRecordSelection,
+} from "../utils/record-selection-store";
+
+function useHoveredRecordId(): string | null {
+  return useSyncExternalStore(
+    subscribeSelection,
+    () => recordSelection.getHovered(),
+    () => null,
+  );
+}
 
 const TIMEFRAMES: TimelineView["timeframe"][] = [
   "day",
@@ -165,7 +185,8 @@ function TimelineNav({
 }
 
 function DatabaseTimelineNodeViewImpl() {
-  const { db, source, sortedRecords, onUpdateView } = useDatabaseContext();
+  const { db, source, sortedRecords, onUpdateView, attrs } =
+    useDatabaseContext();
   const { setTarget } = usePageViewActions();
   const { addRecordAsync } = useDataSource(source?.id);
   const { year, month } = useTimelineViewState();
@@ -332,6 +353,27 @@ function DatabaseTimelineNodeViewImpl() {
     });
   }
 
+  const hoveredRecordId = useHoveredRecordId();
+  const selectedRecordIds = useRecordSelection(attrs.id);
+
+  const highlights = useMemo(() => {
+    const out: HighlightRange[] = [];
+    const { placement } = timelineLayout;
+
+    selectedRecordIds.forEach((id) => {
+      const geo = placement[id];
+      if (geo) out.push({ left: geo.left, width: geo.width, tone: "selected" });
+    });
+
+    if (hoveredRecordId && !selectedRecordIds.includes(hoveredRecordId)) {
+      const geo = placement[hoveredRecordId];
+      if (geo) out.push({ left: geo.left, width: geo.width, tone: "hover" });
+    }
+
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timelineLayout.placement, hoveredRecordId, selectedRecordIds]);
+
   if (!startProp) {
     return (
       <div className="db-tl-empty">
@@ -427,7 +469,7 @@ function DatabaseTimelineNodeViewImpl() {
 
             <div className="db-tl-scroll" ref={scrollRef}>
               <div style={{ width: gridWidth, minWidth: gridWidth }}>
-                <TimelineHeader range={range} />
+                <TimelineHeader highlights={highlights} range={range} />
                 <div
                   className="db-tl-gantt__body"
                   style={{
