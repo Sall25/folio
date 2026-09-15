@@ -12,14 +12,33 @@ import {
 import CalendarView from "src/components/tiptap-ui/mention-menu/calendar-view/calendar-view";
 import type { DateFormat, TimeFormat } from "src/types";
 
+type DateCellValue = string | { start: string; end?: string } | null;
+
 interface DateCellDisplayProps {
-  value: string | null;
+  value: DateCellValue;
   format?: DateFormat;
   timeFormat?: TimeFormat;
   includeTime?: boolean;
-  onChange?: (iso: string) => void;
+  onChange?: (value: DateCellValue) => void;
   readonly?: boolean;
   placeholder?: string;
+}
+
+function normalize(value: DateCellValue): {
+  start: Date | null;
+  end: Date | null;
+} {
+  if (value == null) return { start: null, end: null };
+  if (typeof value === "string") {
+    const d = new Date(value);
+    return { start: isNaN(d.getTime()) ? null : d, end: null };
+  }
+  const start = value.start ? new Date(value.start) : null;
+  const end = value.end ? new Date(value.end) : null;
+  return {
+    start: start && !isNaN(start.getTime()) ? start : null,
+    end: end && !isNaN(end.getTime()) ? end : null,
+  };
 }
 
 function formatForCell(
@@ -61,16 +80,31 @@ export function DateCellDisplay({
   placeholder = "Empty",
 }: DateCellDisplayProps) {
   const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<Date | undefined>(
-    value ? new Date(value) : undefined,
-  );
 
-  const date = value ? new Date(value) : new Date();
+  const { start, end } = normalize(value);
+  const [draft, setDraft] = useState<Date | undefined>(start ?? undefined);
+
+  const displayDate = start ?? new Date();
 
   function handleDateChange(d: Date) {
     setDraft(d);
-    onChange?.(d.toISOString());
+    // Editing via the calendar picker sets/moves the START date only,
+    // preserving an existing end (e.g. set via timeline resize) rather than
+    // silently dropping it. A plain string is only written when there was
+    // never an end to begin with, so simple (non-range) date properties keep
+    // their original storage shape instead of turning into objects.
+    if (end) {
+      onChange?.({ start: d.toISOString(), end: end.toISOString() });
+    } else {
+      onChange?.(d.toISOString());
+    }
   }
+
+  const displayText = start
+    ? end && end.getTime() !== start.getTime()
+      ? `${formatForCell(start, format, timeFormat, includeTime)} → ${formatForCell(end, format, timeFormat, includeTime)}`
+      : formatForCell(start, format, timeFormat, includeTime)
+    : placeholder;
 
   const trigger = (
     <Button
@@ -88,18 +122,15 @@ export function DateCellDisplay({
         height: "inherit",
         margin: 0,
         padding: 0,
-        // paddingTop: 2,
       }}
     >
       <span
         className={`tiptap-button-text db-cell-text__display${
-          value ? "" : " db-cell-text__display--empty"
+          start ? "" : " db-cell-text__display--empty"
         }`}
         style={{ lineHeight: "inherit" }}
       >
-        {value
-          ? formatForCell(date, format, timeFormat, includeTime)
-          : placeholder}
+        {displayText}
       </span>
     </Button>
   );
@@ -130,7 +161,7 @@ export function DateCellDisplay({
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent>
         <CalendarView
-          value={draft ?? date}
+          value={draft ?? displayDate}
           onChange={handleDateChange}
           includeTime={includeTime}
         />
