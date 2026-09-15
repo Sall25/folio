@@ -1,5 +1,9 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, type RefObject } from "react";
 import type { ResizableNodeContextType } from "./types";
+
+const defaultNodeRef: RefObject<HTMLElement | null> = {
+  current: null,
+};
 
 export const ResizableNodeContext = createContext<ResizableNodeContextType>({
   isResizing: false,
@@ -10,7 +14,7 @@ export const ResizableNodeContext = createContext<ResizableNodeContextType>({
   startHeight: 0,
   // elementDimensions: { width: 0, height: 0, offsetWidth: 0, offsetHeight: 0 },
   aspectRatio: 1,
-  nodeRef: null,
+  nodeRef: defaultNodeRef,
 });
 
 export function useResizableNode() {

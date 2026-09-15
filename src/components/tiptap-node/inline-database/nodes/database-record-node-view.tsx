@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { NodeViewWrapper, NodeViewContent } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/core";
 import { createPortal } from "react-dom";
@@ -13,8 +13,57 @@ import {
   CELL_HEADER_HEIGHT,
   RECORD_HEIGHT,
 } from "../hooks/use-calendar-layout";
-import { ROW_HEIGHT as TL_ROW_HEIGHT } from "../hooks/use-timeline-layout";
+import {
+  DAY_WIDTH,
+  parseDateValue,
+  ROW_HEIGHT as TL_ROW_HEIGHT,
+} from "../hooks/use-timeline-layout";
 import { TimelineCardBody } from "./timeline-card-body";
+import { ResizableNodeProvider, useResizableNode } from "../../figure-node";
+
+// Sits inside ResizableNodeProvider so it can consume the ref the provider
+// creates internally — that ref has to be attached to the actual DOM box
+// being resized (the NodeViewWrapper), which can't happen in the same
+// component that renders <ResizableNodeProvider>, since context only flows
+// to descendants.
+function TimelineRecordBox({
+  recordId,
+  setWrapperEl,
+  children,
+  setIsResizing,
+}: {
+  recordId: string;
+  setWrapperEl: (el: HTMLElement | null) => void;
+  setIsResizing: (v: boolean) => void;
+  children: React.ReactNode;
+}) {
+  const wrapperEl = useRef<HTMLDivElement | null>(null);
+  const { nodeRef, isResizing } = useResizableNode();
+  useEffect(() => {
+    const box = wrapperEl.current?.closest<HTMLElement>(
+      ".react-renderer.node-databaseRecord",
+    );
+    nodeRef.current = box ?? null;
+    setIsResizing(isResizing);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <NodeViewWrapper
+      as="div"
+      ref={(el: HTMLDivElement | null) => {
+        setWrapperEl(el);
+        wrapperEl.current = el;
+        // nodeRef.current = el;
+      }}
+      style={{ zIndex: 20 }}
+      data-type="database-record"
+      data-record-id={recordId}
+    >
+      {children}
+    </NodeViewWrapper>
+  );
+}
 
 function isEmptyCellValue(
   value: CellValue | null,
@@ -56,6 +105,7 @@ export default function DatabaseRecordNodeView({
   const data = useDatabaseBridgeData(editor, databaseId);
   const { isSelected, isHovered } = useRecordRowState(databaseId, recordId);
   const [wrapperEl, setWrapperEl] = useState<HTMLElement | null>(null);
+  const [isResizing, setIsResizing] = useState(false);
 
   const isBoard = data?.view?.type === "board";
   const isGallery = data?.view?.type === "gallery";
@@ -99,10 +149,24 @@ export default function DatabaseRecordNodeView({
       if (tp && index !== -1) {
         box.style.setProperty("display", "block", "important");
         box.style.setProperty("position", "absolute", "important");
-        box.style.setProperty("top", `${index * TL_ROW_HEIGHT}px`, "important");
+        // Row comes from the overlap-packing pass (tp.row), not list order —
+        // two records only share a row when their dates don't overlap.
+        box.style.setProperty(
+          "top",
+          `${tp.row * TL_ROW_HEIGHT}px`,
+          "important",
+        );
+        box.style.setProperty(
+          "top",
+          `${index === 0 ? TL_ROW_HEIGHT : index * TL_ROW_HEIGHT}px`,
+          "important",
+        );
         box.style.setProperty("left", `${tp.left}px`, "important");
-        box.style.setProperty("width", `${tp.width}px`, "important");
+        if (!isResizing) {
+          box.style.setProperty("width", `${tp.width}px`, "important");
+        }
         box.style.setProperty("height", `${TL_ROW_HEIGHT}px`, "important");
+        box.style.setProperty("margin", `0px`, "important");
         box.removeAttribute("draggable");
       } else {
         box.style.setProperty("display", "none", "important");
@@ -168,7 +232,16 @@ export default function DatabaseRecordNodeView({
     } else {
       box.style.gridRow = String(index + 1);
     }
-  }, [wrapperEl, isBoard, isGallery, isCalendar, isTimeline, recordId, data]);
+  }, [
+    wrapperEl,
+    isBoard,
+    isGallery,
+    isCalendar,
+    isTimeline,
+    recordId,
+    data,
+    isResizing,
+  ]);
 
   const isTableView = data?.view?.type === "table";
   const [pointerOnCheckbox, setPointerOnCheckbox] = useState(false);
@@ -179,28 +252,53 @@ export default function DatabaseRecordNodeView({
     !isFilteredOut &&
     (isHovered || isSelected || pointerOnCheckbox);
   const anchor = useRowAnchor(wrapperEl, showCheckbox);
-
-  // ── TIMELINE: render as a bar (own body, own drag/resize) ──────────────
+  // ── TIMELINE: render as a bar, resizable to adjust endDate ─────────────
   if (isTimeline && record && data && recordId) {
     const tp = data.timelinePlacement?.[recordId];
     if (!tp) return null;
+
     const view = data.view as TimelineView;
+    const recordStart = parseDateValue(
+      view.startDatePropertyId
+        ? record.values?.[view.startDatePropertyId]
+        : null,
+    );
 
     return (
-      <NodeViewWrapper
-        as="div"
-        ref={setWrapperEl}
-        data-type="database-record"
-        data-record-id={recordId}
-        style={{ zIndex: 20 }}
+      <ResizableNodeProvider
+        min={{ width: DAY_WIDTH }}
+        onResizeEnd={(dimensions) => {
+          if (!recordStart.start) return;
+          // Snap the dragged pixel width back to whole days on the same
+          // ruler the header/day-grid use, then write the resulting date —
+          // not the pixel width itself.
+          const days = Math.max(1, Math.round(dimensions.width / DAY_WIDTH));
+
+          const newEnd = new Date(recordStart.start);
+          newEnd.setDate(newEnd.getDate() + days - 1);
+
+          data.setCellValue(recordId, view.startDatePropertyId, {
+            start: recordStart.start.toISOString(),
+            end: newEnd.toISOString(),
+          });
+        }}
       >
-        <TimelineCardBody
-          record={record}
-          view={view}
-          geo={{ left: 0, width: tp.width }}
-          setCellValue={data.setCellValue}
-        />
-      </NodeViewWrapper>
+        <TimelineRecordBox
+          setIsResizing={setIsResizing}
+          recordId={recordId}
+          setWrapperEl={setWrapperEl}
+        >
+          <TimelineCardBody
+            record={record}
+            view={view}
+            geo={{ left: 0, width: tp.width }}
+            setCellValue={data.setCellValue}
+            clippedLeft={tp.clippedLeft}
+            clippedRight={tp.clippedRight}
+            canResize={true}
+          />
+        </TimelineRecordBox>
+      </ResizableNodeProvider>
     );
   }
 

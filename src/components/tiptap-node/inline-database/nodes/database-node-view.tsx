@@ -124,7 +124,7 @@ function DatabaseNodeViewBody({
   );
 
   const { year: tlYear, month: tlMonth } = useTimelineViewState();
-  const { timelineLayout } = useTimelineLayout(
+  const { timelineLayout, setEndPropertyId } = useTimelineLayout(
     sortedRecords,
     source ?? null,
     db,
@@ -159,6 +159,7 @@ function DatabaseNodeViewBody({
     galleryLayout,
     calendarLayout,
     timelineLayout,
+    setEndPropertyId,
   });
 
   // Seed record/cell nodes once at creation; keep cells matching properties.

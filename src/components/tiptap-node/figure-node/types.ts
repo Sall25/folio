@@ -23,7 +23,7 @@ export type ResizableNodeContextType = {
   startWidth: number;
   startHeight: number;
   aspectRatio: number;
-  nodeRef: RefObject<HTMLElement | null> | null;
+  nodeRef: RefObject<HTMLElement | null>;
   handleResizeStart?: (
     event: React.MouseEvent | React.TouchEvent,
     direction: ResizableNodeDirection,

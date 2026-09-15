@@ -50,6 +50,7 @@ export interface DatabaseBridgeData {
   galleryPlacement?: Record<string, GalleryPlacement>;
   calendarPlacement?: Record<string, CalendarPlacement>;
   timelinePlacement?: Record<string, TimelinePlacement>;
+  setEndPropertyId?: (propertyID: ID) => void;
 }
 
 interface DatabaseEntry {

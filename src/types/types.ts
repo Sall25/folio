@@ -285,7 +285,7 @@ export type CellValueMap = {
   multi_select: SelectOption[]; // SelectOption.id[]
   status: ID | null; // StatusItem.id
   checkbox: boolean;
-  date: string | null; // ISO string
+  date: string | { start: string; end?: string } | null; // ISO string
   person: PersonValue[];
   formula: string | number | boolean | null; // computed, read-only
   relation: RelationValue[];

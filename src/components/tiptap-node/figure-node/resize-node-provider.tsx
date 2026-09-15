@@ -236,7 +236,13 @@ export function ResizableNodeProvider({
         //     shouldPreserveAspectRatio,
         //   );
         if (nodeRef.current) {
-          nodeRef.current.style.width = `${constrained.width}px`;
+          console.log("constrained.width", constrained.width);
+          nodeRef.current.style.setProperty(
+            "width",
+            `${constrained.width}px`,
+            "important",
+          );
+          // nodeRef.current.style.width = `${constrained.width}px !important`;
           nodeRef.current.style.flexBasis = `${constrained.width}px`;
         }
       });

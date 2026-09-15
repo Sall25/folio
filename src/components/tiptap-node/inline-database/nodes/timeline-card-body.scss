@@ -1,0 +1,124 @@
+.db-tl-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  border-radius: var(--tt-radius-sm) !important;
+  padding: 5px !important;
+  background: var(--tt-gray-light-50) !important;
+  box-shadow: var(--tt-shadow-elevated-sm);
+  border: 5px solid var(--tt-border-color) !important;
+  .dark & {
+    background: rgba(37, 37, 37, 0.897) !important;
+    box-shadow: var(--tt-shadow-elevated-lg);
+    border: 1px solid var(--tt-border-color) !important;
+  }
+  cursor: pointer;
+  overflow: visible !important;
+  transition: background 0.1s ease;
+  border: none !important;
+
+  // &:hover {
+  //   background: var(--tt-gray-dark-300, #333);
+  // }
+
+  &[data-selected="true"] {
+    background: color-mix(in srgb, var(--tt-selection-color) 22%, var(--tt-gray-dark-200, #2a2a2a));
+  }
+}
+
+.db-tl-bar__content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  min-width: 0;
+  height: fit-content;
+  min-height: 0;
+  overflow: visible !important;
+  background-color: transparent !important;
+}
+
+
+.db-tl-bar__title {
+  font-weight: 500 !important;
+  white-space: nowrap;
+  // Deliberately NOT overflow:hidden/ellipsis — when the title is wider than
+  // the bar's date-range width, it should spill past the colored background
+  // rather than truncate. Only the portion within tp.width (the Card's own
+  // box, which is what carries the background) gets the pill fill; the
+  // overflow renders on transparent, directly against the day-grid.
+  overflow: visible;
+  flex-shrink: 0;
+  position: absolute;
+  left: 20px;
+  color: var(--tt-text-primary) !important;
+  font-size: 14px !important;
+}
+
+.db-tl-bar__connector {
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 1px;
+  background: var(--tt-gray-dark-400, #4d4d4d);
+  transform: translateY(-50%);
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    border: 1px solid var(--tt-gray-dark-400, #4d4d4d);
+    background: var(--tt-gray-dark-200, #2a2a2a);
+    transform: translateY(-50%);
+  }
+
+  &--right {
+    right: -24px;
+
+    &::after {
+      right: -3px;
+    }
+  }
+
+  &--left {
+    left: -24px;
+
+    &::after {
+      left: -3px;
+    }
+  }
+}
+
+.db-tl-bar__icon{
+  color: var(--tt-text-primary);
+}
+
+.db-tl-bar__resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+  border-radius: 0 999px 999px 0;
+  opacity: 0;
+  background: var(--tt-gray-dark-a-900, #f0ede6);
+  transition: opacity 0.1s ease;
+
+  .db-tl-bar:hover &,
+  &--active {
+    opacity: 0.5;
+  }
+
+  &[data-is-resizing="true"]{
+    background: var(--tt-gray-dark-a-900, #f0ede6);
+  }
+
+  &--active {
+    opacity: 0.9;
+  }
+}

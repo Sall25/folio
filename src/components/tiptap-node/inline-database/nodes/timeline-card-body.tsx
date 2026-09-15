@@ -1,8 +1,10 @@
 import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Card } from "src/components/tiptap-ui-primitive/card";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import type { CellValue, DatabaseView, ID, Page } from "src/types";
+import "./timeline-card-body.scss";
+import { ROW_HEIGHT } from "../hooks/use-timeline-layout";
+import { useResizableNode } from "../../figure-node";
 
 interface TimelineCardBodyProps {
   view: DatabaseView;
@@ -13,10 +15,21 @@ interface TimelineCardBodyProps {
     propertyId: string,
     value: CellValue,
   ) => void;
+  clippedLeft?: boolean;
+  clippedRight?: boolean;
+  canResize?: boolean;
 }
 
-export function TimelineCardBody({ view, record }: TimelineCardBodyProps) {
+export function TimelineCardBody({
+  view,
+  record,
+  clippedLeft,
+  clippedRight,
+  geo,
+  canResize,
+}: TimelineCardBodyProps) {
   const { setTarget } = usePageView();
+  const { handleResizeStart, isResizing, activeHandle } = useResizableNode();
 
   const onOpenRecord = (recordId: ID) => {
     if (view.openPageIn === "Center") {
@@ -28,20 +41,66 @@ export function TimelineCardBody({ view, record }: TimelineCardBodyProps) {
     }
   };
 
-  // left/width are already applied to the NodeViewWrapper that hosts this
-  // component (see DatabaseRecordNodeView's isTimeline branch) — this just
-  // fills that positioned box. Setting them again here was the double-offset
-  // bug: the wrapper shifted the box right, then the card shifted again.
+  // Plain div, not <Card> — Card clips its children internally (an inner
+  // wrapper we don't have visibility into) and that clipping survived
+  // overriding overflow both via className and inline style on the outer
+  // element, meaning it's not reachable from outside. .db-tl-bar below
+  // already supplies the background/radius/hover Card would have given us,
+  // so there's nothing lost by not using it here.
   return (
-    <Card
+    <div
       className="db-tl-bar"
-      style={{ position: "absolute", inset: 0 }}
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: geo.width,
+        height: ROW_HEIGHT - 1,
+      }}
       onClick={() => onOpenRecord(record.id)}
     >
-      <Button variant="ghost">
-        <DynamicIcon name={record.cover.iconName ?? undefined} size={18} />
-        <span className="tiptap-button-text">{record.title}</span>
+      {clippedLeft && (
+        <span
+          className="db-tl-bar__connector db-tl-bar__connector--left"
+          aria-hidden
+        />
+      )}
+
+      <Button variant="ghost" className="db-tl-bar__content">
+        <span className="db-tl-bar__icon">
+          <DynamicIcon name={record.cover.iconName ?? undefined} size={14} />
+        </span>
+        <span className="tiptap-button-text db-tl-bar__title">
+          {record.title}
+        </span>
       </Button>
-    </Card>
+
+      {clippedRight && (
+        <span
+          className="db-tl-bar__connector db-tl-bar__connector--right"
+          aria-hidden
+        />
+      )}
+      {canResize && (
+        <span
+          className={
+            "db-tl-bar__resize-handle" +
+            (isResizing && activeHandle === "right"
+              ? " db-tl-bar__resize-handle--active"
+              : "")
+          }
+          data-is-resizing={isResizing}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            handleResizeStart?.(e, "right");
+          }}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+            handleResizeStart?.(e, "right");
+          }}
+          onClick={(e) => e.stopPropagation()}
+          aria-hidden
+        />
+      )}
+    </div>
   );
 }
