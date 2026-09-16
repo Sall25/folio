@@ -11,36 +11,35 @@ import type { Editor, NodeViewProps } from "@tiptap/core";
 import { NodeViewWrapper } from "@tiptap/react";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { usePage } from "src/hooks/use-pages";
-import { useDataSource } from "../hooks/use-data-source";
-import { useDatabase } from "../hooks/use-database";
-import { DatabaseProvider } from "./database-provider";
-import { DatabaseToolbar } from "../components/database-toolbar";
-import { DatabaseTitleBar } from "../components/database-title-bar";
-import { DataSourcePicker } from "./data-source-picker";
-import { DatabaseBoardNodeView } from "./database-board-node-view";
-import { DatabaseGalleryNodeView } from "./database-gallery-node-view";
-import { DatabaseListNodeView } from "./database-list-node-view/database-list-node-view";
-import { DatabaseCalendarNodeView } from "./database-calendar-node-view";
-import { DatabaseTimelineNodeView } from "./database-timeline-node-view";
-import { DatabaseTableBody } from "./database-table-node";
-import { useDatabaseColumnLayout } from "../hooks/use-database-column-layout";
-import { useDatabaseBridgePublish } from "../hooks/use-database-bridge-publish";
+import { useDataSource } from "../../hooks/use-data-source";
+import { useDatabase } from "../../hooks/use-database";
+import { DatabaseProvider } from "../../context/database-provider";
+import { DatabaseToolbar } from "../../components/database-toolbar";
+import { DatabaseTitleBar } from "../../components/database-title-bar";
+import { DataSourcePicker } from "../../components/data-source-picker/data-source-picker";
+import { DatabaseBoardNodeView } from "../database-board-node-view";
+import { DatabaseGalleryNodeView } from "../database-gallery-node-view/database-gallery-node-view";
+import { DatabaseListNodeView } from "../database-list-node-view/database-list-node-view";
+import { DatabaseCalendarNodeView } from "../database-calendar-node-view";
+import { DatabaseTimelineNodeView } from "../database-timeline-node-view/database-timeline-node-view";
+import { DatabaseTableBody } from "../database-table-node";
+import { useDatabaseColumnLayout } from "../../hooks/use-database-column-layout";
+import { useDatabaseBridgePublish } from "../../hooks/use-database-bridge-publish";
 import {
   useDatabaseSeed,
   useDatabaseCellSync,
   removeRecordNode,
-} from "../hooks/use-database-seed";
-import { useTableRecords } from "../hooks/use-table-records";
-import { useViewSwitch } from "../hooks/use-view-switch";
+} from "../../hooks/use-database-seed";
+import { useTableRecords } from "../../hooks/use-table-records";
+import { useViewSwitch } from "../../hooks/use-view-switch";
 
 import { type DatabaseAttrs, type ID, type DatabaseProperty } from "src/types";
-import "./database-table-node-view.scss";
 import "./database-node.scss";
-import { SelectionToolbar } from "../components/selection-toolbar";
+import { SelectionToolbar } from "../../components/selection-toolbar";
 import {
   NewRowEditActionsProvider,
   NewRowEditStateProvider,
-} from "./new-row-edit-provider";
+} from "../../context/new-row-edit-provider";
 import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import {
   useActiveViewFromHash,
@@ -49,20 +48,20 @@ import {
   useListLayout,
   useMeasureViewDims,
   useSyncViews,
-} from "../hooks";
-import { ChipsRow } from "../components/chips-row";
+} from "../../hooks";
+import { ChipsRow } from "../../components/chips-row";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { usePageViewState } from "src/components/tiptap-templates/simple/context/page-view-context";
-import { setColumnHint } from "../utils/skeleton-hints";
-import { DatabaseLoadingSkeletonWithDims } from "./database-loading-skeleton-with-dims";
-import { useTableLayout } from "../hooks/use-table-layout";
-import { useGalleryLayout } from "../hooks/use-gallery-layout";
-import { useDatabaseContext } from "./database-context";
-import { useNewRowEditState } from "./new-row-edit-context";
-import { useCalendarLayout } from "../hooks/use-calendar-layout";
-import { useCalendarViewState } from "../context/calendar-view-context";
-import { useTimelineViewState } from "../context";
-import { useTimelineLayout } from "../hooks/use-timeline-layout";
+import { setColumnHint } from "../../utils/skeleton-hints";
+import { DatabaseLoadingSkeletonWithDims } from "../../components/database-loading-skeleton-with-dims/database-loading-skeleton-with-dims";
+import { useTableLayout } from "../../hooks/use-table-layout";
+import { useGalleryLayout } from "../../hooks/use-gallery-layout";
+import { useDatabaseContext } from "../../context/database-context";
+import { useNewRowEditState } from "../../context/new-row-edit-context";
+import { useCalendarLayout } from "../../hooks/use-calendar-layout";
+import { useCalendarViewState } from "../../context/calendar-view-context";
+import { useTimelineViewState } from "../../context";
+import { useTimelineLayout } from "../../hooks/use-timeline-layout";
 
 const EMPTY_SOURCE = { properties: [] };
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];
@@ -124,7 +123,7 @@ function DatabaseNodeViewBody({
   );
 
   const { year: tlYear, month: tlMonth } = useTimelineViewState();
-  const { timelineLayout, setEndPropertyId } = useTimelineLayout(
+  const { timelineLayout } = useTimelineLayout(
     sortedRecords,
     source ?? null,
     db,
@@ -159,7 +158,6 @@ function DatabaseNodeViewBody({
     galleryLayout,
     calendarLayout,
     timelineLayout,
-    setEndPropertyId,
   });
 
   // Seed record/cell nodes once at creation; keep cells matching properties.

@@ -1,5 +1,5 @@
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { useDatabaseContext } from "../../nodes/database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import { FilterRuleChips } from "../filter-rule-chips";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";

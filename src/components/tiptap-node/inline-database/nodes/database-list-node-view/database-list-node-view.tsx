@@ -3,10 +3,10 @@ import { Plus } from "lucide-react";
 import { NodeViewContent } from "@tiptap/react";
 import type { ListView } from "src/types";
 import { recordSelection } from "../../utils/record-selection-store";
-import { useDatabaseContext } from "../database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import { useListLayout } from "../../hooks";
 import { useNewRecordSkeleton } from "../database-table-node/use-new-record-skeleton";
-import { GroupHeaders } from "../group-headers";
+import { GroupHeaders } from "../../components/group-headers/group-headers";
 import "./database-list-node-view.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 

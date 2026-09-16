@@ -1,11 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { NodeViewWrapper } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/core";
-import { useDatabaseBridgeData } from "../hooks/use-database-bridge-data";
-import { Cell } from "../components/cells/cell";
+import { useDatabaseBridgeData } from "../../hooks/use-database-bridge-data";
+import { Cell } from "../../components/cells/cell";
 import type { CellValue, DatabaseProperty, ID } from "src/types";
-import { CellOverlay } from "../components/cell-overlay";
-import { isCopiableType } from "./database-board-node-view/utils";
+import { CellOverlay } from "../../components/cell-overlay";
+import { isCopiableType } from "../database-board-node-view/utils";
 import { usePageView } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { useActivePage } from "src/components/tiptap-templates/simple/context/active-page-context";
 

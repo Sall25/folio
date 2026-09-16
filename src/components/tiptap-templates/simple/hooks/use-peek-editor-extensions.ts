@@ -37,7 +37,7 @@ import {
   DatabaseCellNode,
   DatabaseRecordNode,
   DatabaseNode,
-} from "src/components/tiptap-node/inline-database/nodes/database-node";
+} from "src/components/tiptap-node/inline-database/nodes/database-node/database-node";
 import { AudioExtension } from "src/components/tiptap-node/audio-node";
 import { RecordPropertyPanelNode } from "../record-property-panel-node";
 import type { ID } from "src/types";

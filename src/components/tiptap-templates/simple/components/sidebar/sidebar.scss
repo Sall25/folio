@@ -472,9 +472,10 @@
 
 .name-initial {
   padding: 2px;
+  box-shadow: var(--tt-shadow-elevated-xs);
   background: rgba(241, 237, 230, 0.842) !important;
   .dark & {
-    background: var(--tt-gray-dark-300) !important;
+    background: var(--tt-gray-dark-200) !important;
   }
 }
 

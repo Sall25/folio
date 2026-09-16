@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useCurrentEditor } from "@tiptap/react";
-import { useDatabaseContext } from "../../nodes/database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import type { CalendarView, DatabaseProperty, Page } from "src/types";
 import type { DragStorage } from "../../extensions";
 import { Button } from "src/components/tiptap-ui-primitive/button";

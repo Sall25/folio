@@ -7,7 +7,7 @@ import {
   CalendarViewStateContext,
 } from "./calendar-view-context";
 import { useDataSource } from "../hooks/use-data-source";
-import { useDatabaseContext } from "../nodes/database-context";
+import { useDatabaseContext } from "./database-context";
 
 export function CalendarViewProvider({ children }: { children: ReactNode }) {
   const today = useMemo(() => new Date(), []);

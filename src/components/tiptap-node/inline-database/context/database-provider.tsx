@@ -27,11 +27,11 @@ import { useVisibleSelection } from "../hooks/use-visible-selection";
 import { useResolvedRecords } from "../hooks/use-resolved-records";
 import { useTableLayout } from "../hooks/use-table-layout";
 import { useRecordCreation } from "../hooks/use-record-creation";
-import { CardActionsProvider, TimelineViewProvider } from "../context";
+import { CardActionsProvider, TimelineViewProvider } from ".";
 import { useListLayout } from "../hooks";
 import type { DragStorage, DropInfo } from "../extensions";
 import { groupValueForColumn } from "../utils/group-value-for-column";
-import { CalendarViewProvider } from "../context/calendar-view-provider";
+import { CalendarViewProvider } from "./calendar-view-provider";
 
 // ── Provider ───────────────────────────────────────────────────────────────
 

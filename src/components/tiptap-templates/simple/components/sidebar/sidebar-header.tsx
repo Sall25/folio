@@ -42,8 +42,8 @@ function FolioPanelLeft({ color = "currentColor", ...props }: PanelIconProps) {
         width="6"
         height="16"
         rx="2"
-        fill={color}
-        stroke="none"
+        // fill={color}
+        stroke={color}
       />
     </svg>
   );
@@ -69,8 +69,8 @@ function FolioPanelRight({ color = "currentColor", ...props }: PanelIconProps) {
         width="6"
         height="16"
         rx="2"
-        fill={color}
-        stroke="none"
+        // fill={color}
+        stroke={color}
       />
     </svg>
   );
@@ -153,6 +153,7 @@ export const SidebarHeader = memo(() => {
             // border: "1px solid var(--tt-border-color)",
             padding: "6px",
             borderRadius: "var(--tt-radius-md)",
+            border: "0.2px solid var(--tt-border-color)",
           }}
         >
           <User />

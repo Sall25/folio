@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import type { NodeViewProps } from "@tiptap/core";
-import { DatabaseLoadingSkeleton } from "../components/database-loading-skeleton";
+import { DatabaseLoadingSkeleton } from "../../components/database-loading-skeleton";
 
 // The heavy database subsystem (six views, cells, dnd-kit, lodash, hooks,
 // utils) lives behind this dynamic import, so it leaves the editor-create

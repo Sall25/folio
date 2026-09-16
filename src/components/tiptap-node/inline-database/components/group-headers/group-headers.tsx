@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Chevron } from "src/components/tiptap-ui-primitive/chevron";
 import { SpinnerRing } from "src/components/tiptap-ui-primitive/spinner-ring";
-import type { GroupHeaderSlot } from "../utils/group-rows";
+import type { GroupHeaderSlot } from "../../utils/group-rows";
 import "./group-headers.scss";
 
 export function GroupHeaders({

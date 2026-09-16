@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { useCalendarViewState } from "../../context/calendar-view-context";
 import { useCalendarLayout } from "../../hooks/use-calendar-layout";
-import { useDatabaseContext } from "../database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import { CalendarGrid } from "./calendar-grid";
 import { CalendarNav } from "./calendar-nav";
 import { CalendarWeeks } from "./calendar-weeks";

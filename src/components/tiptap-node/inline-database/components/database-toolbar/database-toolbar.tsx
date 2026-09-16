@@ -21,7 +21,7 @@ import { useDataSource } from "../../hooks/use-data-source";
 import { usePageViewActions } from "src/components/tiptap-templates/simple/context/page-view-context";
 import { DatabaseTitleBar } from "../database-title-bar";
 import "./database-toolbar.scss";
-import { useDatabaseContext } from "../../nodes/database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import { SearchButton } from "./search-button";
 import { NewRecordButton } from "./new-record-button";
 import { CollapseToggle } from "./collapse-toggle";

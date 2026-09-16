@@ -2,26 +2,26 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { NodeViewWrapper, NodeViewContent } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/core";
 import { createPortal } from "react-dom";
-import { useDatabaseBridgeData } from "../hooks/use-database-bridge-data";
-import { useRecordRowState } from "../utils/record-selection-store";
-import { recordSelection } from "../utils/record-selection-store";
-import { beginRowDragSelect } from "../utils/row-drag-select";
-import { useRowAnchor } from "../hooks/use-row-anchor";
+import { useDatabaseBridgeData } from "../../hooks/use-database-bridge-data";
+import { useRecordRowState } from "../../utils/record-selection-store";
+import { recordSelection } from "../../utils/record-selection-store";
+import { beginRowDragSelect } from "../../utils/row-drag-select";
+import { useRowAnchor } from "../../hooks/use-row-anchor";
 import type {
   CalendarView,
   CellValue,
   DatabaseProperty,
   TimelineView,
 } from "src/types";
-import { BoardCardBody } from "../primitives/board-card-body";
+import { BoardCardBody } from "../../primitives/board-card-body";
 import {
   DAY_WIDTH,
   parseDateValue,
   ROW_HEIGHT as TL_ROW_HEIGHT,
-} from "../hooks/use-timeline-layout";
-import { TimelineCardBody } from "./timeline-card-body";
-import { CalendarEventBar } from "./database-calendar-node-view/calendar-event-bar";
-import { ResizableNodeProvider, useResizableNode } from "../../figure-node";
+} from "../../hooks/use-timeline-layout";
+import { TimelineCardBody } from "../database-timeline-node-view/timeline-card-body";
+import { CalendarEventBar } from "../database-calendar-node-view/calendar-event-bar";
+import { ResizableNodeProvider, useResizableNode } from "../../../figure-node";
 
 // Sits inside ResizableNodeProvider so it can consume the ref the provider
 // creates internally — that ref has to be attached to the actual DOM box
@@ -32,39 +32,32 @@ function TimelineRecordBox({
   recordId,
   setWrapperEl,
   children,
-  setIsResizing,
+  resizingRef,
 }: {
   recordId: string;
   setWrapperEl: (el: HTMLElement | null) => void;
-  setIsResizing: (v: boolean) => void;
+  resizingRef: React.MutableRefObject<boolean>;
   children: React.ReactNode;
 }) {
   const wrapperEl = useRef<HTMLDivElement | null>(null);
   const { nodeRef, isResizing } = useResizableNode();
 
-  // Assign the actual box on every render (not just mount) — cheap, and
-  // guards against wrapperEl.current changing identity.
   useLayoutEffect(() => {
     const box = wrapperEl.current?.closest<HTMLElement>(
       ".react-renderer.node-databaseRecord",
     );
+
     nodeRef.current = box ?? null;
   });
 
-  // Propagate isResizing to the PARENT's state whenever it actually
-  // changes — the previous empty-deps effect only ran once at mount, so
-  // the parent's isResizing stayed stuck at its initial `false` forever.
-  // That made the "if (!isResizing) set width" guard in the placement
-  // effect always true, so it kept stomping the live width the provider's
-  // own rAF loop was writing during an actual drag.
   useEffect(() => {
-    setIsResizing(isResizing);
-  }, [isResizing, setIsResizing]);
+    resizingRef.current = isResizing;
+  }, [isResizing, resizingRef]);
 
   return (
     <NodeViewWrapper
       as="div"
-      ref={(el: HTMLDivElement | null) => {
+      ref={(el: HTMLDivElement) => {
         setWrapperEl(el);
         wrapperEl.current = el;
       }}
@@ -117,7 +110,8 @@ export default function DatabaseRecordNodeView({
   const data = useDatabaseBridgeData(editor, databaseId);
   const { isSelected, isHovered } = useRecordRowState(databaseId, recordId);
   const [wrapperEl, setWrapperEl] = useState<HTMLElement | null>(null);
-  const [isResizing, setIsResizing] = useState(false);
+  const resizingRef = useRef(false);
+  const skipTimelineWidthRef = useRef(false);
 
   const isBoard = data?.view?.type === "board";
   const isGallery = data?.view?.type === "gallery";
@@ -168,9 +162,14 @@ export default function DatabaseRecordNodeView({
           "important",
         );
         box.style.setProperty("left", `${tp.left}px`, "important");
-        if (!isResizing) {
+        if (resizingRef.current === false) {
           box.style.setProperty("width", `${tp.width}px`, "important");
         }
+        // if (!skipTimelineWidthRef.current) {
+        //   box.style.setProperty("width", `${tp.width}px`, "important");
+        // } else {
+        //   skipTimelineWidthRef.current = false;
+        // }
         box.style.setProperty(
           "top",
           `${index === 0 ? TL_ROW_HEIGHT : index * TL_ROW_HEIGHT}px`,
@@ -237,16 +236,7 @@ export default function DatabaseRecordNodeView({
     } else {
       box.style.gridRow = String(index + 1);
     }
-  }, [
-    wrapperEl,
-    isBoard,
-    isGallery,
-    isCalendar,
-    isTimeline,
-    recordId,
-    data,
-    isResizing,
-  ]);
+  }, [wrapperEl, isBoard, isGallery, isCalendar, isTimeline, recordId, data]);
 
   const isTableView = data?.view?.type === "table";
   const [pointerOnCheckbox, setPointerOnCheckbox] = useState(false);
@@ -275,7 +265,11 @@ export default function DatabaseRecordNodeView({
         min={{ width: DAY_WIDTH }}
         onResizeEnd={(dimensions) => {
           if (!recordStart.start) return;
+
+          skipTimelineWidthRef.current = true;
+
           const days = Math.max(1, Math.round(dimensions.width / DAY_WIDTH));
+
           const newEnd = new Date(recordStart.start);
           newEnd.setDate(newEnd.getDate() + days - 1);
 
@@ -286,7 +280,7 @@ export default function DatabaseRecordNodeView({
         }}
       >
         <TimelineRecordBox
-          setIsResizing={setIsResizing}
+          resizingRef={resizingRef}
           recordId={recordId}
           setWrapperEl={setWrapperEl}
         >

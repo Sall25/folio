@@ -13,14 +13,15 @@ import {
 } from "src/types";
 import { recordSelection } from "../../utils/record-selection-store";
 import { FreezeDivider } from "../../components/freeze-divider";
-import { useDatabaseContext } from "./../database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import "./database-table-body.scss";
 import { useDataSource } from "../../hooks/use-data-source";
 import { useNewRecordSkeleton } from "./use-new-record-skeleton";
 import { TablePlaceholder } from "./table-placeholder";
 import { TableSkeletonRow } from "./table-skeleton-row";
 import "./database-table-body.scss";
-import { GroupHeaders } from "../group-headers";
+import "./database-table-node-view.scss";
+import { GroupHeaders } from "../../components/group-headers/group-headers";
 
 type PropertyType = PropertyConfig["type"];
 const EMPTY_PROPERTIES: DatabaseProperty[] = [];

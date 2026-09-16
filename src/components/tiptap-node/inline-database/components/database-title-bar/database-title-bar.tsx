@@ -10,7 +10,7 @@ import {
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { ViewIcon } from "../database-toolbar/view-icon";
 import type { DatabaseView } from "src/types";
-import { useDatabaseContext } from "../../nodes/database-context";
+import { useDatabaseContext } from "../../context/database-context";
 
 const VIEW_TYPES: { type: DatabaseView["type"]; label: string }[] = [
   { type: "table", label: "Table" },

@@ -24,7 +24,7 @@ import {
   CardBody,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
-import { useDatabaseContext } from "../../nodes/database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { DeletePropertyButton } from "../delete-property-button";

@@ -19,21 +19,21 @@ import {
 import { NodeViewContent } from "@tiptap/react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { usePageViewActions } from "src/components/tiptap-templates/simple/context/page-view-context";
-import { useDataSource } from "../hooks/use-data-source";
+import { useDataSource } from "../../hooks/use-data-source";
 import type { TimelineView } from "src/types";
 import "./database-timeline-node-view.scss";
-import { useDatabaseContext } from "./database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import {
   DAY_WIDTH,
   ROW_HEIGHT,
   HEADER_HEIGHT,
   GROUP_ROW_HEIGHT,
   useTimelineLayout,
-} from "../hooks/use-timeline-layout";
+} from "../../hooks/use-timeline-layout";
 import {
   useTimelineViewActions,
   useTimelineViewState,
-} from "../context/timeline-view-context";
+} from "../../context/timeline-view-context";
 import { TimelineHeader, type HighlightRange } from "./timeline-header";
 import { TimelineDayGrid } from "./timeline-day-grid";
 import {
@@ -42,13 +42,13 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Card } from "src/components/tiptap-ui-primitive/card";
-import { MenuRow } from "../components/menu-row";
+import { MenuRow } from "../../components/menu-row";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import {
   recordSelection,
   subscribe as subscribeSelection,
   useRecordSelection,
-} from "../utils/record-selection-store";
+} from "../../utils/record-selection-store";
 
 function useHoveredRecordId(): string | null {
   return useSyncExternalStore(

@@ -44,7 +44,7 @@ import {
   DatabaseCellNode,
   DatabaseNode,
   DatabaseRecordNode,
-} from "src/components/tiptap-node/inline-database/nodes/database-node";
+} from "src/components/tiptap-node/inline-database/nodes/database-node/database-node";
 
 import { handleImageUpload, MAX_FILE_SIZE } from "src/lib/tiptap-utils";
 import { TitleNode } from "src/components/tiptap-node/title-node";

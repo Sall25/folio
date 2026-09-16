@@ -9,7 +9,7 @@
 // useCardActions() instead of receiving handlers as props — one source, no
 // prop-drilling, reaches both in-tree and portaled consumers.
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
-import { useDatabaseContext } from "../nodes/database-context";
+import { useDatabaseContext } from "./database-context";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage as patchPageApi } from "src/api/pages";
 import { CardActionsContext } from "./card-actions-context";

@@ -1,10 +1,10 @@
 import { memo } from "react";
-import type { TimelineRange } from "../hooks/use-timeline-layout";
+import type { TimelineRange } from "../../hooks/use-timeline-layout";
 import {
   DAY_WIDTH,
   HEADER_HEIGHT,
   GROUP_ROW_HEIGHT,
-} from "../hooks/use-timeline-layout";
+} from "../../hooks/use-timeline-layout";
 
 interface HighlightRange {
   left: number;

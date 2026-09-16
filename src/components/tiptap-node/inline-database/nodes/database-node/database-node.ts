@@ -3,12 +3,12 @@ import { ReactNodeViewRenderer } from "@tiptap/react";
 import type { ID } from "src/types";
 import { Plugin } from "@tiptap/pm/state";
 import { DatabaseNodeViewLazy } from "./database-node-view-lazy";
-import { DatabaseRecordNodeViewLazy } from "./database-record-node-view-lazy";
+import { DatabaseRecordNodeViewLazy } from "../database-record-node-view/database-record-node-view-lazy";
 import { DatabaseCellNodeViewLazy } from "./database-cell-node-view-lazy";
 import {
   createDatabaseStorage,
   type DatabaseStorage,
-} from "../utils/database-bridge";
+} from "../../utils/database-bridge";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {

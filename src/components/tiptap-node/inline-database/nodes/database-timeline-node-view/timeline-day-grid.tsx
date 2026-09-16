@@ -1,6 +1,6 @@
 import { memo } from "react";
-import type { TimelineRange } from "../hooks/use-timeline-layout";
-import { DAY_WIDTH } from "../hooks/use-timeline-layout";
+import type { TimelineRange } from "../../hooks/use-timeline-layout";
+import { DAY_WIDTH } from "../../hooks/use-timeline-layout";
 
 function TimelineDayGridImpl({ range }: { range: TimelineRange }) {
   return (

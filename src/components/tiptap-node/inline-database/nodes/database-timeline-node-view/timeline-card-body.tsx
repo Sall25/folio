@@ -3,9 +3,9 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import type { CellValue, DatabaseView, ID, Page } from "src/types";
 import "./timeline-card-body.scss";
-import { useResizableNode } from "../../figure-node";
-import { recordSelection } from "../utils/record-selection-store";
-import { ROW_HEIGHT } from "../hooks/use-timeline-layout";
+import { useResizableNode } from "../../../figure-node";
+import { recordSelection } from "../../utils/record-selection-store";
+import { ROW_HEIGHT } from "../../hooks/use-timeline-layout";
 
 interface TimelineCardBodyProps {
   view: DatabaseView;

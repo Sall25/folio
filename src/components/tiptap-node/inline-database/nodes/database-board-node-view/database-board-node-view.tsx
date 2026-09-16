@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import "./database-board-node-view.scss";
 import { useBoardLayout } from "../../hooks";
 import { NodeViewContent, useCurrentEditor } from "@tiptap/react";
-import { useDatabaseContext } from "../database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Cell } from "../../components/cells/cell";
 import { makePage } from "src/utils/make-page";

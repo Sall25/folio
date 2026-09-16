@@ -7,7 +7,7 @@ import type { DatabaseProperty, ID } from "src/types";
 import { type FilterRule, type FilterGroup } from "src/types/filter-types";
 import { FilterChipButton } from "./filter-chip-button";
 import { useFilterRules } from "./use-filter-rules";
-import { useDatabaseContext } from "../../nodes/database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import "./filter-rule-chips.scss";
 import { AdvancedFilterBuilder } from "./advanced-filter-builder";
 import { SimpleFilterEditor } from "./simple-filter-editor";

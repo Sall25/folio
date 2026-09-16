@@ -4,7 +4,7 @@
 // Re-derives db + source from context; onClose lets the formula editor close
 
 import type { DatabaseProperty, PropertyConfig, SelectOption } from "src/types";
-import { useDatabaseContext } from "../../nodes/database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import { useDataSource } from "../../hooks/use-data-source";
 import { PropertyEditPopover } from "../property-edit-popover";
 import { SelectOptionsEditor } from "../../ui/select/select-options-editor";

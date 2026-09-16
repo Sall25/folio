@@ -1,17 +1,17 @@
 import type { GalleryView } from "src/types";
 import "./database-gallery-node-view.scss";
 import { memo, useCallback, useEffect, useRef } from "react";
-import { useDatabaseContext } from "./database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import { NodeViewContent, useCurrentEditor } from "@tiptap/react";
 import { Plus } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import type { DragStorage } from "../extensions";
+import type { DragStorage } from "../../extensions";
 import {
   beforeGalleryCardAtPoint,
   hideGalleryDropIndicator,
   showGalleryDropIndicator,
   showGalleryEndIndicator,
-} from "../extensions/utils";
+} from "../../extensions/utils";
 
 const CARD_SIZE_WIDTH: Record<"small" | "medium" | "large", number> = {
   small: 200,

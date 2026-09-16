@@ -1,6 +1,6 @@
 import type { DatabaseView } from "src/types";
-import { DatabaseLoadingSkeleton } from "../components/database-loading-skeleton";
-import { useViewSkeletonDims } from "../hooks";
+import { DatabaseLoadingSkeleton } from "../database-loading-skeleton";
+import { useViewSkeletonDims } from "../../hooks";
 
 export function DatabaseLoadingSkeletonWithDims({
   databaseId,

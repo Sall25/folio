@@ -1,7 +1,7 @@
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import { useState, useRef, useMemo } from "react";
 import type { DatabaseProperty, ID, ConfigOf } from "src/types";
-import { useDatabaseContext } from "../../nodes/database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import { useDataSource } from "../../hooks/use-data-source";
 import { resolveFormulaValues } from "./resolve-formula-values";
 import { validateFormula } from "./formula-evaluator";

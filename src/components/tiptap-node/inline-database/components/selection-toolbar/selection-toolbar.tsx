@@ -3,7 +3,7 @@ import { Card } from "src/components/tiptap-ui-primitive/card";
 import type { DatabaseProperty, ID } from "src/types";
 import { recordSelection } from "../../utils/record-selection-store";
 import "./selection-toolbar.scss";
-import { useDatabaseContext } from "../../nodes/database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import { useDataSource } from "../../hooks/use-data-source";
 import { removeRecordNodes } from "../../utils/remove-record-nodes";
 import { SelectionCount } from "./selection-count";

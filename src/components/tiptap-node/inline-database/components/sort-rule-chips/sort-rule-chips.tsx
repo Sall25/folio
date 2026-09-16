@@ -26,7 +26,7 @@ import {
 import { SortRow } from "./sort-row";
 import { SortChipButton } from "./sort-chip-button";
 import { useSortRules } from "./use-sort-rules";
-import { useDatabaseContext } from "../../nodes/database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import "./sort-rule-chips.scss";
 
 const EMPTY_SORTS: SortRule[] = [];

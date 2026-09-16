@@ -10,7 +10,6 @@ import type {
   DatabaseAttrs,
   DatabaseProperty,
   DatabaseView,
-  ID,
   Page,
   PageCover,
 } from "src/types";
@@ -40,7 +39,6 @@ interface Params {
   galleryLayout: GalleryLayout;
   calendarLayout: CalendarLayout;
   timelineLayout: TimelineLayout;
-  setEndPropertyId: (propertyId: ID) => void;
 }
 
 const EMPTY_GALLERY_PLACEMENT: Record<string, GalleryPlacement> = {};
@@ -65,7 +63,6 @@ export function useDatabaseBridgePublish({
   galleryLayout,
   calendarLayout,
   timelineLayout,
-  setEndPropertyId,
 }: Params) {
   const bridgeSetCellValue = useCallback(
     (recordId: string, propertyId: string, value: unknown) => {
@@ -153,7 +150,6 @@ export function useDatabaseBridgePublish({
         activeView?.type === "timeline"
           ? timelineLayout.placement
           : EMPTY_TIMELINE_PLACEMENT,
-      setEndPropertyId,
     }),
     [
       attrs.sourceId,
@@ -172,7 +168,6 @@ export function useDatabaseBridgePublish({
       galleryLayout,
       calendarLayout,
       timelineLayout,
-      setEndPropertyId,
     ],
   );
 

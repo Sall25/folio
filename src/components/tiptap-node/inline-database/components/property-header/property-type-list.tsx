@@ -7,7 +7,7 @@ import {
   PROPERTY_TYPE_META,
   type DatabaseProperty,
 } from "src/types";
-import { useDatabaseContext } from "../../nodes/database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import { useDataSource } from "../../hooks/use-data-source";
 import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
 import { Button } from "src/components/tiptap-ui-primitive/button";

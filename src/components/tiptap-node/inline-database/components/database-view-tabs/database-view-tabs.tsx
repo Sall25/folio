@@ -11,7 +11,7 @@ import {
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Fragment, useLayoutEffect, useRef, useState } from "react";
 import "./database-view-tabs.scss";
-import { useDatabaseContext } from "../../nodes/database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 interface DatabaseViewTabsProps {

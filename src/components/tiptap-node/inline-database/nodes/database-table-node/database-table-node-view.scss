@@ -7,17 +7,6 @@
   // Extend toward the viewport's right edge. Adjust the right gutter (48px)
   // and account for your sidebar if 100vw includes it.
   max-width: calc(100vw - var(--db-table-left, 0px) - 48px);
-
-
-  // &:not(:hover) {
-  //   scrollbar-width: none;
-  //   &::-webkit-scrollbar {
-  //     display: none;
-  //   }
-  // }
-  // &:hover {
-  //   scrollbar-width: thin;
-  // }
 }
 // database-table-node-view.scss
 .db-table {

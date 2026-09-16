@@ -15,7 +15,7 @@ import {
   runCalc,
 } from "../../utils/calc-utils";
 import "./database-calculations.scss";
-import { useDatabaseContext } from "../../nodes/database-context";
+import { useDatabaseContext } from "../../context/database-context";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 interface CalcCellProps {
