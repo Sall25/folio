@@ -201,10 +201,40 @@ export function DatabaseProvider({
 
         if (!resolvedDateProp || !targetDate) return;
 
-        // Move to another day.
-        setCellValue(recordId, resolvedDateProp.id, targetDate);
+        const record = sortedRecords.find((r) => r.id === recordId);
+        const raw = record?.values?.[resolvedDateProp.id];
 
-        // Reorder within the day (same flat manualOrder convention as board).
+        // Preserve an existing end date — shift BOTH start and end by the
+        // same day-delta, same principle as timeline's onBarDragEnd. Without
+        // this, dropping a multi-day event on a new day silently truncated
+        // it back to a single day by overwriting with a plain string.
+        let currentStart: Date | null = null;
+        let currentEnd: Date | null = null;
+        if (typeof raw === "string") {
+          currentStart = new Date(raw);
+        } else if (raw && typeof raw === "object" && "start" in raw) {
+          const r = raw as { start?: string; end?: string };
+          currentStart = r.start ? new Date(r.start) : null;
+          currentEnd = r.end ? new Date(r.end) : null;
+        }
+
+        const newStart = new Date(targetDate);
+
+        if (currentStart && currentEnd) {
+          const deltaDays = Math.round(
+            (newStart.getTime() - currentStart.getTime()) / 86_400_000,
+          );
+          const newEnd = new Date(currentEnd);
+          newEnd.setDate(newEnd.getDate() + deltaDays);
+
+          setCellValue(recordId, resolvedDateProp.id, {
+            start: newStart.toISOString(),
+            end: newEnd.toISOString(),
+          });
+        } else {
+          setCellValue(recordId, resolvedDateProp.id, targetDate);
+        }
+
         const currentOrder =
           view.manualOrder ?? sortedRecords.map((record) => record.id);
 

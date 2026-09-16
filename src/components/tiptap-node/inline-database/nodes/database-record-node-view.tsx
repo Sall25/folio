@@ -7,18 +7,20 @@ import { useRecordRowState } from "../utils/record-selection-store";
 import { recordSelection } from "../utils/record-selection-store";
 import { beginRowDragSelect } from "../utils/row-drag-select";
 import { useRowAnchor } from "../hooks/use-row-anchor";
-import type { CellValue, DatabaseProperty, TimelineView } from "src/types";
+import type {
+  CalendarView,
+  CellValue,
+  DatabaseProperty,
+  TimelineView,
+} from "src/types";
 import { BoardCardBody } from "../primitives/board-card-body";
-import {
-  CELL_HEADER_HEIGHT,
-  RECORD_HEIGHT,
-} from "../hooks/use-calendar-layout";
 import {
   DAY_WIDTH,
   parseDateValue,
   ROW_HEIGHT as TL_ROW_HEIGHT,
 } from "../hooks/use-timeline-layout";
 import { TimelineCardBody } from "./timeline-card-body";
+import { CalendarEventBar } from "./database-calendar-node-view/calendar-event-bar";
 import { ResizableNodeProvider, useResizableNode } from "../../figure-node";
 
 // Sits inside ResizableNodeProvider so it can consume the ref the provider
@@ -54,7 +56,6 @@ function TimelineRecordBox({
       ref={(el: HTMLDivElement | null) => {
         setWrapperEl(el);
         wrapperEl.current = el;
-        // nodeRef.current = el;
       }}
       style={{ zIndex: 20 }}
       data-type="database-record"
@@ -139,7 +140,6 @@ export default function DatabaseRecordNodeView({
     resetBoxOverrides(box);
 
     const gp = recordId ? data?.galleryPlacement?.[recordId] : undefined;
-    const cp = recordId ? data?.calendarPlacement?.[recordId] : undefined;
     const tp = recordId ? data?.timelinePlacement?.[recordId] : undefined;
 
     if (isTimeline) {
@@ -156,16 +156,15 @@ export default function DatabaseRecordNodeView({
           `${tp.row * TL_ROW_HEIGHT}px`,
           "important",
         );
+        box.style.setProperty("left", `${tp.left}px`, "important");
+        if (!isResizing) {
+          box.style.setProperty("width", `${tp.width}px`, "important");
+        }
         box.style.setProperty(
           "top",
           `${index === 0 ? TL_ROW_HEIGHT : index * TL_ROW_HEIGHT}px`,
           "important",
         );
-        box.style.setProperty("left", `${tp.left}px`, "important");
-        if (!isResizing) {
-          box.style.setProperty("width", `${tp.width}px`, "important");
-        }
-        box.style.setProperty("height", `${TL_ROW_HEIGHT}px`, "important");
         box.style.setProperty("margin", `0px`, "important");
         box.removeAttribute("draggable");
       } else {
@@ -176,19 +175,14 @@ export default function DatabaseRecordNodeView({
     }
 
     if (isCalendar) {
-      if (cp) {
-        box.style.setProperty("display", "block", "important");
-        box.style.setProperty("grid-column", String(cp.col + 1), "important");
-        box.style.setProperty("grid-row", String(cp.row + 2), "important");
-        box.style.setProperty("margin", "0px 4px", "important");
-        box.style.setProperty("height", "fit-content", "important");
-        box.setAttribute("draggable", "true");
-
-        box.style.transform = `translateY(${cp.indexInDay * RECORD_HEIGHT + CELL_HEADER_HEIGHT}px)`;
-      } else {
-        box.style.setProperty("display", "none", "important");
-        box.setAttribute("data-filtered", "true");
-      }
+      // Calendar no longer places a single card in a single cell — a record
+      // can now render N segments (one bar per week it spans), rendered by
+      // CalendarEventBar via createPortal into .db-calendar__grid, which has
+      // the actual 7-column CSS grid CalendarCell already places into. The
+      // wrapper itself carries no visual content and no grid placement; it
+      // just needs to stay mounted (invisible) so this component keeps
+      // rendering and portaling the bars below.
+      box.style.setProperty("display", "none", "important");
       return;
     }
 
@@ -252,6 +246,7 @@ export default function DatabaseRecordNodeView({
     !isFilteredOut &&
     (isHovered || isSelected || pointerOnCheckbox);
   const anchor = useRowAnchor(wrapperEl, showCheckbox);
+
   // ── TIMELINE: render as a bar, resizable to adjust endDate ─────────────
   if (isTimeline && record && data && recordId) {
     const tp = data.timelinePlacement?.[recordId];
@@ -269,11 +264,7 @@ export default function DatabaseRecordNodeView({
         min={{ width: DAY_WIDTH }}
         onResizeEnd={(dimensions) => {
           if (!recordStart.start) return;
-          // Snap the dragged pixel width back to whole days on the same
-          // ruler the header/day-grid use, then write the resulting date —
-          // not the pixel width itself.
           const days = Math.max(1, Math.round(dimensions.width / DAY_WIDTH));
-
           const newEnd = new Date(recordStart.start);
           newEnd.setDate(newEnd.getDate() + days - 1);
 
@@ -302,8 +293,37 @@ export default function DatabaseRecordNodeView({
     );
   }
 
-  // ── BOARD / Gallery / Calendar: render as a card ──────────────
-  if ((isBoard || isGallery || isCalendar) && record && data) {
+  // ── CALENDAR: portal one bar per week segment ───────────────────────────
+  if (isCalendar && record && data && recordId) {
+    const segments = data.calendarPlacement?.[recordId];
+    if (!segments || segments.length === 0) return null;
+    const view = data.view as CalendarView;
+
+    return (
+      <>
+        <NodeViewWrapper
+          as="div"
+          ref={setWrapperEl}
+          data-type="database-record"
+          data-record-id={recordId}
+          style={{ display: "none" }}
+        />
+        {segments.map((segment, i) => (
+          <CalendarEventBar
+            key={i}
+            record={record}
+            view={view}
+            segment={segment}
+            recordId={recordId}
+            editor={editor ?? null}
+          />
+        ))}
+      </>
+    );
+  }
+
+  // ── BOARD / Gallery: render as a card ──────────────
+  if ((isBoard || isGallery) && record && data) {
     const properties = data.properties;
     const view = data.view!;
     const cardPreview =
