@@ -3,9 +3,9 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import type { CellValue, DatabaseView, ID, Page } from "src/types";
 import "./timeline-card-body.scss";
-import { ROW_HEIGHT } from "../hooks/use-timeline-layout";
 import { useResizableNode } from "../../figure-node";
 import { recordSelection } from "../utils/record-selection-store";
+import { ROW_HEIGHT } from "../hooks/use-timeline-layout";
 
 interface TimelineCardBodyProps {
   view: DatabaseView;
@@ -26,7 +26,6 @@ export function TimelineCardBody({
   record,
   clippedLeft,
   clippedRight,
-  geo,
   canResize,
 }: TimelineCardBodyProps) {
   const { setTarget } = usePageView();
@@ -43,14 +42,18 @@ export function TimelineCardBody({
   };
 
   return (
+    // inset: 0 alone stretches this to fill whatever width the parent
+    // NodeViewWrapper CURRENTLY has — that's what makes it track live during
+    // drag, since ResizableNodeProvider mutates the wrapper's width directly
+    // via the DOM, not through React state. An explicit width/height here
+    // (the previous geo.width/ROW_HEIGHT-2) overrides that stretch and
+    // locks this box to a stale size until the next React render — which
+    // during drag only happens after the drop, via the committed date
+    // change. Same class of bug as the earlier overflow:hidden fix: a
+    // property on this element silently overriding what the parent intends.
     <div
       className="db-tl-bar"
-      style={{
-        position: "absolute",
-        inset: 0,
-        width: geo.width,
-        height: ROW_HEIGHT - 2,
-      }}
+      style={{ position: "absolute", inset: 0, height: ROW_HEIGHT - 2 }}
       onClick={() => onOpenRecord(record.id)}
       onMouseEnter={() => recordSelection.setHovered(record.id)}
       onMouseLeave={() => recordSelection.setHovered(null)}

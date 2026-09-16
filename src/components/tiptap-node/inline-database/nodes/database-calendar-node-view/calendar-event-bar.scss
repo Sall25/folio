@@ -71,3 +71,21 @@
     border-bottom-left-radius: 0;
   }
 }
+
+.db-cal-bar__resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+  border-radius: 0 6px 6px 0;
+  opacity: 0;
+  background: var(--tt-gray-dark-a-900, #f0ede6);
+  transition: opacity 0.1s ease;
+
+  .db-cal-bar:hover &,
+  &--active {
+    opacity: 0.5;
+  }
+}

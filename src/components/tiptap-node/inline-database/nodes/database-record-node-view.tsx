@@ -41,14 +41,25 @@ function TimelineRecordBox({
 }) {
   const wrapperEl = useRef<HTMLDivElement | null>(null);
   const { nodeRef, isResizing } = useResizableNode();
-  useEffect(() => {
+
+  // Assign the actual box on every render (not just mount) — cheap, and
+  // guards against wrapperEl.current changing identity.
+  useLayoutEffect(() => {
     const box = wrapperEl.current?.closest<HTMLElement>(
       ".react-renderer.node-databaseRecord",
     );
     nodeRef.current = box ?? null;
+  });
+
+  // Propagate isResizing to the PARENT's state whenever it actually
+  // changes — the previous empty-deps effect only ran once at mount, so
+  // the parent's isResizing stayed stuck at its initial `false` forever.
+  // That made the "if (!isResizing) set width" guard in the placement
+  // effect always true, so it kept stomping the live width the provider's
+  // own rAF loop was writing during an actual drag.
+  useEffect(() => {
     setIsResizing(isResizing);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isResizing, setIsResizing]);
 
   return (
     <NodeViewWrapper
@@ -316,6 +327,7 @@ export default function DatabaseRecordNodeView({
             segment={segment}
             recordId={recordId}
             editor={editor ?? null}
+            setCellValue={data.setCellValue}
           />
         ))}
       </>
