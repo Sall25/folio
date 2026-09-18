@@ -20,10 +20,11 @@ import {
 import { getPageExcerpt } from "src/lib/get-page-excerpt";
 import { useCurrentPerson } from "src/hooks/use-session";
 import "./home-page-content.scss";
+import { useEditorLayout } from "../context/editor-layout-context";
 
 const GRID: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
   gap: 12,
 };
 
@@ -64,11 +65,12 @@ export function HomePageContent({ userName }: { userName?: string }) {
   const { t, i18n } = useTranslation();
   const { data, isPending } = useRecentPages();
   const { setActivePageId } = useActivePageActions();
+  const { collapsed: sidebarCollapsed, expandedWidth } = useEditorLayout();
   const createPage = useCreatePage();
 
   const recents = (data ?? []).filter((p) => p.category !== "Template");
-  const visited = recents.slice(0, 4);
-  const earlier = recents.slice(4, 12);
+  const visited = recents.slice(0, 7);
+  const earlier = recents.slice(7, 12);
 
   const { person } = useCurrentPerson();
 
@@ -87,11 +89,14 @@ export function HomePageContent({ userName }: { userName?: string }) {
   return (
     <div
       style={{
-        maxWidth: "80%",
-        margin: "0 auto",
-        padding: "32px 24px 48px",
-        paddingLeft: "20rem",
-        overflowY: "auto",
+        maxWidth: "100%",
+        // maxHeight: "100vh",
+        margin: sidebarCollapsed ? "5vh 12vw" : "5vh auto",
+        paddingLeft: sidebarCollapsed ? 0 : expandedWidth,
+        // marginTop: "5vh",
+        // padding: "32px 24px 48px",
+        // paddingLeft: "20rem",
+        overflowY: "scroll",
       }}
     >
       {/* greeting */}
@@ -132,7 +137,7 @@ export function HomePageContent({ userName }: { userName?: string }) {
       {earlier.length > 0 && (
         <>
           <SectionLabel>{t("home.earlier")}</SectionLabel>
-          <List showLines spacing="compact">
+          <List className="recent-list" showLines spacing="compact">
             {earlier.map((page, i) => (
               <ListItem
                 key={page.id}
@@ -197,7 +202,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function RecentCard({ page, onOpen }: { page: Page; onOpen: () => void }) {
   const { t, i18n } = useTranslation();
   return (
-    <Board onClick={onOpen}>
+    <Board className="recent-card" onClick={onOpen}>
       <BoardCover
         height={68}
         style={{ background: coverBackground(page.cover) }}

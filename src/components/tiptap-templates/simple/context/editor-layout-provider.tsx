@@ -24,7 +24,7 @@ export type PeekPhase = "hidden" | "entering" | "open" | "leaving";
 
 export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
   const { mode } = useLayoutMode();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(mode === "mobile");
   const [expandedWidth, setExpandedWidth] = useState<number>(loadStoredWidth);
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   const [discussionOpen, setDiscussionOpen] = useState(false);

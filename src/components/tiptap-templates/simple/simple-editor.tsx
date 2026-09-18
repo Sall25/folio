@@ -32,7 +32,8 @@ function SimpleEditorMain({ view }: { view: View }) {
 }
 
 export function SimpleEditor({ view }: { view: View }) {
-  usePageBrowserTab();
+  const capitalized = view.charAt(0).toUpperCase() + view.slice(1);
+  usePageBrowserTab("Folio", capitalized);
 
   return (
     <div className="simple-editor-wrapper">

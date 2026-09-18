@@ -1,6 +1,11 @@
 .recent-card{
-  box-shadow: var(--tt-shadow-elevated-sm);
+  box-shadow: var(--tt-shadow-elevated-sm) !important;
+  // border: 1px solid var(--tt-border-color);
   .dark & {
-    box-shadow: var(--tt-shadow-elevated-lg);
+    box-shadow: var(--tt-shadow-elevated-lg) !important;
+    border: none;
   }
+}
+.recent-list{
+  overflow-y: auto;
 }

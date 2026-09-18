@@ -1,5 +1,4 @@
 import {
-  FileText,
   Lock,
   CircleUser,
   Clock,
