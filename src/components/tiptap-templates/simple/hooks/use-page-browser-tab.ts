@@ -58,10 +58,13 @@ async function materialIconToFaviconHref(
  * re-runs when the active page changes. Drives the browser tab title + favicon,
  * branching on cover.target exactly like PageItemIcon.
  */
-export function usePageBrowserTab(appName: string | null = "Folio") {
+export function usePageBrowserTab(
+  appName: string | null = "Folio",
+  providedTitle?: string,
+) {
   const { activePage } = useActivePageState();
   const cover = activePage?.cover;
-  const title = activePage?.title;
+  const title = providedTitle ?? activePage?.title;
 
   const target = cover?.target ?? null;
   const iconName = cover?.iconName ?? null;
