@@ -159,7 +159,10 @@ export const SidebarHeader = memo(() => {
           <User />
           <Spacer orientation="horizontal" />
           <Button variant="ghost" size="small" style={{ borderRadius: "50%" }}>
-            <ChevronsUpDown className="tiptap-button-icon" />
+            <ChevronsUpDown
+              className="tiptap-button-icon"
+              style={{ color: "var(--tt-text-primary)" }}
+            />
           </Button>
         </CardItemGroup>
         <Spacer orientation="vertical" size={10} />

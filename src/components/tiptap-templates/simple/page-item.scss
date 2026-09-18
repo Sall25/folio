@@ -37,6 +37,7 @@
 
   //  min-height: 27px;
     height: 29.5px;
+    
   
  // min-width: 200px;
   &:hover {
@@ -46,6 +47,10 @@
     .page-options-btn {
       opacity: 1;
     }
+  }
+
+  .page-icon{
+    opacity: 1 !important;
   }
 
   &.active {
@@ -64,8 +69,13 @@
     min-height: 27px;
     height: 29px;
 
+
     .page-icon {
-      opacity: 1;
+      opacity: 1 !important;
+      stroke: var(--tt-text-primary);  //currentColor;
+    }
+    .page-icon.emoji{
+      fill: currentColor;
     }
   }
 
@@ -84,6 +94,9 @@
 
   .page-item-title{
     color: inherit;
+    font-weight: 500;
+    line-height: 20px !important;
+    font-size: 14.3px !important;
   }
 
   &:hover .page-item-actions,

@@ -15,7 +15,7 @@ export function PageItemIcon({ cover, styles }: PageItemIconProps) {
   if (cover.target === "Emoji" && hasIcon) {
     return (
       <span
-        className="page-icon"
+        className="page-icon emoji"
         style={{ ...styles, fontSize: 16.5 }}
         aria-hidden="true"
       >

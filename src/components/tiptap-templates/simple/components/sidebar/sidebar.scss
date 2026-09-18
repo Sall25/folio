@@ -473,9 +473,10 @@
 .name-initial {
   padding: 2px;
   box-shadow: var(--tt-shadow-elevated-xs);
-  background: rgba(241, 237, 230, 0.842) !important;
+  // background: rgba(241, 237, 230, 0.842) !important;
   .dark & {
-    background: var(--tt-gray-dark-200) !important;
+    background: var(--tt-gray-dark-a-50) !important;
+    box-shadow: none;
   }
 }
 
@@ -630,6 +631,9 @@
 .workspace-icon-button {
   // whatever the trigger's class is
   position: relative; // anchor for the badge
+  font-weight: 500;
+  color: var(--tt-text-secondary) !important;
+  font-size: 12px !important;
 }
 
 .workspace-notification-badge {

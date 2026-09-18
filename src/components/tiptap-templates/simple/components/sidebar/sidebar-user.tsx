@@ -51,9 +51,9 @@ export const User = memo(() => {
                 <Button
                   ref={initialRef}
                   className="name-initial workspace-avatar"
-                  data-highlighted={true}
+                  //data-highlighted={true}
                   onClick={() => setSwitcherOpen((v) => !v)}
-                  // variant="primary"
+                  variant="ghost"
                   style={{
                     width: 26,
                     height: 24,
@@ -61,7 +61,6 @@ export const User = memo(() => {
                     minHeight: 24,
                     padding: 0,
                     borderRadius: "var(--tt-radius-sm)",
-
                     cursor: "pointer",
                   }}
                 >
