@@ -18,6 +18,20 @@
     "createPage": "Create page",
     "open": "Ouvrir"
   },
+  "workspace": {
+    "plan": {
+      "free": "Free Plan"
+    },
+    "memberCount_one": "{{count}} member",
+    "memberCount_other": "{{count}} members",
+    "upgrade": "Upgrade",
+    "settings": "Settings",
+    "inviteMembers": "Invite members",
+    "addAccount": "Add account",
+    "comingSoon": "Coming soon",
+    "new": "New workspace",
+    "logout": "Log out"
+  },
   "activity": "Activity",
   "creadtedBy": "Created by",
   "editedBy": "Edited by",
@@ -35,10 +49,13 @@
       "yesterday": "yesterday",
       "daysAgo": "{{count}}d ago"
     },
-     "firstRun": {
-      "guideTitle": "Read the quick start",   "guideDesc": "A 2-minute tour of the essentials.",
-      "dbTitle": "Try a database",            "dbDesc": "Tables, boards, and galleries.",
-      "blankTitle": "Create your first page", "blankDesc": "A blank page to make your own."
+    "firstRun": {
+      "guideTitle": "Read the quick start",
+      "guideDesc": "A 2-minute tour of the essentials.",
+      "dbTitle": "Try a database",
+      "dbDesc": "Tables, boards, and galleries.",
+      "blankTitle": "Create your first page",
+      "blankDesc": "A blank page to make your own."
     }
   },
   "trash.title": "Trash",
@@ -48,7 +65,7 @@
   "trash.emptyState": "Trash is empty",
   "trash.movedToast": "Page moved to Trash",
   "trash.undo": "Undo",
-  
+
   "sidebar": {
     "home": "Home",
     "search": "Search",
@@ -123,7 +140,7 @@
     "items_one": "{{count}} item",
     "items_other": "{{count}} items"
   },
-  "section":{
+  "section": {
     "private": "Private",
     "shared": "Shared",
     "teamspaces": "Teamspaces",
@@ -137,7 +154,7 @@
     "deletedPage": "Deleted Page",
     "locked": "locked"
   },
- "templates": {
+  "templates": {
     "browse": "Browse templates",
     "startFrom": "Start from a template",
     "browseAll": "Browse all templates",
@@ -278,7 +295,7 @@
     "title": "Language",
     "description": "Change the language used across the interface."
   },
-   "colors": {
+  "colors": {
     "label": "Colors",
     "recent": "Recent colors",
     "background": "Background colors",
@@ -338,7 +355,7 @@
     "deleteNode": "Delete node",
     "resetFormatting": "Reset Formatting"
   },
-   "blockTypes": {
+  "blockTypes": {
     "paragraph": "Paragraphe",
     "heading1": "Titre 1",
     "heading2": "Titre 2",
@@ -508,7 +525,7 @@
         "description": "Insert a table, board, or list."
       }
     },
-     "colors": {
+    "colors": {
       "red": "Red",
       "orange": "Orange",
       "yellow": "Yellow",

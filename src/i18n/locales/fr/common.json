@@ -1,5 +1,4 @@
 {
- 
   "actions": {
     "new": "Nouveau",
     "newPage": "Nouvelle page",
@@ -19,6 +18,20 @@
     "createPage": "Créer une page",
     "open": "Ouvrir"
   },
+  "workspace": {
+    "plan": {
+      "free": "Plan gratuit"
+    },
+    "memberCount_one": "{{count}} membre",
+    "memberCount_other": "{{count}} membres",
+    "upgrade": "Mettre à niveau",
+    "settings": "Paramètres",
+    "inviteMembers": "Inviter des membres",
+    "addAccount": "Ajouter un compte",
+    "comingSoon": "Bientôt disponible",
+    "new": "Nouvel espace de travail",
+    "logout": "Se déconnecter"
+  },
   "activity": "Activité",
   "creadtedBy": "Créé par",
   "editedBy": "Modifié par",
@@ -30,7 +43,7 @@
   "trash.emptyState": "La corbeille est vide",
   "trash.movedToast": "Page déplacée vers la corbeille",
   "trash.undo": "Annuler",
-  
+
   "sidebar": {
     "home": "Accueil",
     "search": "Rechercher",
@@ -48,7 +61,7 @@
     "recents": "Récents",
     "personalSpace": "Espace de {{name}}"
   },
-    "library": {
+  "library": {
     "title": "Bibliothèque",
     "createFirst": "Créer votre première page",
     "tabs": {
@@ -71,7 +84,7 @@
       "teamspaces": "Aucune page d'espace d'équipe pour le moment"
     }
   },
-   "search": {
+  "search": {
     "title": "Rechercher",
     "placeholder": "Rechercher des pages...",
     "templatePlaceholder": "Rechercher des modèles...",
@@ -105,7 +118,7 @@
     "items_one": "{{count}} élément",
     "items_other": "{{count}} éléments"
   },
-  "section":{
+  "section": {
     "private": "Privés",
     "shared": "Partagés",
     "teamspaces": "Travail de Groupes",
@@ -113,13 +126,13 @@
     "template": "Modèles",
     "recent": "recent"
   },
- "page": {
+  "page": {
     "untitled": "Sans titre",
     "newPage": "Nouvelle page",
     "deletedPage": "Page supprimée",
     "locked": "Verrouillé"
   },
-   "time": {
+  "time": {
     "justNow": "À l'instant",
     "minutesAgo": "il y a {{count}} min",
     "hoursAgo": "il y a {{count}} h",
@@ -127,7 +140,7 @@
     "daysAgo_one": "il y a {{count}} jour",
     "daysAgo_other": "il y a {{count}} jours"
   },
-   "templates": {
+  "templates": {
     "browse": "Parcourir les modèles",
     "startFrom": "Commencer à partir d'un modèle",
     "browseAll": "Parcourir tous les modèles",
@@ -242,7 +255,7 @@
       "billing": "Facturation"
     }
   },
-   "home": {
+  "home": {
     "recentlyVisited": "Récemment consultés",
     "earlier": "Plus tôt",
     "edited": "Modifié {{time}}",
@@ -255,10 +268,13 @@
       "yesterday": "hier",
       "daysAgo": "il y a {{count}} j"
     },
-     "firstRun": {
-      "guideTitle": "Read the quick start",   "guideDesc": "A 2-minute tour of the essentials.",
-      "dbTitle": "Try a database",            "dbDesc": "Tables, boards, and galleries.",
-      "blankTitle": "Create your first page", "blankDesc": "A blank page to make your own."
+    "firstRun": {
+      "guideTitle": "Read the quick start",
+      "guideDesc": "A 2-minute tour of the essentials.",
+      "dbTitle": "Try a database",
+      "dbDesc": "Tables, boards, and galleries.",
+      "blankTitle": "Create your first page",
+      "blankDesc": "A blank page to make your own."
     }
   },
   "greeting": {
@@ -273,7 +289,7 @@
     "dark": "Sombre",
     "system": "Système"
   },
- "language": {
+  "language": {
     "title": "Langue",
     "description": "Changez la langue utilisée dans toute l'interface.",
     "en": "English",
@@ -340,17 +356,17 @@
     "deleteNode": "Supprimer le nœud",
     "resetFormatting": "Effacer la mise en forme"
   },
- "blockTypes": {
-  "paragraph": "Paragraphe",
-  "heading1": "Titre 1",
-  "heading2": "Titre 2",
-  "heading3": "Titre 3",
-  "blockquote": "Citation",
-  "codeBlock": "Bloc de code",
-  "orderedList": "Liste numérotée",
-  "bulletList": "Liste à puces",
-  "taskList": "Liste de tâches",
-  "turnIntoPage": "Transformer en page"
+  "blockTypes": {
+    "paragraph": "Paragraphe",
+    "heading1": "Titre 1",
+    "heading2": "Titre 2",
+    "heading3": "Titre 3",
+    "blockquote": "Citation",
+    "codeBlock": "Bloc de code",
+    "orderedList": "Liste numérotée",
+    "bulletList": "Liste à puces",
+    "taskList": "Liste de tâches",
+    "turnIntoPage": "Transformer en page"
   },
   "slash": {
     "appendix": "Annexe",
