@@ -537,16 +537,8 @@ export const SidebarTree = memo(function SidebarTree({
   const [dropTarget, setDropTarget] = useState<DropTarget>(null);
   const [expandedIds, setExpandedIds] = useState<Set<ID>>(new Set());
   const [hidden, toggleHidden] = useHiddenSections();
-
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(() =>
-    // While loading, `tree` is empty — collapsing every section on that basis
-    // would hide the skeleton rows entirely. Only auto-collapse empty sections
-    // once we actually know they're empty.
-    isLoading
-      ? new Set<string>()
-      : new Set(
-          DEFAULT_SECTION_ORDER.filter((c) => (tree[c]?.length ?? 0) === 0),
-        ),
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
+    new Set(),
   );
   const { person } = useCurrentPerson();
 
@@ -844,7 +836,10 @@ export const SidebarTree = memo(function SidebarTree({
 
   const activeNode = activeId != null ? nodeById.get(activeId) : null;
   const isDraggingSection = activeId?.startsWith(SECTION_DRAG_PREFIX) ?? false;
-  const visibleCategories = sectionOrder.filter((c) => !hidden.has(c));
+  const visibleCategories = sectionOrder.filter(
+    (category) =>
+      !hidden.has(category) && (isLoading || (tree[category]?.length ?? 0) > 0),
+  );
 
   const sectionItems = useMemo(
     () => visibleCategories.map((c) => `${SECTION_DRAG_PREFIX}${c}`),

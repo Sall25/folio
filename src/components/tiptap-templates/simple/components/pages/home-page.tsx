@@ -1,9 +1,11 @@
+import { useCurrentPerson } from "src/hooks/use-session";
 import { useLayoutMode } from "../../hooks/use-layout-mode";
 import { HomePageContent } from "../home-page-content";
 import { memo } from "react";
 
 function HomePageImpl() {
   const { isMobile } = useLayoutMode();
+  const { person } = useCurrentPerson();
   return (
     <div
       style={{
@@ -15,7 +17,7 @@ function HomePageImpl() {
         marginTop: 40,
       }}
     >
-      <HomePageContent />
+      <HomePageContent userName={person?.name} />
     </div>
   );
 }

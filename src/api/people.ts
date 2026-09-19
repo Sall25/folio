@@ -1,7 +1,8 @@
 import type { ID, Person } from "src/types";
 import { http } from "./client";
 
-export const fetchPeople = () => http<Person[]>("/people");
+export const fetchPeople = (workspaceId: ID) =>
+  http<Person[]>(`/people?workspace_id=eq.${workspaceId}`);
 
 export const fetchPerson = (id: ID) => http<Person>(`/people/${id}`);
 

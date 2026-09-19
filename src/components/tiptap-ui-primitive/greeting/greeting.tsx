@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Sun, Sunset, Moon, CloudMoon } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { usePersonNames } from "src/hooks/use-person-names";
 import { useCurrentPerson } from "src/hooks/use-session";
 
 interface GreetingConfig {
@@ -31,8 +30,6 @@ interface GreetingProps {
 export function Greeting({ name, className, iconSize = 28 }: GreetingProps) {
   const { t } = useTranslation();
   const [greeting, setGreeting] = useState(getGreeting);
-  const personName = usePersonNames(true);
-  const { person } = useCurrentPerson();
 
   useEffect(() => {
     const now = new Date();
@@ -68,8 +65,7 @@ export function Greeting({ name, className, iconSize = 28 }: GreetingProps) {
         fill={greeting.color}
         style={{ color: greeting.color }}
       />
-      {name ? t("greeting.withName", { greeting: text, name }) : text} {", "}{" "}
-      {person?.id ? personName(person.id) : ""}
+      {name ? t("greeting.withName", { greeting: text, name }) : text}{" "}
     </span>
   );
 }

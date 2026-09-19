@@ -1,7 +1,7 @@
 {
   "actions": {
     "new": "New",
-    "newPage": "New page",
+    "newPage": "New Page",
     "search": "Search",
     "settings": "Settings",
     "delete": "Delete",
@@ -49,14 +49,7 @@
       "yesterday": "yesterday",
       "daysAgo": "{{count}}d ago"
     },
-    "firstRun": {
-      "guideTitle": "Read the quick start",
-      "guideDesc": "A 2-minute tour of the essentials.",
-      "dbTitle": "Try a database",
-      "dbDesc": "Tables, boards, and galleries.",
-      "blankTitle": "Create your first page",
-      "blankDesc": "A blank page to make your own."
-    }
+    "newPage": "New Page"
   },
   "trash.title": "Trash",
   "trash.empty": "Empty",

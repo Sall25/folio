@@ -5,7 +5,7 @@ import { useCreatePage } from "src/hooks/use-create-page";
 import { useActivePageActions } from "../context/active-page-context";
 import { makePage } from "src/utils/make-page";
 import { PageItemIcon } from "../page-item-icon";
-import { FileText, LayoutGrid, PenBox } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { List, ListItem } from "src/components/tiptap-ui-primitive/list/list";
 import { Greeting } from "src/components/tiptap-ui-primitive/greeting/greeting";
@@ -90,12 +90,8 @@ export function HomePageContent({ userName }: { userName?: string }) {
     <div
       style={{
         maxWidth: "100%",
-        // maxHeight: "100vh",
         margin: sidebarCollapsed ? "5vh 12vw" : "5vh auto",
         paddingLeft: sidebarCollapsed ? 0 : expandedWidth,
-        // marginTop: "5vh",
-        // padding: "32px 24px 48px",
-        // paddingLeft: "20rem",
         overflowY: "scroll",
       }}
     >
@@ -115,22 +111,24 @@ export function HomePageContent({ userName }: { userName?: string }) {
         </div>
       </div>
 
-      {/* recently visited */}
-      <SectionLabel>{t("home.recentlyVisited")}</SectionLabel>
       {isPending ? (
         <CardGridSkeleton />
       ) : visited.length === 0 ? (
         <EmptyState onNewPage={newPage} />
       ) : (
-        <div style={{ ...GRID, marginBottom: earlier.length ? 32 : 0 }}>
-          {visited.map((page) => (
-            <RecentCard
-              key={page.id}
-              page={page}
-              onOpen={() => setActivePageId(page.id)}
-            />
-          ))}
-        </div>
+        <>
+          {/* recently visited */}
+          <SectionLabel>{t("home.recentlyVisited")}</SectionLabel>
+          <div style={{ ...GRID, marginBottom: earlier.length ? 32 : 0 }}>
+            {visited.map((page) => (
+              <RecentCard
+                key={page.id}
+                page={page}
+                onOpen={() => setActivePageId(page.id)}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       {/* earlier */}
@@ -244,131 +242,37 @@ function RecentCard({ page, onOpen }: { page: Page; onOpen: () => void }) {
 
 function EmptyState({ onNewPage }: { onNewPage: () => void }) {
   const { t } = useTranslation();
-  // const { setActivePageId } = useActivePage();
-
-  // // These ids point at the starter pages you'll author + seed. Until they
-  // // exist, the cards can fall back to onNewPage or be hidden — see note below.
-  // const openStarter = (pageId: string) => setActivePageId(pageId);
 
   return (
     <div
       style={{
-        border: "0.5px dashed var(--tt-border-color)",
-        borderRadius: 14,
-        padding: 22,
-        textAlign: "left",
-      }}
-    >
-      <div
-        style={{
-          fontSize: 15,
-          fontWeight: 600,
-          color: "var(--tt-text-color)",
-          marginBottom: 3,
-        }}
-      >
-        {t("home.emptyTitle")}
-      </div>
-      <div
-        style={{
-          fontSize: 13,
-          color: "var(--tt-theme-muted)",
-          marginBottom: 16,
-          maxWidth: "52ch",
-          lineHeight: 1.5,
-        }}
-      >
-        {t("home.emptyDesc")}
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0,1fr))",
-          gap: 10,
-        }}
-      >
-        <FirstRunCard
-          icon={<FileText size={19} />}
-          title={t("home.firstRun.guideTitle")}
-          desc={t("home.firstRun.guideDesc")}
-          onClick={
-            onNewPage /* → replace with openStarter(GUIDE_PAGE_ID) once seeded */
-          }
-        />
-        <FirstRunCard
-          icon={<LayoutGrid size={19} />}
-          title={t("home.firstRun.dbTitle")}
-          desc={t("home.firstRun.dbDesc")}
-          onClick={onNewPage /* → openStarter(DB_PAGE_ID) once seeded */}
-        />
-        <FirstRunCard
-          icon={<PenBox size={19} />}
-          title={t("home.firstRun.blankTitle")}
-          desc={t("home.firstRun.blankDesc")}
-          onClick={onNewPage}
-        />
-      </div>
-    </div>
-  );
-}
-
-function FirstRunCard({
-  icon,
-  title,
-  desc,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
         display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        gap: 2,
-        textAlign: "left",
-        border: "0.5px solid var(--tt-border-color)",
-        borderRadius: 10,
-        background: "var(--tt-card-bg-color)",
-        padding: 12,
-        cursor: "pointer",
-        transition: "border-color 0.12s",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: 300,
       }}
-      onMouseEnter={(e) =>
-        (e.currentTarget.style.borderColor = "var(--tt-brand-color-500)")
-      }
-      onMouseLeave={(e) =>
-        (e.currentTarget.style.borderColor = "var(--tt-border-color)")
-      }
     >
-      <span style={{ color: "var(--tt-brand-color-500)" }}>{icon}</span>
-      <span
+      <button
+        type="button"
+        onClick={onNewPage}
         style={{
-          fontSize: 13,
-          fontWeight: 500,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "16px 26px",
+          border: "1px solid var(--tt-border-color)",
+          borderRadius: 12,
+          background: "var(--tt-bg-color)",
           color: "var(--tt-text-color)",
-          marginTop: 8,
+          fontSize: 15,
+          fontWeight: 500,
+          cursor: "pointer",
         }}
       >
-        {title}
-      </span>
-      <span
-        style={{
-          fontSize: 11.5,
-          color: "var(--tt-theme-muted)",
-          lineHeight: 1.4,
-        }}
-      >
-        {desc}
-      </span>
-    </button>
+        <Plus size={19} strokeWidth={1.8} />
+        {t("home.newPage")}
+      </button>
+    </div>
   );
 }
 

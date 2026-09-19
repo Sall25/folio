@@ -28,17 +28,22 @@ export const queryKeys = {
   },
   people: {
     all: ["people"] as const,
-    lists: () => [...queryKeys.people.all, "list"] as const,
+    lists: (workspaceId: ID) =>
+      [...queryKeys.people.all, "list", workspaceId] as const,
     detail: (id: ID) => [...queryKeys.people.all, "detail", id] as const,
   },
+
   groups: {
     all: ["groups"] as const,
-    lists: () => [...queryKeys.groups.all, "list"] as const,
+    lists: (workspaceId: ID) =>
+      [...queryKeys.groups.all, "list", workspaceId] as const,
     detail: (id: ID) => [...queryKeys.groups.all, "detail", id] as const,
   },
+
   teamspaces: {
     all: ["teamspaces"] as const,
-    lists: () => [...queryKeys.teamspaces.all, "list"] as const,
+    lists: (workspaceId: ID) =>
+      [...queryKeys.teamspaces.all, "list", workspaceId] as const,
     detail: (id: ID) => [...queryKeys.teamspaces.all, "detail", id] as const,
   },
   workspaces: {
