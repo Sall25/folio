@@ -21,7 +21,10 @@ function PageEditorLayoutImpl() {
       <TocProvider>
         <div
           className="simple-editor-main"
-          style={{ transition: "margin-right 0.2s ease" }}
+          style={{
+            transition: "margin-right 0.2s ease",
+            // marginTop: isMobile ? "0px" : undefined,
+          }}
         >
           {isCreatingPage && (
             <div className="editor-skeleton-overlay">

@@ -31,7 +31,6 @@ import { useEffect, useRef, useState } from "react";
 import { usePageCapabilities } from "src/hooks/use-page-role";
 import { NetworkStatusBadge } from "./components/network-status-badge";
 import { ToolbarPresence } from "./components/toolbar-presence";
-import { useWindowSize } from "src/hooks/use-window-size";
 import { useLayoutMode } from "./hooks/use-layout-mode";
 import { calculateSidebarWidth } from "src/lib/utils";
 import { LockIcon, StarIcon } from "src/components/tiptap-icons";
@@ -380,14 +379,9 @@ export const MobileSubToolbarContent = ({
 // ============================================================
 // Composed toolbar — picks the content by breakpoint.
 // ============================================================
-export const SimpleEditorToolbar = ({
-  rectY,
-
-  view,
-}: SimpleEditorToolbarProps) => {
+export const SimpleEditorToolbar = ({ view }: SimpleEditorToolbarProps) => {
   const [mobileView, setMobileView] = useState<MobileView>("main");
   const toolbarRef = useRef<HTMLDivElement | null>(null);
-  const { height } = useWindowSize();
   const { collapsed } = useEditorLayoutState();
   const { isMobile } = useLayoutMode();
   const { expandedWidth } = useEditorLayoutTransient();
@@ -418,7 +412,6 @@ export const SimpleEditorToolbar = ({
         {
           "--sidebar-width": `${sidebarWidth}px`,
           padding: collapsed ? "10px 0px !important" : 10,
-          ...(isMobile ? { bottom: `calc(100% - ${height - rectY}px)` } : {}),
         } as React.CSSProperties
       }
     >

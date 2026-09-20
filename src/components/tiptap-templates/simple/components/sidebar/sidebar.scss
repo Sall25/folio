@@ -102,9 +102,38 @@
   );
 }
 
-.sidebar-mobile > div:nth-child(2) {
-  display: none !important;
-  pointer-events: none !important;
+// (removed) — this used to hide an overlay that was the 2nd child, but the
+// child order changed and it was hiding SidebarBody (the page tree) on
+// mobile instead. If a specific overlay still needs hiding on mobile, target
+// it by class, never by nth-child position.
+
+// Touch has no hover, so the desktop hover-to-reveal behaviors (collapse
+// toggle appearing, workspace-name cell expanding) are dead weight on
+// mobile — the name cell would stay stuck at fit-content. Show them outright.
+@media (max-width: 768px) {
+  .sidebar {
+    .sidebar-collapse-toggle {
+      opacity: 1;
+    }
+    .sidebar-ws-name-cell {
+      max-width: 150px;
+    }
+  }
+}
+
+// On mobile the page-editor toolbar is pinned to the BOTTOM (the
+// bottom: calc(...) offset in SimpleEditorToolbar, for on-screen-keyboard
+// reasons) — but .simple-editor-main still reserves top space with
+// margin-top: var(--tt-toolbar-height), which assumes a top toolbar. That
+// leaves a phantom gap above the content. Remove the reserved top space on
+// mobile and reserve bottom space instead, so content clears the actually-
+// bottom-pinned toolbar.
+@media (max-width: 768px) {
+  .simple-editor-main {
+    margin-top: 0;
+    height: calc(100vh - var(--tt-toolbar-height));
+    padding-bottom: var(--tt-toolbar-height);
+  }
 }
 
 .sidebar--floating {

@@ -19,6 +19,7 @@ import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import { CoverHeaderSkeleton } from "src/components/tiptap-templates/simple/components/skeletons";
 import { usePageCapabilities } from "src/hooks/use-page-role";
+import { useIsMobile } from "src/hooks/use-breakpoint";
 
 const IconButton = memo(function IconButton({
   open,
@@ -41,6 +42,7 @@ const IconButton = memo(function IconButton({
 }) {
   const cover = page.cover;
   const hasCover = !!cover.coverImage || !!cover.gradient;
+  const isMobile = useIsMobile();
 
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const mutateAsyncRef = useRef(mutateAsync);
@@ -84,7 +86,10 @@ const IconButton = memo(function IconButton({
       style={{
         paddingTop: hasCover ? 0 : 24,
         paddingLeft,
-        transform: hasThreads ? `translateX(${translateX}px)` : "translateX(0)",
+        transform:
+          hasThreads && !isMobile
+            ? `translateX(${translateX}px)`
+            : "translateX(0)",
         maxWidth: 400,
       }}
     >
@@ -205,6 +210,7 @@ export function CoverHeader({
 }: CoverHeaderProps) {
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [target, setTarget] = useState<Target>("Emoji");
+  const isMobile = useIsMobile();
 
   // fetch the active page only when no page is provided (peek passes its own)
   const { activePageId } = useActivePageState();
@@ -221,7 +227,7 @@ export function CoverHeader({
   // The panels are precisely the instances that pass `providedPage`; the main
   // editor reads the active page from context instead. That's the real test, and
   // unlike the view target it's local to this instance.
-  const isPanel = !!providedPage;
+  const isPanel = !!providedPage || isMobile;
 
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const mutateAsyncRef = useRef(mutateAsync);
@@ -249,6 +255,7 @@ export function CoverHeader({
   const hasCoverImage = !!page.cover.coverImage;
   const hasGradient = !!page.cover.gradient;
 
+  console.log("isMobile", isMobile);
   return (
     <div
       className="cover-header-wrapper"
@@ -262,7 +269,7 @@ export function CoverHeader({
       <div
         style={{
           width: `calc(100vw)`,
-          marginLeft: isPanel ? 0 : marginLeft,
+          marginLeft: isMobile ? "0px !important" : marginLeft,
           transition: "margin-left 0.2s ease, width 0.2s ease",
         }}
       >

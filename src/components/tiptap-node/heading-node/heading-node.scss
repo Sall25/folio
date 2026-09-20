@@ -225,3 +225,37 @@
     font-weight: 600;
   }
 }
+
+// Headings scale down on phones — 40px/30px h1/h2 sized for a wide desktop
+// column overwhelm a ~375px viewport and force awkward wraps. Body text (p,
+// li, code, tables) deliberately stays put: 16px is the mobile reading
+// baseline, and anything under 16px in an input triggers iOS auto-zoom.
+@media (max-width: 768px) {
+  .tiptap.ProseMirror {
+    h1 {
+      font-size: 1.875rem; // 30px (was 40px)
+      margin-top: 1.4em;
+    }
+
+    h2 {
+      font-size: 1.5rem; // 24px (was 30px)
+      margin-top: 1.25em;
+    }
+
+    h3 {
+      font-size: 1.375rem; // ~22px (was ~26.8px)
+      margin-top: 1.1em;
+    }
+
+    h4 {
+      font-size: 1.25rem; // 20px (was ~23.6px)
+    }
+
+    h5 {
+      font-size: 1.125rem; // 18px (was ~20.4px)
+    }
+
+    // h6 is already 1rem (16px) — leave it, it's body-sized on purpose.
+  }
+}
+

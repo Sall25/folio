@@ -375,3 +375,52 @@
   cursor: default;
   word-break: keep-all;
 }
+
+@media (max-width: 768px) {
+  .library-palette-content {
+    top: 0;
+    left: 0;
+    transform: none;
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    border-radius: 0;
+    border: none;
+    // The base rule animates via library-modal-in, whose keyframes set
+    // transform (translate(-50%, …)) — that would drag the full-screen
+    // mobile sheet off-position. Kill it, same reasoning as the settings
+    // modal's mobile override.
+    animation: none;
+
+    &__inner {
+      width: 100%;
+      padding: 16px 16px 32px;
+      padding-left: 16px; // override the desktop 20rem indent
+      gap: 20px;
+    }
+
+    &__header {
+      margin-top: 0;
+    }
+
+    &__title {
+      font-size: 20px;
+    }
+  }
+
+  .library {
+    font-size: 24px;
+  }
+
+  // The recent grid's 3 inline-styled columns are set in the .tsx, so this
+  // can't retarget them — the component drops to a single column on mobile
+  // instead (see library-palette.tsx). The author/date cells hide there too.
+  .library-recent-row {
+    &__badge,
+    &__time {
+      display: none;
+    }
+  }
+}

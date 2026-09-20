@@ -19,6 +19,8 @@ import { useCreatePage } from "src/hooks/use-create-page";
 import { makeChildPage } from "src/utils/make-page";
 import { Chevron } from "src/components/tiptap-ui-primitive/chevron";
 import { usePageCapabilities } from "src/hooks/use-page-role";
+import { useIsMobile } from "src/hooks/use-breakpoint";
+import { useEditorLayoutActions } from "./context/editor-layout-context";
 
 interface PageItemProps {
   page: Page;
@@ -111,8 +113,11 @@ function PageItemView({
     }
   };
 
+  const isMobile = useIsMobile();
+  const { onCollapsedChange } = useEditorLayoutActions();
   const onSelect = (pageId: ID) => {
     setActivePageId(pageId);
+    onCollapsedChange(isMobile);
   };
 
   return (

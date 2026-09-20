@@ -29,6 +29,7 @@ import { FileIcon } from "src/components/tiptap-icons";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useCollabProvider } from "../context/collab-provider-context";
 import { usePresence } from "../hooks/use-presence";
+import { useIsMobile } from "src/hooks/use-breakpoint";
 
 export type LibraryTab =
   | Exclude<PageCategory, "Template" | "Recent">
@@ -106,12 +107,14 @@ function RecentRow({
   onlineIds,
   peopleById,
   currentPersonId,
+  isMobile,
 }: {
   page: Page;
   depth?: number;
   onlineIds: Set<ID>;
   peopleById: Map<ID, Person>;
   currentPersonId: ID | undefined;
+  isMobile: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const [show, setShow] = useState(false);
@@ -224,27 +227,31 @@ function RecentRow({
         </CardItemGroup>
       </div>
 
-      <div key={`${page.id}-author`} style={cellStyle}>
-        <Avatar
-          size="sm"
-          src={owner?.avatarUrl}
-          name={ownerDisplayName}
-          online={ownerOnline}
-        />
-        <span style={{ ...dataStyle, fontWeight: 500 }}>
-          {ownerDisplayName}
-        </span>
-      </div>
+      {!isMobile && (
+        <div key={`${page.id}-author`} style={cellStyle}>
+          <Avatar
+            size="sm"
+            src={owner?.avatarUrl}
+            name={ownerDisplayName}
+            online={ownerOnline}
+          />
+          <span style={{ ...dataStyle, fontWeight: 500 }}>
+            {ownerDisplayName}
+          </span>
+        </div>
+      )}
 
-      <div key={`${page.id}-date`} style={cellStyle}>
-        <span style={dataStyle}>
-          {formatRelativeTime(
-            page.updatedAt ?? page.createdAt,
-            t,
-            i18n.language,
-          )}
-        </span>
-      </div>
+      {!isMobile && (
+        <div key={`${page.id}-date`} style={cellStyle}>
+          <span style={dataStyle}>
+            {formatRelativeTime(
+              page.updatedAt ?? page.createdAt,
+              t,
+              i18n.language,
+            )}
+          </span>
+        </div>
+      )}
 
       {isOpen &&
         children.data?.map((child) => (
@@ -255,6 +262,7 @@ function RecentRow({
             onlineIds={onlineIds}
             peopleById={peopleById}
             currentPersonId={currentPersonId}
+            isMobile={isMobile}
           />
         ))}
     </>
@@ -266,18 +274,20 @@ function RecentGrid({
   onlineIds,
   peopleById,
   currentPersonId,
+  isMobile,
 }: {
   rows: Page[];
   onlineIds: Set<ID>;
   peopleById: Map<ID, Person>;
   currentPersonId: ID | undefined;
+  isMobile: boolean;
 }) {
   const { t } = useTranslation();
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "2fr 1fr 1fr",
+        gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr 1fr",
         width: "100%",
       }}
     >
@@ -289,22 +299,26 @@ function RecentGrid({
           </span>
         </Button>
       </div>
-      <div style={headerStyle}>
-        <Button variant="ghost">
-          <CircleUser className="tiptap-button-icon" />
-          <span className="tiptap-button-text">
-            {t("library.columns.createdBy")}
-          </span>
-        </Button>
-      </div>
-      <div style={headerStyle}>
-        <Button variant="ghost">
-          <Clock className="tiptap-button-icon" />
-          <span className="tiptap-button-text">
-            {t("library.columns.lastEdited")}
-          </span>
-        </Button>
-      </div>
+      {!isMobile && (
+        <>
+          <div style={headerStyle}>
+            <Button variant="ghost">
+              <CircleUser className="tiptap-button-icon" />
+              <span className="tiptap-button-text">
+                {t("library.columns.createdBy")}
+              </span>
+            </Button>
+          </div>
+          <div style={headerStyle}>
+            <Button variant="ghost">
+              <Clock className="tiptap-button-icon" />
+              <span className="tiptap-button-text">
+                {t("library.columns.lastEdited")}
+              </span>
+            </Button>
+          </div>
+        </>
+      )}
 
       {rows.map((page) => (
         <div key={page.id} style={{ display: "contents" }}>
@@ -313,6 +327,7 @@ function RecentGrid({
             onlineIds={onlineIds}
             peopleById={peopleById}
             currentPersonId={currentPersonId}
+            isMobile={isMobile}
           />
         </div>
       ))}
@@ -396,6 +411,8 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
       );
   }, [pages, tab]);
 
+  const isMobile = useIsMobile();
+
   if (!pages) return null;
 
   return (
@@ -446,6 +463,7 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
             onlineIds={onlineIds}
             peopleById={peopleById}
             currentPersonId={person?.id}
+            isMobile={isMobile}
           />
         ) : (
           <div className="library-empty">
