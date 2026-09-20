@@ -152,7 +152,7 @@ function WorkspaceIconField({
 }
 
 export function WorkspaceSettingsContent() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { renameAsync, setIconAsync, setSettingAsync } = useManageWorkspace();
   const { person } = useCurrentPerson();
 
@@ -274,7 +274,10 @@ export function WorkspaceSettingsContent() {
         <Select<WorkspaceLanguage>
           value={s.language}
           disabled={!isOwner}
-          onChange={(v) => set("language", v)}
+          onChange={(v) => {
+            i18n.changeLanguage(v);
+            set("language", v);
+          }}
           options={[
             { value: "en", label: "English" },
             { value: "fr", label: "Français" },

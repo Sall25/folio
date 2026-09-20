@@ -7,6 +7,7 @@ import { useCurrentPerson } from "src/hooks/use-session";
 import { WorkspaceSettingsContent } from "./workspace-settings-content";
 import { useCollabProvider } from "../../context/collab-provider-context";
 import { usePresence } from "../../hooks/use-presence";
+import { MyAccountContent } from "./my-account-content";
 
 // activeId → content pane. Plug the rest in as they land on this branch.
 function SettingsPane({ activeId }: { activeId: string }) {
@@ -19,6 +20,8 @@ function SettingsPane({ activeId }: { activeId: string }) {
       return <LanguageSetting />;
     case "settings":
       return <WorkspaceSettingsContent />;
+    case "my-account":
+      return <MyAccountContent />;
     default:
       return (
         <div

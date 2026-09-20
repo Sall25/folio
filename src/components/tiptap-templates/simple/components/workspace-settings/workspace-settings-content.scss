@@ -110,3 +110,34 @@
   padding: 8px 10px;
   margin-bottom: 4px;
 }
+
+.ws-setting-row__static {
+  font-size: 14px;
+  color: var(--tt-text-secondary);
+}
+
+.ws-avatar-upload {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ws-avatar-upload__btn {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md);
+  cursor: pointer;
+
+  &.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.ws-settings-content__danger {
+  border: 1px solid color-mix(in srgb, #e5484d 30%, transparent);
+  border-radius: var(--tt-radius-md);
+  padding: 4px 8px;
+}

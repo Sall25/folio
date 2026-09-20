@@ -253,6 +253,24 @@
       "account": "Account",
       "workspace": "Workspace"
     },
+    "account": {
+      "loading": "Loading account…",
+      "avatar": "Photo",
+      "avatarDesc": "Shown next to your name across the workspace.",
+      "name": "Preferred name",
+      "nameDesc": "How your name appears to others.",
+      "email": "Email",
+      "emailDesc": "Used to sign in. Contact support to change it.",
+      "deleteTitle": "Delete account",
+      "deleteDesc": "Permanently delete your account and all your data. This cannot be undone.",
+      "deleteAction": "Delete account",
+      "deleteWorkspaceTitle": "Delete workspace",
+      "deleteWorkspaceDesc": "Permanently delete this workspace and everything in it. This cannot be undone.",
+      "deleteWorkspaceAction": "Delete workspace",
+      "deleteWorkspaceConfirmPre": "Delete",
+      "deleteWorkspaceConfirmPost": "? This will permanently delete the workspace and everything in it. This cannot be undone.",
+      "deleting": "Deleting…"
+    },
     "items": {
       "myAccount": "My account",
       "mySettings": "My settings",

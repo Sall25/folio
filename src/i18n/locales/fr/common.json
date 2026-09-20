@@ -238,6 +238,24 @@
       "account": "Compte",
       "workspace": "Espace de travail"
     },
+    "account": {
+      "loading": "Chargement du compte…",
+      "avatar": "Photo",
+      "avatarDesc": "Affichée à côté de ton nom dans tout l'espace de travail.",
+      "name": "Nom préféré",
+      "nameDesc": "Comment ton nom apparaît aux autres.",
+      "email": "E-mail",
+      "emailDesc": "Utilisé pour te connecter. Contacte le support pour le changer.",
+      "deleteTitle": "Supprimer le compte",
+      "deleteDesc": "Supprime définitivement ton compte et toutes tes données. Cette action est irréversible.",
+      "deleteAction": "Supprimer le compte",
+      "deleteWorkspaceTitle": "Supprimer l'espace de travail",
+      "deleteWorkspaceDesc": "Supprime définitivement cet espace de travail et tout ce qu'il contient. Cette action est irréversible.",
+      "deleteWorkspaceAction": "Supprimer l'espace de travail",
+      "deleteWorkspaceConfirmPre": "Supprimer",
+      "deleteWorkspaceConfirmPost": " ? Cela supprimera définitivement l'espace de travail et tout ce qu'il contient. Cette action est irréversible.",
+      "deleting": "Suppression…"
+    },
     "items": {
       "myAccount": "Mon compte",
       "mySettings": "Mes paramètres",
