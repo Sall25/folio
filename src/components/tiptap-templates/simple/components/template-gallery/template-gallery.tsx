@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Page, PageCover, ID } from "src/types";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, X } from "lucide-react";
 import { PageItemIcon } from "../../page-item-icon";
 import { useActivePageActions } from "../../context/active-page-context";
 import { makePage } from "src/utils/make-page";
@@ -9,6 +9,7 @@ import { useCreatePage } from "src/hooks/use-create-page";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { useTranslation } from "react-i18next";
 import { useCurrentPerson } from "src/hooks/use-session";
+import { useIsMobile } from "src/hooks/use-breakpoint";
 
 // ── People metadata (display contract) ──────────────────────────────────────
 // Page carries no author/usage data, so the parent supplies this from the real
@@ -166,6 +167,7 @@ export function TemplatesGallery({
   const [query, setQuery] = useState("");
   const [hoveredId, setHoveredId] = useState<ID | null>(null);
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!open) return;
@@ -221,9 +223,9 @@ export function TemplatesGallery({
         inset: 0,
         background: "rgba(15, 15, 15, 0.4)",
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: isMobile ? "stretch" : "flex-start",
         justifyContent: "center",
-        paddingTop: "16vh",
+        paddingTop: isMobile ? 0 : "16vh",
         zIndex: 10000,
       }}
     >
@@ -233,16 +235,16 @@ export function TemplatesGallery({
         aria-label={t("templates.title")}
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: 900,
-          maxWidth: "94vw",
-          height: "70vh",
-          maxHeight: "82vh",
+          width: isMobile ? "100vw" : 900,
+          maxWidth: isMobile ? "100vw" : "94vw",
+          height: isMobile ? "100dvh" : "70vh",
+          maxHeight: isMobile ? "100dvh" : "82vh",
           display: "flex",
           flexDirection: "column",
           background: "var(--tt-card-bg-color)",
-          border: "0.5px solid var(--tt-border-color)",
-          borderRadius: "var(--tt-radius-lg)",
-          boxShadow: "0 12px 40px rgba(0, 0, 0, 0.18)",
+          border: isMobile ? "none" : "0.5px solid var(--tt-border-color)",
+          borderRadius: isMobile ? 0 : "var(--tt-radius-lg)",
+          boxShadow: isMobile ? "none" : "0 12px 40px rgba(0, 0, 0, 0.18)",
           overflow: "hidden",
         }}
       >
@@ -267,9 +269,9 @@ export function TemplatesGallery({
             {t("templates.title")}
           </h2>
           <Spacer orientation="horizontal" />
-          {/* <button
+          <button
             type="button"
-            aria-label="Close"
+            aria-label={t("actions.close", "Close")}
             onClick={onClose}
             style={{
               display: "flex",
@@ -282,7 +284,7 @@ export function TemplatesGallery({
             }}
           >
             <X size={18} />
-          </button> */}
+          </button>
         </div>
 
         <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
@@ -475,139 +477,141 @@ export function TemplatesGallery({
             </div>
           </div>
 
-          {/* ── Right: hover detail panel ─────────────────────────────────── */}
-          <div
-            style={{
-              width: 300,
-              flexShrink: 0,
-              borderLeft: "0.5px solid var(--tt-border-color)",
-              background: "var(--tt-hover-bg-color, rgba(0,0,0,0.015))",
-              overflowY: "auto",
-            }}
-          >
-            {preview ? (
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <div
-                  style={{
-                    height: 120,
-                    background: coverBackground(preview.cover),
-                    borderBottom: "0.5px solid var(--tt-border-color)",
-                  }}
-                />
-                <div
-                  style={{
-                    padding: 18,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 16,
-                  }}
-                >
+          {/* ── Right: hover detail panel (desktop only) ──────────────────── */}
+          {!isMobile && (
+            <div
+              style={{
+                width: 300,
+                flexShrink: 0,
+                borderLeft: "0.5px solid var(--tt-border-color)",
+                background: "var(--tt-hover-bg-color, rgba(0,0,0,0.015))",
+                overflowY: "auto",
+              }}
+            >
+              {preview ? (
+                <div style={{ display: "flex", flexDirection: "column" }}>
                   <div
-                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                    style={{
+                      height: 120,
+                      background: coverBackground(preview.cover),
+                      borderBottom: "0.5px solid var(--tt-border-color)",
+                    }}
+                  />
+                  <div
+                    style={{
+                      padding: 18,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 16,
+                    }}
                   >
-                    <PageItemIcon cover={preview.cover} />
-                    <span
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 600,
-                        color: "var(--tt-text-color)",
-                      }}
-                    >
-                      {preview.title || t("page.untitled")}
-                    </span>
-                  </div>
-
-                  <div>
                     <div
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        letterSpacing: "0.05em",
-                        textTransform: "uppercase",
-                        color: "var(--tt-text-color)",
-                        marginBottom: 8,
-                      }}
+                      style={{ display: "flex", alignItems: "center", gap: 8 }}
                     >
-                      {t("templates.createdBy")}
-                    </div>
-                    {meta?.createdBy ? (
-                      <div
+                      <PageItemIcon cover={preview.cover} />
+                      <span
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
+                          fontSize: 16,
+                          fontWeight: 600,
+                          color: "var(--tt-text-color)",
                         }}
                       >
-                        <Avatar person={meta.createdBy} size={26} />
+                        {preview.title || t("page.untitled")}
+                      </span>
+                    </div>
+
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          letterSpacing: "0.05em",
+                          textTransform: "uppercase",
+                          color: "var(--tt-text-color)",
+                          marginBottom: 8,
+                        }}
+                      >
+                        {t("templates.createdBy")}
+                      </div>
+                      {meta?.createdBy ? (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          <Avatar person={meta.createdBy} size={26} />
+                          <span
+                            style={{
+                              fontSize: 13,
+                              color: "var(--tt-text-color)",
+                            }}
+                          >
+                            {meta.createdBy.name}
+                          </span>
+                        </div>
+                      ) : (
                         <span
                           style={{
                             fontSize: 13,
                             color: "var(--tt-text-color)",
                           }}
                         >
-                          {meta.createdBy.name}
+                          {t("templates.unknown")}
                         </span>
-                      </div>
-                    ) : (
-                      <span
+                      )}
+                    </div>
+
+                    <div>
+                      <div
                         style={{
-                          fontSize: 13,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          letterSpacing: "0.05em",
+                          textTransform: "uppercase",
                           color: "var(--tt-text-color)",
+                          marginBottom: 8,
                         }}
                       >
-                        {t("templates.unknown")}
-                      </span>
-                    )}
-                  </div>
+                        {t("templates.usedBy")}
+                      </div>
+                      <AvatarStack people={usedBy} count={usedCount} />
+                    </div>
 
-                  <div>
-                    <div
+                    <button
+                      type="button"
+                      onClick={() => openTemplate(preview.id)}
                       style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        letterSpacing: "0.05em",
-                        textTransform: "uppercase",
-                        color: "var(--tt-text-color)",
-                        marginBottom: 8,
+                        marginTop: 4,
+                        padding: "8px 12px",
+                        borderRadius: "var(--tt-radius-md)",
+                        border: "none",
+                        background: "var(--tt-brand-color-500)",
+                        color: "#fff",
+                        fontSize: 13,
+                        fontWeight: 500,
+                        cursor: "pointer",
                       }}
                     >
-                      {t("templates.usedBy")}
-                    </div>
-                    <AvatarStack people={usedBy} count={usedCount} />
+                      {t("templates.openTemplate")}
+                    </button>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => openTemplate(preview.id)}
-                    style={{
-                      marginTop: 4,
-                      padding: "8px 12px",
-                      borderRadius: "var(--tt-radius-md)",
-                      border: "none",
-                      background: "var(--tt-brand-color-500)",
-                      color: "#fff",
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {t("templates.openTemplate")}
-                  </button>
                 </div>
-              </div>
-            ) : (
-              <div
-                style={{
-                  padding: 24,
-                  fontSize: 13,
-                  color: "var(--tt-text-color)",
-                  lineHeight: 1.5,
-                }}
-              >
-                {t("templates.hoverHint")}
-              </div>
-            )}
-          </div>
+              ) : (
+                <div
+                  style={{
+                    padding: 24,
+                    fontSize: 13,
+                    color: "var(--tt-text-color)",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {t("templates.hoverHint")}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>,
