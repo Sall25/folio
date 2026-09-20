@@ -67,6 +67,11 @@ export const SidebarNav = memo(() => {
     }
   };
 
+  const handleSearchClick = () => {
+    onOpenChange?.(true);
+    onCollapsedChange(isMobile);
+  };
+
   // Icon + badge, anchored together — same pattern .workspace-notification-badge
   // already uses off .workspace-icon-button, instead of the old
   // page-level-fixed-offset approach that made the badge land near whichever
@@ -85,7 +90,7 @@ export const SidebarNav = memo(() => {
         data-highlighted={open}
         variant="ghost"
         size="large"
-        onClick={() => onOpenChange?.(true)}
+        onClick={handleSearchClick}
         className="sidebar-nav-item"
       >
         <Search className="tiptap-button-icon" />

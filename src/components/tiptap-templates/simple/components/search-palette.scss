@@ -261,3 +261,52 @@
     scrollbar-width: thin;
   }
 }
+
+@media (max-width: 768px) {
+  .sp {
+    top: 0;
+    left: 0;
+    transform: none;
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    // Base rule animates via sp-modal-in, whose keyframes set
+    // translateX(-50%) — that would drag the full-screen sheet off-center.
+    animation: none;
+  }
+
+  .sp-search__input {
+    font-size: 16px; // ≥16px so iOS doesn't auto-zoom on focus
+  }
+
+  .sp-footer {
+    // The ⌘+Enter "open in new window" hint is desktop-only — hide the
+    // keyboard-shortcut hints on mobile where there's no keyboard.
+    display: none;
+  }
+}
+
+.sp-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: var(--tt-radius-md, 6px);
+  color: var(--sp-text-muted);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+
+  &:hover {
+    background: var(--sp-hover);
+    color: var(--sp-text);
+  }
+}

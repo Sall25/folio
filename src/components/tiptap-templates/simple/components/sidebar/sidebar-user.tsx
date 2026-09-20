@@ -16,6 +16,7 @@ import {
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { WorkspaceSwitcherPopover } from "../../workspace-switcher-popover";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
+import { useIsMobile } from "src/hooks/use-breakpoint";
 
 const UserSkeleton = memo(() => {
   return (
@@ -29,6 +30,7 @@ UserSkeleton.displayName = "UserSkeleton";
 
 export const User = memo(() => {
   const { person, isLoading } = useCurrentPerson();
+  const isMobile = useIsMobile();
 
   const { workspace } = useCurrentWorkspace();
   const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -57,10 +59,10 @@ export const User = memo(() => {
                   onClick={() => setSwitcherOpen((v) => !v)}
                   variant="ghost"
                   style={{
-                    width: 26,
-                    height: 24,
-                    minWidth: 26,
-                    minHeight: 24,
+                    width: isMobile ? 18 : 26,
+                    height: isMobile ? 16 : 24,
+                    minWidth: isMobile ? 18 : 26,
+                    minHeight: isMobile ? 16 : 24,
                     padding: 0,
                     borderRadius: "var(--tt-radius-sm)",
                     cursor: "pointer",
@@ -71,8 +73,8 @@ export const User = memo(() => {
                       <DynamicIcon
                         name={wsIcon}
                         style={{
-                          width: 18,
-                          height: 18,
+                          width: isMobile ? 15 : 18,
+                          height: isMobile ? 15 : 18,
                           color: wsIconColor ?? "currentColor",
                         }}
                       />

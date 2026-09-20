@@ -9,6 +9,7 @@ import type { ID, Page, PageCover } from "src/types";
 import type { JSONContent } from "@tiptap/core";
 import { usePages } from "src/hooks/use-pages";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { useIsMobile } from "src/hooks/use-breakpoint";
 
 type Group = "today" | "past";
 
@@ -335,6 +336,7 @@ export default function SearchPalette() {
   const { data: pages } = usePages();
   const { setActivePageId } = useActivePageActions();
   const { onOpenChange } = useSearch();
+  const isMobile = useIsMobile();
   const [query, setQuery] = useState("");
   const [titlesOnly, setTitlesOnly] = useState(false);
   const [selected, setSelected] = useState(0);
@@ -492,8 +494,29 @@ export default function SearchPalette() {
         role="dialog"
         aria-label={t("search.title")}
         onClick={(e) => e.stopPropagation()}
-        style={{ width: 930, maxWidth: "98vw" }}
+        style={isMobile ? undefined : { width: 930, maxWidth: "98vw" }}
       >
+        {isMobile && (
+          <button
+            type="button"
+            className="sp-close"
+            aria-label={t("actions.close", "Close")}
+            onClick={() => onOpenChange?.(false)}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        )}
         <CardItemGroup orientation="horizontal">
           <div className="sp-search">
             <span className="sp-search__icon">
@@ -535,8 +558,15 @@ export default function SearchPalette() {
           })}
         </div>
 
-        {/* body: results (left) + preview (right) */}
-        <div style={{ display: "flex", flex: 1, minHeight: 0, gap: 10 }}>
+        {/* body: results (left) + preview (right, desktop only) */}
+        <div
+          style={{
+            display: "flex",
+            flex: 1,
+            minHeight: 0,
+            gap: isMobile ? 0 : 10,
+          }}
+        >
           <div className="sp-results" ref={listRef} style={{ flex: 1 }}>
             {groups.order.length === 0 && (
               <div className="sp-empty">
@@ -557,104 +587,108 @@ export default function SearchPalette() {
             )}
           </div>
 
-          <Spacer orientation="horizontal" size={10} />
+          {!isMobile && (
+            <>
+              <Spacer orientation="horizontal" size={10} />
 
-          {/* preview panel */}
-          <div
-            className="preview-panel"
-            style={{
-              width: 320,
-              flexShrink: 0,
-              borderLeft: "0.5px solid var(--tt-border-color)",
-              overflowY: "auto",
-            }}
-          >
-            {selectedPage ? (
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <div
-                  style={{
-                    position: "relative",
-                    height: 110,
-                    background: coverBackground(selectedPage.cover),
-                  }}
-                >
-                  <button
-                    type="button"
-                    aria-label={t("search.openPage")}
-                    onClick={() => open(selectedPage)}
-                    style={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 26,
-                      height: 26,
-                      borderRadius: 6,
-                      border: "none",
-                      background: "var(--tt-card-bg-color)",
-                      color: "var(--tt-text-color)",
-                      cursor: "pointer",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                    }}
-                  >
-                    <Icon name="arrow" size={14} />
-                  </button>
-                </div>
-
-                <div style={{ padding: "14px 16px 18px" }}>
-                  <div style={{ marginBottom: 8 }}>
-                    <PageItemIcon
-                      cover={selectedPage.cover}
-                      styles={{ fontSize: 28 }}
-                    />
-                  </div>
-
-                  {breadcrumb && (
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: "var(--tt-theme-muted)",
-                        marginBottom: 6,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {breadcrumb}
-                    </div>
-                  )}
-
-                  <div
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 700,
-                      color: "var(--tt-text-color)",
-                      marginBottom: 10,
-                      lineHeight: 1.25,
-                    }}
-                  >
-                    {selectedPage.title || t("page.untitled")}
-                  </div>
-
-                  <PreviewBlocks content={selectedPage.content} />
-                </div>
-              </div>
-            ) : (
+              {/* preview panel */}
               <div
+                className="preview-panel"
                 style={{
-                  padding: 24,
-                  fontSize: 13,
-                  color: "var(--tt-theme-muted)",
-                  lineHeight: 1.5,
+                  width: 320,
+                  flexShrink: 0,
+                  borderLeft: "0.5px solid var(--tt-border-color)",
+                  overflowY: "auto",
                 }}
               >
-                {t("search.previewEmpty")}
+                {selectedPage ? (
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <div
+                      style={{
+                        position: "relative",
+                        height: 110,
+                        background: coverBackground(selectedPage.cover),
+                      }}
+                    >
+                      <button
+                        type="button"
+                        aria-label={t("search.openPage")}
+                        onClick={() => open(selectedPage)}
+                        style={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 26,
+                          height: 26,
+                          borderRadius: 6,
+                          border: "none",
+                          background: "var(--tt-card-bg-color)",
+                          color: "var(--tt-text-color)",
+                          cursor: "pointer",
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                        }}
+                      >
+                        <Icon name="arrow" size={14} />
+                      </button>
+                    </div>
+
+                    <div style={{ padding: "14px 16px 18px" }}>
+                      <div style={{ marginBottom: 8 }}>
+                        <PageItemIcon
+                          cover={selectedPage.cover}
+                          styles={{ fontSize: 28 }}
+                        />
+                      </div>
+
+                      {breadcrumb && (
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: "var(--tt-theme-muted)",
+                            marginBottom: 6,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {breadcrumb}
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          fontSize: 20,
+                          fontWeight: 700,
+                          color: "var(--tt-text-color)",
+                          marginBottom: 10,
+                          lineHeight: 1.25,
+                        }}
+                      >
+                        {selectedPage.title || t("page.untitled")}
+                      </div>
+
+                      <PreviewBlocks content={selectedPage.content} />
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      padding: 24,
+                      fontSize: 13,
+                      color: "var(--tt-theme-muted)",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {t("search.previewEmpty")}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <Spacer orientation="horizontal" size={10} />
+              <Spacer orientation="horizontal" size={10} />
+            </>
+          )}
         </div>
 
         <div className="sp-footer">

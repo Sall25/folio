@@ -3,6 +3,7 @@ import { CardFooter } from "src/components/tiptap-ui-primitive/card";
 import "./sidebar-footer.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
+import { useIsMobile } from "src/hooks/use-breakpoint";
 
 interface SidebarFooterProps {
   name: string;
@@ -11,6 +12,7 @@ interface SidebarFooterProps {
 }
 
 function SidebarFooterImpl({ name, subtitle, avatarUrl }: SidebarFooterProps) {
+  const isMobile = useIsMobile();
   return (
     <CardFooter className="sidebar-footer-wrap">
       <div className="sidebar-footer-fog" aria-hidden />
@@ -21,12 +23,16 @@ function SidebarFooterImpl({ name, subtitle, avatarUrl }: SidebarFooterProps) {
         type="button"
         className="sidebar-footer"
       >
-        <Avatar src={avatarUrl} name={name} />
+        <Avatar size={isMobile ? "sm" : "md"} src={avatarUrl} name={name} />
 
         <span className="sidebar-footer__info">
           <span
             className="tiptap-button-text"
-            style={{ opacity: 1, display: "block" }}
+            style={{
+              opacity: 1,
+              display: "block",
+              fontSize: isMobile ? 13 : 14,
+            }}
           >
             {name}
           </span>
