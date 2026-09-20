@@ -643,7 +643,13 @@ export type PageTreeNode = {
 
 export type SaveState = "saved" | "unsaved" | "saving";
 
-export type View = "home" | "page" | "resources" | "library";
+export type View =
+  | "home"
+  | "page"
+  | "resources"
+  | "library"
+  | "inbox"
+  | "trash";
 
 export type SimpleEditorContentProps = {
   activePage: Page;
@@ -751,6 +757,7 @@ export interface Workspace {
   settings: WorkspaceSettings;
   createdAt: CreatedAt;
   updatedAt: UpdatedAt;
+  iconColor: string | null;
 }
 
 /** Defaults for a freshly created workspace — matches Notion's on-state. */

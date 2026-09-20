@@ -51,7 +51,6 @@ export function useCurrentWorkspace() {
 // read the current settings, merge, and write the complete object back — this
 // is why setSettingAsync needs the current workspace in scope.
 // ─────────────────────────────────────────────────────────────────────────────
-
 export function useManageWorkspace() {
   const { workspace } = useCurrentWorkspace();
   const patch = usePatchWorkspace(({ id, patch }) => patchWorkspace(id, patch));
@@ -62,18 +61,12 @@ export function useManageWorkspace() {
     renameAsync: (id: ID, name: string) =>
       patch.mutateAsync({ id, patch: { name } }),
 
-    setIconAsync: (id: ID, icon: string | null) =>
-      patch.mutateAsync({ id, patch: { icon } }),
+    setIconAsync: (id: ID, icon: string | null, iconColor?: string | null) =>
+      patch.mutateAsync({ id, patch: { icon, iconColor: iconColor ?? null } }),
 
-    // Replace the ENTIRE settings object. Callers that already hold a full
-    // WorkspaceSettings use this directly.
     setSettingsAsync: (id: ID, settings: WorkspaceSettings) =>
       patch.mutateAsync({ id, patch: { settings } }),
 
-    // Patch ONE settings field. Reads current settings, merges the single key,
-    // writes the whole object back (settings is stored as one jsonb blob, so
-    // there's no per-field column to PATCH). No-ops if the workspace isn't
-    // loaded yet.
     setSettingAsync: <K extends keyof WorkspaceSettings>(
       id: ID,
       key: K,

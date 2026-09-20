@@ -16,6 +16,7 @@ import { useWorkspaceSettings as useWorkspaceSettingsModal } from "./context/wor
 import { supabase } from "src/api/supabase-client";
 import "./workspace-switcher-popover.scss";
 import type { Person } from "src/types";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 // Notion-style workspace switcher. Single-workspace for v1: the list shows the
 // one workspace with a checkmark, and "New workspace" is present-but-disabled
@@ -108,6 +109,7 @@ export function WorkspaceSwitcherPopover({
 
   const name = workspace?.name ?? "";
   const icon = workspace?.icon ?? null;
+  const iconColor = workspace?.iconColor ?? null;
   const initial = name ? name.charAt(0).toUpperCase() : "?";
   const memberCount = (people as Person[]).length;
 
@@ -138,7 +140,18 @@ export function WorkspaceSwitcherPopover({
       {/* ── Current workspace header ─────────────────────────────── */}
       <div className="ws-switch__header">
         <span className="ws-switch__ws-icon">
-          {icon ? <span className="ws-switch__ws-emoji">{icon}</span> : initial}
+          {icon ? (
+            <DynamicIcon
+              name={icon}
+              style={{
+                width: 18,
+                height: 18,
+                color: iconColor ?? "currentColor",
+              }}
+            />
+          ) : (
+            initial
+          )}
         </span>
         <div className="ws-switch__ws-text">
           <span className="ws-switch__ws-name">{name}</span>
@@ -182,7 +195,20 @@ export function WorkspaceSwitcherPopover({
 
       <Row
         icon={
-          <span className="ws-switch__list-icon">{icon ? icon : initial}</span>
+          <span className="ws-switch__list-icon">
+            {icon ? (
+              <DynamicIcon
+                name={icon}
+                style={{
+                  width: 16,
+                  height: 16,
+                  color: iconColor ?? "currentColor",
+                }}
+              />
+            ) : (
+              initial
+            )}
+          </span>
         }
         label={name}
         trailing={<Check size={15} />}

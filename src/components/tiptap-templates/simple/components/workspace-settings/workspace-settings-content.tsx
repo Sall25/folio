@@ -17,6 +17,9 @@ import type {
 import "./workspace-settings-content.scss";
 import { THEME_KEY } from "src/hooks/use-apply-theme";
 import { useLocalStorage } from "../../hooks/use-local-storage";
+import { Button } from "src/components/tiptap-ui-primitive/button";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
+import { IconPickerPopover } from "src/components/tiptap-ui/cover";
 
 function SettingRow({
   label,
@@ -90,15 +93,69 @@ function Select<T extends string>({
   );
 }
 
+// Icon + color field, now backed by the shared IconPickerPopover (trigger
+// mode — the button itself is the trigger) instead of hand-rolling
+// Popover/PopoverTrigger/PopoverContent + the older single-tab IconPicker.
+// Gets Emoji/Icons/Upload tabs and remove-icon support for free.
+function WorkspaceIconField({
+  icon,
+  iconColor,
+  disabled,
+  onSelect,
+  onRemove,
+}: {
+  icon: string | null;
+  iconColor: string | null;
+  disabled: boolean;
+  onSelect: (name: string, color?: string) => void;
+  onRemove: () => void;
+}) {
+  const trigger = (
+    <Button
+      type="button"
+      variant="ghost"
+      disabled={disabled}
+      style={{
+        width: 36,
+        height: 36,
+        padding: 0,
+        border: "1px solid var(--tt-border-color)",
+        borderRadius: "var(--tt-radius-md)",
+      }}
+    >
+      {icon ? (
+        <DynamicIcon
+          name={icon}
+          style={{
+            width: 20,
+            height: 20,
+            color: iconColor ?? "currentColor",
+          }}
+        />
+      ) : (
+        <span style={{ fontSize: 12, opacity: 0.6 }}>—</span>
+      )}
+    </Button>
+  );
+
+  if (disabled) return trigger;
+
+  return (
+    <IconPickerPopover
+      onSelect={(name, color) => onSelect(name, color)}
+      onRemove={icon ? onRemove : undefined}
+      side="left"
+    >
+      {trigger}
+    </IconPickerPopover>
+  );
+}
+
 export function WorkspaceSettingsContent() {
   const { t } = useTranslation();
-  const { renameAsync, setSettingAsync } = useManageWorkspace();
+  const { renameAsync, setIconAsync, setSettingAsync } = useManageWorkspace();
   const { person } = useCurrentPerson();
 
-  // Only owners may edit workspace settings — the RLS update policy is
-  // owner-gated, so for members every control is read-only. Showing disabled
-  // controls (rather than hiding them) keeps members informed of the settings
-  // without letting them trigger a silent permission error.
   const isOwner = person?.role === "owner";
 
   const [nameDraft, setNameDraft] = useState<string | null>(null);
@@ -111,7 +168,6 @@ export function WorkspaceSettingsContent() {
   );
 
   const onChangeTheme = (theme: Theme) => {
-    // if (theme === value) return;
     remove();
     setValue(theme);
   };
@@ -131,9 +187,6 @@ export function WorkspaceSettingsContent() {
     if (next && next !== workspace.name) renameAsync(workspace.id, next);
   };
 
-  // Guarded setter — no-ops for non-owners so a stray call can't hit the RLS
-  // wall. The disabled controls already prevent this in the UI; this is belt
-  // and suspenders.
   const set = <K extends keyof WorkspaceSettings>(
     key: K,
     value: WorkspaceSettings[K],
@@ -152,6 +205,22 @@ export function WorkspaceSettingsContent() {
           )}
         </div>
       )}
+
+      <SettingRow
+        label={t("settings.workspace.icon", "Icon")}
+        description={t(
+          "settings.workspace.iconDesc",
+          "Shown next to your workspace name in the sidebar.",
+        )}
+      >
+        <WorkspaceIconField
+          icon={workspace.icon}
+          iconColor={workspace.iconColor}
+          disabled={!isOwner}
+          onSelect={(name, color) => setIconAsync(workspace.id, name, color)}
+          onRemove={() => setIconAsync(workspace.id, null)}
+        />
+      </SettingRow>
 
       <SettingRow
         label={t("settings.workspace.name", "Name")}
@@ -185,7 +254,6 @@ export function WorkspaceSettingsContent() {
           disabled={!isOwner}
           onChange={(v) => {
             onChangeTheme(v);
-
             set("defaultTheme", v);
           }}
           options={[

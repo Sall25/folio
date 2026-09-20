@@ -15,6 +15,7 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { WorkspaceSwitcherPopover } from "../../workspace-switcher-popover";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 const UserSkeleton = memo(() => {
   return (
@@ -35,6 +36,7 @@ export const User = memo(() => {
 
   const wsName = workspace?.name ?? person?.name ?? "";
   const wsIcon = workspace?.icon ?? null;
+  const wsIconColor = workspace?.iconColor ?? null;
   const initial = wsName ? wsName.charAt(0).toUpperCase() : "?";
 
   const { unreadCount } = useNotificationState();
@@ -65,7 +67,18 @@ export const User = memo(() => {
                   }}
                 >
                   <span className="tiptap-button-icon workspace-icon-button">
-                    {wsIcon ? wsIcon : initial}
+                    {wsIcon ? (
+                      <DynamicIcon
+                        name={wsIcon}
+                        style={{
+                          width: 18,
+                          height: 18,
+                          color: wsIconColor ?? "currentColor",
+                        }}
+                      />
+                    ) : (
+                      initial
+                    )}
                     {unreadCount > 0 && (
                       <span className="workspace-notification-badge" />
                     )}
