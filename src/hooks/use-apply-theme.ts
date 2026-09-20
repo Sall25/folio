@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import type { Theme } from "src/types";
 
-const THEME_KEY = "folio-theme";
+export const THEME_KEY = "folio-theme";
 
 /** Resolve a Theme to a concrete dark boolean, honoring "system". */
 function resolveDark(theme: Theme): boolean {
@@ -17,14 +17,14 @@ function resolveDark(theme: Theme): boolean {
  */
 export function useApplyTheme(workspaceDefault: Theme) {
   useEffect(() => {
-    const stored = localStorage.getItem(THEME_KEY) as Theme | null;
-    const effective: Theme = stored ?? workspaceDefault;
-
     const apply = () =>
-      document.documentElement.classList.toggle("dark", resolveDark(effective));
+      document.documentElement.classList.toggle(
+        "dark",
+        resolveDark(workspaceDefault),
+      );
     apply();
 
-    if (effective === "system") {
+    if (workspaceDefault === "system") {
       const mq = window.matchMedia("(prefers-color-scheme: dark)");
       mq.addEventListener("change", apply);
       return () => mq.removeEventListener("change", apply);

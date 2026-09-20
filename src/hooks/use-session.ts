@@ -17,6 +17,7 @@ interface PeopleRow {
   role: Person["role"];
   created_at: number;
   workspace_id: string;
+  notification_settings: Person["notificationSettings"] | null;
 }
 
 function toPerson(row: PeopleRow): Person {
@@ -28,6 +29,7 @@ function toPerson(row: PeopleRow): Person {
     role: row.role,
     createdAt: row.created_at,
     workspaceId: row.workspace_id,
+    notificationSettings: row.notification_settings ?? undefined,
   };
 }
 
@@ -62,6 +64,14 @@ export function useSession() {
 /**
  * The domain-level "who am I" — resolves the auth session to the real
  * `Person` record.
+ *
+ * A valid session with NO matching `people` row is a real, distinct state —
+ * not an error to throw past. This can happen if the row was deleted/never
+ * created (a table wipe, a failed signup trigger, manual DB cleanup). Using
+ * maybeSingle() instead of single() avoids PostgREST's 406 in that case
+ * (single() demands exactly one row; zero rows is treated as a request
+ * failure) and lets the caller render an explicit "no profile found" state
+ * instead of an uncaught query error.
  */
 export function useCurrentPerson() {
   const { session, loading: sessionLoading } = useSession();
@@ -74,16 +84,25 @@ export function useCurrentPerson() {
         .from("people")
         .select("*")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
       if (error) throw error;
-      return toPerson(data as PeopleRow);
+      return data ? toPerson(data as PeopleRow) : null;
     },
     enabled: !sessionLoading && !!session?.user,
   });
+
+  const isMissingPerson =
+    !sessionLoading &&
+    !query.isLoading &&
+    !!session?.user &&
+    query.data === null &&
+    !query.error;
 
   return {
     person: query.data ?? null,
     isLoading: sessionLoading || query.isLoading,
     isAuthenticated: !!session?.user,
+    isMissingPerson,
+    error: query.error,
   };
 }

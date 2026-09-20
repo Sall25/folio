@@ -106,7 +106,9 @@ export function IconPickerPopover({
           side={side}
           align={align}
           sideOffset={sideOffset}
-          style={{ position: "fixed", zIndex: 999, ...contentStyle }}
+          collisionPadding={8}
+          avoidCollisions
+          style={{ zIndex: 999, ...contentStyle }}
         >
           <IconPickerCard
             target={target}

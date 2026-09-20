@@ -220,15 +220,17 @@ const StableShell = React.memo(function StableShell() {
         >
           <EditorContentMemo hasThreads={hasThreads} />
         </div>
-        <FloatingMenuMemo
-          open={open}
-          setOpen={setOpen}
-          target={target}
-          setTarget={setTarget}
-          onSelectAsync={onSelectAsync}
-          onAddCoverAsync={onAddCoverAsync}
-          floatingRef={floatingRef}
-        />
+        {editor && (
+          <FloatingMenuMemo
+            open={open}
+            setOpen={setOpen}
+            target={target}
+            setTarget={setTarget}
+            onSelectAsync={onSelectAsync}
+            onAddCoverAsync={onAddCoverAsync}
+            floatingRef={floatingRef}
+          />
+        )}
       </section>
 
       <div className="right-gutter-container">
@@ -266,10 +268,13 @@ export function SimpleEditorContent() {
   return (
     <>
       <StableShell />
-      <DragHandle editor={editor} />
-      <BlockCommentHandle editor={editor} />
-      <BubbleMenu editor={editor} />
-      <ImageBubble editor={editor} />
+      {editor && <DragHandle editor={editor} />}
+
+      {editor && <BlockCommentHandle editor={editor} />}
+
+      {editor && <BubbleMenu editor={editor} />}
+
+      {editor && <ImageBubble editor={editor} />}
     </>
   );
 }

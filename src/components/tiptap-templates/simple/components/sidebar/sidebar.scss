@@ -181,58 +181,11 @@
 .sidebar-nav-item {
   width: 100%;
   justify-content: flex-start;
-  padding: 0;
-  gap: 0;
+  color: var(--tt-text-primary);
 
-  .tiptap-button {
-    width: 100%;
-    justify-content: flex-start;
-    border-radius: var(--tt-radius-md);
-
-    transition:
-      background 0.1s,
-      color 0.1s;
-    min-height: 32px;
-    height: 30px;
-    line-height: 1.5;
-
-    &:hover {
-      background: var(--tt-gray-light-a-100, rgba(0, 0, 0, 0.04));
-      color: var(--sidebar-text-color);
-    }
-
-    .tiptap-button-icon {
-      width: 18px;
-      height: 18px;
-      stroke-width: 1.5px;
-    }
-
-    .tiptap-button-text {
-      font-size: 14px;
-      font-weight: 500; // 450 only exists if Inter is loaded as a variable font
-      // letter-spacing: -0.006em;    // Inter wants tight tracking, not loose
-      color: inherit;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      line-height: 1.5;
-      font-family:
-        ui-sans-serif,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI Variable Display",
-        "Segoe UI",
-        Helvetica,
-        "Apple Color Emoji",
-        "Noto Sans Arabic",
-        "Noto Sans Hebrew",
-        Arial,
-        sans-serif,
-        "Segoe UI Emoji",
-        "Segoe UI Symbol";
-      -webkit-font-smoothing: auto;
-    }
+  .tiptap-button-icon{
+    color: var(--tt-text-primary);
   }
-
   // Active/current route — the one row that gets full contrast + weight
   &[data-active="true"] .tiptap-button,
   &.is-active .tiptap-button {
@@ -603,29 +556,34 @@
     }
   }
 }
+.sidebar-inbox-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .sidebar-inbox-badge {
-  position: absolute;
-  top: 6px;
-  left: 18px;
-  min-width: 12px;
-  height: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
   padding: 0 4px;
-  display: grid;
-  place-items: center;
-  font-size: 9px;
-  font-weight: 600;
+  box-sizing: border-box;
+  font-size: 12px;
+  font-weight: 700;
   line-height: 1;
+  letter-spacing: -0.02em;
   color: #fff;
   background: var(--tt-color-red-dec-2);
   .dark & {
     background: var(--tt-color-red-inc-2);
   }
-  border-radius: 999px;
-  border: none;
+  border-radius: var(--tt-radius-md); //999px;
+  border: 1.5px solid var(--sidebar-bg-color);
+  // box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   pointer-events: none;
-  // Prevent layout shift; the badge floats over the icon corner.
-  transform: translate(0, 0);
 }
 
 .workspace-icon-button {

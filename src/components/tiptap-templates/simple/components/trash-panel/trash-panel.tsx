@@ -42,9 +42,11 @@ export function TrashPanel() {
       <div className="trash-panel">
         <div className="trash-panel__header">
           <span className="trash-panel__title">
-            {t("trash.title", "Trash")}
             {roots.length > 0 && (
-              <span className="trash-panel__count">{roots.length}</span>
+              <>
+                {t("trash.title", "Trash")}
+                <span className="trash-panel__count">{roots.length}</span>
+              </>
             )}
           </span>
           {roots.length > 0 && (

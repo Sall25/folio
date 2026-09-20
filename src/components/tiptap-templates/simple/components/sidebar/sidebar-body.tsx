@@ -14,7 +14,7 @@ import { useHiddenSections } from "../../hooks/use-hidden-sections";
 import type { Group, ID, PageCategory, Teamspace } from "src/types";
 import { makePage } from "src/utils/make-page";
 import { patchPage as updatePage } from "src/api/pages";
-import { CardBody } from "src/components/tiptap-ui-primitive/card";
+import { Card, CardBody } from "src/components/tiptap-ui-primitive/card";
 import { ScrollFog } from "src/components/tiptap-ui-primitive/scroll-frog";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { SidebarTree } from "../sidebar-tree";
@@ -22,12 +22,93 @@ import { LibraryPaletteTrigger } from "./library-palette-trigger";
 import { TemplatePaletteTrigger } from "./template-palette-trigger";
 import { CustomizeSidebarPanel } from "../customize-sidebar-panel";
 import { CreateTeamspaceModal } from "../create-teamspace-modal";
+import { useIsMobile } from "src/hooks/use-breakpoint";
+import { useNavigate } from "@tanstack/react-location";
+import { Button } from "src/components/tiptap-ui-primitive/button";
+import { Trash2 } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverPortal,
+  PopoverTrigger,
+} from "src/components/tiptap-ui-primitive/popover";
+import { TrashPanel } from "../trash-panel";
+import { Separator } from "src/components/tiptap-ui-primitive/separator";
 
 // Stable references so a memoized <SidebarTree /> can skip re-render when the
 // pages cache churns but nothing it renders actually changed.
 const NOOP = () => {};
 const EMPTY_TEAMSPACES: Teamspace[] = [];
 const EMPTY_GROUPS: Group[] = [];
+
+function Trash() {
+  const isMobile = useIsMobile();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { onCollapsedChange } = useEditorLayout();
+
+  const handleTrashClick = () => {
+    if (isMobile) {
+      navigate({ to: "/trash" });
+      onCollapsedChange(isMobile);
+    }
+  };
+
+  if (isMobile) {
+    return (
+      <Button
+        variant="ghost"
+        size="large"
+        style={{ width: "100%", justifyContent: "flex-start" }}
+        onClick={handleTrashClick}
+      >
+        <Trash2 className="tiptap-button-icon" />
+        <Spacer orientation="horizontal" size={2} />
+        <span
+          className="tiptap-button-text"
+          style={{ opacity: 1, display: "block" }}
+        >
+          {t("sidebar.trash")}
+        </span>
+      </Button>
+    );
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="large"
+          style={{ width: "100%", justifyContent: "flex-start" }}
+        >
+          <Trash2 className="tiptap-button-icon" />
+          <Spacer orientation="horizontal" size={2} />
+          <span
+            className="tiptap-button-text"
+            style={{ opacity: 1, display: "block" }}
+          >
+            {t("sidebar.trash")}
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverPortal container={document.getElementById("root")}>
+        <PopoverContent
+          side="right"
+          alignOffset={6}
+          collisionPadding={8}
+          align="center"
+          avoidCollisions
+          style={{ zIndex: 999 }}
+        >
+          <Card style={{ minWidth: 300, minHeight: 300 }}>
+            <TrashPanel />
+          </Card>
+        </PopoverContent>
+      </PopoverPortal>
+    </Popover>
+  );
+}
 
 export const SidebarBody = memo(() => {
   const { t } = useTranslation();
@@ -183,9 +264,14 @@ export const SidebarBody = memo(() => {
             {!peeking && (
               <>
                 <Spacer orientation="vertical" size={10} />
+                <Separator orientation="horizontal" style={{ height: 0.5 }} />
+                <Spacer orientation="vertical" size={10} />
                 <LibraryPaletteTrigger />
                 <Spacer orientation="vertical" size={5} />
                 <TemplatePaletteTrigger />
+                <Spacer orientation="vertical" size={5} />
+                <Trash />
+
                 <Spacer orientation="vertical" size={25} />
               </>
             )}

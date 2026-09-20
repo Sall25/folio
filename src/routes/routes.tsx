@@ -13,6 +13,14 @@ export const routes = [
     element: <SimpleEditor view="library" />,
   },
   {
+    path: "/inbox",
+    element: <SimpleEditor view="inbox" />,
+  },
+  {
+    path: "/trash",
+    element: <SimpleEditor view="trash" />,
+  },
+  {
     path: "page/:pageId",
     element: <SimpleEditor view="page" />,
   },

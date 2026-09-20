@@ -1,16 +1,16 @@
-import { useState, type CSSProperties } from "react"
-import type { AvatarSize } from "./types"
-import { SIZE } from "./data"
-import { getInitials, nameToColor } from "./utils"
+import { useState, type CSSProperties } from "react";
+import type { AvatarSize } from "./types";
+import { SIZE } from "./data";
+import { getInitials, nameToColor } from "./utils";
 
 interface AvatarProps {
-  name: string // User's display name 
-  online: boolean // Show a green presence dot
-  src?: string // Optional image URL
-  size?: AvatarSize // "xs" | "sm" | "md" (default) | "lg" | "xl"
-  showTooltip?: boolean // Show name on hover (default true)
-  style?: Partial<CSSProperties> // Extra inline styles on the wrapper
-  className?: string // Extra class names
+  name?: string | null; // User's display name
+  online?: boolean; // Show a green presence dot
+  src?: string | null; // Optional image URL
+  size?: AvatarSize; // "xs" | "sm" | "md" (default) | "lg" | "xl"
+  showTooltip?: boolean; // Show name on hover (default true)
+  style?: Partial<CSSProperties>; // Extra inline styles on the wrapper
+  className?: string; // Extra class names
 }
 
 export function Avatar({
@@ -20,31 +20,30 @@ export function Avatar({
   size = "md",
   showTooltip = true,
   style,
-  className
-
+  className,
 }: AvatarProps) {
-  const [imgError, setImgError] = useState(false)
-  const s = SIZE[size] ?? SIZE.md
-  const showImg = src ?? !imgError
-  const initials = getInitials(name)
-  const { background, color } = nameToColor(name)
+  const [imgError, setImgError] = useState(false);
+  const s = SIZE[size] ?? SIZE.md;
+  const showImg = !!src && !imgError;
+  const initials = getInitials(name ?? undefined);
+  const { background, color } = nameToColor(name ?? undefined);
 
   return (
     <span
-      title={showTooltip ? name : undefined}
+      title={showTooltip && name ? name : undefined}
       className={className}
       style={{
-        position: 'relative',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        position: "relative",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
         flexShrink: 0,
         width: s.box,
         height: s.box,
-        borderRadius: '50%',
-        overflow: 'visible',
-        userSelect: 'none',
-        ...style
+        borderRadius: "50%",
+        overflow: "visible",
+        userSelect: "none",
+        ...style,
       }}
     >
       {/* Image or initials */}
@@ -70,8 +69,8 @@ export function Avatar({
       >
         {showImg ? (
           <img
-            src={src}
-            alt={name}
+            src={src ?? undefined}
+            alt={name ?? undefined}
             onError={() => setImgError(true)}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
@@ -97,6 +96,5 @@ export function Avatar({
         />
       )}
     </span>
-  )
-
+  );
 }

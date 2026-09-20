@@ -16,6 +16,11 @@ import { usePageBrowserTab } from "./hooks/use-page-browser-tab";
 import { HomePage, LibraryPage, PageEditorLayout } from "./components/pages";
 import { AppOverlays } from "./app-overlays";
 import { SimpleEditorToolbar } from "./simple-editor-toolbar";
+import { InboxPage } from "./components/inbox-page";
+import { TrashPage } from "./components/trash-page";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
+import { THEME_KEY, useApplyTheme } from "src/hooks/use-apply-theme";
+import { useLocalStorage } from "./hooks/use-local-storage";
 
 function SimpleEditorMain({ view }: { view: View }) {
   return (
@@ -26,6 +31,10 @@ function SimpleEditorMain({ view }: { view: View }) {
 
       {view === "page" && <PageEditorLayout />}
 
+      {view === "inbox" && <InboxPage />}
+
+      {view === "trash" && <TrashPage />}
+
       <AppOverlays />
     </>
   );
@@ -34,6 +43,12 @@ function SimpleEditorMain({ view }: { view: View }) {
 export function SimpleEditor({ view }: { view: View }) {
   const capitalized = view.charAt(0).toUpperCase() + view.slice(1);
   usePageBrowserTab("Folio", capitalized);
+  const { workspace } = useCurrentWorkspace();
+  const [value] = useLocalStorage(
+    THEME_KEY,
+    workspace?.settings.defaultTheme ?? "system",
+  );
+  useApplyTheme(value);
 
   return (
     <div className="simple-editor-wrapper">

@@ -14,6 +14,7 @@ import { NotificationProvider } from "./components/tiptap-ui/notification";
 import { PageCapabilitiesProvider } from "./components/tiptap-templates/simple/context/page-capabilities-provider";
 import { ToastProvider } from "./components/tiptap-templates/simple/components/toast";
 import { Sidebar } from "./components/tiptap-templates/simple/components/sidebar";
+
 const client = new QueryClient();
 
 function App() {

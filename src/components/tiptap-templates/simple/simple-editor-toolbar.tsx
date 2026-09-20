@@ -10,7 +10,6 @@ import { UndoRedoButton } from "src/components/tiptap-ui/undo-redo-button";
 import { ArrowLeftIcon } from "src/components/tiptap-icons/arrow-left-icon";
 import { HighlighterIcon } from "src/components/tiptap-icons/highlighter-icon";
 import { LinkIcon } from "src/components/tiptap-icons/link-icon";
-import { ThemeToggle } from "src/components/tiptap-templates/simple/theme-toggle";
 import { MorePopover } from "./more-popover";
 import { useActivePageState } from "./context/active-page-context";
 import type { View } from "src/types";
@@ -277,8 +276,6 @@ export const DesktopToolbarContent = ({ view }: ContentProps) => {
             <Spacer orientation="horizontal" size={8} />
           </>
         )}
-
-        <ThemeToggle />
 
         <MorePopover />
       </ToolbarGroup>
