@@ -5,6 +5,8 @@ import { useWorkspaceSettings as useWorkspaceSettingsModal } from "../../context
 import { LanguageSetting } from "src/components/tiptap-ui/language-settings";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { WorkspaceSettingsContent } from "./workspace-settings-content";
+import { useCollabProvider } from "../../context/collab-provider-context";
+import { usePresence } from "../../hooks/use-presence";
 
 // activeId → content pane. Plug the rest in as they land on this branch.
 function SettingsPane({ activeId }: { activeId: string }) {
@@ -37,6 +39,9 @@ export function WorkspaceSettings() {
   const { open, onOpenChange, activeId, setActiveId } =
     useWorkspaceSettingsModal();
   const { person } = useCurrentPerson();
+  const provider = useCollabProvider();
+  const presenceUsers = usePresence(provider);
+  const isOnline = presenceUsers.some((u) => u.id === person?.id);
 
   return (
     <WorkspaceSettingsModal
@@ -44,7 +49,12 @@ export function WorkspaceSettings() {
       onClose={() => onOpenChange(false)}
       activeId={activeId}
       onSelect={setActiveId}
-      account={{ name: person?.name ?? "", email: person?.email ?? "" }}
+      online={isOnline}
+      account={{
+        name: person?.name ?? "",
+        email: person?.email ?? "",
+        avatarUrl: person?.avatarUrl ?? undefined,
+      }}
     >
       <SettingsPane activeId={activeId} />
     </WorkspaceSettingsModal>

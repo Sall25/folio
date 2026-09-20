@@ -15,7 +15,8 @@ import type {
   WorkspaceSettings,
 } from "src/types";
 import "./workspace-settings-content.scss";
-import { useApplyTheme } from "src/hooks/use-apply-theme";
+import { THEME_KEY } from "src/hooks/use-apply-theme";
+import { useLocalStorage } from "../../hooks/use-local-storage";
 
 function SettingRow({
   label,
@@ -103,7 +104,17 @@ export function WorkspaceSettingsContent() {
   const [nameDraft, setNameDraft] = useState<string | null>(null);
 
   const { workspace } = useCurrentWorkspace();
-  useApplyTheme(workspace?.settings.defaultTheme ?? "system");
+
+  const [value, setValue, remove] = useLocalStorage(
+    THEME_KEY,
+    workspace?.settings.defaultTheme ?? "system",
+  );
+
+  const onChangeTheme = (theme: Theme) => {
+    // if (theme === value) return;
+    remove();
+    setValue(theme);
+  };
 
   if (!workspace) {
     return (
@@ -170,9 +181,13 @@ export function WorkspaceSettingsContent() {
         )}
       >
         <Select<Theme>
-          value={s.defaultTheme}
+          value={value}
           disabled={!isOwner}
-          onChange={(v) => set("defaultTheme", v)}
+          onChange={(v) => {
+            onChangeTheme(v);
+
+            set("defaultTheme", v);
+          }}
           options={[
             { value: "system", label: t("settings.theme.system", "System") },
             { value: "light", label: t("settings.theme.light", "Light") },

@@ -8,25 +8,28 @@ import {
   PanelRight,
   Users2,
 } from "lucide-react";
-import type { ID, Page, PageCategory } from "src/types";
+import type { ID, Page, PageCategory, Person } from "src/types";
 import { PageItemIcon } from "../page-item-icon";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import { useActivePageActions } from "../context/active-page-context";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
-import { AvatarDemo } from "src/components/tiptap-ui-primitive/avatar";
+import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import "./library-palette.scss";
 import { useChildPages, usePages } from "src/hooks/use-pages";
+import { usePeople } from "src/hooks/use-people";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { makePage } from "src/utils/make-page";
 import { useLibrary } from "../context/library-context";
 import { formatRelativeTime } from "src/utils/format-relative";
 import { FileIcon } from "src/components/tiptap-icons";
-import { usePersonNames } from "src/hooks/use-person-names";
 import { useCurrentPerson } from "src/hooks/use-session";
+import { useCollabProvider } from "../context/collab-provider-context";
+import { usePresence } from "../hooks/use-presence";
+
 export type LibraryTab =
   | Exclude<PageCategory, "Template" | "Recent">
   | "Recents";
@@ -97,7 +100,19 @@ const dataStyle: React.CSSProperties = {
   fontFamily: "inherit",
 };
 
-function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
+function RecentRow({
+  page,
+  depth = 0,
+  onlineIds,
+  peopleById,
+  currentPersonId,
+}: {
+  page: Page;
+  depth?: number;
+  onlineIds: Set<ID>;
+  peopleById: Map<ID, Person>;
+  currentPersonId: ID | undefined;
+}) {
   const { t, i18n } = useTranslation();
   const [show, setShow] = useState(false);
   const [expanded, setExpanded] = useState<Set<ID>>(new Set());
@@ -120,7 +135,13 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
   const hasChildren = (children.data?.length ?? 0) > 0;
   const isOpen = expanded.has(page.id);
 
-  const personName = usePersonNames();
+  const owner = page.ownerId ? peopleById.get(page.ownerId) : undefined;
+  const ownerDisplayName =
+    page.ownerId === currentPersonId ? "You" : (owner?.name ?? "Unknown");
+  const ownerOnline = page.ownerId ? onlineIds.has(page.ownerId) : false;
+
+  console.log("people", peopleById);
+  console.log("avatarUrl", owner?.avatarUrl);
 
   return (
     <>
@@ -204,9 +225,14 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
       </div>
 
       <div key={`${page.id}-author`} style={cellStyle}>
-        <AvatarDemo />
+        <Avatar
+          size="sm"
+          src={owner?.avatarUrl}
+          name={ownerDisplayName}
+          online={ownerOnline}
+        />
         <span style={{ ...dataStyle, fontWeight: 500 }}>
-          {page.ownerId ? personName(page.ownerId) : "Unknown"}
+          {ownerDisplayName}
         </span>
       </div>
 
@@ -222,13 +248,30 @@ function RecentRow({ page, depth = 0 }: { page: Page; depth?: number }) {
 
       {isOpen &&
         children.data?.map((child) => (
-          <RecentRow key={child.id} page={child} depth={depth + 1} />
+          <RecentRow
+            key={child.id}
+            page={child}
+            depth={depth + 1}
+            onlineIds={onlineIds}
+            peopleById={peopleById}
+            currentPersonId={currentPersonId}
+          />
         ))}
     </>
   );
 }
 
-function RecentGrid({ rows }: { rows: Page[] }) {
+function RecentGrid({
+  rows,
+  onlineIds,
+  peopleById,
+  currentPersonId,
+}: {
+  rows: Page[];
+  onlineIds: Set<ID>;
+  peopleById: Map<ID, Person>;
+  currentPersonId: ID | undefined;
+}) {
   const { t } = useTranslation();
   return (
     <div
@@ -265,7 +308,12 @@ function RecentGrid({ rows }: { rows: Page[] }) {
 
       {rows.map((page) => (
         <div key={page.id} style={{ display: "contents" }}>
-          <RecentRow page={page} />
+          <RecentRow
+            page={page}
+            onlineIds={onlineIds}
+            peopleById={peopleById}
+            currentPersonId={currentPersonId}
+          />
         </div>
       ))}
     </div>
@@ -284,11 +332,23 @@ const TAB_EMPTY: Record<LibraryTab, string> = {
 export function LibraryPalette({ onClose }: { onClose?: () => void }) {
   const { t } = useTranslation();
   const { data: pages } = usePages();
+  const { data: people = [] } = usePeople();
   const createPage = useCreatePage();
   const { person } = useCurrentPerson();
   const { setActivePageId } = useActivePageActions();
   const { activeTab } = useLibrary();
   const [tab, setTab] = useState<LibraryTab>(activeTab ?? "Recents");
+
+  const provider = useCollabProvider();
+  const presenceUsers = usePresence(provider);
+  const onlineIds = useMemo(
+    () => new Set(presenceUsers.map((u) => u.id)),
+    [presenceUsers],
+  );
+  const peopleById = useMemo(
+    () => new Map((people as Person[]).map((p) => [p.id, p])),
+    [people],
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -381,7 +441,12 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
         <Spacer orientation="vertical" size={10} />
 
         {rows.length > 0 ? (
-          <RecentGrid rows={rows} />
+          <RecentGrid
+            rows={rows}
+            onlineIds={onlineIds}
+            peopleById={peopleById}
+            currentPersonId={person?.id}
+          />
         ) : (
           <div className="library-empty">
             <FileIcon className="library-empty__icon" />

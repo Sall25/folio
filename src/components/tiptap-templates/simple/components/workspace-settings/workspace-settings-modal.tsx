@@ -20,6 +20,7 @@ import {
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import "./workspace-settings-modal.scss";
+import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 
 export interface SettingsNavItem {
   id: string;
@@ -140,6 +141,14 @@ export interface WorkspaceSettingsModalProps {
   children?: ReactNode;
   /** Account identity shown at the top of the nav. */
   account?: { name: string; email: string; avatarUrl?: string };
+  /**
+   * Whether the current user is present on some live collaborative
+   * connection (a page's HocuspocusProvider) — this modal has no provider
+   * of its own, so the caller must derive this itself, e.g. from whichever
+   * page was open when settings was invoked. Omit if there's no meaningful
+   * connection to check; the dot simply won't render.
+   */
+  online?: boolean;
 }
 
 export function WorkspaceSettingsModal({
@@ -151,6 +160,7 @@ export function WorkspaceSettingsModal({
   headerAction,
   children,
   account = { name: "Workspace", email: "" },
+  online,
 }: WorkspaceSettingsModalProps) {
   const { t } = useTranslation();
   const [internalActive, setInternalActive] = useState("people");
@@ -173,7 +183,6 @@ export function WorkspaceSettingsModal({
 
   if (!open) return null;
 
-  const initial = (account.name || "?").trim().charAt(0).toUpperCase();
   const activeLabelKey = findLabelKey(active);
 
   return (
@@ -190,17 +199,11 @@ export function WorkspaceSettingsModal({
         <aside className="ws-settings__nav">
           {/* Account identity */}
           <div className="ws-settings__account">
-            {account.avatarUrl ? (
-              <img
-                className="ws-settings__avatar"
-                src={account.avatarUrl}
-                alt=""
-              />
-            ) : (
-              <span className="ws-settings__avatar ws-settings__avatar--initial">
-                {initial}
-              </span>
-            )}
+            <Avatar
+              src={account.avatarUrl}
+              name={account.name}
+              online={online}
+            />
             <div className="ws-settings__account-text">
               <span className="ws-settings__account-name">{account.name}</span>
               {account.email && (

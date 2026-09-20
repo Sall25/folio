@@ -103,7 +103,16 @@ function parse(path: string): Parsed {
       const [k, v] = pair.split("=");
       if (!k) continue;
       const col = COLUMN[k] ?? toSnake(k);
-      filters.push([col, decodeURIComponent(v ?? "")]);
+      // Callers may write PostgREST-style operator-prefixed values
+      // (?col=eq.value) even though this shim just forwards the value
+      // straight into supabase-js's .eq(col, val) — which does NOT expect
+      // the "eq." prefix, since .eq() already implies equality. Strip it
+      // defensively so both styles (?col=value and ?col=eq.value) work
+      // identically instead of silently comparing against the literal
+      // string "eq.value".
+      let val = decodeURIComponent(v ?? "");
+      if (val.startsWith("eq.")) val = val.slice(3);
+      filters.push([col, val]);
     }
   }
   return { table, id, filters };
