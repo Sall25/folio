@@ -8,6 +8,9 @@ import { WorkspaceSettingsContent } from "./workspace-settings-content";
 import { useCollabProvider } from "../../context/collab-provider-context";
 import { usePresence } from "../../hooks/use-presence";
 import { MyAccountContent } from "./my-account-content";
+import { MyConnectionsContent } from "./my-connections-content";
+import { MyNotificationsContent } from "./my-notifications-content";
+import { MySettingsContent } from "./my-settings-content";
 
 // activeId → content pane. Plug the rest in as they land on this branch.
 function SettingsPane({ activeId }: { activeId: string }) {
@@ -22,6 +25,12 @@ function SettingsPane({ activeId }: { activeId: string }) {
       return <WorkspaceSettingsContent />;
     case "my-account":
       return <MyAccountContent />;
+    case "my-connections":
+      return <MyConnectionsContent />;
+    case "my-notifications":
+      return <MyNotificationsContent />;
+    case "my-settings":
+      return <MySettingsContent />;
     default:
       return (
         <div

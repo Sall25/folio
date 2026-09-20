@@ -224,6 +224,26 @@
     }
   },
   "settings": {
+    "notifications": {
+      "loading": "Chargement…",
+      "intro": "Choisis les notifications qui apparaissent dans ta boîte de réception. Désactiver un type le masque de ta boîte de réception et du compteur de non lus — cela n'empêche pas les autres de te mentionner ou de créer un lien vers tes pages.",
+      "mentions": "Mentions",
+      "mentionsDesc": "Quand quelqu'un te @mentionne.",
+      "commentMentions": "Mentions en commentaire",
+      "commentMentionsDesc": "Quand quelqu'un te mentionne dans un commentaire.",
+      "dateDue": "Échéances à venir",
+      "dateDueDesc": "Rappels pour les dates qui approchent.",
+      "dateOverdue": "Échéances dépassées",
+      "dateOverdueDesc": "Rappels pour les dates passées.",
+      "backlinks": "Rétroliens",
+      "backlinksDesc": "Quand une autre page fait un lien vers l'une des tiennes."
+    },
+    "mySettings": {
+      "theme": "Thème",
+      "themeDesc": "Ton propre thème pour cet appareil. Remplace le thème par défaut de l'espace de travail.",
+      "language": "Langue",
+      "languageDesc": "Ta propre langue pour l'interface."
+    },
     "title": "Paramètres",
     "appearance": "Apparence",
     "language": "Langue",
@@ -234,6 +254,7 @@
     "modalAria": "Paramètres de l’espace de travail",
     "closeAria": "Fermer",
     "getUnlimitedAi": "Passer à l’IA illimitée",
+
     "nav": {
       "account": "Compte",
       "workspace": "Espace de travail"
@@ -255,6 +276,18 @@
       "deleteWorkspaceConfirmPre": "Supprimer",
       "deleteWorkspaceConfirmPost": " ? Cela supprimera définitivement l'espace de travail et tout ce qu'il contient. Cette action est irréversible.",
       "deleting": "Suppression…"
+    },
+    "connections": {
+      "loading": "Chargement des connexions…",
+      "intro": "Gère les comptes que tu peux utiliser pour te connecter.",
+      "addMore": "Connecter un autre compte",
+      "connected": "Connecté",
+      "connect": "Connecter",
+      "connecting": "Connexion…",
+      "disconnect": "Déconnecter",
+      "disconnecting": "Déconnexion…",
+      "needOneMore": "Connecte une autre méthode avant de déconnecter celle-ci.",
+      "emailPassword": "E-mail et mot de passe"
     },
     "items": {
       "myAccount": "Mon compte",

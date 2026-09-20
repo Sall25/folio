@@ -249,6 +249,26 @@
     "modalAria": "Workspace settings",
     "closeAria": "Close",
     "getUnlimitedAi": "Get unlimited AI",
+    "notifications": {
+      "loading": "Loading…",
+      "intro": "Choose which notifications show up in your inbox. Turning a type off hides it from your inbox and unread count — it doesn't stop others from mentioning you or linking your pages.",
+      "mentions": "Mentions",
+      "mentionsDesc": "When someone @mentions you.",
+      "commentMentions": "Comment mentions",
+      "commentMentionsDesc": "When someone mentions you in a comment.",
+      "dateDue": "Upcoming dates",
+      "dateDueDesc": "Reminders for dates coming up soon.",
+      "dateOverdue": "Overdue dates",
+      "dateOverdueDesc": "Reminders for dates that have passed.",
+      "backlinks": "Backlinks",
+      "backlinksDesc": "When another page links to one of yours."
+    },
+    "mySettings": {
+      "theme": "Theme",
+      "themeDesc": "Your own theme for this device. Overrides the workspace default.",
+      "language": "Language",
+      "languageDesc": "Your own language for the interface."
+    },
     "nav": {
       "account": "Account",
       "workspace": "Workspace"
@@ -270,6 +290,18 @@
       "deleteWorkspaceConfirmPre": "Delete",
       "deleteWorkspaceConfirmPost": "? This will permanently delete the workspace and everything in it. This cannot be undone.",
       "deleting": "Deleting…"
+    },
+    "connections": {
+      "loading": "Loading connections…",
+      "intro": "Manage the accounts you can use to sign in.",
+      "addMore": "Connect another account",
+      "connected": "Connected",
+      "connect": "Connect",
+      "connecting": "Connecting…",
+      "disconnect": "Disconnect",
+      "disconnecting": "Disconnecting…",
+      "needOneMore": "Connect another method before disconnecting this one.",
+      "emailPassword": "Email & password"
     },
     "items": {
       "myAccount": "My account",

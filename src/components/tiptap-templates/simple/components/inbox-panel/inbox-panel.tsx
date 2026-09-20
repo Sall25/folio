@@ -7,6 +7,7 @@ import {
   Check,
 } from "lucide-react";
 import { useNotifications } from "src/components/tiptap-ui/notification/notification-context";
+import { useCurrentPerson } from "src/hooks/use-session";
 import type { Notification, NotificationType } from "src/types";
 import { useActivePageActions } from "../../context/active-page-context";
 import { setPendingScrollTarget } from "./pending-scroll-target";
@@ -17,10 +18,19 @@ import "./inbox-panel.scss";
 // a notification marks it read and navigates to its source page/thread.
 export function InboxPanel() {
   const { t } = useTranslation();
-  const { notifications, markRead, markAllRead, unreadCount } =
-    useNotifications();
+  const { notifications, markRead, markAllRead } = useNotifications();
+  const { person } = useCurrentPerson();
 
   const { setActivePageId } = useActivePageActions();
+
+  // A type defaulting to true (unset) shows by default — only an explicit
+  // false in the person's saved preferences hides it. This mirrors what
+  // MyNotificationsContent writes (settings.notifications.*).
+  const settings = person?.notificationSettings ?? {};
+  const visibleNotifications = notifications.filter(
+    (n) => settings[n.type] ?? true,
+  );
+  const unreadCount = visibleNotifications.filter((n) => !n.read).length;
 
   const handleClick = (n: Notification) => {
     markRead(n.id);
@@ -42,9 +52,11 @@ export function InboxPanel() {
     <div className="inbox-panel">
       <div className="inbox-panel__header">
         <span className="inbox-panel__title">
-          {t("sidebar.inbox")}
           {unreadCount > 0 && (
-            <span className="inbox-panel__count">{unreadCount}</span>
+            <>
+              {t("sidebar.inbox")}
+              <span className="inbox-panel__count">{unreadCount}</span>
+            </>
           )}
         </span>
         {unreadCount > 0 && (
@@ -60,13 +72,13 @@ export function InboxPanel() {
       </div>
 
       <div className="inbox-panel__body">
-        {notifications.length === 0 ? (
+        {visibleNotifications.length === 0 ? (
           <div className="inbox-panel__empty">
             <InboxIcon size={26} strokeWidth={1.5} />
             <p>{t("inbox.empty", "No notifications")}</p>
           </div>
         ) : (
-          notifications.map((n) => (
+          visibleNotifications.map((n) => (
             <button
               type="button"
               key={n.id}

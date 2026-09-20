@@ -679,6 +679,7 @@ export interface Person {
   avatarUrl: string | null;
   role: MemberRole;
   createdAt: CreatedAt;
+  notificationSettings?: Partial<Record<NotificationType, boolean>>;
 }
 
 export interface Group {
