@@ -17,6 +17,8 @@ import { supabase } from "src/api/supabase-client";
 import "./workspace-switcher-popover.scss";
 import type { Person } from "src/types";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
+import { useIsMobile } from "src/hooks/use-breakpoint";
+import { useEditorLayoutActions } from "./context/editor-layout-context";
 
 // Notion-style workspace switcher. Single-workspace for v1: the list shows the
 // one workspace with a checkmark, and "New workspace" is present-but-disabled
@@ -72,6 +74,8 @@ export function WorkspaceSwitcherPopover({
   const { person } = useCurrentPerson();
   const { data: people = [] } = usePeople();
   const { onOpenChange, setActiveId } = useWorkspaceSettingsModal();
+  const { onCollapsedChange } = useEditorLayoutActions();
+  const isMobile = useIsMobile();
 
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
@@ -117,6 +121,7 @@ export function WorkspaceSwitcherPopover({
     setActiveId("settings");
     onOpenChange(true);
     onClose();
+    onCollapsedChange(isMobile);
   };
 
   const openInvite = () => {

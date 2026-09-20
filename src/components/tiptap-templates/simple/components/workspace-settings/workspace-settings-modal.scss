@@ -255,3 +255,82 @@
     color: var(--tt-text-primary);
   }
 }
+
+.ws-settings--mobile {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  transform: none;
+  border-radius: 0;
+  border: none;
+  display: block;
+  // The base rule runs ws-dialog-in, whose keyframes set transform
+  // (translate(-50%, -48%)…) — that would drag the full-screen mobile
+  // panel around. Kill the animation here; the base desktop dialog keeps
+  // its own.
+  animation: none;
+}
+
+.ws-settings--mobile .ws-settings__nav,
+.ws-settings--mobile .ws-settings__content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  border-right: none;
+  overflow-y: auto;
+}
+
+.ws-settings__nav--hidden-mobile,
+.ws-settings__content--hidden-mobile {
+  display: none;
+}
+
+.ws-settings__mobile-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--tt-border-color);
+  flex-shrink: 0;
+}
+
+.ws-settings__mobile-nav-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tt-text-primary);
+}
+
+.ws-settings__close--inline {
+  position: static;
+  flex-shrink: 0;
+}
+
+.ws-settings__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: var(--tt-radius-md, 6px);
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+  margin-right: 4px;
+  flex-shrink: 0;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-color) 6%, transparent);
+    color: var(--tt-text-primary);
+  }
+}

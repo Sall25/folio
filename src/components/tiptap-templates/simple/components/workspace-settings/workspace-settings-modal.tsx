@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { ChevronLeft, X } from "lucide-react";
 import {
   Bell,
   CreditCard,
@@ -15,12 +16,12 @@ import {
   Sparkles,
   UserCircle,
   Users,
-  X,
 } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import "./workspace-settings-modal.scss";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
+import { useIsMobile } from "src/hooks/use-breakpoint";
 
 export interface SettingsNavItem {
   id: string;
@@ -163,12 +164,29 @@ export function WorkspaceSettingsModal({
   online,
 }: WorkspaceSettingsModalProps) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const [internalActive, setInternalActive] = useState("people");
   const active = activeId ?? internalActive;
+
+  // Mobile shows ONE pane at a time — nav list, or content, never a fixed
+  // side-by-side split (there's no room for it). Selecting a nav item
+  // switches to content; a back chevron in the content header returns to
+  // the nav list, distinct from the X, which fully closes the modal.
+  const [mobileShowContent, setMobileShowContent] = useState(false);
+
+  // Reopening the modal (or switching to/from mobile mid-session, e.g.
+  // rotating a tablet) always starts back at the nav list, not wherever it
+  // was left — avoids landing on content with no visible way back if the
+  // previous session's active id no longer resolves to anything.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (open) setMobileShowContent(false);
+  }, [open]);
 
   const select = (id: string) => {
     onSelect?.(id);
     if (activeId === undefined) setInternalActive(id);
+    if (isMobile) setMobileShowContent(true);
   };
 
   // Esc to close
@@ -185,18 +203,45 @@ export function WorkspaceSettingsModal({
 
   const activeLabelKey = findLabelKey(active);
 
+  // On mobile, each pane is shown/hidden via a class rather than unmounted —
+  // keeps content state (scroll position, form drafts) alive when flipping
+  // back to the nav and forward again, same reasoning AuthGate's skeletons
+  // use overlay-not-swap for.
+  const navPaneClass = isMobile
+    ? `ws-settings__nav${mobileShowContent ? " ws-settings__nav--hidden-mobile" : ""}`
+    : "ws-settings__nav";
+  const contentPaneClass = isMobile
+    ? `ws-settings__content${mobileShowContent ? "" : " ws-settings__content--hidden-mobile"}`
+    : "ws-settings__content";
+
   return (
     <>
       <div className="ws-settings__backdrop" onClick={onClose} />
 
       <div
-        className="ws-settings"
+        className={`ws-settings${isMobile ? " ws-settings--mobile" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-label={t("settings.modalAria")}
       >
-        {/* ── Left nav ──────────────────────────────────────────────── */}
-        <aside className="ws-settings__nav">
+        {/* ── Left nav (full-screen pane on mobile) ────────────────────── */}
+        <aside className={navPaneClass}>
+          {isMobile && (
+            <div className="ws-settings__mobile-nav-header">
+              <span className="ws-settings__mobile-nav-title">
+                {t("settings.title")}
+              </span>
+              <button
+                type="button"
+                className="ws-settings__close ws-settings__close--inline"
+                aria-label={t("settings.closeAria")}
+                onClick={onClose}
+              >
+                <X size={18} />
+              </button>
+            </div>
+          )}
+
           {/* Account identity */}
           <div className="ws-settings__account">
             <Avatar
@@ -256,9 +301,19 @@ export function WorkspaceSettingsModal({
           </div>
         </aside>
 
-        {/* ── Content pane ──────────────────────────────────────────── */}
-        <section className="ws-settings__content">
+        {/* ── Content pane (full-screen pane on mobile) ────────────────── */}
+        <section className={contentPaneClass}>
           <header className="ws-settings__header">
+            {isMobile && (
+              <button
+                type="button"
+                className="ws-settings__back"
+                aria-label={t("actions.back", "Back")}
+                onClick={() => setMobileShowContent(false)}
+              >
+                <ChevronLeft size={18} />
+              </button>
+            )}
             <h1 className="ws-settings__title">
               {title ?? (activeLabelKey ? t(activeLabelKey) : "")}
             </h1>
@@ -268,14 +323,16 @@ export function WorkspaceSettingsModal({
           <div className="ws-settings__body">{children}</div>
         </section>
 
-        <button
-          type="button"
-          className="ws-settings__close"
-          aria-label={t("settings.closeAria")}
-          onClick={onClose}
-        >
-          <X size={18} />
-        </button>
+        {!isMobile && (
+          <button
+            type="button"
+            className="ws-settings__close"
+            aria-label={t("settings.closeAria")}
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
     </>
   );
