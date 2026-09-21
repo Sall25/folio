@@ -14,14 +14,19 @@ export function usePatchPage(
       await qc.cancelQueries({ queryKey: queryKeys.pages.all });
 
       const previousPages = qc.getQueriesData<Page[]>({
-        queryKey: queryKeys.pages.lists(),
+        queryKey: queryKeys.pages.all,
       });
       const previousPageDetail = qc.getQueryData<Page>(
         queryKeys.pages.detail(id),
       );
 
-      qc.setQueriesData<Page[]>({ queryKey: queryKeys.pages.lists() }, (old) =>
-        old?.map((o) => (o.id === id ? { ...o, ...patch } : o)),
+      // `.all` matches list entries (Page[]) AND detail entries (single Page).
+      // Only .map over arrays — a detail entry isn't iterable/mappable. The
+      // detail entry is handled by the explicit setQueryData(detail(id)) below.
+      qc.setQueriesData<Page[]>({ queryKey: queryKeys.pages.all }, (old) =>
+        Array.isArray(old)
+          ? old.map((o) => (o.id === id ? { ...o, ...patch } : o))
+          : old,
       );
       qc.setQueryData<Page>(queryKeys.pages.detail(id), (p) =>
         p ? { ...p, ...patch } : p,

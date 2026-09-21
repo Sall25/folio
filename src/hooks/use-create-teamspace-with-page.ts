@@ -6,7 +6,7 @@ import {
 } from "../api/teamspaces";
 import { makePage } from "../utils/make-page";
 import { queryKeys } from "../lib/queryKeys";
-import type { Page, Teamspace, TeamspaceAccess } from "../types";
+import type { ID, Page, Teamspace, TeamspaceAccess } from "../types";
 
 export interface CreateTeamspaceInput {
   name: string;
@@ -14,29 +14,23 @@ export interface CreateTeamspaceInput {
   iconColor?: string | null;
   description?: string | null;
   access: TeamspaceAccess;
+  // The page under a teamspace needs an owner and a workspace, same as any
+  // page — supplied by the caller (current person + current workspace) since
+  // this is a pure builder with no hook context.
+  ownerId: ID;
+  workspaceId: ID;
 }
 
-// A teamspace is a PAGE (category "Teamspaces") joined to a TEAMSPACE record by
-// a SHARED id. The pair is built here and inserted optimistically into BOTH
-// caches in onMutate, so the new page exists synchronously — before the modal
-// calls onCreated → setActivePageId. (Invalidate-only, as before, left the page
-// absent when activation ran, so the active-id fallback landed on the first
-// page.) Display fields (title, icon) live on the page; the record holds only
-// teamspace-specific fields.
 export function useCreateTeamspaceWithPage() {
   const qc = useQueryClient();
 
   return useMutation({
-    // Build page + record here so onMutate and mutationFn share the exact same
-    // objects (same id, same cover, same timestamps).
     mutationFn: async (built: { page: Page; record: Teamspace }) => {
       const createdRecord = await createTeamspaceApi(built.record);
       try {
         const createdPage = await createPageApi(built.page);
         return { page: createdPage, teamspace: createdRecord };
       } catch (err) {
-        // roll the server back too — best-effort — so a failed page write
-        // doesn't leave an orphan record on the server.
         try {
           await deleteTeamspaceApi(built.record.id);
         } catch {
@@ -52,20 +46,25 @@ export function useCreateTeamspaceWithPage() {
         qc.cancelQueries({ queryKey: queryKeys.teamspaces.all }),
       ]);
 
+      // Match on the `.all` prefix — lists() now requires a workspaceId this
+      // hook has no single value for, and a prefix matches every workspace's
+      // cached list. Guard updaters against non-array (detail) matches.
       const previousPageList = qc.getQueriesData<Page[]>({
-        queryKey: queryKeys.pages.lists(),
+        queryKey: queryKeys.pages.all,
       });
       const previousTeamspaceList = qc.getQueriesData<Teamspace[]>({
-        queryKey: queryKeys.teamspaces.lists(),
+        queryKey: queryKeys.teamspaces.all,
       });
 
-      qc.setQueriesData<Page[]>(
-        { queryKey: queryKeys.pages.lists() },
-        (pages) => (pages ? [...pages, built.page] : pages),
+      qc.setQueriesData<Page[]>({ queryKey: queryKeys.pages.all }, (pages) =>
+        Array.isArray(pages) ? [...pages, built.page] : pages,
       );
       qc.setQueriesData<Teamspace[]>(
-        { queryKey: queryKeys.teamspaces.lists() },
-        (teamspaces) => [...(teamspaces ?? []), built.record],
+        { queryKey: queryKeys.teamspaces.all },
+        (teamspaces) =>
+          Array.isArray(teamspaces)
+            ? [...teamspaces, built.record]
+            : teamspaces,
       );
 
       return { previousPageList, previousTeamspaceList };
@@ -87,8 +86,6 @@ export function useCreateTeamspaceWithPage() {
   });
 }
 
-// Build the page + record pair from modal input. Kept as a standalone helper
-// (not inside the hook) so the id is generated once and both objects share it.
 export function buildTeamspacePair(input: CreateTeamspaceInput): {
   page: Page;
   record: Teamspace;
@@ -96,8 +93,6 @@ export function buildTeamspacePair(input: CreateTeamspaceInput): {
   const id = crypto.randomUUID();
   const name = input.name.trim() || "New teamspace";
 
-  // Record holds ONLY teamspace-specific fields. name/icon are NOT stored here
-  // — they live on the page (title, cover.iconName), joined by shared id.
   const record: Teamspace = {
     id,
     description: input.description?.trim() || null,
@@ -106,9 +101,12 @@ export function buildTeamspacePair(input: CreateTeamspaceInput): {
     groupIds: [],
     ownerIds: [],
     createdAt: Date.now(),
+    workspaceId: input.workspaceId,
   };
 
   const base = makePage({
+    ownerId: input.ownerId,
+    workspaceId: input.workspaceId,
     title: name,
     parentId: null,
     category: "Teamspaces",
@@ -118,9 +116,6 @@ export function buildTeamspacePair(input: CreateTeamspaceInput): {
     id,
     cover: {
       ...base.cover,
-      // IconPicker yields Lucide icon names, so target must be "Icons" — that's
-      // the discriminator PageItemIcon switches on. Without it, target stays
-      // null and the row falls back to a plain FileText, ignoring iconName.
       ...(input.iconName
         ? {
             iconName: input.iconName,

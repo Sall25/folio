@@ -30,6 +30,7 @@ import { useCurrentPerson } from "src/hooks/use-session";
 import { useCollabProvider } from "../context/collab-provider-context";
 import { usePresence } from "../hooks/use-presence";
 import { useIsMobile } from "src/hooks/use-breakpoint";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 
 export type LibraryTab =
   | Exclude<PageCategory, "Template" | "Recent">
@@ -412,6 +413,7 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
   }, [pages, tab]);
 
   const isMobile = useIsMobile();
+  const { workspaceId } = useCurrentWorkspace();
 
   if (!pages) return null;
 
@@ -434,11 +436,12 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
               borderRadius: "var(--tt-radius-sm)",
             }}
             onClick={() => {
-              if (!person) return;
+              if (!person || !workspaceId) return;
               const page = makePage({
                 title: t("page.newPage"),
                 parentId: null,
                 ownerId: person.id,
+                workspaceId,
               });
               createPage
                 .mutateAsync(page)
@@ -473,11 +476,12 @@ export function LibraryPalette({ onClose }: { onClose?: () => void }) {
               <button
                 className="library-palette-content__new-btn"
                 onClick={() => {
-                  if (!person) return;
+                  if (!person || !workspaceId) return;
                   const page = makePage({
                     title: t("page.newPage"),
                     parentId: null,
                     ownerId: person.id,
+                    workspaceId,
                   });
                   createPage
                     .mutateAsync(page)

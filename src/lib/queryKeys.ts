@@ -3,7 +3,8 @@ import type { ID } from "../types";
 export const queryKeys = {
   pages: {
     all: ["pages"] as const,
-    lists: () => [...queryKeys.pages.all, "list"] as const,
+    lists: (workspaceId: ID) =>
+      [...queryKeys.pages.all, "list", workspaceId] as const,
     detail: (id: ID) => [...queryKeys.pages.all, "detail", id] as const,
   },
   threads: {

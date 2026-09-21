@@ -19,9 +19,9 @@ import { fetchTeamspaces } from "../api/teamspaces";
 export function useDeletePage() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: ID) => {
+    mutationFn: async ({ id, workspaceId }: { id: ID; workspaceId: ID }) => {
       const [allPages, allSources, teamspaces] = await Promise.all([
-        fetchPages(),
+        fetchPages(workspaceId),
         fetchDataSources(),
         fetchTeamspaces(),
       ]);
@@ -50,7 +50,7 @@ export function useDeletePage() {
       );
       await executeDeletePlan(plan, allSources, allPages);
     },
-    onMutate: async (id: ID) => {
+    onMutate: async ({ id }) => {
       await Promise.all(
         PLAN_NAMESPACES.map((qk) => qc.cancelQueries({ queryKey: qk })),
       );

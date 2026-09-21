@@ -27,6 +27,7 @@ import { makePage } from "src/utils/make-page";
 import { useScrollToPendingTarget } from "../components/inbox-panel";
 import { usePageCapabilities } from "src/hooks/use-page-role";
 import { CollabProviderContext } from "./collab-provider-context";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 
 // Exactly the array type useEditorExtensions produces — derived so it can't
 // drift from the real return, whatever member types are in it (one of them
@@ -197,19 +198,25 @@ function EditorInstance({
   useScrollToPendingTarget(editor, page.id);
 
   const { mutateAsync: createPage } = useCreatePage();
+  const { workspaceId } = useCurrentWorkspace();
 
   useEffect(() => {
-    if (!editor || !person) return;
+    if (!editor || !person || !workspaceId) return;
     editor.commands.syncSlashCommandCtx({
       activePageId: page.id,
       setActivePageId: (id) => refsRef.current?.setActivePageId(id),
       addPageAsync: ({ title, parentId }) => {
-        const newPage = makePage({ title, parentId, ownerId: person.id });
+        const newPage = makePage({
+          title,
+          parentId,
+          ownerId: person.id,
+          workspaceId,
+        });
         return createPage(newPage);
       },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor, page.id, createPage]);
+  }, [editor, page.id, createPage, workspaceId]);
 
   // Baseline capture for the db-page structure guard.
   // ── CHANGED: no longer DELETES anything from the doc. ──

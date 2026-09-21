@@ -15,6 +15,7 @@ export function makeRow(
   source: DataSource,
   opts: {
     ownerId: ID;
+    workspaceId: ID;
     title?: string;
     template?: RowTemplate;
     content?: JSONContent; // caller passes the cloned page content, if any
@@ -37,6 +38,7 @@ export function makeRow(
       parentId: source.pageId,
       category: opts.category ?? "Private",
       cover: opts.cover ?? undefined,
+      workspaceId: opts.workspaceId,
     }),
     sourceId: source.id,
     values,

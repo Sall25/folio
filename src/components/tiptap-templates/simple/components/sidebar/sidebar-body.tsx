@@ -34,6 +34,7 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { TrashPanel } from "../trash-panel";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 
 // Stable references so a memoized <SidebarTree /> can skip re-render when the
 // pages cache churns but nothing it renders actually changed.
@@ -205,9 +206,10 @@ export const SidebarBody = memo(() => {
     [patchPage],
   );
 
+  const { workspaceId } = useCurrentWorkspace();
   const handleAddPageToSection = useCallback(
     (category: PageCategory) => {
-      if (!person) return null;
+      if (!person || !workspaceId) return null;
       // A teamspace is created through its own modal (it must create a page +
       // a Teamspace record sharing one id), not as a plain page. Every other
       // section creates a page directly.
@@ -220,10 +222,18 @@ export const SidebarBody = memo(() => {
         parentId: null,
         category,
         ownerId: person.id,
+        workspaceId,
       });
       createPage.mutateAsync(p).then((page) => setActivePageId(page.id));
     },
-    [person, t, createPage, setActivePageId, setCreateTeamspaceOpen],
+    [
+      person,
+      t,
+      createPage,
+      setActivePageId,
+      setCreateTeamspaceOpen,
+      workspaceId,
+    ],
   );
 
   return (

@@ -4,12 +4,18 @@ import { queryKeys } from "../lib/queryKeys";
 import { fetchPages, fetchPage } from "../api/pages";
 import { useMemo } from "react";
 import type { PageTreeNode } from "../types";
+import { useCurrentWorkspace } from "./use-workspaces";
 
 // ─── the ONE base query — everything below is a lens over this ──────────────
+// Now scoped to the current workspace: the query key includes the workspace id
+// (so each workspace caches separately and switching refetches), and the fetch
+// filters by it. Disabled until a workspace is resolved.
 export function usePagesBase<T>(select?: (pages: Page[]) => T) {
+  const { workspaceId } = useCurrentWorkspace();
   return useQuery({
-    queryKey: queryKeys.pages.lists(),
-    queryFn: fetchPages,
+    queryKey: queryKeys.pages.lists(workspaceId ?? ""),
+    queryFn: () => fetchPages(workspaceId!),
+    enabled: !!workspaceId,
     select,
   });
 }
@@ -33,11 +39,13 @@ export function useChildPages(parentId: ID) {
   return usePagesBase((pages) => pages.filter((p) => p.parentId === parentId));
 }
 
-
 export function useRows(sourceId: ID) {
   return usePagesBase((pages) =>
     pages.filter(
-      (p) => p.sourceId === sourceId && p.deletedAt == null && p.category !== "Template",
+      (p) =>
+        p.sourceId === sourceId &&
+        p.deletedAt == null &&
+        p.category !== "Template",
     ),
   );
 }
@@ -98,8 +106,6 @@ export function useTabPages(tabIds: ID[]) {
 }
 
 // ─── the tree: flat pages → nested PageTreeNode[], grouped by category ──────
-// Teamspace-pages (category "Teamspaces") fall into the Teamspaces bucket like
-// any other root — a teamspace is just a page.
 export function usePageTree() {
   const query = usePagesBase((pages) =>
     pages.filter((p) => p.deletedAt == null),
@@ -115,7 +121,6 @@ export function usePageTree() {
   return { ...query, tree };
 }
 
-// pure: flat pages → { category → roots[] }, each root a nested PageTreeNode
 function buildTree(pages: Page[]): Record<PageCategory, PageTreeNode[]> {
   const childrenOf = new Map<string, Page[]>();
   for (const p of pages) {

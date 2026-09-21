@@ -6,6 +6,7 @@ import { useActivePageState } from "src/components/tiptap-templates/simple/conte
 import { useCreatePage } from "src/hooks/use-create-page";
 import { makePage } from "src/utils/make-page";
 import { useCurrentPerson } from "src/hooks/use-session";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 
 interface Props {
   editor: Editor | null;
@@ -49,9 +50,15 @@ export function useTurnIntoPage({
   }, [editor]);
 
   const { person } = useCurrentPerson();
-
+  const { workspaceId } = useCurrentWorkspace();
   const handleTurnIntoPage = useCallback(async () => {
-    if (!editor || !canTurn || activePageId === undefined || !person)
+    if (
+      !editor ||
+      !canTurn ||
+      activePageId === undefined ||
+      !person ||
+      !workspaceId
+    )
       return false;
 
     const { selection } = editor.state;
@@ -82,6 +89,7 @@ export function useTurnIntoPage({
       title,
       parentId: activePageId,
       ownerId: person.id,
+      workspaceId,
     });
     await createPage.mutateAsync(newPage);
 
@@ -106,7 +114,15 @@ export function useTurnIntoPage({
 
     onTurnedIntoPage?.();
     return true;
-  }, [editor, canTurn, activePageId, createPage, onTurnedIntoPage, person]);
+  }, [
+    editor,
+    canTurn,
+    activePageId,
+    createPage,
+    onTurnedIntoPage,
+    person,
+    workspaceId,
+  ]);
 
   return {
     isVisible: hideWhenUnavailable ? canTurn : true,

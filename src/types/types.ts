@@ -759,6 +759,18 @@ export interface Workspace {
   createdAt: CreatedAt;
   updatedAt: UpdatedAt;
   iconColor: string | null;
+  plan: WorkspacePlan;
+  ownerId: ID;
+}
+
+export type WorkspacePlan = "free" | "pro";
+
+export interface PlanLimits {
+  plan: WorkspacePlan;
+  maxMembers: number | null; // null = unlimited
+  maxTeamspaces: number | null;
+  maxWorkspaces: number | null;
+  versionHistory: boolean;
 }
 
 /** Defaults for a freshly created workspace — matches Notion's on-state. */

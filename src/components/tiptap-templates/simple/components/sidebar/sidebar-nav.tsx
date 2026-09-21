@@ -21,6 +21,7 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { InboxPanel } from "../inbox-panel";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 
 export const SidebarNav = memo(() => {
   const { open, onOpenChange } = useSearch();
@@ -35,14 +36,16 @@ export const SidebarNav = memo(() => {
   const isMobile = useIsMobile();
   const { onCollapsedChange } = useEditorLayout();
   const isHomeActive = location.current.pathname === "/";
+  const { workspaceId } = useCurrentWorkspace();
 
   const onCreatePage = () => {
-    if (!person) return;
+    if (!person || !workspaceId) return;
     const newPage = makePage({
       title: t("page.newPage"),
       parentId: null,
       category: "Private",
       ownerId: person.id,
+      workspaceId,
     });
     createPage
       .mutateAsync(newPage)

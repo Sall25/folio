@@ -13,12 +13,14 @@ export function useCreatePerson() {
       await qc.cancelQueries({ queryKey: queryKeys.people.all });
 
       const previousPersonList = qc.getQueriesData<Person[]>({
-        queryKey: queryKeys.people.lists(),
+        queryKey: queryKeys.people.all,
       });
 
+      // Only add the new person to LIST entries (arrays), not detail entries
+      // that the `.all` prefix also matches.
       qc.setQueriesData<Person[]>(
-        { queryKey: queryKeys.people.lists() },
-        (people) => (people ? [...people, person] : people),
+        { queryKey: queryKeys.people.all },
+        (people) => (Array.isArray(people) ? [...people, person] : people),
       );
 
       return { previousPersonList };

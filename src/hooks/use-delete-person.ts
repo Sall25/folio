@@ -14,45 +14,54 @@ export function useDeletePerson() {
       await qc.cancelQueries({ queryKey: queryKeys.groups.all });
       await qc.cancelQueries({ queryKey: queryKeys.teamspaces.all });
 
+      // Match on the `.all` prefix rather than lists(workspaceId) — lists()
+      // now requires a workspaceId this hook has no single value for, and a
+      // prefix matches every workspace's cached list. Updaters guard against
+      // non-array matches since `.all` also catches detail entries.
       const previousPersonList = qc.getQueriesData<Person[]>({
-        queryKey: queryKeys.people.lists(),
+        queryKey: queryKeys.people.all,
       });
       const previousGroupList = qc.getQueriesData<Group[]>({
-        queryKey: queryKeys.groups.lists(),
+        queryKey: queryKeys.groups.all,
       });
       const previousTeamspaceList = qc.getQueriesData<Teamspace[]>({
-        queryKey: queryKeys.teamspaces.lists(),
+        queryKey: queryKeys.teamspaces.all,
       });
       const personId = id;
 
       qc.setQueriesData<Group[]>(
-        { queryKey: queryKeys.groups.lists() },
+        { queryKey: queryKeys.groups.all },
         (groups) =>
-          (groups ?? []).map((g) =>
-            g.memberIds.includes(personId)
-              ? {
-                  ...g,
-                  memberIds: g.memberIds.filter((mId) => mId !== personId),
-                }
-              : g,
-          ),
+          Array.isArray(groups)
+            ? groups.map((g) =>
+                g.memberIds.includes(personId)
+                  ? {
+                      ...g,
+                      memberIds: g.memberIds.filter((mId) => mId !== personId),
+                    }
+                  : g,
+              )
+            : groups,
       );
       qc.setQueriesData<Teamspace[]>(
-        { queryKey: queryKeys.teamspaces.lists() },
+        { queryKey: queryKeys.teamspaces.all },
         (teamspaces) =>
-          (teamspaces ?? []).map((t) =>
-            t.ownerIds.includes(personId) || t.memberIds.includes(personId)
-              ? {
-                  ...t,
-                  ownerIds: t.ownerIds.filter((oId) => oId !== personId),
-                  memberIds: t.memberIds.filter((mId) => mId !== personId),
-                }
-              : t,
-          ),
+          Array.isArray(teamspaces)
+            ? teamspaces.map((t) =>
+                t.ownerIds.includes(personId) || t.memberIds.includes(personId)
+                  ? {
+                      ...t,
+                      ownerIds: t.ownerIds.filter((oId) => oId !== personId),
+                      memberIds: t.memberIds.filter((mId) => mId !== personId),
+                    }
+                  : t,
+              )
+            : teamspaces,
       );
       qc.setQueriesData<Person[]>(
-        { queryKey: queryKeys.people.lists() },
-        (people) => (people ?? []).filter((p) => p.id !== id),
+        { queryKey: queryKeys.people.all },
+        (people) =>
+          Array.isArray(people) ? people.filter((p) => p.id !== id) : people,
       );
 
       return { previousPersonList, previousGroupList, previousTeamspaceList };

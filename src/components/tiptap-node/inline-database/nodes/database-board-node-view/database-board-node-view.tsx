@@ -12,7 +12,9 @@ import { BoardColumnMenu } from "../../components/board-column-menu";
 import type { BoardView, DatabaseProperty, ID } from "src/types";
 import type { DragStorage } from "../../extensions";
 
-const syntheticRecord = makePage({ ownerId: null });
+// Synthetic record for display only (rendered in a readonly Cell to show a
+// column's group value) — never saved, so workspaceId is a throwaway "".
+const syntheticRecord = makePage({ ownerId: null, workspaceId: "" });
 
 const CARD_SIZE_WIDTH: Record<"small" | "medium" | "large", number> = {
   small: 200,

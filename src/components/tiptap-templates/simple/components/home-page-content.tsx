@@ -21,6 +21,7 @@ import { getPageExcerpt } from "src/lib/get-page-excerpt";
 import { useCurrentPerson } from "src/hooks/use-session";
 import "./home-page-content.scss";
 import { useEditorLayout } from "../context/editor-layout-context";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 
 const GRID: React.CSSProperties = {
   display: "grid",
@@ -73,14 +74,16 @@ export function HomePageContent({ userName }: { userName?: string }) {
   const earlier = recents.slice(7, 12);
 
   const { person } = useCurrentPerson();
+  const { workspaceId } = useCurrentWorkspace();
 
   const newPage = () => {
-    if (!person) return;
+    if (!person || !workspaceId) return;
     const page = makePage({
       title: t("page.newPage"),
       parentId: null,
       category: "Private",
       ownerId: person.id,
+      workspaceId,
     });
     createPage.mutate(page);
     setActivePageId(page.id);

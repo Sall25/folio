@@ -16,12 +16,14 @@ export function useCreatePage() {
       await qc.cancelQueries({ queryKey: queryKeys.pages.all });
 
       const previousPageList = qc.getQueriesData<Page[]>({
-        queryKey: queryKeys.pages.lists(),
+        queryKey: queryKeys.pages.all,
       });
 
-      qc.setQueriesData<Page[]>(
-        { queryKey: queryKeys.pages.lists() },
-        (pages) => (pages ? [...pages, page] : pages),
+      // The `.all` prefix matches BOTH list entries (Page[]) and detail
+      // entries (a single Page). Only push onto arrays — spreading a
+      // page-detail object threw "pages is not iterable".
+      qc.setQueriesData<Page[]>({ queryKey: queryKeys.pages.all }, (pages) =>
+        Array.isArray(pages) ? [...pages, page] : pages,
       );
 
       return { previousPageList };

@@ -26,8 +26,8 @@ function collectSubtree(pages: Page[], rootId: ID): ID[] {
 }
 
 // Trash a page + subtree: set deletedAt (same timestamp across the subtree).
-export async function trashPage(pageId: ID): Promise<void> {
-  const pages = await fetchPages();
+export async function trashPage(pageId: ID, workspaceId: ID): Promise<void> {
+  const pages = await fetchPages(workspaceId);
   const ids = collectSubtree(pages, pageId);
   const deletedAt = Date.now();
   await Promise.all(
@@ -36,8 +36,8 @@ export async function trashPage(pageId: ID): Promise<void> {
 }
 
 // Restore a page + subtree (clear deletedAt).
-export async function restorePage(pageId: ID): Promise<void> {
-  const pages = await fetchPages();
+export async function restorePage(pageId: ID, workspaceId: ID): Promise<void> {
+  const pages = await fetchPages(workspaceId);
   const ids = collectSubtree(pages, pageId);
   await Promise.all(
     ids.map((id) =>
@@ -47,8 +47,11 @@ export async function restorePage(pageId: ID): Promise<void> {
 }
 
 // Permanently delete a page + subtree (leaf-first to respect FKs).
-export async function deletePagePermanently(pageId: ID): Promise<void> {
-  const pages = await fetchPages();
+export async function deletePagePermanently(
+  pageId: ID,
+  workspaceId: ID,
+): Promise<void> {
+  const pages = await fetchPages(workspaceId);
   const ids = collectSubtree(pages, pageId).reverse();
   for (const id of ids) {
     await deletePage(id);
@@ -56,14 +59,16 @@ export async function deletePagePermanently(pageId: ID): Promise<void> {
 }
 
 // Trashed pages only.
-export async function fetchTrashedPages(): Promise<TrashablePage[]> {
-  const all = (await fetchPages()) as TrashablePage[];
+export async function fetchTrashedPages(
+  workspaceId: ID,
+): Promise<TrashablePage[]> {
+  const all = (await fetchPages(workspaceId)) as TrashablePage[];
   return all.filter((p) => p.deletedAt != null);
 }
 
 // Empty the whole trash (permanent-delete every trashed root).
-export async function emptyTrash(): Promise<void> {
-  const trashed = await fetchTrashedPages();
+export async function emptyTrash(workspaceId: ID): Promise<void> {
+  const trashed = await fetchTrashedPages(workspaceId);
   // Only purge roots of trashed subtrees (a trashed child is covered by its
   // trashed parent's subtree). A page is a "trashed root" if its parent isn't
   // also trashed.
@@ -72,6 +77,6 @@ export async function emptyTrash(): Promise<void> {
     (p) => !p.parentId || !trashedIds.has(p.parentId),
   );
   for (const root of roots) {
-    await deletePagePermanently(root.id);
+    await deletePagePermanently(root.id, workspaceId);
   }
 }

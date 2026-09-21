@@ -1,10 +1,6 @@
 import type { ID, Workspace } from "src/types";
 import { http } from "./client";
-
-// Mirrors api/teamspaces.ts. The http shim maps /workspaces → the `workspaces`
-// table (add it to TABLE in client.ts). `settings` is a jsonb column and is in
-// JSONB_PASSTHROUGH, so the nested WorkspaceSettings object round-trips whole
-// without key-casing its internals.
+import { supabase } from "./supabase-client";
 
 export const fetchWorkspaces = () => http<Workspace[]>("/workspaces");
 
@@ -24,3 +20,19 @@ export const createWorkspace = (workspace: Workspace) =>
 
 export const deleteWorkspace = (id: ID) =>
   http<void>(`/workspaces/${id}`, { method: "DELETE" });
+
+// ── RPC: atomic create-and-switch / switch, run server-side as the caller ───
+export const createWorkspaceRpc = async (name: string): Promise<ID> => {
+  const { data, error } = await supabase.rpc("create_workspace", {
+    ws_name: name,
+  });
+  if (error) throw error;
+  return data as ID;
+};
+
+export const switchWorkspaceRpc = async (targetWsId: ID): Promise<void> => {
+  const { error } = await supabase.rpc("switch_workspace", {
+    target_ws_id: targetWsId,
+  });
+  if (error) throw error;
+};

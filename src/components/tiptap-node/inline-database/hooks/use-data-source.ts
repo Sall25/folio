@@ -24,6 +24,7 @@ import { useMaterializeComputedColumn } from "src/hooks/use-materialized-compute
 import { makeDefaultView } from "src/utils/make-default-view";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useCurrentPerson } from "src/hooks/use-session";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 
 // module scope, outside the hook
 const patchDataSourceFn = ({
@@ -144,10 +145,13 @@ export function useDataSource(
     pagesRef.current = allPages;
   }, [allPages]);
 
+  const { workspaceId } = useCurrentWorkspace();
+
   // CREATE row from optional template (templateId falls back to node default elsewhere)
   const addRecordAsync = useCallback(
     async (opts?: { title?: string; templateId?: ID }): Promise<Page> => {
-      if (!sourceRef.current || !person) throw new Error("No source");
+      if (!sourceRef.current || !person || !workspaceId)
+        throw new Error("No source or no person or no workspaceId");
 
       const template = opts?.templateId
         ? sourceRef.current.rowTemplates.find((t) => t.id === opts.templateId)
@@ -165,21 +169,23 @@ export function useDataSource(
         template,
         content: templatePage?.content ?? undefined,
         cover: templatePage?.cover,
+        workspaceId,
       });
 
       await addRowAsync(row);
       return row;
     },
-    [addRowAsync, person],
+    [addRowAsync, person, workspaceId],
   );
 
   const deletePage = useDeletePage();
   const deletePageAsync = deletePage.mutateAsync;
   const removeRecordAsync = useCallback(
     async (recordId: ID) => {
-      await deletePageAsync(recordId);
+      if (!workspaceId) return;
+      await deletePageAsync({ id: recordId, workspaceId });
     },
-    [deletePageAsync],
+    [deletePageAsync, workspaceId],
   );
 
   const mutateSource = usePatchDataSource(patchDataSourceFn);
@@ -189,13 +195,15 @@ export function useDataSource(
 
   const createRowTemplateAsync = useCallback(
     async (name: string): Promise<RowTemplate> => {
-      if (!sourceRef.current || !person) throw new Error("No source");
+      if (!sourceRef.current || !person || !workspaceId)
+        throw new Error("No source");
 
       // The editable template page: a real page tied to this source, marked
       // Template so useRows excludes it from live rows.
       const page = makeRow(sourceRef.current, {
         title: name,
         ownerId: person.id,
+        workspaceId,
       });
       await addRowAsync({ ...page, category: "Template" });
 
@@ -215,7 +223,7 @@ export function useDataSource(
       });
       return template;
     },
-    [addRowAsync, patchSourceAsync, person],
+    [addRowAsync, patchSourceAsync, person, workspaceId],
   );
 
   const deleteRowTemplateAsync = useCallback(
@@ -224,7 +232,8 @@ export function useDataSource(
       const tpl = sourceRef.current.rowTemplates?.find(
         (t) => t.id === templateId,
       );
-      if (tpl?.pageId) await deletePageAsync(tpl.pageId); // delete the page too — no orphan
+      if (!workspaceId) return;
+      if (tpl?.pageId) await deletePageAsync({ id: tpl.pageId, workspaceId }); // delete the page too — no orphan
       await patchSourceAsync({
         id: sourceRef.current.id,
         patch: {
@@ -234,7 +243,7 @@ export function useDataSource(
         },
       });
     },
-    [patchSourceAsync, deletePageAsync],
+    [patchSourceAsync, deletePageAsync, workspaceId],
   );
 
   const setDefaultRowTemplateAsync = useCallback(

@@ -14,6 +14,7 @@ import { makeChildPage } from "src/utils/make-page";
 import { usePageCapabilities } from "src/hooks/use-page-role";
 import { useTrashPage } from "src/hooks/use-trash-page";
 import { useState } from "react";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 
 interface PageItemOptionsProps {
   page: Page;
@@ -37,6 +38,7 @@ export function PageItemOptions({
   const { data: recentPages } = useRecentPages();
 
   const { mutate: trashPage } = useTrashPage();
+  const { workspaceId } = useCurrentWorkspace();
 
   const handleDeletePage = () => {
     // Deleting the page we're on: navigate away FIRST so the editor never
@@ -47,7 +49,8 @@ export function PageItemOptions({
         setActivePageId(fallback.id);
       }
     }
-    trashPage(page.id);
+    if (!workspaceId) return;
+    trashPage({ pageId: page.id, workspaceId });
   };
 
   if (!canDeletePage) return null;

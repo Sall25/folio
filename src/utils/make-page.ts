@@ -3,8 +3,6 @@ import { newId } from "src/lib/id";
 import type { JSONContent } from "@tiptap/core";
 import { makeDefaultView } from "src/utils/make-default-view";
 
-// General access defaults per category — mirrors the migration's backfill, so a
-// page created client-side resolves the same way the DB would.
 function generalAccessForCategory(category: PageCategory): {
   generalAccess: Page["generalAccess"];
   generalAccessRole: Page["generalAccessRole"];
@@ -14,17 +12,18 @@ function generalAccessForCategory(category: PageCategory): {
       return { generalAccess: "workspace", generalAccessRole: "view" };
     case "Teamspaces":
       return { generalAccess: "teamspace", generalAccessRole: "view" };
-    // Private / Favorites / Template → owner + explicit grants only.
     default:
       return { generalAccess: "private", generalAccessRole: "view" };
   }
 }
 
-// Base seeder — a valid empty page. ownerId MUST be supplied by the caller (the
-// current person's id); it's what grants the creator full access under the
-// category-driven permission model.
+// Base seeder — a valid empty page. ownerId AND workspaceId MUST be supplied by
+// the caller (the current person's id and their current workspace). workspaceId
+// is no longer hardcoded — a page created in the wrong workspace fails the
+// workspace-scoped pages_select policy when read back after insert (403).
 export function makePage(opts: {
   ownerId: ID | null;
+  workspaceId: ID;
   title?: string;
   parentId?: ID | null;
   category?: PageCategory;
@@ -38,7 +37,7 @@ export function makePage(opts: {
     id: newId(),
     title,
     ownerId: opts.ownerId,
-    workspaceId: "workspace_default", // single workspace; DB default matches
+    workspaceId: opts.workspaceId,
     parentId: opts.parentId ?? null,
     category,
     ...access,
@@ -65,26 +64,30 @@ export function makePage(opts: {
   };
 }
 
-// A child inherits the parent's category AND owner — same section, same owner.
+// A child inherits the parent's category, owner, AND workspace.
 export function makeChildPage(parent: Page, title = "New Page"): Page {
   return makePage({
     ownerId: parent.ownerId,
+    workspaceId: parent.workspaceId,
     title,
     parentId: parent.id,
     category: parent.category,
   });
 }
 
-// Clone a template into a new page. The instance is owned by whoever creates it
-// (ownerId passed in), NOT the template's owner — a shared template shouldn't
-// make every instance owned by the template author.
 export function makePageFromTemplate(
   template: Page,
-  opts: { ownerId: ID; parentId?: ID | null; category?: PageCategory },
+  opts: {
+    ownerId: ID;
+    workspaceId: ID;
+    parentId?: ID | null;
+    category?: PageCategory;
+  },
 ): Page {
   return {
     ...makePage({
       ownerId: opts.ownerId,
+      workspaceId: opts.workspaceId,
       title: template.title,
       parentId: opts.parentId ?? null,
       category: opts.category ?? "Private",
@@ -118,6 +121,7 @@ function databasePageContent(sourceId: ID, name: string): JSONContent {
 
 export function makeDatabasePage(opts: {
   ownerId: ID;
+  workspaceId: ID;
   sourceId: ID;
   name?: string;
   parentId?: ID | null;
@@ -127,6 +131,7 @@ export function makeDatabasePage(opts: {
   return {
     ...makePage({
       ownerId: opts.ownerId,
+      workspaceId: opts.workspaceId,
       title: name,
       parentId: opts.parentId ?? null,
       category: opts.category ?? "Private",

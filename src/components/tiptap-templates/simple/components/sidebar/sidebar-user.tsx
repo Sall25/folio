@@ -8,11 +8,6 @@ import {
   GridCell,
   GridRow,
 } from "src/components/tiptap-ui-primitive/grid";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "src/components/tiptap-ui-primitive/popover";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { WorkspaceSwitcherPopover } from "../../workspace-switcher-popover";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
@@ -50,51 +45,45 @@ export const User = memo(() => {
       <Grid columns="36px 1fr" gap={4} style={{ width: "fit-content" }}>
         <GridRow style={{ width: "fit-content" }}>
           <GridCell>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  ref={initialRef}
-                  className="name-initial workspace-avatar"
-                  //data-highlighted={true}
-                  onClick={() => setSwitcherOpen((v) => !v)}
-                  variant="ghost"
-                  style={{
-                    width: isMobile ? 18 : 26,
-                    height: isMobile ? 16 : 24,
-                    minWidth: isMobile ? 18 : 26,
-                    minHeight: isMobile ? 16 : 24,
-                    padding: 0,
-                    borderRadius: "var(--tt-radius-sm)",
-                    cursor: "pointer",
-                  }}
-                >
-                  <span className="tiptap-button-icon workspace-icon-button">
-                    {wsIcon ? (
-                      <DynamicIcon
-                        name={wsIcon}
-                        style={{
-                          width: isMobile ? 15 : 18,
-                          height: isMobile ? 15 : 18,
-                          color: wsIconColor ?? "currentColor",
-                        }}
-                      />
-                    ) : (
-                      initial
-                    )}
-                    {unreadCount > 0 && (
-                      <span className="workspace-notification-badge" />
-                    )}
-                  </span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent>
-                <WorkspaceSwitcherPopover
-                  anchorRef={initialRef}
-                  open={switcherOpen}
-                  onClose={() => setSwitcherOpen(false)}
-                />
-              </PopoverContent>
-            </Popover>
+            <Button
+              ref={initialRef}
+              className="name-initial workspace-avatar"
+              onClick={() => setSwitcherOpen((v) => !v)}
+              variant="ghost"
+              style={{
+                width: isMobile ? 18 : 26,
+                height: isMobile ? 16 : 24,
+                minWidth: isMobile ? 18 : 26,
+                minHeight: isMobile ? 16 : 24,
+                padding: 0,
+                borderRadius: "var(--tt-radius-sm)",
+                cursor: "pointer",
+              }}
+            >
+              <span className="tiptap-button-icon workspace-icon-button">
+                {wsIcon ? (
+                  <DynamicIcon
+                    name={wsIcon}
+                    style={{
+                      width: isMobile ? 15 : 18,
+                      height: isMobile ? 15 : 18,
+                      color: wsIconColor ?? "currentColor",
+                    }}
+                  />
+                ) : (
+                  initial
+                )}
+                {unreadCount > 0 && (
+                  <span className="workspace-notification-badge" />
+                )}
+              </span>
+            </Button>
+
+            <WorkspaceSwitcherPopover
+              anchorRef={initialRef}
+              open={switcherOpen}
+              onClose={() => setSwitcherOpen(false)}
+            />
           </GridCell>
 
           {/* ── Middle: name over subtext ── */}

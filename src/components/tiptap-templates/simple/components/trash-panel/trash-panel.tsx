@@ -10,21 +10,23 @@ import "./trash-panel.scss";
 import { PageItemIcon } from "../../page-item-icon";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { useCallback, useState } from "react";
-import { type ID } from "src/types";
+import { type ID, type Page } from "src/types";
 import { ConfirmDialog } from "../confirm-dialog";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 
 // Trash view: lists trashed pages (subtree roots) with restore / delete
 // permanently, and an empty-all action. Rendered in the sidebar like the inbox.
 export function TrashPanel() {
   const { t } = useTranslation();
-  const { data: trashed = [] } = useTrashedPages();
-  const restore = useRestorePage();
-  const purge = useDeletePagePermanently();
-  const emptyAll = useEmptyTrash();
+  const { workspaceId } = useCurrentWorkspace();
+  const { data: trashed = [] } = useTrashedPages(workspaceId!);
+  const restore = useRestorePage(workspaceId!);
+  const purge = useDeletePagePermanently(workspaceId!);
+  const emptyAll = useEmptyTrash(workspaceId!);
 
   // Show only trashed ROOTS (a trashed child is covered by its trashed parent).
-  const trashedIds = new Set(trashed.map((p) => p.id));
-  const roots = trashed.filter(
+  const trashedIds = new Set((trashed as Page[]).map((p) => p.id));
+  const roots = (trashed as Page[]).filter(
     (p) => !p.parentId || !trashedIds.has(p.parentId),
   );
 

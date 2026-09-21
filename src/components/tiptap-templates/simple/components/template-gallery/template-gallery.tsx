@@ -10,6 +10,7 @@ import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { useTranslation } from "react-i18next";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useIsMobile } from "src/hooks/use-breakpoint";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 
 // ── People metadata (display contract) ──────────────────────────────────────
 // Page carries no author/usage data, so the parent supplies this from the real
@@ -179,6 +180,7 @@ export function TemplatesGallery({
   }, [open, onClose]);
 
   const { person } = useCurrentPerson();
+  const { workspaceId } = useCurrentWorkspace();
 
   if (!open) return null;
 
@@ -201,12 +203,13 @@ export function TemplatesGallery({
   };
 
   const createBlankTemplate = () => {
-    if (!person) return;
+    if (!person || !workspaceId) return;
     const template = makePage({
       title: t("templates.newTemplate"),
       parentId: null,
       category: "Template",
       ownerId: person.id,
+      workspaceId,
     });
     createPage.mutate(template);
     setActivePageId(template.id);

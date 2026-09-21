@@ -8,6 +8,7 @@ import { useCreateDataSource } from "src/hooks/use-create-data-source";
 import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
 import { makePage } from "src/utils/make-page";
 import { useCurrentPerson } from "src/hooks/use-session";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 
 function defaultProperties(): DatabaseProperty[] {
   return [
@@ -60,9 +61,10 @@ export function useCreateDatabase(editor: Editor) {
   const createSource = useCreateDataSource();
   const { activePageId } = useActivePageState();
   const { person } = useCurrentPerson();
+  const { workspaceId } = useCurrentWorkspace();
 
   return useCallback(async () => {
-    if (!person) return;
+    if (!person || !workspaceId) return;
     const sourceId = newId();
     const name = "Untitled";
 
@@ -75,6 +77,7 @@ export function useCreateDatabase(editor: Editor) {
         parentId: activePageId ?? null,
         category: "Private",
         ownerId: person.id,
+        workspaceId,
       }),
       content: databasePageContent(sourceId, name),
     };
@@ -97,5 +100,5 @@ export function useCreateDatabase(editor: Editor) {
     // 3. inline embed on the HOST page (the one being edited) — a second
     //    database node referencing the same source.
     editor.chain().focus().insertDatabaseWithSource(source.id, dbPage.id).run();
-  }, [editor, createPage, createSource, activePageId, person]);
+  }, [editor, createPage, createSource, activePageId, person, workspaceId]);
 }

@@ -9,22 +9,21 @@ import {
   ArrowUpCircle,
   UserPlus,
 } from "lucide-react";
-import { useCurrentWorkspace } from "src/hooks/use-workspaces";
+import {
+  useCurrentWorkspace,
+  useOwnedWorkspaces,
+} from "src/hooks/use-workspaces";
+import {
+  useCreateWorkspace,
+  useSwitchWorkspace,
+} from "src/hooks/use-workspace-switch";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { usePeople } from "src/hooks/use-people";
 import { useWorkspaceSettings as useWorkspaceSettingsModal } from "./context/workspace-settings-context";
 import { supabase } from "src/api/supabase-client";
 import "./workspace-switcher-popover.scss";
-import type { Person } from "src/types";
+import type { Person, Workspace } from "src/types";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
-import { useIsMobile } from "src/hooks/use-breakpoint";
-import { useEditorLayoutActions } from "./context/editor-layout-context";
-
-// Notion-style workspace switcher. Single-workspace for v1: the list shows the
-// one workspace with a checkmark, and "New workspace" is present-but-disabled
-// (multi-workspace lands in v2). Everything else — Settings, Invite, account,
-// Log out — is fully wired. The structure is B-ready: when multi-workspace
-// ships, the single-item list becomes an array and the disabled state lifts.
 
 function Row({
   icon,
@@ -60,6 +59,18 @@ function Row({
   );
 }
 
+function workspaceGlyph(ws: Workspace) {
+  if (ws.icon) {
+    return (
+      <DynamicIcon
+        name={ws.icon}
+        style={{ width: 16, height: 16, color: ws.iconColor ?? "currentColor" }}
+      />
+    );
+  }
+  return (ws.name || "?").charAt(0).toUpperCase();
+}
+
 export function WorkspaceSwitcherPopover({
   anchorRef,
   open,
@@ -71,23 +82,23 @@ export function WorkspaceSwitcherPopover({
 }) {
   const { t } = useTranslation();
   const { workspace } = useCurrentWorkspace();
+  const { workspaces: ownedWorkspaces } = useOwnedWorkspaces();
   const { person } = useCurrentPerson();
   const { data: people = [] } = usePeople();
   const { onOpenChange, setActiveId } = useWorkspaceSettingsModal();
-  const { onCollapsedChange } = useEditorLayoutActions();
-  const isMobile = useIsMobile();
+
+  const switchWorkspace = useSwitchWorkspace();
+  const createWorkspace = useCreateWorkspace();
 
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
-  // Position under the anchor.
   useEffect(() => {
     if (!open || !anchorRef.current) return;
     const r = anchorRef.current.getBoundingClientRect();
     setPos({ top: r.bottom + 6, left: r.left });
   }, [open, anchorRef]);
 
-  // Close on outside click / Esc.
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
@@ -121,7 +132,6 @@ export function WorkspaceSwitcherPopover({
     setActiveId("settings");
     onOpenChange(true);
     onClose();
-    onCollapsedChange(isMobile);
   };
 
   const openInvite = () => {
@@ -130,10 +140,26 @@ export function WorkspaceSwitcherPopover({
     onClose();
   };
 
+  const handleSwitch = (targetId: string) => {
+    if (targetId === workspace?.id) {
+      onClose();
+      return;
+    }
+    switchWorkspace.mutate(targetId, { onSuccess: onClose });
+  };
+
+  const handleCreate = () => {
+    createWorkspace.mutate(t("workspace.newDefaultName", "New workspace"), {
+      onSuccess: onClose,
+    });
+  };
+
   const logout = async () => {
     onClose();
     await supabase.auth.signOut();
   };
+
+  const busy = switchWorkspace.isPending || createWorkspace.isPending;
 
   return createPortal(
     <div
@@ -195,38 +221,33 @@ export function WorkspaceSwitcherPopover({
 
       <div className="ws-switch__divider" />
 
-      {/* ── Account + workspace list ─────────────────────────────── */}
+      {/* ── Account + owned-workspace list ───────────────────────── */}
       {person?.email && <div className="ws-switch__email">{person.email}</div>}
 
-      <Row
-        icon={
-          <span className="ws-switch__list-icon">
-            {icon ? (
-              <DynamicIcon
-                name={icon}
-                style={{
-                  width: 16,
-                  height: 16,
-                  color: iconColor ?? "currentColor",
-                }}
-              />
-            ) : (
-              initial
-            )}
-          </span>
-        }
-        label={name}
-        trailing={<Check size={15} />}
-        onClick={onClose}
-      />
+      {ownedWorkspaces.map((ws) => (
+        <Row
+          key={ws.id}
+          icon={
+            <span className="ws-switch__list-icon">{workspaceGlyph(ws)}</span>
+          }
+          label={ws.name}
+          trailing={ws.id === workspace?.id ? <Check size={15} /> : undefined}
+          disabled={busy}
+          onClick={() => handleSwitch(ws.id)}
+        />
+      ))}
 
-      {/* New workspace — disabled until multi-workspace (v2). */}
+      {/* New workspace — now enabled. Creates + switches atomically. */}
       <Row
         icon={<Plus size={16} />}
-        label={t("workspace.new", "New workspace")}
+        label={
+          createWorkspace.isPending
+            ? t("workspace.creating", "Creating…")
+            : t("workspace.new", "New workspace")
+        }
         accent
-        disabled
-        title={t("workspace.comingSoon", "Coming soon")}
+        disabled={busy}
+        onClick={handleCreate}
       />
 
       <div className="ws-switch__divider" />
