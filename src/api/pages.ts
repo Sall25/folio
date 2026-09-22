@@ -1,8 +1,11 @@
 import type { ID, Page } from "src/types";
 import { http } from "./client";
 
-export const fetchPages = (workspaceId: ID) =>
-  http<Page[]>(`/pages?workspace_id=eq.${workspaceId}`);
+// No workspace filter: pages_select RLS defines exactly the readable set —
+// your current workspace's pages (that you own or can read) plus pages of
+// teamspaces you're a member of in other people's workspaces. Filtering by
+// workspace_id here would drop the joined-teamspace pages.
+export const fetchPages = () => http<Page[]>("/pages");
 
 export const fetchPage = (id: ID) => http<Page>(`/pages/${id}`);
 

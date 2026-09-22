@@ -1,13 +1,15 @@
-
+// z-index 10000: above the workspace settings modal (701) and the mobile
+// sidebar drawer (950), matching ConfirmDialog / TemplatesGallery. At 140 it
+// opened underneath the settings modal and looked like nothing happened.
 .cts-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 140;
+  z-index: 10000;
   display: flex;
   align-items: flex-start;
   justify-content: center;
   padding-top: 12vh;
-   backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
   animation: sp-backdrop-in 120ms ease;
 }

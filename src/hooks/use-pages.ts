@@ -7,14 +7,15 @@ import type { PageTreeNode } from "../types";
 import { useCurrentWorkspace } from "./use-workspaces";
 
 // ─── the ONE base query — everything below is a lens over this ──────────────
-// Now scoped to the current workspace: the query key includes the workspace id
-// (so each workspace caches separately and switching refetches), and the fetch
-// filters by it. Disabled until a workspace is resolved.
+// The workspace id stays in the query key even though fetchPages no longer
+// filters by it: RLS returns a different set depending on your current
+// workspace, so each workspace must cache separately and a switch must
+// refetch.
 export function usePagesBase<T>(select?: (pages: Page[]) => T) {
   const { workspaceId } = useCurrentWorkspace();
   return useQuery({
     queryKey: queryKeys.pages.lists(workspaceId ?? ""),
-    queryFn: () => fetchPages(workspaceId!),
+    queryFn: () => fetchPages(),
     enabled: !!workspaceId,
     select,
   });
@@ -106,6 +107,8 @@ export function useTabPages(tabIds: ID[]) {
 }
 
 // ─── the tree: flat pages → nested PageTreeNode[], grouped by category ──────
+// Joined teamspaces from other workspaces land in the Teamspaces bucket like
+// any other root — their root page has category "Teamspaces", parent null.
 export function usePageTree() {
   const query = usePagesBase((pages) =>
     pages.filter((p) => p.deletedAt == null),

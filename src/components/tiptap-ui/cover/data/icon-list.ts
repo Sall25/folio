@@ -38,6 +38,7 @@ export const DEFAULT_ICON_COLOR = ICON_COLORS[0];
 export type IconEntry = {
   name: string;
   color: IconColorValue;
+  icon?: string;
 };
 
 export type IconName = string;

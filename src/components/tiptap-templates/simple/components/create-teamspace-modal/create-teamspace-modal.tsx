@@ -15,8 +15,11 @@ import {
 } from "src/hooks/use-create-teamspace-with-page";
 import { IconPicker } from "src/components/tiptap-ui/cover/icon-picker";
 import { getIconList } from "src/components/tiptap-ui/cover/data/icon-list";
+import { useCurrentPerson } from "src/hooks/use-session";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 
 import "./create-teamspace-modal.scss";
+import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 
 interface CreateTeamspaceModalProps {
   onClose: () => void;
@@ -46,6 +49,11 @@ const ACCESS_OPTIONS: {
   },
 ];
 
+// Popovers inside this modal must sit above it. The modal itself is at
+// 10000 (see .cts-backdrop) so it clears the workspace settings modal (701)
+// and the mobile sidebar drawer (950).
+const POPOVER_Z = 10001;
+
 // Mounted only while open (parent gates with &&), so state starts fresh each
 // time — no reset effect, no setState-in-effect.
 export function CreateTeamspaceModal({
@@ -53,6 +61,8 @@ export function CreateTeamspaceModal({
   onCreated,
 }: CreateTeamspaceModalProps) {
   const create = useCreateTeamspaceWithPage();
+  const { person } = useCurrentPerson();
+  const { workspace } = useCurrentWorkspace();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -64,7 +74,13 @@ export function CreateTeamspaceModal({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        // This listener is on document; the settings modal's Escape listener
+        // is on window. Stopping propagation here means Esc closes only this
+        // modal, not the settings modal underneath it too.
+        e.stopPropagation();
+        onClose();
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -72,7 +88,7 @@ export function CreateTeamspaceModal({
 
   // Resolve the chosen icon's component for the trigger preview. Only runs once
   // an icon is picked (after the picker has loaded the list).
-  const SelectedIcon = useMemo(() => {
+  const selectedIcon = useMemo(() => {
     if (!iconName) return null;
     return getIconList().find((e) => e.name === iconName)?.icon ?? null;
   }, [iconName]);
@@ -80,14 +96,19 @@ export function CreateTeamspaceModal({
   const selectedAccess =
     ACCESS_OPTIONS.find((a) => a.value === access) ?? ACCESS_OPTIONS[0];
 
+  const canSubmit =
+    !!name.trim() && !!person && !!workspace && !create.isPending;
+
   const submit = async () => {
-    if (!name.trim() || create.isPending) return;
+    if (!canSubmit || !person || !workspace) return;
     const built = buildTeamspacePair({
       name,
       iconName,
       iconColor: iconColor ?? null,
       description,
       access,
+      ownerId: person.id,
+      workspaceId: workspace.id,
     });
     try {
       const { page } = await create.mutateAsync(built);
@@ -129,8 +150,12 @@ export function CreateTeamspaceModal({
           <Popover open={iconOpen} onOpenChange={setIconOpen}>
             <PopoverTrigger asChild>
               <button type="button" className="cts-icon-button">
-                {SelectedIcon ? (
-                  <SelectedIcon size={26} strokeWidth={2} stroke={iconColor} />
+                {selectedIcon ? (
+                  <DynamicIcon
+                    name={selectedIcon}
+                    size={20}
+                    style={{ color: iconColor }}
+                  />
                 ) : (
                   <UsersRound
                     size={26}
@@ -143,7 +168,7 @@ export function CreateTeamspaceModal({
             <PopoverContent
               side="bottom"
               align="center"
-              style={{ zIndex: 200 }}
+              style={{ zIndex: POPOVER_Z }}
             >
               <Card style={{ padding: "8px 10px" }}>
                 <IconPicker
@@ -209,7 +234,11 @@ export function CreateTeamspaceModal({
                 <ChevronDown size={16} className="cts-access__chevron" />
               </button>
             </PopoverTrigger>
-            <PopoverContent side="bottom" align="start">
+            <PopoverContent
+              side="bottom"
+              align="start"
+              style={{ zIndex: POPOVER_Z }}
+            >
               <Card style={{ padding: 4, minWidth: 320 }}>
                 {ACCESS_OPTIONS.map((a) => (
                   <button
@@ -232,11 +261,7 @@ export function CreateTeamspaceModal({
 
         <div className="cts-footer">
           <span className="cts-learn">Learn about teamspaces</span>
-          <Button
-            className="cts-create"
-            disabled={!name.trim() || create.isPending}
-            onClick={submit}
-          >
+          <Button className="cts-create" disabled={!canSubmit} onClick={submit}>
             <span className="tiptap-button-text">
               {create.isPending ? "Creating…" : "Create teamspace"}
             </span>

@@ -25,6 +25,9 @@ export function useCreateTeamspaceWithPage() {
   const qc = useQueryClient();
 
   return useMutation({
+    // The teamspace record is created FIRST so that when the page insert
+    // runs, the server trigger finds teamspaces.id = page.id and stamps
+    // teamspace_id on the root page.
     mutationFn: async (built: { page: Page; record: Teamspace }) => {
       const createdRecord = await createTeamspaceApi(built.record);
       try {
@@ -100,8 +103,8 @@ export function buildTeamspacePair(input: CreateTeamspaceInput): {
     memberIds: [],
     groupIds: [],
     ownerIds: [],
-    createdAt: Date.now(),
     workspaceId: input.workspaceId,
+    createdAt: Date.now(),
   };
 
   const base = makePage({
@@ -114,6 +117,9 @@ export function buildTeamspacePair(input: CreateTeamspaceInput): {
   const page: Page = {
     ...base,
     id,
+    // The root page IS the teamspace (shared id). The server trigger sets
+    // this too; mirroring it here keeps the optimistic entry accurate.
+    teamspaceId: id,
     cover: {
       ...base.cover,
       ...(input.iconName

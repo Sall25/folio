@@ -17,13 +17,14 @@ function generalAccessForCategory(category: PageCategory): {
   }
 }
 
-// Base seeder — a valid empty page. ownerId AND workspaceId MUST be supplied by
-// the caller (the current person's id and their current workspace). workspaceId
-// is no longer hardcoded — a page created in the wrong workspace fails the
-// workspace-scoped pages_select policy when read back after insert (403).
+// Base seeder — a valid empty page. ownerId AND workspaceId MUST be supplied
+// by the caller. teamspaceId is advisory: the server trigger recomputes it
+// from the page's parent/source/root position on insert, so it's only here to
+// keep the optimistic cache entry accurate until the refetch lands.
 export function makePage(opts: {
   ownerId: ID | null;
   workspaceId: ID;
+  teamspaceId?: ID | null;
   title?: string;
   parentId?: ID | null;
   category?: PageCategory;
@@ -38,6 +39,7 @@ export function makePage(opts: {
     title,
     ownerId: opts.ownerId,
     workspaceId: opts.workspaceId,
+    teamspaceId: opts.teamspaceId ?? null,
     parentId: opts.parentId ?? null,
     category,
     ...access,
@@ -64,11 +66,12 @@ export function makePage(opts: {
   };
 }
 
-// A child inherits the parent's category, owner, AND workspace.
+// A child inherits the parent's category, owner, workspace AND teamspace.
 export function makeChildPage(parent: Page, title = "New Page"): Page {
   return makePage({
     ownerId: parent.ownerId,
     workspaceId: parent.workspaceId,
+    teamspaceId: parent.teamspaceId,
     title,
     parentId: parent.id,
     category: parent.category,
@@ -80,6 +83,7 @@ export function makePageFromTemplate(
   opts: {
     ownerId: ID;
     workspaceId: ID;
+    teamspaceId?: ID | null;
     parentId?: ID | null;
     category?: PageCategory;
   },
@@ -88,6 +92,7 @@ export function makePageFromTemplate(
     ...makePage({
       ownerId: opts.ownerId,
       workspaceId: opts.workspaceId,
+      teamspaceId: opts.teamspaceId ?? null,
       title: template.title,
       parentId: opts.parentId ?? null,
       category: opts.category ?? "Private",
@@ -122,6 +127,7 @@ function databasePageContent(sourceId: ID, name: string): JSONContent {
 export function makeDatabasePage(opts: {
   ownerId: ID;
   workspaceId: ID;
+  teamspaceId?: ID | null;
   sourceId: ID;
   name?: string;
   parentId?: ID | null;
@@ -132,6 +138,7 @@ export function makeDatabasePage(opts: {
     ...makePage({
       ownerId: opts.ownerId,
       workspaceId: opts.workspaceId,
+      teamspaceId: opts.teamspaceId ?? null,
       title: name,
       parentId: opts.parentId ?? null,
       category: opts.category ?? "Private",

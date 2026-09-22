@@ -19,9 +19,11 @@ import { fetchTeamspaces } from "../api/teamspaces";
 export function useDeletePage() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, workspaceId }: { id: ID; workspaceId: ID }) => {
+    // workspaceId is kept in the variables for callers' sake; the page set
+    // itself now comes from RLS (fetchPages is unfiltered).
+    mutationFn: async ({ id }: { id: ID; workspaceId: ID }) => {
       const [allPages, allSources, teamspaces] = await Promise.all([
-        fetchPages(workspaceId),
+        fetchPages(),
         fetchDataSources(),
         fetchTeamspaces(),
       ]);

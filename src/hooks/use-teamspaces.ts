@@ -1,5 +1,6 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { Teamspace, TeamspaceAccess, ID, Person } from "../types";
+import type { Teamspace, TeamspaceAccess, ID, Person, Page } from "../types";
 import { queryKeys } from "../lib/queryKeys";
 import {
   fetchTeamspaces,
@@ -14,11 +15,19 @@ import { useDeleteTeamspace } from "./use-delete-teamspace";
 import { useCreateTeamspace } from "./use-create-teamspace";
 import { useCreatePage } from "./use-create-page";
 import { buildTeamspacePair } from "./use-create-teamspace-with-page";
+import { useCurrentWorkspace } from "./use-workspaces";
+import { useCurrentPerson } from "./use-session";
+import { usePagesByCategory } from "./use-pages";
 
+// Keyed by the current workspace: RLS returns a different set depending on who
+// you are and where you are, so each workspace caches separately and a switch
+// refetches. (lists() requires the workspace id.)
 function useTeamspacesBase<T>(select?: (teamspaces: Teamspace[]) => T) {
+  const { workspaceId } = useCurrentWorkspace();
   return useQuery({
-    queryKey: queryKeys.teamspaces.lists(),
+    queryKey: queryKeys.teamspaces.lists(workspaceId ?? ""),
     queryFn: fetchTeamspaces,
+    enabled: !!workspaceId,
     select,
   });
 }
@@ -78,13 +87,31 @@ export function useTeamspaceOwners(teamspaceId: ID | null) {
 // calls, on top of the granular query + mutation hooks. Member/group ops read
 // the current list to append/filter the right array, then PATCH it.
 //
-// Display fields (name, icon) now live on the PAGE, not the record — the two
-// share an id — so creating a teamspace creates a page + record pair, and
-// renaming patches the page title, not the record.
+// Display fields (name, icon) live on the PAGE, not the record — the two share
+// an id — so creating a teamspace creates a page + record pair, and renaming
+// patches the page title, not the record.
+//
+// `teamspaces` here is only the teamspaces HOSTED by the current workspace.
+// RLS also returns teamspaces you've joined in other people's workspaces
+// (they belong in your sidebar), but they aren't yours to rename, delete, or
+// manage members of. Hosting is read off the root page's workspaceId, which
+// the server pins to the teamspace's host workspace.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function useManageTeamspaces() {
-  const { data: teamspaces = [] } = useTeamspacesBase();
+  const { data: allTeamspaces = [] } = useTeamspacesBase();
+  const { data: teamspacePages = [] } = usePagesByCategory("Teamspaces");
+  const { workspaceId } = useCurrentWorkspace();
+  const { person } = useCurrentPerson();
+
+  const teamspaces = useMemo(() => {
+    const pageById = new Map((teamspacePages as Page[]).map((p) => [p.id, p]));
+    // A teamspace whose root page hasn't loaded yet is left out rather than
+    // guessed at, so a joined teamspace never flashes in with admin controls.
+    return (allTeamspaces as Teamspace[]).filter(
+      (t) => pageById.get(t.id)?.workspaceId === workspaceId,
+    );
+  }, [allTeamspaces, teamspacePages, workspaceId]);
 
   const patch = usePatchTeamspace(({ id, patch }) => patchTeamspace(id, patch));
   const patchPageMut = usePatchPage(({ id, patch }) => patchPage(id, patch));
@@ -92,7 +119,7 @@ export function useManageTeamspaces() {
   const createRecord = useCreateTeamspace();
   const createPageMut = useCreatePage();
 
-  const byId = (id: ID) => (teamspaces as Teamspace[]).find((t) => t.id === id);
+  const byId = (id: ID) => teamspaces.find((t) => t.id === id);
 
   return {
     teamspaces,
@@ -107,12 +134,17 @@ export function useManageTeamspaces() {
       description?: string | null;
       access?: TeamspaceAccess;
     }) => {
+      if (!person || !workspaceId) {
+        throw new Error("Cannot create a teamspace before the session loads");
+      }
       const { page, record } = buildTeamspacePair({
         name: args.name,
         iconName: args.iconName ?? null,
         iconColor: args.iconColor ?? null,
         description: args.description ?? null,
         access: args.access ?? "open",
+        ownerId: person.id,
+        workspaceId,
       });
       // Record first, then page — roll the record back if the page write fails
       // so a failure never leaves an orphan record.
