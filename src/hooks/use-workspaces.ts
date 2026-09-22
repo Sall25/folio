@@ -66,9 +66,20 @@ export function useManageWorkspace() {
     renameAsync: (id: ID, name: string) =>
       patch.mutateAsync({ id, patch: { name } }),
 
-    setIconAsync: (id: ID, icon: string | null, iconColor?: string | null) =>
-      patch.mutateAsync({ id, patch: { icon, iconColor: iconColor ?? null } }),
-
+    setIconAsync: (
+      id: ID,
+      icon: string | null,
+      iconColor?: string | null,
+      iconTarget?: string | null,
+    ) =>
+      patch.mutateAsync({
+        id,
+        patch: {
+          icon,
+          iconColor: iconColor ?? null,
+          iconTarget: iconTarget ?? null,
+        },
+      }),
     // Set the workspace's plan. Right now you'd call this from a manual admin
     // path (or just edit the column in SQL); later a Stripe webhook handler
     // calls the same thing. Every limit check reads the resulting `plan`

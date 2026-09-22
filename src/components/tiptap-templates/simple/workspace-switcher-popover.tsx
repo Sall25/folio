@@ -61,6 +61,9 @@ function Row({
 
 function workspaceGlyph(ws: Workspace) {
   if (ws.icon) {
+    if (ws.iconTarget === "Emoji") {
+      return <span style={{ fontSize: 18, lineHeight: 1 }}>{ws.icon}</span>;
+    }
     return (
       <DynamicIcon
         name={ws.icon}
@@ -68,6 +71,7 @@ function workspaceGlyph(ws: Workspace) {
       />
     );
   }
+
   return (ws.name || "?").charAt(0).toUpperCase();
 }
 
@@ -125,6 +129,7 @@ export function WorkspaceSwitcherPopover({
   const name = workspace?.name ?? "";
   const icon = workspace?.icon ?? null;
   const iconColor = workspace?.iconColor ?? null;
+  const iconTarget = workspace?.iconTarget;
   const initial = name ? name.charAt(0).toUpperCase() : "?";
   const memberCount = (people as Person[]).length;
 
@@ -170,16 +175,17 @@ export function WorkspaceSwitcherPopover({
     >
       {/* ── Current workspace header ─────────────────────────────── */}
       <div className="ws-switch__header">
-        <span className="ws-switch__ws-icon">
+        <span className="ws-switch__ws-icon" data-has-icon={icon}>
           {icon ? (
-            <DynamicIcon
-              name={icon}
-              style={{
-                width: 18,
-                height: 18,
-                color: iconColor ?? "currentColor",
-              }}
-            />
+            iconTarget === "Emoji" ? (
+              <span style={{ fontSize: 18, lineHeight: 1 }}>{icon}</span>
+            ) : (
+              <DynamicIcon
+                name={icon}
+                size={20}
+                style={{ color: iconColor ?? "currentColor" }}
+              />
+            )
           ) : (
             initial
           )}

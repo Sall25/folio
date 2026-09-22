@@ -761,6 +761,7 @@ export interface Workspace {
   iconColor: string | null;
   plan: WorkspacePlan;
   ownerId: ID;
+  iconTarget: string | null; // "Emoji" | "Icons" | null
 }
 
 export type WorkspacePlan = "free" | "pro";

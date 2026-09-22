@@ -34,6 +34,7 @@ export const User = memo(() => {
   const wsName = workspace?.name ?? person?.name ?? "";
   const wsIcon = workspace?.icon ?? null;
   const wsIconColor = workspace?.iconColor ?? null;
+  const wsIconTarget = workspace?.iconTarget;
   const initial = wsName ? wsName.charAt(0).toUpperCase() : "?";
 
   const { unreadCount } = useNotificationState();
@@ -48,6 +49,7 @@ export const User = memo(() => {
             <Button
               ref={initialRef}
               className="name-initial workspace-avatar"
+              data-has-icon={wsIcon !== null}
               onClick={() => setSwitcherOpen((v) => !v)}
               variant="ghost"
               style={{
@@ -60,16 +62,26 @@ export const User = memo(() => {
                 cursor: "pointer",
               }}
             >
-              <span className="tiptap-button-icon workspace-icon-button">
+              <span
+                className="tiptap-button-icon workspace-icon-button"
+                style={{
+                  backgroundColor: wsIcon
+                    ? "transparent !important"
+                    : undefined,
+                }}
+              >
                 {wsIcon ? (
-                  <DynamicIcon
-                    name={wsIcon}
-                    style={{
-                      width: isMobile ? 15 : 18,
-                      height: isMobile ? 15 : 18,
-                      color: wsIconColor ?? "currentColor",
-                    }}
-                  />
+                  wsIconTarget === "Emoji" ? (
+                    <span style={{ fontSize: 18, lineHeight: 1 }}>
+                      {wsIcon}
+                    </span>
+                  ) : (
+                    <DynamicIcon
+                      name={wsIcon}
+                      size={18}
+                      style={{ color: wsIconColor ?? "currentColor" }}
+                    />
+                  )
                 ) : (
                   initial
                 )}

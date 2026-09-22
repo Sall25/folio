@@ -39,6 +39,9 @@
     font-size: 14px;
     font-weight: 600;
     color: var(--tt-text-primary);
+    &[data-has-icon="true"]{
+      background-color: transparent !important;
+    }
   }
 
   &__ws-emoji { font-size: 18px; }

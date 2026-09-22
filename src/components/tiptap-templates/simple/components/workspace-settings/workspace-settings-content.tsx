@@ -94,14 +94,16 @@ function Select<T extends string>({
 function WorkspaceIconField({
   icon,
   iconColor,
+  iconTarget,
   disabled,
   onSelect,
   onRemove,
 }: {
   icon: string | null;
   iconColor: string | null;
+  iconTarget: string | null;
   disabled: boolean;
-  onSelect: (name: string, color?: string) => void;
+  onSelect: (name: string, color?: string, target?: string) => void;
   onRemove: () => void;
 }) {
   const trigger = (
@@ -118,14 +120,18 @@ function WorkspaceIconField({
       }}
     >
       {icon ? (
-        <DynamicIcon
-          name={icon}
-          style={{
-            width: 20,
-            height: 20,
-            color: iconColor ?? "currentColor",
-          }}
-        />
+        iconTarget === "Emoji" ? (
+          <span style={{ fontSize: 20, lineHeight: 1 }}>{icon}</span>
+        ) : (
+          <DynamicIcon
+            name={icon}
+            style={{
+              width: 20,
+              height: 20,
+              color: iconColor ?? "currentColor",
+            }}
+          />
+        )
       ) : (
         <span style={{ fontSize: 12, opacity: 0.6 }}>—</span>
       )}
@@ -136,7 +142,7 @@ function WorkspaceIconField({
 
   return (
     <IconPickerPopover
-      onSelect={(name, color) => onSelect(name, color)}
+      onSelect={(name, color, target) => onSelect(name, color, target)}
       onRemove={icon ? onRemove : undefined}
       side="left"
     >
@@ -200,8 +206,11 @@ export function WorkspaceSettingsContent() {
         <WorkspaceIconField
           icon={workspace.icon}
           iconColor={workspace.iconColor}
+          iconTarget={workspace.iconTarget}
           disabled={!isOwner}
-          onSelect={(name, color) => setIconAsync(workspace.id, name, color)}
+          onSelect={(name, color, target) =>
+            setIconAsync(workspace.id, name, color, target)
+          }
           onRemove={() => setIconAsync(workspace.id, null)}
         />
       </SettingRow>
