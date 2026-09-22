@@ -276,7 +276,7 @@ export const DesktopToolbarContent = ({ view }: ContentProps) => {
           </>
         )}
 
-        <MorePopover />
+        {view === "page" && <MorePopover />}
       </ToolbarGroup>
     </>
   );
@@ -306,10 +306,9 @@ export const TabletToolbarContent = ({ view }: ContentProps) => {
 
         {/* Edited-time + theme move inside; MorePopover renders them when
             these flags are set. */}
-        <MorePopover
-          includeTheme={true}
-          editedPage={view !== "home" ? activePage : undefined}
-        />
+        {view === "page" && (
+          <MorePopover includeTheme={true} editedPage={activePage} />
+        )}
       </ToolbarGroup>
     </>
   );
@@ -332,24 +331,26 @@ export const MobileToolbarContent = ({ view }: ContentProps) => {
       </ToolbarGroup>
       <Spacer />
 
-      <ToolbarGroup>
-        <MorePopover
-          includeTheme
-          includeUndoRedo
-          includeNotifications
-          editedPage={view !== "home" ? activePage : undefined}
-          category={
-            view !== "home" && activePage
-              ? {
-                  value: activePage.category,
-                  onChange: (category) =>
-                    activePageId &&
-                    mutateAsync({ id: activePageId, patch: { category } }),
-                }
-              : undefined
-          }
-        />
-      </ToolbarGroup>
+      {view === "page" && (
+        <ToolbarGroup>
+          <MorePopover
+            includeTheme
+            includeUndoRedo
+            includeNotifications
+            editedPage={activePage}
+            category={
+              activePage
+                ? {
+                    value: activePage.category,
+                    onChange: (category) =>
+                      activePageId &&
+                      mutateAsync({ id: activePageId, patch: { category } }),
+                  }
+                : undefined
+            }
+          />
+        </ToolbarGroup>
+      )}
     </>
   );
 };
