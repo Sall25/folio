@@ -15,8 +15,6 @@ import type {
   WorkspaceSettings,
 } from "src/types";
 import "./workspace-settings-content.scss";
-import { THEME_KEY } from "src/hooks/use-apply-theme";
-import { useLocalStorage } from "../../hooks/use-local-storage";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import { IconPickerPopover } from "src/components/tiptap-ui/cover";
@@ -93,10 +91,6 @@ function Select<T extends string>({
   );
 }
 
-// Icon + color field, now backed by the shared IconPickerPopover (trigger
-// mode — the button itself is the trigger) instead of hand-rolling
-// Popover/PopoverTrigger/PopoverContent + the older single-tab IconPicker.
-// Gets Emoji/Icons/Upload tabs and remove-icon support for free.
 function WorkspaceIconField({
   icon,
   iconColor,
@@ -161,16 +155,6 @@ export function WorkspaceSettingsContent() {
   const [nameDraft, setNameDraft] = useState<string | null>(null);
 
   const { workspace } = useCurrentWorkspace();
-
-  const [value, setValue, remove] = useLocalStorage(
-    THEME_KEY,
-    workspace?.settings.defaultTheme ?? "system",
-  );
-
-  const onChangeTheme = (theme: Theme) => {
-    remove();
-    setValue(theme);
-  };
 
   if (!workspace) {
     return (
@@ -246,16 +230,13 @@ export function WorkspaceSettingsContent() {
         label={t("settings.workspace.theme", "Default theme")}
         description={t(
           "settings.workspace.themeDesc",
-          "The theme new members start with. Anyone can change their own.",
+          "The theme for this workspace.",
         )}
       >
         <Select<Theme>
-          value={value}
+          value={s.defaultTheme}
           disabled={!isOwner}
-          onChange={(v) => {
-            onChangeTheme(v);
-            set("defaultTheme", v);
-          }}
+          onChange={(v) => set("defaultTheme", v)}
           options={[
             { value: "system", label: t("settings.theme.system", "System") },
             { value: "light", label: t("settings.theme.light", "Light") },

@@ -19,8 +19,8 @@ import { SimpleEditorToolbar } from "./simple-editor-toolbar";
 import { InboxPage } from "./components/inbox-page";
 import { TrashPage } from "./components/trash-page";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
-import { THEME_KEY, useApplyTheme } from "src/hooks/use-apply-theme";
-import { useLocalStorage } from "./hooks/use-local-storage";
+import { useApplyTheme } from "src/hooks/use-apply-theme";
+import { useApplyLanguage } from "src/hooks/use-apply-language";
 
 function SimpleEditorMain({ view }: { view: View }) {
   return (
@@ -44,11 +44,13 @@ export function SimpleEditor({ view }: { view: View }) {
   const capitalized = view.charAt(0).toUpperCase() + view.slice(1);
   usePageBrowserTab("Folio", capitalized);
   const { workspace } = useCurrentWorkspace();
-  const [value] = useLocalStorage(
-    THEME_KEY,
-    workspace?.settings.defaultTheme ?? "system",
-  );
-  useApplyTheme(value);
+
+  // Theme and language are both per-workspace: applied straight from
+  // workspace.settings, re-applied whenever the current workspace changes
+  // (i.e. on switch). No per-person localStorage override anymore — that was
+  // what made theme follow the person across workspaces.
+  useApplyTheme(workspace?.settings.defaultTheme ?? "system");
+  useApplyLanguage(workspace?.settings.language);
 
   return (
     <div className="simple-editor-wrapper">
