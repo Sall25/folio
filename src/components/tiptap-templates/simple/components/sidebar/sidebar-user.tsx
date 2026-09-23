@@ -1,6 +1,8 @@
 import { memo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
+import { useCurrentSpace } from "src/hooks/use-current-space";
 import { Bone } from "../skeletons";
 import { useNotificationState } from "src/components/tiptap-ui/notification/notification-context";
 import {
@@ -11,6 +13,7 @@ import {
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { WorkspaceSwitcherPopover } from "../../workspace-switcher-popover";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
+import { PageItemIcon } from "../../page-item-icon";
 import { useIsMobile } from "src/hooks/use-breakpoint";
 
 const UserSkeleton = memo(() => {
@@ -23,23 +26,58 @@ const UserSkeleton = memo(() => {
 });
 UserSkeleton.displayName = "UserSkeleton";
 
+// Shows the CURRENT space's identity — your workspace, or the teamspace
+// you've entered — and opens the space switcher.
 export const User = memo(() => {
+  const { t } = useTranslation();
   const { person, isLoading } = useCurrentPerson();
   const isMobile = useIsMobile();
 
   const { workspace } = useCurrentWorkspace();
+  const space = useCurrentSpace();
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const initialRef = useRef<HTMLButtonElement>(null);
-
-  const wsName = workspace?.name ?? person?.name ?? "";
-  const wsIcon = workspace?.icon ?? null;
-  const wsIconColor = workspace?.iconColor ?? null;
-  const wsIconTarget = workspace?.iconTarget;
-  const initial = wsName ? wsName.charAt(0).toUpperCase() : "?";
 
   const { unreadCount } = useNotificationState();
 
   if (isLoading) return <UserSkeleton />;
+
+  const iconSize = isMobile ? 15 : 18;
+
+  let name: string;
+  let glyph: React.ReactNode;
+
+  if (space.kind === "teamspace") {
+    name = space.page?.title || t("teamspaces.untitled");
+    glyph = space.page ? (
+      <PageItemIcon
+        cover={space.page.cover}
+        styles={{ width: iconSize, height: iconSize, fontSize: iconSize }}
+      />
+    ) : null;
+  } else {
+    name = workspace?.name ?? person?.name ?? "";
+    const initial = name ? name.charAt(0).toUpperCase() : "?";
+    if (workspace?.icon) {
+      glyph =
+        workspace.iconTarget === "Emoji" ? (
+          <span style={{ fontSize: iconSize, lineHeight: 1 }}>
+            {workspace.icon}
+          </span>
+        ) : (
+          <DynamicIcon
+            name={workspace.icon}
+            style={{
+              width: iconSize,
+              height: iconSize,
+              color: workspace.iconColor ?? "currentColor",
+            }}
+          />
+        );
+    } else {
+      glyph = initial;
+    }
+  }
 
   return (
     <>
@@ -48,8 +86,8 @@ export const User = memo(() => {
           <GridCell>
             <Button
               ref={initialRef}
+              data-has-icon={workspace?.icon !== null}
               className="name-initial workspace-avatar"
-              data-has-icon={wsIcon !== null}
               onClick={() => setSwitcherOpen((v) => !v)}
               variant="ghost"
               style={{
@@ -62,29 +100,8 @@ export const User = memo(() => {
                 cursor: "pointer",
               }}
             >
-              <span
-                className="tiptap-button-icon workspace-icon-button"
-                style={{
-                  backgroundColor: wsIcon
-                    ? "transparent !important"
-                    : undefined,
-                }}
-              >
-                {wsIcon ? (
-                  wsIconTarget === "Emoji" ? (
-                    <span style={{ fontSize: 18, lineHeight: 1 }}>
-                      {wsIcon}
-                    </span>
-                  ) : (
-                    <DynamicIcon
-                      name={wsIcon}
-                      size={18}
-                      style={{ color: wsIconColor ?? "currentColor" }}
-                    />
-                  )
-                ) : (
-                  initial
-                )}
+              <span className="tiptap-button-icon workspace-icon-button">
+                {glyph}
                 {unreadCount > 0 && (
                   <span className="workspace-notification-badge" />
                 )}
@@ -122,7 +139,7 @@ export const User = memo(() => {
                 maxWidth: "100%",
               }}
             >
-              {wsName}
+              {name}
             </span>
           </GridCell>
         </GridRow>

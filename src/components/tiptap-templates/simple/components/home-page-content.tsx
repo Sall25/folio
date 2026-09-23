@@ -22,6 +22,7 @@ import { useCurrentPerson } from "src/hooks/use-session";
 import "./home-page-content.scss";
 import { useEditorLayout } from "../context/editor-layout-context";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
+import { useCurrentSpace } from "src/hooks/use-current-space";
 
 const GRID: React.CSSProperties = {
   display: "grid",
@@ -69,22 +70,43 @@ export function HomePageContent({ userName }: { userName?: string }) {
   const { collapsed: sidebarCollapsed, expandedWidth } = useEditorLayout();
   const createPage = useCreatePage();
 
-  const recents = (data ?? []).filter((p) => p.category !== "Template");
+  const { person } = useCurrentPerson();
+  const { workspaceId } = useCurrentWorkspace();
+  const space = useCurrentSpace();
+  const teamspaceId = space.kind === "teamspace" ? space.id : null;
+
+  // Home follows the current space: inside a teamspace, only its pages (not
+  // the root page itself); in your workspace, everything as before.
+  const recents = (data ?? []).filter(
+    (p) =>
+      p.category !== "Template" &&
+      (teamspaceId == null ||
+        (p.teamspaceId === teamspaceId && p.id !== teamspaceId)),
+  );
   const visited = recents.slice(0, 7);
   const earlier = recents.slice(7, 12);
 
-  const { person } = useCurrentPerson();
-  const { workspaceId } = useCurrentWorkspace();
-
   const newPage = () => {
     if (!person || !workspaceId) return;
-    const page = makePage({
-      title: t("page.newPage"),
-      parentId: null,
-      category: "Private",
-      ownerId: person.id,
-      workspaceId,
-    });
+    // Inside a teamspace, the new page goes INTO it (child of the root); the
+    // server trigger stamps teamspace_id and pins it to the host workspace.
+    const page =
+      space.kind === "teamspace"
+        ? makePage({
+            title: t("page.newPage"),
+            parentId: space.id,
+            category: "Teamspaces",
+            ownerId: person.id,
+            workspaceId: space.page?.workspaceId ?? workspaceId,
+            teamspaceId: space.id,
+          })
+        : makePage({
+            title: t("page.newPage"),
+            parentId: null,
+            category: "Private",
+            ownerId: person.id,
+            workspaceId,
+          });
     createPage.mutate(page);
     setActivePageId(page.id);
   };
@@ -112,6 +134,27 @@ export function HomePageContent({ userName }: { userName?: string }) {
         <div style={{ fontSize: 13, color: "var(--tt-theme-muted)" }}>
           {todayLabel(i18n.language)}
         </div>
+        {space.kind === "teamspace" && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              marginTop: 6,
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--tt-text-secondary)",
+            }}
+          >
+            {space.page && (
+              <PageItemIcon
+                cover={space.page.cover}
+                styles={{ width: 15, height: 15, fontSize: 15 }}
+              />
+            )}
+            <span>{space.page?.title || t("teamspaces.untitled")}</span>
+          </div>
+        )}
       </div>
 
       {isPending ? (

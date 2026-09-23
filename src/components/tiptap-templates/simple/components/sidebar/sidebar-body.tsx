@@ -11,7 +11,14 @@ import { useActivePageActions } from "../../context/active-page-context";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useSectionOrder } from "../../hooks/use-sidebar-order";
 import { useHiddenSections } from "../../hooks/use-hidden-sections";
-import type { Group, ID, PageCategory, Teamspace } from "src/types";
+import type {
+  Group,
+  ID,
+  Page,
+  PageCategory,
+  PageTreeNode,
+  Teamspace,
+} from "src/types";
 import { makePage } from "src/utils/make-page";
 import { patchPage as updatePage } from "src/api/pages";
 import { Card, CardBody } from "src/components/tiptap-ui-primitive/card";
@@ -35,12 +42,34 @@ import {
 import { TrashPanel } from "../trash-panel";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
+import { useCurrentSpace } from "src/hooks/use-current-space";
+import { useTeamspacePins } from "src/hooks/use-teamspace-pins";
+import {
+  TeamspacePinContext,
+  type TeamspacePinControl,
+} from "../../context/teamspace-pin-context";
 
-// Stable references so a memoized <SidebarTree /> can skip re-render when the
-// pages cache churns but nothing it renders actually changed.
 const NOOP = () => {};
 const EMPTY_TEAMSPACES: Teamspace[] = [];
 const EMPTY_GROUPS: Group[] = [];
+const RECENT_LIMIT = 6;
+
+// Inside a teamspace: Pinned (the Favorites key, relabelled — Favorites is a
+// workspace concept, so the key is free here), Recent, Pages (its root,
+// flattened), Templates. Pinned and Templates are flat lists.
+const TEAMSPACE_SECTIONS: PageCategory[] = [
+  "Favorites",
+  "Recent",
+  "Teamspaces",
+  "Template",
+];
+const TEAMSPACE_FLATTEN: PageCategory[] = ["Teamspaces"];
+const TEAMSPACE_FLAT: PageCategory[] = ["Favorites", "Template"];
+// Every member can reorganize inside a teamspace (pages_update already
+// allows teamspace members server-side).
+const ALLOW_ALL = () => true;
+
+const toLeaf = (page: Page): PageTreeNode => ({ page, children: [] });
 
 function Trash() {
   const isMobile = useIsMobile();
@@ -123,7 +152,6 @@ export const SidebarBody = memo(() => {
   const { isMobile } = useLayoutMode();
 
   const { tree, isPending, isLoading } = usePageTree();
-  // Joined to teamspace-pages by id, only to show a member count in the row.
   const { data: teamspaces = EMPTY_TEAMSPACES } = useTeamspaces();
   const { data: groups = EMPTY_GROUPS } = useGroups();
   const patchPage = usePatchPage(({ id, patch }) => updatePage(id, patch));
@@ -131,6 +159,20 @@ export const SidebarBody = memo(() => {
   const { setActivePageId } = useActivePageActions();
   const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
   const { person } = useCurrentPerson();
+  const space = useCurrentSpace();
+  const teamspaceId = space.kind === "teamspace" ? space.id : null;
+  const teamspaceHostWs =
+    space.kind === "teamspace" ? (space.page?.workspaceId ?? null) : null;
+  const { pinnedIds, canPin, isPinned, setPinned } =
+    useTeamspacePins(teamspaceId);
+
+  // Pin controls for the rows: computed once here, read by each PageItem
+  // through context (no per-row query subscriptions). Null unless you own
+  // the teamspace you're in.
+  const pinControl = useMemo<TeamspacePinControl | null>(
+    () => (teamspaceId && canPin ? { teamspaceId, isPinned, setPinned } : null),
+    [teamspaceId, canPin, isPinned, setPinned],
+  );
 
   const isFloating = !isMobile && collapsed && peeking;
 
@@ -138,8 +180,6 @@ export const SidebarBody = memo(() => {
 
   useEffect(() => {
     if (isFloating) {
-      // Next frame: flip from the pre-enter offset to resting, so the transition
-      // has a start position to animate from.
       const raf = requestAnimationFrame(() => setPeekEntered(true));
       return () => cancelAnimationFrame(raf);
     }
@@ -147,7 +187,6 @@ export const SidebarBody = memo(() => {
     setPeekEntered(false);
   }, [isFloating]);
 
-  // Render floating styles while entering OR exiting — not just while peeking.
   const [, setFloatingMounted] = useState(false);
 
   useEffect(() => {
@@ -157,28 +196,62 @@ export const SidebarBody = memo(() => {
       const raf = requestAnimationFrame(() => setPeekEntered(true));
       return () => cancelAnimationFrame(raf);
     }
-    setPeekEntered(false); // animate out
-    // Unmount the floating styles only AFTER the transition finishes.
-    const t = window.setTimeout(() => setFloatingMounted(false), 260); // > transition
+    setPeekEntered(false);
+    const t = window.setTimeout(() => setFloatingMounted(false), 260);
     return () => window.clearTimeout(t);
   }, [isFloating]);
 
   const floatingActive = !isMobile && collapsed && phase !== "hidden";
-  // Visible position: on-screen while open OR during the grace period of leaving.
-  // Only 'hidden' (after the timer) actually moves it off.
   const showContent = isMobile ? true : !collapsed || floatingActive;
 
-  const { data: recentPages } = useRecentPages(6);
+  // Unlimited (all non-deleted pages, newest first) — scoped + capped below.
+  const { data: allRecentPages } = useRecentPages();
 
-  const treeWithRecent = useMemo(
+  const sidebarTree = useMemo<Record<PageCategory, PageTreeNode[]>>(() => {
+    const result = {} as Record<PageCategory, PageTreeNode[]>;
+    const all = allRecentPages ?? [];
+
+    if (teamspaceId) {
+      const byId = new Map(all.map((p) => [p.id, p]));
+      const root = (tree.Teamspaces ?? []).find(
+        (n) => n.page.id === teamspaceId,
+      );
+      // Key order matters: flat sections first, the tree last, so a pinned
+      // page resolves to its tree node for drag math.
+      result.Favorites = pinnedIds
+        .map((id) => byId.get(id))
+        .filter((p): p is Page => p != null)
+        .map(toLeaf);
+      result.Recent = all
+        .filter(
+          (p) =>
+            p.teamspaceId === teamspaceId &&
+            p.id !== teamspaceId &&
+            p.category !== "Template",
+        )
+        .slice(0, RECENT_LIMIT)
+        .map(toLeaf);
+      result.Template = all
+        .filter(
+          (p) => p.category === "Template" && p.teamspaceId === teamspaceId,
+        )
+        .map(toLeaf);
+      result.Teamspaces = root ? [root] : [];
+      return result;
+    }
+
+    Object.assign(result, tree);
+    result.Recent = all.slice(0, RECENT_LIMIT).map(toLeaf);
+    return result;
+  }, [tree, allRecentPages, teamspaceId, pinnedIds]);
+
+  const teamspaceLabels = useMemo(
     () => ({
-      ...tree,
-      Recent: (recentPages ?? []).map((page) => ({
-        page,
-        children: [],
-      })),
+      Favorites: t("sidebar.pinned", "Pinned"),
+      Teamspaces: t("sidebar.pages", "Pages"),
+      Template: t("sidebar.templates", "Templates"),
     }),
-    [tree, recentPages],
+    [t],
   );
 
   const [order] = useSectionOrder();
@@ -194,7 +267,6 @@ export const SidebarBody = memo(() => {
       newParentId: ID | null;
       category?: PageCategory;
     }) => {
-      // optimistic move — patch parentId (+ category on cross-section drop)
       patchPage.mutate({
         id: pageId,
         patch: {
@@ -210,9 +282,33 @@ export const SidebarBody = memo(() => {
   const handleAddPageToSection = useCallback(
     (category: PageCategory) => {
       if (!person || !workspaceId) return null;
-      // A teamspace is created through its own modal (it must create a page +
-      // a Teamspace record sharing one id), not as a plain page. Every other
-      // section creates a page directly.
+
+      if (teamspaceId) {
+        const hostWs = teamspaceHostWs ?? workspaceId;
+        // Templates are ROOT pages carrying the teamspace id (the server
+        // accepts it for members); everything else is a child of the root.
+        const p =
+          category === "Template"
+            ? makePage({
+                title: t("templates.newTemplate"),
+                parentId: null,
+                category: "Template",
+                ownerId: person.id,
+                workspaceId: hostWs,
+                teamspaceId,
+              })
+            : makePage({
+                title: t("page.newPage"),
+                parentId: teamspaceId,
+                category: "Teamspaces",
+                ownerId: person.id,
+                workspaceId: hostWs,
+                teamspaceId,
+              });
+        createPage.mutateAsync(p).then((page) => setActivePageId(page.id));
+        return;
+      }
+
       if (category === "Teamspaces") {
         setCreateTeamspaceOpen(true);
         return;
@@ -233,6 +329,8 @@ export const SidebarBody = memo(() => {
       setActivePageId,
       setCreateTeamspaceOpen,
       workspaceId,
+      teamspaceId,
+      teamspaceHostWs,
     ],
   );
 
@@ -258,17 +356,24 @@ export const SidebarBody = memo(() => {
             )}
 
             <div style={{ display: "contents" }}>
-              <SidebarTree
-                key={"sidebar-tree"}
-                tree={treeWithRecent}
-                teamspaces={teamspaces as Teamspace[]}
-                groups={groups as Group[]}
-                onMovePage={handleMovePage}
-                onAddPageToSection={handleAddPageToSection}
-                onRenameSection={NOOP}
-                onDeleteSection={NOOP}
-                isLoading={isPending || isLoading}
-              />
+              <TeamspacePinContext.Provider value={pinControl}>
+                <SidebarTree
+                  key={teamspaceId ?? "workspace"}
+                  tree={sidebarTree}
+                  teamspaces={teamspaces as Teamspace[]}
+                  groups={groups as Group[]}
+                  onMovePage={handleMovePage}
+                  onAddPageToSection={handleAddPageToSection}
+                  onRenameSection={NOOP}
+                  onDeleteSection={NOOP}
+                  isLoading={isPending || isLoading}
+                  sections={teamspaceId ? TEAMSPACE_SECTIONS : undefined}
+                  sectionLabels={teamspaceId ? teamspaceLabels : undefined}
+                  flattenRootsOf={teamspaceId ? TEAMSPACE_FLATTEN : undefined}
+                  flatSections={teamspaceId ? TEAMSPACE_FLAT : undefined}
+                  canReorganize={teamspaceId ? ALLOW_ALL : undefined}
+                />
+              </TeamspacePinContext.Provider>
             </div>
 
             {!peeking && (
@@ -296,8 +401,6 @@ export const SidebarBody = memo(() => {
           onDone={() => setCustomizeSidebarOpen?.(false)}
         />
       )}
-
-      {/* <WorkspaceFooter /> */}
 
       {createTeamspaceOpen && (
         <CreateTeamspaceModal

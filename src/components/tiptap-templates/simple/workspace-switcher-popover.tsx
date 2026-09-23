@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "@tanstack/react-location";
 import {
+  ArrowLeft,
   Check,
   Plus,
   Settings,
@@ -19,11 +21,23 @@ import {
 } from "src/hooks/use-workspace-switch";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { usePeople } from "src/hooks/use-people";
+import { useTeamspaces } from "src/hooks/use-teamspaces";
+import { useGroups } from "src/hooks/use-groups";
+import { usePagesByCategory } from "src/hooks/use-pages";
+import { useCurrentSpace } from "src/hooks/use-current-space";
 import { useWorkspaceSettings as useWorkspaceSettingsModal } from "./context/workspace-settings-context";
 import { supabase } from "src/api/supabase-client";
 import "./workspace-switcher-popover.scss";
-import type { Person, Workspace } from "src/types";
+import {
+  effectiveMemberCount,
+  type Group,
+  type Page,
+  type Person,
+  type Teamspace,
+  type Workspace,
+} from "src/types";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
+import { PageItemIcon } from "./page-item-icon";
 
 function Row({
   icon,
@@ -59,20 +73,23 @@ function Row({
   );
 }
 
-function workspaceGlyph(ws: Workspace) {
+function WorkspaceGlyph({ ws, size }: { ws: Workspace; size: number }) {
   if (ws.icon) {
     if (ws.iconTarget === "Emoji") {
-      return <span style={{ fontSize: 18, lineHeight: 1 }}>{ws.icon}</span>;
+      return <span style={{ fontSize: size, lineHeight: 1 }}>{ws.icon}</span>;
     }
     return (
       <DynamicIcon
         name={ws.icon}
-        style={{ width: 16, height: 16, color: ws.iconColor ?? "currentColor" }}
+        style={{
+          width: size,
+          height: size,
+          color: ws.iconColor ?? "currentColor",
+        }}
       />
     );
   }
-
-  return (ws.name || "?").charAt(0).toUpperCase();
+  return <>{(ws.name || "?").charAt(0).toUpperCase()}</>;
 }
 
 export function WorkspaceSwitcherPopover({
@@ -85,10 +102,15 @@ export function WorkspaceSwitcherPopover({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { workspace } = useCurrentWorkspace();
   const { workspaces: ownedWorkspaces } = useOwnedWorkspaces();
   const { person } = useCurrentPerson();
   const { data: people = [] } = usePeople();
+  const { data: teamspaces = [] } = useTeamspaces();
+  const { data: groups = [] } = useGroups();
+  const { data: teamspacePages = [] } = usePagesByCategory("Teamspaces");
+  const space = useCurrentSpace();
   const { onOpenChange, setActiveId } = useWorkspaceSettingsModal();
 
   const switchWorkspace = useSwitchWorkspace();
@@ -96,6 +118,18 @@ export function WorkspaceSwitcherPopover({
 
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  // Teamspaces you can enter: those whose root page RLS lets you read — the
+  // current workspace's teamspaces plus ones you've joined elsewhere, never
+  // teamspaces in your other owned workspaces. Name/icon come from the page.
+  const enterableTeamspaces = useMemo(() => {
+    const recordById = new Map(
+      (teamspaces as Teamspace[]).map((ts) => [ts.id, ts]),
+    );
+    return (teamspacePages as Page[])
+      .filter((p) => p.parentId == null && recordById.has(p.id))
+      .map((page) => ({ page, record: recordById.get(page.id)! }));
+  }, [teamspaces, teamspacePages]);
 
   useEffect(() => {
     if (!open || !anchorRef.current) return;
@@ -105,7 +139,16 @@ export function WorkspaceSwitcherPopover({
 
   useEffect(() => {
     if (!open) return;
+
+    // Ignore the click that opened us — the listener attaches during the same
+    // event that toggled `open`, and could otherwise close immediately.
+    let armed = false;
+    const arm = window.setTimeout(() => {
+      armed = true;
+    }, 0);
+
     const onDown = (e: MouseEvent) => {
+      if (!armed) return;
       if (
         ref.current &&
         !ref.current.contains(e.target as Node) &&
@@ -119,6 +162,7 @@ export function WorkspaceSwitcherPopover({
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
+      window.clearTimeout(arm);
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
     };
@@ -126,12 +170,8 @@ export function WorkspaceSwitcherPopover({
 
   if (!open || !pos) return null;
 
-  const name = workspace?.name ?? "";
-  const icon = workspace?.icon ?? null;
-  const iconColor = workspace?.iconColor ?? null;
-  const iconTarget = workspace?.iconTarget;
-  const initial = name ? name.charAt(0).toUpperCase() : "?";
-  const memberCount = (people as Person[]).length;
+  const inTeamspace = space.kind === "teamspace";
+  const busy = switchWorkspace.isPending || createWorkspace.isPending;
 
   const openSettings = () => {
     setActiveId("settings");
@@ -145,17 +185,37 @@ export function WorkspaceSwitcherPopover({
     onClose();
   };
 
-  const handleSwitch = (targetId: string) => {
+  // Workspace rows: switching to ANOTHER workspace changes membership (RPC +
+  // cache reset). Picking your CURRENT workspace while inside a teamspace
+  // just leaves the teamspace — a URL change, no RPC.
+  const handleWorkspace = (targetId: string) => {
     if (targetId === workspace?.id) {
+      if (inTeamspace) navigate({ to: "/" });
       onClose();
       return;
     }
-    switchWorkspace.mutate(targetId, { onSuccess: onClose });
+    switchWorkspace.mutate(targetId, {
+      onSuccess: () => {
+        // A teamspace URL from the old workspace may not be enterable in the
+        // new one — always land on the new workspace's home.
+        navigate({ to: "/" });
+        onClose();
+      },
+    });
+  };
+
+  // Teamspace rows: entering is navigation only — membership never moves.
+  const handleTeamspace = (teamspaceId: string) => {
+    navigate({ to: `/t/${teamspaceId}` });
+    onClose();
   };
 
   const handleCreate = () => {
     createWorkspace.mutate(t("workspace.newDefaultName", "New workspace"), {
-      onSuccess: onClose,
+      onSuccess: () => {
+        navigate({ to: "/" });
+        onClose();
+      },
     });
   };
 
@@ -164,7 +224,54 @@ export function WorkspaceSwitcherPopover({
     await supabase.auth.signOut();
   };
 
-  const busy = switchWorkspace.isPending || createWorkspace.isPending;
+  // ── Header: the CURRENT space's identity ────────────────────────────────
+  const header =
+    space.kind === "teamspace" ? (
+      <div className="ws-switch__header">
+        <span className="ws-switch__ws-icon">
+          {space.page ? (
+            <PageItemIcon
+              cover={space.page.cover}
+              styles={{ width: 18, height: 18, fontSize: 18 }}
+            />
+          ) : null}
+        </span>
+        <div className="ws-switch__ws-text">
+          <span className="ws-switch__ws-name">
+            {space.page?.title || t("teamspaces.untitled")}
+          </span>
+          <span className="ws-switch__ws-meta">
+            {t("workspace.teamspace", "Teamspace")}
+            {space.teamspace && (
+              <>
+                {" · "}
+                {t("workspace.memberCount", {
+                  count: effectiveMemberCount(
+                    space.teamspace,
+                    groups as Group[],
+                  ),
+                })}
+              </>
+            )}
+          </span>
+        </div>
+      </div>
+    ) : (
+      <div className="ws-switch__header">
+        <span className="ws-switch__ws-icon">
+          {workspace ? <WorkspaceGlyph ws={workspace} size={18} /> : "?"}
+        </span>
+        <div className="ws-switch__ws-text">
+          <span className="ws-switch__ws-name">{workspace?.name ?? ""}</span>
+          <span className="ws-switch__ws-meta">
+            {t("workspace.plan.free", "Free Plan")} ·{" "}
+            {t("workspace.memberCount", {
+              count: (people as Person[]).length,
+            })}
+          </span>
+        </div>
+      </div>
+    );
 
   return createPortal(
     <div
@@ -173,50 +280,44 @@ export function WorkspaceSwitcherPopover({
       style={{ top: pos.top, left: pos.left }}
       role="menu"
     >
-      {/* ── Current workspace header ─────────────────────────────── */}
-      <div className="ws-switch__header">
-        <span className="ws-switch__ws-icon" data-has-icon={icon}>
-          {icon ? (
-            iconTarget === "Emoji" ? (
-              <span style={{ fontSize: 18, lineHeight: 1 }}>{icon}</span>
-            ) : (
-              <DynamicIcon
-                name={icon}
-                size={20}
-                style={{ color: iconColor ?? "currentColor" }}
-              />
-            )
-          ) : (
-            initial
-          )}
-        </span>
-        <div className="ws-switch__ws-text">
-          <span className="ws-switch__ws-name">{name}</span>
-          <span className="ws-switch__ws-meta">
-            {t("workspace.plan.free", "Free Plan")} ·{" "}
-            {t("workspace.memberCount", { count: memberCount })}
-          </span>
-        </div>
-      </div>
+      {header}
 
       <div className="ws-switch__divider" />
 
       {/* ── Actions ──────────────────────────────────────────────── */}
-      <Row
-        icon={<ArrowUpCircle size={16} />}
-        label={t("workspace.upgrade", "Upgrade")}
-        accent
-        onClick={onClose}
-      />
+      {inTeamspace ? (
+        // Inside a teamspace: always one click back to your own workspace.
+        // Upgrade / invite are workspace-level and don't apply here.
+        <Row
+          icon={<ArrowLeft size={16} />}
+          label={t("workspace.backTo", {
+            name: workspace?.name ?? "",
+            defaultValue: "Back to {{name}}",
+          })}
+          onClick={() => {
+            navigate({ to: "/" });
+            onClose();
+          }}
+        />
+      ) : (
+        <>
+          <Row
+            icon={<ArrowUpCircle size={16} />}
+            label={t("workspace.upgrade", "Upgrade")}
+            accent
+            onClick={onClose}
+          />
+          <Row
+            icon={<Mail size={16} />}
+            label={t("workspace.inviteMembers", "Invite members")}
+            onClick={openInvite}
+          />
+        </>
+      )}
       <Row
         icon={<Settings size={16} />}
         label={t("workspace.settings", "Settings")}
         onClick={openSettings}
-      />
-      <Row
-        icon={<Mail size={16} />}
-        label={t("workspace.inviteMembers", "Invite members")}
-        onClick={openInvite}
       />
       <Row
         icon={<UserPlus size={16} />}
@@ -227,23 +328,31 @@ export function WorkspaceSwitcherPopover({
 
       <div className="ws-switch__divider" />
 
-      {/* ── Account + owned-workspace list ───────────────────────── */}
       {person?.email && <div className="ws-switch__email">{person.email}</div>}
 
+      {/* ── Workspaces you own ───────────────────────────────────── */}
+      <div className="ws-switch__section-label">
+        {t("workspace.sectionWorkspaces", "Workspaces")}
+      </div>
       {ownedWorkspaces.map((ws) => (
         <Row
           key={ws.id}
           icon={
-            <span className="ws-switch__list-icon">{workspaceGlyph(ws)}</span>
+            <span className="ws-switch__list-icon">
+              <WorkspaceGlyph ws={ws} size={16} />
+            </span>
           }
           label={ws.name}
-          trailing={ws.id === workspace?.id ? <Check size={15} /> : undefined}
+          trailing={
+            !inTeamspace && ws.id === workspace?.id ? (
+              <Check size={15} />
+            ) : undefined
+          }
           disabled={busy}
-          onClick={() => handleSwitch(ws.id)}
+          onClick={() => handleWorkspace(ws.id)}
         />
       ))}
 
-      {/* New workspace — now enabled. Creates + switches atomically. */}
       <Row
         icon={<Plus size={16} />}
         label={
@@ -255,6 +364,37 @@ export function WorkspaceSwitcherPopover({
         disabled={busy}
         onClick={handleCreate}
       />
+
+      {/* ── Teamspaces you can enter ─────────────────────────────── */}
+      {enterableTeamspaces.length > 0 && (
+        <>
+          <div className="ws-switch__divider" />
+          <div className="ws-switch__section-label">
+            {t("workspace.sectionTeamspaces", "Teamspaces")}
+          </div>
+          {enterableTeamspaces.map(({ page }) => (
+            <Row
+              key={page.id}
+              icon={
+                <span className="ws-switch__list-icon">
+                  <PageItemIcon
+                    cover={page.cover}
+                    styles={{ width: 16, height: 16, fontSize: 16 }}
+                  />
+                </span>
+              }
+              label={page.title || t("teamspaces.untitled")}
+              trailing={
+                inTeamspace && space.id === page.id ? (
+                  <Check size={15} />
+                ) : undefined
+              }
+              disabled={busy}
+              onClick={() => handleTeamspace(page.id)}
+            />
+          ))}
+        </>
+      )}
 
       <div className="ws-switch__divider" />
 

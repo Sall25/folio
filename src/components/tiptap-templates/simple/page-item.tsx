@@ -1,8 +1,9 @@
 import { memo, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { PageItemIcon } from "./page-item-icon";
 import { PageItemOptions } from "./page-item-options";
-import { Plus } from "lucide-react";
+import { Pin, PinOff, Plus } from "lucide-react";
 import type { ID, Page } from "src/types";
 
 import "./page-item.scss";
@@ -21,6 +22,7 @@ import { Chevron } from "src/components/tiptap-ui-primitive/chevron";
 import { usePageCapabilities } from "src/hooks/use-page-role";
 import { useIsMobile } from "src/hooks/use-breakpoint";
 import { useEditorLayoutActions } from "./context/editor-layout-context";
+import { usePinControl } from "./context/teamspace-pin-context";
 
 interface PageItemProps {
   page: Page;
@@ -43,10 +45,6 @@ interface PageItemProps {
 }
 
 export const PageItem = memo(function PageItem(props: PageItemProps) {
-  // Sidebar rows are handed `canEditContent` (computed once in SidebarTree), so
-  // they don't each open a page-role subscription — that was the ~30-observer
-  // line on ["page-role", activePageId]. PageItems rendered elsewhere omit the
-  // prop and compute it themselves, unchanged.
   return props.canEditContent === undefined ? (
     <PageItemStandalone {...props} />
   ) : (
@@ -69,9 +67,9 @@ function PageItemView({
   subtitle,
   expanded = false,
   onToggleExpand,
-  // showChevron = true,
   canEditContent = false,
 }: PageItemProps) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(page.title);
   const [shouldShow, setShouldShow] = useState(false);
@@ -82,6 +80,16 @@ function PageItemView({
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const mutateAsyncRef = useRef(mutateAsync);
   const createPage = useCreatePage();
+
+  // Pinning: only when SidebarBody provides controls (owner, inside a
+  // teamspace) and this row is one of that teamspace's regular pages.
+  const pin = usePinControl();
+  const pinnable =
+    pin != null &&
+    page.teamspaceId === pin.teamspaceId &&
+    page.id !== pin.teamspaceId &&
+    page.category !== "Template";
+  const pinned = pinnable && pin.isPinned(page.id);
 
   const isActive = activePageId === page.id && !disableActive;
   const title = page.title || "New Page";
@@ -120,6 +128,14 @@ function PageItemView({
     onCollapsedChange(isMobile);
   };
 
+  const smallButtonStyle = {
+    minWidth: 20,
+    width: 20,
+    minHeight: 20,
+    height: 20,
+    opacity: shouldShow ? 1 : 0,
+  };
+
   return (
     <div className="page-item-tree">
       <Spacer orientation="vertical" size={1.1} />
@@ -142,16 +158,7 @@ function PageItemView({
             }}
           />
         ) : (
-          <PageItemIcon
-            cover={page.cover}
-            // styles={{
-            //   width: 15,
-            //   height: 15,
-            //   opacity: 1,
-            //   fontSize: 15,
-            //   color: "inherit",
-            // }}
-          />
+          <PageItemIcon cover={page.cover} />
         )}
 
         <Spacer orientation="horizontal" size={1} />
@@ -200,39 +207,56 @@ function PageItemView({
           <span className="page-item-title">{title}</span>
         )}
 
-        {/* <Spacer orientation="horizontal" /> */}
-
-        {canEditContent && (
+        {(canEditContent || pinnable) && (
           <CardItemGroup
             orientation="horizontal"
             className="page-item-actions"
             style={{ maxWidth: shouldShow ? "fit-content" : 0 }}
           >
-            <PageItemOptions
-              shouldShow={shouldShow}
-              onOpenChange={(v) => setShouldShow(v)}
-              page={page}
-              onRenameAsync={async () => setEditing(true)}
-            />
-            <Button
-              style={{
-                minWidth: 20,
-                width: 20,
-                minHeight: 20,
-                height: 20,
-                opacity: shouldShow ? 1 : 0,
-              }}
-              variant="ghost"
-              tooltip="New page"
-              onClick={async (e) => {
-                e.stopPropagation();
-                const child = makeChildPage(page, "New Page");
-                createPage.mutate(child);
-                setActivePageId(child.id);
-              }}
-            >
-              <Plus size={12} className="tiptap-button-icon" />
-            </Button>
+            {pinnable && (
+              <Button
+                style={smallButtonStyle}
+                variant="ghost"
+                tooltip={
+                  pinned
+                    ? t("sidebar.unpin", "Unpin")
+                    : t("sidebar.pin", "Pin to teamspace")
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  pin.setPinned(page.id, !pinned);
+                }}
+              >
+                {pinned ? (
+                  <PinOff size={12} className="tiptap-button-icon" />
+                ) : (
+                  <Pin size={12} className="tiptap-button-icon" />
+                )}
+              </Button>
+            )}
+            {canEditContent && (
+              <>
+                <PageItemOptions
+                  shouldShow={shouldShow}
+                  onOpenChange={(v) => setShouldShow(v)}
+                  page={page}
+                  onRenameAsync={async () => setEditing(true)}
+                />
+                <Button
+                  style={smallButtonStyle}
+                  variant="ghost"
+                  tooltip="New page"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const child = makeChildPage(page, "New Page");
+                    createPage.mutate(child);
+                    setActivePageId(child.id);
+                  }}
+                >
+                  <Plus size={12} className="tiptap-button-icon" />
+                </Button>
+              </>
+            )}
           </CardItemGroup>
         )}
       </CardItemGroup>

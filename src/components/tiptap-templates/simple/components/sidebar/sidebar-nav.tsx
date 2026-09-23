@@ -22,6 +22,7 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { InboxPanel } from "../inbox-panel";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
+import { spaceHomePath, useCurrentSpace } from "src/hooks/use-current-space";
 
 export const SidebarNav = memo(() => {
   const { open, onOpenChange } = useSearch();
@@ -35,18 +36,38 @@ export const SidebarNav = memo(() => {
   const { person } = useCurrentPerson();
   const isMobile = useIsMobile();
   const { onCollapsedChange } = useEditorLayout();
-  const isHomeActive = location.current.pathname === "/";
   const { workspaceId } = useCurrentWorkspace();
+  const space = useCurrentSpace();
+
+  // Home is the CURRENT space's home: "/" in your workspace, "/t/:id" inside
+  // a teamspace — so Home never throws you out of the space you're in.
+  const teamspaceId = space.kind === "teamspace" ? space.id : null;
+  const homePath = spaceHomePath(teamspaceId);
+  const isHomeActive = location.current.pathname === homePath;
 
   const onCreatePage = () => {
     if (!person || !workspaceId) return;
-    const newPage = makePage({
-      title: t("page.newPage"),
-      parentId: null,
-      category: "Private",
-      ownerId: person.id,
-      workspaceId,
-    });
+    // Inside a teamspace, a new page lands in THAT teamspace (as a child of
+    // its root page). The server trigger stamps teamspace_id and pins the page
+    // to the teamspace's host workspace; the values here only keep the
+    // optimistic cache entry accurate.
+    const newPage =
+      space.kind === "teamspace"
+        ? makePage({
+            title: t("page.newPage"),
+            parentId: space.id,
+            category: "Teamspaces",
+            ownerId: person.id,
+            workspaceId: space.page?.workspaceId ?? workspaceId,
+            teamspaceId: space.id,
+          })
+        : makePage({
+            title: t("page.newPage"),
+            parentId: null,
+            category: "Private",
+            ownerId: person.id,
+            workspaceId,
+          });
     createPage
       .mutateAsync(newPage)
       .then((created) => {
@@ -59,7 +80,7 @@ export const SidebarNav = memo(() => {
   };
 
   const handleHomeClick = () => {
-    navigate({ to: "/" });
+    navigate({ to: homePath });
     onCollapsedChange(isMobile);
   };
 
@@ -75,11 +96,6 @@ export const SidebarNav = memo(() => {
     onCollapsedChange(isMobile);
   };
 
-  // Icon + badge, anchored together — same pattern .workspace-notification-badge
-  // already uses off .workspace-icon-button, instead of the old
-  // page-level-fixed-offset approach that made the badge land near whichever
-  // element happened to sit at that (top, left) regardless of which button
-  // actually rendered it.
   const inboxBadge = unreadCount > 0 && (
     <>
       <Spacer orientation="horizontal" size={3} />
