@@ -1,5 +1,5 @@
-import { memo } from "react";
-import { Home, Plus } from "lucide-react";
+import { memo, useState } from "react";
+import { Home, Plus, Users2 } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
@@ -20,6 +20,8 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { InboxPanel } from "../inbox-panel";
+import { TeamspacesPanel } from "../teamspaces-panel/teamspaces-panel";
+import { CreateTeamspaceModal } from "../create-teamspace-modal";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { spaceHomePath, useCurrentSpace } from "src/hooks/use-current-space";
 
@@ -36,6 +38,9 @@ export const SidebarNav = memo(() => {
   const { onCollapsedChange } = useEditorLayout();
   const { workspaceId } = useCurrentWorkspace();
   const space = useCurrentSpace();
+
+  const [teamspacesOpen, setTeamspacesOpen] = useState(false);
+  const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
 
   const teamspaceId = space.kind === "teamspace" ? space.id : null;
   const homePath = spaceHomePath(teamspaceId);
@@ -97,7 +102,7 @@ export const SidebarNav = memo(() => {
         variant="ghost"
         size="large"
         className="sidebar-nav-item"
-        data-active-state={isHomeActive ? "on" : "off"}
+        data-highlighted={isHomeActive}
       >
         <Home className="tiptap-button-icon" />
         <Spacer orientation="horizontal" size={3} />
@@ -162,6 +167,48 @@ export const SidebarNav = memo(() => {
           </PopoverPortal>
         </Popover>
       )}
+
+      <Popover open={teamspacesOpen} onOpenChange={setTeamspacesOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="large"
+            className="sidebar-nav-item"
+            data-highlighted={teamspacesOpen}
+          >
+            <Users2 className="tiptap-button-icon" />
+            <Spacer orientation="horizontal" size={3} />
+            <span
+              className="tiptap-button-text"
+              style={{ opacity: 1, display: "block" }}
+            >
+              {t("teamspacesPanel.title", "Teamspaces")}
+            </span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverPortal container={document.getElementById("root")}>
+          <PopoverContent
+            side={isMobile ? "bottom" : "right"}
+            align="start"
+            sideOffset={8}
+            style={{ zIndex: 999 }}
+          >
+            <Card style={{ width: isMobile ? "calc(100vw - 32px)" : 300 }}>
+              <TeamspacesPanel
+                onDone={() => {
+                  setTeamspacesOpen(false);
+                  if (isMobile) onCollapsedChange(true);
+                }}
+                onCreate={() => {
+                  setTeamspacesOpen(false);
+                  setCreateTeamspaceOpen(true);
+                }}
+              />
+            </Card>
+          </PopoverContent>
+        </PopoverPortal>
+      </Popover>
+
       <Button
         variant="ghost"
         size="large"
@@ -183,6 +230,16 @@ export const SidebarNav = memo(() => {
           {t("page.newPage")}
         </span>
       </Button>
+
+      {createTeamspaceOpen && (
+        <CreateTeamspaceModal
+          onClose={() => setCreateTeamspaceOpen(false)}
+          onCreated={(pageId) => {
+            navigate({ to: `/t/${pageId}` });
+            onCollapsedChange(isMobile);
+          }}
+        />
+      )}
     </CardItemGroup>
   );
 });

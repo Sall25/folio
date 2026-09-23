@@ -29,6 +29,13 @@
     "summary_other": "{{count}} résultats dans {{pages}} pages",
     "truncated": "premiers résultats affichés"
   },
+  "teamspacesPanel": {
+    "title": "Espaces d'équipe",
+    "yourWorkspace": "Ton espace de travail",
+    "inWorkspace": "Dans cet espace de travail",
+    "joined": "Rejoints",
+    "empty": "Aucun espace d'équipe pour l'instant. Crées-en un pour travailler sur des pages à plusieurs."
+  },
   "open": "Rechercher dans les pages",
   "close": "Fermer la recherche",
   "hint": "Tape pour rechercher dans tes pages",

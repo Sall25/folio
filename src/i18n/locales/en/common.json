@@ -29,7 +29,14 @@
     "summary_other": "{{count}} results in {{pages}} pages",
     "truncated": "showing the first results"
   },
-  "open": "Search in pages", 
+  "teamspacesPanel": {
+    "title": "Teamspaces",
+    "yourWorkspace": "Your workspace",
+    "inWorkspace": "In this workspace",
+    "joined": "Joined",
+    "empty": "No teamspaces yet. Create one to work on pages together."
+  },
+  "open": "Search in pages",
   "close": "Close search",
   "hint": "Type to search across your pages",
   "clear": "Clear",
