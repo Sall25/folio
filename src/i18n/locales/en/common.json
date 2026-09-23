@@ -18,6 +18,16 @@
     "createPage": "Create page",
     "open": "Ouvrir"
   },
+  "pinned": "Pinned",
+  "templates": "Templates",
+  "pin": "Pin to teamspace",
+  "unpin": "Unpin",
+  "teamspace": "Teamspace",
+  "backTo": "Back to {{name}}",
+  "sectionWorkspaces": "Workspaces",
+  "sectionTeamspaces": "Teamspaces",
+  "newDefaultName": "New workspace",
+  "creating": "Creating…",
   "workspace": {
     "plan": {
       "free": "Free Plan"

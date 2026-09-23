@@ -31,6 +31,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type {
+  Page,
   PageCategory,
   PageTreeNode,
   ID,
@@ -104,6 +105,33 @@ export interface SidebarTreeProps {
   onDeleteSection?: (category: PageCategory) => void;
   onHideSection?: (category: PageCategory) => void;
   isLoading?: boolean;
+  /**
+   * Fixed section list for a space (e.g. inside a teamspace). When set:
+   * exactly these sections render, in this order; the workspace's stored
+   * section order and hidden set are ignored, sections can't be dragged, and
+   * the Hide / Customize / Rename / Delete menu items are omitted.
+   */
+  sections?: PageCategory[];
+  /** Per-category label overrides (e.g. "Pages" inside a teamspace). */
+  sectionLabels?: Partial<Record<PageCategory, string>>;
+  /**
+   * Categories whose single root is rendered by its CHILDREN — the root stays
+   * in the tree (drag math and custom-order scopes unchanged) but isn't shown
+   * as a row. A drop on such a section nests under the root.
+   */
+  flattenRootsOf?: PageCategory[];
+  /**
+   * Sections rendered as a plain list like Recent (e.g. Pinned, Templates):
+   * not draggable, not drop targets, no sort menu. Needed when their pages
+   * also appear in a tree section — a draggable id can't be registered twice.
+   * Recent is always flat.
+   */
+  flatSections?: PageCategory[];
+  /**
+   * Who may drag a page / nest into it. Default: only the page's owner.
+   * Inside a teamspace every member may reorganize.
+   */
+  canReorganize?: (page: Page) => boolean;
 }
 
 function collectSubtreeIds(
@@ -125,6 +153,7 @@ function TreeRow({
   activeId,
   subtitleByPageId,
   canEditContent,
+  reorganize,
 }: {
   node: PageTreeNode;
   depth: number;
@@ -134,18 +163,17 @@ function TreeRow({
   activeId: ID | null;
   subtitleByPageId: Map<ID, string>;
   canEditContent: boolean;
+  reorganize: (page: Page) => boolean;
 }) {
   const page = node.page;
   const hasChildren = node.children.length > 0;
   const isExpanded = expandedIds.has(page.id);
-  const { person } = useCurrentPerson();
-  const isOwner = person?.id != null && page.ownerId === person.id;
 
   const {
     attributes,
     listeners,
     setNodeRef: setDragRef,
-  } = useDraggable({ id: page.id, disabled: !isOwner });
+  } = useDraggable({ id: page.id, disabled: !reorganize(page) });
   const { setNodeRef: setDropRef } = useDroppable({ id: page.id });
 
   const setRefs = useCallback(
@@ -217,6 +245,7 @@ function TreeRow({
                 activeId={activeId}
                 subtitleByPageId={subtitleByPageId}
                 canEditContent={canEditContent}
+                reorganize={reorganize}
               />
             ))
           ) : (
@@ -241,13 +270,6 @@ function TreeRow({
   );
 }
 
-// ── TreeSection: wires dnd-kit droppables into the reusable Section ──────────
-// The reusable Section is dnd-agnostic; this wrapper owns the droppables and
-// passes their refs + active state down. Header/body droppable ids are
-// unchanged, so collision detection and onDragOver/End keep working as-is.
-/**
- * "Favorites" | "Shared" | "Private" | "Template" | "Teamspaces"
- */
 const CATEGORY_TRANSLATION_MAP: Record<PageCategory, string> = {
   Recent: "section.recent",
   Favorites: "section.favorites",
@@ -275,6 +297,11 @@ function TreeSection({
   onSetSortMode,
   isLoading,
   canEditContent,
+  labelOverride,
+  flatten,
+  flat,
+  allowSectionPrefs,
+  reorganize,
 }: {
   category: PageCategory;
   topLevel: PageTreeNode[];
@@ -293,6 +320,11 @@ function TreeSection({
   onSetSortMode: (category: PageCategory, mode: SortMode) => void;
   isLoading?: boolean;
   canEditContent: boolean;
+  labelOverride?: string;
+  flatten: boolean;
+  flat: boolean;
+  allowSectionPrefs: boolean;
+  reorganize: (page: Page) => boolean;
 }) {
   const { setNodeRef: setBodyRef } = useDroppable({
     id: `section:${category}`,
@@ -318,12 +350,11 @@ function TreeSection({
 
   const { t } = useTranslation();
 
-  const isRecent = category === "Recent";
-
   const { setCustomizeSidebarOpen } = useEditorLayoutActions();
 
+  // Flat sections (Recent, Pinned, Templates) have no ordering to choose.
   const menu = useMemo(() => {
-    if (isRecent) return undefined;
+    if (flat) return undefined;
     return (
       <>
         <SectionMenuLabel>Order by</SectionMenuLabel>
@@ -339,33 +370,37 @@ function TreeSection({
           closeOnClick={false}
           onClick={() => onSetSortMode(category, "custom")}
         />
-        <SectionMenuSeparator />
-        <SectionMenuItem
-          icon={<Pencil size={14} />}
-          label="Rename"
-          onClick={() => onRename?.(category)}
-        />
-        <SectionMenuItem
-          icon={<EyeOff size={14} />}
-          label="Hide section"
-          onClick={() => onHide?.(category)}
-        />
-        <SectionMenuSeparator />
-        <SectionMenuItem
-          icon={<Layout size={14} />}
-          label="Customize sidebar"
-          onClick={() => setCustomizeSidebarOpen?.(true)}
-        />
-        <SectionMenuItem
-          danger
-          icon={<Trash2 size={14} />}
-          label="Delete"
-          onClick={() => onDelete?.(category)}
-        />
+        {allowSectionPrefs && (
+          <>
+            <SectionMenuSeparator />
+            <SectionMenuItem
+              icon={<Pencil size={14} />}
+              label="Rename"
+              onClick={() => onRename?.(category)}
+            />
+            <SectionMenuItem
+              icon={<EyeOff size={14} />}
+              label="Hide section"
+              onClick={() => onHide?.(category)}
+            />
+            <SectionMenuSeparator />
+            <SectionMenuItem
+              icon={<Layout size={14} />}
+              label="Customize sidebar"
+              onClick={() => setCustomizeSidebarOpen?.(true)}
+            />
+            <SectionMenuItem
+              danger
+              icon={<Trash2 size={14} />}
+              label="Delete"
+              onClick={() => onDelete?.(category)}
+            />
+          </>
+        )}
       </>
     );
   }, [
-    isRecent,
+    flat,
     sortMode,
     category,
     onSetSortMode,
@@ -373,6 +408,7 @@ function TreeSection({
     onHide,
     onDelete,
     setCustomizeSidebarOpen,
+    allowSectionPrefs,
   ]);
 
   const onToggleCollapseMemo = useCallback(
@@ -380,60 +416,74 @@ function TreeSection({
     [onToggleCollapse, category],
   );
 
+  const rows = flatten ? topLevel.flatMap((n) => n.children) : topLevel;
+
   return (
     <Section
-      label={t(CATEGORY_TRANSLATION_MAP[category]) ?? category}
+      label={labelOverride ?? t(CATEGORY_TRANSLATION_MAP[category]) ?? category}
       collapsed={collapsed}
       onToggleCollapse={onToggleCollapseMemo}
       headerRef={setHeaderRef}
       bodyRef={setBodyRef}
       dropActive={isSectionDrop}
       onAddClick={onAddClick}
-      addLabel={`New page in ${category}`}
-      menuLabel={`${category} options`}
+      addLabel={`New page in ${labelOverride ?? category}`}
+      menuLabel={`${labelOverride ?? category} options`}
       hasLibrary={true}
       onLibraryClick={onLibraryClick}
       menu={menu}
     >
-      {isLoading
-        ? Array.from({ length: 4 }).map((_, i) => (
-            <PageRowSkeleton key={i} index={i} />
-          ))
-        : isRecent
-          ? topLevel.map((node) => (
-              <PageItem
-                key={node.page.id}
-                page={node.page}
-                depth={0}
-                disableActive={false}
-                showChevron={false}
-                canEditContent={canEditContent}
-              />
-            ))
-          : topLevel.map((node) => (
-              <TreeRow
-                key={node.page.id}
-                node={node}
-                depth={0}
-                expandedIds={expandedIds}
-                onToggleExpand={onToggleExpand}
-                dropTarget={dropTarget}
-                activeId={activeId}
-                subtitleByPageId={subtitleByPageId}
-                canEditContent={canEditContent}
-              />
-            ))}
+      {isLoading ? (
+        Array.from({ length: 4 }).map((_, i) => (
+          <PageRowSkeleton key={i} index={i} />
+        ))
+      ) : flat ? (
+        rows.map((node) => (
+          <PageItem
+            key={node.page.id}
+            page={node.page}
+            depth={0}
+            disableActive={false}
+            showChevron={false}
+            canEditContent={canEditContent}
+          />
+        ))
+      ) : flatten && rows.length === 0 ? (
+        <div
+          className="sidebar-tree__empty-leaf"
+          style={{
+            paddingLeft: 6,
+            paddingTop: 3,
+            paddingBottom: 3,
+            fontSize: 12.5,
+            color:
+              "color-mix(in srgb, var(--tt-text-primary) 42%, transparent)",
+            userSelect: "none",
+          }}
+        >
+          {t("sidebar.emptySpace", "No pages yet")}
+        </div>
+      ) : (
+        rows.map((node) => (
+          <TreeRow
+            key={node.page.id}
+            node={node}
+            depth={0}
+            expandedIds={expandedIds}
+            onToggleExpand={onToggleExpand}
+            dropTarget={dropTarget}
+            activeId={activeId}
+            subtitleByPageId={subtitleByPageId}
+            canEditContent={canEditContent}
+            reorganize={reorganize}
+          />
+        ))
+      )}
     </Section>
   );
 }
 
 // ── SectionDragWrapper: the whole section is the drag source ────────────────
-// Same pattern as TreeRow: grab anywhere, drag only activates past a few
-// pixels of pointer movement (PointerSensor's activationConstraint), so
-// ordinary clicks on buttons inside the section still work untouched.
-// width: "100%" is explicit here — without it this wrapper can starve
-// Section's internal layout down to near-zero width, which is what caused
-// the section label to wrap one letter per line during drag.
 function SectionDragWrapper({
   category,
   children,
@@ -456,9 +506,6 @@ function SectionDragWrapper({
       style={{
         position: "relative",
         width: "100%",
-        // The sortable transform shifts this section aside as another drags
-        // past it, opening a real gap to drop into — replacing the old
-        // before/after line, which marked a target without making room for it.
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.4 : 1,
@@ -484,9 +531,12 @@ export const SidebarTree = memo(function SidebarTree({
   onDeleteSection,
   onHideSection,
   isLoading,
+  sections,
+  sectionLabels,
+  flattenRootsOf,
+  flatSections,
+  canReorganize,
 }: SidebarTreeProps) {
-  // Join teamspace records to their pages by id → "N members" per teamspace-page.
-  // Only teamspace-pages land in this map; everything else has no subtitle.
   const subtitleByPageId = useMemo(() => {
     const m = new Map<ID, string>();
     for (const ts of teamspaces) {
@@ -496,13 +546,35 @@ export const SidebarTree = memo(function SidebarTree({
     return m;
   }, [teamspaces, groups]);
 
-  // Sort mode is set once per section and governs every depth beneath it.
-  // Custom order is a map of scopeKey → ordered ids, one scope per set of
-  // siblings (a section's top-level pages, or any page's children).
+  const { person } = useCurrentPerson();
+  const personId = person?.id;
+
+  const reorganize = useCallback(
+    (page: Page) =>
+      canReorganize
+        ? canReorganize(page)
+        : personId != null && page.ownerId === personId,
+    [canReorganize, personId],
+  );
+
+  // Recent is always flat; spaces can add more (Pinned, Templates).
+  const flatSet = useMemo(
+    () => new Set<PageCategory>(["Recent", ...(flatSections ?? [])]),
+    [flatSections],
+  );
+
+  // Every category the tree may render: the workspace set plus any a space
+  // brings (e.g. Template inside a teamspace).
+  const treeCategories = useMemo(
+    () =>
+      Array.from(
+        new Set<PageCategory>([...DEFAULT_SECTION_ORDER, ...(sections ?? [])]),
+      ),
+    [sections],
+  );
+
   const [sortModeByCategory, setSortModeByCategory] = useSectionSortModes();
   const [customOrder, setCustomOrder] = useCustomOrder();
-  // Display order of the sections themselves — the set is still fixed and
-  // closed, only their sequence is user-configurable.
   const [sectionOrder, setSectionOrder] = useSectionOrder();
 
   const setSortModeForCategory = useCallback(
@@ -512,16 +584,11 @@ export const SidebarTree = memo(function SidebarTree({
     [setSortModeByCategory],
   );
 
-  // category is root-membership only (order-independent) — walk the raw tree.
   const categoryByPageId = useMemo(() => buildCategoryByPageId(tree), [tree]);
 
-  // The tree actually rendered — each section's own sort mode applied
-  // recursively to its whole subtree. Computed over the FULL fixed category
-  // set regardless of display order or hidden state (data must stay ready
-  // in case a hidden section is unhidden later).
   const sortedTree = useMemo(() => {
     const result = {} as Record<PageCategory, PageTreeNode[]>;
-    for (const category of DEFAULT_SECTION_ORDER) {
+    for (const category of treeCategories) {
       const mode = getSortMode(sortModeByCategory, category);
       result[category] = applySectionSort(
         tree[category] ?? [],
@@ -531,7 +598,7 @@ export const SidebarTree = memo(function SidebarTree({
       );
     }
     return result;
-  }, [tree, sortModeByCategory, customOrder]);
+  }, [tree, sortModeByCategory, customOrder, treeCategories]);
 
   const [activeId, setActiveId] = useState<ID | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget>(null);
@@ -540,11 +607,9 @@ export const SidebarTree = memo(function SidebarTree({
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
     new Set(),
   );
-  const { person } = useCurrentPerson();
 
-  // Built from the SORTED tree — reorder math needs the currently displayed
-  // order, not raw tree order, so untouched siblings don't silently reshuffle
-  // the first time a section switches into custom mode.
+  // Tree sections are walked last-wins, so a page that appears both as a flat
+  // leaf (Recent / Pinned) and in a tree resolves to its tree node.
   const nodeById = useMemo(() => {
     const m = new Map<ID, PageTreeNode>();
     const walk = (nodes: PageTreeNode[]) => {
@@ -553,9 +618,14 @@ export const SidebarTree = memo(function SidebarTree({
         if (n.children.length) walk(n.children);
       }
     };
-    for (const cat of DEFAULT_SECTION_ORDER) walk(sortedTree[cat] ?? []);
+    for (const cat of treeCategories) {
+      if (flatSet.has(cat)) walk(sortedTree[cat] ?? []);
+    }
+    for (const cat of treeCategories) {
+      if (!flatSet.has(cat)) walk(sortedTree[cat] ?? []);
+    }
     return m;
-  }, [sortedTree]);
+  }, [sortedTree, treeCategories, flatSet]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -574,23 +644,20 @@ export const SidebarTree = memo(function SidebarTree({
     const activeIdStr = String(active.id);
     const overId = over.id;
 
-    // Section reorder is handled by SortableContext's own shift — the
-    // siblings animate apart, so no manual dropTarget is computed here.
     if (activeIdStr.startsWith(SECTION_DRAG_PREFIX)) return;
 
-    // ── Page drag (unchanged) ────────────────────────────────────────────
-    if (typeof overId === "string" && overId.startsWith("section:")) {
-      setDropTarget({
-        kind: "section",
-        category: overId.slice("section:".length) as PageCategory,
-      });
-      return;
-    }
-    if (typeof overId === "string" && overId.startsWith("section-header:")) {
-      setDropTarget({
-        kind: "section",
-        category: overId.slice("section-header:".length) as PageCategory,
-      });
+    // Section-level targets. Flat sections (Recent / Pinned / Templates) are
+    // never drop targets — dropping there used to patch a page's category to
+    // the section's key (e.g. "Recent"), which the DB rejects.
+    if (typeof overId === "string" && isSectionId(overId)) {
+      const category = (
+        overId.startsWith("section:")
+          ? overId.slice("section:".length)
+          : overId.slice("section-header:".length)
+      ) as PageCategory;
+      setDropTarget(
+        flatSet.has(category) ? null : { kind: "section", category },
+      );
       return;
     }
 
@@ -602,7 +669,11 @@ export const SidebarTree = memo(function SidebarTree({
       const subtree = collectSubtreeIds(activeNode);
       if (subtree.has(overPageId)) {
         const overNode = nodeById.get(overPageId);
-        if (overNode && overNode.page.parentId == null) {
+        if (
+          overNode &&
+          overNode.page.parentId == null &&
+          !flatSet.has(overNode.page.category)
+        ) {
           setDropTarget({ kind: "section", category: overNode.page.category });
         } else {
           setDropTarget(null);
@@ -627,9 +698,6 @@ export const SidebarTree = memo(function SidebarTree({
     setDropTarget({ kind: "page", pageId: overPageId, zone });
   };
 
-  // Persist a custom-order position for the destination scope, IF that
-  // scope's section is currently in "custom" mode. In "recent" mode this is
-  // a no-op — order is computed from updatedAt, not draggable.
   const persistOrderIfCustom = useCallback(
     (
       newParentId: ID | null,
@@ -665,7 +733,6 @@ export const SidebarTree = memo(function SidebarTree({
     setActiveId(null);
     setDropTarget(null);
 
-    // ── Section reorder — sortable: resolve against over.id, arrayMove ────
     if (activeIdStr.startsWith(SECTION_DRAG_PREFIX)) {
       if (!overId || !overId.startsWith(SECTION_DRAG_PREFIX)) return;
       const moved = activeIdStr.slice(
@@ -682,13 +749,30 @@ export const SidebarTree = memo(function SidebarTree({
       return;
     }
 
-    // ── Page drag (unchanged) ────────────────────────────────────────────
     const target = dropTarget;
     if (!target) return;
 
     const pageId = activeIdStr;
 
     if (target.kind === "section") {
+      if (flatSet.has(target.category)) return;
+
+      const flatRoot = flattenRootsOf?.includes(target.category)
+        ? sortedTree[target.category]?.[0]
+        : undefined;
+      if (flatRoot) {
+        if (flatRoot.page.id === pageId) return;
+        onMovePage({ pageId, newParentId: flatRoot.page.id });
+        persistOrderIfCustom(
+          flatRoot.page.id,
+          target.category,
+          pageId,
+          null,
+          "end",
+        );
+        return;
+      }
+
       onMovePage({ pageId, newParentId: null, category: target.category });
       persistOrderIfCustom(null, target.category, pageId, null, "end");
       setCollapsedSections((s) => {
@@ -716,8 +800,7 @@ export const SidebarTree = memo(function SidebarTree({
     }
 
     if (target.zone === "inside") {
-      const targetOwner = nodeById.get(target.pageId)?.page.ownerId;
-      if (targetOwner !== person?.id) return;
+      if (!reorganize(overPage)) return;
       onMovePage({ pageId, newParentId: target.pageId });
       const destCategory = categoryByPageId.get(target.pageId);
       if (destCategory) {
@@ -758,22 +841,14 @@ export const SidebarTree = memo(function SidebarTree({
   );
 
   const { activePageId } = useActivePageState();
-
-  // Capability for the active page, computed ONCE here instead of in every
-  // PageItem. Previously ~30 rows each called usePageCapabilities(activePageId)
-  // against the same key — that was the 55-observer page-role line in devtools.
   const { canEditContent } = usePageCapabilities(activePageId);
 
-  // Keep the active page reachable: expand its ancestor chain and un-collapse
-  // its section whenever the current page changes. Additive only — never
-  // collapses or contracts anything the user opened.
   useEffect(() => {
     if (activePageId == null) return;
 
     const node = nodeById.get(activePageId);
-    if (!node) return; // page isn't in the sidebar tree
+    if (!node) return;
 
-    // Climb parentId to collect ancestors (excludes the page itself).
     const ancestors: ID[] = [];
     let cur: PageTreeNode | undefined = node;
     while (cur && cur.page.parentId != null) {
@@ -794,7 +869,7 @@ export const SidebarTree = memo(function SidebarTree({
             changed = true;
           }
         }
-        return changed ? next : prev; // no new Set unless something changed
+        return changed ? next : prev;
       });
     }
 
@@ -834,16 +909,23 @@ export const SidebarTree = memo(function SidebarTree({
     [setSortModeForCategory],
   );
 
+  const fixedSections = sections != null;
   const activeNode = activeId != null ? nodeById.get(activeId) : null;
   const isDraggingSection = activeId?.startsWith(SECTION_DRAG_PREFIX) ?? false;
-  const visibleCategories = sectionOrder.filter(
-    (category) =>
-      !hidden.has(category) && (isLoading || (tree[category]?.length ?? 0) > 0),
+
+  const candidateCategories = fixedSections
+    ? sections
+    : sectionOrder.filter((category) => !hidden.has(category));
+  const visibleCategories = candidateCategories.filter(
+    (category) => isLoading || (tree[category]?.length ?? 0) > 0,
   );
 
   const sectionItems = useMemo(
-    () => visibleCategories.map((c) => `${SECTION_DRAG_PREFIX}${c}`),
-    [visibleCategories],
+    () =>
+      fixedSections
+        ? []
+        : visibleCategories.map((c) => `${SECTION_DRAG_PREFIX}${c}`),
+    [fixedSections, visibleCategories],
   );
 
   return (
@@ -863,8 +945,8 @@ export const SidebarTree = memo(function SidebarTree({
           items={sectionItems}
           strategy={verticalListSortingStrategy}
         >
-          {visibleCategories.map((category) => (
-            <SectionDragWrapper key={category} category={category}>
+          {visibleCategories.map((category) => {
+            const section = (
               <TreeSection
                 category={category}
                 topLevel={sortedTree[category] ?? EMPTY_NODES}
@@ -883,9 +965,23 @@ export const SidebarTree = memo(function SidebarTree({
                 onSetSortMode={onSetSortMode}
                 isLoading={isLoading}
                 canEditContent={canEditContent}
+                labelOverride={sectionLabels?.[category]}
+                flatten={flattenRootsOf?.includes(category) ?? false}
+                flat={flatSet.has(category)}
+                allowSectionPrefs={!fixedSections}
+                reorganize={reorganize}
               />
-            </SectionDragWrapper>
-          ))}
+            );
+            return fixedSections ? (
+              <div key={category} style={{ width: "100%" }}>
+                {section}
+              </div>
+            ) : (
+              <SectionDragWrapper key={category} category={category}>
+                {section}
+              </SectionDragWrapper>
+            );
+          })}
         </SortableContext>
       </div>
 

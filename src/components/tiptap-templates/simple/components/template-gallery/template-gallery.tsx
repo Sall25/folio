@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useIsMobile } from "src/hooks/use-breakpoint";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
+import { useCurrentSpace } from "src/hooks/use-current-space";
 
 // ── People metadata (display contract) ──────────────────────────────────────
 // Page carries no author/usage data, so the parent supplies this from the real
@@ -181,6 +182,7 @@ export function TemplatesGallery({
 
   const { person } = useCurrentPerson();
   const { workspaceId } = useCurrentWorkspace();
+  const space = useCurrentSpace();
 
   if (!open) return null;
 
@@ -202,15 +204,28 @@ export function TemplatesGallery({
     onClose();
   };
 
+  // Inside a teamspace, a new template belongs to that teamspace: a root
+  // Template page carrying its id (the server keeps it for members and pins
+  // it to the host workspace). In your workspace, a plain workspace template.
   const createBlankTemplate = () => {
     if (!person || !workspaceId) return;
-    const template = makePage({
-      title: t("templates.newTemplate"),
-      parentId: null,
-      category: "Template",
-      ownerId: person.id,
-      workspaceId,
-    });
+    const template =
+      space.kind === "teamspace"
+        ? makePage({
+            title: t("templates.newTemplate"),
+            parentId: null,
+            category: "Template",
+            ownerId: person.id,
+            workspaceId: space.page?.workspaceId ?? workspaceId,
+            teamspaceId: space.id,
+          })
+        : makePage({
+            title: t("templates.newTemplate"),
+            parentId: null,
+            category: "Template",
+            ownerId: person.id,
+            workspaceId,
+          });
     createPage.mutate(template);
     setActivePageId(template.id);
     onClose();

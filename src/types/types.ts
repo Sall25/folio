@@ -622,6 +622,7 @@ export type Page = {
    *  teamspace ancestor) so page queries can scope by workspace without a
    *  parentId walk. */
   workspaceId: ID;
+  teamspaceId: ID | null;
   category: PageCategory;
   /** Database membership — null when this page is not a database row. */
   sourceId: ID | null;
@@ -842,6 +843,7 @@ export interface Teamspace {
   /** Teamspace owners/admins (subset of effective members). */
   ownerIds: ID[];
   createdAt: CreatedAt;
+  pinnedPageIds?: ID[];
 }
 
 // ── Derived helpers (pure) ───────────────────────────────────────────────

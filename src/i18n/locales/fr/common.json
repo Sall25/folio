@@ -18,6 +18,16 @@
     "createPage": "Créer une page",
     "open": "Ouvrir"
   },
+  "pinned": "Épinglés",
+  "templates": "Modèles",
+  "pin": "Épingler dans l'espace d'équipe",
+  "unpin": "Désépingler",
+  "teamspace": "Espace d'équipe",
+  "backTo": "Retour à {{name}}",
+  "sectionWorkspaces": "Espaces de travail",
+  "sectionTeamspaces": "Espaces d'équipe",
+  "newDefaultName": "Nouvel espace de travail",
+  "creating": "Création…",
   "workspace": {
     "plan": {
       "free": "Plan gratuit"
