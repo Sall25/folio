@@ -1,0 +1,148 @@
+$ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+$dur: 0.3s;
+
+.sidebar-switcher-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+// Both layers sit in the same grid cell, so the row keeps the switcher's
+// height and nothing below it shifts while they swap.
+.sidebar-switcher-stack {
+  display: grid;
+  // An explicit shrinkable column: the implicit `auto` column sizes to the
+  // switcher's content and pushed the row past the sidebar edge.
+  grid-template-columns: minmax(0, 1fr);
+  // Basis 0, not auto: start from nothing and take the leftover space,
+  // instead of starting from the content width.
+  flex: 1 1 0;
+  min-width: 0;
+
+  > * {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+
+  // ── Visible layer ────────────────────────────────────────────────────
+  &__switcher,
+  &.is-searching &__search {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0 0 0 0 round var(--tt-radius-md));
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+      opacity 0.2s ease,
+      transform $dur $ease-out,
+      clip-path $dur $ease-out,
+      visibility 0s linear 0s;
+  }
+
+  // ── Hidden layer ─────────────────────────────────────────────────────
+  &__search,
+  &.is-searching &__switcher {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 0.18s ease,
+      transform $dur $ease-out,
+      clip-path $dur $ease-out,
+      visibility 0s linear $dur;
+  }
+
+  &__search {
+    transform: translateX(10px);
+    clip-path: inset(0 0 0 100% round var(--tt-radius-md));
+  }
+
+  &.is-searching &__switcher {
+    transform: translateX(-10px) scale(0.98);
+  }
+
+  // The switcher itself must be allowed to shrink too, so a long workspace
+  // name truncates instead of widening the row.
+  &__switcher {
+    box-sizing: border-box;
+    overflow: hidden;
+
+    > * {
+      min-width: 0;
+    }
+
+    .sidebar-ws-name-cell {
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+    }
+  }
+}
+
+.sidebar-find-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  width: 36px;
+  border: 0.2px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md);
+  background-color: rgba(241, 237, 230, 0.341);
+  border: 1px solid var(--tt-border-color);
+  .dark & {
+    background-color: var(--tt-gray-dark-a-50);
+  }
+  color: var(--tt-text-primary);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+    color: var(--tt-text-primary);
+  }
+
+  &.is-on {
+    color: var(--tt-text-primary);
+    border-color: color-mix(in srgb, var(--sidebar-accent) 45%, transparent);
+    background: color-mix(in srgb, var(--sidebar-accent) 12%, transparent);
+  }
+
+  &__icon {
+    position: absolute;
+    transition:
+      opacity 0.18s ease,
+      transform $dur $ease-out;
+
+    &.is-close {
+      opacity: 0;
+      transform: rotate(-90deg) scale(0.6);
+    }
+  }
+
+  &.is-on &__icon {
+    &.is-search {
+      opacity: 0;
+      transform: rotate(90deg) scale(0.6);
+    }
+
+    &.is-close {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-switcher-stack > *,
+  .sidebar-find-toggle__icon {
+    transition-duration: 0s !important;
+    transform: none !important;
+  }
+}

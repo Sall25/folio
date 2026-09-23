@@ -761,3 +761,9 @@
   transform: none; /* No scaling applied */
   white-space: nowrap; /* Ensure emoji doesn't wrap */
 }
+.tiptap-button.sidebar-nav-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0; /* Allow the button to shrink below its text width */
+}

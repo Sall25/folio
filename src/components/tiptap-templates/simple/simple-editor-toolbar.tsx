@@ -34,9 +34,11 @@ import { ToolbarPresence } from "./components/toolbar-presence";
 import { useLayoutMode } from "./hooks/use-layout-mode";
 import { calculateSidebarWidth } from "src/lib/utils";
 import { LockIcon, StarIcon } from "src/components/tiptap-icons";
+import { QuickOpenTrigger } from "./components/quick-open-trigger";
+import { useSearch } from "./context/search-context";
+import { requestFindFocus } from "src/lib/find-store";
 
 function Expand() {
-  // const { t } = useTranslation();
   const { collapsed } = useEditorLayoutState();
   const { openPeek, closePeek, onCollapsedChange } = useEditorLayoutActions();
 
@@ -47,7 +49,6 @@ function Expand() {
       onMouseLeave={closePeek}
       variant="ghost"
       size="large"
-      // tooltip={t("sidebar.expand")}
       style={{ background: "transparent", padding: 0, cursor: "pointer" }}
     >
       <Menu className="tiptap-button-icon" />
@@ -160,7 +161,6 @@ function ShareButton() {
           style={{
             width: 14,
             height: 14,
-            // marginBottom: 3,
             color: "var(--tt-text-primary)",
           }}
         />
@@ -198,8 +198,6 @@ type SimpleEditorToolbarProps = {
 
 // ============================================================
 // Shared left group — title / category / breadcrumbs
-// The leading edge is identical across sizes; only the trailing
-// controls differ, so this is factored out.
 // ============================================================
 function TitleGroup({ view }: { view: View }) {
   const { activePage, activePageId } = useActivePageState();
@@ -246,7 +244,8 @@ function TitleGroup({ view }: { view: View }) {
 }
 
 // ============================================================
-// Desktop — everything inline (the current MainToolbarContent)
+// Desktop — quick open centered between two spacers, presence
+// moves into the trailing group.
 // ============================================================
 export const DesktopToolbarContent = ({ view }: ContentProps) => {
   const { activePage } = useActivePageState();
@@ -255,10 +254,12 @@ export const DesktopToolbarContent = ({ view }: ContentProps) => {
     <>
       <TitleGroup view={view} />
       <Spacer />
-      <ToolbarPresence />
+      <QuickOpenTrigger />
       <Spacer />
 
       <ToolbarGroup>
+        <ToolbarPresence />
+
         {view !== "home" && activePage && (
           <>
             <EditedTimeButton page={activePage} />
@@ -283,8 +284,7 @@ export const DesktopToolbarContent = ({ view }: ContentProps) => {
 };
 
 // ============================================================
-// Tablet — fold the label-heavy items (edited-time, theme) into
-// the More popover; keep undo/redo, bell, more on the bar.
+// Tablet — compact quick open; label-heavy items in More.
 // ============================================================
 export const TabletToolbarContent = ({ view }: ContentProps) => {
   const { activePage } = useActivePageState();
@@ -295,6 +295,8 @@ export const TabletToolbarContent = ({ view }: ContentProps) => {
       <Spacer />
 
       <ToolbarGroup>
+        <QuickOpenTrigger compact />
+
         {view !== "home" && activePage && (
           <>
             <UndoRedoButton action="undo" />
@@ -304,8 +306,6 @@ export const TabletToolbarContent = ({ view }: ContentProps) => {
           </>
         )}
 
-        {/* Edited-time + theme move inside; MorePopover renders them when
-            these flags are set. */}
         {view === "page" && (
           <MorePopover includeTheme={true} editedPage={activePage} />
         )}
@@ -315,8 +315,7 @@ export const TabletToolbarContent = ({ view }: ContentProps) => {
 };
 
 // ============================================================
-// Mobile — strip to menu · title · more. Everything else lives
-// in the More popover.
+// Mobile — menu · title · quick open · more.
 // ============================================================
 export const MobileToolbarContent = ({ view }: ContentProps) => {
   const { activePage, activePageId } = useActivePageState();
@@ -331,8 +330,9 @@ export const MobileToolbarContent = ({ view }: ContentProps) => {
       </ToolbarGroup>
       <Spacer />
 
-      {view === "page" && (
-        <ToolbarGroup>
+      <ToolbarGroup>
+        <QuickOpenTrigger compact />
+        {view === "page" && (
           <MorePopover
             includeTheme
             includeUndoRedo
@@ -349,8 +349,8 @@ export const MobileToolbarContent = ({ view }: ContentProps) => {
                 : undefined
             }
           />
-        </ToolbarGroup>
-      )}
+        )}
+      </ToolbarGroup>
     </>
   );
 };
@@ -384,19 +384,43 @@ export const SimpleEditorToolbar = ({ view }: SimpleEditorToolbarProps) => {
   const [mobileView, setMobileView] = useState<MobileView>("main");
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const { collapsed } = useEditorLayoutState();
+  const { onCollapsedChange, setSidebarView } = useEditorLayoutActions();
   const { isMobile } = useLayoutMode();
   const { expandedWidth } = useEditorLayoutTransient();
   const { mode } = useLayoutMode();
   const sidebarWidth = calculateSidebarWidth(mode, collapsed, expandedWidth);
+  const { onOpenChange: openQuickOpen } = useSearch();
 
   useEffect(() => {
     if (!isMobile && mobileView !== "main")
       requestAnimationFrame(() => setMobileView("main"));
   }, [isMobile, mobileView]);
 
-  // Breakpoint selection. useIsMobile/useIsTablet come from the media-query
-  // hook; the `isMobile` prop still drives the positioning offset below since
-  // that's about the on-screen keyboard, not layout.
+  // Global shortcuts live here because the toolbar is always mounted (the
+  // sidebar's contents unmount when it's collapsed).
+  //   Ctrl/⌘+P        → quick open (page search). Mod+K is left to the
+  //                     editor's link shortcut; preventDefault stops print.
+  //   Ctrl/⌘+Shift+F  → find in pages: expand the sidebar, show the results
+  //                     panel, focus the sidebar search input.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const key = e.key.toLowerCase();
+      if (!e.shiftKey && key === "p") {
+        e.preventDefault();
+        openQuickOpen?.(true);
+      } else if (e.shiftKey && key === "f") {
+        e.preventDefault();
+        if (collapsed) onCollapsedChange(false);
+        setSidebarView("search");
+        // After the sidebar has rendered the input.
+        requestAnimationFrame(() => requestFindFocus());
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openQuickOpen, collapsed, onCollapsedChange, setSidebarView]);
+
   const isMobileBp = useIsMobile();
   const isTabletBp = useIsTablet();
 

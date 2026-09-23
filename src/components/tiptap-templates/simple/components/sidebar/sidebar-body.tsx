@@ -48,15 +48,15 @@ import {
   TeamspacePinContext,
   type TeamspacePinControl,
 } from "../../context/teamspace-pin-context";
+import { FindInPagesPanel } from "./find-in-pages-panel";
+import { setPendingScrollTarget } from "../inbox-panel/pending-scroll-target";
+import type { FindMatch, FindOptions } from "src/lib/find-in-pages";
 
 const NOOP = () => {};
 const EMPTY_TEAMSPACES: Teamspace[] = [];
 const EMPTY_GROUPS: Group[] = [];
 const RECENT_LIMIT = 6;
 
-// Inside a teamspace: Pinned (the Favorites key, relabelled — Favorites is a
-// workspace concept, so the key is free here), Recent, Pages (its root,
-// flattened), Templates. Pinned and Templates are flat lists.
 const TEAMSPACE_SECTIONS: PageCategory[] = [
   "Favorites",
   "Recent",
@@ -65,8 +65,6 @@ const TEAMSPACE_SECTIONS: PageCategory[] = [
 ];
 const TEAMSPACE_FLATTEN: PageCategory[] = ["Teamspaces"];
 const TEAMSPACE_FLAT: PageCategory[] = ["Favorites", "Template"];
-// Every member can reorganize inside a teamspace (pages_update already
-// allows teamspace members server-side).
 const ALLOW_ALL = () => true;
 
 const toLeaf = (page: Page): PageTreeNode => ({ page, children: [] });
@@ -148,6 +146,9 @@ export const SidebarBody = memo(() => {
     peekPhase: phase,
     customizeSidebarOpen,
     setCustomizeSidebarOpen,
+    sidebarView,
+    setSidebarView,
+    onCollapsedChange,
   } = useEditorLayout();
   const { isMobile } = useLayoutMode();
 
@@ -166,12 +167,30 @@ export const SidebarBody = memo(() => {
   const { pinnedIds, canPin, isPinned, setPinned } =
     useTeamspacePins(teamspaceId);
 
-  // Pin controls for the rows: computed once here, read by each PageItem
-  // through context (no per-row query subscriptions). Null unless you own
-  // the teamspace you're in.
   const pinControl = useMemo<TeamspacePinControl | null>(
     () => (teamspaceId && canPin ? { teamspaceId, isPinned, setPinned } : null),
     [teamspaceId, canPin, isPinned, setPinned],
+  );
+
+  const isFindOpen = sidebarView === "search";
+  const closeFind = useCallback(
+    () => setSidebarView("pages"),
+    [setSidebarView],
+  );
+
+  // Open the page and hand the editor a "find" scroll target: it re-runs the
+  // same matcher over the live doc and selects the occurrence.
+  const openFindMatch = useCallback(
+    (page: Page, match: FindMatch, query: string, options: FindOptions) => {
+      setPendingScrollTarget({
+        pageId: page.id,
+        type: "find",
+        find: { query, options, blockIndex: match.blockIndex },
+      });
+      setActivePageId(page.id);
+      if (isMobile) onCollapsedChange(true);
+    },
+    [setActivePageId, isMobile, onCollapsedChange],
   );
 
   const isFloating = !isMobile && collapsed && peeking;
@@ -204,7 +223,6 @@ export const SidebarBody = memo(() => {
   const floatingActive = !isMobile && collapsed && phase !== "hidden";
   const showContent = isMobile ? true : !collapsed || floatingActive;
 
-  // Unlimited (all non-deleted pages, newest first) — scoped + capped below.
   const { data: allRecentPages } = useRecentPages();
 
   const sidebarTree = useMemo<Record<PageCategory, PageTreeNode[]>>(() => {
@@ -216,8 +234,6 @@ export const SidebarBody = memo(() => {
       const root = (tree.Teamspaces ?? []).find(
         (n) => n.page.id === teamspaceId,
       );
-      // Key order matters: flat sections first, the tree last, so a pinned
-      // page resolves to its tree node for drag math.
       result.Favorites = pinnedIds
         .map((id) => byId.get(id))
         .filter((p): p is Page => p != null)
@@ -285,8 +301,6 @@ export const SidebarBody = memo(() => {
 
       if (teamspaceId) {
         const hostWs = teamspaceHostWs ?? workspaceId;
-        // Templates are ROOT pages carrying the teamspace id (the server
-        // accepts it for members); everything else is a child of the root.
         const p =
           category === "Template"
             ? makePage({
@@ -355,26 +369,33 @@ export const SidebarBody = memo(() => {
               </>
             )}
 
-            <div style={{ display: "contents" }}>
-              <TeamspacePinContext.Provider value={pinControl}>
-                <SidebarTree
-                  key={teamspaceId ?? "workspace"}
-                  tree={sidebarTree}
-                  teamspaces={teamspaces as Teamspace[]}
-                  groups={groups as Group[]}
-                  onMovePage={handleMovePage}
-                  onAddPageToSection={handleAddPageToSection}
-                  onRenameSection={NOOP}
-                  onDeleteSection={NOOP}
-                  isLoading={isPending || isLoading}
-                  sections={teamspaceId ? TEAMSPACE_SECTIONS : undefined}
-                  sectionLabels={teamspaceId ? teamspaceLabels : undefined}
-                  flattenRootsOf={teamspaceId ? TEAMSPACE_FLATTEN : undefined}
-                  flatSections={teamspaceId ? TEAMSPACE_FLAT : undefined}
-                  canReorganize={teamspaceId ? ALLOW_ALL : undefined}
-                />
-              </TeamspacePinContext.Provider>
-            </div>
+            {isFindOpen ? (
+              <FindInPagesPanel
+                onClose={closeFind}
+                onOpenMatch={openFindMatch}
+              />
+            ) : (
+              <div style={{ display: "contents" }}>
+                <TeamspacePinContext.Provider value={pinControl}>
+                  <SidebarTree
+                    key={teamspaceId ?? "workspace"}
+                    tree={sidebarTree}
+                    teamspaces={teamspaces as Teamspace[]}
+                    groups={groups as Group[]}
+                    onMovePage={handleMovePage}
+                    onAddPageToSection={handleAddPageToSection}
+                    onRenameSection={NOOP}
+                    onDeleteSection={NOOP}
+                    isLoading={isPending || isLoading}
+                    sections={teamspaceId ? TEAMSPACE_SECTIONS : undefined}
+                    sectionLabels={teamspaceId ? teamspaceLabels : undefined}
+                    flattenRootsOf={teamspaceId ? TEAMSPACE_FLATTEN : undefined}
+                    flatSections={teamspaceId ? TEAMSPACE_FLAT : undefined}
+                    canReorganize={teamspaceId ? ALLOW_ALL : undefined}
+                  />
+                </TeamspacePinContext.Provider>
+              </div>
+            )}
 
             {!peeking && (
               <>

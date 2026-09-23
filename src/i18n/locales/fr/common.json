@@ -18,6 +18,22 @@
     "createPage": "Créer une page",
     "open": "Ouvrir"
   },
+  "find": {
+    "title": "Rechercher",
+    "placeholder": "Rechercher dans les pages…",
+    "matchCase": "Respecter la casse",
+    "wholeWord": "Mot entier",
+    "regex": "Expression régulière",
+    "noResults": "Aucun résultat",
+    "summary_one": "{{count}} résultat dans {{pages}} pages",
+    "summary_other": "{{count}} résultats dans {{pages}} pages",
+    "truncated": "premiers résultats affichés"
+  },
+  "open": "Rechercher dans les pages",
+  "close": "Fermer la recherche",
+  "hint": "Tape pour rechercher dans tes pages",
+  "clear": "Effacer",
+  "quickOpen": { "placeholder": "Rechercher des pages…" },
   "pinned": "Épinglés",
   "templates": "Modèles",
   "pin": "Épingler dans l'espace d'équipe",

@@ -1,10 +1,9 @@
 import { memo } from "react";
-import { Search, Home, Plus } from "lucide-react";
+import { Home, Plus } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { InboxIcon } from "src/components/tiptap-icons";
-import { useSearch } from "../../context/search-context";
 import { useNotificationState } from "src/components/tiptap-ui/notification/notification-context";
 import { useLocation, useNavigate } from "@tanstack/react-location";
 import { useTranslation } from "react-i18next";
@@ -25,7 +24,6 @@ import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { spaceHomePath, useCurrentSpace } from "src/hooks/use-current-space";
 
 export const SidebarNav = memo(() => {
-  const { open, onOpenChange } = useSearch();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -39,18 +37,12 @@ export const SidebarNav = memo(() => {
   const { workspaceId } = useCurrentWorkspace();
   const space = useCurrentSpace();
 
-  // Home is the CURRENT space's home: "/" in your workspace, "/t/:id" inside
-  // a teamspace — so Home never throws you out of the space you're in.
   const teamspaceId = space.kind === "teamspace" ? space.id : null;
   const homePath = spaceHomePath(teamspaceId);
   const isHomeActive = location.current.pathname === homePath;
 
   const onCreatePage = () => {
     if (!person || !workspaceId) return;
-    // Inside a teamspace, a new page lands in THAT teamspace (as a child of
-    // its root page). The server trigger stamps teamspace_id and pins the page
-    // to the teamspace's host workspace; the values here only keep the
-    // optimistic cache entry accurate.
     const newPage =
       space.kind === "teamspace"
         ? makePage({
@@ -91,11 +83,6 @@ export const SidebarNav = memo(() => {
     }
   };
 
-  const handleSearchClick = () => {
-    onOpenChange?.(true);
-    onCollapsedChange(isMobile);
-  };
-
   const inboxBadge = unreadCount > 0 && (
     <>
       <Spacer orientation="horizontal" size={3} />
@@ -105,22 +92,6 @@ export const SidebarNav = memo(() => {
 
   return (
     <CardItemGroup>
-      <Button
-        data-highlighted={open}
-        variant="ghost"
-        size="large"
-        onClick={handleSearchClick}
-        className="sidebar-nav-item"
-      >
-        <Search className="tiptap-button-icon" />
-        <Spacer orientation="horizontal" size={3} />
-        <span
-          className="tiptap-button-text"
-          style={{ opacity: 1, display: "block" }}
-        >
-          {t("sidebar.search")}
-        </span>
-      </Button>
       <Button
         onClick={handleHomeClick}
         variant="ghost"

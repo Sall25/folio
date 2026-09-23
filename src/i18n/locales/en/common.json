@@ -18,6 +18,22 @@
     "createPage": "Create page",
     "open": "Ouvrir"
   },
+  "find": {
+    "title": "Search",
+    "placeholder": "Search in pages…",
+    "matchCase": "Match case",
+    "wholeWord": "Match whole word",
+    "regex": "Use regular expression",
+    "noResults": "No results",
+    "summary_one": "{{count}} result in {{pages}} pages",
+    "summary_other": "{{count}} results in {{pages}} pages",
+    "truncated": "showing the first results"
+  },
+  "open": "Search in pages", 
+  "close": "Close search",
+  "hint": "Type to search across your pages",
+  "clear": "Clear",
+  "quickOpen": { "placeholder": "Search pages…" },
   "pinned": "Pinned",
   "templates": "Templates",
   "pin": "Pin to teamspace",
