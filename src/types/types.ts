@@ -650,7 +650,8 @@ export type View =
   | "resources"
   | "library"
   | "inbox"
-  | "trash";
+  | "trash"
+  | "chat";
 
 export type SimpleEditorContentProps = {
   activePage: Page;
@@ -1009,3 +1010,44 @@ export const PAGE_ROLE_ORDER: Record<PageRole, number> = {
 
 export const higherRole = (a: PageRole, b: PageRole): PageRole =>
   PAGE_ROLE_ORDER[a] >= PAGE_ROLE_ORDER[b] ? a : b;
+
+// ── Chat ─────────────────────────────────────────────────────────────────
+export type ChatRoomKind = "room" | "dm";
+export type ChatVisibility = "open" | "private";
+
+export interface ChatMember {
+  personId: string;
+  role: "owner" | "member";
+  lastReadAt: number;
+}
+
+export interface ChatRoom {
+  id: string;
+  kind: ChatRoomKind;
+  name: string | null;
+  icon: string | null;
+  workspaceId: string | null;
+  teamspaceId: string | null;
+  visibility: ChatVisibility;
+  createdBy: string | null;
+  createdAt: number;
+  lastMessageAt: number | null;
+  members: ChatMember[];
+}
+
+export interface ChatMessage {
+  id: string;
+  roomId: string;
+  authorId: string | null;
+  body: string;
+  replyToId: string | null;
+  createdAt: number;
+  editedAt: number | null;
+  deletedAt: number | null;
+}
+
+export interface ChatPerson {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+}

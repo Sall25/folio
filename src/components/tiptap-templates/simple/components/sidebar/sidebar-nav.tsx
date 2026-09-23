@@ -1,5 +1,5 @@
-import { memo, useState } from "react";
-import { Home, Plus, Users2 } from "lucide-react";
+import { memo, useMemo, useState } from "react";
+import { Home, MessagesSquare, Plus, Users2 } from "lucide-react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
@@ -22,6 +22,9 @@ import {
 import { InboxPanel } from "../inbox-panel";
 import { TeamspacesPanel } from "../teamspaces-panel/teamspaces-panel";
 import { CreateTeamspaceModal } from "../create-teamspace-modal";
+import { ChatsPanel } from "../chat/chats-panel";
+import { CreateRoomModal, NewDmModal } from "../chat/chat-modals";
+import { useUnreadCounts } from "src/hooks/use-chat";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { spaceHomePath, useCurrentSpace } from "src/hooks/use-current-space";
 
@@ -41,10 +44,25 @@ export const SidebarNav = memo(() => {
 
   const [teamspacesOpen, setTeamspacesOpen] = useState(false);
   const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
+  const [chatsOpen, setChatsOpen] = useState(false);
+  const [newRoomOpen, setNewRoomOpen] = useState(false);
+  const [newDmOpen, setNewDmOpen] = useState(false);
+
+  const { data: chatUnread = {} } = useUnreadCounts();
+  const chatUnreadTotal = useMemo(
+    () => Object.values(chatUnread).reduce((a, b) => a + b, 0),
+    [chatUnread],
+  );
 
   const teamspaceId = space.kind === "teamspace" ? space.id : null;
   const homePath = spaceHomePath(teamspaceId);
   const isHomeActive = location.current.pathname === homePath;
+  const isChatActive = /\/chat\//.test(location.current.pathname);
+
+  const popoverSide = isMobile ? "bottom" : "right";
+  const closeDrawerOnMobile = () => {
+    if (isMobile) onCollapsedChange(true);
+  };
 
   const onCreatePage = () => {
     if (!person || !workspaceId) return;
@@ -92,6 +110,15 @@ export const SidebarNav = memo(() => {
     <>
       <Spacer orientation="horizontal" size={3} />
       <span className="sidebar-inbox-badge">{unreadCount}</span>
+    </>
+  );
+
+  const chatBadge = chatUnreadTotal > 0 && (
+    <>
+      <Spacer orientation="horizontal" size={3} />
+      <span className="sidebar-inbox-badge">
+        {chatUnreadTotal > 99 ? "99+" : chatUnreadTotal}
+      </span>
     </>
   );
 
@@ -168,6 +195,53 @@ export const SidebarNav = memo(() => {
         </Popover>
       )}
 
+      <Popover open={chatsOpen} onOpenChange={setChatsOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="large"
+            className="sidebar-nav-item"
+            data-highlighted={chatsOpen}
+            data-active-state={isChatActive ? "on" : "off"}
+          >
+            <MessagesSquare className="tiptap-button-icon" />
+            <Spacer orientation="horizontal" size={3} />
+            <span
+              className="tiptap-button-text"
+              style={{ opacity: 1, display: "block" }}
+            >
+              {t("chat.title", "Chats")}
+            </span>
+            {chatBadge}
+          </Button>
+        </PopoverTrigger>
+        <PopoverPortal container={document.getElementById("root")}>
+          <PopoverContent
+            side={popoverSide}
+            align="start"
+            sideOffset={8}
+            style={{ zIndex: 999 }}
+          >
+            <Card style={{ width: isMobile ? "calc(100vw - 32px)" : 300 }}>
+              <ChatsPanel
+                onDone={() => {
+                  setChatsOpen(false);
+                  closeDrawerOnMobile();
+                }}
+                onNewRoom={() => {
+                  setChatsOpen(false);
+                  setNewRoomOpen(true);
+                }}
+                onNewDm={() => {
+                  setChatsOpen(false);
+                  setNewDmOpen(true);
+                }}
+              />
+            </Card>
+          </PopoverContent>
+        </PopoverPortal>
+      </Popover>
+
       <Popover open={teamspacesOpen} onOpenChange={setTeamspacesOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -188,7 +262,7 @@ export const SidebarNav = memo(() => {
         </PopoverTrigger>
         <PopoverPortal container={document.getElementById("root")}>
           <PopoverContent
-            side={isMobile ? "bottom" : "right"}
+            side={popoverSide}
             align="start"
             sideOffset={8}
             style={{ zIndex: 999 }}
@@ -197,7 +271,7 @@ export const SidebarNav = memo(() => {
               <TeamspacesPanel
                 onDone={() => {
                   setTeamspacesOpen(false);
-                  if (isMobile) onCollapsedChange(true);
+                  closeDrawerOnMobile();
                 }}
                 onCreate={() => {
                   setTeamspacesOpen(false);
@@ -237,6 +311,22 @@ export const SidebarNav = memo(() => {
           onCreated={(pageId) => {
             navigate({ to: `/t/${pageId}` });
             onCollapsedChange(isMobile);
+          }}
+        />
+      )}
+      {newRoomOpen && (
+        <CreateRoomModal
+          onClose={() => {
+            setNewRoomOpen(false);
+            closeDrawerOnMobile();
+          }}
+        />
+      )}
+      {newDmOpen && (
+        <NewDmModal
+          onClose={() => {
+            setNewDmOpen(false);
+            closeDrawerOnMobile();
           }}
         />
       )}

@@ -1,0 +1,39 @@
+.chat-row--unread .tsp-row__name {
+  font-weight: 600;
+}
+
+.chat-row__badge {
+  flex-shrink: 0;
+  min-width: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  color: #fff;
+  background: var(--sidebar-accent, var(--tt-brand-color-500));
+}
+
+.chat-label--live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #30a46c;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #30a46c 20%, transparent);
+}
+
+.chat-panel__footer {
+  display: flex;
+  gap: 4px;
+
+  .tsp__create {
+    flex: 1;
+  }
+}

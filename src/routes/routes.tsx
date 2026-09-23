@@ -16,6 +16,10 @@ export const routes = [
     element: <SimpleEditor view="home" />,
   },
   {
+    path: "t/:teamspaceId/chat/:roomId",
+    element: <SimpleEditor view="chat" />,
+  },
+  {
     path: "/",
     element: <SimpleEditor view="home" />,
   },
