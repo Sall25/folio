@@ -92,8 +92,11 @@ interface PageRecord {
   content?: unknown;
 }
 
+type CollabAccess = "edit" | "view";
+
 interface AuthContext {
   personId: string;
+  access: CollabAccess;
 }
 
 const server = new Server<AuthContext>({
@@ -110,8 +113,6 @@ const server = new Server<AuthContext>({
   // Collaboration extension and TitleNode see it, it's already correct.
   async onLoadDocument({ documentName, document }) {
     // Not empty → the doc already has real content (from SQLite/prior edits).
-    // With the client no longer writing structure at mount, "not empty" now
-    // reliably means "stored content exists", so skipping the seed is correct.
     if (!document.isEmpty("default")) return;
 
     const pageId = documentName.startsWith("page:")
@@ -123,11 +124,7 @@ const server = new Server<AuthContext>({
     );
     const page = rows?.[0] ?? null;
 
-    // Determine the content to seed. If Supabase has stored content, use it;
-    // otherwise start from a minimal doc. EITHER WAY, guarantee a title node
-    // exists as the first child — because the client no longer inserts one.
     let content = (page?.content as any) ?? null;
-
     content = ensureTitle(content); // ← guarantee a title first-child
 
     try {
@@ -142,7 +139,9 @@ const server = new Server<AuthContext>({
     }
   },
 
-  async onAuthenticate({ token, documentName }) {
+  // Hocuspocus v3: the per-connection settings are `connectionConfig`
+  // (v2 called this `connection`).
+  async onAuthenticate({ token, documentName, connectionConfig }) {
     if (!token) {
       throw new Error("Not authenticated.");
     }
@@ -154,7 +153,7 @@ const server = new Server<AuthContext>({
       if (!payload.sub) {
         throw new Error("Token has no subject.");
       }
-      // `sub` is the Supabase auth user id === people.id (per the migration).
+      // `sub` is the Supabase auth user id === people.id.
       personId = payload.sub;
     } catch (err) {
       console.error("[onAuthenticate] JWT verify failed:", err);
@@ -165,22 +164,27 @@ const server = new Server<AuthContext>({
       ? documentName.slice("page:".length)
       : documentName;
 
-    // The DB decides access: can_person_access_page walks parent_id to the
-    // teamspace and checks effective membership, returning a single boolean.
-    // Not under a teamspace → the RPC returns true (v1 private-page gap,
-    // documented in the migration).
-    const ok = await sb<boolean>(
-      `/rpc/can_person_access_page?p_id=${encodeURIComponent(
+    // The DB decides the access LEVEL with the same rules as page RLS:
+    // owner / teamspace member / edit role → 'edit'; view or comment role,
+    // public view → 'view'; otherwise null (no access).
+    const access = await sb<string | null>(
+      `/rpc/collab_page_access?p_id=${encodeURIComponent(
         pageId,
       )}&person=${encodeURIComponent(personId)}`,
     );
 
-    if (ok !== true) {
+    if (access !== "edit" && access !== "view") {
       throw new Error("Not authorized for this page.");
     }
 
-    // Available in later hooks via context.personId.
-    return { personId };
+    // Below edit: the connection still receives live updates and awareness
+    // (cursors), but the server ignores document changes it sends.
+    if (access === "view") {
+      connectionConfig.readOnly = true;
+    }
+
+    // Available in later hooks via context.
+    return { personId, access };
   },
 
   // Persist the live document content back to Supabase. This is the DURABLE
@@ -194,8 +198,6 @@ const server = new Server<AuthContext>({
       : documentName;
 
     // Convert the live Yjs doc → JSON, using the SAME schema the seed uses.
-    // toYdoc (seed) and fromYdoc (this) MUST use the same extension set, or the
-    // round-trip loses/mangles nodes. seedExtensions is that shared schema.
     let content: unknown;
     try {
       content = TiptapTransformer.fromYdoc(document, "default");
@@ -204,12 +206,10 @@ const server = new Server<AuthContext>({
         `[onStoreDocument] fromYdoc failed for ${documentName}:`,
         err,
       );
-      return; // don't write garbage — bail, keep the last good Supabase content
+      return; // don't write garbage — keep the last good Supabase content
     }
 
-    // Guard: never persist an empty/again-skeleton doc over real content. If
-    // the doc somehow serialized to nothing, writing it would REINTRODUCE the
-    // wipe. Only write when there's actual content.
+    // Guard: never persist an empty/skeleton doc over real content.
     if (!isMeaningfulContent(content)) {
       console.warn(
         `[onStoreDocument] refusing to write empty content for ${documentName}`,
@@ -235,9 +235,8 @@ const server = new Server<AuthContext>({
         },
       );
 
-      // fetch does NOT throw on 4xx/5xx — a 403 (RLS), 400 (bad payload), etc.
-      // returns a response. Without this check those failures look like success
-      // and the write is silently lost. res.ok covers 200–299.
+      // fetch does NOT throw on 4xx/5xx — check res.ok so failures aren't
+      // silently treated as success.
       if (!res.ok) {
         const body = await res.text();
         console.error(
@@ -250,7 +249,7 @@ const server = new Server<AuthContext>({
         `[onStoreDocument] PATCH ${res.status} OK for ${documentName}`,
       );
     } catch (err) {
-      // Only network-level throws reach here now (DNS, connection refused, etc).
+      // Only network-level throws reach here (DNS, connection refused, etc).
       console.error(`[onStoreDocument] PATCH threw for ${documentName}:`, err);
     }
   },
