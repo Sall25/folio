@@ -18,10 +18,11 @@ import { buildTeamspacePair } from "./use-create-teamspace-with-page";
 import { useCurrentWorkspace } from "./use-workspaces";
 import { useCurrentPerson } from "./use-session";
 import { usePagesByCategory } from "./use-pages";
+import {
+  useAddTeamspaceMember,
+  useRemoveTeamspaceMember,
+} from "./use-teamspace-members";
 
-// Keyed by the current workspace: RLS returns a different set depending on who
-// you are and where you are, so each workspace caches separately and a switch
-// refetches. (lists() requires the workspace id.)
 function useTeamspacesBase<T>(select?: (teamspaces: Teamspace[]) => T) {
   const { workspaceId } = useCurrentWorkspace();
   return useQuery({
@@ -44,7 +45,6 @@ export function useTeamspace(id: ID | null) {
   });
 }
 
-// generic resolver: id list + entity list → entities, order-preserving
 function resolveIds<T extends { id: ID }>(ids: ID[], entities: T[]): T[] {
   const byId = new Map(entities.map((e) => [e.id, e]));
   return ids.map((id) => byId.get(id)).filter((e): e is T => e !== undefined);
@@ -83,19 +83,13 @@ export function useTeamspaceOwners(teamspaceId: ID | null) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Admin adapter — re-exposes the fat (id, x) => Promise API the settings screen
-// calls, on top of the granular query + mutation hooks. Member/group ops read
-// the current list to append/filter the right array, then PATCH it.
+// Admin adapter for the settings screen. `teamspaces` = only those HOSTED by
+// the current workspace (joined ones aren't yours to manage).
 //
-// Display fields (name, icon) live on the PAGE, not the record — the two share
-// an id — so creating a teamspace creates a page + record pair, and renaming
-// patches the page title, not the record.
-//
-// `teamspaces` here is only the teamspaces HOSTED by the current workspace.
-// RLS also returns teamspaces you've joined in other people's workspaces
-// (they belong in your sidebar), but they aren't yours to rename, delete, or
-// manage members of. Hosting is read off the root page's workspaceId, which
-// the server pins to the teamspace's host workspace.
+// Membership (member_ids / owner_ids) can no longer be patched directly — a
+// guard trigger rejects it — so add/remove go through the membership RPCs,
+// which check the caller is an owner. Rename/access/description/groups are
+// ordinary owner edits and still use the patch path.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function useManageTeamspaces() {
@@ -106,8 +100,6 @@ export function useManageTeamspaces() {
 
   const teamspaces = useMemo(() => {
     const pageById = new Map((teamspacePages as Page[]).map((p) => [p.id, p]));
-    // A teamspace whose root page hasn't loaded yet is left out rather than
-    // guessed at, so a joined teamspace never flashes in with admin controls.
     return (allTeamspaces as Teamspace[]).filter(
       (t) => pageById.get(t.id)?.workspaceId === workspaceId,
     );
@@ -118,15 +110,14 @@ export function useManageTeamspaces() {
   const del = useDeleteTeamspace();
   const createRecord = useCreateTeamspace();
   const createPageMut = useCreatePage();
+  const addMember = useAddTeamspaceMember();
+  const removeMember = useRemoveTeamspaceMember();
 
   const byId = (id: ID) => teamspaces.find((t) => t.id === id);
 
   return {
     teamspaces,
 
-    // Create the PAIR (page + record, shared id). Record-only creation would
-    // orphan the teamspace — it'd show in settings but never in the sidebar,
-    // since the sidebar renders teamspace-PAGES.
     addTeamspaceAsync: async (args: {
       name: string;
       iconName?: string | null;
@@ -146,8 +137,6 @@ export function useManageTeamspaces() {
         ownerId: person.id,
         workspaceId,
       });
-      // Record first, then page — roll the record back if the page write fails
-      // so a failure never leaves an orphan record.
       await createRecord.mutateAsync(record);
       try {
         await createPageMut.mutateAsync(page);
@@ -162,7 +151,6 @@ export function useManageTeamspaces() {
       return { page, teamspace: record };
     },
 
-    // Name lives on the page — rename patches the page title (same id).
     renameTeamspaceAsync: (id: ID, name: string) =>
       patchPageMut.mutateAsync({ id, patch: { title: name } }),
 
@@ -174,24 +162,15 @@ export function useManageTeamspaces() {
 
     deleteTeamspaceAsync: (id: ID) => del.mutateAsync(id),
 
+    // Membership → RPCs (owner-checked server-side).
     addMemberAsync: (id: ID, personId: ID) => {
       const ts = byId(id);
-      if (!ts) return Promise.resolve();
-      if (ts.memberIds.includes(personId)) return Promise.resolve(ts);
-      return patch.mutateAsync({
-        id,
-        patch: { memberIds: [...ts.memberIds, personId] },
-      });
+      if (!ts || ts.memberIds.includes(personId)) return Promise.resolve();
+      return addMember.mutateAsync({ teamspaceId: id, personId });
     },
 
-    removeMemberAsync: (id: ID, personId: ID) => {
-      const ts = byId(id);
-      if (!ts) return Promise.resolve();
-      return patch.mutateAsync({
-        id,
-        patch: { memberIds: ts.memberIds.filter((p) => p !== personId) },
-      });
-    },
+    removeMemberAsync: (id: ID, personId: ID) =>
+      removeMember.mutateAsync({ teamspaceId: id, personId }),
 
     attachGroupAsync: (id: ID, groupId: ID) => {
       const ts = byId(id);

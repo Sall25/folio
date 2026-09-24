@@ -1051,3 +1051,20 @@ export interface ChatPerson {
   name: string;
   avatarUrl: string | null;
 }
+
+// ── Teamspace Invite ─────────────────────────────────────────────────────────────────
+
+export type InviteStatus = "pending" | "accepted" | "declined";
+
+export interface TeamspaceInvite {
+  id: string;
+  teamspaceId: string;
+  email: string;
+  invitedBy: string | null;
+  inviterName: string | null;
+  teamspaceName: string | null;
+  iconName: string | null;
+  iconTarget: string | null;
+  status: InviteStatus;
+  createdAt: number;
+}
