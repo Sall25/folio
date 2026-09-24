@@ -15,6 +15,22 @@
   background: var(--sidebar-accent, var(--tt-brand-color-500));
 }
 
+// Unread mention: stands out from a plain unread count.
+.chat-row__at {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1;
+  color: #1a1a1a;
+  background: #f5a623;
+}
+
 .chat-label--live {
   display: flex;
   align-items: center;

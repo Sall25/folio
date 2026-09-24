@@ -121,7 +121,7 @@ export const SidebarNav = memo(() => {
     );
 
   return (
-    <CardItemGroup>
+    <CardItemGroup style={{ gap: 2 }}>
       <Button
         onClick={handleHomeClick}
         variant="ghost"

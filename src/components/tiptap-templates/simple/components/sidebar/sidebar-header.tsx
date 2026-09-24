@@ -170,7 +170,7 @@ export const SidebarHeader = memo(() => {
                 width: "100%",
                 padding: "6px",
                 boxSizing: "border-box",
-                borderRadius: "var(--tt-radius-md)",
+                borderRadius: "var(--tt-radius-lg) !important",
                 border: "0.2px solid var(--tt-border-color)",
               }}
             >
@@ -196,7 +196,7 @@ export const SidebarHeader = memo(() => {
             </div>
           </div>
 
-          <button
+          <Button
             type="button"
             className={`sidebar-find-toggle${isSearching ? " is-on" : ""}`}
             aria-label={
@@ -212,9 +212,12 @@ export const SidebarHeader = memo(() => {
             aria-pressed={isSearching}
             onClick={toggleSearch}
           >
-            <Search size={16} className="sidebar-find-toggle__icon is-search" />
+            <Search
+              size={16}
+              className="tiptap-button-icon sidebar-find-toggle__icon is-search"
+            />
             <X size={16} className="sidebar-find-toggle__icon is-close" />
-          </button>
+          </Button>
         </div>
 
         <Spacer orientation="vertical" size={10} />

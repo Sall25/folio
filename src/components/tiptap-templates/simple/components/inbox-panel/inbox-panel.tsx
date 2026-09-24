@@ -1,31 +1,34 @@
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "@tanstack/react-location";
 import {
   Inbox as InboxIcon,
   AtSign,
   Calendar,
   Link2,
   Check,
+  MessagesSquare,
 } from "lucide-react";
 import { useNotifications } from "src/components/tiptap-ui/notification/notification-context";
 import { useCurrentPerson } from "src/hooks/use-session";
+import { useChatRooms } from "src/hooks/use-chat";
 import type { Notification, NotificationType } from "src/types";
 import { useActivePageActions } from "../../context/active-page-context";
+import { chatPath, useOpenChatRoom } from "../chat/chat-utils";
 import { setPendingScrollTarget } from "./pending-scroll-target";
 import "./inbox-panel.scss";
 
-// The notification inbox, rendered in the sidebar body when the Inbox tab is
-// active (replacing the page tree). Reuses the notification data layer; clicking
-// a notification marks it read and navigates to its source page/thread.
+// The notification inbox. Clicking a notification marks it read and opens its
+// source: a page (scrolling to the node/thread), or — for chat mentions — the
+// room it came from.
 export function InboxPanel() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { notifications, markRead, markAllRead } = useNotifications();
   const { person } = useCurrentPerson();
-
   const { setActivePageId } = useActivePageActions();
+  const { all: rooms } = useChatRooms();
+  const openRoom = useOpenChatRoom();
 
-  // A type defaulting to true (unset) shows by default — only an explicit
-  // false in the person's saved preferences hides it. This mirrors what
-  // MyNotificationsContent writes (settings.notifications.*).
   const settings = person?.notificationSettings ?? {};
   const visibleNotifications = notifications.filter(
     (n) => settings[n.type] ?? true,
@@ -34,17 +37,24 @@ export function InboxPanel() {
 
   const handleClick = (n: Notification) => {
     markRead(n.id);
+
+    // Chat mention → its room, in the right space (teamspace rooms under
+    // /t/…). Falls back to the plain route if the room isn't cached yet.
+    if (n.type === "chat-mention" && n.sourceRoomId) {
+      const room = rooms.find((r) => r.id === n.sourceRoomId);
+      if (room) openRoom(room);
+      else navigate({ to: chatPath(null, n.sourceRoomId) });
+      return;
+    }
+
     if (n.sourcePageId != null) {
       const pageId = String(n.sourcePageId);
-      // Set the scroll target BEFORE navigating; the destination editor reads
-      // and clears it once the page has rendered (via useScrollToPendingTarget).
       setPendingScrollTarget({
         pageId,
         targetNodeId: n.targetNodeId,
         type: n.type,
       });
       setActivePageId(pageId);
-      // navigate({ to: "/" });
     }
   };
 
@@ -66,7 +76,7 @@ export function InboxPanel() {
             onClick={markAllRead}
           >
             <Check size={13} />
-            <span>Mark all read</span>
+            <span>{t("inbox.markAllRead", "Mark all read")}</span>
           </button>
         )}
       </div>
@@ -109,6 +119,8 @@ function NotifIcon({ type }: { type: NotificationType }) {
     case "user-mention":
     case "comment-mention":
       return <AtSign size={15} />;
+    case "chat-mention":
+      return <MessagesSquare size={15} />;
     case "date-due":
     case "date-overdue":
       return <Calendar size={15} />;

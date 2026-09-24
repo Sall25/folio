@@ -1,0 +1,125 @@
+.mp {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 5;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md);
+  background: var(--tt-card-bg-color);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.16);
+
+  &__label {
+    padding: 6px 8px 3px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--tt-text-secondary);
+  }
+
+  &__empty {
+    padding: 8px;
+    font-size: 12.5px;
+    color: var(--tt-text-secondary);
+  }
+}
+
+.mp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border: none;
+  border-radius: var(--tt-radius-sm);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &.is-active {
+    background: color-mix(in srgb, var(--sidebar-accent) 14%, transparent);
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    flex-shrink: 0;
+  }
+
+  &__label {
+    flex: 1;
+    min-width: 0;
+    font-size: 13.5px;
+    color: var(--tt-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// ── Mentions inside messages ──────────────────────────────────────────────
+
+.chat-mention {
+  padding: 0 3px;
+  border-radius: 4px;
+  font-weight: 500;
+  color: var(--sidebar-accent, var(--tt-brand-color-500));
+  background: color-mix(in srgb, var(--sidebar-accent) 12%, transparent);
+
+  &--me {
+    color: var(--tt-text-primary);
+    background: color-mix(in srgb, #f5a623 30%, transparent);
+  }
+}
+
+.chat-page-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 0 6px 0 4px;
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--tt-text-primary);
+  vertical-align: baseline;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+  }
+
+  &__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &--locked {
+    color: var(--tt-text-secondary);
+    cursor: default;
+
+    &:hover {
+      background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
+    }
+  }
+}
+
+// A message that mentions you gets a soft highlight, like in Slack.
+.chat-msg--mentions-me {
+  background: color-mix(in srgb, #f5a623 8%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, #f5a623 70%, transparent);
+}
+
+.chat-composer-wrap {
+  position: relative;
+}

@@ -15,6 +15,7 @@ import {
   makeNotification,
   type NotificationRecord,
 } from "src/api/notifications";
+import { supabase } from "src/api/supabase-client";
 import { useCurrentPerson } from "src/hooks/use-session";
 import {
   NotificationActionsContext,
@@ -23,51 +24,139 @@ import {
   type NotificationState,
 } from "./notification-context";
 
-function recordToNotification(r: NotificationRecord): Notification {
+// source_room_id is a newer column (chat mentions); NotificationRecord in
+// api/notifications predates it, so it's read as an optional extra here.
+type RecordWithRoom = NotificationRecord & { sourceRoomId?: string | null };
+
+function recordToNotification(r: RecordWithRoom): Notification {
   return {
     id: r.id,
     type: r.type as Notification["type"],
     title: r.title,
     message: r.message,
     read: r.read,
-    timestamp: new Date(r.createdAt), // ← createdAt (number) → timestamp (Date)
+    timestamp: new Date(r.createdAt),
     sourcePageId: r.sourcePageId ?? undefined,
     sourcePageTitle: r.sourcePageTitle ?? undefined,
     targetNodeId: r.targetNodeId ?? undefined,
     mentionId: r.mentionId ?? undefined,
     mentionLabel: r.mentionLabel ?? undefined,
+    sourceRoomId: r.sourceRoomId ?? undefined,
   };
 }
 
-// DB-backed notification provider. Same context API as before (so the bell and
-// existing callers don't change), but notifications are now persisted and
+// Realtime payloads are raw snake_case rows (no http() shim in between).
+interface NotificationRow {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: number;
+  actor_id: string | null;
+  source_page_id: string | null;
+  source_page_title: string | null;
+  target_node_id: string | null;
+  mention_id: string | null;
+  mention_label: string | null;
+  source_room_id: string | null;
+}
+
+function rowToNotification(r: NotificationRow): Notification {
+  return {
+    id: r.id,
+    type: r.type as Notification["type"],
+    title: r.title,
+    message: r.message,
+    read: r.read,
+    timestamp: new Date(r.created_at),
+    sourcePageId: r.source_page_id ?? undefined,
+    sourcePageTitle: r.source_page_title ?? undefined,
+    targetNodeId: r.target_node_id ?? undefined,
+    mentionId: r.mention_id ?? undefined,
+    mentionLabel: r.mention_label ?? undefined,
+    sourceRoomId: r.source_room_id ?? undefined,
+  };
+}
+
+// DB-backed notification provider. Notifications are persisted and
 // RECIPIENT-TARGETED: addNotification inserts a row for a recipient, and each
-// user reads only their own. Dedup is enforced by the DB (unique dedup_key),
-// with an in-memory mirror to avoid redundant inserts within a session.
+// user reads only their own. New rows for you — including ones created
+// server-side, like chat mentions — arrive live over Realtime.
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { person } = useCurrentPerson();
+  const personId = person?.id ?? null;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const notifiedKeys = useRef<Set<string>>(new Set());
 
-  // Mirror notifications in a ref so markAllRead/dismissAll can read the current
-  // list WITHOUT depending on it — keeps those actions stable (Technique 3).
   const notificationsRef = useRef(notifications);
   useEffect(() => {
     notificationsRef.current = notifications;
   }, [notifications]);
 
   useEffect(() => {
-    if (!person) return;
+    if (!personId) return;
     let cancelled = false;
     fetchNotifications()
       .then((rows) => {
-        if (!cancelled) setNotifications(rows.map(recordToNotification));
+        if (!cancelled)
+          setNotifications(
+            (rows as RecordWithRoom[]).map(recordToNotification),
+          );
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [person]);
+  }, [personId]);
+
+  // Live: rows addressed to me. Rows I created for MYSELF (actor = me, e.g.
+  // date reminders) are skipped — addNotification already inserted them
+  // optimistically, so the echo would duplicate them.
+  useEffect(() => {
+    if (!personId) return;
+    const channel = supabase
+      .channel(`notifications:${personId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${personId}`,
+        },
+        (payload) => {
+          const row = payload.new as NotificationRow;
+          if (row.actor_id === personId) return;
+          setNotifications((prev) =>
+            prev.some((n) => n.id === row.id)
+              ? prev
+              : [rowToNotification(row), ...prev],
+          );
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${personId}`,
+        },
+        (payload) => {
+          // e.g. marked read in another tab.
+          const row = payload.new as NotificationRow;
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === row.id ? { ...n, read: row.read } : n)),
+          );
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [personId]);
 
   const hasNotified = useCallback(
     (key: string) => notifiedKeys.current.has(key),
@@ -77,9 +166,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     notifiedKeys.current.add(key);
   }, []);
 
-  // addNotification now needs a recipientId. For back-compat with callers that
-  // don't pass one, default the recipient to the current user (self-directed
-  // notifications like date reminders).
   const addNotification = useCallback(
     (
       payload: Omit<Notification, "id" | "timestamp" | "read"> & {
@@ -90,8 +176,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const recipientId = payload.recipientId ?? person?.id;
       if (!recipientId) return;
 
-      // Optimistic local insert (only if the recipient is ME — otherwise it's
-      // for someone else and shouldn't show in my bell).
       if (recipientId === person?.id) {
         const optimistic: Notification = {
           ...payload,
@@ -102,9 +186,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         setNotifications((prev) => [optimistic, ...prev]);
       }
 
-      // Persist for the recipient (fire-and-forget; dedup handled server-side
-      // via the unique (recipient_id, dedup_key) index — a conflict is a
-      // harmless no-op we swallow).
       createNotification(
         makeNotification({
           recipientId,
@@ -119,12 +200,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           mentionLabel: payload.mentionLabel ?? null,
           dedupKey: payload.dedupKey ?? null,
         }),
-      )
-        .then(() => console.log("notification inserted OK"))
-        .catch((e) => console.error("notification insert FAILED:", e));
+      ).catch((e) => console.error("notification insert failed:", e));
     },
     [person],
   );
+
   const markRead = useCallback((id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
@@ -132,7 +212,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     patchNotification(id, { read: true }).catch(() => {});
   }, []);
 
-  // Read the list from the ref, NOT the dep — so this stays stable.
   const markAllRead = useCallback(() => {
     const unreadIds = notificationsRef.current
       .filter((n) => !n.read)
@@ -154,7 +233,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     ids.forEach((id) => deleteNotification(id).catch(() => {}));
   }, []);
 
-  // Actions: now ALL stable → this object never rebuilds.
   const actions = useMemo<NotificationActions>(
     () => ({
       addNotification,
@@ -176,7 +254,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     ],
   );
 
-  // State: rebuilds when notifications change (unreadCount derived here).
   const state = useMemo<NotificationState>(
     () => ({
       notifications,

@@ -95,6 +95,12 @@
     "lastOwner": "A teamspace needs at least one owner",
     "lastOwnerLeave": "Make someone else an owner before leaving"
   },
+  "mentionPeople": "People",
+  "mentionPages": "Pages",
+  "mentionNone": "No matches",
+  "mentionedYou": "You were mentioned",
+  "privatePage": "Private page",
+  "someone": "someone",
   "manage": "Manage members",
   "teamspacesPanel": {
     "invitations": "Invitations",

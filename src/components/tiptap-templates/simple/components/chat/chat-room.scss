@@ -8,7 +8,6 @@
   min-width: 0;
   height: 100dvh;
   box-sizing: border-box;
-  z-index: 9999;
 
   &__state {
     align-self: center;
@@ -27,7 +26,7 @@
   height: 100%;
   padding: 0 24px;
   box-sizing: border-box;
-
+  z-index: 900;
   &__header {
     display: flex;
     align-items: center;
@@ -137,9 +136,19 @@
   }
 }
 
+// Mobile: the toolbar (with the sidebar's Expand button) is pinned to the
+// bottom of the screen — keep the composer above it.
 @media (max-width: 768px) {
+  .chat-view {
+    padding-bottom: var(--tt-toolbar-height, 48px);
+  }
+
   .chat-room {
     padding: 0 12px;
+  }
+
+  .chat-room__bottom {
+    padding-bottom: 10px;
   }
 }
 

@@ -8,6 +8,7 @@ import {
   useChatRooms,
   useUnreadCounts,
 } from "src/hooks/use-chat";
+import { useUnreadMentions } from "src/hooks/use-chat-mentions";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useNow } from "src/hooks/use-now";
 import { formatRelativeTime } from "src/utils/format-relative";
@@ -22,16 +23,13 @@ interface ChatsPanelProps {
   onNewDm: () => void;
 }
 
-// Rooms for the current space and your DMs, grouped: Active now (a message in
-// the last 10 min), Rooms, Direct messages. Unread counts on each row.
 export function ChatsPanel({ onDone, onNewRoom, onNewDm }: ChatsPanelProps) {
   const { t, i18n } = useTranslation();
   const { person } = useCurrentPerson();
   const { rooms, dms } = useChatRooms();
   const { data: unread = {} } = useUnreadCounts();
+  const { data: mentions = {} } = useUnreadMentions();
   const openRoom = useOpenChatRoom();
-  // Shared clock: pure during render, refreshes every 30s so "Active now"
-  // updates while the panel is open.
   const now = useNow();
 
   const dmPartnerIds = useMemo(
@@ -66,6 +64,7 @@ export function ChatsPanel({ onDone, onNewRoom, onNewDm }: ChatsPanelProps) {
     const title = roomTitle(room, peopleById, person?.id, t);
     const isMember = room.members.some((m) => m.personId === person?.id);
     const count = unread[room.id] ?? 0;
+    const mentionCount = mentions[room.id] ?? 0;
     const partner =
       room.kind === "dm"
         ? peopleById.get(otherDmMember(room, person?.id) ?? "")
@@ -101,6 +100,14 @@ export function ChatsPanel({ onDone, onNewRoom, onNewDm }: ChatsPanelProps) {
           <span className="tsp-row__name">{title}</span>
           <span className="tsp-row__meta">{meta}</span>
         </span>
+        {mentionCount > 0 && (
+          <span
+            className="chat-row__at"
+            title={t("chat.mentionedYou", "You were mentioned")}
+          >
+            @
+          </span>
+        )}
         {count > 0 && (
           <span className="chat-row__badge">{count > 99 ? "99+" : count}</span>
         )}

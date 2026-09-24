@@ -940,7 +940,8 @@ export type NotificationType =
   | "date-due"
   | "date-overdue"
   | "backlink"
-  | "comment-mention"; // ← new: a mention inside a comment
+  | "comment-mention"
+  | "chat-mention";
 
 export interface Notification {
   id: string;
@@ -954,6 +955,7 @@ export interface Notification {
   mentionLabel?: string;
   mentionId?: string;
   targetNodeId?: string;
+  sourceRoomId?: string;
 }
 
 export interface NotificationContextValue {

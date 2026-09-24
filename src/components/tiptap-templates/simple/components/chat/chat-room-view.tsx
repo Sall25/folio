@@ -15,16 +15,33 @@ import {
   useRoomPresence,
   useSendMessage,
 } from "src/hooks/use-chat";
+import { useChatCandidates } from "src/hooks/use-chat-candidates";
+import { usePages } from "src/hooks/use-pages";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { spaceHomePath, useCurrentSpace } from "src/hooks/use-current-space";
 import { useIsMobile } from "src/hooks/use-breakpoint";
 import { useEditorLayout } from "../../context/editor-layout-context";
+import { useActivePageActions } from "../../context/active-page-context";
+import { PageItemIcon } from "../../page-item-icon";
 import type { ChatMessage, ChatPerson, ChatRoom } from "src/types";
+import type { Page } from "src/types";
+import {
+  mentionedPersonIds,
+  mentionsPerson,
+  pageToken,
+  parseBody,
+  personToken,
+  serializeDraft,
+  type DraftMention,
+} from "src/lib/chat-mentions";
 import { chatRoomIdFromPath, otherDmMember, roomTitle } from "./chat-utils";
 import { InviteToRoomModal } from "./chat-modals";
+import { MentionPicker, type MentionItem } from "./mention-picker";
 import "./chat-room.scss";
+import "./mention-picker.scss";
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
+const PICKER_LIMIT = 5;
 
 export function ChatRoomView() {
   const { t } = useTranslation();
@@ -40,7 +57,6 @@ export function ChatRoomView() {
       style={{ paddingLeft: isMobile || collapsed ? 0 : expandedWidth }}
     >
       {room ? (
-        // Keyed so scroll/draft/typing state resets per room.
         <RoomContent key={room.id} room={room} />
       ) : (
         <div className="chat-view__state">
@@ -74,17 +90,31 @@ function RoomContent({ room }: { room: ChatRoom }) {
     isMember ? room.id : null,
   );
 
-  const personIds = useMemo(
-    () => [
-      ...room.members.map((m) => m.personId),
-      ...messages.map((m) => m.authorId).filter((id): id is string => !!id),
-    ],
-    [room.members, messages],
-  );
+  // Everyone we need a name for: members, authors, and people mentioned.
+  const personIds = useMemo(() => {
+    const ids = new Set<string>(room.members.map((m) => m.personId));
+    for (const msg of messages) {
+      if (msg.authorId) ids.add(msg.authorId);
+      for (const id of mentionedPersonIds(msg.body)) ids.add(id);
+    }
+    return [...ids];
+  }, [room.members, messages]);
   const { data: people = [] } = useChatPeople(personIds);
   const peopleById = useMemo(
     () => new Map<string, ChatPerson>(people.map((p) => [p.id, p])),
     [people],
+  );
+
+  // Pages you can read — for page chips and the @ picker.
+  const { data: allPages = [] } = usePages();
+  const pagesById = useMemo(
+    () =>
+      new Map<string, Page>(
+        (allPages as Page[])
+          .filter((p) => p.deletedAt == null)
+          .map((p) => [p.id, p]),
+      ),
+    [allPages],
   );
 
   const send = useSendMessage(room.id);
@@ -99,7 +129,22 @@ function RoomContent({ room }: { room: ChatRoom }) {
       ? peopleById.get(otherDmMember(room, meId) ?? "")
       : undefined;
 
-  // ── Timeline items: day separators + author grouping ───────────────────
+  // People you can mention: the room's members, plus — in an open room —
+  // everyone in its scope (they can see the room, so they'll get notified).
+  const { candidates: scopePeople } = useChatCandidates("room");
+  const mentionablePeople = useMemo(() => {
+    const byId = new Map<string, ChatPerson>();
+    for (const m of room.members) {
+      const p = peopleById.get(m.personId);
+      if (p) byId.set(p.id, p);
+    }
+    if (room.kind === "room" && room.visibility === "open") {
+      for (const p of scopePeople) byId.set(p.id, p);
+    }
+    if (meId) byId.delete(meId);
+    return [...byId.values()];
+  }, [room, peopleById, scopePeople, meId]);
+
   const items = useMemo<Item[]>(() => {
     const out: Item[] = [];
     let lastDay = "";
@@ -130,7 +175,6 @@ function RoomContent({ room }: { room: ChatRoom }) {
     return out;
   }, [messages, i18n.language]);
 
-  // ── Stick to bottom unless the user scrolled up ────────────────────────
   const listRef = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
   const onScroll = () => {
@@ -160,7 +204,6 @@ function RoomContent({ room }: { room: ChatRoom }) {
 
   return (
     <div className="chat-room">
-      {/* ── Header ─────────────────────────────────────────────────── */}
       <header className="chat-room__header">
         <span className="chat-room__icon">
           {room.kind === "dm" ? (
@@ -226,7 +269,6 @@ function RoomContent({ room }: { room: ChatRoom }) {
         )}
       </header>
 
-      {/* ── Messages ───────────────────────────────────────────────── */}
       <div className="chat-room__list" ref={listRef} onScroll={onScroll}>
         {items.length === 0 ? (
           <div className="chat-room__empty">
@@ -267,6 +309,9 @@ function RoomContent({ room }: { room: ChatRoom }) {
                     : undefined
                 }
                 isMine={item.msg.authorId === meId}
+                meId={meId}
+                peopleById={peopleById}
+                pagesById={pagesById}
                 onDelete={() => del.mutate(item.msg.id)}
               />
             ),
@@ -274,7 +319,6 @@ function RoomContent({ room }: { room: ChatRoom }) {
         )}
       </div>
 
-      {/* ── Composer / join bar ────────────────────────────────────── */}
       <div className="chat-room__bottom">
         <div className="chat-room__typing" aria-live="polite">
           {typingNames.length === 1 &&
@@ -299,6 +343,8 @@ function RoomContent({ room }: { room: ChatRoom }) {
                     defaultValue: "Message #{{name}}",
                   })
             }
+            people={mentionablePeople}
+            pages={[...pagesById.values()]}
             onSend={onSend}
             onTyping={setTyping}
           />
@@ -325,17 +371,86 @@ function RoomContent({ room }: { room: ChatRoom }) {
   );
 }
 
+// Renders a body with mention tokens resolved: people as @Name (highlighted
+// when it's you), pages as clickable chips — or a locked chip when the page
+// isn't one you can read.
+function MessageBody({
+  body,
+  meId,
+  peopleById,
+  pagesById,
+}: {
+  body: string;
+  meId: string | undefined;
+  peopleById: Map<string, ChatPerson>;
+  pagesById: Map<string, Page>;
+}) {
+  const { t } = useTranslation();
+  const { setActivePageId } = useActivePageActions();
+  const segments = useMemo(() => parseBody(body), [body]);
+
+  return (
+    <>
+      {segments.map((seg, i) => {
+        if (seg.kind === "text") return <span key={i}>{seg.text}</span>;
+        if (seg.kind === "person") {
+          const name =
+            peopleById.get(seg.id)?.name ?? t("chat.someone", "someone");
+          return (
+            <span
+              key={i}
+              className={`chat-mention${seg.id === meId ? " chat-mention--me" : ""}`}
+            >
+              @{name}
+            </span>
+          );
+        }
+        const page = pagesById.get(seg.id);
+        return page ? (
+          <button
+            key={i}
+            type="button"
+            className="chat-page-chip"
+            onClick={() => setActivePageId(page.id)}
+          >
+            <PageItemIcon
+              cover={page.cover}
+              styles={{ width: 13, height: 13, fontSize: 13 }}
+            />
+            <span className="chat-page-chip__title">
+              {page.title || t("page.untitled")}
+            </span>
+          </button>
+        ) : (
+          <span key={i} className="chat-page-chip chat-page-chip--locked">
+            <Lock size={11} />
+            <span className="chat-page-chip__title">
+              {t("chat.privatePage", "Private page")}
+            </span>
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
 function MessageRow({
   msg,
   compact,
   author,
   isMine,
+  meId,
+  peopleById,
+  pagesById,
   onDelete,
 }: {
   msg: ChatMessage;
   compact: boolean;
   author: ChatPerson | undefined;
   isMine: boolean;
+  meId: string | undefined;
+  peopleById: Map<string, ChatPerson>;
+  pagesById: Map<string, Page>;
   onDelete: () => void;
 }) {
   const { t, i18n } = useTranslation();
@@ -346,12 +461,15 @@ function MessageRow({
   const pending = msg.id.startsWith("pending-");
   const deleted = msg.deletedAt != null;
   const name = author?.name ?? t("chat.unknown", "Someone");
+  const mentionsMe =
+    !deleted && !isMine && !!meId && mentionsPerson(msg.body, meId);
 
   return (
     <div
       className={[
         "chat-msg",
         compact && "chat-msg--compact",
+        mentionsMe && "chat-msg--mentions-me",
         pending && "is-pending",
       ]
         .filter(Boolean)
@@ -376,7 +494,14 @@ function MessageRow({
             {t("chat.deleted", "Message deleted")}
           </p>
         ) : (
-          <p className="chat-msg__body">{msg.body}</p>
+          <p className="chat-msg__body">
+            <MessageBody
+              body={msg.body}
+              meId={meId}
+              peopleById={peopleById}
+              pagesById={pagesById}
+            />
+          </p>
         )}
       </div>
       {isMine && !deleted && !pending && (
@@ -394,17 +519,31 @@ function MessageRow({
   );
 }
 
+// "@" + up to 30 non-space chars right before the caret, at the start or
+// after whitespace (so emails like a@b.c don't trigger it).
+const TRIGGER_RE = /(?:^|\s)@([^\s@]{0,30})$/;
+
 function Composer({
   placeholder,
+  people,
+  pages,
   onSend,
   onTyping,
 }: {
   placeholder: string;
+  people: ChatPerson[];
+  pages: Page[];
   onSend: (body: string) => void;
   onTyping: (typing: boolean) => void;
 }) {
   const { t } = useTranslation();
   const [value, setValue] = useState("");
+  const [mentions, setMentions] = useState<DraftMention[]>([]);
+  const [trigger, setTrigger] = useState<{
+    start: number;
+    query: string;
+  } | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const ref = useRef<HTMLTextAreaElement>(null);
   const typingTimer = useRef<number | null>(null);
 
@@ -424,50 +563,156 @@ function Composer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const pickerItems = useMemo<MentionItem[]>(() => {
+    if (!trigger) return [];
+    const q = trigger.query.toLowerCase();
+    const matchedPeople = people
+      .filter((p) => p.name.toLowerCase().includes(q))
+      .slice(0, PICKER_LIMIT)
+      .map((person) => ({ kind: "person" as const, person }));
+    const matchedPages = pages
+      .filter(
+        (p) =>
+          p.category !== "Template" &&
+          (p.title || "").toLowerCase().includes(q),
+      )
+      .slice(0, PICKER_LIMIT)
+      .map((page) => ({ kind: "page" as const, page }));
+    return [...matchedPeople, ...matchedPages];
+  }, [trigger, people, pages]);
+
+  const updateTrigger = (text: string, caret: number) => {
+    const m = text.slice(0, caret).match(TRIGGER_RE);
+    if (m) {
+      setTrigger({ start: caret - m[1].length - 1, query: m[1] });
+      setActiveIndex(0);
+    } else {
+      setTrigger(null);
+    }
+  };
+
   const bumpTyping = () => {
     onTyping(true);
     if (typingTimer.current) window.clearTimeout(typingTimer.current);
     typingTimer.current = window.setTimeout(() => onTyping(false), 3000);
   };
 
+  const pick = (item: MentionItem) => {
+    const el = ref.current;
+    if (!el || !trigger) return;
+    const caret = el.selectionStart ?? value.length;
+    const label =
+      item.kind === "person"
+        ? item.person.name
+        : item.page.title || t("page.untitled");
+    const display = `@${label}`;
+    const token =
+      item.kind === "person"
+        ? personToken(item.person.id)
+        : pageToken(item.page.id);
+
+    const next =
+      value.slice(0, trigger.start) + display + " " + value.slice(caret);
+    const nextCaret = trigger.start + display.length + 1;
+
+    setValue(next);
+    setMentions((prev) => [...prev, { display, token }]);
+    setTrigger(null);
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(nextCaret, nextCaret);
+    });
+  };
+
   const submit = () => {
-    const body = value.trim();
-    if (!body) return;
-    onSend(body);
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    onSend(serializeDraft(trimmed, mentions));
     setValue("");
+    setMentions([]);
+    setTrigger(null);
     if (typingTimer.current) window.clearTimeout(typingTimer.current);
     onTyping(false);
   };
 
+  const pickerOpen = trigger !== null;
+
   return (
-    <div className="chat-composer">
-      <textarea
-        ref={ref}
-        className="chat-composer__input"
-        rows={1}
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => {
-          setValue(e.target.value);
-          if (e.target.value) bumpTyping();
-        }}
-        onBlur={() => onTyping(false)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-            e.preventDefault();
-            submit();
+    <div className="chat-composer-wrap">
+      {pickerOpen && (
+        <MentionPicker
+          items={pickerItems}
+          activeIndex={activeIndex}
+          onPick={pick}
+          onHover={setActiveIndex}
+        />
+      )}
+      <div className="chat-composer">
+        <textarea
+          ref={ref}
+          className="chat-composer__input"
+          rows={1}
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => {
+            const text = e.target.value;
+            setValue(text);
+            updateTrigger(text, e.target.selectionStart ?? text.length);
+            if (text) bumpTyping();
+          }}
+          onClick={(e) =>
+            updateTrigger(value, e.currentTarget.selectionStart ?? value.length)
           }
-        }}
-      />
-      <button
-        type="button"
-        className="chat-composer__send"
-        aria-label={t("chat.send", "Send")}
-        disabled={!value.trim()}
-        onClick={submit}
-      >
-        <ArrowUp size={16} />
-      </button>
+          onBlur={() => {
+            onTyping(false);
+            setTrigger(null);
+          }}
+          onKeyDown={(e) => {
+            if (pickerOpen && pickerItems.length > 0) {
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setActiveIndex((i) => (i + 1) % pickerItems.length);
+                return;
+              }
+              if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setActiveIndex(
+                  (i) => (i - 1 + pickerItems.length) % pickerItems.length,
+                );
+                return;
+              }
+              if (e.key === "Enter" || e.key === "Tab") {
+                e.preventDefault();
+                pick(pickerItems[activeIndex]);
+                return;
+              }
+            }
+            if (pickerOpen && e.key === "Escape") {
+              e.preventDefault();
+              e.stopPropagation();
+              setTrigger(null);
+              return;
+            }
+            if (
+              e.key === "Enter" &&
+              !e.shiftKey &&
+              !e.nativeEvent.isComposing
+            ) {
+              e.preventDefault();
+              submit();
+            }
+          }}
+        />
+        <button
+          type="button"
+          className="chat-composer__send"
+          aria-label={t("chat.send", "Send")}
+          disabled={!value.trim()}
+          onClick={submit}
+        >
+          <ArrowUp size={16} />
+        </button>
+      </div>
     </div>
   );
 }

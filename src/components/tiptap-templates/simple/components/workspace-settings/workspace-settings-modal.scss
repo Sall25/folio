@@ -9,7 +9,7 @@
 .ws-settings__backdrop {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 901;
   background: var(--background-drop);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
@@ -23,10 +23,10 @@
 }
 
 .ws-settings {
-  z-index: 701; 
+  z-index: 901; 
 }
 .ws-settings__backdrop {
-  z-index: 700;
+  z-index: 901;
 }
 
 // Dialog — centered two-pane shell.

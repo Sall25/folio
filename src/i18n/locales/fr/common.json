@@ -95,6 +95,12 @@
     "lastOwner": "Un espace d'équipe doit avoir au moins un propriétaire",
     "lastOwnerLeave": "Nomme un autre propriétaire avant de partir"
   },
+  "mentionPeople": "Personnes",
+  "mentionPages": "Pages",
+  "mentionNone": "Aucun résultat",
+  "mentionedYou": "On t'a mentionné",
+  "privatePage": "Page privée",
+  "someone": "quelqu'un",
   "manage": "Gérer les membres",
   "teamspacesPanel": {
     "invitations": "Invitations",

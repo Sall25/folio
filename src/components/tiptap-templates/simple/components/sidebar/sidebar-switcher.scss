@@ -8,6 +8,7 @@ $dur: 0.3s;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  height: 36px;
 }
 
 // Both layers sit in the same grid cell, so the row keeps the switcher's
@@ -89,8 +90,10 @@ $dur: 0.3s;
   justify-content: center;
   flex: 0 0 36px;
   width: 36px;
+  height: auto !important;
+  align-self: stretch;
   border: 0.2px solid var(--tt-border-color);
-  border-radius: var(--tt-radius-md);
+  border-radius: var(--tt-radius-lg);
   background-color: rgba(241, 237, 230, 0.341);
   border: 1px solid var(--tt-border-color);
   .dark & {
