@@ -95,6 +95,12 @@
     "lastOwner": "A teamspace needs at least one owner",
     "lastOwnerLeave": "Make someone else an owner before leaving"
   },
+  "reply": "Reply",
+  "react": "Add reaction",
+  "replyingTo": "Replying to",
+  "cancelReply": "Cancel reply",
+  "originalDeleted": "Original message deleted",
+  "originalMissing": "Original message not loaded",
   "pageDiscussion": "Discussion",
   "pageDiscussions": "Page discussions",
   "pageStart": "Start the discussion about this page.",

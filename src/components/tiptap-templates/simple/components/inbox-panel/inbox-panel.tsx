@@ -18,9 +18,6 @@ import { setPageChatOpen } from "../chat/page-chat-store";
 import { setPendingScrollTarget } from "./pending-scroll-target";
 import "./inbox-panel.scss";
 
-// The notification inbox. Clicking a notification marks it read and opens its
-// source: a page (scrolling to the node/thread), a chat room, or — for a
-// mention in a page discussion — the page with its discussion drawer open.
 export function InboxPanel() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -40,14 +37,23 @@ export function InboxPanel() {
     markRead(n.id);
 
     if (n.type === "chat-mention") {
-      // Page discussion: the notification carries the page (set server-side
-      // for page rooms), so this works even before the rooms list loads.
+      // Land on the exact message: the room view consumes this target (keyed
+      // by room id) once its messages are rendered.
+      if (n.sourceRoomId && n.targetNodeId) {
+        setPendingScrollTarget({
+          pageId: n.sourceRoomId,
+          targetNodeId: n.targetNodeId,
+          type: "chat-message",
+        });
+      }
+
+      // Page discussion → the page with its drawer.
       if (n.sourcePageId) {
         setActivePageId(String(n.sourcePageId));
         setPageChatOpen(true);
         return;
       }
-      // Room or DM: open it in the right space.
+      // Room or DM → the room, in the right space.
       if (n.sourceRoomId) {
         const room = rooms.find((r) => r.id === n.sourceRoomId);
         if (room) openRoom(room);

@@ -1,5 +1,13 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useLocation, useNavigate } from "@tanstack/react-location";
 import {
   ArrowUp,
@@ -7,8 +15,11 @@ import {
   Hash,
   Lock,
   LogOut,
+  Reply,
+  SmilePlus,
   Trash2,
   UserPlus,
+  X,
 } from "lucide-react";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -23,6 +34,12 @@ import {
   useRoomPresence,
   useSendMessage,
 } from "src/hooks/use-chat";
+import {
+  groupReactions,
+  useRoomReactions,
+  useToggleReaction,
+  type ReactionGroup,
+} from "src/hooks/use-chat-reactions";
 import { useChatCandidates } from "src/hooks/use-chat-candidates";
 import { usePages } from "src/hooks/use-pages";
 import { useCurrentPerson } from "src/hooks/use-session";
@@ -31,8 +48,7 @@ import { useIsMobile } from "src/hooks/use-breakpoint";
 import { useEditorLayout } from "../../context/editor-layout-context";
 import { useActivePageActions } from "../../context/active-page-context";
 import { PageItemIcon } from "../../page-item-icon";
-import type { ChatMessage, ChatPerson, ChatRoom } from "src/types";
-import type { Page } from "src/types";
+import type { Page, ChatMessage, ChatPerson, ChatRoom } from "src/types";
 import {
   mentionedPersonIds,
   mentionsPerson,
@@ -42,15 +58,21 @@ import {
   serializeDraft,
   type DraftMention,
 } from "src/lib/chat-mentions";
+import {
+  consumePendingScrollTarget,
+  subscribePendingScrollTarget,
+} from "../inbox-panel/pending-scroll-target";
 import { chatRoomIdFromPath, otherDmMember, roomTitle } from "./chat-utils";
 import { InviteToRoomModal } from "./chat-modals";
 import { MentionPicker, type MentionItem } from "./mention-picker";
 import { setPageChatOpen } from "./page-chat-store";
 import "./chat-room.scss";
 import "./mention-picker.scss";
+import "./chat-extras.scss";
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
 const PICKER_LIMIT = 5;
+const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "😮", "🙏"];
 
 export function ChatRoomView() {
   const { t } = useTranslation();
@@ -85,8 +107,34 @@ type Item =
   | { kind: "day"; key: string; label: string }
   | { kind: "msg"; key: string; msg: ChatMessage; compact: boolean };
 
-// The room itself — full page view, or embedded in the page-discussion
-// drawer ("panel": no header, the drawer has its own).
+// Plain one-line text of a body (mentions resolved), for quotes.
+function plainExcerpt(
+  body: string,
+  peopleById: Map<string, ChatPerson>,
+  pagesById: Map<string, Page>,
+  t: TFunction,
+): string {
+  const text = parseBody(body)
+    .map((seg) => {
+      if (seg.kind === "text") return seg.text;
+      if (seg.kind === "person")
+        return `@${peopleById.get(seg.id)?.name ?? t("chat.someone", "someone")}`;
+      return (
+        pagesById.get(seg.id)?.title || t("chat.privatePage", "Private page")
+      );
+    })
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text.length > 90 ? `${text.slice(0, 90)}…` : text;
+}
+
+interface ReplyContext {
+  id: string;
+  authorName: string;
+  excerpt: string;
+}
+
 export function RoomContent({
   room,
   variant,
@@ -108,14 +156,22 @@ export function RoomContent({
     isMember ? room.id : null,
   );
 
+  const { data: reactions = [] } = useRoomReactions(room.id);
+  const reactionsByMessage = useMemo(
+    () => groupReactions(reactions, meId),
+    [reactions, meId],
+  );
+  const toggleReaction = useToggleReaction(room.id);
+
   const personIds = useMemo(() => {
     const ids = new Set<string>(room.members.map((m) => m.personId));
     for (const msg of messages) {
       if (msg.authorId) ids.add(msg.authorId);
       for (const id of mentionedPersonIds(msg.body)) ids.add(id);
     }
+    for (const r of reactions) ids.add(r.personId);
     return [...ids];
-  }, [room.members, messages]);
+  }, [room.members, messages, reactions]);
   const { data: people = [] } = useChatPeople(personIds);
   const peopleById = useMemo(
     () => new Map<string, ChatPerson>(people.map((p) => [p.id, p])),
@@ -133,11 +189,18 @@ export function RoomContent({
     [allPages],
   );
 
+  const messagesById = useMemo(
+    () => new Map(messages.map((m) => [m.id, m])),
+    [messages],
+  );
+
   const send = useSendMessage(room.id);
   const del = useDeleteMessage(room.id);
   const join = useJoinChatRoom();
   const leave = useLeaveChatRoom();
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [replyTo, setReplyTo] = useState<ReplyContext | null>(null);
+  const [pickerFor, setPickerFor] = useState<string | null>(null);
 
   const discussedPage =
     room.kind === "page" && room.pageId
@@ -186,8 +249,10 @@ export function RoomContent({
         lastDay = day;
         prev = null;
       }
+      // A reply always starts a new group, so its quote has a header.
       const compact =
         !!prev &&
+        !msg.replyToId &&
         prev.authorId === msg.authorId &&
         msg.createdAt - prev.createdAt < GROUP_WINDOW_MS;
       out.push({ kind: "msg", key: msg.id, msg, compact });
@@ -196,6 +261,7 @@ export function RoomContent({
     return out;
   }, [messages, i18n.language]);
 
+  // ── Scrolling ──────────────────────────────────────────────────────────
   const listRef = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
   const onScroll = () => {
@@ -208,11 +274,58 @@ export function RoomContent({
     if (el && stick.current) el.scrollTop = el.scrollHeight;
   }, [items.length]);
 
+  // Jump to a message and flash it (reply quotes, notifications).
+  const scrollToMessage = useCallback((messageId: string): boolean => {
+    const el = listRef.current?.querySelector<HTMLElement>(
+      `[data-message-id="${messageId}"]`,
+    );
+    if (!el) return false;
+    stick.current = false;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.remove("chat-msg--flash");
+    // Restart the animation even if it's still running.
+    void el.offsetWidth;
+    el.classList.add("chat-msg--flash");
+    window.setTimeout(() => el.classList.remove("chat-msg--flash"), 1600);
+    return true;
+  }, []);
+
+  // A notification can ask to land on a specific message (keyed by room id
+  // in the shared pending-scroll store). Tried once messages are rendered,
+  // and again if a new request arrives while the room is already open.
+  const hasMessages = messages.length > 0;
+  useEffect(() => {
+    if (!hasMessages) return;
+    const tryConsume = () => {
+      const target = consumePendingScrollTarget(room.id);
+      if (!target?.targetNodeId) return;
+      const id = target.targetNodeId;
+      requestAnimationFrame(() => {
+        // Not loaded (older than the fetched history) → stay at the bottom.
+        scrollToMessage(id);
+      });
+    };
+    tryConsume();
+    return subscribePendingScrollTarget(tryConsume);
+  }, [hasMessages, room.id, scrollToMessage]);
+
   const teamspaceId = space.kind === "teamspace" ? space.id : null;
 
   const onSend = (body: string) => {
     stick.current = true;
-    send.mutate({ body });
+    send.mutate({ body, replyToId: replyTo?.id ?? null });
+    setReplyTo(null);
+  };
+
+  const startReply = (msg: ChatMessage) => {
+    setPickerFor(null);
+    setReplyTo({
+      id: msg.id,
+      authorName:
+        (msg.authorId && peopleById.get(msg.authorId)?.name) ||
+        t("chat.unknown", "Someone"),
+      excerpt: plainExcerpt(msg.body, peopleById, pagesById, t),
+    });
   };
 
   const onLeave = () => {
@@ -357,29 +470,66 @@ export function RoomContent({
             </p>
           </div>
         ) : (
-          items.map((item) =>
-            item.kind === "day" ? (
-              <div key={item.key} className="chat-day">
-                <span>{item.label}</span>
-              </div>
-            ) : (
+          items.map((item) => {
+            if (item.kind === "day") {
+              return (
+                <div key={item.key} className="chat-day">
+                  <span>{item.label}</span>
+                </div>
+              );
+            }
+            const msg = item.msg;
+            const original = msg.replyToId
+              ? messagesById.get(msg.replyToId)
+              : undefined;
+            const quote = msg.replyToId
+              ? original
+                ? original.deletedAt != null
+                  ? { state: "deleted" as const }
+                  : {
+                      state: "ok" as const,
+                      id: original.id,
+                      authorName:
+                        (original.authorId &&
+                          peopleById.get(original.authorId)?.name) ||
+                        t("chat.unknown", "Someone"),
+                      excerpt: plainExcerpt(
+                        original.body,
+                        peopleById,
+                        pagesById,
+                        t,
+                      ),
+                    }
+                : { state: "missing" as const }
+              : null;
+            return (
               <MessageRow
                 key={item.key}
-                msg={item.msg}
+                msg={msg}
                 compact={item.compact}
-                author={
-                  item.msg.authorId
-                    ? peopleById.get(item.msg.authorId)
-                    : undefined
-                }
-                isMine={item.msg.authorId === meId}
+                author={msg.authorId ? peopleById.get(msg.authorId) : undefined}
+                isMine={msg.authorId === meId}
+                canInteract={isMember}
                 meId={meId}
                 peopleById={peopleById}
                 pagesById={pagesById}
-                onDelete={() => del.mutate(item.msg.id)}
+                quote={quote}
+                reactions={reactionsByMessage.get(msg.id) ?? []}
+                pickerOpen={pickerFor === msg.id}
+                onTogglePicker={() =>
+                  setPickerFor((cur) => (cur === msg.id ? null : msg.id))
+                }
+                onClosePicker={() => setPickerFor(null)}
+                onReact={(emoji, on) => {
+                  setPickerFor(null);
+                  toggleReaction.mutate({ messageId: msg.id, emoji, on });
+                }}
+                onReply={() => startReply(msg)}
+                onJumpTo={scrollToMessage}
+                onDelete={() => del.mutate(msg.id)}
               />
-            ),
-          )
+            );
+          })
         )}
       </div>
 
@@ -399,11 +549,12 @@ export function RoomContent({
             placeholder={composerPlaceholder}
             people={mentionablePeople}
             pages={[...pagesById.values()]}
+            replyTo={replyTo}
+            onCancelReply={() => setReplyTo(null)}
             onSend={onSend}
             onTyping={setTyping}
           />
         ) : room.kind === "page" ? (
-          // Readers of the page who can't comment: read along, no posting.
           <div className="chat-join">
             <span>
               {t(
@@ -495,23 +646,47 @@ function MessageBody({
   );
 }
 
+type Quote =
+  | { state: "ok"; id: string; authorName: string; excerpt: string }
+  | { state: "deleted" }
+  | { state: "missing" }
+  | null;
+
 function MessageRow({
   msg,
   compact,
   author,
   isMine,
+  canInteract,
   meId,
   peopleById,
   pagesById,
+  quote,
+  reactions,
+  pickerOpen,
+  onTogglePicker,
+  onClosePicker,
+  onReact,
+  onReply,
+  onJumpTo,
   onDelete,
 }: {
   msg: ChatMessage;
   compact: boolean;
   author: ChatPerson | undefined;
   isMine: boolean;
+  canInteract: boolean;
   meId: string | undefined;
   peopleById: Map<string, ChatPerson>;
   pagesById: Map<string, Page>;
+  quote: Quote;
+  reactions: ReactionGroup[];
+  pickerOpen: boolean;
+  onTogglePicker: () => void;
+  onClosePicker: () => void;
+  onReact: (emoji: string, on: boolean) => void;
+  onReply: () => void;
+  onJumpTo: (messageId: string) => void;
   onDelete: () => void;
 }) {
   const { t, i18n } = useTranslation();
@@ -524,17 +699,30 @@ function MessageRow({
   const name = author?.name ?? t("chat.unknown", "Someone");
   const mentionsMe =
     !deleted && !isMine && !!meId && mentionsPerson(msg.body, meId);
+  const interactive = canInteract && !pending && !deleted;
+
+  const reactedBy = (g: ReactionGroup) =>
+    g.personIds
+      .map((id) =>
+        id === meId
+          ? t("members.you", "(you)").replace(/[()]/g, "")
+          : (peopleById.get(id)?.name ?? t("chat.someone", "someone")),
+      )
+      .join(", ");
 
   return (
     <div
+      data-message-id={msg.id}
       className={[
         "chat-msg",
         compact && "chat-msg--compact",
         mentionsMe && "chat-msg--mentions-me",
         pending && "is-pending",
+        pickerOpen && "has-picker",
       ]
         .filter(Boolean)
         .join(" ")}
+      onMouseLeave={pickerOpen ? onClosePicker : undefined}
     >
       <div className="chat-msg__gutter">
         {compact ? (
@@ -544,6 +732,28 @@ function MessageRow({
         )}
       </div>
       <div className="chat-msg__main">
+        {quote &&
+          (quote.state === "ok" ? (
+            <button
+              type="button"
+              className="chat-quote"
+              onClick={() => onJumpTo(quote.id)}
+            >
+              <span className="chat-quote__line" aria-hidden="true" />
+              <span className="chat-quote__author">{quote.authorName}</span>
+              <span className="chat-quote__text">{quote.excerpt}</span>
+            </button>
+          ) : (
+            <span className="chat-quote chat-quote--muted">
+              <span className="chat-quote__line" aria-hidden="true" />
+              <span className="chat-quote__text">
+                {quote.state === "deleted"
+                  ? t("chat.originalDeleted", "Original message deleted")
+                  : t("chat.originalMissing", "Original message not loaded")}
+              </span>
+            </span>
+          ))}
+
         {!compact && (
           <div className="chat-msg__head">
             <span className="chat-msg__author">{name}</span>
@@ -564,17 +774,74 @@ function MessageRow({
             />
           </p>
         )}
+
+        {!deleted && reactions.length > 0 && (
+          <div className="chat-reactions">
+            {reactions.map((g) => (
+              <button
+                key={g.emoji}
+                type="button"
+                className={`chat-reaction${g.mine ? " is-mine" : ""}`}
+                title={reactedBy(g)}
+                disabled={!interactive}
+                onClick={() => onReact(g.emoji, !g.mine)}
+              >
+                <span className="chat-reaction__emoji">{g.emoji}</span>
+                <span>{g.count}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-      {isMine && !deleted && !pending && (
-        <button
-          type="button"
-          className="chat-msg__action"
-          aria-label={t("chat.deleteMessage", "Delete message")}
-          title={t("chat.deleteMessage", "Delete message")}
-          onClick={onDelete}
-        >
-          <Trash2 size={14} />
-        </button>
+
+      {interactive && (
+        <div className="chat-msg__bar">
+          <button
+            type="button"
+            aria-label={t("chat.react", "Add reaction")}
+            title={t("chat.react", "Add reaction")}
+            onClick={onTogglePicker}
+          >
+            <SmilePlus size={15} />
+          </button>
+          <button
+            type="button"
+            aria-label={t("chat.reply", "Reply")}
+            title={t("chat.reply", "Reply")}
+            onClick={onReply}
+          >
+            <Reply size={15} />
+          </button>
+          {isMine && (
+            <button
+              type="button"
+              className="is-danger"
+              aria-label={t("chat.deleteMessage", "Delete message")}
+              title={t("chat.deleteMessage", "Delete message")}
+              onClick={onDelete}
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+        </div>
+      )}
+
+      {interactive && pickerOpen && (
+        <div className="chat-emoji-pop" role="menu">
+          {QUICK_REACTIONS.map((emoji) => {
+            const mine = reactions.some((g) => g.emoji === emoji && g.mine);
+            return (
+              <button
+                key={emoji}
+                type="button"
+                aria-label={emoji}
+                onClick={() => onReact(emoji, !mine)}
+              >
+                {emoji}
+              </button>
+            );
+          })}
+        </div>
       )}
     </div>
   );
@@ -586,12 +853,16 @@ function Composer({
   placeholder,
   people,
   pages,
+  replyTo,
+  onCancelReply,
   onSend,
   onTyping,
 }: {
   placeholder: string;
   people: ChatPerson[];
   pages: Page[];
+  replyTo: ReplyContext | null;
+  onCancelReply: () => void;
   onSend: (body: string) => void;
   onTyping: (typing: boolean) => void;
 }) {
@@ -621,6 +892,12 @@ function Composer({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Starting a reply puts the cursor in the composer.
+  const replyId = replyTo?.id ?? null;
+  useEffect(() => {
+    if (replyId) ref.current?.focus();
+  }, [replyId]);
 
   const pickerItems = useMemo<MentionItem[]>(() => {
     if (!trigger) return [];
@@ -706,6 +983,22 @@ function Composer({
           onHover={setActiveIndex}
         />
       )}
+      {replyTo && (
+        <div className="chat-reply-bar">
+          <span className="chat-reply-bar__text">
+            {t("chat.replyingTo", "Replying to")}{" "}
+            <strong>{replyTo.authorName}</strong> — {replyTo.excerpt}
+          </span>
+          <button
+            type="button"
+            aria-label={t("chat.cancelReply", "Cancel reply")}
+            title={t("chat.cancelReply", "Cancel reply")}
+            onClick={onCancelReply}
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
       <div className="chat-composer">
         <textarea
           ref={ref}
@@ -746,11 +1039,13 @@ function Composer({
                 return;
               }
             }
-            if (pickerOpen && e.key === "Escape") {
+            if (e.key === "Escape" && (pickerOpen || replyTo)) {
+              // Esc closes the picker first, then cancels the reply.
               // preventDefault also tells the drawer's Esc handler to ignore it.
               e.preventDefault();
               e.stopPropagation();
-              setTrigger(null);
+              if (pickerOpen) setTrigger(null);
+              else onCancelReply();
               return;
             }
             if (

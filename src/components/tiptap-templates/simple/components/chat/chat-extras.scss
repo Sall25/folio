@@ -1,0 +1,218 @@
+// Hover action bar on a message: react / reply / delete.
+.chat-msg__bar {
+  position: absolute;
+  top: -12px;
+  right: 8px;
+  z-index: 2;
+  display: none;
+  gap: 1px;
+  padding: 2px;
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md);
+  background: var(--tt-card-bg-color);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: var(--tt-radius-sm);
+    background: transparent;
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--tt-text-primary);
+      background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+    }
+
+    &.is-danger:hover {
+      color: var(--tt-color-red-dec-2, #e5484d);
+    }
+  }
+}
+
+.chat-msg:hover .chat-msg__bar,
+.chat-msg.has-picker .chat-msg__bar {
+  display: flex;
+}
+
+// Quick emoji picker, opened from the bar.
+.chat-emoji-pop {
+  position: absolute;
+  top: 18px;
+  right: 8px;
+  z-index: 3;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: 999px;
+  background: var(--tt-card-bg-color);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+
+  button {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+      transform: scale(1.15);
+    }
+  }
+}
+
+// Reaction pills under a message.
+.chat-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.chat-reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
+  font: inherit;
+  font-size: 12px;
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+
+  &__emoji {
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--tt-text-primary) 25%, transparent);
+  }
+
+  &.is-mine {
+    color: var(--tt-text-primary);
+    border-color: color-mix(in srgb, var(--sidebar-accent) 60%, transparent);
+    background: color-mix(in srgb, var(--sidebar-accent) 14%, transparent);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+// Quote of the message being replied to, above a reply.
+.chat-quote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  margin: 0 0 3px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--tt-text-secondary);
+  text-align: left;
+  cursor: pointer;
+
+  &__line {
+    flex-shrink: 0;
+    width: 2px;
+    height: 14px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--sidebar-accent) 60%, transparent);
+  }
+
+  &__author {
+    flex-shrink: 0;
+    font-weight: 600;
+    color: var(--tt-text-primary);
+  }
+
+  &__text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:hover &__text {
+    color: var(--tt-text-primary);
+  }
+
+  &--muted {
+    font-style: italic;
+    cursor: default;
+  }
+}
+
+// Brief highlight when jumping to a message.
+.chat-msg--flash {
+  animation: chat-flash 1.6s ease;
+}
+
+@keyframes chat-flash {
+  0%,
+  30% {
+    background: color-mix(in srgb, var(--sidebar-accent) 22%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+// "Replying to …" bar above the composer.
+.chat-reply-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 6px 8px 6px 10px;
+  border-radius: var(--tt-radius-md);
+  background: color-mix(in srgb, var(--tt-text-primary) 5%, transparent);
+  font-size: 12.5px;
+  color: var(--tt-text-secondary);
+
+  &__text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    strong {
+      font-weight: 600;
+      color: var(--tt-text-primary);
+    }
+  }
+
+  button {
+    display: inline-flex;
+    padding: 3px;
+    border: none;
+    border-radius: var(--tt-radius-sm);
+    background: transparent;
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--tt-text-primary);
+      background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+    }
+  }
+}

@@ -95,6 +95,12 @@
     "lastOwner": "Un espace d'équipe doit avoir au moins un propriétaire",
     "lastOwnerLeave": "Nomme un autre propriétaire avant de partir"
   },
+  "reply": "Répondre",
+  "react": "Ajouter une réaction",
+  "replyingTo": "En réponse à",
+  "cancelReply": "Annuler la réponse",
+  "originalDeleted": "Message d'origine supprimé",
+  "originalMissing": "Message d'origine non chargé",
   "pageDiscussion": "Discussion",
   "pageDiscussions": "Discussions de pages",
   "pageStart": "Lance la discussion sur cette page.",
