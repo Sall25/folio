@@ -95,6 +95,9 @@
     "lastOwner": "Un espace d'équipe doit avoir au moins un propriétaire",
     "lastOwnerLeave": "Nomme un autre propriétaire avant de partir"
   },
+  "loadOlder": "Charger les messages précédents",
+  "loadingOlder": "Chargement des messages précédents…",
+  "originalEarlier": "Réponse à un message précédent",
   "reply": "Répondre",
   "react": "Ajouter une réaction",
   "replyingTo": "En réponse à",

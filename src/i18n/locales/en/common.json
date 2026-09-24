@@ -95,6 +95,9 @@
     "lastOwner": "A teamspace needs at least one owner",
     "lastOwnerLeave": "Make someone else an owner before leaving"
   },
+  "loadOlder": "Load earlier messages",
+  "loadingOlder": "Loading earlier messages…",
+  "originalEarlier": "Reply to an earlier message",
   "reply": "Reply",
   "react": "Add reaction",
   "replyingTo": "Replying to",

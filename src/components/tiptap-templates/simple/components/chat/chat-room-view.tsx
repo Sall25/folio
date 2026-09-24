@@ -30,6 +30,7 @@ import {
   useDeleteMessage,
   useJoinChatRoom,
   useLeaveChatRoom,
+  useLoadOlderMessages,
   useMarkRoomRead,
   useRoomPresence,
   useSendMessage,
@@ -73,6 +74,15 @@ import "./chat-extras.scss";
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
 const PICKER_LIMIT = 5;
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "😮", "🙏"];
+// Start loading older messages this close to the top of the list.
+const LOAD_OLDER_THRESHOLD_PX = 80;
+// Jumping to an unloaded message loads at most this many older pages.
+const MAX_JUMP_PAGES = 10;
+
+const nextFrame = () =>
+  new Promise<void>((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+  );
 
 export function ChatRoomView() {
   const { t } = useTranslation();
@@ -107,7 +117,6 @@ type Item =
   | { kind: "day"; key: string; label: string }
   | { kind: "msg"; key: string; msg: ChatMessage; compact: boolean };
 
-// Plain one-line text of a body (mentions resolved), for quotes.
 function plainExcerpt(
   body: string,
   peopleById: Map<string, ChatPerson>,
@@ -151,6 +160,7 @@ export function RoomContent({
 
   const isMember = room.members.some((m) => m.personId === meId);
   const { data: messages = [] } = useChatMessages(room.id);
+  const { loadOlder, hasMore, isLoadingOlder } = useLoadOlderMessages(room.id);
   useMarkRoomRead(isMember ? room.id : null, messages.length);
   const { present, typing, setTyping } = useRoomPresence(
     isMember ? room.id : null,
@@ -249,7 +259,6 @@ export function RoomContent({
         lastDay = day;
         prev = null;
       }
-      // A reply always starts a new group, so its quote has a header.
       const compact =
         !!prev &&
         !msg.replyToId &&
@@ -264,17 +273,43 @@ export function RoomContent({
   // ── Scrolling ──────────────────────────────────────────────────────────
   const listRef = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
-  const onScroll = () => {
-    const el = listRef.current;
-    if (!el) return;
-    stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
-  };
+  // Scroll anchor while older messages are prepended: keeps the view still.
+  const anchor = useRef<{ height: number; top: number } | null>(null);
+
   useLayoutEffect(() => {
     const el = listRef.current;
     if (el && stick.current) el.scrollTop = el.scrollHeight;
   }, [items.length]);
 
-  // Jump to a message and flash it (reply quotes, notifications).
+  // After older messages land above, restore the reading position.
+  const firstMessageId = messages[0]?.id;
+  useLayoutEffect(() => {
+    const el = listRef.current;
+    const a = anchor.current;
+    if (!el || !a) return;
+    el.scrollTop = el.scrollHeight - a.height + a.top;
+    anchor.current = null;
+  }, [firstMessageId]);
+
+  const loadOlderKeepingPosition = useCallback(async () => {
+    const el = listRef.current;
+    if (el) anchor.current = { height: el.scrollHeight, top: el.scrollTop };
+    stick.current = false;
+    const more = await loadOlder();
+    // Nothing prepended → nothing to restore.
+    if (anchor.current && !more) anchor.current = null;
+    return more;
+  }, [loadOlder]);
+
+  const onScroll = () => {
+    const el = listRef.current;
+    if (!el) return;
+    stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    if (el.scrollTop < LOAD_OLDER_THRESHOLD_PX && hasMore && !isLoadingOlder) {
+      void loadOlderKeepingPosition();
+    }
+  };
+
   const scrollToMessage = useCallback((messageId: string): boolean => {
     const el = listRef.current?.querySelector<HTMLElement>(
       `[data-message-id="${messageId}"]`,
@@ -283,16 +318,26 @@ export function RoomContent({
     stick.current = false;
     el.scrollIntoView({ behavior: "smooth", block: "center" });
     el.classList.remove("chat-msg--flash");
-    // Restart the animation even if it's still running.
     void el.offsetWidth;
     el.classList.add("chat-msg--flash");
     window.setTimeout(() => el.classList.remove("chat-msg--flash"), 1600);
     return true;
   }, []);
 
-  // A notification can ask to land on a specific message (keyed by room id
-  // in the shared pending-scroll store). Tried once messages are rendered,
-  // and again if a new request arrives while the room is already open.
+  // Jump to a message, loading older pages until it's there (bounded).
+  const jumpTo = useCallback(
+    async (messageId: string) => {
+      if (scrollToMessage(messageId)) return;
+      for (let i = 0; i < MAX_JUMP_PAGES; i++) {
+        const more = await loadOlderKeepingPosition();
+        await nextFrame();
+        if (scrollToMessage(messageId) || !more) return;
+      }
+    },
+    [scrollToMessage, loadOlderKeepingPosition],
+  );
+
+  // A notification can ask to land on a specific message (keyed by room id).
   const hasMessages = messages.length > 0;
   useEffect(() => {
     if (!hasMessages) return;
@@ -301,13 +346,12 @@ export function RoomContent({
       if (!target?.targetNodeId) return;
       const id = target.targetNodeId;
       requestAnimationFrame(() => {
-        // Not loaded (older than the fetched history) → stay at the bottom.
-        scrollToMessage(id);
+        void jumpTo(id);
       });
     };
     tryConsume();
     return subscribePendingScrollTarget(tryConsume);
-  }, [hasMessages, room.id, scrollToMessage]);
+  }, [hasMessages, room.id, jumpTo]);
 
   const teamspaceId = space.kind === "teamspace" ? space.id : null;
 
@@ -351,6 +395,36 @@ export function RoomContent({
             name: title,
             defaultValue: "Message #{{name}}",
           });
+
+  // The room's opening line — the empty state, and the top of a fully
+  // loaded history.
+  const roomStart = (
+    <>
+      <span className="chat-room__empty-icon">
+        {room.kind === "dm" ? (
+          <Avatar src={partner?.avatarUrl ?? undefined} name={title} />
+        ) : room.kind === "page" ? (
+          <FileText size={22} />
+        ) : (
+          <Hash size={22} />
+        )}
+      </span>
+      <p className="chat-room__empty-title">
+        {room.kind === "dm"
+          ? t("chat.dmStart", {
+              name: title,
+              defaultValue:
+                "This is the start of your conversation with {{name}}.",
+            })
+          : room.kind === "page"
+            ? t("chat.pageStart", "Start the discussion about this page.")
+            : t("chat.roomStart", {
+                name: title,
+                defaultValue: "This is the start of #{{name}}.",
+              })}
+      </p>
+    </>
+  );
 
   return (
     <div className="chat-room">
@@ -444,92 +518,91 @@ export function RoomContent({
 
       <div className="chat-room__list" ref={listRef} onScroll={onScroll}>
         {items.length === 0 ? (
-          <div className="chat-room__empty">
-            <span className="chat-room__empty-icon">
-              {room.kind === "dm" ? (
-                <Avatar src={partner?.avatarUrl ?? undefined} name={title} />
-              ) : room.kind === "page" ? (
-                <FileText size={22} />
-              ) : (
-                <Hash size={22} />
-              )}
-            </span>
-            <p className="chat-room__empty-title">
-              {room.kind === "dm"
-                ? t("chat.dmStart", {
-                    name: title,
-                    defaultValue:
-                      "This is the start of your conversation with {{name}}.",
-                  })
-                : room.kind === "page"
-                  ? t("chat.pageStart", "Start the discussion about this page.")
-                  : t("chat.roomStart", {
-                      name: title,
-                      defaultValue: "This is the start of #{{name}}.",
-                    })}
-            </p>
-          </div>
+          <div className="chat-room__empty">{roomStart}</div>
         ) : (
-          items.map((item) => {
-            if (item.kind === "day") {
+          <>
+            {isLoadingOlder ? (
+              <div className="chat-history-top">
+                {t("chat.loadingOlder", "Loading earlier messages…")}
+              </div>
+            ) : hasMore ? (
+              <div className="chat-history-top">
+                <button
+                  type="button"
+                  onClick={() => void loadOlderKeepingPosition()}
+                >
+                  {t("chat.loadOlder", "Load earlier messages")}
+                </button>
+              </div>
+            ) : (
+              <div className="chat-history-top chat-history-top--start">
+                {roomStart}
+              </div>
+            )}
+
+            {items.map((item) => {
+              if (item.kind === "day") {
+                return (
+                  <div key={item.key} className="chat-day">
+                    <span>{item.label}</span>
+                  </div>
+                );
+              }
+              const msg = item.msg;
+              const original = msg.replyToId
+                ? messagesById.get(msg.replyToId)
+                : undefined;
+              const quote: Quote = msg.replyToId
+                ? original
+                  ? original.deletedAt != null
+                    ? { state: "deleted" }
+                    : {
+                        state: "ok",
+                        id: original.id,
+                        authorName:
+                          (original.authorId &&
+                            peopleById.get(original.authorId)?.name) ||
+                          t("chat.unknown", "Someone"),
+                        excerpt: plainExcerpt(
+                          original.body,
+                          peopleById,
+                          pagesById,
+                          t,
+                        ),
+                      }
+                  : { state: "missing", id: msg.replyToId }
+                : null;
               return (
-                <div key={item.key} className="chat-day">
-                  <span>{item.label}</span>
-                </div>
+                <MessageRow
+                  key={item.key}
+                  msg={msg}
+                  compact={item.compact}
+                  author={
+                    msg.authorId ? peopleById.get(msg.authorId) : undefined
+                  }
+                  isMine={msg.authorId === meId}
+                  canInteract={isMember}
+                  meId={meId}
+                  peopleById={peopleById}
+                  pagesById={pagesById}
+                  quote={quote}
+                  reactions={reactionsByMessage.get(msg.id) ?? []}
+                  pickerOpen={pickerFor === msg.id}
+                  onTogglePicker={() =>
+                    setPickerFor((cur) => (cur === msg.id ? null : msg.id))
+                  }
+                  onClosePicker={() => setPickerFor(null)}
+                  onReact={(emoji, on) => {
+                    setPickerFor(null);
+                    toggleReaction.mutate({ messageId: msg.id, emoji, on });
+                  }}
+                  onReply={() => startReply(msg)}
+                  onJumpTo={(id) => void jumpTo(id)}
+                  onDelete={() => del.mutate(msg.id)}
+                />
               );
-            }
-            const msg = item.msg;
-            const original = msg.replyToId
-              ? messagesById.get(msg.replyToId)
-              : undefined;
-            const quote = msg.replyToId
-              ? original
-                ? original.deletedAt != null
-                  ? { state: "deleted" as const }
-                  : {
-                      state: "ok" as const,
-                      id: original.id,
-                      authorName:
-                        (original.authorId &&
-                          peopleById.get(original.authorId)?.name) ||
-                        t("chat.unknown", "Someone"),
-                      excerpt: plainExcerpt(
-                        original.body,
-                        peopleById,
-                        pagesById,
-                        t,
-                      ),
-                    }
-                : { state: "missing" as const }
-              : null;
-            return (
-              <MessageRow
-                key={item.key}
-                msg={msg}
-                compact={item.compact}
-                author={msg.authorId ? peopleById.get(msg.authorId) : undefined}
-                isMine={msg.authorId === meId}
-                canInteract={isMember}
-                meId={meId}
-                peopleById={peopleById}
-                pagesById={pagesById}
-                quote={quote}
-                reactions={reactionsByMessage.get(msg.id) ?? []}
-                pickerOpen={pickerFor === msg.id}
-                onTogglePicker={() =>
-                  setPickerFor((cur) => (cur === msg.id ? null : msg.id))
-                }
-                onClosePicker={() => setPickerFor(null)}
-                onReact={(emoji, on) => {
-                  setPickerFor(null);
-                  toggleReaction.mutate({ messageId: msg.id, emoji, on });
-                }}
-                onReply={() => startReply(msg)}
-                onJumpTo={scrollToMessage}
-                onDelete={() => del.mutate(msg.id)}
-              />
-            );
-          })
+            })}
+          </>
         )}
       </div>
 
@@ -649,7 +722,7 @@ function MessageBody({
 type Quote =
   | { state: "ok"; id: string; authorName: string; excerpt: string }
   | { state: "deleted" }
-  | { state: "missing" }
+  | { state: "missing"; id: string }
   | null;
 
 function MessageRow({
@@ -743,13 +816,23 @@ function MessageRow({
               <span className="chat-quote__author">{quote.authorName}</span>
               <span className="chat-quote__text">{quote.excerpt}</span>
             </button>
+          ) : quote.state === "missing" ? (
+            // Older than what's loaded: clicking loads history until found.
+            <button
+              type="button"
+              className="chat-quote"
+              onClick={() => onJumpTo(quote.id)}
+            >
+              <span className="chat-quote__line" aria-hidden="true" />
+              <span className="chat-quote__text">
+                {t("chat.originalEarlier", "Reply to an earlier message")}
+              </span>
+            </button>
           ) : (
             <span className="chat-quote chat-quote--muted">
               <span className="chat-quote__line" aria-hidden="true" />
               <span className="chat-quote__text">
-                {quote.state === "deleted"
-                  ? t("chat.originalDeleted", "Original message deleted")
-                  : t("chat.originalMissing", "Original message not loaded")}
+                {t("chat.originalDeleted", "Original message deleted")}
               </span>
             </span>
           ))}
@@ -893,7 +976,6 @@ function Composer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Starting a reply puts the cursor in the composer.
   const replyId = replyTo?.id ?? null;
   useEffect(() => {
     if (replyId) ref.current?.focus();
@@ -1040,8 +1122,6 @@ function Composer({
               }
             }
             if (e.key === "Escape" && (pickerOpen || replyTo)) {
-              // Esc closes the picker first, then cancels the reply.
-              // preventDefault also tells the drawer's Esc handler to ignore it.
               e.preventDefault();
               e.stopPropagation();
               if (pickerOpen) setTrigger(null);

@@ -24,6 +24,7 @@ import {
   type MessageRow,
 } from "src/api/chat";
 import type { ChatMessage, ChatRoom, ChatVisibility } from "src/types";
+import { fetchChatMessagesBefore } from "src/api/chat-history";
 import { useCurrentPerson } from "./use-session";
 import { useCurrentWorkspace } from "./use-workspaces";
 import { useCurrentSpace } from "./use-current-space";
@@ -39,11 +40,27 @@ export const chatKeys = {
 // "Active now" in the rooms list: a message within this window.
 export const ACTIVE_WINDOW_MS = 10 * 60 * 1000;
 
+// Messages per page, both for the first load and for each "older" page.
+export const CHAT_PAGE_SIZE = 100;
+
+const isPending = (m: ChatMessage) => m.id.startsWith("pending-");
+
+// Union by id (b wins on conflicts — it's the fresher copy), oldest first.
+function mergeMessages(a: ChatMessage[], b: ChatMessage[]): ChatMessage[] {
+  const byId = new Map<string, ChatMessage>();
+  for (const m of a) byId.set(m.id, m);
+  for (const m of b) byId.set(m.id, m);
+  return [...byId.values()].sort(
+    (x, y) => x.createdAt - y.createdAt || x.id.localeCompare(y.id),
+  );
+}
+
 // ── Rooms ─────────────────────────────────────────────────────────────────
 
 // Rooms for the current space, plus your DMs (DMs aren't tied to a space):
 //   • workspace → workspace rooms (no teamspace);
 //   • teamspace → that teamspace's rooms.
+// Page discussions (kind "page") are in `all` only.
 export function useChatRooms() {
   const { workspaceId } = useCurrentWorkspace();
   const space = useCurrentSpace();
@@ -90,8 +107,6 @@ export function useUnreadCounts() {
   });
 }
 
-// Names/avatars for a set of people (DM partners, members from other
-// workspaces). Stable key: sorted ids.
 export function useChatPeople(ids: string[]) {
   const sorted = useMemo(() => [...new Set(ids)].sort(), [ids]);
   return useQuery({
@@ -119,9 +134,8 @@ function appendOrReplace(
   });
 }
 
-// Mount ONCE (e.g. in the sidebar). Any message you can see (RLS applies to
-// postgres_changes) refreshes unread counts and room ordering, and updates an
-// already-open room's cache.
+// Mount ONCE (AppOverlays). Any message you can see refreshes unread counts
+// and room ordering, and updates an already-open room's cache.
 export function useChatRealtimeSync() {
   const qc = useQueryClient();
   const { person } = useCurrentPerson();
@@ -149,12 +163,72 @@ export function useChatRealtimeSync() {
 
 // ── Messages ──────────────────────────────────────────────────────────────
 
+// The latest page of a room. A refetch MERGES into what's cached rather than
+// replacing it, so older pages loaded with useLoadOlderMessages survive
+// window-focus refetches.
 export function useChatMessages(roomId: string | null) {
+  const qc = useQueryClient();
   return useQuery({
     queryKey: chatKeys.messages(roomId ?? ""),
-    queryFn: () => fetchChatMessages(roomId!),
+    queryFn: async () => {
+      const latest = await fetchChatMessages(roomId!, CHAT_PAGE_SIZE);
+      const prev =
+        qc.getQueryData<ChatMessage[]>(chatKeys.messages(roomId!)) ?? [];
+      return prev.length ? mergeMessages(prev, latest) : latest;
+    },
     enabled: !!roomId,
   });
+}
+
+// Loads the page before the oldest loaded message into the same cache.
+// Resolves to whether there may be more to load.
+export function useLoadOlderMessages(roomId: string | null) {
+  const qc = useQueryClient();
+  const { data = [] } = useChatMessages(roomId);
+  const [done, setDone] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const busy = useRef(false);
+  const doneRef = useRef(false);
+
+  const loadOlder = useCallback(async (): Promise<boolean> => {
+    if (!roomId || busy.current || doneRef.current) return false;
+    const key = chatKeys.messages(roomId);
+    const current = qc.getQueryData<ChatMessage[]>(key) ?? [];
+    const oldest = current.find((m) => !isPending(m));
+    if (!oldest) {
+      doneRef.current = true;
+      setDone(true);
+      return false;
+    }
+
+    busy.current = true;
+    setLoading(true);
+    try {
+      const older = await fetchChatMessagesBefore(
+        roomId,
+        oldest.createdAt,
+        CHAT_PAGE_SIZE,
+      );
+      qc.setQueryData<ChatMessage[]>(key, (old) =>
+        mergeMessages(older, old ?? []),
+      );
+      const more = older.length >= CHAT_PAGE_SIZE;
+      if (!more) {
+        doneRef.current = true;
+        setDone(true);
+      }
+      return more;
+    } finally {
+      busy.current = false;
+      setLoading(false);
+    }
+  }, [roomId, qc]);
+
+  // A first page shorter than a full page means there's nothing older.
+  const realCount = data.filter((m) => !isPending(m)).length;
+  const hasMore = !done && realCount >= CHAT_PAGE_SIZE;
+
+  return { loadOlder, hasMore, isLoadingOlder: loading };
 }
 
 export function useSendMessage(roomId: string | null) {
@@ -172,8 +246,6 @@ export function useSendMessage(roomId: string | null) {
         replyToId: args.replyToId,
       });
     },
-    // Optimistic: show the message immediately. The realtime echo carries
-    // the same id, so appendOrReplace dedupes it.
     onMutate: async (args) => {
       if (!roomId || !person) return;
       const optimistic: ChatMessage = {
@@ -221,7 +293,6 @@ export function useDeleteMessage(roomId: string | null) {
   });
 }
 
-// Mark a room read now and whenever its message count grows while open.
 export function useMarkRoomRead(roomId: string | null, messageCount: number) {
   const qc = useQueryClient();
   useEffect(() => {
@@ -307,8 +378,8 @@ export interface RoomPresence {
 }
 
 // Who's in this room right now, and who's typing. One channel per open room.
-// NOTE: plain Presence channels aren't covered by RLS — see the migration
-// notes; Realtime Authorization should gate these before launch.
+// NOTE: plain Presence channels aren't covered by RLS — Realtime
+// Authorization should gate these before launch.
 export function useRoomPresence(roomId: string | null) {
   const { person } = useCurrentPerson();
   const [present, setPresent] = useState<RoomPresence[]>([]);
@@ -369,8 +440,7 @@ export function useRoomPresence(roomId: string | null) {
   };
 }
 
-// Convenience for the rooms list.
-export function isRoomActive(room: ChatRoom, now = Date.now()): boolean {
+export function isRoomActive(room: ChatRoom, now: number): boolean {
   return (
     room.lastMessageAt != null && now - room.lastMessageAt < ACTIVE_WINDOW_MS
   );
