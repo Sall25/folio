@@ -253,20 +253,25 @@ export const DesktopToolbarContent = ({ view }: ContentProps) => {
   return (
     <>
       <TitleGroup view={view} />
-      <Spacer />
-      <QuickOpenTrigger />
+      {view !== "chat" && (
+        <>
+          {" "}
+          <Spacer />
+          <QuickOpenTrigger />
+        </>
+      )}
       <Spacer />
 
       <ToolbarGroup>
         <ToolbarPresence />
 
-        {view !== "home" && activePage && (
+        {view !== "home" && view !== "chat" && activePage && (
           <>
             <EditedTimeButton page={activePage} />
           </>
         )}
 
-        {view !== "home" && (
+        {view !== "home" && view !== "chat" && (
           <>
             <ShareButton />
             <Spacer orientation="horizontal" size={8} />

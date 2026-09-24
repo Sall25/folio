@@ -21,6 +21,7 @@ import { TrashPage } from "./components/trash-page";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { useApplyTheme } from "src/hooks/use-apply-theme";
 import { useApplyLanguage } from "src/hooks/use-apply-language";
+import { ChatRoomView } from "./components/chat/chat-room-view";
 
 function SimpleEditorMain({ view }: { view: View }) {
   return (
@@ -34,6 +35,8 @@ function SimpleEditorMain({ view }: { view: View }) {
       {view === "inbox" && <InboxPage />}
 
       {view === "trash" && <TrashPage />}
+
+      {view === "chat" && <ChatRoomView />}
 
       <AppOverlays />
     </>

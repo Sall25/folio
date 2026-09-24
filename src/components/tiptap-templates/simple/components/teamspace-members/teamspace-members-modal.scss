@@ -1,0 +1,214 @@
+.tmm {
+  width: 480px;
+
+  &__heading {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__sub {
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.tmm-add {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.tmm-suggest {
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md);
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px;
+    border: none;
+    border-radius: var(--tt-radius-sm);
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: 13.5px;
+    color: var(--tt-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__sub {
+    font-size: 11.5px;
+    color: var(--tt-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    color: var(--tt-text-secondary);
+  }
+
+  &__mail {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+    color: var(--tt-text-secondary);
+  }
+}
+
+.tmm-notice {
+  padding: 6px 8px;
+  border-radius: var(--tt-radius-sm);
+  font-size: 12.5px;
+  color: var(--tt-text-primary);
+  background: color-mix(in srgb, #30a46c 12%, transparent);
+}
+
+.tmm-error {
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: var(--tt-radius-sm);
+  font-size: 12.5px;
+  color: var(--tt-color-red-dec-2, #e5484d);
+  background: color-mix(in srgb, #e5484d 10%, transparent);
+}
+
+.tmm-label {
+  padding: 12px 2px 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--tt-text-secondary);
+}
+
+.tmm-empty {
+  padding: 8px 2px;
+  font-size: 12.5px;
+  color: var(--tt-text-secondary);
+}
+
+.tmm-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  border-radius: var(--tt-radius-sm);
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
+  }
+
+  &__name {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    font-size: 13.5px;
+    color: var(--tt-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__you {
+    color: var(--tt-text-secondary);
+  }
+
+  &__meta {
+    font-size: 11.5px;
+    color: var(--tt-text-secondary);
+  }
+
+  // Actions appear on hover, except where they're the whole point of the row.
+  &__actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.1s ease;
+
+    &--always {
+      opacity: 1;
+    }
+  }
+
+  &:hover &__actions,
+  &:focus-within &__actions {
+    opacity: 1;
+  }
+}
+
+.tmm-role {
+  flex-shrink: 0;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--tt-text-secondary);
+  background: color-mix(in srgb, var(--tt-text-primary) 7%, transparent);
+
+  &.is-owner {
+    color: var(--tt-text-primary);
+    background: color-mix(in srgb, var(--sidebar-accent) 16%, transparent);
+  }
+}
+
+.tmm-action {
+  padding: 3px 8px;
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-sm);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--tt-text-primary);
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  &--danger:hover:not(:disabled) {
+    color: var(--tt-color-red-dec-2, #e5484d);
+  }
+}

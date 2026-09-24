@@ -21,10 +21,12 @@ import {
 } from "src/components/tiptap-ui-primitive/popover";
 import { InboxPanel } from "../inbox-panel";
 import { TeamspacesPanel } from "../teamspaces-panel/teamspaces-panel";
+import { TeamspaceMembersModal } from "../teamspace-members/teamspace-members-modal";
 import { CreateTeamspaceModal } from "../create-teamspace-modal";
 import { ChatsPanel } from "../chat/chats-panel";
 import { CreateRoomModal, NewDmModal } from "../chat/chat-modals";
 import { useUnreadCounts } from "src/hooks/use-chat";
+import { useMyInvites } from "src/hooks/use-teamspace-members";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { spaceHomePath, useCurrentSpace } from "src/hooks/use-current-space";
 
@@ -44,6 +46,7 @@ export const SidebarNav = memo(() => {
 
   const [teamspacesOpen, setTeamspacesOpen] = useState(false);
   const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
+  const [membersFor, setMembersFor] = useState<string | null>(null);
   const [chatsOpen, setChatsOpen] = useState(false);
   const [newRoomOpen, setNewRoomOpen] = useState(false);
   const [newDmOpen, setNewDmOpen] = useState(false);
@@ -53,6 +56,7 @@ export const SidebarNav = memo(() => {
     () => Object.values(chatUnread).reduce((a, b) => a + b, 0),
     [chatUnread],
   );
+  const { invites } = useMyInvites();
 
   const teamspaceId = space.kind === "teamspace" ? space.id : null;
   const homePath = spaceHomePath(teamspaceId);
@@ -106,21 +110,15 @@ export const SidebarNav = memo(() => {
     }
   };
 
-  const inboxBadge = unreadCount > 0 && (
-    <>
-      <Spacer orientation="horizontal" size={3} />
-      <span className="sidebar-inbox-badge">{unreadCount}</span>
-    </>
-  );
-
-  const chatBadge = chatUnreadTotal > 0 && (
-    <>
-      <Spacer orientation="horizontal" size={3} />
-      <span className="sidebar-inbox-badge">
-        {chatUnreadTotal > 99 ? "99+" : chatUnreadTotal}
-      </span>
-    </>
-  );
+  const badge = (count: number) =>
+    count > 0 && (
+      <>
+        <Spacer orientation="horizontal" size={3} />
+        <span className="sidebar-inbox-badge">
+          {count > 99 ? "99+" : count}
+        </span>
+      </>
+    );
 
   return (
     <CardItemGroup>
@@ -156,7 +154,7 @@ export const SidebarNav = memo(() => {
           >
             {t("sidebar.inbox")}
           </span>
-          {inboxBadge}
+          {badge(unreadCount)}
         </Button>
       ) : (
         <Popover key={"popover"}>
@@ -170,7 +168,7 @@ export const SidebarNav = memo(() => {
               >
                 {t("sidebar.inbox")}
               </span>
-              {inboxBadge}
+              {badge(unreadCount)}
             </Button>
           </PopoverTrigger>
           <PopoverPortal container={document.getElementById("root")}>
@@ -212,7 +210,7 @@ export const SidebarNav = memo(() => {
             >
               {t("chat.title", "Chats")}
             </span>
-            {chatBadge}
+            {badge(chatUnreadTotal)}
           </Button>
         </PopoverTrigger>
         <PopoverPortal container={document.getElementById("root")}>
@@ -258,6 +256,7 @@ export const SidebarNav = memo(() => {
             >
               {t("teamspacesPanel.title", "Teamspaces")}
             </span>
+            {badge(invites.length)}
           </Button>
         </PopoverTrigger>
         <PopoverPortal container={document.getElementById("root")}>
@@ -276,6 +275,10 @@ export const SidebarNav = memo(() => {
                 onCreate={() => {
                   setTeamspacesOpen(false);
                   setCreateTeamspaceOpen(true);
+                }}
+                onManageMembers={(id) => {
+                  setTeamspacesOpen(false);
+                  setMembersFor(id);
                 }}
               />
             </Card>
@@ -312,6 +315,12 @@ export const SidebarNav = memo(() => {
             navigate({ to: `/t/${pageId}` });
             onCollapsedChange(isMobile);
           }}
+        />
+      )}
+      {membersFor && (
+        <TeamspaceMembersModal
+          teamspaceId={membersFor}
+          onClose={() => setMembersFor(null)}
         />
       )}
       {newRoomOpen && (

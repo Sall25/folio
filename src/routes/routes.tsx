@@ -3,21 +3,21 @@ import { SimpleEditor } from "../components/tiptap-templates/simple/simple-edito
 
 export const location = new ReactLocation();
 
-// Teamspace-space routes come first so /t/... is matched before anything
-// more general. Entering a teamspace is purely a URL change: /t/:teamspaceId
-// is the teamspace's home, /t/:teamspaceId/page/:pageId a page inside it.
+// Order matters: routes are matched top to bottom, and a shorter path like
+// t/:teamspaceId also matches the start of longer ones. So every more
+// specific /t/... route comes BEFORE the bare teamspace home.
 export const routes = [
   {
     path: "t/:teamspaceId/page/:pageId",
     element: <SimpleEditor view="page" />,
   },
   {
-    path: "t/:teamspaceId",
-    element: <SimpleEditor view="home" />,
-  },
-  {
     path: "t/:teamspaceId/chat/:roomId",
     element: <SimpleEditor view="chat" />,
+  },
+  {
+    path: "t/:teamspaceId",
+    element: <SimpleEditor view="home" />,
   },
   {
     path: "/",
@@ -38,6 +38,11 @@ export const routes = [
   {
     path: "page/:pageId",
     element: <SimpleEditor view="page" />,
+  },
+  // Workspace rooms and DMs opened outside a teamspace.
+  {
+    path: "chat/:roomId",
+    element: <SimpleEditor view="chat" />,
   },
   { path: "resources", element: <SimpleEditor view="resources" /> },
 ];

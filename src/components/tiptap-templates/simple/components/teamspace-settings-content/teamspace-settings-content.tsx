@@ -18,30 +18,38 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { usePeople } from "src/hooks/use-people";
 import { useGroups } from "src/hooks/use-groups";
 import { useManageTeamspaces } from "src/hooks/use-teamspaces";
 import { usePagesByCategory } from "src/hooks/use-pages";
+import { useTeamspaceMemberList } from "src/hooks/use-teamspace-members";
 import { PageItemIcon } from "../../page-item-icon";
 import { CreateTeamspaceModal } from "../create-teamspace-modal";
+import { TeamspaceMembersModal } from "../teamspace-members/teamspace-members-modal";
 import {
   attachedGroups,
-  directMembers,
   effectiveMemberCount,
   type Page,
   type Teamspace,
   type TeamspaceAccess,
 } from "src/types";
-import { memberCount, type Group, type Person } from "src/types";
+import { memberCount, type Group } from "src/types";
 import "./teamspace-settings-content.scss";
 
-// name/icon live on the PAGE now (joined to the record by shared id). Reads the
-// display name off the page, with a safe fallback if the page isn't loaded yet
-// (or is briefly missing during an optimistic create).
+// Popovers here open inside the workspace settings modal (z-index 701) —
+// they must sit above it.
+const POPOVER_Z = 1000;
+
+// name/icon live on the PAGE (joined to the record by shared id).
 const nameOf = (page: Page | undefined, fallback: string) =>
   page?.title || fallback;
 
-function Avatar({ person, size = 22 }: { person: Person; size?: number }) {
+function Avatar({
+  person,
+  size = 22,
+}: {
+  person: { name: string; avatarUrl?: string | null };
+  size?: number;
+}) {
   const initial = (person.name || "?").trim().charAt(0).toUpperCase();
   return person.avatarUrl ? (
     <img
@@ -78,7 +86,7 @@ function AccessSelect({
           {accessLabel(value)}
         </button>
       </PopoverTrigger>
-      <PopoverContent side="bottom" align="start">
+      <PopoverContent side="bottom" align="start" style={{ zIndex: POPOVER_Z }}>
         <Card style={{ padding: 4, minWidth: 160 }}>
           {options.map((a) => (
             <Button
@@ -93,87 +101,6 @@ function AccessSelect({
               <span className="tiptap-button-text">{accessLabel(a)}</span>
             </Button>
           ))}
-        </Card>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-// Add direct PEOPLE to a teamspace.
-function MemberPicker({
-  ts,
-  people,
-  onAdd,
-  onRemove,
-}: {
-  ts: Teamspace;
-  people: Person[];
-  onAdd: (id: string, personId: string) => void;
-  onRemove: (id: string, personId: string) => void;
-}) {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const q = query.trim().toLowerCase();
-  const candidates = !q
-    ? people
-    : people.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q),
-      );
-  const toggle = (pid: string) =>
-    ts.memberIds.includes(pid) ? onRemove(ts.id, pid) : onAdd(ts.id, pid);
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button type="button" className="ts-add">
-          <UserPlus size={14} />
-          <span>{t("teamspaces.addMembers")}</span>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent side="bottom" align="start">
-        <Card style={{ padding: "5px 10px", minWidth: 260 }}>
-          <div className="ts-picker-search">
-            <Search size={13} style={{ opacity: 0.6 }} />
-            <input
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t("teamspaces.searchPeoplePlaceholder")}
-            />
-          </div>
-          <div className="ts-picker-list">
-            {candidates.length === 0 ? (
-              <span className="ts-picker-empty">
-                {t("teamspaces.noPeople")}
-              </span>
-            ) : (
-              candidates.map((p) => {
-                const selected = ts.memberIds.includes(p.id);
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className="ts-picker-row"
-                    onClick={() => toggle(p.id)}
-                  >
-                    <Avatar person={p} size={22} />
-                    <span className="ts-picker-row__text">
-                      <span className="ts-picker-row__name">{p.name}</span>
-                      <span className="ts-picker-row__sub">{p.email}</span>
-                    </span>
-                    {selected && (
-                      <Check
-                        size={15}
-                        style={{ color: "var(--tt-brand-color-400)" }}
-                      />
-                    )}
-                  </button>
-                );
-              })
-            )}
-          </div>
         </Card>
       </PopoverContent>
     </Popover>
@@ -210,7 +137,7 @@ function GroupPicker({
           <span>{t("teamspaces.attachGroup")}</span>
         </button>
       </PopoverTrigger>
-      <PopoverContent side="bottom" align="start">
+      <PopoverContent side="bottom" align="start" style={{ zIndex: POPOVER_Z }}>
         <Card style={{ padding: "5px 10px", minWidth: 260 }}>
           <div className="ts-picker-search">
             <Search size={13} style={{ opacity: 0.6 }} />
@@ -264,28 +191,65 @@ function GroupPicker({
   );
 }
 
+// Members of a teamspace — from ANY workspace (resolved via the membership
+// hook, not this workspace's people list). All changes happen in the members
+// modal, which sits above the settings modal.
+function MembersSection({ ts }: { ts: Teamspace }) {
+  const { t } = useTranslation();
+  const { members, isLoading } = useTeamspaceMemberList(ts.id);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="ts-detail__section">
+      <div className="ts-detail__label">{t("teamspaces.members")}</div>
+      {isLoading ? null : members.length === 0 ? (
+        <span className="ts-detail__empty">
+          {t("teamspaces.noDirectMembers")}
+        </span>
+      ) : (
+        members.map(({ person, isOwner }) => (
+          <div className="ts-detail__row" key={person.id}>
+            <Avatar person={person} size={20} />
+            <span className="ts-detail__name">{person.name}</span>
+            <span className="ts-detail__sub">
+              {isOwner
+                ? t("members.owner", "Owner")
+                : t("members.member", "Member")}
+            </span>
+          </div>
+        ))
+      )}
+      <button type="button" className="ts-add" onClick={() => setOpen(true)}>
+        <UserPlus size={14} />
+        <span>{t("members.manage", "Manage members")}</span>
+      </button>
+
+      {open && (
+        <TeamspaceMembersModal
+          teamspaceId={ts.id}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
 function TeamspaceRow({
   ts,
   page,
-  people,
   groups,
   onRename,
   onSetAccess,
   onDelete,
-  onAddMember,
-  onRemoveMember,
   onAttachGroup,
   onDetachGroup,
 }: {
   ts: Teamspace;
   page: Page | undefined;
-  people: Person[];
   groups: Group[];
   onRename: (id: string, name: string) => void;
   onSetAccess: (id: string, a: TeamspaceAccess) => void;
   onDelete: (id: string) => void;
-  onAddMember: (id: string, personId: string) => void;
-  onRemoveMember: (id: string, personId: string) => void;
   onAttachGroup: (id: string, groupId: string) => void;
   onDetachGroup: (id: string, groupId: string) => void;
 }) {
@@ -296,7 +260,6 @@ function TeamspaceRow({
   const name = nameOf(page, t("teamspaces.untitled"));
   const [draft, setDraft] = useState(name);
 
-  const members = directMembers(ts, people);
   const attached = attachedGroups(ts, groups);
 
   const commit = () => {
@@ -376,7 +339,11 @@ function TeamspaceRow({
               <MoreHorizontal size={16} />
             </button>
           </PopoverTrigger>
-          <PopoverContent side="bottom" align="end">
+          <PopoverContent
+            side="bottom"
+            align="end"
+            style={{ zIndex: POPOVER_Z }}
+          >
             <Card style={{ padding: 4, minWidth: 180 }}>
               <Button
                 variant="ghost"
@@ -415,37 +382,7 @@ function TeamspaceRow({
 
       {expanded && (
         <div className="ts-detail">
-          {/* Direct members */}
-          <div className="ts-detail__section">
-            <div className="ts-detail__label">{t("teamspaces.members")}</div>
-            {members.length === 0 ? (
-              <span className="ts-detail__empty">
-                {t("teamspaces.noDirectMembers")}
-              </span>
-            ) : (
-              members.map((m) => (
-                <div className="ts-detail__row" key={m.id}>
-                  <Avatar person={m} size={20} />
-                  <span className="ts-detail__name">{m.name}</span>
-                  <span className="ts-detail__sub">{m.email}</span>
-                  <button
-                    type="button"
-                    className="ts-detail__remove"
-                    aria-label={t("teamspaces.removePerson", { name: m.name })}
-                    onClick={() => onRemoveMember(ts.id, m.id)}
-                  >
-                    <X size={13} />
-                  </button>
-                </div>
-              ))
-            )}
-            <MemberPicker
-              ts={ts}
-              people={people}
-              onAdd={onAddMember}
-              onRemove={onRemoveMember}
-            />
-          </div>
+          <MembersSection ts={ts} />
 
           {/* Attached groups */}
           <div className="ts-detail__section">
@@ -490,24 +427,17 @@ function TeamspaceRow({
 
 export function TeamspacesSettingsContent() {
   const { t } = useTranslation();
-  const { data: people = [] } = usePeople();
   const { data: groups = [] } = useGroups();
-  // Teamspace PAGES (roots with category "Teamspaces") — joined to records by
-  // shared id to resolve each teamspace's display name + icon.
   const { data: teamspacePages = [] } = usePagesByCategory("Teamspaces");
   const {
     teamspaces,
     renameTeamspaceAsync,
     setAccessAsync,
     deleteTeamspaceAsync,
-    addMemberAsync,
-    removeMemberAsync,
     attachGroupAsync,
     detachGroupAsync,
   } = useManageTeamspaces();
 
-  // "Create teamspace" opens the full modal (name/icon/description/permission)
-  // — the same one the sidebar uses — instead of dropping a blank record.
   const [createOpen, setCreateOpen] = useState(false);
 
   const pagesById = useMemo(() => {
@@ -562,13 +492,10 @@ export function TeamspacesSettingsContent() {
               key={ts.id}
               ts={ts}
               page={pagesById.get(ts.id)}
-              people={people as Person[]}
               groups={groups as Group[]}
               onRename={renameTeamspaceAsync}
               onSetAccess={setAccessAsync}
               onDelete={deleteTeamspaceAsync}
-              onAddMember={addMemberAsync}
-              onRemoveMember={removeMemberAsync}
               onAttachGroup={attachGroupAsync}
               onDetachGroup={detachGroupAsync}
             />

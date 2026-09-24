@@ -150,3 +150,98 @@
     color: var(--tt-text-primary);
   }
 }
+
+// Teamspace row + its hover "Members" button, side by side.
+.tsp-row-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .tsp-row {
+    padding-right: 38px; // room for the side button
+  }
+
+  .tsp-row__side {
+    position: absolute;
+    right: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: var(--tt-radius-sm);
+    background: transparent;
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.1s ease;
+
+    &:hover {
+      color: var(--tt-text-primary);
+      background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+    }
+
+    &:focus-visible {
+      opacity: 1;
+    }
+  }
+
+  &:hover .tsp-row__side {
+    opacity: 1;
+  }
+
+  // The active row's check mark moves left of the side button's spot.
+  .tsp-row__check {
+    margin-right: 4px;
+  }
+}
+
+.tsp-invite {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  margin-bottom: 2px;
+  border-radius: var(--tt-radius-sm);
+  background: color-mix(in srgb, var(--sidebar-accent) 7%, transparent);
+
+  &__actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  &__btn {
+    padding: 3px 9px;
+    border: 0.5px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-sm);
+    background: transparent;
+    font: inherit;
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      color: var(--tt-text-primary);
+      background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+    }
+
+    &.is-primary {
+      border-color: transparent;
+      color: #fff;
+      background: var(--sidebar-accent, var(--tt-brand-color-500));
+
+      &:hover:not(:disabled) {
+        color: #fff;
+        background: var(--sidebar-accent, var(--tt-brand-color-500));
+        filter: brightness(1.08);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+  }
+}
