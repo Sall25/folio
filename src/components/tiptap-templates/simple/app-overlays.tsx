@@ -5,14 +5,13 @@ import { useCurrentSpace } from "src/hooks/use-current-space";
 import { useChatRealtimeSync } from "src/hooks/use-chat";
 import SearchPalette from "./components/search-palette";
 import { TemplatesGallery } from "./components/template-gallery";
+import { PageChatDrawer } from "./components/chat/page-chat-drawer";
 import { useSearch } from "./context/search-context";
 import { useTemplates } from "./context/templates-context";
 import { useTemplates as useTemplatesApi } from "src/hooks/use-templates";
 import { WorkspaceSettings } from "./components/workspace-settings";
 import type { Page, Person } from "src/types";
 
-// Keeps chat unread counts, room order and open rooms live. Rendered here
-// because AppOverlays is always mounted (the sidebar isn't, when collapsed).
 function ChatRealtimeSync() {
   useChatRealtimeSync();
   return null;
@@ -47,6 +46,7 @@ function AppOverlaysImpl() {
   return (
     <>
       <ChatRealtimeSync />
+      <PageChatDrawer />
       {open && <SearchPalette />}
       {templatesGalleryOpen && (
         <TemplatesGallery

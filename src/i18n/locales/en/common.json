@@ -95,6 +95,13 @@
     "lastOwner": "A teamspace needs at least one owner",
     "lastOwnerLeave": "Make someone else an owner before leaving"
   },
+  "pageDiscussion": "Discussion",
+  "pageDiscussions": "Page discussions",
+  "pageStart": "Start the discussion about this page.",
+  "messagePage": "Discuss this page…",
+  "pageReadOnly": "You can read this discussion. Posting needs comment access to the page.",
+  "pageNoAccess": "You don't have access to this page's discussion.",
+  "openPage": "Open page",
   "mentionPeople": "People",
   "mentionPages": "Pages",
   "mentionNone": "No matches",

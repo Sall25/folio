@@ -21,6 +21,7 @@ interface RoomRow {
   icon: string | null;
   workspace_id: string | null;
   teamspace_id: string | null;
+  page_id: string | null;
   visibility: ChatVisibility;
   created_by: string | null;
   created_at: number;
@@ -46,6 +47,7 @@ const toRoom = (r: RoomRow): ChatRoom => ({
   icon: r.icon,
   workspaceId: r.workspace_id,
   teamspaceId: r.teamspace_id,
+  pageId: r.page_id ?? null,
   visibility: r.visibility,
   createdBy: r.created_by,
   createdAt: r.created_at,
@@ -68,26 +70,25 @@ export const toMessage = (m: MessageRow): ChatMessage => ({
   deletedAt: m.deleted_at,
 });
 
-function fail(error: { message: string } | null): never | void {
+function fail(error: { message: string } | null): void {
   if (error) throw new Error(error.message);
 }
 
 // ── Reads ─────────────────────────────────────────────────────────────────
 
-// Every room RLS lets you see (member of, or open in your scope), with its
-// members. Scoping to the current space happens in the hook.
+// Every room RLS lets you see, with its members. Scoping to the current
+// space (and splitting rooms / DMs / page discussions) happens in the hooks.
 export async function fetchChatRooms(): Promise<ChatRoom[]> {
   const { data, error } = await supabase
     .from("chat_rooms")
     .select(
-      "id, kind, name, icon, workspace_id, teamspace_id, visibility, created_by, created_at, last_message_at, chat_members(person_id, role, last_read_at)",
+      "id, kind, name, icon, workspace_id, teamspace_id, page_id, visibility, created_by, created_at, last_message_at, chat_members(person_id, role, last_read_at)",
     )
     .order("last_message_at", { ascending: false, nullsFirst: false });
   fail(error);
   return ((data ?? []) as RoomRow[]).map(toRoom);
 }
 
-// Latest messages of a room, returned oldest-first for rendering.
 export async function fetchChatMessages(
   roomId: string,
   limit = 100,
@@ -102,8 +103,6 @@ export async function fetchChatMessages(
   return ((data ?? []) as MessageRow[]).map(toMessage).reverse();
 }
 
-// People by id — the people table is readable by any signed-in user, so this
-// resolves names/avatars for DM partners and members from other workspaces.
 export async function fetchChatPeople(ids: string[]): Promise<ChatPerson[]> {
   if (!ids.length) return [];
   const { data, error } = await supabase
@@ -208,6 +207,15 @@ export async function leaveChatRoom(
 export async function openDm(otherPersonId: string): Promise<string> {
   const { data, error } = await supabase.rpc("open_dm", {
     p_other: otherPersonId,
+  });
+  fail(error);
+  return data as string;
+}
+
+// Open (lazily creating) a page's discussion; joins you if you can comment.
+export async function openPageChat(pageId: string): Promise<string> {
+  const { data, error } = await supabase.rpc("open_page_chat", {
+    p_page: pageId,
   });
   fail(error);
   return data as string;

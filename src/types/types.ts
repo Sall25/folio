@@ -1014,7 +1014,7 @@ export const higherRole = (a: PageRole, b: PageRole): PageRole =>
   PAGE_ROLE_ORDER[a] >= PAGE_ROLE_ORDER[b] ? a : b;
 
 // ── Chat ─────────────────────────────────────────────────────────────────
-export type ChatRoomKind = "room" | "dm";
+export type ChatRoomKind = "room" | "dm" | "page";
 export type ChatVisibility = "open" | "private";
 
 export interface ChatMember {
@@ -1030,6 +1030,8 @@ export interface ChatRoom {
   icon: string | null;
   workspaceId: string | null;
   teamspaceId: string | null;
+  /** Set for page discussions (kind "page"). */
+  pageId: string | null;
   visibility: ChatVisibility;
   createdBy: string | null;
   createdAt: number;

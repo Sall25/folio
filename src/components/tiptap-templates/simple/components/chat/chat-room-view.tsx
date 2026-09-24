@@ -1,7 +1,15 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "@tanstack/react-location";
-import { ArrowUp, Hash, Lock, LogOut, Trash2, UserPlus } from "lucide-react";
+import {
+  ArrowUp,
+  FileText,
+  Hash,
+  Lock,
+  LogOut,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -37,6 +45,7 @@ import {
 import { chatRoomIdFromPath, otherDmMember, roomTitle } from "./chat-utils";
 import { InviteToRoomModal } from "./chat-modals";
 import { MentionPicker, type MentionItem } from "./mention-picker";
+import { setPageChatOpen } from "./page-chat-store";
 import "./chat-room.scss";
 import "./mention-picker.scss";
 
@@ -57,7 +66,7 @@ export function ChatRoomView() {
       style={{ paddingLeft: isMobile || collapsed ? 0 : expandedWidth }}
     >
       {room ? (
-        <RoomContent key={room.id} room={room} />
+        <RoomContent key={room.id} room={room} variant="full" />
       ) : (
         <div className="chat-view__state">
           {isLoading
@@ -76,11 +85,20 @@ type Item =
   | { kind: "day"; key: string; label: string }
   | { kind: "msg"; key: string; msg: ChatMessage; compact: boolean };
 
-function RoomContent({ room }: { room: ChatRoom }) {
+// The room itself — full page view, or embedded in the page-discussion
+// drawer ("panel": no header, the drawer has its own).
+export function RoomContent({
+  room,
+  variant,
+}: {
+  room: ChatRoom;
+  variant: "full" | "panel";
+}) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const space = useCurrentSpace();
   const { person } = useCurrentPerson();
+  const { setActivePageId } = useActivePageActions();
   const meId = person?.id;
 
   const isMember = room.members.some((m) => m.personId === meId);
@@ -90,7 +108,6 @@ function RoomContent({ room }: { room: ChatRoom }) {
     isMember ? room.id : null,
   );
 
-  // Everyone we need a name for: members, authors, and people mentioned.
   const personIds = useMemo(() => {
     const ids = new Set<string>(room.members.map((m) => m.personId));
     for (const msg of messages) {
@@ -105,7 +122,6 @@ function RoomContent({ room }: { room: ChatRoom }) {
     [people],
   );
 
-  // Pages you can read — for page chips and the @ picker.
   const { data: allPages = [] } = usePages();
   const pagesById = useMemo(
     () =>
@@ -123,14 +139,19 @@ function RoomContent({ room }: { room: ChatRoom }) {
   const leave = useLeaveChatRoom();
   const [inviteOpen, setInviteOpen] = useState(false);
 
-  const title = roomTitle(room, peopleById, meId, t);
+  const discussedPage =
+    room.kind === "page" && room.pageId
+      ? pagesById.get(room.pageId)
+      : undefined;
+  const title =
+    room.kind === "page"
+      ? discussedPage?.title || t("chat.pageDiscussion", "Discussion")
+      : roomTitle(room, peopleById, meId, t);
   const partner =
     room.kind === "dm"
       ? peopleById.get(otherDmMember(room, meId) ?? "")
       : undefined;
 
-  // People you can mention: the room's members, plus — in an open room —
-  // everyone in its scope (they can see the room, so they'll get notified).
   const { candidates: scopePeople } = useChatCandidates("room");
   const mentionablePeople = useMemo(() => {
     const byId = new Map<string, ChatPerson>();
@@ -200,74 +221,113 @@ function RoomContent({ room }: { room: ChatRoom }) {
     });
   };
 
+  const openDiscussedPage = () => {
+    if (!room.pageId) return;
+    setActivePageId(room.pageId);
+    setPageChatOpen(true);
+  };
+
   const typingNames = typing.map((p) => p.name.split(" ")[0]).filter(Boolean);
+
+  const composerPlaceholder =
+    room.kind === "dm"
+      ? t("chat.messageTo", { name: title, defaultValue: "Message {{name}}" })
+      : room.kind === "page"
+        ? t("chat.messagePage", "Discuss this page…")
+        : t("chat.messageRoom", {
+            name: title,
+            defaultValue: "Message #{{name}}",
+          });
 
   return (
     <div className="chat-room">
-      <header className="chat-room__header">
-        <span className="chat-room__icon">
-          {room.kind === "dm" ? (
-            <Avatar src={partner?.avatarUrl ?? undefined} name={title} />
-          ) : room.visibility === "private" ? (
-            <Lock size={16} />
-          ) : (
-            <Hash size={17} />
-          )}
-        </span>
-        <div className="chat-room__heading">
-          <h1 className="chat-room__title">{title}</h1>
-          <span className="chat-room__meta">
-            {room.kind === "dm"
-              ? t("chat.directMessage", "Direct message")
-              : t("chat.memberCount", {
-                  count: room.members.length,
-                  defaultValue: "{{count}} members",
-                })}
-          </span>
-        </div>
-
-        {present.length > 0 && (
-          <div
-            className="chat-room__present"
-            title={present.map((p) => p.name).join(", ")}
-          >
-            {present.slice(0, 5).map((p) => (
-              <span key={p.id} className="chat-room__present-avatar">
-                <Avatar
-                  size="sm"
-                  src={p.avatarUrl ?? undefined}
-                  name={p.name}
-                  online
+      {variant === "full" && (
+        <header className="chat-room__header">
+          <span className="chat-room__icon">
+            {room.kind === "dm" ? (
+              <Avatar src={partner?.avatarUrl ?? undefined} name={title} />
+            ) : room.kind === "page" ? (
+              discussedPage ? (
+                <PageItemIcon
+                  cover={discussedPage.cover}
+                  styles={{ width: 16, height: 16, fontSize: 16 }}
                 />
-              </span>
-            ))}
-            {present.length > 5 && (
-              <span className="chat-room__present-more">
-                +{present.length - 5}
-              </span>
+              ) : (
+                <FileText size={16} />
+              )
+            ) : room.visibility === "private" ? (
+              <Lock size={16} />
+            ) : (
+              <Hash size={17} />
+            )}
+          </span>
+          <div className="chat-room__heading">
+            <h1 className="chat-room__title">{title}</h1>
+            <span className="chat-room__meta">
+              {room.kind === "dm"
+                ? t("chat.directMessage", "Direct message")
+                : room.kind === "page"
+                  ? t("chat.pageDiscussion", "Discussion")
+                  : t("chat.memberCount", {
+                      count: room.members.length,
+                      defaultValue: "{{count}} members",
+                    })}
+            </span>
+          </div>
+
+          {present.length > 0 && (
+            <div
+              className="chat-room__present"
+              title={present.map((p) => p.name).join(", ")}
+            >
+              {present.slice(0, 5).map((p) => (
+                <span key={p.id} className="chat-room__present-avatar">
+                  <Avatar
+                    size="sm"
+                    src={p.avatarUrl ?? undefined}
+                    name={p.name}
+                    online
+                  />
+                </span>
+              ))}
+              {present.length > 5 && (
+                <span className="chat-room__present-more">
+                  +{present.length - 5}
+                </span>
+              )}
+            </div>
+          )}
+
+          <div className="chat-room__actions">
+            {room.kind === "page" && discussedPage && (
+              <Button variant="ghost" onClick={openDiscussedPage}>
+                <FileText className="tiptap-button-icon" />
+                <span className="tiptap-button-text">
+                  {t("chat.openPage", "Open page")}
+                </span>
+              </Button>
+            )}
+            {room.kind === "room" && isMember && (
+              <>
+                <Button
+                  variant="ghost"
+                  tooltip={t("chat.invite", "Invite")}
+                  onClick={() => setInviteOpen(true)}
+                >
+                  <UserPlus className="tiptap-button-icon" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  tooltip={t("chat.leave", "Leave room")}
+                  onClick={onLeave}
+                >
+                  <LogOut className="tiptap-button-icon" />
+                </Button>
+              </>
             )}
           </div>
-        )}
-
-        {room.kind === "room" && isMember && (
-          <div className="chat-room__actions">
-            <Button
-              variant="ghost"
-              tooltip={t("chat.invite", "Invite")}
-              onClick={() => setInviteOpen(true)}
-            >
-              <UserPlus className="tiptap-button-icon" />
-            </Button>
-            <Button
-              variant="ghost"
-              tooltip={t("chat.leave", "Leave room")}
-              onClick={onLeave}
-            >
-              <LogOut className="tiptap-button-icon" />
-            </Button>
-          </div>
-        )}
-      </header>
+        </header>
+      )}
 
       <div className="chat-room__list" ref={listRef} onScroll={onScroll}>
         {items.length === 0 ? (
@@ -275,6 +335,8 @@ function RoomContent({ room }: { room: ChatRoom }) {
             <span className="chat-room__empty-icon">
               {room.kind === "dm" ? (
                 <Avatar src={partner?.avatarUrl ?? undefined} name={title} />
+              ) : room.kind === "page" ? (
+                <FileText size={22} />
               ) : (
                 <Hash size={22} />
               )}
@@ -286,10 +348,12 @@ function RoomContent({ room }: { room: ChatRoom }) {
                     defaultValue:
                       "This is the start of your conversation with {{name}}.",
                   })
-                : t("chat.roomStart", {
-                    name: title,
-                    defaultValue: "This is the start of #{{name}}.",
-                  })}
+                : room.kind === "page"
+                  ? t("chat.pageStart", "Start the discussion about this page.")
+                  : t("chat.roomStart", {
+                      name: title,
+                      defaultValue: "This is the start of #{{name}}.",
+                    })}
             </p>
           </div>
         ) : (
@@ -332,22 +396,22 @@ function RoomContent({ room }: { room: ChatRoom }) {
 
         {isMember ? (
           <Composer
-            placeholder={
-              room.kind === "dm"
-                ? t("chat.messageTo", {
-                    name: title,
-                    defaultValue: "Message {{name}}",
-                  })
-                : t("chat.messageRoom", {
-                    name: title,
-                    defaultValue: "Message #{{name}}",
-                  })
-            }
+            placeholder={composerPlaceholder}
             people={mentionablePeople}
             pages={[...pagesById.values()]}
             onSend={onSend}
             onTyping={setTyping}
           />
+        ) : room.kind === "page" ? (
+          // Readers of the page who can't comment: read along, no posting.
+          <div className="chat-join">
+            <span>
+              {t(
+                "chat.pageReadOnly",
+                "You can read this discussion. Posting needs comment access to the page.",
+              )}
+            </span>
+          </div>
         ) : (
           <div className="chat-join">
             <span>{t("chat.viewingOpen", "You're viewing an open room.")}</span>
@@ -371,9 +435,6 @@ function RoomContent({ room }: { room: ChatRoom }) {
   );
 }
 
-// Renders a body with mention tokens resolved: people as @Name (highlighted
-// when it's you), pages as clickable chips — or a locked chip when the page
-// isn't one you can read.
 function MessageBody({
   body,
   meId,
@@ -519,8 +580,6 @@ function MessageRow({
   );
 }
 
-// "@" + up to 30 non-space chars right before the caret, at the start or
-// after whitespace (so emails like a@b.c don't trigger it).
 const TRIGGER_RE = /(?:^|\s)@([^\s@]{0,30})$/;
 
 function Composer({
@@ -688,6 +747,7 @@ function Composer({
               }
             }
             if (pickerOpen && e.key === "Escape") {
+              // preventDefault also tells the drawer's Esc handler to ignore it.
               e.preventDefault();
               e.stopPropagation();
               setTrigger(null);

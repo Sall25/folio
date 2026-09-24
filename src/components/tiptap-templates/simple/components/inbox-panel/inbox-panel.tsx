@@ -14,12 +14,13 @@ import { useChatRooms } from "src/hooks/use-chat";
 import type { Notification, NotificationType } from "src/types";
 import { useActivePageActions } from "../../context/active-page-context";
 import { chatPath, useOpenChatRoom } from "../chat/chat-utils";
+import { setPageChatOpen } from "../chat/page-chat-store";
 import { setPendingScrollTarget } from "./pending-scroll-target";
 import "./inbox-panel.scss";
 
 // The notification inbox. Clicking a notification marks it read and opens its
-// source: a page (scrolling to the node/thread), or — for chat mentions — the
-// room it came from.
+// source: a page (scrolling to the node/thread), a chat room, or — for a
+// mention in a page discussion — the page with its discussion drawer open.
 export function InboxPanel() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -38,12 +39,20 @@ export function InboxPanel() {
   const handleClick = (n: Notification) => {
     markRead(n.id);
 
-    // Chat mention → its room, in the right space (teamspace rooms under
-    // /t/…). Falls back to the plain route if the room isn't cached yet.
-    if (n.type === "chat-mention" && n.sourceRoomId) {
-      const room = rooms.find((r) => r.id === n.sourceRoomId);
-      if (room) openRoom(room);
-      else navigate({ to: chatPath(null, n.sourceRoomId) });
+    if (n.type === "chat-mention") {
+      // Page discussion: the notification carries the page (set server-side
+      // for page rooms), so this works even before the rooms list loads.
+      if (n.sourcePageId) {
+        setActivePageId(String(n.sourcePageId));
+        setPageChatOpen(true);
+        return;
+      }
+      // Room or DM: open it in the right space.
+      if (n.sourceRoomId) {
+        const room = rooms.find((r) => r.id === n.sourceRoomId);
+        if (room) openRoom(room);
+        else navigate({ to: chatPath(null, n.sourceRoomId) });
+      }
       return;
     }
 

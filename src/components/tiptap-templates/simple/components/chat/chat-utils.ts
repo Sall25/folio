@@ -19,6 +19,8 @@ export function otherDmMember(room: ChatRoom, meId: string | undefined) {
   return room.members.find((m) => m.personId !== meId)?.personId ?? null;
 }
 
+// Page discussions are titled by their page where the caller has it (the
+// room view passes the page title); this is the fallback label.
 export function roomTitle(
   room: ChatRoom,
   peopleById: Map<string, ChatPerson>,
@@ -32,11 +34,12 @@ export function roomTitle(
       t("chat.directMessage", "Direct message")
     );
   }
+  if (room.kind === "page") {
+    return t("chat.pageDiscussion", "Discussion");
+  }
   return room.name || t("chat.untitledRoom", "Untitled room");
 }
 
-// Open a room in the right space: a teamspace room under its teamspace, a
-// workspace room at /chat, a DM in whatever space you're in now.
 export function useOpenChatRoom() {
   const navigate = useNavigate();
   const space = useCurrentSpace();

@@ -95,6 +95,13 @@
     "lastOwner": "Un espace d'équipe doit avoir au moins un propriétaire",
     "lastOwnerLeave": "Nomme un autre propriétaire avant de partir"
   },
+  "pageDiscussion": "Discussion",
+  "pageDiscussions": "Discussions de pages",
+  "pageStart": "Lance la discussion sur cette page.",
+  "messagePage": "Discuter de cette page…",
+  "pageReadOnly": "Tu peux lire cette discussion. Pour écrire, il faut un accès commentaire à la page.",
+  "pageNoAccess": "Tu n'as pas accès à la discussion de cette page.",
+  "openPage": "Ouvrir la page",
   "mentionPeople": "Personnes",
   "mentionPages": "Pages",
   "mentionNone": "Aucun résultat",
