@@ -1,8 +1,9 @@
-import type { PageCategory } from "src/types";
+import type { SidebarSectionKey } from "./use-sidebar-order";
 import { useLocalStorage } from "./use-local-storage";
 import { useCallback, useMemo } from "react";
+
 export function useHiddenSections() {
-  const [hiddenArr, setHiddenArr] = useLocalStorage<PageCategory[]>(
+  const [hiddenArr, setHiddenArr] = useLocalStorage<SidebarSectionKey[]>(
     "folio:hidden-sections",
     [],
   );
@@ -10,11 +11,11 @@ export function useHiddenSections() {
   const hidden = useMemo(() => new Set(hiddenArr), [hiddenArr]);
 
   const toggleHidden = useCallback(
-    (category: PageCategory) => {
+    (section: SidebarSectionKey) => {
       setHiddenArr((prev) =>
-        prev.includes(category)
-          ? prev.filter((c) => c !== category)
-          : [...prev, category],
+        prev.includes(section)
+          ? prev.filter((c) => c !== section)
+          : [...prev, section],
       );
     },
     [setHiddenArr],

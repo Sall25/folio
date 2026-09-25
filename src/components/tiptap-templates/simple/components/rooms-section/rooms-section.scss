@@ -1,0 +1,48 @@
+// Room rows, sized to sit alongside page rows in the sidebar.
+.sb-room {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 30px;
+  margin-top: 1px;
+  padding: 4px 6px;
+  border: none;
+  border-radius: var(--tt-radius-md);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  color: var(--tt-text-primary);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+  }
+
+  &.is-active {
+    background: color-mix(in srgb, var(--tt-text-primary) 9%, transparent);
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    flex-shrink: 0;
+    color: var(--tt-text-secondary);
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &.is-unread &__name {
+    font-weight: 700;
+  }
+}

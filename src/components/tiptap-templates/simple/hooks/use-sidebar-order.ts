@@ -4,6 +4,14 @@ import type { ID, PageCategory, PageTreeNode } from "src/types";
 
 export type SortMode = "recent" | "custom";
 
+// Sections the sidebar can show, order and hide. Page sections are keyed by
+// their PageCategory; "Rooms" is the one non-page section. Page code keeps
+// using PageCategory — only ordering/hiding uses this wider key.
+export type SidebarSectionKey = PageCategory | "Rooms";
+
+export const isPageSection = (key: SidebarSectionKey): key is PageCategory =>
+  key !== "Rooms";
+
 export function scopeKeyForRoots(category: PageCategory): string {
   return `category:${category}`;
 }
@@ -131,15 +139,20 @@ export function buildCategoryByPageId(
 }
 
 // ── Section order (which section renders first, second, ...) ────────────────
-// The set of sections itself is still fixed and closed — this only controls
-// their display order, client-only for now like everything else here.
-export const DEFAULT_SECTION_ORDER: PageCategory[] = [
+// The set of sections itself is fixed and closed — this only controls their
+// display order, client-only for now like everything else here.
+export const DEFAULT_SECTION_ORDER: SidebarSectionKey[] = [
   "Recent",
   "Favorites",
   "Shared",
   "Private",
+  "Rooms",
   "Teamspaces",
 ];
+
+// Just the page sections of the default order (for building page trees).
+export const DEFAULT_PAGE_SECTIONS: PageCategory[] =
+  DEFAULT_SECTION_ORDER.filter(isPageSection);
 
 // Generic version of the splice-to-position logic reorderScope uses for page
 // ids — kept separate (not a shared refactor) so the already-working page
@@ -162,36 +175,36 @@ export function reorderList<T>(
   ];
 }
 
+// Stored positions for known sections, then any known section not yet stored
+// appended at the end (a new section like Rooms joins without reshuffling
+// someone's saved order), dropping anything no longer a real section.
+function normalizeOrder(stored: SidebarSectionKey[]): SidebarSectionKey[] {
+  const known = DEFAULT_SECTION_ORDER;
+  return [
+    ...stored.filter((c) => known.includes(c)),
+    ...known.filter((c) => !stored.includes(c)),
+  ];
+}
+
 export function useSectionOrder() {
-  const [stored, setStored] = useLocalStorage<PageCategory[]>(
+  const [stored, setStored] = useLocalStorage<SidebarSectionKey[]>(
     "folio:section-order",
     DEFAULT_SECTION_ORDER,
   );
 
-  // Merge-normalize: stored positions for known categories, append any fixed
-  // category not yet in storage, drop anything no longer a real category.
-  const order = useMemo(() => {
-    const known = DEFAULT_SECTION_ORDER;
-    const merged = [
-      ...stored.filter((c) => known.includes(c)), // keep valid stored, drop stale
-      ...known.filter((c) => !stored.includes(c)), // append missing (e.g. Recent)
-    ];
-    return merged;
-  }, [stored]);
+  const order = useMemo(() => normalizeOrder(stored), [stored]);
 
   // Setter operates on the SAME normalized array the caller reads from, so an
-  // arrayMove computed against `order` writes back a consistent order — even
-  // for categories (like Recent) that were only present via the merge append.
+  // arrayMove computed against `order` writes back a consistent order.
   const setOrder = useCallback(
-    (next: PageCategory[] | ((prev: PageCategory[]) => PageCategory[])) => {
+    (
+      next:
+        | SidebarSectionKey[]
+        | ((prev: SidebarSectionKey[]) => SidebarSectionKey[]),
+    ) => {
       setStored((prevStored) => {
-        const prevOrder = [
-          ...prevStored.filter((c) => DEFAULT_SECTION_ORDER.includes(c)),
-          ...DEFAULT_SECTION_ORDER.filter((c) => !prevStored.includes(c)),
-        ];
-        return typeof next === "function"
-          ? (next as (p: PageCategory[]) => PageCategory[])(prevOrder)
-          : next;
+        const prevOrder = normalizeOrder(prevStored);
+        return typeof next === "function" ? next(prevOrder) : next;
       });
     },
     [setStored],

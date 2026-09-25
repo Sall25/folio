@@ -53,22 +53,26 @@ import { useTranslation } from "react-i18next";
 import {
   applySectionSort,
   buildCategoryByPageId,
-  DEFAULT_SECTION_ORDER,
+  DEFAULT_PAGE_SECTIONS,
   getSortMode,
+  isPageSection,
   reorderScope,
   scopeKeyForChildren,
   scopeKeyForRoots,
   useCustomOrder,
   useSectionOrder,
   useSectionSortModes,
+  type SidebarSectionKey,
   type SortMode,
 } from "../hooks/use-sidebar-order";
 import { PageRowSkeleton } from "./skeletons";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useActivePageState } from "../context/active-page-context";
 import { useEditablePageIds } from "src/hooks/use-editable-pages";
+import { useChatRooms } from "src/hooks/use-chat";
 import { useHiddenSections } from "../hooks/use-hidden-sections";
 import { useEditorLayoutActions } from "../context/editor-layout-context";
+import { RoomsSection } from "./rooms-section";
 
 type DropZone = "before" | "after" | "inside";
 
@@ -102,9 +106,11 @@ export interface SidebarTreeProps {
   onAddPageToSection?: (category: PageCategory) => void;
   onRenameSection?: (category: PageCategory) => void;
   onDeleteSection?: (category: PageCategory) => void;
-  onHideSection?: (category: PageCategory) => void;
+  onHideSection?: (section: SidebarSectionKey) => void;
+  /** Opens the New room modal (the Rooms section's "+"). */
+  onAddRoom?: () => void;
   isLoading?: boolean;
-  sections?: PageCategory[];
+  sections?: SidebarSectionKey[];
   sectionLabels?: Partial<Record<PageCategory, string>>;
   flattenRootsOf?: PageCategory[];
   flatSections?: PageCategory[];
@@ -291,7 +297,7 @@ function TreeSection({
   onAddPage?: (c: PageCategory) => void;
   onRename?: (c: PageCategory) => void;
   onDelete?: (c: PageCategory) => void;
-  onHide?: (c: PageCategory) => void;
+  onHide?: (c: SidebarSectionKey) => void;
   subtitleByPageId: Map<ID, string>;
   sortMode: SortMode;
   onSetSortMode: (category: PageCategory, mode: SortMode) => void;
@@ -460,10 +466,10 @@ function TreeSection({
 }
 
 function SectionDragWrapper({
-  category,
+  sectionKey,
   children,
 }: {
-  category: PageCategory;
+  sectionKey: SidebarSectionKey;
   children: ReactNode;
 }) {
   const {
@@ -473,7 +479,7 @@ function SectionDragWrapper({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: `${SECTION_DRAG_PREFIX}${category}` });
+  } = useSortable({ id: `${SECTION_DRAG_PREFIX}${sectionKey}` });
 
   return (
     <div
@@ -505,6 +511,7 @@ export const SidebarTree = memo(function SidebarTree({
   onRenameSection,
   onDeleteSection,
   onHideSection,
+  onAddRoom,
   isLoading,
   sections,
   sectionLabels,
@@ -524,6 +531,13 @@ export const SidebarTree = memo(function SidebarTree({
   const { person } = useCurrentPerson();
   const personId = person?.id;
 
+  // Rooms you've joined in the current space (the hook scopes to the space).
+  const { rooms } = useChatRooms();
+  const joinedRooms = useMemo(
+    () => rooms.filter((r) => r.members.some((m) => m.personId === personId)),
+    [rooms, personId],
+  );
+
   const reorganize = useCallback(
     (page: Page) =>
       canReorganize
@@ -537,10 +551,14 @@ export const SidebarTree = memo(function SidebarTree({
     [flatSections],
   );
 
+  // Page sections only — Rooms has no page tree.
   const treeCategories = useMemo(
     () =>
       Array.from(
-        new Set<PageCategory>([...DEFAULT_SECTION_ORDER, ...(sections ?? [])]),
+        new Set<PageCategory>([
+          ...DEFAULT_PAGE_SECTIONS,
+          ...(sections ?? []).filter(isPageSection),
+        ]),
       ),
     [sections],
   );
@@ -597,9 +615,6 @@ export const SidebarTree = memo(function SidebarTree({
     return m;
   }, [sortedTree, treeCategories, flatSet]);
 
-  // Per-row edit rights: one query for the whole tree (refetched when the
-  // number of pages changes). Your own pages count immediately — covers a
-  // page you just created before the list catches up.
   const editableIds = useEditablePageIds(nodeById.size);
   const canEdit = useCallback(
     (page: Page) =>
@@ -715,12 +730,14 @@ export const SidebarTree = memo(function SidebarTree({
       if (!overId || !overId.startsWith(SECTION_DRAG_PREFIX)) return;
       const moved = activeIdStr.slice(
         SECTION_DRAG_PREFIX.length,
-      ) as PageCategory;
-      const overCat = overId.slice(SECTION_DRAG_PREFIX.length) as PageCategory;
-      if (moved === overCat) return;
+      ) as SidebarSectionKey;
+      const overKey = overId.slice(
+        SECTION_DRAG_PREFIX.length,
+      ) as SidebarSectionKey;
+      if (moved === overKey) return;
       setSectionOrder((prev) => {
         const from = prev.indexOf(moved);
-        const to = prev.indexOf(overCat);
+        const to = prev.indexOf(overKey);
         if (from === -1 || to === -1) return prev;
         return arrayMove(prev, from, to);
       });
@@ -862,20 +879,20 @@ export const SidebarTree = memo(function SidebarTree({
   }, [activePageId, nodeById, categoryByPageId]);
 
   const onToggleCollapse = useCallback(
-    (category: string) =>
+    (key: string) =>
       setCollapsedSections((s) => {
         const n = new Set(s);
-        if (n.has(category)) n.delete(category);
-        else n.add(category);
+        if (n.has(key)) n.delete(key);
+        else n.add(key);
         return n;
       }),
     [],
   );
 
   const handleHide = useCallback(
-    (c: PageCategory) => {
-      toggleHidden(c);
-      onHideSection?.(c);
+    (key: SidebarSectionKey) => {
+      toggleHidden(key);
+      onHideSection?.(key);
     },
     [toggleHidden, onHideSection],
   );
@@ -890,20 +907,59 @@ export const SidebarTree = memo(function SidebarTree({
   const activeNode = activeId != null ? nodeById.get(activeId) : null;
   const isDraggingSection = activeId?.startsWith(SECTION_DRAG_PREFIX) ?? false;
 
-  const candidateCategories = fixedSections
+  const candidateSections: SidebarSectionKey[] = fixedSections
     ? sections
-    : sectionOrder.filter((category) => !hidden.has(category));
-  const visibleCategories = candidateCategories.filter(
-    (category) => isLoading || (tree[category]?.length ?? 0) > 0,
+    : sectionOrder.filter((key) => !hidden.has(key));
+  const visibleSections = candidateSections.filter((key) =>
+    key === "Rooms"
+      ? joinedRooms.length > 0
+      : isLoading || (tree[key]?.length ?? 0) > 0,
   );
 
   const sectionItems = useMemo(
     () =>
       fixedSections
         ? []
-        : visibleCategories.map((c) => `${SECTION_DRAG_PREFIX}${c}`),
-    [fixedSections, visibleCategories],
+        : visibleSections.map((k) => `${SECTION_DRAG_PREFIX}${k}`),
+    [fixedSections, visibleSections],
   );
+
+  const renderSection = (key: SidebarSectionKey) =>
+    key === "Rooms" ? (
+      <RoomsSection
+        rooms={joinedRooms}
+        collapsed={collapsedSections.has("Rooms")}
+        onToggleCollapse={() => onToggleCollapse("Rooms")}
+        onAddRoom={onAddRoom}
+        onHide={() => handleHide("Rooms")}
+        allowSectionPrefs={!fixedSections}
+      />
+    ) : (
+      <TreeSection
+        category={key}
+        topLevel={sortedTree[key] ?? EMPTY_NODES}
+        expandedIds={expandedIds}
+        onToggleExpand={onToggleExpand}
+        dropTarget={dropTarget}
+        activeId={activeId}
+        collapsed={collapsedSections.has(key)}
+        onToggleCollapse={onToggleCollapse}
+        onAddPage={onAddPageToSection}
+        onRename={onRenameSection}
+        onDelete={onDeleteSection}
+        onHide={handleHide}
+        subtitleByPageId={subtitleByPageId}
+        sortMode={getSortMode(sortModeByCategory, key)}
+        onSetSortMode={onSetSortMode}
+        isLoading={isLoading}
+        canEdit={canEdit}
+        labelOverride={sectionLabels?.[key]}
+        flatten={flattenRootsOf?.includes(key) ?? false}
+        flat={flatSet.has(key)}
+        allowSectionPrefs={!fixedSections}
+        reorganize={reorganize}
+      />
+    );
 
   return (
     <DndContext
@@ -922,43 +978,17 @@ export const SidebarTree = memo(function SidebarTree({
           items={sectionItems}
           strategy={verticalListSortingStrategy}
         >
-          {visibleCategories.map((category) => {
-            const section = (
-              <TreeSection
-                category={category}
-                topLevel={sortedTree[category] ?? EMPTY_NODES}
-                expandedIds={expandedIds}
-                onToggleExpand={onToggleExpand}
-                dropTarget={dropTarget}
-                activeId={activeId}
-                collapsed={collapsedSections.has(category)}
-                onToggleCollapse={onToggleCollapse}
-                onAddPage={onAddPageToSection}
-                onRename={onRenameSection}
-                onDelete={onDeleteSection}
-                onHide={handleHide}
-                subtitleByPageId={subtitleByPageId}
-                sortMode={getSortMode(sortModeByCategory, category)}
-                onSetSortMode={onSetSortMode}
-                isLoading={isLoading}
-                canEdit={canEdit}
-                labelOverride={sectionLabels?.[category]}
-                flatten={flattenRootsOf?.includes(category) ?? false}
-                flat={flatSet.has(category)}
-                allowSectionPrefs={!fixedSections}
-                reorganize={reorganize}
-              />
-            );
-            return fixedSections ? (
-              <div key={category} style={{ width: "100%" }}>
-                {section}
+          {visibleSections.map((key) =>
+            fixedSections ? (
+              <div key={key} style={{ width: "100%" }}>
+                {renderSection(key)}
               </div>
             ) : (
-              <SectionDragWrapper key={category} category={category}>
-                {section}
+              <SectionDragWrapper key={key} sectionKey={key}>
+                {renderSection(key)}
               </SectionDragWrapper>
-            );
-          })}
+            ),
+          )}
         </SortableContext>
       </div>
 

@@ -1,17 +1,18 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { PageCategory } from "src/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+import type { SidebarSectionKey } from "../../hooks/use-sidebar-order";
 import "./customize-sidebar-panel.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
-const CATEGORY_LABEL: Record<PageCategory, string> = {
+const SECTION_LABEL: Record<SidebarSectionKey, string> = {
   Recent: "section.recent",
   Favorites: "section.favorites",
   Shared: "section.shared",
   Private: "section.private",
   Teamspaces: "section.teamspaces",
   Template: "section.template",
+  Rooms: "section.rooms",
 };
 
 export function CustomizeSidebarPanel({
@@ -20,9 +21,9 @@ export function CustomizeSidebarPanel({
   onToggle,
   onDone,
 }: {
-  order: PageCategory[];
+  order: SidebarSectionKey[];
   hidden: Set<string>;
-  onToggle: (category: PageCategory) => void;
+  onToggle: (section: SidebarSectionKey) => void;
   onDone: () => void;
 }) {
   const { t } = useTranslation();
@@ -33,19 +34,19 @@ export function CustomizeSidebarPanel({
   return (
     <div className="customize-sidebar" contentEditable={false}>
       <div className="customize-sidebar__list">
-        {sections.map((category) => {
-          const isHidden = hidden.has(category);
+        {sections.map((section) => {
+          const isHidden = hidden.has(section);
           return (
             <Button
-              key={category}
+              key={section}
               type="button"
               className="customize-sidebar__row"
-              onClick={() => onToggle(category)}
+              onClick={() => onToggle(section)}
             >
               <span
                 className={`customize-sidebar__label${isHidden ? " is-hidden" : ""}`}
               >
-                {t(CATEGORY_LABEL[category]) ?? category}
+                {t(SECTION_LABEL[section]) ?? section}
               </span>
               {isHidden ? (
                 <EyeOff size={16} className="customize-sidebar__eye is-off" />

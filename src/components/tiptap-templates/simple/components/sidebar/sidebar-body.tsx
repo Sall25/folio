@@ -9,7 +9,10 @@ import { usePatchPage } from "src/hooks/use-patch-page";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { useActivePageActions } from "../../context/active-page-context";
 import { useCurrentPerson } from "src/hooks/use-session";
-import { useSectionOrder } from "../../hooks/use-sidebar-order";
+import {
+  useSectionOrder,
+  type SidebarSectionKey,
+} from "../../hooks/use-sidebar-order";
 import { useHiddenSections } from "../../hooks/use-hidden-sections";
 import type {
   Group,
@@ -63,9 +66,12 @@ const EMPTY_TEAMSPACES: Teamspace[] = [];
 const EMPTY_GROUPS: Group[] = [];
 const RECENT_LIMIT = 6;
 
-const TEAMSPACE_SECTIONS: PageCategory[] = [
+// Inside a teamspace: a fixed list — Pinned (Favorites), Recent, Rooms, the
+// teamspace's pages (Teamspaces), Templates.
+const TEAMSPACE_SECTIONS: SidebarSectionKey[] = [
   "Favorites",
   "Recent",
+  "Rooms",
   "Teamspaces",
   "Template",
 ];
@@ -173,7 +179,6 @@ export const SidebarBody = memo(() => {
   const { pinnedIds, canPin, isPinned, setPinned } =
     useTeamspacePins(teamspaceId);
 
-  // Modals opened from the tab bodies (previously owned by SidebarNav).
   const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
   const [membersFor, setMembersFor] = useState<string | null>(null);
   const [newRoomOpen, setNewRoomOpen] = useState(false);
@@ -182,6 +187,8 @@ export const SidebarBody = memo(() => {
   const closeDrawerOnMobile = useCallback(() => {
     if (isMobile) onCollapsedChange(true);
   }, [isMobile, onCollapsedChange]);
+
+  const openNewRoom = useCallback(() => setNewRoomOpen(true), []);
 
   const pinControl = useMemo<TeamspacePinControl | null>(
     () => (teamspaceId && canPin ? { teamspaceId, isPinned, setPinned } : null),
@@ -377,7 +384,7 @@ export const SidebarBody = memo(() => {
           <div className="sb-tab-panel">
             <ChatsPanel
               onDone={closeDrawerOnMobile}
-              onNewRoom={() => setNewRoomOpen(true)}
+              onNewRoom={openNewRoom}
               onNewDm={() => setNewDmOpen(true)}
             />
           </div>
@@ -406,6 +413,7 @@ export const SidebarBody = memo(() => {
                   onAddPageToSection={handleAddPageToSection}
                   onRenameSection={NOOP}
                   onDeleteSection={NOOP}
+                  onAddRoom={openNewRoom}
                   isLoading={isPending || isLoading}
                   sections={teamspaceId ? TEAMSPACE_SECTIONS : undefined}
                   sectionLabels={teamspaceId ? teamspaceLabels : undefined}
@@ -451,7 +459,7 @@ export const SidebarBody = memo(() => {
             {!peeking && (
               <>
                 <ScrollFog edge="top" color="var(--sidebar-fog-color)" />
-                <Spacer orientation="vertical" size={15} />
+                <Spacer orientation="vertical" size={12} />
               </>
             )}
             {renderView()}

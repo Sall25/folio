@@ -311,8 +311,12 @@ export const DesktopToolbarContent = ({ view }: ContentProps) => {
   return (
     <>
       <TitleGroup view={view} />
-      <Spacer />
-      <QuickOpenTrigger />
+      {view === "page" && (
+        <>
+          <Spacer />
+          <QuickOpenTrigger />
+        </>
+      )}
       <Spacer />
 
       <ToolbarGroup>
