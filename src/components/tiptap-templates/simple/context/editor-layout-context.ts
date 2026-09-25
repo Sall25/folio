@@ -7,7 +7,14 @@ export const TRANSLATE_X = -80;
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type LayoutMode = "mobile" | "tablet" | "desktop";
 export type CommentDisplayMode = "sidebar" | "popover";
-export type SidebarView = "pages" | "inbox" | "trash";
+// The sidebar's tabs ("pages" = Home / the page tree) plus the find panel.
+export type SidebarView =
+  | "pages"
+  | "inbox"
+  | "chats"
+  | "teams"
+  | "trash"
+  | "search";
 
 export interface EditorLayoutActions {
   onCollapsedChange: (collapsed: boolean) => void;
@@ -78,10 +85,6 @@ export function useEditorLayoutTransient(): EditorLayoutTransient {
 }
 
 // ── Back-compat shim (optional — eases migration) ────────────────────────────
-// Lets existing useEditorLayout() calls keep working during migration. It reads
-// ALL THREE contexts, so any component using it re-renders on any change — i.e.
-// it forfeits the optimization. Migrate consumers to the specific hooks, then
-// delete this. Keeping it temporarily avoids a big-bang rewrite of every caller.
 export function useEditorLayout() {
   return {
     ...useEditorLayoutActions(),

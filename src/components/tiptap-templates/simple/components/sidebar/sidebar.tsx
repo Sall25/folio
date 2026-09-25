@@ -11,7 +11,6 @@ import { useHiddenSections } from "../../hooks/use-hidden-sections";
 import { createPortal } from "react-dom";
 import "./sidebar.scss";
 import { SidebarResizeHandle } from "../sidebar-resize-handle";
-import { SidebarFooterConnected } from "./sidebar-footer-connected";
 
 export const Sidebar = memo(() => {
   const {
@@ -110,7 +109,7 @@ export const Sidebar = memo(() => {
           onDone={() => setCustomizeSidebarOpen?.(false)}
         />
       )}
-      <SidebarFooterConnected />
+    
       <SidebarResizeHandle />
     </Card>
   );

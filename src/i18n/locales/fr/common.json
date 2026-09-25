@@ -107,6 +107,7 @@
     "leave": "Quitter",
     "stop": "Arrêter la session"
   },
+  "enterTeamspace": "Entrer dans l'espace d'équipe",
   "attach": "Joindre des fichiers",
   "attachment": "Pièce jointe",
   "uploading": "Envoi…",

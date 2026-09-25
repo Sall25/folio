@@ -11,7 +11,7 @@ import { useActivePage } from "./context/active-page-context";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { useRecentPages } from "src/hooks/use-pages";
 import { makeChildPage } from "src/utils/make-page";
-import { usePageCapabilities } from "src/hooks/use-page-role";
+//import { usePageCapabilities } from "src/hooks/use-page-role";
 import { useTrashPage } from "src/hooks/use-trash-page";
 import { useState } from "react";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
@@ -33,7 +33,7 @@ export function PageItemOptions({
   const { setActivePageId, activePageId } = useActivePage();
   const createPage = useCreatePage();
 
-  const { canDeletePage } = usePageCapabilities(activePageId);
+  //const { canDeletePage } = usePageCapabilities(activePageId);
 
   const { data: recentPages } = useRecentPages();
 
@@ -53,7 +53,7 @@ export function PageItemOptions({
     trashPage({ pageId: page.id, workspaceId });
   };
 
-  if (!canDeletePage) return null;
+  // if (!canDeletePage) return null; TODO: NEEDS FIXING
 
   if (!menuOpen) {
     return (

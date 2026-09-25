@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { CardFooter } from "src/components/tiptap-ui-primitive/card";
 import "./sidebar-footer.scss";
+import "./sidebar-footer-compose.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import { useIsMobile } from "src/hooks/use-breakpoint";
@@ -17,35 +18,38 @@ function SidebarFooterImpl({ name, subtitle, avatarUrl }: SidebarFooterProps) {
     <CardFooter className="sidebar-footer-wrap">
       <div className="sidebar-footer-fog" aria-hidden />
 
-      <Button
-        size="large"
-        variant="ghost"
-        type="button"
-        className="sidebar-footer"
-      >
-        <Avatar size={isMobile ? "sm" : "md"} src={avatarUrl} name={name} />
+      {/* Profile on the left, compose (new page) on the right. */}
+      <div className="sidebar-footer-row">
+        <Button
+          size="large"
+          variant="ghost"
+          type="button"
+          className="sidebar-footer"
+        >
+          <Avatar size={isMobile ? "sm" : "md"} src={avatarUrl} name={name} />
 
-        <span className="sidebar-footer__info">
-          <span
-            className="tiptap-button-text"
-            style={{
-              opacity: 1,
-              display: "block",
-              fontSize: isMobile ? 13 : 14,
-            }}
-          >
-            {name}
-          </span>
-          {subtitle && (
+          <span className="sidebar-footer__info">
             <span
-              className="sidebar-footer__plan"
-              style={{ opacity: 1, display: "block" }}
+              className="tiptap-button-text"
+              style={{
+                opacity: 1,
+                display: "block",
+                fontSize: isMobile ? 13 : 14,
+              }}
             >
-              {subtitle}
+              {name}
             </span>
-          )}
-        </span>
-      </Button>
+            {subtitle && (
+              <span
+                className="sidebar-footer__plan"
+                style={{ opacity: 1, display: "block" }}
+              >
+                {subtitle}
+              </span>
+            )}
+          </span>
+        </Button>
+      </div>
     </CardFooter>
   );
 }

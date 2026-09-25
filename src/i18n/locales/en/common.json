@@ -107,6 +107,7 @@
     "leave": "Leave",
     "stop": "Stop session"
   },
+  "enterTeamspace": "Enter teamspace",
   "attach": "Attach files",
   "attachment": "Attachment",
   "uploading": "Uploading…",

@@ -66,7 +66,7 @@ import {
 import { PageRowSkeleton } from "./skeletons";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useActivePageState } from "../context/active-page-context";
-import { usePageCapabilities } from "src/hooks/use-page-role";
+import { useEditablePageIds } from "src/hooks/use-editable-pages";
 import { useHiddenSections } from "../hooks/use-hidden-sections";
 import { useEditorLayoutActions } from "../context/editor-layout-context";
 
@@ -92,7 +92,6 @@ const treeCollisionDetection: CollisionDetection = (args) => {
 
 export interface SidebarTreeProps {
   tree: Record<PageCategory, PageTreeNode[]>;
-  /** Teamspace records, joined to teamspace-pages by id to show a member count. */
   teamspaces: Teamspace[];
   groups: Group[];
   onMovePage: (args: {
@@ -105,32 +104,10 @@ export interface SidebarTreeProps {
   onDeleteSection?: (category: PageCategory) => void;
   onHideSection?: (category: PageCategory) => void;
   isLoading?: boolean;
-  /**
-   * Fixed section list for a space (e.g. inside a teamspace). When set:
-   * exactly these sections render, in this order; the workspace's stored
-   * section order and hidden set are ignored, sections can't be dragged, and
-   * the Hide / Customize / Rename / Delete menu items are omitted.
-   */
   sections?: PageCategory[];
-  /** Per-category label overrides (e.g. "Pages" inside a teamspace). */
   sectionLabels?: Partial<Record<PageCategory, string>>;
-  /**
-   * Categories whose single root is rendered by its CHILDREN — the root stays
-   * in the tree (drag math and custom-order scopes unchanged) but isn't shown
-   * as a row. A drop on such a section nests under the root.
-   */
   flattenRootsOf?: PageCategory[];
-  /**
-   * Sections rendered as a plain list like Recent (e.g. Pinned, Templates):
-   * not draggable, not drop targets, no sort menu. Needed when their pages
-   * also appear in a tree section — a draggable id can't be registered twice.
-   * Recent is always flat.
-   */
   flatSections?: PageCategory[];
-  /**
-   * Who may drag a page / nest into it. Default: only the page's owner.
-   * Inside a teamspace every member may reorganize.
-   */
   canReorganize?: (page: Page) => boolean;
 }
 
@@ -152,7 +129,7 @@ function TreeRow({
   dropTarget,
   activeId,
   subtitleByPageId,
-  canEditContent,
+  canEdit,
   reorganize,
 }: {
   node: PageTreeNode;
@@ -162,7 +139,7 @@ function TreeRow({
   dropTarget: DropTarget;
   activeId: ID | null;
   subtitleByPageId: Map<ID, string>;
-  canEditContent: boolean;
+  canEdit: (page: Page) => boolean;
   reorganize: (page: Page) => boolean;
 }) {
   const page = node.page;
@@ -226,7 +203,7 @@ function TreeRow({
             subtitle={subtitleByPageId.get(page.id)}
             expanded={isExpanded}
             onToggleExpand={onToggleExpand}
-            canEditContent={canEditContent}
+            canEditContent={canEdit(page)}
           />
         </div>
       </div>
@@ -244,7 +221,7 @@ function TreeRow({
                 dropTarget={dropTarget}
                 activeId={activeId}
                 subtitleByPageId={subtitleByPageId}
-                canEditContent={canEditContent}
+                canEdit={canEdit}
                 reorganize={reorganize}
               />
             ))
@@ -296,7 +273,7 @@ function TreeSection({
   sortMode,
   onSetSortMode,
   isLoading,
-  canEditContent,
+  canEdit,
   labelOverride,
   flatten,
   flat,
@@ -319,7 +296,7 @@ function TreeSection({
   sortMode: SortMode;
   onSetSortMode: (category: PageCategory, mode: SortMode) => void;
   isLoading?: boolean;
-  canEditContent: boolean;
+  canEdit: (page: Page) => boolean;
   labelOverride?: string;
   flatten: boolean;
   flat: boolean;
@@ -352,7 +329,6 @@ function TreeSection({
 
   const { setCustomizeSidebarOpen } = useEditorLayoutActions();
 
-  // Flat sections (Recent, Pinned, Templates) have no ordering to choose.
   const menu = useMemo(() => {
     if (flat) return undefined;
     return (
@@ -445,7 +421,7 @@ function TreeSection({
             depth={0}
             disableActive={false}
             showChevron={false}
-            canEditContent={canEditContent}
+            canEditContent={canEdit(node.page)}
           />
         ))
       ) : flatten && rows.length === 0 ? (
@@ -474,7 +450,7 @@ function TreeSection({
             dropTarget={dropTarget}
             activeId={activeId}
             subtitleByPageId={subtitleByPageId}
-            canEditContent={canEditContent}
+            canEdit={canEdit}
             reorganize={reorganize}
           />
         ))
@@ -483,7 +459,6 @@ function TreeSection({
   );
 }
 
-// ── SectionDragWrapper: the whole section is the drag source ────────────────
 function SectionDragWrapper({
   category,
   children,
@@ -557,14 +532,11 @@ export const SidebarTree = memo(function SidebarTree({
     [canReorganize, personId],
   );
 
-  // Recent is always flat; spaces can add more (Pinned, Templates).
   const flatSet = useMemo(
     () => new Set<PageCategory>(["Recent", ...(flatSections ?? [])]),
     [flatSections],
   );
 
-  // Every category the tree may render: the workspace set plus any a space
-  // brings (e.g. Template inside a teamspace).
   const treeCategories = useMemo(
     () =>
       Array.from(
@@ -608,8 +580,6 @@ export const SidebarTree = memo(function SidebarTree({
     new Set(),
   );
 
-  // Tree sections are walked last-wins, so a page that appears both as a flat
-  // leaf (Recent / Pinned) and in a tree resolves to its tree node.
   const nodeById = useMemo(() => {
     const m = new Map<ID, PageTreeNode>();
     const walk = (nodes: PageTreeNode[]) => {
@@ -626,6 +596,17 @@ export const SidebarTree = memo(function SidebarTree({
     }
     return m;
   }, [sortedTree, treeCategories, flatSet]);
+
+  // Per-row edit rights: one query for the whole tree (refetched when the
+  // number of pages changes). Your own pages count immediately — covers a
+  // page you just created before the list catches up.
+  const editableIds = useEditablePageIds(nodeById.size);
+  const canEdit = useCallback(
+    (page: Page) =>
+      (personId != null && page.ownerId === personId) ||
+      editableIds.has(page.id),
+    [personId, editableIds],
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -646,9 +627,6 @@ export const SidebarTree = memo(function SidebarTree({
 
     if (activeIdStr.startsWith(SECTION_DRAG_PREFIX)) return;
 
-    // Section-level targets. Flat sections (Recent / Pinned / Templates) are
-    // never drop targets — dropping there used to patch a page's category to
-    // the section's key (e.g. "Recent"), which the DB rejects.
     if (typeof overId === "string" && isSectionId(overId)) {
       const category = (
         overId.startsWith("section:")
@@ -841,7 +819,6 @@ export const SidebarTree = memo(function SidebarTree({
   );
 
   const { activePageId } = useActivePageState();
-  const { canEditContent } = usePageCapabilities(activePageId);
 
   useEffect(() => {
     if (activePageId == null) return;
@@ -964,7 +941,7 @@ export const SidebarTree = memo(function SidebarTree({
                 sortMode={getSortMode(sortModeByCategory, category)}
                 onSetSortMode={onSetSortMode}
                 isLoading={isLoading}
-                canEditContent={canEditContent}
+                canEdit={canEdit}
                 labelOverride={sectionLabels?.[category]}
                 flatten={flattenRootsOf?.includes(category) ?? false}
                 flat={flatSet.has(category)}
@@ -1004,7 +981,10 @@ export const SidebarTree = memo(function SidebarTree({
           </div>
         ) : activeNode ? (
           <div className="sidebar-drag-overlay" style={{ opacity: 0.7 }}>
-            <PageItem page={activeNode.page} canEditContent={canEditContent} />
+            <PageItem
+              page={activeNode.page}
+              canEditContent={canEdit(activeNode.page)}
+            />
           </div>
         ) : null}
       </DragOverlay>

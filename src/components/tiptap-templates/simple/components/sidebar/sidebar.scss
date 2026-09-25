@@ -741,12 +741,13 @@
 }
 
 .workspace-switcher{
-  background-color: rgba(241, 237, 230, 0.341);
-  border: 1px solid rgba(241, 237, 230, 0.553);
-  .dark & {
-    background-color: var(--tt-gray-dark-a-50);
-     border: 1px solid rgba(32, 32, 31, 0.553);
-  }
+ 
+  // background-color: rgba(241, 237, 230, 0.341);
+  // border: 1px solid rgba(241, 237, 230, 0.553);
+  // .dark & {
+  //   background-color: var(--tt-gray-dark-a-50);
+  //    border: 1px solid rgba(32, 32, 31, 0.553);
+  // }
 }
 
 .tiptap-button-icon.workspace-icon-button > span {

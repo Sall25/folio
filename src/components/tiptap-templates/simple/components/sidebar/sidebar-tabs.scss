@@ -1,0 +1,326 @@
+$ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+$dur: 0.3s;
+
+// One rounded strip: tabs (or the search input) + the search toggle.
+.sb-tabs-shell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+// Tabs and search input share one grid cell and cross-animate.
+.sb-tabs-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+
+  > * {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+
+  &__tabs,
+  &.is-searching &__search {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+      opacity 0.2s ease,
+      transform $dur $ease-out,
+      visibility 0s linear 0s;
+  }
+
+  &__search,
+  &.is-searching &__tabs {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 0.18s ease,
+      transform $dur $ease-out,
+      visibility 0s linear $dur;
+  }
+
+  &__search {
+    transform: translateX(10px);
+  }
+
+  &.is-searching &__tabs {
+    transform: translateX(-10px);
+  }
+
+  .sb-search {
+    height: 100%;
+    min-height: 0;
+    padding: 0 2px 0 6px;
+    border: none;
+    background: transparent;
+
+    &:focus-within {
+      border: none;
+    }
+  }
+}
+
+.sb-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 100%;
+}
+
+.sb-tab {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 8px;
+  border: none;
+  border-radius: calc(var(--tt-radius-md) - 2px);
+  background: transparent;
+  font: inherit;
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    color: var(--tt-text-primary);
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+  }
+
+  &__icon {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  &__badge {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    min-width: 14px;
+    height: 14px;
+    padding: 0 3px;
+    border-radius: 999px;
+    font-size: 9.5px;
+    font-weight: 600;
+    line-height: 14px;
+    text-align: center;
+    color: #fff;
+    background: var(--sidebar-accent, var(--tt-brand-color-500));
+    box-shadow: 0 0 0 2px var(--sidebar-bg, var(--tt-card-bg-color));
+  }
+
+  &__label {
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    opacity: 0;
+    font-size: 13.5px;
+    font-weight: 600;
+    transition:
+      max-width $dur $ease-out,
+      opacity 0.2s ease,
+      margin 0.2s ease;
+  }
+
+  &.is-active {
+    color: var(--tt-text-primary);
+    background: color-mix(in srgb, var(--tt-text-primary) 9%, transparent);
+  }
+
+  &.is-active &__label {
+    max-width: 110px;
+    margin-left: 8px;
+    opacity: 1;
+  }
+}
+
+.sb-find-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 32px;
+  height: 100%;
+  border: none;
+  border-radius: calc(var(--tt-radius-md) - 2px);
+  background: transparent;
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+
+  &:hover,
+  &.is-on {
+    color: var(--tt-text-primary);
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+  }
+
+  &__icon {
+    position: absolute;
+    transition:
+      opacity 0.18s ease,
+      transform $dur $ease-out;
+
+    &.is-close {
+      opacity: 0;
+      transform: rotate(-90deg) scale(0.6);
+    }
+  }
+
+  &.is-on &__icon {
+    &.is-search {
+      opacity: 0;
+      transform: rotate(90deg) scale(0.6);
+    }
+
+    &.is-close {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+// ── Top row: workspace switcher, borderless ────────────────────────────────
+.sb-top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+
+  &__switcher {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 4px 6px;
+    border-radius: var(--tt-radius-md);
+    overflow: hidden;
+
+    &:hover {
+      background: color-mix(in srgb, var(--tt-text-primary) 5%, transparent);
+    }
+
+    .sidebar-ws-name-cell {
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+    }
+  }
+
+  &__chevron {
+    flex-shrink: 0;
+    color: var(--tt-text-secondary);
+  }
+
+  // Back to your workspace: takes no space in your workspace, slides in
+  // before the teamspace's icon when you enter one.
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    max-width: 0;
+    margin-right: -4px; // cancels the row gap while hidden
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      max-width 0.28s $ease-out,
+      margin 0.28s $ease-out,
+      opacity 0.2s ease;
+
+    .tiptap-button-icon {
+      color: var(--tt-text-secondary);
+    }
+
+    button:hover .tiptap-button-icon {
+      color: var(--tt-text-primary);
+    }
+
+    &.is-visible {
+      max-width: 40px;
+      margin-right: 0;
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  // Collapse chevrons: take no space until the top row is hovered (or the
+  // button is focused), then slide open.
+  &__collapse {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    max-width: 0;
+    margin-left: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition:
+      max-width 0.25s $ease-out,
+      margin 0.25s $ease-out,
+      opacity 0.18s ease;
+
+    .tiptap-button-icon {
+      color: var(--tt-text-secondary);
+    }
+
+    button:hover .tiptap-button-icon {
+      color: var(--tt-text-primary);
+    }
+  }
+
+  &:hover &__collapse,
+  &__collapse:focus-within {
+    max-width: 40px;
+    margin-left: 2px;
+    opacity: 1;
+  }
+}
+
+@media (hover: none) {
+  .sb-top__collapse {
+    max-width: 40px;
+    margin-left: 2px;
+    opacity: 1;
+  }
+}
+
+// ── Tab bodies (Inbox / Chats / Teamspaces) inside the sidebar ─────────────
+.sb-tab-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+
+  .tsp {
+    max-height: none;
+    height: 100%;
+  }
+
+  .tsp__header {
+    padding-left: 4px;
+  }
+
+  .tsp__body {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sb-tabs-stack > *,
+  .sb-tab__label,
+  .sb-find-toggle__icon,
+  .sb-top__collapse,
+  .sb-top__back {
+    transition-duration: 0s !important;
+    transform: none !important;
+  }
+}

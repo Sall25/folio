@@ -1,9 +1,10 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "@tanstack/react-location";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { PageItemIcon } from "./page-item-icon";
 import { PageItemOptions } from "./page-item-options";
-import { Pin, PinOff, Plus } from "lucide-react";
+import { ArrowRight, Pin, PinOff, Plus } from "lucide-react";
 import type { ID, Page } from "src/types";
 
 import "./page-item.scss";
@@ -37,9 +38,8 @@ interface PageItemProps {
   showChevron?: boolean;
   /**
    * Whether the current user can edit content, gating the row's hover actions.
-   * Computed once in SidebarTree and passed down (was previously a per-row
-   * usePageCapabilities call). Defaults to false so a PageItem rendered outside
-   * the sidebar tree simply hides those actions rather than crashing.
+   * Computed once in SidebarTree and passed down. Defaults to false so a
+   * PageItem rendered outside the sidebar tree simply hides those actions.
    */
   canEditContent?: boolean;
 }
@@ -52,8 +52,6 @@ export const PageItem = memo(function PageItem(props: PageItemProps) {
   );
 });
 
-// Fallback for PageItems rendered outside the sidebar tree (peek, tabs, drag
-// overlays elsewhere): compute the active page's capability itself, as before.
 function PageItemStandalone(props: PageItemProps) {
   const { activePageId } = useActivePageState();
   const { canEditContent } = usePageCapabilities(activePageId);
@@ -70,6 +68,7 @@ function PageItemView({
   canEditContent = false,
 }: PageItemProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(page.title);
   const [shouldShow, setShouldShow] = useState(false);
@@ -81,8 +80,6 @@ function PageItemView({
   const mutateAsyncRef = useRef(mutateAsync);
   const createPage = useCreatePage();
 
-  // Pinning: only when SidebarBody provides controls (owner, inside a
-  // teamspace) and this row is one of that teamspace's regular pages.
   const pin = usePinControl();
   const pinnable =
     pin != null &&
@@ -91,8 +88,15 @@ function PageItemView({
     page.category !== "Template";
   const pinned = pinnable && pin.isPinned(page.id);
 
+  // A teamspace's root page carries its own id as teamspace_id — that's how
+  // this row knows it IS a teamspace, and offers to enter it.
+  const isTeamspaceRoot = page.teamspaceId === page.id;
+
   const isActive = activePageId === page.id && !disableActive;
   const title = page.title || "New Page";
+
+  const isMobile = useIsMobile();
+  const { onCollapsedChange } = useEditorLayoutActions();
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
@@ -121,11 +125,14 @@ function PageItemView({
     }
   };
 
-  const isMobile = useIsMobile();
-  const { onCollapsedChange } = useEditorLayoutActions();
   const onSelect = (pageId: ID) => {
     setActivePageId(pageId);
     onCollapsedChange(isMobile);
+  };
+
+  const enterTeamspace = () => {
+    navigate({ to: `/t/${page.id}` });
+    if (isMobile) onCollapsedChange(true);
   };
 
   const smallButtonStyle = {
@@ -135,6 +142,9 @@ function PageItemView({
     height: 20,
     opacity: shouldShow ? 1 : 0,
   };
+
+  // Touch screens have no hover: keep the enter arrow visible there.
+  const showActions = shouldShow || (isMobile && isTeamspaceRoot);
 
   return (
     <div className="page-item-tree">
@@ -207,11 +217,11 @@ function PageItemView({
           <span className="page-item-title">{title}</span>
         )}
 
-        {(canEditContent || pinnable) && (
+        {(canEditContent || pinnable || isTeamspaceRoot) && (
           <CardItemGroup
             orientation="horizontal"
             className="page-item-actions"
-            style={{ maxWidth: shouldShow ? "fit-content" : 0 }}
+            style={{ maxWidth: showActions ? "fit-content" : 0 }}
           >
             {pinnable && (
               <Button
@@ -256,6 +266,26 @@ function PageItemView({
                   <Plus size={12} className="tiptap-button-icon" />
                 </Button>
               </>
+            )}
+            {isTeamspaceRoot && (
+              <Button
+                variant="ghost"
+                tooltip={t("sidebar.enterTeamspace", "Enter teamspace")}
+                aria-label={t("sidebar.enterTeamspace", "Enter teamspace")}
+                style={{
+                  ...smallButtonStyle,
+                  opacity: showActions ? 1 : 0,
+                  border: "0.5px solid var(--tt-border-color)",
+                  background:
+                    "color-mix(in srgb, var(--tt-text-primary) 8%, transparent)",
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  enterTeamspace();
+                }}
+              >
+                <ArrowRight size={12} className="tiptap-button-icon" />
+              </Button>
             )}
           </CardItemGroup>
         )}

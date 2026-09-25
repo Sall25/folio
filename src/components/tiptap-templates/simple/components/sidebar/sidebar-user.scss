@@ -1,0 +1,24 @@
+/* 1. Ensure the button itself centers the icon container */
+button.tiptap-button.workspace-avatar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 2. Make the icon container a flexbox to center the emoji/text inside it */
+.tiptap-button-icon.workspace-icon-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible; /* Allows larger icons/emojis to not be clipped */
+  width: 16px;       /* Keep your original dimensions */
+  height: 16px;
+}
+
+/* 3. Ensure the inner element (the emoji) doesn't have alignment issues */
+.tiptap-button-icon.workspace-icon-button span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;    /* Prevents vertical shifting from line-height */
+}

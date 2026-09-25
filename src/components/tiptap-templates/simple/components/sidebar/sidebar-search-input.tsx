@@ -4,6 +4,7 @@ import { CaseSensitive, Regex, Search, WholeWord, X } from "lucide-react";
 import { useEditorLayout } from "../../context/editor-layout-context";
 import { setFindOption, setFindQuery, useFindState } from "src/lib/find-store";
 import "./sidebar-search-input.scss";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 
 function Toggle({
   active,
@@ -17,7 +18,7 @@ function Toggle({
   children: React.ReactNode;
 }) {
   return (
-    <button
+    <Button
       type="button"
       className={`fip-toggle${active ? " is-on" : ""}`}
       aria-pressed={active}
@@ -28,7 +29,7 @@ function Toggle({
       onClick={onClick}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -80,7 +81,7 @@ export function SidebarSearchInput() {
 
       <div className="sb-search__tools">
         {query && (
-          <button
+          <Button
             type="button"
             className="fip-toggle"
             aria-label={t("find.clear", "Clear")}
@@ -88,8 +89,8 @@ export function SidebarSearchInput() {
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => setFindQuery("")}
           >
-            <X size={13} />
-          </button>
+            <X className="tiptap-button-icon" size={13} />
+          </Button>
         )}
         <Toggle
           active={options.matchCase}

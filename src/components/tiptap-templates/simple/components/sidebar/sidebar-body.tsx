@@ -51,6 +51,12 @@ import {
 import { FindInPagesPanel } from "./find-in-pages-panel";
 import { setPendingScrollTarget } from "../inbox-panel/pending-scroll-target";
 import type { FindMatch, FindOptions } from "src/lib/find-in-pages";
+import { InboxPanel } from "../inbox-panel";
+import { ChatsPanel } from "../chat/chats-panel";
+import { CreateRoomModal, NewDmModal } from "../chat/chat-modals";
+import { TeamspacesPanel } from "../teamspaces-panel/teamspaces-panel";
+import { TeamspaceMembersModal } from "../teamspace-members/teamspace-members-modal";
+import "./sidebar-tabs.scss";
 
 const NOOP = () => {};
 const EMPTY_TEAMSPACES: Teamspace[] = [];
@@ -140,6 +146,7 @@ function Trash() {
 
 export const SidebarBody = memo(() => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const {
     collapsed,
     peeking,
@@ -158,7 +165,6 @@ export const SidebarBody = memo(() => {
   const patchPage = usePatchPage(({ id, patch }) => updatePage(id, patch));
   const createPage = useCreatePage();
   const { setActivePageId } = useActivePageActions();
-  const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
   const { person } = useCurrentPerson();
   const space = useCurrentSpace();
   const teamspaceId = space.kind === "teamspace" ? space.id : null;
@@ -167,19 +173,26 @@ export const SidebarBody = memo(() => {
   const { pinnedIds, canPin, isPinned, setPinned } =
     useTeamspacePins(teamspaceId);
 
+  // Modals opened from the tab bodies (previously owned by SidebarNav).
+  const [createTeamspaceOpen, setCreateTeamspaceOpen] = useState(false);
+  const [membersFor, setMembersFor] = useState<string | null>(null);
+  const [newRoomOpen, setNewRoomOpen] = useState(false);
+  const [newDmOpen, setNewDmOpen] = useState(false);
+
+  const closeDrawerOnMobile = useCallback(() => {
+    if (isMobile) onCollapsedChange(true);
+  }, [isMobile, onCollapsedChange]);
+
   const pinControl = useMemo<TeamspacePinControl | null>(
     () => (teamspaceId && canPin ? { teamspaceId, isPinned, setPinned } : null),
     [teamspaceId, canPin, isPinned, setPinned],
   );
 
-  const isFindOpen = sidebarView === "search";
   const closeFind = useCallback(
     () => setSidebarView("pages"),
     [setSidebarView],
   );
 
-  // Open the page and hand the editor a "find" scroll target: it re-runs the
-  // same matcher over the live doc and selects the occurrence.
   const openFindMatch = useCallback(
     (page: Page, match: FindMatch, query: string, options: FindOptions) => {
       setPendingScrollTarget({
@@ -188,9 +201,9 @@ export const SidebarBody = memo(() => {
         find: { query, options, blockIndex: match.blockIndex },
       });
       setActivePageId(page.id);
-      if (isMobile) onCollapsedChange(true);
+      closeDrawerOnMobile();
     },
-    [setActivePageId, isMobile, onCollapsedChange],
+    [setActivePageId, closeDrawerOnMobile],
   );
 
   const isFloating = !isMobile && collapsed && peeking;
@@ -341,12 +354,85 @@ export const SidebarBody = memo(() => {
       t,
       createPage,
       setActivePageId,
-      setCreateTeamspaceOpen,
       workspaceId,
       teamspaceId,
       teamspaceHostWs,
     ],
   );
+
+  const renderView = () => {
+    switch (sidebarView) {
+      case "search":
+        return (
+          <FindInPagesPanel onClose={closeFind} onOpenMatch={openFindMatch} />
+        );
+      case "inbox":
+        return (
+          <div className="sb-tab-panel">
+            <InboxPanel />
+          </div>
+        );
+      case "chats":
+        return (
+          <div className="sb-tab-panel">
+            <ChatsPanel
+              onDone={closeDrawerOnMobile}
+              onNewRoom={() => setNewRoomOpen(true)}
+              onNewDm={() => setNewDmOpen(true)}
+            />
+          </div>
+        );
+      case "teams":
+        return (
+          <div className="sb-tab-panel">
+            <TeamspacesPanel
+              onDone={closeDrawerOnMobile}
+              onCreate={() => setCreateTeamspaceOpen(true)}
+              onManageMembers={(id) => setMembersFor(id)}
+            />
+          </div>
+        );
+      default:
+        return (
+          <>
+            <div style={{ display: "contents" }}>
+              <TeamspacePinContext.Provider value={pinControl}>
+                <SidebarTree
+                  key={teamspaceId ?? "workspace"}
+                  tree={sidebarTree}
+                  teamspaces={teamspaces as Teamspace[]}
+                  groups={groups as Group[]}
+                  onMovePage={handleMovePage}
+                  onAddPageToSection={handleAddPageToSection}
+                  onRenameSection={NOOP}
+                  onDeleteSection={NOOP}
+                  isLoading={isPending || isLoading}
+                  sections={teamspaceId ? TEAMSPACE_SECTIONS : undefined}
+                  sectionLabels={teamspaceId ? teamspaceLabels : undefined}
+                  flattenRootsOf={teamspaceId ? TEAMSPACE_FLATTEN : undefined}
+                  flatSections={teamspaceId ? TEAMSPACE_FLAT : undefined}
+                  canReorganize={teamspaceId ? ALLOW_ALL : undefined}
+                />
+              </TeamspacePinContext.Provider>
+            </div>
+
+            {!peeking && (
+              <>
+                <Spacer orientation="vertical" size={10} />
+                <Separator orientation="horizontal" style={{ height: 0.5 }} />
+                <Spacer orientation="vertical" size={10} />
+                <LibraryPaletteTrigger />
+                <Spacer orientation="vertical" size={5} />
+                <TemplatePaletteTrigger />
+                <Spacer orientation="vertical" size={5} />
+                <Trash />
+                <Spacer orientation="vertical" size={25} />
+              </>
+            )}
+          </>
+        );
+    }
+  };
 
   return (
     <>
@@ -365,52 +451,10 @@ export const SidebarBody = memo(() => {
             {!peeking && (
               <>
                 <ScrollFog edge="top" color="var(--sidebar-fog-color)" />
-                <Spacer orientation="vertical" size={12} />
+                <Spacer orientation="vertical" size={15} />
               </>
             )}
-
-            {isFindOpen ? (
-              <FindInPagesPanel
-                onClose={closeFind}
-                onOpenMatch={openFindMatch}
-              />
-            ) : (
-              <div style={{ display: "contents" }}>
-                <TeamspacePinContext.Provider value={pinControl}>
-                  <SidebarTree
-                    key={teamspaceId ?? "workspace"}
-                    tree={sidebarTree}
-                    teamspaces={teamspaces as Teamspace[]}
-                    groups={groups as Group[]}
-                    onMovePage={handleMovePage}
-                    onAddPageToSection={handleAddPageToSection}
-                    onRenameSection={NOOP}
-                    onDeleteSection={NOOP}
-                    isLoading={isPending || isLoading}
-                    sections={teamspaceId ? TEAMSPACE_SECTIONS : undefined}
-                    sectionLabels={teamspaceId ? teamspaceLabels : undefined}
-                    flattenRootsOf={teamspaceId ? TEAMSPACE_FLATTEN : undefined}
-                    flatSections={teamspaceId ? TEAMSPACE_FLAT : undefined}
-                    canReorganize={teamspaceId ? ALLOW_ALL : undefined}
-                  />
-                </TeamspacePinContext.Provider>
-              </div>
-            )}
-
-            {!peeking && (
-              <>
-                <Spacer orientation="vertical" size={10} />
-                <Separator orientation="horizontal" style={{ height: 0.5 }} />
-                <Spacer orientation="vertical" size={10} />
-                <LibraryPaletteTrigger />
-                <Spacer orientation="vertical" size={5} />
-                <TemplatePaletteTrigger />
-                <Spacer orientation="vertical" size={5} />
-                <Trash />
-
-                <Spacer orientation="vertical" size={25} />
-              </>
-            )}
+            {renderView()}
           </>
         </CardBody>
       )}
@@ -426,7 +470,32 @@ export const SidebarBody = memo(() => {
       {createTeamspaceOpen && (
         <CreateTeamspaceModal
           onClose={() => setCreateTeamspaceOpen(false)}
-          onCreated={(pageId) => setActivePageId(pageId)}
+          onCreated={(pageId) => {
+            navigate({ to: `/t/${pageId}` });
+            closeDrawerOnMobile();
+          }}
+        />
+      )}
+      {membersFor && (
+        <TeamspaceMembersModal
+          teamspaceId={membersFor}
+          onClose={() => setMembersFor(null)}
+        />
+      )}
+      {newRoomOpen && (
+        <CreateRoomModal
+          onClose={() => {
+            setNewRoomOpen(false);
+            closeDrawerOnMobile();
+          }}
+        />
+      )}
+      {newDmOpen && (
+        <NewDmModal
+          onClose={() => {
+            setNewDmOpen(false);
+            closeDrawerOnMobile();
+          }}
         />
       )}
     </>

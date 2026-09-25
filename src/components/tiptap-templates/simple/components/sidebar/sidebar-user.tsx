@@ -15,6 +15,7 @@ import { WorkspaceSwitcherPopover } from "../../workspace-switcher-popover";
 import { DynamicIcon } from "src/components/tiptap-ui/cover/dynamic-icon";
 import { PageItemIcon } from "../../page-item-icon";
 import { useIsMobile } from "src/hooks/use-breakpoint";
+import "./sidebar-user.scss";
 
 const UserSkeleton = memo(() => {
   return (
@@ -91,10 +92,10 @@ export const User = memo(() => {
               onClick={() => setSwitcherOpen((v) => !v)}
               variant="ghost"
               style={{
-                width: isMobile ? 18 : 26,
-                height: isMobile ? 16 : 24,
-                minWidth: isMobile ? 18 : 26,
-                minHeight: isMobile ? 16 : 24,
+                width: isMobile ? 18 : 32,
+                height: isMobile ? 16 : 28,
+                minWidth: isMobile ? 18 : 32,
+                minHeight: isMobile ? 16 : 28,
                 padding: 0,
                 borderRadius: "var(--tt-radius-sm)",
                 cursor: "pointer",

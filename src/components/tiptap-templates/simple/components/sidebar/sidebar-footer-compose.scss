@@ -1,0 +1,56 @@
+// Profile + compose, side by side. The profile button takes the remaining
+// width and truncates; the compose button keeps its size.
+.sidebar-footer-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+
+  .sidebar-footer {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .sidebar-footer__info {
+    min-width: 0;
+    overflow: hidden;
+
+    > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+.sidebar-footer__compose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 38px;
+  height: 38px;
+  border: 0.5px solid var(--tt-border-color);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
+  color: var(--sidebar-footer-text, var(--tt-text-primary));
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--tt-text-primary) 9%, transparent);
+    border-color: color-mix(in srgb, var(--tt-text-primary) 22%, transparent);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.94);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
