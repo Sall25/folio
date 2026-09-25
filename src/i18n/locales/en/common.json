@@ -95,6 +95,18 @@
     "lastOwner": "A teamspace needs at least one owner",
     "lastOwnerLeave": "Make someone else an owner before leaving"
   },
+  "study": {
+    "start": "Start a study session",
+    "preset": "{{focus}} min focus · {{rest}} min break",
+    "rounds_one": "{{count}} round",
+    "rounds_other": "{{count}} rounds",
+    "focus": "Focus",
+    "break": "Break",
+    "roundOf": "Round {{round}}/{{total}}",
+    "join": "Join",
+    "leave": "Leave",
+    "stop": "Stop session"
+  },
   "attach": "Attach files",
   "attachment": "Attachment",
   "uploading": "Uploading…",

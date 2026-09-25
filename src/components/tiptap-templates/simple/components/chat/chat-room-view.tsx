@@ -49,15 +49,21 @@ import {
   useSendWithAttachments,
   useSignedUrls,
 } from "src/hooks/use-chat-attachments";
+import { isSessionOpen, useStudySession } from "src/hooks/use-study-session";
 import { useChatCandidates } from "src/hooks/use-chat-candidates";
 import { usePages } from "src/hooks/use-pages";
 import { useCurrentPerson } from "src/hooks/use-session";
+import { useNow } from "src/hooks/use-now";
 import { spaceHomePath, useCurrentSpace } from "src/hooks/use-current-space";
 import { useIsMobile } from "src/hooks/use-breakpoint";
 import { useEditorLayout } from "../../context/editor-layout-context";
 import { useActivePageActions } from "../../context/active-page-context";
 import { PageItemIcon } from "../../page-item-icon";
-import type { ChatAttachment, UploadedFile } from "src/api/chat-attachments";
+import {
+  removeChatFile,
+  type ChatAttachment,
+  type UploadedFile,
+} from "src/api/chat-attachments";
 import type { Page, ChatMessage, ChatPerson, ChatRoom } from "src/types";
 import {
   mentionedPersonIds,
@@ -76,6 +82,7 @@ import { chatRoomIdFromPath, otherDmMember, roomTitle } from "./chat-utils";
 import { InviteToRoomModal } from "./chat-modals";
 import { MentionPicker, type MentionItem } from "./mention-picker";
 import { setPageChatOpen } from "./page-chat-store";
+import { StudySessionBar, StudyStartMenu } from "./study-session";
 import "./chat-room.scss";
 import "./mention-picker.scss";
 import "./chat-extras.scss";
@@ -131,8 +138,6 @@ type Item =
   | { kind: "day"; key: string; label: string }
   | { kind: "msg"; key: string; msg: ChatMessage; compact: boolean };
 
-// One-line text of a message for quotes. Files-only messages read
-// "Attachment".
 function plainExcerpt(
   body: string,
   peopleById: Map<string, ChatPerson>,
@@ -174,8 +179,10 @@ export function RoomContent({
   const { person } = useCurrentPerson();
   const { setActivePageId } = useActivePageActions();
   const meId = person?.id;
+  const now = useNow();
 
-  const isMember = room.members.some((m) => m.personId === meId);
+  const myMembership = room.members.find((m) => m.personId === meId);
+  const isMember = !!myMembership;
   const { data: messages = [] } = useChatMessages(room.id);
   const { loadOlder, hasMore, isLoadingOlder } = useLoadOlderMessages(room.id);
   useMarkRoomRead(isMember ? room.id : null, messages.length);
@@ -190,7 +197,6 @@ export function RoomContent({
   );
   const toggleReaction = useToggleReaction(room.id);
 
-  // Attachments + their signed links (one batch per room).
   const { data: attachments = [] } = useRoomAttachments(room.id);
   const attachmentsByMessage = useMemo(() => {
     const m = new Map<string, ChatAttachment[]>();
@@ -207,6 +213,14 @@ export function RoomContent({
   );
   const { data: signedUrls = {} } = useSignedUrls(attachmentPaths);
 
+  // Study session: members who can post (i.e. members here — the composer
+  // gate) can start/join; the starter or a room owner can stop.
+  const study = useStudySession(room.id);
+  const sessionOpen = isSessionOpen(study.session, now);
+  const canStopSession =
+    !!study.session &&
+    (study.session.startedBy === meId || myMembership?.role === "owner");
+
   const personIds = useMemo(() => {
     const ids = new Set<string>(room.members.map((m) => m.personId));
     for (const msg of messages) {
@@ -214,8 +228,9 @@ export function RoomContent({
       for (const id of mentionedPersonIds(msg.body)) ids.add(id);
     }
     for (const r of reactions) ids.add(r.personId);
+    for (const id of study.participants) ids.add(id);
     return [...ids];
-  }, [room.members, messages, reactions]);
+  }, [room.members, messages, reactions, study.participants]);
   const { data: people = [] } = useChatPeople(personIds);
   const peopleById = useMemo(
     () => new Map<string, ChatPerson>(people.map((p) => [p.id, p])),
@@ -385,8 +400,6 @@ export function RoomContent({
 
   const teamspaceId = space.kind === "teamspace" ? space.id : null;
 
-  // Text-only messages keep the optimistic path; messages with files go
-  // through the single-transaction RPC.
   const onSend = (body: string, files: UploadedFile[]) => {
     stick.current = true;
     const replyToId = replyTo?.id ?? null;
@@ -396,6 +409,19 @@ export function RoomContent({
       send.mutate({ body, replyToId });
     }
     setReplyTo(null);
+  };
+
+  // Deleting a message also removes its files from Storage. Only the author
+  // can delete a message, and the author owns its uploads.
+  const deleteMessage = (messageId: string) => {
+    const paths = (attachmentsByMessage.get(messageId) ?? []).map(
+      (a) => a.path,
+    );
+    del.mutate(messageId, {
+      onSuccess: () => {
+        for (const p of paths) removeChatFile(p).catch(() => {});
+      },
+    });
   };
 
   const startReply = (msg: ChatMessage) => {
@@ -521,6 +547,7 @@ export function RoomContent({
           )}
 
           <div className="chat-room__actions">
+            {isMember && !sessionOpen && <StudyStartMenu study={study} />}
             {room.kind === "page" && discussedPage && (
               <Button variant="ghost" onClick={openDiscussedPage}>
                 <FileText className="tiptap-button-icon" />
@@ -550,6 +577,15 @@ export function RoomContent({
           </div>
         </header>
       )}
+
+      <StudySessionBar
+        study={study}
+        meId={meId}
+        canPost={isMember}
+        canStop={canStopSession}
+        peopleById={peopleById}
+        showIdleStart={variant === "panel"}
+      />
 
       <div className="chat-room__list" ref={listRef} onScroll={onScroll}>
         {items.length === 0 ? (
@@ -635,7 +671,7 @@ export function RoomContent({
                   }}
                   onReply={() => startReply(msg)}
                   onJumpTo={(id) => void jumpTo(id)}
-                  onDelete={() => del.mutate(msg.id)}
+                  onDelete={() => deleteMessage(msg.id)}
                 />
               );
             })}
@@ -758,8 +794,6 @@ function MessageBody({
   );
 }
 
-// Images as a thumbnail grid; everything else as file cards. Links are the
-// short-lived signed URLs; until they arrive, items render dimmed.
 function MessageAttachments({
   attachments,
   signedUrls,

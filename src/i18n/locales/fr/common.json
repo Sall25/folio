@@ -95,6 +95,18 @@
     "lastOwner": "Un espace d'équipe doit avoir au moins un propriétaire",
     "lastOwnerLeave": "Nomme un autre propriétaire avant de partir"
   },
+  "study": {
+    "start": "Lancer une session d'étude",
+    "preset": "{{focus}} min de travail · {{rest}} min de pause",
+    "rounds_one": "{{count}} tour",
+    "rounds_other": "{{count}} tours",
+    "focus": "Concentration",
+    "break": "Pause",
+    "roundOf": "Tour {{round}}/{{total}}",
+    "join": "Rejoindre",
+    "leave": "Quitter",
+    "stop": "Arrêter la session"
+  },
   "attach": "Joindre des fichiers",
   "attachment": "Pièce jointe",
   "uploading": "Envoi…",
