@@ -11,10 +11,12 @@ import type { TFunction } from "i18next";
 import { useLocation, useNavigate } from "@tanstack/react-location";
 import {
   ArrowUp,
+  Download,
   FileText,
   Hash,
   Lock,
   LogOut,
+  Paperclip,
   Reply,
   SmilePlus,
   Trash2,
@@ -41,6 +43,12 @@ import {
   useToggleReaction,
   type ReactionGroup,
 } from "src/hooks/use-chat-reactions";
+import {
+  useChatUploads,
+  useRoomAttachments,
+  useSendWithAttachments,
+  useSignedUrls,
+} from "src/hooks/use-chat-attachments";
 import { useChatCandidates } from "src/hooks/use-chat-candidates";
 import { usePages } from "src/hooks/use-pages";
 import { useCurrentPerson } from "src/hooks/use-session";
@@ -49,6 +57,7 @@ import { useIsMobile } from "src/hooks/use-breakpoint";
 import { useEditorLayout } from "../../context/editor-layout-context";
 import { useActivePageActions } from "../../context/active-page-context";
 import { PageItemIcon } from "../../page-item-icon";
+import type { ChatAttachment, UploadedFile } from "src/api/chat-attachments";
 import type { Page, ChatMessage, ChatPerson, ChatRoom } from "src/types";
 import {
   mentionedPersonIds,
@@ -70,19 +79,24 @@ import { setPageChatOpen } from "./page-chat-store";
 import "./chat-room.scss";
 import "./mention-picker.scss";
 import "./chat-extras.scss";
+import "./chat-attachments.scss";
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
 const PICKER_LIMIT = 5;
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "😮", "🙏"];
-// Start loading older messages this close to the top of the list.
 const LOAD_OLDER_THRESHOLD_PX = 80;
-// Jumping to an unloaded message loads at most this many older pages.
 const MAX_JUMP_PAGES = 10;
 
 const nextFrame = () =>
   new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
   );
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
 
 export function ChatRoomView() {
   const { t } = useTranslation();
@@ -117,6 +131,8 @@ type Item =
   | { kind: "day"; key: string; label: string }
   | { kind: "msg"; key: string; msg: ChatMessage; compact: boolean };
 
+// One-line text of a message for quotes. Files-only messages read
+// "Attachment".
 function plainExcerpt(
   body: string,
   peopleById: Map<string, ChatPerson>,
@@ -135,6 +151,7 @@ function plainExcerpt(
     .join("")
     .replace(/\s+/g, " ")
     .trim();
+  if (!text) return t("chat.attachment", "Attachment");
   return text.length > 90 ? `${text.slice(0, 90)}…` : text;
 }
 
@@ -173,6 +190,23 @@ export function RoomContent({
   );
   const toggleReaction = useToggleReaction(room.id);
 
+  // Attachments + their signed links (one batch per room).
+  const { data: attachments = [] } = useRoomAttachments(room.id);
+  const attachmentsByMessage = useMemo(() => {
+    const m = new Map<string, ChatAttachment[]>();
+    for (const a of attachments) {
+      const list = m.get(a.messageId) ?? [];
+      list.push(a);
+      m.set(a.messageId, list);
+    }
+    return m;
+  }, [attachments]);
+  const attachmentPaths = useMemo(
+    () => attachments.map((a) => a.path),
+    [attachments],
+  );
+  const { data: signedUrls = {} } = useSignedUrls(attachmentPaths);
+
   const personIds = useMemo(() => {
     const ids = new Set<string>(room.members.map((m) => m.personId));
     for (const msg of messages) {
@@ -205,6 +239,7 @@ export function RoomContent({
   );
 
   const send = useSendMessage(room.id);
+  const sendWithFiles = useSendWithAttachments(room.id);
   const del = useDeleteMessage(room.id);
   const join = useJoinChatRoom();
   const leave = useLeaveChatRoom();
@@ -273,15 +308,13 @@ export function RoomContent({
   // ── Scrolling ──────────────────────────────────────────────────────────
   const listRef = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
-  // Scroll anchor while older messages are prepended: keeps the view still.
   const anchor = useRef<{ height: number; top: number } | null>(null);
 
   useLayoutEffect(() => {
     const el = listRef.current;
     if (el && stick.current) el.scrollTop = el.scrollHeight;
-  }, [items.length]);
+  }, [items.length, attachments.length]);
 
-  // After older messages land above, restore the reading position.
   const firstMessageId = messages[0]?.id;
   useLayoutEffect(() => {
     const el = listRef.current;
@@ -296,7 +329,6 @@ export function RoomContent({
     if (el) anchor.current = { height: el.scrollHeight, top: el.scrollTop };
     stick.current = false;
     const more = await loadOlder();
-    // Nothing prepended → nothing to restore.
     if (anchor.current && !more) anchor.current = null;
     return more;
   }, [loadOlder]);
@@ -324,7 +356,6 @@ export function RoomContent({
     return true;
   }, []);
 
-  // Jump to a message, loading older pages until it's there (bounded).
   const jumpTo = useCallback(
     async (messageId: string) => {
       if (scrollToMessage(messageId)) return;
@@ -337,7 +368,6 @@ export function RoomContent({
     [scrollToMessage, loadOlderKeepingPosition],
   );
 
-  // A notification can ask to land on a specific message (keyed by room id).
   const hasMessages = messages.length > 0;
   useEffect(() => {
     if (!hasMessages) return;
@@ -355,9 +385,16 @@ export function RoomContent({
 
   const teamspaceId = space.kind === "teamspace" ? space.id : null;
 
-  const onSend = (body: string) => {
+  // Text-only messages keep the optimistic path; messages with files go
+  // through the single-transaction RPC.
+  const onSend = (body: string, files: UploadedFile[]) => {
     stick.current = true;
-    send.mutate({ body, replyToId: replyTo?.id ?? null });
+    const replyToId = replyTo?.id ?? null;
+    if (files.length) {
+      sendWithFiles.mutate({ body, replyToId, attachments: files });
+    } else {
+      send.mutate({ body, replyToId });
+    }
     setReplyTo(null);
   };
 
@@ -396,8 +433,6 @@ export function RoomContent({
             defaultValue: "Message #{{name}}",
           });
 
-  // The room's opening line — the empty state, and the top of a fully
-  // loaded history.
   const roomStart = (
     <>
       <span className="chat-room__empty-icon">
@@ -586,6 +621,8 @@ export function RoomContent({
                   peopleById={peopleById}
                   pagesById={pagesById}
                   quote={quote}
+                  attachments={attachmentsByMessage.get(msg.id) ?? []}
+                  signedUrls={signedUrls}
                   reactions={reactionsByMessage.get(msg.id) ?? []}
                   pickerOpen={pickerFor === msg.id}
                   onTogglePicker={() =>
@@ -619,10 +656,12 @@ export function RoomContent({
 
         {isMember ? (
           <Composer
+            roomId={room.id}
             placeholder={composerPlaceholder}
             people={mentionablePeople}
             pages={[...pagesById.values()]}
             replyTo={replyTo}
+            sending={sendWithFiles.isPending}
             onCancelReply={() => setReplyTo(null)}
             onSend={onSend}
             onTyping={setTyping}
@@ -719,6 +758,67 @@ function MessageBody({
   );
 }
 
+// Images as a thumbnail grid; everything else as file cards. Links are the
+// short-lived signed URLs; until they arrive, items render dimmed.
+function MessageAttachments({
+  attachments,
+  signedUrls,
+}: {
+  attachments: ChatAttachment[];
+  signedUrls: Record<string, string>;
+}) {
+  const { t } = useTranslation();
+  const images = attachments.filter((a) => a.mime.startsWith("image/"));
+  const files = attachments.filter((a) => !a.mime.startsWith("image/"));
+
+  return (
+    <div className="chat-files">
+      {images.length > 0 && (
+        <div className="chat-images">
+          {images.map((a) => {
+            const url = signedUrls[a.path];
+            return url ? (
+              <a
+                key={a.id}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={a.name}
+              >
+                <img src={url} alt={a.name} loading="lazy" />
+              </a>
+            ) : (
+              <span key={a.id} className="chat-file--pending" />
+            );
+          })}
+        </div>
+      )}
+      {files.map((a) => {
+        const url = signedUrls[a.path];
+        return (
+          <a
+            key={a.id}
+            className={`chat-file${url ? "" : " chat-file--pending"}`}
+            href={url ?? undefined}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={t("chat.download", "Download")}
+          >
+            <span className="chat-file__icon">
+              <FileText size={16} />
+            </span>
+            <span className="chat-file__text">
+              <span className="chat-file__name">{a.name}</span>
+              <span className="chat-file__size">{formatSize(a.size)}</span>
+            </span>
+            <Download size={15} className="chat-file__dl" />
+          </a>
+        );
+      })}
+    </div>
+  );
+}
+
 type Quote =
   | { state: "ok"; id: string; authorName: string; excerpt: string }
   | { state: "deleted" }
@@ -735,6 +835,8 @@ function MessageRow({
   peopleById,
   pagesById,
   quote,
+  attachments,
+  signedUrls,
   reactions,
   pickerOpen,
   onTogglePicker,
@@ -753,6 +855,8 @@ function MessageRow({
   peopleById: Map<string, ChatPerson>;
   pagesById: Map<string, Page>;
   quote: Quote;
+  attachments: ChatAttachment[];
+  signedUrls: Record<string, string>;
   reactions: ReactionGroup[];
   pickerOpen: boolean;
   onTogglePicker: () => void;
@@ -817,7 +921,6 @@ function MessageRow({
               <span className="chat-quote__text">{quote.excerpt}</span>
             </button>
           ) : quote.state === "missing" ? (
-            // Older than what's loaded: clicking loads history until found.
             <button
               type="button"
               className="chat-quote"
@@ -848,14 +951,24 @@ function MessageRow({
             {t("chat.deleted", "Message deleted")}
           </p>
         ) : (
-          <p className="chat-msg__body">
-            <MessageBody
-              body={msg.body}
-              meId={meId}
-              peopleById={peopleById}
-              pagesById={pagesById}
-            />
-          </p>
+          <>
+            {msg.body.trim() && (
+              <p className="chat-msg__body">
+                <MessageBody
+                  body={msg.body}
+                  meId={meId}
+                  peopleById={peopleById}
+                  pagesById={pagesById}
+                />
+              </p>
+            )}
+            {attachments.length > 0 && (
+              <MessageAttachments
+                attachments={attachments}
+                signedUrls={signedUrls}
+              />
+            )}
+          </>
         )}
 
         {!deleted && reactions.length > 0 && (
@@ -933,20 +1046,24 @@ function MessageRow({
 const TRIGGER_RE = /(?:^|\s)@([^\s@]{0,30})$/;
 
 function Composer({
+  roomId,
   placeholder,
   people,
   pages,
   replyTo,
+  sending,
   onCancelReply,
   onSend,
   onTyping,
 }: {
+  roomId: string;
   placeholder: string;
   people: ChatPerson[];
   pages: Page[];
   replyTo: ReplyContext | null;
+  sending: boolean;
   onCancelReply: () => void;
-  onSend: (body: string) => void;
+  onSend: (body: string, files: UploadedFile[]) => void;
   onTyping: (typing: boolean) => void;
 }) {
   const { t } = useTranslation();
@@ -957,8 +1074,12 @@ function Composer({
     query: string;
   } | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimer = useRef<number | null>(null);
+  const uploads = useChatUploads(roomId);
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -980,6 +1101,16 @@ function Composer({
   useEffect(() => {
     if (replyId) ref.current?.focus();
   }, [replyId]);
+
+  const addFiles = (files: File[]) => {
+    if (!files.length) return;
+    const problem = uploads.add(files);
+    setNotice(
+      problem === "tooMany"
+        ? t("chat.tooManyFiles", "Up to 10 files per message.")
+        : null,
+    );
+  };
 
   const pickerItems = useMemo<MentionItem[]>(() => {
     if (!trigger) return [];
@@ -1042,13 +1173,19 @@ function Composer({
     });
   };
 
+  const canSend =
+    !uploads.uploading &&
+    !sending &&
+    (value.trim().length > 0 || uploads.done.length > 0);
+
   const submit = () => {
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    onSend(serializeDraft(trimmed, mentions));
+    if (!canSend) return;
+    onSend(serializeDraft(value.trim(), mentions), uploads.done);
     setValue("");
     setMentions([]);
     setTrigger(null);
+    setNotice(null);
+    uploads.reset();
     if (typingTimer.current) window.clearTimeout(typingTimer.current);
     onTyping(false);
   };
@@ -1056,7 +1193,25 @@ function Composer({
   const pickerOpen = trigger !== null;
 
   return (
-    <div className="chat-composer-wrap">
+    <div
+      className={`chat-composer-wrap${dragging ? " is-dragging" : ""}`}
+      onDragOver={(e) => {
+        if (!e.dataTransfer.types.includes("Files")) return;
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          setDragging(false);
+        }
+      }}
+      onDrop={(e) => {
+        if (!e.dataTransfer.files.length) return;
+        e.preventDefault();
+        setDragging(false);
+        addFiles(Array.from(e.dataTransfer.files));
+      }}
+    >
       {pickerOpen && (
         <MentionPicker
           items={pickerItems}
@@ -1081,7 +1236,75 @@ function Composer({
           </button>
         </div>
       )}
+
+      {notice && <div className="chat-upload-notice">{notice}</div>}
+
+      {uploads.items.length > 0 && (
+        <div className="chat-uploads">
+          {uploads.items.map((it) => (
+            <div
+              key={it.id}
+              className={`chat-upload${it.status === "uploading" ? " is-uploading" : ""}`}
+            >
+              {it.previewUrl ? (
+                <img
+                  className="chat-upload__thumb"
+                  src={it.previewUrl}
+                  alt=""
+                />
+              ) : (
+                <span className="chat-upload__icon">
+                  <FileText size={16} />
+                </span>
+              )}
+              <span className="chat-upload__text">
+                <span className="chat-upload__name">{it.file.name}</span>
+                <span
+                  className={`chat-upload__status${it.status === "error" ? " is-error" : ""}`}
+                >
+                  {it.status === "uploading"
+                    ? t("chat.uploading", "Uploading…")
+                    : it.status === "error"
+                      ? it.error === "tooLarge"
+                        ? t("chat.fileTooLarge", "Over 25 MB")
+                        : t("chat.uploadFailed", "Upload failed")
+                      : formatSize(it.file.size)}
+                </span>
+              </span>
+              <button
+                type="button"
+                className="chat-upload__remove"
+                aria-label={t("chat.removeFile", "Remove file")}
+                title={t("chat.removeFile", "Remove file")}
+                onClick={() => uploads.remove(it.id)}
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="chat-composer">
+        <button
+          type="button"
+          className="chat-composer__attach"
+          aria-label={t("chat.attach", "Attach files")}
+          title={t("chat.attach", "Attach files")}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Paperclip size={16} />
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          hidden
+          onChange={(e) => {
+            addFiles(Array.from(e.target.files ?? []));
+            e.target.value = "";
+          }}
+        />
         <textarea
           ref={ref}
           className="chat-composer__input"
@@ -1093,6 +1316,13 @@ function Composer({
             setValue(text);
             updateTrigger(text, e.target.selectionStart ?? text.length);
             if (text) bumpTyping();
+          }}
+          onPaste={(e) => {
+            const files = Array.from(e.clipboardData.files);
+            if (files.length) {
+              e.preventDefault();
+              addFiles(files);
+            }
           }}
           onClick={(e) =>
             updateTrigger(value, e.currentTarget.selectionStart ?? value.length)
@@ -1142,7 +1372,7 @@ function Composer({
           type="button"
           className="chat-composer__send"
           aria-label={t("chat.send", "Send")}
-          disabled={!value.trim()}
+          disabled={!canSend}
           onClick={submit}
         >
           <ArrowUp size={16} />
