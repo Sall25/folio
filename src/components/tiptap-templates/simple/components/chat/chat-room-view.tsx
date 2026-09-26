@@ -8,14 +8,17 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+import type { JSONContent } from "@tiptap/core";
 import { useLocation, useNavigate } from "@tanstack/react-location";
 import {
   ArrowUp,
+  ArrowUpRight,
   Download,
   FileText,
   Hash,
   Lock,
   LogOut,
+  MessageSquare,
   Paperclip,
   Reply,
   SmilePlus,
@@ -49,6 +52,10 @@ import {
   useSendWithAttachments,
   useSignedUrls,
 } from "src/hooks/use-chat-attachments";
+import {
+  useRoomBlockRefs,
+  useSendBlockMessage,
+} from "src/hooks/use-chat-blocks";
 import { isSessionOpen, useStudySession } from "src/hooks/use-study-session";
 import { useChatCandidates } from "src/hooks/use-chat-candidates";
 import { usePages } from "src/hooks/use-pages";
@@ -59,12 +66,14 @@ import { useIsMobile } from "src/hooks/use-breakpoint";
 import { useEditorLayout } from "../../context/editor-layout-context";
 import { useActivePageActions } from "../../context/active-page-context";
 import { PageItemIcon } from "../../page-item-icon";
+import type { ChatMessage, ChatPerson, ChatRoom } from "src/types";
 import {
   removeChatFile,
   type ChatAttachment,
   type UploadedFile,
 } from "src/api/chat-attachments";
-import type { Page, ChatMessage, ChatPerson, ChatRoom } from "src/types";
+import type { BlockRef } from "src/api/chat-blocks";
+import type { Page } from "src/types";
 import {
   mentionedPersonIds,
   mentionsPerson,
@@ -74,8 +83,10 @@ import {
   serializeDraft,
   type DraftMention,
 } from "src/lib/chat-mentions";
+import { blockContext } from "src/lib/page-blocks";
 import {
   consumePendingScrollTarget,
+  setPendingScrollTarget,
   subscribePendingScrollTarget,
 } from "../inbox-panel/pending-scroll-target";
 import { chatRoomIdFromPath, otherDmMember, roomTitle } from "./chat-utils";
@@ -83,16 +94,25 @@ import { InviteToRoomModal } from "./chat-modals";
 import { MentionPicker, type MentionItem } from "./mention-picker";
 import { setPageChatOpen } from "./page-chat-store";
 import { StudySessionBar, StudyStartMenu } from "./study-session";
+import {
+  pageChatKey,
+  subscribePendingBlocks,
+  takePendingBlock,
+  type SharedBlockDraft,
+} from "./block-share-store";
 import "./chat-room.scss";
 import "./mention-picker.scss";
 import "./chat-extras.scss";
 import "./chat-attachments.scss";
+import "./chat-blocks.scss";
+import "./block-thread.scss";
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
 const PICKER_LIMIT = 5;
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "😮", "🙏"];
 const LOAD_OLDER_THRESHOLD_PX = 80;
 const MAX_JUMP_PAGES = 10;
+const NO_PENDING_KEYS: string[] = [];
 
 const nextFrame = () =>
   new Promise<void>((resolve) =>
@@ -213,8 +233,37 @@ export function RoomContent({
   );
   const { data: signedUrls = {} } = useSignedUrls(attachmentPaths);
 
-  // Study session: members who can post (i.e. members here — the composer
-  // gate) can start/join; the starter or a room owner can stop.
+  const blockRefs = useRoomBlockRefs(room.id, messages.length);
+
+  // Block messages whose page you can read become threads; their replies
+  // live in the side view. (Locked cards stay flat, so nobody loses replies.)
+  const threadable = useMemo(() => {
+    const s = new Set<string>();
+    blockRefs.forEach((ref, id) => {
+      if (ref.snapshot != null) s.add(id);
+    });
+    return s;
+  }, [blockRefs]);
+
+  const repliesByParent = useMemo(() => {
+    const m = new Map<string, ChatMessage[]>();
+    for (const msg of messages) {
+      if (msg.replyToId && threadable.has(msg.replyToId)) {
+        const list = m.get(msg.replyToId) ?? [];
+        list.push(msg);
+        m.set(msg.replyToId, list);
+      }
+    }
+    return m;
+  }, [messages, threadable]);
+
+  const mainMessages = useMemo(
+    () => messages.filter((m) => !(m.replyToId && threadable.has(m.replyToId))),
+    [messages, threadable],
+  );
+
+  const [threadFor, setThreadFor] = useState<string | null>(null);
+
   const study = useStudySession(room.id);
   const sessionOpen = isSessionOpen(study.session, now);
   const canStopSession =
@@ -255,6 +304,7 @@ export function RoomContent({
 
   const send = useSendMessage(room.id);
   const sendWithFiles = useSendWithAttachments(room.id);
+  const sendBlock = useSendBlockMessage(room.id);
   const del = useDeleteMessage(room.id);
   const join = useJoinChatRoom();
   const leave = useLeaveChatRoom();
@@ -289,11 +339,19 @@ export function RoomContent({
     return [...byId.values()];
   }, [room, peopleById, scopePeople, meId]);
 
+  const pendingKeys = useMemo(
+    () =>
+      room.kind === "page" && room.pageId
+        ? [room.id, pageChatKey(room.pageId)]
+        : [room.id],
+    [room.id, room.kind, room.pageId],
+  );
+
   const items = useMemo<Item[]>(() => {
     const out: Item[] = [];
     let lastDay = "";
     let prev: ChatMessage | null = null;
-    for (const msg of messages) {
+    for (const msg of mainMessages) {
       const d = new Date(msg.createdAt);
       const day = d.toDateString();
       if (day !== lastDay) {
@@ -318,10 +376,11 @@ export function RoomContent({
       prev = msg;
     }
     return out;
-  }, [messages, i18n.language]);
+  }, [mainMessages, i18n.language]);
 
   // ── Scrolling ──────────────────────────────────────────────────────────
   const listRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
   const anchor = useRef<{ height: number; top: number } | null>(null);
 
@@ -329,6 +388,19 @@ export function RoomContent({
     const el = listRef.current;
     if (el && stick.current) el.scrollTop = el.scrollHeight;
   }, [items.length, attachments.length]);
+
+  useEffect(() => {
+    const list = listRef.current;
+    const content = contentRef.current;
+    if (!list || !content || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      if (stick.current && !anchor.current) {
+        list.scrollTop = list.scrollHeight;
+      }
+    });
+    ro.observe(content);
+    return () => ro.disconnect();
+  }, []);
 
   const firstMessageId = messages[0]?.id;
   useLayoutEffect(() => {
@@ -371,8 +443,15 @@ export function RoomContent({
     return true;
   }, []);
 
+  // Jump to a message: a thread reply opens its thread; anything else is
+  // scrolled to, loading older pages until found (bounded).
   const jumpTo = useCallback(
     async (messageId: string) => {
+      const known = messagesById.get(messageId);
+      if (known?.replyToId && threadable.has(known.replyToId)) {
+        setThreadFor(known.replyToId);
+        return;
+      }
       if (scrollToMessage(messageId)) return;
       for (let i = 0; i < MAX_JUMP_PAGES; i++) {
         const more = await loadOlderKeepingPosition();
@@ -380,7 +459,7 @@ export function RoomContent({
         if (scrollToMessage(messageId) || !more) return;
       }
     },
-    [scrollToMessage, loadOlderKeepingPosition],
+    [messagesById, threadable, scrollToMessage, loadOlderKeepingPosition],
   );
 
   const hasMessages = messages.length > 0;
@@ -400,10 +479,24 @@ export function RoomContent({
 
   const teamspaceId = space.kind === "teamspace" ? space.id : null;
 
-  const onSend = (body: string, files: UploadedFile[]) => {
+  const onSend = (
+    body: string,
+    files: UploadedFile[],
+    block: SharedBlockDraft | null,
+  ) => {
     stick.current = true;
     const replyToId = replyTo?.id ?? null;
-    if (files.length) {
+    if (block) {
+      sendBlock.mutate({
+        body,
+        replyToId,
+        block: {
+          pageId: block.pageId,
+          blockId: block.blockId,
+          snapshot: block.snapshot,
+        },
+      });
+    } else if (files.length) {
       sendWithFiles.mutate({ body, replyToId, attachments: files });
     } else {
       send.mutate({ body, replyToId });
@@ -411,8 +504,29 @@ export function RoomContent({
     setReplyTo(null);
   };
 
-  // Deleting a message also removes its files from Storage. Only the author
-  // can delete a message, and the author owns its uploads.
+  // A reply posted from the side view goes into that block's thread.
+  const onSendThreadReply =
+    (parentId: string) => (body: string, files: UploadedFile[]) => {
+      if (files.length) {
+        sendWithFiles.mutate({ body, replyToId: parentId, attachments: files });
+      } else {
+        send.mutate({ body, replyToId: parentId });
+      }
+    };
+
+  // Full view: the page (in its own space), scrolled to the block, flashing.
+  const openBlock = useCallback(
+    (pageId: string, blockId: string) => {
+      setPendingScrollTarget({
+        pageId,
+        targetNodeId: blockId,
+        type: "block",
+      });
+      setActivePageId(pageId);
+    },
+    [setActivePageId],
+  );
+
   const deleteMessage = (messageId: string) => {
     const paths = (attachmentsByMessage.get(messageId) ?? []).map(
       (a) => a.path,
@@ -487,250 +601,628 @@ export function RoomContent({
     </>
   );
 
-  return (
-    <div className="chat-room">
-      {variant === "full" && (
-        <header className="chat-room__header">
-          <span className="chat-room__icon">
-            {room.kind === "dm" ? (
-              <Avatar src={partner?.avatarUrl ?? undefined} name={title} />
-            ) : room.kind === "page" ? (
-              discussedPage ? (
-                <PageItemIcon
-                  cover={discussedPage.cover}
-                  styles={{ width: 16, height: 16, fontSize: 16 }}
-                />
-              ) : (
-                <FileText size={16} />
-              )
-            ) : room.visibility === "private" ? (
-              <Lock size={16} />
-            ) : (
-              <Hash size={17} />
-            )}
-          </span>
-          <div className="chat-room__heading">
-            <h1 className="chat-room__title">{title}</h1>
-            <span className="chat-room__meta">
-              {room.kind === "dm"
-                ? t("chat.directMessage", "Direct message")
-                : room.kind === "page"
-                  ? t("chat.pageDiscussion", "Discussion")
-                  : t("chat.memberCount", {
-                      count: room.members.length,
-                      defaultValue: "{{count}} members",
-                    })}
-            </span>
-          </div>
+  // The open thread (only for a readable, live block message).
+  const threadMsg = threadFor ? messagesById.get(threadFor) : undefined;
+  const threadRef = threadFor ? blockRefs.get(threadFor) : undefined;
+  const threadOpen =
+    !!threadMsg &&
+    threadMsg.deletedAt == null &&
+    !!threadRef &&
+    threadRef.snapshot != null &&
+    !!threadRef.pageId &&
+    !!threadRef.blockId;
 
-          {present.length > 0 && (
-            <div
-              className="chat-room__present"
-              title={present.map((p) => p.name).join(", ")}
-            >
-              {present.slice(0, 5).map((p) => (
-                <span key={p.id} className="chat-room__present-avatar">
-                  <Avatar
-                    size="sm"
-                    src={p.avatarUrl ?? undefined}
-                    name={p.name}
-                    online
+  return (
+    <div
+      className={`chat-room-shell${variant === "panel" ? " is-overlay" : ""}`}
+    >
+      <div className="chat-room">
+        {variant === "full" && (
+          <header className="chat-room__header">
+            <span className="chat-room__icon">
+              {room.kind === "dm" ? (
+                <Avatar src={partner?.avatarUrl ?? undefined} name={title} />
+              ) : room.kind === "page" ? (
+                discussedPage ? (
+                  <PageItemIcon
+                    cover={discussedPage.cover}
+                    styles={{ width: 16, height: 16, fontSize: 16 }}
                   />
-                </span>
-              ))}
-              {present.length > 5 && (
-                <span className="chat-room__present-more">
-                  +{present.length - 5}
-                </span>
+                ) : (
+                  <FileText size={16} />
+                )
+              ) : room.visibility === "private" ? (
+                <Lock size={16} />
+              ) : (
+                <Hash size={17} />
+              )}
+            </span>
+            <div className="chat-room__heading">
+              <h1 className="chat-room__title">{title}</h1>
+              <span className="chat-room__meta">
+                {room.kind === "dm"
+                  ? t("chat.directMessage", "Direct message")
+                  : room.kind === "page"
+                    ? t("chat.pageDiscussion", "Discussion")
+                    : t("chat.memberCount", {
+                        count: room.members.length,
+                        defaultValue: "{{count}} members",
+                      })}
+              </span>
+            </div>
+
+            {present.length > 0 && (
+              <div
+                className="chat-room__present"
+                title={present.map((p) => p.name).join(", ")}
+              >
+                {present.slice(0, 5).map((p) => (
+                  <span key={p.id} className="chat-room__present-avatar">
+                    <Avatar
+                      size="sm"
+                      src={p.avatarUrl ?? undefined}
+                      name={p.name}
+                      online
+                    />
+                  </span>
+                ))}
+                {present.length > 5 && (
+                  <span className="chat-room__present-more">
+                    +{present.length - 5}
+                  </span>
+                )}
+              </div>
+            )}
+
+            <div className="chat-room__actions">
+              {isMember && !sessionOpen && <StudyStartMenu study={study} />}
+              {room.kind === "page" && discussedPage && (
+                <Button variant="ghost" onClick={openDiscussedPage}>
+                  <FileText className="tiptap-button-icon" />
+                  <span className="tiptap-button-text">
+                    {t("chat.openPage", "Open page")}
+                  </span>
+                </Button>
+              )}
+              {room.kind === "room" && isMember && (
+                <>
+                  <Button
+                    variant="ghost"
+                    tooltip={t("chat.invite", "Invite")}
+                    onClick={() => setInviteOpen(true)}
+                  >
+                    <UserPlus className="tiptap-button-icon" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    tooltip={t("chat.leave", "Leave room")}
+                    onClick={onLeave}
+                  >
+                    <LogOut className="tiptap-button-icon" />
+                  </Button>
+                </>
               )}
             </div>
-          )}
+          </header>
+        )}
 
-          <div className="chat-room__actions">
-            {isMember && !sessionOpen && <StudyStartMenu study={study} />}
-            {room.kind === "page" && discussedPage && (
-              <Button variant="ghost" onClick={openDiscussedPage}>
-                <FileText className="tiptap-button-icon" />
-                <span className="tiptap-button-text">
-                  {t("chat.openPage", "Open page")}
-                </span>
-              </Button>
-            )}
-            {room.kind === "room" && isMember && (
+        <StudySessionBar
+          study={study}
+          meId={meId}
+          canPost={isMember}
+          canStop={canStopSession}
+          peopleById={peopleById}
+          showIdleStart={variant === "panel"}
+        />
+
+        <div className="chat-room__list" ref={listRef} onScroll={onScroll}>
+          <div ref={contentRef}>
+            {items.length === 0 ? (
+              <div className="chat-room__empty">{roomStart}</div>
+            ) : (
               <>
-                <Button
-                  variant="ghost"
-                  tooltip={t("chat.invite", "Invite")}
-                  onClick={() => setInviteOpen(true)}
-                >
-                  <UserPlus className="tiptap-button-icon" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  tooltip={t("chat.leave", "Leave room")}
-                  onClick={onLeave}
-                >
-                  <LogOut className="tiptap-button-icon" />
-                </Button>
+                {isLoadingOlder ? (
+                  <div className="chat-history-top">
+                    {t("chat.loadingOlder", "Loading earlier messages…")}
+                  </div>
+                ) : hasMore ? (
+                  <div className="chat-history-top">
+                    <button
+                      type="button"
+                      onClick={() => void loadOlderKeepingPosition()}
+                    >
+                      {t("chat.loadOlder", "Load earlier messages")}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="chat-history-top chat-history-top--start">
+                    {roomStart}
+                  </div>
+                )}
+
+                {items.map((item) => {
+                  if (item.kind === "day") {
+                    return (
+                      <div key={item.key} className="chat-day">
+                        <span>{item.label}</span>
+                      </div>
+                    );
+                  }
+                  const msg = item.msg;
+                  const original = msg.replyToId
+                    ? messagesById.get(msg.replyToId)
+                    : undefined;
+                  const quote: Quote = msg.replyToId
+                    ? original
+                      ? original.deletedAt != null
+                        ? { state: "deleted" }
+                        : {
+                            state: "ok",
+                            id: original.id,
+                            authorName:
+                              (original.authorId &&
+                                peopleById.get(original.authorId)?.name) ||
+                              t("chat.unknown", "Someone"),
+                            excerpt: plainExcerpt(
+                              original.body,
+                              peopleById,
+                              pagesById,
+                              t,
+                            ),
+                          }
+                      : { state: "missing", id: msg.replyToId }
+                    : null;
+                  const blockRef = blockRefs.get(msg.id);
+                  const isThread = threadable.has(msg.id);
+                  return (
+                    <MessageRow
+                      key={item.key}
+                      msg={msg}
+                      compact={item.compact}
+                      author={
+                        msg.authorId ? peopleById.get(msg.authorId) : undefined
+                      }
+                      isMine={msg.authorId === meId}
+                      canInteract={isMember}
+                      meId={meId}
+                      peopleById={peopleById}
+                      pagesById={pagesById}
+                      quote={quote}
+                      attachments={attachmentsByMessage.get(msg.id) ?? []}
+                      signedUrls={signedUrls}
+                      blockRef={blockRef}
+                      threadCount={
+                        isThread
+                          ? (repliesByParent.get(msg.id)?.length ?? 0)
+                          : null
+                      }
+                      threadActive={threadFor === msg.id}
+                      onOpenThread={() => {
+                        setPickerFor(null);
+                        setThreadFor(msg.id);
+                      }}
+                      reactions={reactionsByMessage.get(msg.id) ?? []}
+                      pickerOpen={pickerFor === msg.id}
+                      onTogglePicker={() =>
+                        setPickerFor((cur) => (cur === msg.id ? null : msg.id))
+                      }
+                      onClosePicker={() => setPickerFor(null)}
+                      onReact={(emoji, on) => {
+                        setPickerFor(null);
+                        toggleReaction.mutate({
+                          messageId: msg.id,
+                          emoji,
+                          on,
+                        });
+                      }}
+                      onReply={() =>
+                        isThread ? setThreadFor(msg.id) : startReply(msg)
+                      }
+                      onJumpTo={(id) => void jumpTo(id)}
+                      onDelete={() => deleteMessage(msg.id)}
+                    />
+                  );
+                })}
               </>
             )}
           </div>
-        </header>
-      )}
-
-      <StudySessionBar
-        study={study}
-        meId={meId}
-        canPost={isMember}
-        canStop={canStopSession}
-        peopleById={peopleById}
-        showIdleStart={variant === "panel"}
-      />
-
-      <div className="chat-room__list" ref={listRef} onScroll={onScroll}>
-        {items.length === 0 ? (
-          <div className="chat-room__empty">{roomStart}</div>
-        ) : (
-          <>
-            {isLoadingOlder ? (
-              <div className="chat-history-top">
-                {t("chat.loadingOlder", "Loading earlier messages…")}
-              </div>
-            ) : hasMore ? (
-              <div className="chat-history-top">
-                <button
-                  type="button"
-                  onClick={() => void loadOlderKeepingPosition()}
-                >
-                  {t("chat.loadOlder", "Load earlier messages")}
-                </button>
-              </div>
-            ) : (
-              <div className="chat-history-top chat-history-top--start">
-                {roomStart}
-              </div>
-            )}
-
-            {items.map((item) => {
-              if (item.kind === "day") {
-                return (
-                  <div key={item.key} className="chat-day">
-                    <span>{item.label}</span>
-                  </div>
-                );
-              }
-              const msg = item.msg;
-              const original = msg.replyToId
-                ? messagesById.get(msg.replyToId)
-                : undefined;
-              const quote: Quote = msg.replyToId
-                ? original
-                  ? original.deletedAt != null
-                    ? { state: "deleted" }
-                    : {
-                        state: "ok",
-                        id: original.id,
-                        authorName:
-                          (original.authorId &&
-                            peopleById.get(original.authorId)?.name) ||
-                          t("chat.unknown", "Someone"),
-                        excerpt: plainExcerpt(
-                          original.body,
-                          peopleById,
-                          pagesById,
-                          t,
-                        ),
-                      }
-                  : { state: "missing", id: msg.replyToId }
-                : null;
-              return (
-                <MessageRow
-                  key={item.key}
-                  msg={msg}
-                  compact={item.compact}
-                  author={
-                    msg.authorId ? peopleById.get(msg.authorId) : undefined
-                  }
-                  isMine={msg.authorId === meId}
-                  canInteract={isMember}
-                  meId={meId}
-                  peopleById={peopleById}
-                  pagesById={pagesById}
-                  quote={quote}
-                  attachments={attachmentsByMessage.get(msg.id) ?? []}
-                  signedUrls={signedUrls}
-                  reactions={reactionsByMessage.get(msg.id) ?? []}
-                  pickerOpen={pickerFor === msg.id}
-                  onTogglePicker={() =>
-                    setPickerFor((cur) => (cur === msg.id ? null : msg.id))
-                  }
-                  onClosePicker={() => setPickerFor(null)}
-                  onReact={(emoji, on) => {
-                    setPickerFor(null);
-                    toggleReaction.mutate({ messageId: msg.id, emoji, on });
-                  }}
-                  onReply={() => startReply(msg)}
-                  onJumpTo={(id) => void jumpTo(id)}
-                  onDelete={() => deleteMessage(msg.id)}
-                />
-              );
-            })}
-          </>
-        )}
-      </div>
-
-      <div className="chat-room__bottom">
-        <div className="chat-room__typing" aria-live="polite">
-          {typingNames.length === 1 &&
-            t("chat.typingOne", {
-              name: typingNames[0],
-              defaultValue: "{{name}} is typing…",
-            })}
-          {typingNames.length > 1 &&
-            t("chat.typingMany", "Several people are typing…")}
         </div>
 
-        {isMember ? (
-          <Composer
-            roomId={room.id}
-            placeholder={composerPlaceholder}
-            people={mentionablePeople}
-            pages={[...pagesById.values()]}
-            replyTo={replyTo}
-            sending={sendWithFiles.isPending}
-            onCancelReply={() => setReplyTo(null)}
-            onSend={onSend}
-            onTyping={setTyping}
-          />
-        ) : room.kind === "page" ? (
-          <div className="chat-join">
-            <span>
-              {t(
-                "chat.pageReadOnly",
-                "You can read this discussion. Posting needs comment access to the page.",
-              )}
-            </span>
+        <div className="chat-room__bottom">
+          <div className="chat-room__typing" aria-live="polite">
+            {typingNames.length === 1 &&
+              t("chat.typingOne", {
+                name: typingNames[0],
+                defaultValue: "{{name}} is typing…",
+              })}
+            {typingNames.length > 1 &&
+              t("chat.typingMany", "Several people are typing…")}
           </div>
-        ) : (
-          <div className="chat-join">
-            <span>{t("chat.viewingOpen", "You're viewing an open room.")}</span>
-            <Button
-              variant="primary"
-              disabled={join.isPending}
-              onClick={() => join.mutate(room.id)}
-            >
-              <span className="tiptap-button-text">
-                {t("chat.join", "Join room")}
+
+          {isMember ? (
+            <Composer
+              roomId={room.id}
+              pendingKeys={pendingKeys}
+              placeholder={composerPlaceholder}
+              people={mentionablePeople}
+              pages={[...pagesById.values()]}
+              replyTo={replyTo}
+              sending={sendWithFiles.isPending || sendBlock.isPending}
+              onCancelReply={() => setReplyTo(null)}
+              onSend={onSend}
+              onTyping={setTyping}
+            />
+          ) : room.kind === "page" ? (
+            <div className="chat-join">
+              <span>
+                {t(
+                  "chat.pageReadOnly",
+                  "You can read this discussion. Posting needs comment access to the page.",
+                )}
               </span>
-            </Button>
-          </div>
-        )}
+            </div>
+          ) : (
+            <div className="chat-join">
+              <span>
+                {t("chat.viewingOpen", "You're viewing an open room.")}
+              </span>
+              <Button
+                variant="primary"
+                disabled={join.isPending}
+                onClick={() => join.mutate(room.id)}
+              >
+                <span className="tiptap-button-text">
+                  {t("chat.join", "Join room")}
+                </span>
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
+
+      {threadOpen && threadMsg && threadRef && (
+        <BlockThreadPanel
+          key={threadMsg.id}
+          msg={threadMsg}
+          blockRef={threadRef}
+          page={threadRef.pageId ? pagesById.get(threadRef.pageId) : undefined}
+          author={
+            threadMsg.authorId ? peopleById.get(threadMsg.authorId) : undefined
+          }
+          replies={repliesByParent.get(threadMsg.id) ?? []}
+          reactions={reactionsByMessage.get(threadMsg.id) ?? []}
+          meId={meId}
+          isMember={isMember}
+          peopleById={peopleById}
+          pagesById={pagesById}
+          attachmentsByMessage={attachmentsByMessage}
+          signedUrls={signedUrls}
+          onReact={(emoji, on) =>
+            toggleReaction.mutate({ messageId: threadMsg.id, emoji, on })
+          }
+          onOpenFull={() =>
+            openBlock(threadRef.pageId as string, threadRef.blockId as string)
+          }
+          onClose={() => setThreadFor(null)}
+          onDeleteReply={deleteMessage}
+          composer={
+            isMember ? (
+              <Composer
+                roomId={room.id}
+                pendingKeys={NO_PENDING_KEYS}
+                placeholder={t("chat.replyInThread", "Reply to this block…")}
+                people={mentionablePeople}
+                pages={[...pagesById.values()]}
+                replyTo={null}
+                sending={sendWithFiles.isPending}
+                onCancelReply={() => {}}
+                onSend={onSendThreadReply(threadMsg.id)}
+                onTyping={setTyping}
+                allowBlocks={false}
+              />
+            ) : null
+          }
+        />
+      )}
 
       {inviteOpen && (
         <InviteToRoomModal room={room} onClose={() => setInviteOpen(false)} />
       )}
     </div>
+  );
+}
+
+// ── Side view: a shared block in context, its reactions and its thread ────────
+function BlockThreadPanel({
+  msg,
+  blockRef,
+  page,
+  author,
+  replies,
+  reactions,
+  meId,
+  isMember,
+  peopleById,
+  pagesById,
+  attachmentsByMessage,
+  signedUrls,
+  onReact,
+  onOpenFull,
+  onClose,
+  onDeleteReply,
+  composer,
+}: {
+  msg: ChatMessage;
+  blockRef: BlockRef;
+  page: Page | undefined;
+  author: ChatPerson | undefined;
+  replies: ChatMessage[];
+  reactions: ReactionGroup[];
+  meId: string | undefined;
+  isMember: boolean;
+  peopleById: Map<string, ChatPerson>;
+  pagesById: Map<string, Page>;
+  attachmentsByMessage: Map<string, ChatAttachment[]>;
+  signedUrls: Record<string, string>;
+  onReact: (emoji: string, on: boolean) => void;
+  onOpenFull: () => void;
+  onClose: () => void;
+  onDeleteReply: (id: string) => void;
+  composer: React.ReactNode;
+}) {
+  const { t, i18n } = useTranslation();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  const snapshot = blockRef.snapshot ?? "";
+  // Live context from the page's content; null text → block is gone.
+  const ctx = useMemo(
+    () =>
+      page && blockRef.blockId
+        ? blockContext(
+            page.content as JSONContent | undefined,
+            blockRef.blockId,
+          )
+        : { before: null, text: null, after: null },
+    [page, blockRef.blockId],
+  );
+  const removed = ctx.text == null;
+  // The snapshot may be truncated (… at the end) — compare the prefix.
+  const snapshotCore = snapshot.replace(/…$/, "").trim();
+  const edited =
+    !removed && !!snapshotCore && !(ctx.text ?? "").startsWith(snapshotCore);
+
+  // Keep the thread scrolled to its newest reply.
+  useLayoutEffect(() => {
+    const el = bodyRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [replies.length]);
+
+  // Esc closes the side view (unless something inside handled it).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !e.defaultPrevented) onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const time = (ts: number) =>
+    new Date(ts).toLocaleTimeString(i18n.language, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  return (
+    <aside className="bt-panel" aria-label={t("chat.thread", "Thread")}>
+      <header className="bt-panel__head">
+        <span className="bt-panel__head-icon">
+          {page ? (
+            <PageItemIcon
+              cover={page.cover}
+              styles={{ width: 15, height: 15, fontSize: 15 }}
+            />
+          ) : (
+            <FileText size={15} />
+          )}
+        </span>
+        <div className="bt-panel__heading">
+          <span className="bt-panel__title">
+            {page?.title || t("page.untitled")}
+          </span>
+          <span className="bt-panel__sub">
+            {t("chat.sharedBy", {
+              name: author?.name ?? t("chat.someone", "someone"),
+              defaultValue: "Shared by {{name}}",
+            })}{" "}
+            · {time(msg.createdAt)}
+          </span>
+        </div>
+        <button
+          type="button"
+          className="bt-panel__icon-btn"
+          aria-label={t("chat.openBlock", "Open in page")}
+          title={t("chat.openBlock", "Open in page")}
+          onClick={onOpenFull}
+          disabled={removed}
+        >
+          <ArrowUpRight size={16} />
+        </button>
+        <button
+          type="button"
+          className="bt-panel__icon-btn"
+          aria-label={t("actions.close", "Close")}
+          title={t("actions.close", "Close")}
+          onClick={onClose}
+        >
+          <X size={16} />
+        </button>
+      </header>
+
+      <div className="bt-panel__body" ref={bodyRef}>
+        {ctx.before && <div className="bt-context">{ctx.before}</div>}
+        <div className={`bt-focus${removed ? " is-removed" : ""}`}>
+          {removed ? snapshot : ctx.text}
+        </div>
+        {ctx.after && <div className="bt-context">{ctx.after}</div>}
+
+        {removed && (
+          <p className="bt-note">
+            {t(
+              "chat.blockRemoved",
+              "This block is no longer on the page — showing the version that was shared.",
+            )}
+          </p>
+        )}
+        {edited && (
+          <>
+            <p className="bt-note">
+              <strong>
+                {t("chat.editedSinceShared", "Edited since shared.")}
+              </strong>{" "}
+              {t("chat.sharedVersion", "The shared version:")}
+            </p>
+            <div className="bt-shared">{snapshot}</div>
+          </>
+        )}
+
+        {msg.body.trim() && (
+          <div className="bt-message">
+            <div className="bt-message__by">
+              <strong>{author?.name ?? t("chat.unknown", "Someone")}</strong>
+            </div>
+            <MessageBody
+              body={msg.body}
+              meId={meId}
+              peopleById={peopleById}
+              pagesById={pagesById}
+            />
+          </div>
+        )}
+
+        <div className="bt-reactions">
+          {reactions.map((g) => (
+            <button
+              key={g.emoji}
+              type="button"
+              className={`chat-reaction${g.mine ? " is-mine" : ""}`}
+              disabled={!isMember}
+              onClick={() => onReact(g.emoji, !g.mine)}
+            >
+              <span className="chat-reaction__emoji">{g.emoji}</span>
+              <span>{g.count}</span>
+            </button>
+          ))}
+          {isMember && (
+            <button
+              type="button"
+              className="bt-add-reaction"
+              aria-label={t("chat.react", "Add reaction")}
+              title={t("chat.react", "Add reaction")}
+              onClick={() => setPickerOpen((v) => !v)}
+            >
+              <SmilePlus size={13} />
+            </button>
+          )}
+          {pickerOpen && (
+            <div className="chat-emoji-pop" role="menu">
+              {QUICK_REACTIONS.map((emoji) => {
+                const mine = reactions.some((g) => g.emoji === emoji && g.mine);
+                return (
+                  <button
+                    key={emoji}
+                    type="button"
+                    aria-label={emoji}
+                    onClick={() => {
+                      setPickerOpen(false);
+                      onReact(emoji, !mine);
+                    }}
+                  >
+                    {emoji}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="bt-thread-label">
+          {t("chat.replies", {
+            count: replies.length,
+            defaultValue: "{{count}} replies",
+          })}
+        </div>
+
+        {replies.length === 0 ? (
+          <div className="bt-empty">
+            {t("chat.noReplies", "No replies yet — start the thread.")}
+          </div>
+        ) : (
+          replies.map((r) => {
+            const rAuthor = r.authorId ? peopleById.get(r.authorId) : undefined;
+            const rName = rAuthor?.name ?? t("chat.unknown", "Someone");
+            const rDeleted = r.deletedAt != null;
+            const rPending = r.id.startsWith("pending-");
+            const files = attachmentsByMessage.get(r.id) ?? [];
+            return (
+              <div
+                key={r.id}
+                className={`bt-reply${rPending ? " is-pending" : ""}`}
+              >
+                <Avatar
+                  size="sm"
+                  src={rAuthor?.avatarUrl ?? undefined}
+                  name={rName}
+                />
+                <div className="bt-reply__main">
+                  <div className="bt-reply__head">
+                    <strong>{rName}</strong>
+                    <span>{time(r.createdAt)}</span>
+                  </div>
+                  {rDeleted ? (
+                    <p className="bt-reply__body is-deleted">
+                      {t("chat.deleted", "Message deleted")}
+                    </p>
+                  ) : (
+                    <>
+                      {r.body.trim() && (
+                        <p className="bt-reply__body">
+                          <MessageBody
+                            body={r.body}
+                            meId={meId}
+                            peopleById={peopleById}
+                            pagesById={pagesById}
+                          />
+                        </p>
+                      )}
+                      {files.length > 0 && (
+                        <MessageAttachments
+                          attachments={files}
+                          signedUrls={signedUrls}
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
+                {r.authorId === meId && !rDeleted && !rPending && (
+                  <button
+                    type="button"
+                    className="bt-reply__delete"
+                    aria-label={t("chat.deleteMessage", "Delete message")}
+                    title={t("chat.deleteMessage", "Delete message")}
+                    onClick={() => onDeleteReply(r.id)}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {composer && <div className="bt-panel__bottom">{composer}</div>}
+    </aside>
   );
 }
 
@@ -791,6 +1283,53 @@ function MessageBody({
         );
       })}
     </>
+  );
+}
+
+// A shared block. Readers of the page: click → the side view. Everyone
+// else: a locked card.
+function BlockCard({
+  blockRef,
+  page,
+  active,
+  onOpen,
+}: {
+  blockRef: BlockRef;
+  page: Page | undefined;
+  active: boolean;
+  onOpen: () => void;
+}) {
+  const { t } = useTranslation();
+  if (!blockRef.pageId || !blockRef.blockId || blockRef.snapshot == null) {
+    return (
+      <span className="chat-block-card is-locked">
+        <span className="chat-block-card__src">
+          <Lock size={11} />
+          {t("chat.privatePage", "Private page")}
+        </span>
+      </span>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className={`chat-block-card${active ? " is-active" : ""}`}
+      title={t("chat.openThread", "Open the block")}
+      onClick={onOpen}
+    >
+      <span className="chat-block-card__src">
+        {page ? (
+          <PageItemIcon
+            cover={page.cover}
+            styles={{ width: 12, height: 12, fontSize: 12 }}
+          />
+        ) : (
+          <FileText size={12} />
+        )}
+        {page?.title || t("page.untitled")}
+      </span>
+      <span className="chat-block-card__text">{blockRef.snapshot}</span>
+    </button>
   );
 }
 
@@ -871,6 +1410,10 @@ function MessageRow({
   quote,
   attachments,
   signedUrls,
+  blockRef,
+  threadCount,
+  threadActive,
+  onOpenThread,
   reactions,
   pickerOpen,
   onTogglePicker,
@@ -891,6 +1434,11 @@ function MessageRow({
   quote: Quote;
   attachments: ChatAttachment[];
   signedUrls: Record<string, string>;
+  blockRef: BlockRef | undefined;
+  /** Reply count when this message is a block thread; null otherwise. */
+  threadCount: number | null;
+  threadActive: boolean;
+  onOpenThread: () => void;
   reactions: ReactionGroup[];
   pickerOpen: boolean;
   onTogglePicker: () => void;
@@ -986,6 +1534,16 @@ function MessageRow({
           </p>
         ) : (
           <>
+            {blockRef && (
+              <BlockCard
+                blockRef={blockRef}
+                page={
+                  blockRef.pageId ? pagesById.get(blockRef.pageId) : undefined
+                }
+                active={threadActive}
+                onOpen={onOpenThread}
+              />
+            )}
             {msg.body.trim() && (
               <p className="chat-msg__body">
                 <MessageBody
@@ -1022,6 +1580,20 @@ function MessageRow({
             ))}
           </div>
         )}
+
+        {!deleted && threadCount != null && threadCount > 0 && (
+          <button
+            type="button"
+            className="chat-thread-link"
+            onClick={onOpenThread}
+          >
+            <MessageSquare size={13} />
+            {t("chat.replies", {
+              count: threadCount,
+              defaultValue: "{{count}} replies",
+            })}
+          </button>
+        )}
       </div>
 
       {interactive && (
@@ -1036,11 +1608,23 @@ function MessageRow({
           </button>
           <button
             type="button"
-            aria-label={t("chat.reply", "Reply")}
-            title={t("chat.reply", "Reply")}
+            aria-label={
+              threadCount != null
+                ? t("chat.replyInThreadShort", "Reply in thread")
+                : t("chat.reply", "Reply")
+            }
+            title={
+              threadCount != null
+                ? t("chat.replyInThreadShort", "Reply in thread")
+                : t("chat.reply", "Reply")
+            }
             onClick={onReply}
           >
-            <Reply size={15} />
+            {threadCount != null ? (
+              <MessageSquare size={15} />
+            ) : (
+              <Reply size={15} />
+            )}
           </button>
           {isMine && (
             <button
@@ -1081,6 +1665,7 @@ const TRIGGER_RE = /(?:^|\s)@([^\s@]{0,30})$/;
 
 function Composer({
   roomId,
+  pendingKeys,
   placeholder,
   people,
   pages,
@@ -1089,16 +1674,24 @@ function Composer({
   onCancelReply,
   onSend,
   onTyping,
+  allowBlocks = true,
 }: {
   roomId: string;
+  pendingKeys: string[];
   placeholder: string;
   people: ChatPerson[];
   pages: Page[];
   replyTo: ReplyContext | null;
   sending: boolean;
   onCancelReply: () => void;
-  onSend: (body: string, files: UploadedFile[]) => void;
+  onSend: (
+    body: string,
+    files: UploadedFile[],
+    block: SharedBlockDraft | null,
+  ) => void;
   onTyping: (typing: boolean) => void;
+  /** The side view's composer doesn't take shared blocks. */
+  allowBlocks?: boolean;
 }) {
   const { t } = useTranslation();
   const [value, setValue] = useState("");
@@ -1110,6 +1703,7 @@ function Composer({
   const [activeIndex, setActiveIndex] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [block, setBlock] = useState<SharedBlockDraft | null>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimer = useRef<number | null>(null);
@@ -1131,6 +1725,26 @@ function Composer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!allowBlocks || pendingKeys.length === 0) return;
+    const take = () => {
+      for (const key of pendingKeys) {
+        const draft = takePendingBlock(key);
+        if (draft) {
+          setBlock(draft);
+          ref.current?.focus();
+          return;
+        }
+      }
+    };
+    const raf = requestAnimationFrame(take);
+    const unsub = subscribePendingBlocks(take);
+    return () => {
+      cancelAnimationFrame(raf);
+      unsub();
+    };
+  }, [pendingKeys, allowBlocks]);
+
   const replyId = replyTo?.id ?? null;
   useEffect(() => {
     if (replyId) ref.current?.focus();
@@ -1138,6 +1752,15 @@ function Composer({
 
   const addFiles = (files: File[]) => {
     if (!files.length) return;
+    if (block) {
+      setNotice(
+        t(
+          "chat.blockOrFiles",
+          "Remove the block to attach files — a message carries one or the other.",
+        ),
+      );
+      return;
+    }
     const problem = uploads.add(files);
     setNotice(
       problem === "tooMany"
@@ -1210,15 +1833,16 @@ function Composer({
   const canSend =
     !uploads.uploading &&
     !sending &&
-    (value.trim().length > 0 || uploads.done.length > 0);
+    (value.trim().length > 0 || uploads.done.length > 0 || !!block);
 
   const submit = () => {
     if (!canSend) return;
-    onSend(serializeDraft(value.trim(), mentions), uploads.done);
+    onSend(serializeDraft(value.trim(), mentions), uploads.done, block);
     setValue("");
     setMentions([]);
     setTrigger(null);
     setNotice(null);
+    setBlock(null);
     uploads.reset();
     if (typingTimer.current) window.clearTimeout(typingTimer.current);
     onTyping(false);
@@ -1267,6 +1891,27 @@ function Composer({
             onClick={onCancelReply}
           >
             <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {block && (
+        <div className="chat-block-draft">
+          <div className="chat-block-card is-static">
+            <span className="chat-block-card__src">
+              <FileText size={12} />
+              {block.pageTitle || t("page.untitled")}
+            </span>
+            <span className="chat-block-card__text">{block.snapshot}</span>
+          </div>
+          <button
+            type="button"
+            className="chat-block-draft__remove"
+            aria-label={t("chat.removeBlock", "Remove block")}
+            title={t("chat.removeBlock", "Remove block")}
+            onClick={() => setBlock(null)}
+          >
+            <X size={13} />
           </button>
         </div>
       )}
@@ -1325,6 +1970,7 @@ function Composer({
           className="chat-composer__attach"
           aria-label={t("chat.attach", "Attach files")}
           title={t("chat.attach", "Attach files")}
+          disabled={!!block}
           onClick={() => fileInputRef.current?.click()}
         >
           <Paperclip size={16} />
@@ -1344,7 +1990,11 @@ function Composer({
           className="chat-composer__input"
           rows={1}
           value={value}
-          placeholder={placeholder}
+          placeholder={
+            block
+              ? t("chat.askAboutBlock", "Ask about this block…")
+              : placeholder
+          }
           onChange={(e) => {
             const text = e.target.value;
             setValue(text);

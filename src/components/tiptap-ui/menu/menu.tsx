@@ -5,6 +5,8 @@ import {
 } from "src/components/tiptap-ui-primitive/card";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import type { Editor } from "@tiptap/core";
+import { NodeSelection } from "@tiptap/pm/state";
+import { MessagesSquare } from "lucide-react";
 import ColorDropdownMenu from "src/components/tiptap-ui/color-dropdown-menu";
 import AlignmentDropdownMenu from "src/components/tiptap-ui/alignment-dropdown-menu";
 import { TurnIntoDropdown } from "src/components/tiptap-ui/turn-into-dropdown";
@@ -16,15 +18,38 @@ import { DeleteNodeButton } from "src/components/tiptap-ui/delete-node-button";
 
 import "./menu.scss";
 import { DropdownMenuItem } from "src/components/tiptap-ui-primitive/dropdown-menu";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 import { CommentButton } from "../comment-button";
 import { useTranslation } from "react-i18next";
-import { RecordDragMenu } from "src/components/tiptap-node/inline-database/components/record-drag-menu";
+//import { RecordDragMenu } from "src/components/tiptap-node/inline-database/components/record-drag-menu";
+import { useActivePageState } from "src/components/tiptap-templates/simple/context/active-page-context";
+import { requestDiscussBlock } from "src/components/tiptap-templates/simple/components/chat/block-share-store";
+
+const SNAPSHOT_MAX = 600;
+
+// The block the drag handle selected — the node itself when it's a node
+// selection, else the nearest ancestor. Only blocks with a UniqueID id can be
+// shared (the id is what lets the chat jump back to it).
+function getSelectedBlock(editor: Editor): { id: string; text: string } | null {
+  const { selection } = editor.state;
+  if (selection instanceof NodeSelection) {
+    const id = selection.node.attrs?.id as string | undefined;
+    if (id) return { id, text: selection.node.textContent };
+  }
+  const { $from } = selection;
+  for (let d = $from.depth; d > 0; d--) {
+    const node = $from.node(d);
+    const id = node.attrs?.id as string | undefined;
+    if (id) return { id, text: node.textContent };
+  }
+  return null;
+}
 
 export function Menu({
   title,
   editor,
   onAction,
-  target,
+  // target,
 }: {
   title: string;
   editor: Editor;
@@ -34,17 +59,14 @@ export function Menu({
   target?: string;
 }) {
   const { t } = useTranslation();
+  const { activePageId, activePage } = useActivePageState();
 
-  // ── Database record row → the rich record menu (same as board/gallery) ────
-  // The row is a databaseRecord node; its actions are RECORD actions, not node
-  // formatting. Menu stays editor-generic and delegates to the database-world
-  // RecordDragMenu, which resolves the hovered record + handlers and renders
-  // SelectionActionsMenu. One menu, every view.
-  if (target === "Record") {
-    return <RecordDragMenu onAction={onAction} />;
-  }
+  // if (target === "Record") {
+  //   return <RecordDragMenu onAction={onAction} />;
+  // }
 
-  // ── Regular node → the node-formatting menu (unchanged) ───────────────────
+  const block = activePageId ? getSelectedBlock(editor) : null;
+
   return (
     <Card className="menu">
       <CardGroupLabel className="title">{title}</CardGroupLabel>
@@ -87,6 +109,33 @@ export function Menu({
             onClick={onAction}
           />
         </DropdownMenuItem>
+        {block && activePageId && (
+          <DropdownMenuItem asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              style={{ justifyContent: "flex-start", width: "100%" }}
+              onClick={() => {
+                const text = block.text.trim().replace(/\s+/g, " ");
+                requestDiscussBlock({
+                  pageId: activePageId,
+                  blockId: block.id,
+                  snapshot:
+                    text.length > SNAPSHOT_MAX
+                      ? `${text.slice(0, SNAPSHOT_MAX)}…`
+                      : text,
+                  pageTitle: activePage?.title ?? "",
+                });
+                onAction?.();
+              }}
+            >
+              <MessagesSquare className="tiptap-button-icon" />
+              <span className="tiptap-button-text">
+                {t("blockMenu.discussInChat", "Discuss in chat…")}
+              </span>
+            </Button>
+          </DropdownMenuItem>
+        )}
       </CardItemGroup>
       <Separator orientation="horizontal" />
       <CardItemGroup className="group" orientation="vertical">

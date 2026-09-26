@@ -6,6 +6,7 @@ import { useChatRealtimeSync } from "src/hooks/use-chat";
 import SearchPalette from "./components/search-palette";
 import { TemplatesGallery } from "./components/template-gallery";
 import { PageChatDrawer } from "./components/chat/page-chat-drawer";
+import { DiscussBlockHost } from "./components/chat/discuss-block-dialog";
 import { useSearch } from "./context/search-context";
 import { useTemplates } from "./context/templates-context";
 import { useTemplates as useTemplatesApi } from "src/hooks/use-templates";
@@ -47,6 +48,7 @@ function AppOverlaysImpl() {
     <>
       <ChatRealtimeSync />
       <PageChatDrawer />
+      <DiscussBlockHost />
       {open && <SearchPalette />}
       {templatesGalleryOpen && (
         <TemplatesGallery

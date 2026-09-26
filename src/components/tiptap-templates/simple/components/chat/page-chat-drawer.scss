@@ -3,7 +3,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  z-index: 901;
+  z-index: 60; // above page content, below modals (10000)
   display: flex;
   flex-direction: column;
   width: 380px;
@@ -12,7 +12,6 @@
   border-left: 0.5px solid var(--tt-border-color);
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.08);
   animation: pcd-in 0.22s cubic-bezier(0.32, 0.72, 0, 1);
-
 
   &__head {
     display: flex;
@@ -78,10 +77,19 @@
     color: var(--tt-text-secondary);
   }
 
-  // Inside the drawer the room fills the panel, narrower padding.
-  .chat-room {
+  // Inside the drawer: the column is the whole panel, with narrow gutters.
+  .chat-room__header,
+  .chat-room__bottom,
+  .chat-room__list > div,
+  .chat-room > .study-idle {
     max-width: none;
-    padding: 0 12px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .chat-room > .study-bar {
+    width: calc(100% - 24px);
+    max-width: none;
   }
 }
 
