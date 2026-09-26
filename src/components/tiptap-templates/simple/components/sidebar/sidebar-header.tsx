@@ -65,6 +65,12 @@ export const SidebarHeader = memo(() => {
                 navigate({ to: "/" });
                 if (isMobile) onCollapsedChange(true);
               }}
+              style={{
+                minWidth: "fit-content",
+                width: "fit-content",
+                minHeight: "fit-content",
+                height: "fit-content",
+              }}
             >
               <ArrowLeft className="tiptap-button-icon" />
             </Button>

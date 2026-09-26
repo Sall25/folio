@@ -66,6 +66,8 @@ import { useRoomRowRefs, useRoomShowcasePage } from "src/hooks/use-chat-rows";
 import { useDataSource } from "src/components/tiptap-node/inline-database/hooks/use-data-source";
 import { BoardCardCover } from "src/components/tiptap-node/inline-database/primitives/board-card-cover";
 import { usePatchPage } from "src/hooks/use-patch-page";
+import { useDeleteChatRoom } from "src/hooks/use-delete-chat-room";
+import { ConfirmDialog } from "src/components/tiptap-templates/simple/components/confirm-dialog";
 import { patchPage } from "src/api/pages";
 import type { RowRef } from "src/api/chat-rows";
 import { useChatCandidates } from "src/hooks/use-chat-candidates";
@@ -359,6 +361,19 @@ export function RoomContent({
   const del = useDeleteMessage(room.id);
   const join = useJoinChatRoom();
   const leave = useLeaveChatRoom();
+  const deleteRoom = useDeleteChatRoom();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  // Owner role, or the creator (matches delete_chat_room on the server).
+  const canDeleteRoom =
+    room.kind === "room" &&
+    !!meId &&
+    (myMembership?.role === "owner" || room.createdBy === meId);
+  console.log("canDeleteRoom", {
+    meId,
+    createdBy: room.createdBy,
+    myRole: myMembership?.role,
+    kind: room.kind,
+  });
   const [inviteOpen, setInviteOpen] = useState(false);
   const [replyTo, setReplyTo] = useState<ReplyContext | null>(null);
   const [pickerFor, setPickerFor] = useState<string | null>(null);
@@ -600,6 +615,14 @@ export function RoomContent({
     });
   };
 
+  const onDeleteRoom = () => {
+    setConfirmDelete(false);
+    deleteRoom.mutate(
+      { roomId: room.id, filePaths: attachmentPaths },
+      { onSuccess: () => navigate({ to: spaceHomePath(teamspaceId) }) },
+    );
+  };
+
   const onLeave = () => {
     leave.mutate(room.id, {
       onSuccess: () => navigate({ to: spaceHomePath(teamspaceId) }),
@@ -811,6 +834,16 @@ export function RoomContent({
                   >
                     <LogOut className="tiptap-button-icon" />
                   </Button>
+                  {canDeleteRoom && (
+                    <Button
+                      variant="ghost"
+                      tooltip={t("chat.deleteRoom", "Delete room")}
+                      disabled={deleteRoom.isPending}
+                      onClick={() => setConfirmDelete(true)}
+                    >
+                      <Trash2 className="tiptap-button-icon" />
+                    </Button>
+                  )}
                 </>
               )}
             </div>
@@ -1098,6 +1131,31 @@ export function RoomContent({
       {inviteOpen && (
         <InviteToRoomModal room={room} onClose={() => setInviteOpen(false)} />
       )}
+
+      <ConfirmDialog
+        open={confirmDelete}
+        message={
+          <>
+            {t("chat.deleteRoomConfirm", {
+              name: title,
+              defaultValue:
+                "Delete #{{name}}? Its messages, threads and files are deleted for everyone. This can't be undone.",
+            })}
+            {isShowcase && (
+              <>
+                {" "}
+                {t(
+                  "chat.showcase.deleteKeepsDatabase",
+                  "The showcase database stays in this space.",
+                )}
+              </>
+            )}
+          </>
+        }
+        confirmLabel={t("chat.deleteRoom", "Delete room")}
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={onDeleteRoom}
+      />
     </div>
   );
 }
