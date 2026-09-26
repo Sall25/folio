@@ -1,22 +1,27 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { Check, Hash, Lock, X } from "lucide-react";
+import { Check, Database, Hash, Lock, Sparkles, X } from "lucide-react";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import type { ChatPerson, ChatRoom, ChatVisibility } from "src/types";
+import type { ChatPerson, ChatRoom, ChatVisibility, Page } from "src/types";
 import {
   useAddChatMembers,
   useCreateChatRoom,
   useOpenDm,
 } from "src/hooks/use-chat";
 import { useChatCandidates } from "src/hooks/use-chat-candidates";
+import {
+  useCreateShowcaseRoom,
+  useDatabaseTemplates,
+} from "src/hooks/use-create-showcase-room";
+import { PageItemIcon } from "../../page-item-icon";
 import { useOpenChatRoom } from "./chat-utils";
 import "./chat-modals.scss";
 import { useCurrentSpace } from "src/hooks/use-current-space";
 
 // ── Shell ─────────────────────────────────────────────────────────────────
-function ChatModal({
+export function ChatModal({
   title,
   onClose,
   children,
@@ -147,27 +152,52 @@ function useSelection(single = false) {
 }
 
 // ── Create room ───────────────────────────────────────────────────────────
+type RoomKindChoice = "chat" | "showcase";
+const BLANK = "blank";
+
 export function CreateRoomModal({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const [name, setName] = useState("");
+  const [kind, setKind] = useState<RoomKindChoice>("chat");
   const [visibility, setVisibility] = useState<ChatVisibility>("open");
+  const [templateId, setTemplateId] = useState<string>(BLANK);
   const { selected, toggle } = useSelection();
   const { candidates, isLoading } = useChatCandidates("room");
   const create = useCreateChatRoom();
+  const createShowcase = useCreateShowcaseRoom();
+  const { templates, isLoading: templatesLoading } = useDatabaseTemplates();
   const openRoom = useOpenChatRoom();
 
-  const canSubmit = name.trim().length > 0 && !create.isPending;
+  const isShowcase = kind === "showcase";
+  const pending = create.isPending || createShowcase.isPending;
+  const error = create.error ?? createShowcase.error;
+  const canSubmit = name.trim().length > 0 && !pending;
 
   const space = useCurrentSpace();
 
+  // A showcase's database is open to the whole space, so the room is too.
+  const pickKind = (next: RoomKindChoice) => {
+    setKind(next);
+    if (next === "showcase") setVisibility("open");
+  };
+
   const submit = async () => {
     if (!canSubmit) return;
+    const cleanName = name.trim().replace(/^#/, "");
     try {
-      const id = await create.mutateAsync({
-        name: name.trim().replace(/^#/, ""),
-        visibility,
-        memberIds: [...selected],
-      });
+      const template: Page | null =
+        templates.find((p) => p.id === templateId) ?? null;
+      const id = isShowcase
+        ? await createShowcase.mutateAsync({
+            name: cleanName,
+            memberIds: [...selected],
+            template,
+          })
+        : await create.mutateAsync({
+            name: cleanName,
+            visibility,
+            memberIds: [...selected],
+          });
       openRoom({
         id,
         kind: "room",
@@ -185,12 +215,10 @@ export function CreateRoomModal({ onClose }: { onClose: () => void }) {
       onClose={onClose}
       footer={
         <>
-          {create.error && (
-            <span className="chm__error">{create.error.message}</span>
-          )}
+          {error && <span className="chm__error">{error.message}</span>}
           <Button variant="primary" disabled={!canSubmit} onClick={submit}>
             <span className="tiptap-button-text">
-              {create.isPending
+              {pending
                 ? t("chat.creating", "Creating…")
                 : t("chat.createRoom", "Create room")}
             </span>
@@ -201,16 +229,108 @@ export function CreateRoomModal({ onClose }: { onClose: () => void }) {
       <label className="chm-field">
         <span className="chm-field__label">{t("chat.roomName", "Name")}</span>
         <div className="chm-input chm-input--with-icon">
-          <Hash size={14} />
+          {isShowcase ? <Sparkles size={14} /> : <Hash size={14} />}
           <input
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submit()}
-            placeholder={t("chat.roomNamePlaceholder", "study-group")}
+            placeholder={
+              isShowcase
+                ? t("chat.showcase.namePlaceholder", "show-your-work")
+                : t("chat.roomNamePlaceholder", "study-group")
+            }
           />
         </div>
       </label>
+
+      <div className="chm-field">
+        <span className="chm-field__label">
+          {t("chat.showcase.roomType", "Type")}
+        </span>
+        <div className="chm-seg">
+          <button
+            type="button"
+            className={`chm-seg__opt${!isShowcase ? " is-on" : ""}`}
+            onClick={() => pickKind("chat")}
+          >
+            <Hash size={14} />
+            <span>
+              <strong>{t("chat.showcase.typeChat", "Chat")}</strong>
+              <small>
+                {t("chat.showcase.typeChatDesc", "Messages and threads")}
+              </small>
+            </span>
+          </button>
+          <button
+            type="button"
+            className={`chm-seg__opt${isShowcase ? " is-on" : ""}`}
+            onClick={() => pickKind("showcase")}
+          >
+            <Sparkles size={14} />
+            <span>
+              <strong>{t("chat.showcase.typeShowcase", "Showcase")}</strong>
+              <small>
+                {t(
+                  "chat.showcase.typeShowcaseDesc",
+                  "Entries in a database, one thread each",
+                )}
+              </small>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {isShowcase && (
+        <div className="chm-field">
+          <span className="chm-field__label">
+            {t("chat.showcase.startFrom", "Start from")}
+          </span>
+          <div className="chm-people__list">
+            <button
+              type="button"
+              className={`chm-person${templateId === BLANK ? " is-on" : ""}`}
+              onClick={() => setTemplateId(BLANK)}
+            >
+              <Database size={16} />
+              <span className="chm-person__name">
+                {t("chat.showcase.blank", "Blank database")}
+              </span>
+              <span className="chm-person__check">
+                {templateId === BLANK && <Check size={14} />}
+              </span>
+            </button>
+            {templatesLoading ? (
+              <div className="chm-people__empty">
+                {t("chat.loading", "Loading…")}
+              </div>
+            ) : (
+              templates.map((p) => {
+                const on = templateId === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={`chm-person${on ? " is-on" : ""}`}
+                    onClick={() => setTemplateId(p.id)}
+                  >
+                    <PageItemIcon
+                      cover={p.cover}
+                      styles={{ width: 16, height: 16, fontSize: 16 }}
+                    />
+                    <span className="chm-person__name">
+                      {p.title || t("page.untitled")}
+                    </span>
+                    <span className="chm-person__check">
+                      {on && <Check size={14} />}
+                    </span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="chm-field">
         <span className="chm-field__label">
@@ -231,6 +351,15 @@ export function CreateRoomModal({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             className={`chm-seg__opt${visibility === "private" ? " is-on" : ""}`}
+            disabled={isShowcase}
+            title={
+              isShowcase
+                ? t(
+                    "chat.showcase.openOnly",
+                    "Showcases are open to everyone in this space.",
+                  )
+                : undefined
+            }
             onClick={() => setVisibility("private")}
           >
             <Lock size={14} />

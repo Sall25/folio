@@ -1,0 +1,233 @@
+// Showcase rooms: row cards in the message list, the row side view, and the
+// "Share your work" bar that replaces the composer. Side view chrome reuses
+// block-thread.scss (.bt-panel …).
+
+// ── Row card ─────────────────────────────────────────────────────────────
+.chat-row-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 360px;
+  margin-top: 4px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--tt-border-color);
+  border-radius: 10px;
+  background: var(--tt-bg-color);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 4px 14px
+      color-mix(in srgb, var(--tt-text-primary) 10%, transparent);
+  }
+
+  &.is-active {
+    border-color: color-mix(in srgb, var(--tt-text-primary) 35%, transparent);
+  }
+
+  &.is-removed {
+    padding: 10px 12px;
+    font-size: 12.5px;
+    font-style: italic;
+    cursor: default;
+    color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
+  }
+}
+
+// BoardCardCover positions its image absolutely inside this box.
+.chat-row-card__cover,
+.chat-row-panel__cover {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.chat-row-panel__cover {
+  margin-bottom: 12px;
+  border-radius: 8px;
+}
+
+.chat-row-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 12px;
+  min-width: 0;
+}
+
+.chat-row-card__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-row-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chat-row-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+  color: color-mix(in srgb, var(--tt-text-primary) 80%, transparent);
+  font-size: 11.5px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Side view properties ─────────────────────────────────────────────────
+.chat-row-panel__props {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+
+.chat-row-panel__prop {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  font-size: 12.5px;
+
+  dt {
+    padding-top: 2px;
+    color: color-mix(in srgb, var(--tt-text-primary) 55%, transparent);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  dd {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0;
+    min-width: 0;
+  }
+}
+
+// ── Share your work (replaces the composer) ──────────────────────────────
+.chat-share-bar {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 8px;
+}
+
+.chat-share-bar__split {
+  display: inline-flex;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--tt-brand-color-500);
+  box-shadow: 0 2px 8px
+    color-mix(in srgb, var(--tt-brand-color-500) 30%, transparent);
+}
+
+.chat-share-bar__main,
+.chat-share-bar__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  border: 0;
+  background: transparent;
+  color: white;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, white 12%, transparent);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+.chat-share-bar__main {
+  padding: 0 20px;
+}
+
+.chat-share-bar__more {
+  padding: 0 12px;
+  border-left: 1px solid color-mix(in srgb, white 30%, transparent);
+}
+
+.chat-share-bar__menu {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 240px;
+  padding: 5px;
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-sm);
+  background: var(--tt-bg-color);
+  box-shadow: var(--tt-shadow-md);
+  transform: translateX(-50%);
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 30px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--tt-text-primary);
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+    }
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+.chat-share-bar__default {
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--tt-text-primary) 60%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-row-card {
+    transition: none;
+  }
+}

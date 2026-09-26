@@ -13,6 +13,9 @@ import { useLocation, useNavigate } from "@tanstack/react-location";
 import {
   ArrowUp,
   ArrowUpRight,
+  Check,
+  ChevronDown,
+  Database,
   Download,
   FileText,
   Hash,
@@ -20,8 +23,10 @@ import {
   LogOut,
   MessageSquare,
   Paperclip,
+  Plus,
   Reply,
   SmilePlus,
+  Sparkles,
   Trash2,
   UserPlus,
   X,
@@ -57,8 +62,14 @@ import {
   useSendBlockMessage,
 } from "src/hooks/use-chat-blocks";
 import { isSessionOpen, useStudySession } from "src/hooks/use-study-session";
+import { useRoomRowRefs, useRoomShowcasePage } from "src/hooks/use-chat-rows";
+import { useDataSource } from "src/components/tiptap-node/inline-database/hooks/use-data-source";
+import { BoardCardCover } from "src/components/tiptap-node/inline-database/primitives/board-card-cover";
+import { usePatchPage } from "src/hooks/use-patch-page";
+import { patchPage } from "src/api/pages";
+import type { RowRef } from "src/api/chat-rows";
 import { useChatCandidates } from "src/hooks/use-chat-candidates";
-import { usePages } from "src/hooks/use-pages";
+import { usePages, usePagesBase } from "src/hooks/use-pages";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useNow } from "src/hooks/use-now";
 import { spaceHomePath, useCurrentSpace } from "src/hooks/use-current-space";
@@ -73,7 +84,15 @@ import {
   type UploadedFile,
 } from "src/api/chat-attachments";
 import type { BlockRef } from "src/api/chat-blocks";
-import type { Page } from "src/types";
+import type {
+  CellValue,
+  DatabaseProperty,
+  Page,
+  PersonValue,
+  RelationValue,
+  RowTemplate,
+  SelectOption,
+} from "src/types";
 import {
   mentionedPersonIds,
   mentionsPerson,
@@ -106,6 +125,7 @@ import "./chat-extras.scss";
 import "./chat-attachments.scss";
 import "./chat-blocks.scss";
 import "./block-thread.scss";
+import "./chat-showcase.scss";
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
 const PICKER_LIMIT = 5;
@@ -113,6 +133,9 @@ const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "😮", "🙏"];
 const LOAD_OLDER_THRESHOLD_PX = 80;
 const MAX_JUMP_PAGES = 10;
 const NO_PENDING_KEYS: string[] = [];
+const NO_PROPS: DatabaseProperty[] = [];
+const NO_TEMPLATES: RowTemplate[] = [];
+const ROW_CARD_PROPS = 3;
 
 const nextFrame = () =>
   new Promise<void>((resolve) =>
@@ -235,6 +258,13 @@ export function RoomContent({
 
   const blockRefs = useRoomBlockRefs(room.id, messages.length);
 
+  // ── Showcase: the room's database, and the rows posted into it ─────────
+  const { data: showcasePageId = null } = useRoomShowcasePage(
+    room.kind === "room" ? room.id : null,
+  );
+  const isShowcase = !!showcasePageId;
+  const rowRefs = useRoomRowRefs(isShowcase ? room.id : null, messages.length);
+
   // Block messages whose page you can read become threads; their replies
   // live in the side view. (Locked cards stay flat, so nobody loses replies.)
   const threadable = useMemo(() => {
@@ -242,8 +272,12 @@ export function RoomContent({
     blockRefs.forEach((ref, id) => {
       if (ref.snapshot != null) s.add(id);
     });
+    // Row messages you can read are threads too: the row's discussion.
+    rowRefs.forEach((ref, id) => {
+      if (ref.pageId != null) s.add(id);
+    });
     return s;
-  }, [blockRefs]);
+  }, [blockRefs, rowRefs]);
 
   const repliesByParent = useMemo(() => {
     const m = new Map<string, ChatMessage[]>();
@@ -301,6 +335,23 @@ export function RoomContent({
     () => new Map(messages.map((m) => [m.id, m])),
     [messages],
   );
+
+  const showcasePage = showcasePageId
+    ? pagesById.get(showcasePageId)
+    : undefined;
+  const showcaseSourceId =
+    (showcasePage?.content?.content?.find((n) => n.type === "database")?.attrs
+      ?.sourceId as string | undefined) ?? null;
+  const {
+    source: showcaseSource,
+    resolvedRecords: showcaseRows,
+    addRecordAsync,
+  } = useDataSource(showcaseSourceId);
+  const rowsById = useMemo(
+    () => new Map<string, Page>(showcaseRows.map((r) => [r.id, r])),
+    [showcaseRows],
+  );
+  const showcaseProps = showcaseSource?.properties ?? NO_PROPS;
 
   const send = useSendMessage(room.id);
   const sendWithFiles = useSendWithAttachments(room.id);
@@ -561,6 +612,45 @@ export function RoomContent({
     setPageChatOpen(true);
   };
 
+  // Share your work = the database's New: a row from the default row
+  // template (or the one picked), opened full so it can be filled in. The
+  // server trigger posts it into this room.
+  const patchRow = usePatchPage(({ id, patch }) => patchPage(id, patch));
+  const [sharing, setSharing] = useState(false);
+  const shareEntry = async (templateId?: string) => {
+    if (!showcaseSource || sharing) return;
+    const templates = showcaseSource.rowTemplates ?? [];
+    const fallback = showcaseSource.defaultTemplateId ?? null;
+    const useTemplate =
+      templateId ??
+      (fallback && templates.some((t) => t.id === fallback)
+        ? fallback
+        : undefined);
+    setSharing(true);
+    try {
+      const row = await addRecordAsync(
+        useTemplate ? { templateId: useTemplate } : { title: "" },
+      );
+      // The entry is open to the same people as the showcase database.
+      if (showcasePage) {
+        patchRow.mutate({
+          id: row.id,
+          patch: {
+            generalAccess: showcasePage.generalAccess,
+            generalAccessRole: showcasePage.generalAccessRole,
+          },
+        });
+      }
+      setActivePageId(row.id);
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const openShowcase = () => {
+    if (showcasePageId) setActivePageId(showcasePageId);
+  };
+
   const typingNames = typing.map((p) => p.name.split(" ")[0]).filter(Boolean);
 
   const composerPlaceholder =
@@ -580,6 +670,8 @@ export function RoomContent({
           <Avatar src={partner?.avatarUrl ?? undefined} name={title} />
         ) : room.kind === "page" ? (
           <FileText size={22} />
+        ) : isShowcase ? (
+          <Sparkles size={22} />
         ) : (
           <Hash size={22} />
         )}
@@ -593,10 +685,16 @@ export function RoomContent({
             })
           : room.kind === "page"
             ? t("chat.pageStart", "Start the discussion about this page.")
-            : t("chat.roomStart", {
-                name: title,
-                defaultValue: "This is the start of #{{name}}.",
-              })}
+            : isShowcase
+              ? t("chat.showcase.start", {
+                  name: title,
+                  defaultValue:
+                    "This is the start of #{{name}}. Share your work to post the first entry.",
+                })
+              : t("chat.roomStart", {
+                  name: title,
+                  defaultValue: "This is the start of #{{name}}.",
+                })}
       </p>
     </>
   );
@@ -611,6 +709,9 @@ export function RoomContent({
     threadRef.snapshot != null &&
     !!threadRef.pageId &&
     !!threadRef.blockId;
+  const threadRowRef = threadFor ? rowRefs.get(threadFor) : undefined;
+  const rowThreadOpen =
+    !!threadMsg && threadMsg.deletedAt == null && !!threadRowRef?.pageId;
 
   return (
     <div
@@ -631,6 +732,8 @@ export function RoomContent({
                 ) : (
                   <FileText size={16} />
                 )
+              ) : isShowcase ? (
+                <Sparkles size={16} />
               ) : room.visibility === "private" ? (
                 <Lock size={16} />
               ) : (
@@ -681,6 +784,14 @@ export function RoomContent({
                   <FileText className="tiptap-button-icon" />
                   <span className="tiptap-button-text">
                     {t("chat.openPage", "Open page")}
+                  </span>
+                </Button>
+              )}
+              {isShowcase && (
+                <Button variant="ghost" onClick={openShowcase}>
+                  <Database className="tiptap-button-icon" />
+                  <span className="tiptap-button-text">
+                    {t("chat.showcase.open", "Open showcase")}
                   </span>
                 </Button>
               )}
@@ -773,6 +884,7 @@ export function RoomContent({
                       : { state: "missing", id: msg.replyToId }
                     : null;
                   const blockRef = blockRefs.get(msg.id);
+                  const rowRef = rowRefs.get(msg.id);
                   const isThread = threadable.has(msg.id);
                   return (
                     <MessageRow
@@ -791,6 +903,11 @@ export function RoomContent({
                       attachments={attachmentsByMessage.get(msg.id) ?? []}
                       signedUrls={signedUrls}
                       blockRef={blockRef}
+                      rowRef={rowRef}
+                      rowPage={
+                        rowRef?.pageId ? rowsById.get(rowRef.pageId) : undefined
+                      }
+                      rowProps={showcaseProps}
                       threadCount={
                         isThread
                           ? (repliesByParent.get(msg.id)?.length ?? 0)
@@ -839,7 +956,14 @@ export function RoomContent({
               t("chat.typingMany", "Several people are typing…")}
           </div>
 
-          {isMember ? (
+          {isMember && isShowcase ? (
+            <ShowcaseShareBar
+              templates={showcaseSource?.rowTemplates ?? NO_TEMPLATES}
+              defaultTemplateId={showcaseSource?.defaultTemplateId ?? null}
+              disabled={!showcaseSource || sharing}
+              onShare={(templateId) => void shareEntry(templateId)}
+            />
+          ) : isMember ? (
             <Composer
               roomId={room.id}
               pendingKeys={pendingKeys}
@@ -879,6 +1003,52 @@ export function RoomContent({
           )}
         </div>
       </div>
+
+      {rowThreadOpen && threadMsg && threadRowRef?.pageId && (
+        <RowThreadPanel
+          key={threadMsg.id}
+          msg={threadMsg}
+          page={rowsById.get(threadRowRef.pageId)}
+          properties={showcaseProps}
+          author={
+            threadMsg.authorId ? peopleById.get(threadMsg.authorId) : undefined
+          }
+          replies={repliesByParent.get(threadMsg.id) ?? []}
+          reactions={reactionsByMessage.get(threadMsg.id) ?? []}
+          meId={meId}
+          isMember={isMember}
+          peopleById={peopleById}
+          pagesById={pagesById}
+          attachmentsByMessage={attachmentsByMessage}
+          signedUrls={signedUrls}
+          onReact={(emoji, on) =>
+            toggleReaction.mutate({ messageId: threadMsg.id, emoji, on })
+          }
+          onOpenFull={() => setActivePageId(threadRowRef.pageId as string)}
+          onClose={() => setThreadFor(null)}
+          onDeleteReply={deleteMessage}
+          composer={
+            isMember ? (
+              <Composer
+                roomId={room.id}
+                pendingKeys={NO_PENDING_KEYS}
+                placeholder={t(
+                  "chat.showcase.replyToEntry",
+                  "Reply to this entry…",
+                )}
+                people={mentionablePeople}
+                pages={[...pagesById.values()]}
+                replyTo={null}
+                sending={sendWithFiles.isPending}
+                onCancelReply={() => {}}
+                onSend={onSendThreadReply(threadMsg.id)}
+                onTyping={setTyping}
+                allowBlocks={false}
+              />
+            ) : null
+          }
+        />
+      )}
 
       {threadOpen && threadMsg && threadRef && (
         <BlockThreadPanel
@@ -1411,6 +1581,9 @@ function MessageRow({
   attachments,
   signedUrls,
   blockRef,
+  rowRef,
+  rowPage,
+  rowProps,
   threadCount,
   threadActive,
   onOpenThread,
@@ -1435,6 +1608,10 @@ function MessageRow({
   attachments: ChatAttachment[];
   signedUrls: Record<string, string>;
   blockRef: BlockRef | undefined;
+  /** Set when this message is a showcase entry (a posted database row). */
+  rowRef: RowRef | undefined;
+  rowPage: Page | undefined;
+  rowProps: DatabaseProperty[];
   /** Reply count when this message is a block thread; null otherwise. */
   threadCount: number | null;
   threadActive: boolean;
@@ -1534,6 +1711,15 @@ function MessageRow({
           </p>
         ) : (
           <>
+            {rowRef && (
+              <RowCard
+                rowRef={rowRef}
+                page={rowPage}
+                properties={rowProps}
+                active={threadActive}
+                onOpen={onOpenThread}
+              />
+            )}
             {blockRef && (
               <BlockCard
                 blockRef={blockRef}
@@ -1655,6 +1841,517 @@ function MessageRow({
               </button>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Showcase entries: a database row posted into the room ────────────────────
+
+type CellChip = { text: string; color?: string };
+
+// A compact, read-only rendering of one cell for cards and the side view.
+function cellChips(
+  prop: DatabaseProperty,
+  value: CellValue | null | undefined,
+  t: TFunction,
+): CellChip[] {
+  if (value == null || value === "") return [];
+  const cfg = prop.config;
+  switch (cfg.type) {
+    case "title":
+      return [];
+    case "select": {
+      const o = value as SelectOption;
+      return o?.label ? [{ text: o.label, color: o.color }] : [];
+    }
+    case "multi_select":
+      return (value as SelectOption[]).map((o) => ({
+        text: o.label,
+        color: o.color,
+      }));
+    case "status": {
+      const item = cfg.groups
+        .flatMap((g) => g.items)
+        .find((i) => i.id === value);
+      return item ? [{ text: item.name, color: item.color }] : [];
+    }
+    case "checkbox":
+      return value === true ? [{ text: `✓ ${prop.name}` }] : [];
+    case "person": {
+      const people = value as PersonValue[];
+      return people.length
+        ? [{ text: people.map((p) => p.name).join(", ") }]
+        : [];
+    }
+    case "relation": {
+      const links = value as RelationValue[];
+      return links.length
+        ? [
+            {
+              text: links.map((l) => l.title || t("page.untitled")).join(", "),
+            },
+          ]
+        : [];
+    }
+    case "date": {
+      const d = value as string | { start: string; end?: string };
+      const fmt = (iso: string) => new Date(iso).toLocaleDateString();
+      return [
+        {
+          text:
+            typeof d === "string"
+              ? fmt(d)
+              : d.end
+                ? `${fmt(d.start)} → ${fmt(d.end)}`
+                : fmt(d.start),
+        },
+      ];
+    }
+    case "created_time":
+    case "edited_time":
+      return [{ text: new Date(value as number).toLocaleDateString() }];
+    case "created_by":
+    case "edited_by":
+      return [];
+    default:
+      return [{ text: String(value) }];
+  }
+}
+
+const chipStyle = (color?: string) =>
+  color
+    ? {
+        color: `var(--tt-color-text-${color})`,
+        background: `color-mix(in srgb, var(--tt-color-text-${color}) 12%, transparent)`,
+      }
+    : undefined;
+
+function RowCard({
+  rowRef,
+  page,
+  properties,
+  active,
+  onOpen,
+}: {
+  rowRef: RowRef;
+  page: Page | undefined;
+  properties: DatabaseProperty[];
+  active: boolean;
+  onOpen: () => void;
+}) {
+  const { t } = useTranslation();
+  if (!rowRef.pageId) {
+    return (
+      <span className="chat-block-card is-locked">
+        <span className="chat-block-card__src">
+          <Lock size={11} />
+          {t("chat.privatePage", "Private page")}
+        </span>
+      </span>
+    );
+  }
+  if (!page) {
+    return (
+      <span className="chat-row-card is-removed">
+        {t("chat.showcase.entryRemoved", "This entry was removed.")}
+      </span>
+    );
+  }
+  const chips = properties
+    .flatMap((p) => cellChips(p, page.values?.[p.id], t))
+    .slice(0, ROW_CARD_PROPS);
+  return (
+    <button
+      type="button"
+      className={`chat-row-card${active ? " is-active" : ""}`}
+      title={t("chat.showcase.openEntry", "Open the entry")}
+      onClick={onOpen}
+    >
+      <span className="chat-row-card__cover">
+        <BoardCardCover page={page} recordId={page.id} height={120} />
+      </span>
+      <span className="chat-row-card__body">
+        <span className="chat-row-card__title">
+          <PageItemIcon
+            cover={page.cover}
+            styles={{ width: 14, height: 14, fontSize: 14 }}
+          />
+          {page.title || t("page.untitled")}
+        </span>
+        {chips.length > 0 && (
+          <span className="chat-row-card__chips">
+            {chips.map((c, i) => (
+              <span
+                key={i}
+                className="chat-row-chip"
+                style={chipStyle(c.color)}
+              >
+                {c.text}
+              </span>
+            ))}
+          </span>
+        )}
+      </span>
+    </button>
+  );
+}
+
+// ── Side view: a showcase entry, its properties, reactions and thread ────────
+function RowThreadPanel({
+  msg,
+  page,
+  properties,
+  author,
+  replies,
+  reactions,
+  meId,
+  isMember,
+  peopleById,
+  pagesById,
+  attachmentsByMessage,
+  signedUrls,
+  onReact,
+  onOpenFull,
+  onClose,
+  onDeleteReply,
+  composer,
+}: {
+  msg: ChatMessage;
+  page: Page | undefined;
+  properties: DatabaseProperty[];
+  author: ChatPerson | undefined;
+  replies: ChatMessage[];
+  reactions: ReactionGroup[];
+  meId: string | undefined;
+  isMember: boolean;
+  peopleById: Map<string, ChatPerson>;
+  pagesById: Map<string, Page>;
+  attachmentsByMessage: Map<string, ChatAttachment[]>;
+  signedUrls: Record<string, string>;
+  onReact: (emoji: string, on: boolean) => void;
+  onOpenFull: () => void;
+  onClose: () => void;
+  onDeleteReply: (id: string) => void;
+  composer: React.ReactNode;
+}) {
+  const { t, i18n } = useTranslation();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const el = bodyRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [replies.length]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !e.defaultPrevented) onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const time = (ts: number) =>
+    new Date(ts).toLocaleTimeString(i18n.language, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  const fields = page
+    ? properties
+        .map((p) => ({ prop: p, chips: cellChips(p, page.values?.[p.id], t) }))
+        .filter((f) => f.chips.length > 0)
+    : [];
+
+  return (
+    <aside className="bt-panel" aria-label={t("chat.thread", "Thread")}>
+      <header className="bt-panel__head">
+        <span className="bt-panel__head-icon">
+          {page ? (
+            <PageItemIcon
+              cover={page.cover}
+              styles={{ width: 15, height: 15, fontSize: 15 }}
+            />
+          ) : (
+            <FileText size={15} />
+          )}
+        </span>
+        <div className="bt-panel__heading">
+          <span className="bt-panel__title">
+            {page?.title || t("page.untitled")}
+          </span>
+          <span className="bt-panel__sub">
+            {t("chat.sharedBy", {
+              name: author?.name ?? t("chat.someone", "someone"),
+              defaultValue: "Shared by {{name}}",
+            })}{" "}
+            · {time(msg.createdAt)}
+          </span>
+        </div>
+        <button
+          type="button"
+          className="bt-panel__icon-btn"
+          aria-label={t("chat.openPage", "Open page")}
+          title={t("chat.openPage", "Open page")}
+          onClick={onOpenFull}
+          disabled={!page}
+        >
+          <ArrowUpRight size={16} />
+        </button>
+        <button
+          type="button"
+          className="bt-panel__icon-btn"
+          aria-label={t("actions.close", "Close")}
+          title={t("actions.close", "Close")}
+          onClick={onClose}
+        >
+          <X size={16} />
+        </button>
+      </header>
+
+      <div className="bt-panel__body" ref={bodyRef}>
+        {page ? (
+          <>
+            <div className="chat-row-panel__cover">
+              <BoardCardCover page={page} recordId={page.id} height={150} />
+            </div>
+            {fields.length > 0 && (
+              <dl className="chat-row-panel__props">
+                {fields.map(({ prop, chips }) => (
+                  <div key={prop.id} className="chat-row-panel__prop">
+                    <dt>{prop.name}</dt>
+                    <dd>
+                      {chips.map((c, i) => (
+                        <span
+                          key={i}
+                          className="chat-row-chip"
+                          style={chipStyle(c.color)}
+                        >
+                          {c.text}
+                        </span>
+                      ))}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </>
+        ) : (
+          <p className="bt-note">
+            {t("chat.showcase.entryRemoved", "This entry was removed.")}
+          </p>
+        )}
+
+        <div className="bt-reactions">
+          {reactions.map((g) => (
+            <button
+              key={g.emoji}
+              type="button"
+              className={`chat-reaction${g.mine ? " is-mine" : ""}`}
+              disabled={!isMember}
+              onClick={() => onReact(g.emoji, !g.mine)}
+            >
+              <span className="chat-reaction__emoji">{g.emoji}</span>
+              <span>{g.count}</span>
+            </button>
+          ))}
+          {isMember && (
+            <button
+              type="button"
+              className="bt-add-reaction"
+              aria-label={t("chat.react", "Add reaction")}
+              title={t("chat.react", "Add reaction")}
+              onClick={() => setPickerOpen((v) => !v)}
+            >
+              <SmilePlus size={13} />
+            </button>
+          )}
+          {pickerOpen && (
+            <div className="chat-emoji-pop" role="menu">
+              {QUICK_REACTIONS.map((emoji) => {
+                const mine = reactions.some((g) => g.emoji === emoji && g.mine);
+                return (
+                  <button
+                    key={emoji}
+                    type="button"
+                    aria-label={emoji}
+                    onClick={() => {
+                      setPickerOpen(false);
+                      onReact(emoji, !mine);
+                    }}
+                  >
+                    {emoji}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="bt-thread-label">
+          {t("chat.replies", {
+            count: replies.length,
+            defaultValue: "{{count}} replies",
+          })}
+        </div>
+
+        {replies.length === 0 ? (
+          <div className="bt-empty">
+            {t("chat.showcase.noReplies", "No feedback yet — be the first.")}
+          </div>
+        ) : (
+          replies.map((r) => {
+            const rAuthor = r.authorId ? peopleById.get(r.authorId) : undefined;
+            const rName = rAuthor?.name ?? t("chat.unknown", "Someone");
+            const rDeleted = r.deletedAt != null;
+            const rPending = r.id.startsWith("pending-");
+            const files = attachmentsByMessage.get(r.id) ?? [];
+            return (
+              <div
+                key={r.id}
+                className={`bt-reply${rPending ? " is-pending" : ""}`}
+              >
+                <Avatar
+                  size="sm"
+                  src={rAuthor?.avatarUrl ?? undefined}
+                  name={rName}
+                />
+                <div className="bt-reply__main">
+                  <div className="bt-reply__head">
+                    <strong>{rName}</strong>
+                    <span>{time(r.createdAt)}</span>
+                  </div>
+                  {rDeleted ? (
+                    <p className="bt-reply__body is-deleted">
+                      {t("chat.deleted", "Message deleted")}
+                    </p>
+                  ) : (
+                    <>
+                      {r.body.trim() && (
+                        <p className="bt-reply__body">
+                          <MessageBody
+                            body={r.body}
+                            meId={meId}
+                            peopleById={peopleById}
+                            pagesById={pagesById}
+                          />
+                        </p>
+                      )}
+                      {files.length > 0 && (
+                        <MessageAttachments
+                          attachments={files}
+                          signedUrls={signedUrls}
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
+                {r.authorId === meId && !rDeleted && !rPending && (
+                  <button
+                    type="button"
+                    className="bt-reply__delete"
+                    aria-label={t("chat.deleteMessage", "Delete message")}
+                    title={t("chat.deleteMessage", "Delete message")}
+                    onClick={() => onDeleteReply(r.id)}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {composer && <div className="bt-panel__bottom">{composer}</div>}
+    </aside>
+  );
+}
+
+// ── Showcase bottom bar: the database's New, as the room's action ────────────
+function ShowcaseShareBar({
+  templates,
+  defaultTemplateId,
+  disabled,
+  onShare,
+}: {
+  templates: RowTemplate[];
+  defaultTemplateId: string | null;
+  disabled: boolean;
+  onShare: (templateId?: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Template names live on their pages (row-template pages carry a sourceId,
+  // so they're only in the base list), same as NewRecordButton.
+  const { data: names } = usePagesBase((all) => {
+    const ids = new Set(templates.map((tpl) => tpl.pageId));
+    const map: Record<string, string> = {};
+    for (const p of all) if (ids.has(p.id)) map[p.id] = p.title;
+    return map;
+  });
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [menuOpen]);
+
+  return (
+    <div className="chat-share-bar" ref={wrapRef}>
+      <div className="chat-share-bar__split">
+        <button
+          type="button"
+          className="chat-share-bar__main"
+          disabled={disabled}
+          onClick={() => onShare()}
+        >
+          <Plus size={16} />
+          {t("chat.showcase.share", "Share your work")}
+        </button>
+        {templates.length > 0 && (
+          <button
+            type="button"
+            className="chat-share-bar__more"
+            aria-label={t("chat.showcase.pickTemplate", "Choose a template")}
+            aria-expanded={menuOpen}
+            disabled={disabled}
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            <ChevronDown size={16} />
+          </button>
+        )}
+      </div>
+
+      {menuOpen && (
+        <div className="chat-share-bar__menu" role="menu">
+          {templates.map((tpl) => (
+            <button
+              key={tpl.id}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setMenuOpen(false);
+                onShare(tpl.id);
+              }}
+            >
+              <span>
+                {(tpl.pageId && names?.[tpl.pageId]) ||
+                  tpl.name ||
+                  t("chat.showcase.untitledTemplate", "Untitled template")}
+              </span>
+              {tpl.id === defaultTemplateId && (
+                <Check size={14} className="chat-share-bar__default" />
+              )}
+            </button>
+          ))}
         </div>
       )}
     </div>
