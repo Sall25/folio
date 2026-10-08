@@ -138,6 +138,18 @@
   width: 100%;
 }
 
+// Shown when this device kept edits from a sign-out the person didn't ask
+// for (query-persistence.ts → readUnsentOwner).
+.sign-in__notice {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: -8px 0 20px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--tt-text-primary, inherit);
+  background: color-mix(in srgb, var(--tt-brand-color-500, #2383e2) 10%, transparent);
+}
+
 .sign-in__error {
   font-size: 13px;
   color: var(--tt-color-highlight-red, #e5484d);

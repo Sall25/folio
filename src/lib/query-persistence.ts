@@ -107,10 +107,73 @@ export function shouldPersistQuery(query: Query): boolean {
   return !(typeof head === "string" && NOT_PERSISTED.has(head));
 }
 
+// ── Unsent edits survive a sign-out nobody asked for ────────────────────
+// When the session ends on its own (Log out on another device — Supabase
+// signs out everywhere —, a password change, a revoked session, Log out in
+// another tab), this device may still hold page edits that never reached the
+// server. Those are kept (per person; nobody else can open them) and the
+// sign-in screen asks the person to sign in again to send them. Only a Log
+// out clicked here (already confirmed in SignOutHost) drops them.
+
+const UNSENT_KEY = "folio-unsent-owner";
+
+export interface UnsentOwner {
+  personId: string;
+  email: string | null;
+}
+
+/** Who left unsent edits on this device when they were signed out. */
+export function readUnsentOwner(): UnsentOwner | null {
+  try {
+    const raw = localStorage.getItem(UNSENT_KEY);
+    const parsed = raw ? (JSON.parse(raw) as UnsentOwner) : null;
+    return parsed?.personId ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeUnsentOwner(owner: UnsentOwner | null): void {
+  try {
+    if (owner) localStorage.setItem(UNSENT_KEY, JSON.stringify(owner));
+    else localStorage.removeItem(UNSENT_KEY);
+  } catch {
+    /* storage blocked */
+  }
+}
+
+let signOutIntended = false;
+
+/** Called by signOut() just before it signs out: this sign-out was asked
+ *  for here, and its unsent edits (if any) were confirmed as discarded. */
+export function markSignOutIntended(): void {
+  signOutIntended = true;
+}
+
+/** True when the sign-out in progress came from this tab's Log out. */
+export function isSignOutIntended(): boolean {
+  return signOutIntended;
+}
+
+/** What a sign-out wipes. `personId` is who was signed in (null: unknown);
+ *  `keepOwnUnsent` keeps their unsent edits too. Everyone else's unsent
+ *  edits on this device are always kept. */
+export interface SignOutWipe {
+  personId: string | null;
+  email?: string | null;
+  keepOwnUnsent: boolean;
+}
+
+const keepFor =
+  (wipe: SignOutWipe | undefined) =>
+  (personId: string): boolean =>
+    !wipe?.personId || personId !== wipe.personId || wipe.keepOwnUnsent;
+
 /**
  * Makes sure a saved cache belongs to whoever is signed in. When a different
  * person signs in on this device, the previous person's saved queries and
- * page copies are dropped (OfflineCacheGuard runs this before rendering).
+ * page copies are dropped (OfflineCacheGuard runs this before rendering) —
+ * except edits someone hasn't sent yet, which wait for them to sign in again.
  */
 export function claimOfflineCache(
   personId: string,
@@ -125,8 +188,10 @@ export function claimOfflineCache(
   if (previous && previous !== personId) {
     clearQueries();
     void queryPersister.removeClient();
-    void clearOfflineDocCache();
+    void clearOfflineDocCache(() => true);
   }
+  // Back after an unasked sign-out: OfflineDocSync sends the edits now.
+  if (readUnsentOwner()?.personId === personId) writeUnsentOwner(null);
   try {
     localStorage.setItem(OWNER_KEY, personId);
   } catch {
@@ -134,11 +199,18 @@ export function claimOfflineCache(
   }
 }
 
-/** Sign-out: drop every offline copy (queries + page docs) on this device. */
-export function clearOfflineData(clearQueries: () => void): void {
+/** Sign-out with nothing on screen to reload: drop the offline copies
+ *  (queries + page docs) on this device, as `wipe` says. */
+export function clearOfflineData(
+  clearQueries: () => void,
+  wipe?: SignOutWipe,
+): void {
   clearQueries();
   void queryPersister.removeClient();
-  void clearOfflineDocCache();
+  void clearOfflineDocCache(keepFor(wipe));
+  if (wipe?.keepOwnUnsent && wipe.personId) {
+    writeUnsentOwner({ personId: wipe.personId, email: wipe.email ?? null });
+  }
   try {
     localStorage.removeItem(OWNER_KEY);
   } catch {
@@ -150,8 +222,9 @@ let leaving = false;
 
 /**
  * After signing out (here or in another tab): wipe this device's offline
- * data — saved queries and page copies — then reload at "/", the landing
- * page.
+ * data — saved queries and page copies — then reload: at "/", the landing
+ * page, or at "/signin" when unsent edits were kept, so the person sees why
+ * to sign in again.
  *
  * A full reload rather than re-rendering in place: emptying the query cache
  * doesn't re-render the screens reading it (the app just sat there), and a
@@ -159,18 +232,25 @@ let leaving = false;
  * so nothing of the previous account survives. Runs once even if called
  * twice (sign-out + its auth event).
  */
-export async function wipeAndReloadHome(clearQueries: () => void) {
+export async function wipeAndReloadHome(
+  clearQueries: () => void,
+  wipe?: SignOutWipe,
+) {
   if (leaving) return;
   leaving = true;
   clearQueries();
   await Promise.allSettled([
     queryPersister.removeClient(),
-    clearOfflineDocCache(),
+    clearOfflineDocCache(keepFor(wipe)),
   ]);
+  const keptOwn = Boolean(wipe?.keepOwnUnsent && wipe.personId);
+  if (keptOwn && wipe?.personId) {
+    writeUnsentOwner({ personId: wipe.personId, email: wipe.email ?? null });
+  }
   try {
     localStorage.removeItem(OWNER_KEY);
   } catch {
     /* storage blocked */
   }
-  window.location.replace("/");
+  window.location.replace(keptOwn ? "/signin" : "/");
 }

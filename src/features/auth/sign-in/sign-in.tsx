@@ -1,24 +1,45 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import type { Provider } from "@supabase/supabase-js";
 import { supabase } from "src/api/supabase-client";
 import { Input } from "src/components/tiptap-ui-primitive/input";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { FolioMark } from "../../../components/brand/folio-mark";
 import { PROVIDERS } from "./utils";
+import { readUnsentOwner } from "src/lib/query-persistence";
+import { listDirtyPageIds } from "src/lib/offline-doc-cache";
 import "./sign-in.scss";
 
 type Status = "idle" | "sending" | "sent" | "error";
 type Mode = "signin" | "signup" | "magic-link";
 
 export function SignIn() {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<Mode>("signin");
-  const [email, setEmail] = useState("");
+  // Signed out without asking while edits were still unsent: they're kept
+  // on this device — say so, and fill in whose account they belong to.
+  const [unsentOwner] = useState(readUnsentOwner);
+  const [hasUnsent, setHasUnsent] = useState(false);
+  const [email, setEmail] = useState(unsentOwner?.email ?? "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [oauthPending, setOauthPending] = useState<Provider | null>(null);
+
+  // Only mention it while those edits really are still here (another tab's
+  // Log out may have discarded them since).
+  useEffect(() => {
+    if (!unsentOwner) return;
+    let cancelled = false;
+    void listDirtyPageIds(unsentOwner.personId).then((ids) => {
+      if (!cancelled) setHasUnsent(ids.length > 0);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [unsentOwner]);
 
   const resetFeedback = () => {
     setStatus("idle");
@@ -175,6 +196,21 @@ export function SignIn() {
               ? "Enter your email and we'll send you a link to sign in."
               : "Sign in to continue to Folio."}
         </p>
+
+        {hasUnsent && (
+          <p className="sign-in__notice" role="status">
+            {unsentOwner?.email
+              ? t("offline.unsentSignIn", {
+                  email: unsentOwner.email,
+                  defaultValue:
+                    "You have edits on this device that haven't been sent yet. Sign in again as {{email}} to send them.",
+                })
+              : t(
+                  "offline.unsentSignInNoEmail",
+                  "You have edits on this device that haven't been sent yet. Sign in again to send them.",
+                )}
+          </p>
+        )}
 
         {mode !== "magic-link" && (
           <>

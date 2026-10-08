@@ -3,7 +3,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "src/api/supabase-client";
 import type { Person } from "src/types";
-import { clearOfflineData, wipeAndReloadHome } from "src/lib/query-persistence";
+import {
+  clearOfflineData,
+  isSignOutIntended,
+  wipeAndReloadHome,
+} from "src/lib/query-persistence";
+import { listDirtyPageIds } from "src/lib/offline-doc-cache";
 
 export const queryKeys = {
   session: ["session"] as const,
@@ -100,17 +105,34 @@ export function useAuthListener() {
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
         // Signed out (here, in another tab, or the session was revoked):
-        // drop every offline copy on this device. If you were signed in,
-        // reload at the landing page — re-rendering in place doesn't work,
-        // because emptying the cache doesn't refresh the screens reading it.
+        // drop the offline copies on this device. If you were signed in,
+        // reload — re-rendering in place doesn't work, because emptying the
+        // cache doesn't refresh the screens reading it.
+        //
+        // A sign-out you didn't ask for here (Log out on another device or
+        // in another tab, a password change, a revoked session) keeps your
+        // page edits that never reached the server: they wait, and the
+        // sign-in screen asks you to sign in again to send them. Only this
+        // tab's Log out — which already asked — drops them.
         if (event === "SIGNED_OUT") {
-          const wasSignedIn =
-            queryClient.getQueryData(queryKeys.session) != null;
-          if (wasSignedIn) {
-            void wipeAndReloadHome(() => queryClient.clear());
-          } else {
-            clearOfflineData(() => queryClient.clear());
-          }
+          const previous = queryClient.getQueryData<Session | null>(
+            queryKeys.session,
+          );
+          const wasSignedIn = previous != null;
+          const personId = previous?.user?.id ?? null;
+          const email = previous?.user?.email ?? null;
+          void (async () => {
+            const keepOwnUnsent =
+              !isSignOutIntended() &&
+              personId !== null &&
+              (await listDirtyPageIds(personId)).length > 0;
+            const wipe = { personId, email, keepOwnUnsent };
+            if (wasSignedIn) {
+              void wipeAndReloadHome(() => queryClient.clear(), wipe);
+            } else {
+              clearOfflineData(() => queryClient.clear(), wipe);
+            }
+          })();
           return;
         }
         // INITIAL_SESSION repeats what the session query already read.

@@ -1,7 +1,12 @@
 import type { QueryClient } from "@tanstack/react-query";
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "src/api/supabase-client";
-import { hasDirtyDocs } from "src/lib/offline-doc-cache";
-import { wipeAndReloadHome } from "src/lib/query-persistence";
+import { hasDirtyDocs, listDirtyPageIds } from "src/lib/offline-doc-cache";
+import {
+  markSignOutIntended,
+  wipeAndReloadHome,
+} from "src/lib/query-persistence";
+import { queryKeys } from "src/hooks/use-session";
 
 // ONE way to sign out, used by every "Log out" button (user menu, workspace
 // switcher) and by deleting your workspace.
@@ -12,9 +17,13 @@ import { wipeAndReloadHome } from "src/lib/query-persistence";
 //      leaving you signed in.
 //   2. Then this device's offline data is wiped and the app reloads at "/",
 //      the landing page — so the next person who signs in here starts fresh,
-//      not on the previous person's page. (The auth listener does the same
-//      for sign-outs from another tab; it only ever runs once.)
+//      not on the previous person's page. Your unsent edits go too (the
+//      Log out button already asked, see requestSignOut); other people's
+//      unsent edits on this device stay. (The auth listener handles
+//      sign-outs that come from elsewhere; it only ever runs once.)
 export async function signOut(qc: QueryClient): Promise<void> {
+  const personId = signedInPersonId(qc);
+  markSignOutIntended();
   const { error } = await supabase.auth.signOut();
   if (error) {
     const { error: localError } = await supabase.auth.signOut({
@@ -22,17 +31,28 @@ export async function signOut(qc: QueryClient): Promise<void> {
     });
     if (localError) throw localError;
   }
-  await wipeAndReloadHome(() => qc.clear());
+  await wipeAndReloadHome(() => qc.clear(), {
+    personId,
+    keepOwnUnsent: false,
+  });
 }
 
-/** Changes that would be lost by signing out now: page edits not yet sent
- *  to the server, or saves queued while offline. */
+function signedInPersonId(qc: QueryClient): string | null {
+  return qc.getQueryData<Session | null>(queryKeys.session)?.user?.id ?? null;
+}
+
+/** Changes that would be lost by signing out now: your page edits not yet
+ *  sent to the server, or saves queued while offline. */
 export async function hasUnsyncedWork(qc: QueryClient): Promise<boolean> {
   const queued = qc
     .getMutationCache()
     .getAll()
     .some((m) => m.state.isPaused);
-  return queued || (await hasDirtyDocs());
+  if (queued) return true;
+  const personId = signedInPersonId(qc);
+  return personId
+    ? (await listDirtyPageIds(personId)).length > 0
+    : await hasDirtyDocs();
 }
 
 // ── Confirmation when something hasn't synced ───────────────────────────

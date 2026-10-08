@@ -377,6 +377,8 @@
   "app.updateReload": "Reload",
   "offline.syncedPages_one": "Edits made offline on {{count}} page are now synced.",
   "offline.syncedPages_other": "Edits made offline on {{count}} pages are now synced.",
+  "offline.unsentSignIn": "You have edits on this device that haven't been sent yet. Sign in again as {{email}} to send them.",
+  "offline.unsentSignInNoEmail": "You have edits on this device that haven't been sent yet. Sign in again to send them.",
   "inbox.invite.title": "Join {{workspace}}",
   "inbox.invite.aWorkspace": "a workspace",
   "inbox.invite.someone": "Someone",

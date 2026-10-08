@@ -98,13 +98,42 @@ export function markDocClean(personId: string, pageId: string): void {
   );
 }
 
-/** Drop every offline copy on this device — call on sign-out. Resolves
- *  once the wipe is written (so a reload right after can't interrupt it). */
-export function clearOfflineDocCache(): Promise<void> {
-  return request("readwrite", (s) => s.clear()).then(
-    () => {},
-    () => {},
-  );
+/** Drop the offline copies on this device — call on sign-out. Resolves
+ *  once the wipe is written (so a reload right after can't interrupt it).
+ *
+ *  `keepUnsentOf(personId)` returning true keeps that person's UNSENT pages
+ *  (the copy and its dirty flag) — edits nobody else has, which a sign-out
+ *  they didn't ask for must not destroy. Everything else is dropped.
+ *  Without it, everything goes. */
+export async function clearOfflineDocCache(
+  keepUnsentOf?: (personId: string) => boolean,
+): Promise<void> {
+  try {
+    if (!keepUnsentOf) {
+      await request("readwrite", (s) => s.clear());
+      return;
+    }
+    const keys = await request<IDBValidKey[]>("readonly", (s) =>
+      s.getAllKeys(),
+    );
+    // dirty:<person>:<page> → keep it and doc:<person>:<page>.
+    const kept = new Set<string>();
+    for (const k of keys) {
+      if (typeof k !== "string" || !k.startsWith("dirty:")) continue;
+      const rest = k.slice("dirty:".length);
+      const personId = rest.slice(0, rest.indexOf(":"));
+      if (!keepUnsentOf(personId)) continue;
+      kept.add(k);
+      kept.add(`doc:${rest}`);
+    }
+    await Promise.all(
+      keys
+        .filter((k) => typeof k !== "string" || !kept.has(k))
+        .map((k) => request("readwrite", (s) => s.delete(k))),
+    );
+  } catch {
+    /* storage blocked: nothing to clear */
+  }
 }
 
 /** True when some page on this device holds edits the server hasn't
