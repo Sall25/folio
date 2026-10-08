@@ -1,4 +1,11 @@
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "src/components/tiptap-ui-primitive/button";
+import {
+  clearOfflineCopies,
+  formatBytes,
+  getOfflineStorageUsage,
+} from "src/lib/offline-storage";
 import { useLocalStorage } from "../../../hooks/use-local-storage";
 import { THEME_KEY } from "src/hooks/use-apply-theme";
 import type { Theme, WorkspaceLanguage } from "src/types";
@@ -51,6 +58,55 @@ function Select<T extends string>({
   );
 }
 
+// How much Folio keeps on this device for offline use, with a way to free
+// it. Clearing keeps pages with unsent edits and the app itself; pages are
+// saved again the next time they're opened.
+function OfflineStorageRow() {
+  const { t, i18n } = useTranslation();
+  const [usage, setUsage] = useState<number | null>(null);
+  const [clearing, setClearing] = useState(false);
+
+  const refresh = useCallback(() => {
+    void getOfflineStorageUsage().then(setUsage);
+  }, []);
+  useEffect(refresh, [refresh]);
+
+  const clear = async () => {
+    setClearing(true);
+    try {
+      await clearOfflineCopies();
+    } finally {
+      setClearing(false);
+      refresh();
+    }
+  };
+
+  return (
+    <SettingRow
+      label={t("settings.mySettings.offlineStorage", "Offline storage")}
+      description={t(
+        "settings.mySettings.offlineStorageDesc",
+        "Pages and images saved on this device so they open without a connection. Clearing keeps edits that haven't been sent yet.",
+      )}
+    >
+      {usage !== null && (
+        <span className="ws-setting-row__static">
+          {formatBytes(usage, i18n.language)}
+        </span>
+      )}
+      <Button
+        type="button"
+        variant="ghost"
+        disabled={clearing}
+        onClick={() => void clear()}
+        style={{ border: "1px solid var(--tt-border-color)" }}
+      >
+        {t("settings.mySettings.offlineStorageClear", "Clear")}
+      </Button>
+    </SettingRow>
+  );
+}
+
 export function MySettingsContent() {
   const { t, i18n } = useTranslation();
   const { workspace } = useCurrentWorkspace();
@@ -100,6 +156,8 @@ export function MySettingsContent() {
           ]}
         />
       </SettingRow>
+
+      <OfflineStorageRow />
     </div>
   );
 }

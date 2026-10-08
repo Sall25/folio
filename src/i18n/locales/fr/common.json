@@ -663,7 +663,10 @@
       "theme": "Thème",
       "themeDesc": "Ton propre thème pour cet appareil. Remplace le thème par défaut de l'espace de travail.",
       "language": "Langue",
-      "languageDesc": "Ta propre langue pour l'interface."
+      "languageDesc": "Ta propre langue pour l'interface.",
+      "offlineStorage": "Stockage hors ligne",
+      "offlineStorageDesc": "Pages et images enregistrées sur cet appareil pour s'ouvrir sans connexion. Vider garde les modifications pas encore envoyées.",
+      "offlineStorageClear": "Vider"
     },
     "title": "Paramètres",
     "appearance": "Apparence",

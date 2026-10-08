@@ -1,11 +1,13 @@
 // Local copies of collaborative page docs, so pages you've opened on this
 // device still open (and stay editable) while offline.
 //
-// Per person + page, two IndexedDB keys:
+// Per person + page, up to three IndexedDB keys:
 //   doc:<personId>:<pageId>    the full Yjs state (Y.encodeStateAsUpdate)
 //   dirty:<personId>:<pageId>  true when it holds edits the server hasn't
 //                              received yet (made while offline, or while the
 //                              connection was down)
+//   seen:<personId>:<pageId>   when the copy was last saved (ms), so the
+//                              oldest copies can be dropped (pruneDocCache)
 //
 // Keyed by person so a shared device never serves one account's pages to
 // another. Every call swallows storage errors (private mode, quota): offline
@@ -57,6 +59,8 @@ const docKey = (personId: string, pageId: string) =>
   `doc:${personId}:${pageId}`;
 const dirtyKey = (personId: string, pageId: string) =>
   `dirty:${personId}:${pageId}`;
+const seenKey = (personId: string, pageId: string) =>
+  `seen:${personId}:${pageId}`;
 
 export async function loadDocCache(
   personId: string,
@@ -84,6 +88,9 @@ export function saveDocCache(
   request("readwrite", (s) => s.put(update, docKey(personId, pageId))).catch(
     () => {},
   );
+  request("readwrite", (s) =>
+    s.put(Date.now(), seenKey(personId, pageId)),
+  ).catch(() => {});
 }
 
 export function markDocDirty(personId: string, pageId: string): void {
@@ -125,6 +132,7 @@ export async function clearOfflineDocCache(
       if (!keepUnsentOf(personId)) continue;
       kept.add(k);
       kept.add(`doc:${rest}`);
+      kept.add(`seen:${rest}`);
     }
     await Promise.all(
       keys
@@ -187,4 +195,59 @@ export function noteDocOpened(pageId: string): () => void {
 
 export function isDocOpen(pageId: string): boolean {
   return openCounts.has(pageId);
+}
+
+// ── Keeping the store small ─────────────────────────────────────────────
+
+/** How many page copies each person keeps on this device. */
+export const MAX_DOC_COPIES = 200;
+
+/** Drops this person's oldest page copies beyond `max`, by when they were
+ *  last saved. Never drops a page with unsent edits or one open in this tab.
+ *  Resolves with how many copies were dropped. */
+export async function pruneDocCache(
+  personId: string,
+  max = MAX_DOC_COPIES,
+): Promise<number> {
+  try {
+    const keys = await request<IDBValidKey[]>("readonly", (s) =>
+      s.getAllKeys(),
+    );
+    const docPrefix = `doc:${personId}:`;
+    const dirty = new Set(
+      keys
+        .filter((k): k is string => typeof k === "string")
+        .filter((k) => k.startsWith(`dirty:${personId}:`))
+        .map((k) => k.slice(`dirty:${personId}:`.length)),
+    );
+    const pageIds = keys
+      .filter((k): k is string => typeof k === "string")
+      .filter((k) => k.startsWith(docPrefix))
+      .map((k) => k.slice(docPrefix.length));
+    if (pageIds.length <= max) return 0;
+
+    // Copies saved before "seen" existed count as the oldest.
+    const seen = await Promise.all(
+      pageIds.map((pageId) =>
+        request<unknown>("readonly", (s) =>
+          s.get(seenKey(personId, pageId)),
+        ).then((v) => (typeof v === "number" ? v : 0)),
+      ),
+    );
+    const droppable = pageIds
+      .map((pageId, i) => ({ pageId, seen: seen[i] }))
+      .sort((a, b) => b.seen - a.seen)
+      .slice(max)
+      .filter(({ pageId }) => !dirty.has(pageId) && !isDocOpen(pageId));
+
+    await Promise.all(
+      droppable.flatMap(({ pageId }) => [
+        request("readwrite", (s) => s.delete(docKey(personId, pageId))),
+        request("readwrite", (s) => s.delete(seenKey(personId, pageId))),
+      ]),
+    );
+    return droppable.length;
+  } catch {
+    return 0;
+  }
 }

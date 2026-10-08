@@ -735,7 +735,10 @@
       "theme": "Theme",
       "themeDesc": "Your own theme for this device. Overrides the workspace default.",
       "language": "Language",
-      "languageDesc": "Your own language for the interface."
+      "languageDesc": "Your own language for the interface.",
+      "offlineStorage": "Offline storage",
+      "offlineStorageDesc": "Pages and images saved on this device so they open without a connection. Clearing keeps edits that haven't been sent yet.",
+      "offlineStorageClear": "Clear"
     },
     "nav": {
       "account": "Account",
