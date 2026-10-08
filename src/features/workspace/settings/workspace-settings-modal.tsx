@@ -11,6 +11,7 @@ import {
   Monitor,
   Settings,
   Shield,
+  SlidersHorizontal,
   Sparkles,
   UserCircle,
   Users,
@@ -43,6 +44,11 @@ const NAV: SettingsNavSection[] = [
         id: "my-account",
         labelKey: "settings.items.myAccount",
         icon: <UserCircle size={16} />,
+      },
+      {
+        id: "my-settings",
+        labelKey: "settings.items.mySettings",
+        icon: <SlidersHorizontal size={16} />,
       },
       {
         id: "my-notifications",
