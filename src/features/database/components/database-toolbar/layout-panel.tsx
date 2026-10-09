@@ -279,7 +279,7 @@ export function OpenPagesInPanel({
     db.updateView(db.activeView.id, { ...db.activeView, openPageIn: o });
 
   const row = (
-    icon: React.ReactNode,
+    _icon: React.ReactNode,
     title: string,
     desc: string,
     value: OpenPageIn,
