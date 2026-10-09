@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { ViewIcon } from "../database-toolbar/view-icon";
 import { ViewPopover } from "../database-toolbar/view-popover";
@@ -18,13 +19,13 @@ interface DatabaseViewTabsProps {
   onRename: (o: boolean) => void;
 }
 
-const VIEW_TYPES: { type: DatabaseView["type"]; label: string }[] = [
-  { type: "table", label: "Table" },
-  { type: "board", label: "Board" },
-  { type: "list", label: "List" },
-  { type: "gallery", label: "Gallery" },
-  { type: "calendar", label: "Calendar" },
-  { type: "timeline", label: "Timeline" },
+const VIEW_TYPE_KEYS: DatabaseView["type"][] = [
+  "table",
+  "board",
+  "list",
+  "gallery",
+  "calendar",
+  "timeline",
 ];
 
 // Reserved trailing space (px) for the "N more" + "add" controls, so the last
@@ -34,6 +35,7 @@ const ADD_BUTTON_WIDTH = 36;
 const TAB_GAP = 8;
 
 export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
+  const { t } = useTranslation();
   const { attrs, db, updateAttributes } = useDatabaseContext();
   const locked = !!attrs.locked;
 
@@ -249,7 +251,7 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
           <PopoverTrigger asChild>
             <Button variant="ghost" className="db-view-tab db-view-tab--more">
               <span className="tiptap-button-text">
-                {overflowViews.length} more…
+                {t("database.views.more", { count: overflowViews.length })}
               </span>
             </Button>
           </PopoverTrigger>
@@ -280,7 +282,7 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
         </Popover>
       )}
 
-      {/* Add view — your exact original block, unchanged. */}
+      {/* Add view */}
       {!locked && (
         <div
           style={{
@@ -295,7 +297,7 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
               <Button
                 variant="ghost"
                 className="db-view-tab db-view-tab--add"
-                aria-label="Add view"
+                aria-label={t("database.views.addView")}
               >
                 <Plus size={13} />
               </Button>
@@ -303,25 +305,28 @@ export function DatabaseViewTabs({ onRename }: DatabaseViewTabsProps) {
             <PopoverContent side="bottom" align="start" className="db-panel">
               <Card style={{ padding: "5px 10px", minWidth: 150 }}>
                 <CardItemGroup>
-                  {VIEW_TYPES.map(({ type, label }) => (
-                    <Button
-                      key={type}
-                      variant="ghost"
-                      style={{
-                        justifyContent: "flex-start",
-                        width: "100%",
-                        backgroundColor: "transparent",
-                        borderRadius: 0,
-                      }}
-                      onClick={() => {
-                        db.addView(type, label);
-                        setOpen(false);
-                      }}
-                    >
-                      <ViewIcon view={{ type } as DatabaseView} />
-                      <span className="tiptap-button-text">{label}</span>
-                    </Button>
-                  ))}
+                  {VIEW_TYPE_KEYS.map((type) => {
+                    const label = t(`database.views.${type}`);
+                    return (
+                      <Button
+                        key={type}
+                        variant="ghost"
+                        style={{
+                          justifyContent: "flex-start",
+                          width: "100%",
+                          backgroundColor: "transparent",
+                          borderRadius: 0,
+                        }}
+                        onClick={() => {
+                          db.addView(type, label);
+                          setOpen(false);
+                        }}
+                      >
+                        <ViewIcon view={{ type } as DatabaseView} />
+                        <span className="tiptap-button-text">{label}</span>
+                      </Button>
+                    );
+                  })}
                 </CardItemGroup>
               </Card>
             </PopoverContent>
