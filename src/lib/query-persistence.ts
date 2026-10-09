@@ -1,6 +1,7 @@
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import type { Query } from "@tanstack/react-query";
 import { clearOfflineDocCache } from "src/lib/offline-doc-cache";
+import { findJsonUnsafeCached } from "src/lib/json-safe";
 
 // Saves React Query's cache (pages list, threads, people, roles…) to
 // IndexedDB so the app starts with data after a reload — instantly online,
@@ -19,8 +20,9 @@ const OWNER_KEY = "folio-cache-owner";
 export const QUERY_CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 7; // 7 days
 
 /** Bump when a cached shape changes incompatibly — old caches are dropped.
- *  v2: caches saved before Map/Set data was skipped held chat block/row
- *  refs as `{}`, which crashed the chat room after a reload. */
+ *  v2: caches saved before non-JSON data was skipped (shouldPersistQuery)
+ *  held chat block/row refs as `{}`, which crashed the chat room after a
+ *  reload. */
 export const QUERY_CACHE_BUSTER = "v2";
 
 // Query keys (first segment) never written to disk:
@@ -102,16 +104,33 @@ export const queryPersister = createAsyncStoragePersister({
   throttleTime: 1000,
 });
 
-/** Which queries get written to disk: successful ones, minus the denylist. */
+/** Which queries get written to disk: successful ones whose data survives
+ *  the trip through JSON, minus the denylist. */
 export function shouldPersistQuery(query: Query): boolean {
   if (query.state.status !== "success") return false;
-  // The cache is saved as JSON, which turns a Map or Set into a plain `{}`.
-  // Restored, it would break every `.get()` / `.forEach()` on it (the chat
-  // room's block and row refs are Maps). Those are fetched again instead.
-  const data = query.state.data;
-  if (data instanceof Map || data instanceof Set) return false;
   const head = query.queryKey[0];
-  return !(typeof head === "string" && NOT_PERSISTED.has(head));
+  if (typeof head === "string" && NOT_PERSISTED.has(head)) return false;
+  // The cache is saved as JSON. Data JSON can't hold exactly (a Map, a Set,
+  // a Date…) would come back as something else after a reload and crash
+  // whatever reads it — the chat room's Map of block refs came back as `{}`.
+  // Such queries are fetched again instead of restored. In development the
+  // console names the query and the value, so it can be made JSON-safe.
+  const unsafe = findJsonUnsafeCached(query.state.data);
+  if (unsafe) {
+    warnNotPersisted(query.queryHash, unsafe);
+    return false;
+  }
+  return true;
+}
+
+const warned = new Set<string>();
+
+function warnNotPersisted(queryHash: string, where: string) {
+  if (!import.meta.env.DEV || warned.has(queryHash)) return;
+  warned.add(queryHash);
+  console.warn(
+    `[query cache] ${queryHash} isn't saved for offline use: ${where} can't be stored as JSON. It's fetched again after a reload.`,
+  );
 }
 
 // ── Unsent edits survive a sign-out nobody asked for ────────────────────

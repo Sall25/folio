@@ -16,11 +16,15 @@ permissions:
 
 jobs:
   checks:
-    name: Typecheck, translations, build
+    name: Typecheck, lint, translations, build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history, so the lint step can see what this pull request
+          # changed compared with the branch it targets.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -32,6 +36,20 @@ jobs:
 
       - name: Typecheck
         run: npx tsc --noEmit -p tsconfig.app.json
+
+      # Only the files this pull request adds or changes: new code must be
+      # lint-clean, while older files with known problems don't block anyone
+      # until they're touched. (`npx eslint .` still lists everything.)
+      - name: Lint (files changed in this pull request)
+        if: github.event_name == 'pull_request'
+        run: |
+          files=$(git diff --name-only --diff-filter=ACMR "origin/${{ github.base_ref }}...HEAD" -- '*.ts' '*.tsx' | grep -v '^src/_unused/' || true)
+          if [ -z "$files" ]; then
+            echo "No TypeScript files changed."
+            exit 0
+          fi
+          echo "$files"
+          npx eslint --no-warn-ignored $files
 
       - name: Translations (no duplicate or missing keys)
         run: node scripts/check-i18n.mjs
