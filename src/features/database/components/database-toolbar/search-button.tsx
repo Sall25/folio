@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import type { UseDatabaseReturn } from "../../hooks/use-database";
 import { Input } from "src/components/tiptap-ui-primitive/input";
@@ -16,6 +17,7 @@ const CONTROL_BUTTON_STYLE: React.CSSProperties = {
 
 // ── search (already extracted; unchanged) ────────────────────────────────────
 function SearchButtonImpl({ db }: { db: UseDatabaseReturn }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(db.searchQuery);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,7 +49,7 @@ function SearchButtonImpl({ db }: { db: UseDatabaseReturn }) {
     return (
       <Button
         variant="ghost"
-        tooltip="Search"
+        tooltip={t("database.toolbar.search")}
         data-active-state={db.searchQuery ? "on" : "off"}
         style={CONTROL_BUTTON_STYLE}
         onClick={() => setOpen(true)}
@@ -64,7 +66,7 @@ function SearchButtonImpl({ db }: { db: UseDatabaseReturn }) {
       <Input
         ref={inputRef}
         className="db-search__input"
-        placeholder="Type to search..."
+        placeholder={t("database.toolbar.searchPlaceholder")}
         value={draft}
         onChange={(e) => {
           setDraft(e.target.value);
@@ -91,7 +93,7 @@ function SearchButtonImpl({ db }: { db: UseDatabaseReturn }) {
           variant="ghost"
           className="db-search__clear"
           onClick={clear}
-          aria-label="Clear search"
+          aria-label={t("database.toolbar.clearSearch")}
         >
           <X size={13} className="tiptap-button-icon" />
         </Button>
