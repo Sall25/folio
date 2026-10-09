@@ -163,6 +163,12 @@ export function checkReachable(): void {
   });
 }
 
+/** Folio can't be reached right now: the browser says offline, or a check
+ *  found the server not answering. */
+export function isOfflineNow(): boolean {
+  return !navigator.onLine || unreachable;
+}
+
 /** A request just succeeded: Folio is reachable. */
 export function markReachable(): void {
   if (unreachable) setUnreachable(false);

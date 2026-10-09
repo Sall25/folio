@@ -7,6 +7,7 @@ import {
   wipeAndReloadHome,
 } from "src/lib/query-persistence";
 import { queryKeys } from "src/hooks/use-session";
+import { clearOutboxFor, countOutboxMessages } from "src/lib/chat-outbox";
 
 // ONE way to sign out, used by every "Log out" button (user menu, workspace
 // switcher) and by deleting your workspace.
@@ -24,6 +25,9 @@ import { queryKeys } from "src/hooks/use-session";
 export async function signOut(qc: QueryClient): Promise<void> {
   const personId = signedInPersonId(qc);
   markSignOutIntended();
+  // Chat messages written offline go too (the Log out button already
+  // asked, like for page edits).
+  if (personId) await clearOutboxFor(personId);
   const { error } = await supabase.auth.signOut();
   if (error) {
     const { error: localError } = await supabase.auth.signOut({
@@ -42,7 +46,8 @@ function signedInPersonId(qc: QueryClient): string | null {
 }
 
 /** Changes that would be lost by signing out now: your page edits not yet
- *  sent to the server, or saves queued while offline. */
+ *  sent to the server, saves queued while offline, or chat messages
+ *  written offline. */
 export async function hasUnsyncedWork(qc: QueryClient): Promise<boolean> {
   const queued = qc
     .getMutationCache()
@@ -50,6 +55,7 @@ export async function hasUnsyncedWork(qc: QueryClient): Promise<boolean> {
     .some((m) => m.state.isPaused);
   if (queued) return true;
   const personId = signedInPersonId(qc);
+  if (personId && (await countOutboxMessages(personId)) > 0) return true;
   return personId
     ? (await listDirtyPageIds(personId)).length > 0
     : await hasDirtyDocs();

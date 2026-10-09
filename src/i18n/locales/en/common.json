@@ -34,6 +34,14 @@
     "clear": "Clear"
   },
   "chat": {
+    "outbox": {
+      "waiting": "Waiting to send",
+      "sending": "Sending…",
+      "failed": "Not sent.",
+      "retry": "Retry",
+      "delete": "Delete",
+      "fileWaiting": "Waiting for connection"
+    },
     "title": "Chats",
     "activeNow": "Active now",
     "rooms": "Rooms",
@@ -395,6 +403,8 @@
   "offline.status.otherChanges_one": "{{count}} other change (a database edit, comment or setting). Keep this tab open until it's sent.",
   "offline.status.otherChanges_other": "{{count}} other changes (database edits, comments or settings). Keep this tab open until they're sent.",
   "offline.status.tryNow": "Try now",
+  "offline.status.chatMessages_one": "{{count}} chat message waiting to be sent.",
+  "offline.status.chatMessages_other": "{{count}} chat messages waiting to be sent.",
   "offline.keep.page": "Available offline",
   "offline.keep.teamspace": "Teamspace available offline",
   "offline.keep.viaTeamspace": "Available offline with its teamspace",

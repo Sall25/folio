@@ -24,6 +24,7 @@ import {
   requestSyncNow,
   subscribeSyncStatus,
 } from "src/lib/sync-status";
+import { useOutboxCount } from "src/lib/chat-outbox";
 import "./sync-status.scss";
 
 // One status for "are my changes on the server?", shown in the toolbar on
@@ -37,8 +38,8 @@ import "./sync-status.scss";
 //
 // "Changes waiting" = pages with unsent edits on this device (the dirty
 // flags from offline-doc-cache) + saves React Query has queued while offline
-// (paused mutations) — the same two sources hasUnsyncedWork checks before
-// signing out. Clicking the pill lists them.
+// (paused mutations) + chat messages written offline (chat-outbox.ts).
+// Clicking the pill lists them.
 
 const SAVING_DELAY_MS = 600;
 const SAVED_MS = 2500;
@@ -96,10 +97,12 @@ function useWatchRequests() {
 function WaitingList({
   dirtyPageIds,
   pausedCount,
+  messageCount,
   showTryNow,
 }: {
   dirtyPageIds: string[];
   pausedCount: number;
+  messageCount: number;
   showTryNow: boolean;
 }) {
   const { t } = useTranslation();
@@ -130,6 +133,11 @@ function WaitingList({
             )}
           </ul>
         </div>
+      )}
+      {messageCount > 0 && (
+        <p className="sync-status__text">
+          {t("offline.status.chatMessages", { count: messageCount })}
+        </p>
       )}
       {pausedCount > 0 && (
         <p className="sync-status__text">
@@ -171,10 +179,11 @@ export function SyncStatus({ compact = false }: { compact?: boolean }) {
   const pausedCount = pending.filter(Boolean).length;
   const inFlightCount = pending.length - pausedCount;
   const dirtyPageIds = useDirtyPageIds(personId);
+  const messageCount = useOutboxCount(personId);
   useWatchRequests();
 
   const offline = !online || unreachable;
-  const waitingCount = dirtyPageIds.length + pausedCount;
+  const waitingCount = dirtyPageIds.length + pausedCount + messageCount;
   const busy = !offline && (sending || inFlightCount > 0);
 
   // "Saving…" only once it's been busy for a moment; "All changes saved"
@@ -271,6 +280,7 @@ export function SyncStatus({ compact = false }: { compact?: boolean }) {
             <WaitingList
               dirtyPageIds={dirtyPageIds}
               pausedCount={pausedCount}
+              messageCount={messageCount}
               showTryNow={online}
             />
           </CardBody>
