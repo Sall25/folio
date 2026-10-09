@@ -1291,6 +1291,7 @@
       "hideAll": "Hide all",
       "showProperty": "Show property",
       "hideProperty": "Hide property"
+    },
     "selectionActions": {
       "addToFavorites": "Add to Favorites",
       "removeFromFavorites": "Remove from Favorites",
