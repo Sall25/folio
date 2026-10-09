@@ -1,4 +1,5 @@
 import { ListFilter } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Popover,
@@ -32,13 +33,19 @@ function FilterControlImpl({
   showFilterChips: boolean;
   onShowFilterChipsChange: (show: boolean) => void;
 }) {
+  const { t } = useTranslation();
+
   // Rules exist → the button toggles the chip bar.
   if (activeFilterCount > 0) {
     return (
       <Button
         size="small"
         variant="ghost"
-        tooltip={showFilterChips ? "Hide filters" : "Show filters"}
+        tooltip={
+          showFilterChips
+            ? t("database.toolbar.hideFilters")
+            : t("database.toolbar.showFilters")
+        }
         data-active-state="on"
         onClick={() => onShowFilterChipsChange(!showFilterChips)}
         style={CONTROL_BUTTON_STYLE}
@@ -54,7 +61,7 @@ function FilterControlImpl({
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
-          tooltip="Filter"
+          tooltip={t("database.toolbar.filter")}
           size="small"
           data-active-state="off"
           style={CONTROL_BUTTON_STYLE}

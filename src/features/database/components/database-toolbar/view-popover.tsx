@@ -21,6 +21,7 @@ import { DuplicateIcon } from "src/components/tiptap-icons/duplicate-icon";
 import { ViewIcon } from "./view-icon";
 import { MenuRow } from "../menu-row";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ConfirmDialog } from "src/features/shell/confirm-dialog";
 
 interface ViewNamePopoverProps {
@@ -50,6 +51,7 @@ export function ViewPopover({
   active = false,
   attrs,
 }: ViewNamePopoverProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -79,7 +81,7 @@ export function ViewPopover({
           >
             <MenuRow
               Icon={Edit}
-              label="Rename"
+              label={t("database.views.rename")}
               onClick={() => {
                 onRename?.(true);
                 close();
@@ -87,7 +89,7 @@ export function ViewPopover({
             />
             <MenuRow
               Icon={SlidersHorizontal}
-              label="Edit view"
+              label={t("database.views.editView")}
               onClick={() => {
                 onEdit?.();
                 close();
@@ -102,7 +104,7 @@ export function ViewPopover({
 
             <MenuRow
               Icon={Link}
-              label="Copy link to view"
+              label={t("database.views.copyLink")}
               onClick={() => {
                 onCopyLink?.();
                 close();
@@ -110,7 +112,7 @@ export function ViewPopover({
             />
             <MenuRow
               Icon={Maximize2}
-              label="Open as full page"
+              label={t("database.views.openAsFullPage")}
               onClick={() => {
                 onOpenAsFullPage?.();
                 close();
@@ -119,7 +121,7 @@ export function ViewPopover({
             {attrs.hideTitle && (
               <MenuRow
                 Icon={Eye}
-                label="Show database title"
+                label={t("database.views.showDatabaseTitle")}
                 onClick={() => {
                   onShowDatabaseTitle?.();
                   close();
@@ -131,7 +133,7 @@ export function ViewPopover({
 
             <MenuRow
               Icon={DuplicateIcon}
-              label="Duplicate"
+              label={t("database.views.duplicate")}
               onClick={() => {
                 onDuplicate?.();
                 close();
@@ -140,7 +142,7 @@ export function ViewPopover({
             {canDelete && (
               <MenuRow
                 Icon={Trash2}
-                label="Delete view"
+                label={t("database.views.deleteView")}
                 danger
                 onClick={() => {
                   setConfirmOpen(true);
@@ -154,8 +156,8 @@ export function ViewPopover({
 
       <ConfirmDialog
         open={confirmOpen}
-        message={<>Delete this view?</>}
-        confirmLabel="Delete view"
+        message={<>{t("database.views.deleteConfirm")}</>}
+        confirmLabel={t("database.views.deleteView")}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => {
           setConfirmOpen(false);

@@ -4,6 +4,7 @@ import type {
   GalleryView,
   OpenPageIn,
 } from "src/types";
+import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { PanelRight, Check, SquareSquare, Square } from "lucide-react";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
@@ -49,6 +50,7 @@ export function LayoutPanel({
   showVLines = true,
   wrapAllCols = false,
 }: LayoutPanelProps) {
+  const { t } = useTranslation();
   const { editor } = useCurrentEditor();
 
   const onSelect = (type: DatabaseView["type"]) => {
@@ -61,10 +63,10 @@ export function LayoutPanel({
   const openIn: OpenPageIn = db.activeView.openPageIn ?? "Side";
   const openInLabel =
     openIn === "Side"
-      ? "Side peek"
+      ? t("database.layout.sidePeek")
       : openIn === "Center"
-        ? "Center peek"
-        : "Full page";
+        ? t("database.layout.centerPeek")
+        : t("database.layout.fullPage");
 
   const content = (
     <div className="w-full mt-2">
@@ -119,19 +121,19 @@ export function LayoutPanel({
       </Grid>
 
       <MenuRow
-        label="Show database title"
+        label={t("database.layout.showDatabaseTitle")}
         toggle
         checked={showDbTitle}
         onToggle={() => onToggleShowDbTitle?.()}
       />
       <MenuRow
-        label="Show vertical lines"
+        label={t("database.layout.showVerticalLines")}
         toggle
         checked={showVLines}
         onToggle={async () => onToggleShowVLines?.()}
       />
       <MenuRow
-        label="Wrap all columns"
+        label={t("database.layout.wrapAllColumns")}
         toggle
         checked={wrapAllCols}
         onToggle={() => onToggleWrapAllCols?.()}
@@ -140,14 +142,13 @@ export function LayoutPanel({
         <>
           <Separator orientation="horizontal" style={{ height: 0.5 }} />
           <NavigableMenuItem
-            // Icon={LayoutPanelTop}
-            label="Card Preview"
+            label={t("database.layout.cardPreview")}
             sub={
               (view as GalleryView).cardPreview === "none"
-                ? "None"
+                ? t("database.layout.cardPreviewNone")
                 : (view as GalleryView).cardPreview === "cover"
-                  ? "Page cover"
-                  : "Page content"
+                  ? t("database.layout.cardPreviewCover")
+                  : t("database.layout.cardPreviewContent")
             }
             side="right"
             align="center"
@@ -162,9 +163,9 @@ export function LayoutPanel({
             >
               {(
                 [
-                  { value: "none", label: "None" },
-                  { value: "cover", label: "Page cover" },
-                  { value: "content", label: "Page content" },
+                  { value: "none", label: t("database.layout.cardPreviewNone") },
+                  { value: "cover", label: t("database.layout.cardPreviewCover") },
+                  { value: "content", label: t("database.layout.cardPreviewContent") },
                 ] as const
               ).map(({ value, label }) => (
                 <MenuRow
@@ -185,13 +186,13 @@ export function LayoutPanel({
             </Card>
           </NavigableMenuItem>
           <NavigableMenuItem
-            label="Card size"
+            label={t("database.layout.cardSize")}
             sub={
               (view as GalleryView | BoardView).cardSize === "small"
-                ? "Small"
+                ? t("database.layout.cardSizeSmall")
                 : (view as GalleryView | BoardView).cardSize === "medium"
-                  ? "Medium"
-                  : "Large"
+                  ? t("database.layout.cardSizeMedium")
+                  : t("database.layout.cardSizeLarge")
             }
             side="right"
             align="center"
@@ -206,9 +207,9 @@ export function LayoutPanel({
             >
               {(
                 [
-                  { value: "small", label: "Small" },
-                  { value: "medium", label: "Medium" },
-                  { value: "large", label: "Large" },
+                  { value: "small", label: t("database.layout.cardSizeSmall") },
+                  { value: "medium", label: t("database.layout.cardSizeMedium") },
+                  { value: "large", label: t("database.layout.cardSizeLarge") },
                 ] as const
               ).map(({ value, label }) => (
                 <MenuRow
@@ -226,7 +227,7 @@ export function LayoutPanel({
           </NavigableMenuItem>
 
           <MenuRow
-            label="Fit image"
+            label={t("database.layout.fitImage")}
             toggle
             checked={(view as GalleryView | BoardView).coverFit == "contain"}
             onToggle={async () =>
@@ -239,12 +240,12 @@ export function LayoutPanel({
         </>
       )}
       <MenuRow
-        label="Open pages in"
+        label={t("database.layout.openPagesIn")}
         sub={openInLabel}
         onClick={() => db.pushPanel({ type: "open-pages-in" })}
         navigable
       />
-      <MenuRow label="Show page icon" toggle />
+      <MenuRow label={t("database.layout.showPageIcon")} toggle />
     </div>
   );
 
@@ -258,7 +259,7 @@ export function LayoutPanel({
       }}
     >
       <CardHeader>
-        <CardGroupLabel>Layouts</CardGroupLabel>
+        <CardGroupLabel>{t("database.layout.title")}</CardGroupLabel>
       </CardHeader>
       <CardBody className="w-full justify-start">{content}</CardBody>
     </Card>
@@ -272,6 +273,7 @@ export function OpenPagesInPanel({
   db: UseDatabaseReturn;
   bare?: boolean;
 }) {
+  const { t } = useTranslation();
   const openIn: OpenPageIn = db.activeView.openPageIn ?? "Side";
   const onOpenInChange = (o: OpenPageIn) =>
     db.updateView(db.activeView.id, { ...db.activeView, openPageIn: o });
@@ -317,7 +319,7 @@ export function OpenPagesInPanel({
                   paddingLeft: "10px",
                 }}
               >
-                Default for table
+                {t("database.layout.sidePeekDefault")}
               </span>
             )}
           </CardItemGroup>
@@ -337,23 +339,23 @@ export function OpenPagesInPanel({
     <CardItemGroup>
       {row(
         <PanelRight className="tiptap-button-icon" />,
-        "Side peek",
-        "Open pages on the side. Keeps the view behind interactive",
+        t("database.layout.sidePeek"),
+        t("database.layout.sidePeekDesc"),
         "Side",
         true,
       )}
       <Spacer orientation="vertical" size={10} />
       {row(
         <SquareSquare className="tiptap-button-icon" />,
-        "Center peek",
-        "Open pages in a focused, centered modal",
+        t("database.layout.centerPeek"),
+        t("database.layout.centerPeekDesc"),
         "Center",
       )}
       <Spacer orientation="vertical" size={10} />
       {row(
         <Square className="tiptap-button-icon" />,
-        "Full page",
-        "Open pages in full page",
+        t("database.layout.fullPage"),
+        t("database.layout.fullPageDesc"),
         "Full",
       )}
     </CardItemGroup>

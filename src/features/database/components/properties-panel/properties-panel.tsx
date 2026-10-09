@@ -1,4 +1,5 @@
 import { Eye, EyeOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
@@ -28,6 +29,7 @@ export function PropertiesPanel({
   activeView: DatabaseView | undefined;
   bare?: boolean;
 }) {
+  const { t } = useTranslation();
   if (!activeView) return null;
 
   const hidden = new Set(activeView.hiddenProperties ?? []);
@@ -78,7 +80,11 @@ export function PropertiesPanel({
             style={{ justifyContent: "flex-end" }}
             onClick={() => !isTitle && toggleProperty(p.id)}
             disabled={isTitle}
-            aria-label={isVisible ? "Hide property" : "Show property"}
+            aria-label={
+              isVisible
+                ? t("database.properties.hideProperty")
+                : t("database.properties.showProperty")
+            }
           >
             {isVisible ? (
               <Eye className="tiptap-button-icon" size={13} />
@@ -100,7 +106,9 @@ export function PropertiesPanel({
               orientation="horizontal"
               style={{ width: "100%", justifyContent: "flex-start" }}
             >
-              <span className="db-properties-panel__group-label">Visible</span>
+              <span className="db-properties-panel__group-label">
+                {t("database.properties.visible")}
+              </span>
               <Spacer orientation="horizontal" />
               <Button
                 variant="ghost"
@@ -112,7 +120,9 @@ export function PropertiesPanel({
                   color: "var(--tt-brand-color-400)",
                 }}
               >
-                <span className="tiptap-button-text">Show all</span>
+                <span className="tiptap-button-text">
+                  {t("database.properties.showAll")}
+                </span>
               </Button>
             </CardItemGroup>
             {visibleProperties.map(renderRow)}
@@ -124,7 +134,9 @@ export function PropertiesPanel({
               orientation="horizontal"
               style={{ width: "100%", justifyContent: "flex-start" }}
             >
-              <span className="db-properties-panel__group-label">Hidden</span>
+              <span className="db-properties-panel__group-label">
+                {t("database.properties.hidden")}
+              </span>
               <Spacer orientation="horizontal" />
               <Button
                 variant="ghost"
@@ -135,7 +147,9 @@ export function PropertiesPanel({
                   color: "var(--tt-brand-color-400)",
                 }}
               >
-                <span className="tiptap-button-text">Hide all</span>
+                <span className="tiptap-button-text">
+                  {t("database.properties.hideAll")}
+                </span>
               </Button>
             </CardItemGroup>
             {hiddenProperties.map(renderRow)}

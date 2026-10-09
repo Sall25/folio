@@ -1,4 +1,5 @@
 import { Check, Eye, EyeOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
@@ -34,6 +35,7 @@ export function GroupPanel({
   activeView: DatabaseView | undefined;
   bare?: boolean;
 }) {
+  const { t } = useTranslation();
   const groupableProperties = properties.filter((p) =>
     isGroupableProperty(p.config.type),
   );
@@ -97,7 +99,7 @@ export function GroupPanel({
       <CardBody>
         {groupableProperties.length === 0 ? (
           <span className="db-panel__empty">
-            Add a select, status, or checkbox property to enable grouping
+            {t("database.group.placeholder")}
           </span>
         ) : (
           <>
@@ -108,7 +110,9 @@ export function GroupPanel({
               data-active-state={!groupByPropertyId ? "on" : "off"}
               onClick={() => setGroup(null)}
             >
-              <span className="tiptap-button-text">No grouping</span>
+              <span className="tiptap-button-text">
+                {t("database.group.noGrouping")}
+              </span>
               <Spacer orientation="horizontal" />
               {!groupByPropertyId && (
                 <Check size={13} className="tiptap-button-icon-sub" />
@@ -149,7 +153,9 @@ export function GroupPanel({
         {groupByPropertyId && groupDefs.length > 0 && (
           <>
             <Separator orientation="horizontal" style={{ margin: "6px 0" }} />
-            <div className="group-panel__section-label">Groups</div>
+            <div className="group-panel__section-label">
+              {t("database.group.sectionLabel")}
+            </div>
             <div className="group-panel__group-list">
               {groupDefs.map((g) => {
                 const hidden = hiddenGroups.includes(g.id);
@@ -167,7 +173,11 @@ export function GroupPanel({
                     <Button
                       variant="ghost"
                       className="group-panel__group-toggle"
-                      tooltip={hidden ? "Show group" : "Hide group"}
+                      tooltip={
+                        hidden
+                          ? t("database.group.showGroup")
+                          : t("database.group.hideGroup")
+                      }
                       onClick={() => toggleGroupVisibility(g.id)}
                     >
                       {hidden ? (
@@ -196,7 +206,9 @@ export function GroupPanel({
             onClick={toggleShowEmpty}
           >
             <span className="tiptap-button-text">
-              {showEmptyGroups ? "Hide empty groups" : "Show empty groups"}
+              {showEmptyGroups
+                ? t("database.group.hideEmptyGroups")
+                : t("database.group.showEmptyGroups")}
             </span>
           </Button>
         </CardFooter>

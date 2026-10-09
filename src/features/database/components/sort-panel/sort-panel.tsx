@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { nanoid } from "nanoid";
+import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
@@ -27,6 +28,7 @@ export function SortPanel({
   onClose?: () => void;
   bare?: boolean;
 }) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
 
   if (!activeView) return null;
@@ -59,7 +61,7 @@ export function SortPanel({
         <input
           autoFocus
           className="db-sort-panel__search-input"
-          placeholder="Sort by..."
+          placeholder={t("database.sort.placeholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -70,8 +72,8 @@ export function SortPanel({
           {filtered.length === 0 ? (
             <span className="db-panel__empty">
               {available.length === 0
-                ? "Every property is already sorted"
-                : "No properties found"}
+                ? t("database.sort.allSorted")
+                : t("database.sort.noProperties")}
             </span>
           ) : (
             filtered.map((p) => {

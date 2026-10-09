@@ -1,4 +1,5 @@
 import { Plus, Check, Maximize2, ChevronDown, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import {
@@ -60,11 +61,13 @@ export function NewRecordButton({
     return map;
   });
 
+  const { t } = useTranslation();
+
   const templatesWithNames = (templates ?? EMPTY_TEMPLATES).map((tpl) => {
     const info = tpl.pageId ? templatePageInfo?.[tpl.pageId] : undefined;
     return {
       ...tpl,
-      name: info?.title || tpl.name || "Untitled template",
+      name: info?.title || tpl.name || t("database.toolbar.untitledTemplate"),
       cover: info?.cover ?? null,
     };
   });
@@ -87,7 +90,7 @@ export function NewRecordButton({
     >
       {/* Main New — uses the default template if set, else blank. */}
       <span style={{ fontSize: 12.5, fontWeight: "bold" }} onClick={onNewPage}>
-        New
+        {t("database.toolbar.new")}
       </span>
 
       {!locked && (
@@ -125,7 +128,7 @@ export function NewRecordButton({
                           padding: "4px 6px",
                         }}
                       >
-                        No templates yet
+                        {t("database.toolbar.noTemplates")}
                       </span>
                     )}
 
@@ -147,8 +150,8 @@ export function NewRecordButton({
                               variant="ghost"
                               aria-label={
                                 isDefault
-                                  ? "Default template"
-                                  : "Set as default"
+                                  ? t("database.toolbar.defaultTemplate")
+                                  : t("database.toolbar.setDefault")
                               }
                               style={{
                                 minWidth: 24,
@@ -203,7 +206,7 @@ export function NewRecordButton({
                           {/* Open the template page to edit its content. */}
                           <Button
                             variant="ghost"
-                            aria-label="Edit template"
+                            aria-label={t("database.toolbar.editTemplate")}
                             size="small"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -221,7 +224,7 @@ export function NewRecordButton({
                           <Button
                             variant="ghost"
                             size="small"
-                            aria-label="Delete template"
+                            aria-label={t("database.toolbar.deleteTemplate")}
                             className="delete-btn"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -246,7 +249,7 @@ export function NewRecordButton({
                     onClick={onCreateTemplate}
                   >
                     <Plus className="tiptap-button-icon" />
-                    <span>Create a template</span>
+                    <span>{t("database.toolbar.createTemplate")}</span>
                   </Button>
                 </CardFooter>
               </Card>

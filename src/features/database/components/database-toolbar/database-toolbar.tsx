@@ -1,5 +1,6 @@
 import { memo, useCallback, useInsertionEffect, useRef, useState } from "react";
 import { Maximize2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
@@ -53,6 +54,7 @@ const CONTROL_BUTTON_STYLE: React.CSSProperties = {
 // ── main toolbar ─────────────────────────────────────────────────────────────
 
 function DatabaseToolbarImpl() {
+  const { t } = useTranslation();
   const {
     showFilterChips,
     onShowFilterChipsChange,
@@ -243,7 +245,7 @@ function DatabaseToolbarImpl() {
                 <Button
                   variant="ghost"
                   size="small"
-                  tooltip="Open page"
+                  tooltip={t("database.toolbar.openPage")}
                   style={CONTROL_BUTTON_STYLE}
                   onClick={() => databaseId && setActivePageId(databaseId)}
                 >

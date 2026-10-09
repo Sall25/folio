@@ -32,10 +32,10 @@ import type {
   BoardView,
   DatabaseProperty,
   DatabaseView,
-  PanelView,
   TableView,
 } from "src/types";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import "./view-options-popover.scss";
 import type { UseDatabaseReturn } from "../../hooks";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
@@ -52,16 +52,6 @@ import { MenuRow } from "../menu-row";
 import { usePanelTransition } from "../../hooks/use-panel-transition";
 import { SpinnerRing } from "src/components/tiptap-ui-primitive/spinner-ring";
 import { PanelSlide } from "../panel-slide";
-
-const PANEL_TITLES: Record<Exclude<PanelView["type"], "main">, string> = {
-  properties: "Properties",
-  filter: "Filter",
-  sort: "Sort",
-  layout: "Layouts",
-  "open-pages-in": "Open pages in",
-  group: "Group",
-  "sub-items": "Sub-items",
-};
 
 function SubPanelHeader({
   title,
@@ -124,8 +114,19 @@ function ViewOptionsContent({
   onClose?: () => void;
   onCopyLink?: () => void;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState(view.name);
   const [copied, setCopied] = useState(false);
+
+  const panelTitles: Record<string, string> = {
+    properties: t("database.viewOptions.properties"),
+    filter: t("database.viewOptions.filter"),
+    sort: t("database.viewOptions.sort"),
+    layout: t("database.viewOptions.layouts"),
+    "open-pages-in": t("database.layout.openPagesIn"),
+    group: t("database.viewOptions.group"),
+    "sub-items": t("database.viewOptions.subItems"),
+  };
 
   const locked = db.locked;
   const panel = db.currentPanel;
@@ -157,7 +158,8 @@ function ViewOptionsContent({
       : ((view as TableView).groupByPropertyId ?? null);
 
   const groupLabel =
-    properties.find((p) => p.id === groupByPropertyId)?.name ?? "None";
+    properties.find((p) => p.id === groupByPropertyId)?.name ??
+    t("database.viewOptions.none");
 
   // includeInitial=true → spinner also covers the first open (Rename / Edit view).
   const transitioning = usePanelTransition(panel.type, 180, true);
@@ -175,7 +177,7 @@ function ViewOptionsContent({
         }}
       >
         <SubPanelHeader
-          title={PANEL_TITLES[panel.type] ?? "Options"}
+          title={panelTitles[panel.type] ?? t("database.viewOptions.options")}
           onBack={db.popPanel}
           onClose={onClose}
         />
@@ -253,7 +255,7 @@ function ViewOptionsContent({
   return (
     <Card className="view-options">
       <CardHeader>
-        <CardGroupLabel>View options</CardGroupLabel>
+        <CardGroupLabel>{t("database.viewOptions.title")}</CardGroupLabel>
         <Spacer orientation="horizontal" />
         {onClose && (
           <Button
@@ -340,39 +342,39 @@ function ViewOptionsContent({
 
           <MenuRow
             Icon={Layout}
-            label="Layouts"
-            sub={view.type.charAt(0).toUpperCase() + view.type.slice(1)}
+            label={t("database.viewOptions.layouts")}
+            sub={t(`database.views.${view.type}`)}
             navigable
             onClick={() => db.pushPanel({ type: "layout" })}
             disabled={locked}
           />
           <MenuRow
             Icon={SlidersHorizontal}
-            label="Properties"
-            sub={`${shownCount} shown`}
+            label={t("database.viewOptions.properties")}
+            sub={t("database.viewOptions.shown", { count: shownCount })}
             navigable
             onClick={() => db.pushPanel({ type: "properties" })}
             disabled={locked}
           />
           <MenuRow
             Icon={ListFilter}
-            label="Filter"
-            sub={filterCount === 1 ? "1 filter" : `${filterCount} filters`}
+            label={t("database.viewOptions.filter")}
+            sub={t("database.viewOptions.filtersCount", { count: filterCount })}
             navigable
             onClick={() => db.pushPanel({ type: "filter" })}
             disabled={locked}
           />
           <MenuRow
             Icon={ArrowUpDown}
-            label="Sort"
-            sub={sortCount === 1 ? "1 sort" : `${sortCount} sorts`}
+            label={t("database.viewOptions.sort")}
+            sub={t("database.viewOptions.sortsCount", { count: sortCount })}
             navigable
             onClick={() => db.pushPanel({ type: "sort" })}
             disabled={locked}
           />
           <MenuRow
             Icon={Group}
-            label="Group"
+            label={t("database.viewOptions.group")}
             sub={groupLabel}
             navigable
             onClick={() => db.pushPanel({ type: "group" })}
@@ -380,36 +382,48 @@ function ViewOptionsContent({
           />
           <MenuRow
             Icon={ListTree}
-            label="Sub-items"
+            label={t("database.viewOptions.subItems")}
             onClick={locked ? undefined : () => {}}
             disabled={locked}
           />
 
           <Separator orientation="horizontal" />
 
-          <MenuRow Icon={Bell} label="Slack notifications" onClick={() => {}} />
+          <MenuRow
+            Icon={Bell}
+            label={t("database.viewOptions.notifications")}
+            onClick={() => {}}
+          />
 
           <MenuRow
             Icon={Lock}
-            label={locked ? "Unlock database" : "Lock database"}
+            label={
+              locked
+                ? t("database.viewOptions.unlock")
+                : t("database.viewOptions.lock")
+            }
             onClick={() => db.toggleLock()}
           />
 
           <MenuRow
             Icon={LinkIcon}
-            label={copied ? "Copied!" : "Copy link to view"}
+            label={
+              copied
+                ? t("database.viewOptions.copied")
+                : t("database.viewOptions.copyLink")
+            }
             onClick={handleCopy}
           />
 
           <MenuRow
             Icon={Copy}
-            label="Duplicate view"
+            label={t("database.viewOptions.duplicate")}
             onClick={locked ? undefined : () => {}}
             disabled={locked}
           />
           <MenuRow
             Icon={Trash2}
-            label="Delete view"
+            label={t("database.viewOptions.delete")}
             onClick={locked ? undefined : () => {}}
             disabled={locked}
             danger
@@ -435,6 +449,7 @@ export function ViewOptionsPopover({
   onOpenChange?: (o: boolean) => void;
   onCopyLink?: () => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -503,7 +518,7 @@ export function ViewOptionsPopover({
     return (
       <Button
         variant="ghost"
-        tooltip="Settings"
+        tooltip={t("database.viewOptions.settings")}
         size="small"
         onClick={() => setOpen(true)}
         style={{ background: "transparent" }}
@@ -524,7 +539,7 @@ export function ViewOptionsPopover({
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
-          tooltip="Settings"
+          tooltip={t("database.viewOptions.settings")}
           style={{ background: "transparent" }}
         >
           <SettingsSlidersIcon className="tiptap-button-icon" />
