@@ -279,7 +279,7 @@ export function OpenPagesInPanel({
     db.updateView(db.activeView.id, { ...db.activeView, openPageIn: o });
 
   const row = (
-    _icon: React.ReactNode,
+    icon: React.ReactNode,
     title: string,
     desc: string,
     value: OpenPageIn,
@@ -290,6 +290,11 @@ export function OpenPagesInPanel({
         style={{ cursor: "pointer" }}
         onClick={() => onOpenInChange(value)}
       >
+        <GridCell>
+          <Button variant="ghost" style={{ background: "transparent" }}>
+            {icon}
+          </Button>
+        </GridCell>
         <GridCell>
           <CardItemGroup>
             <CardGroupLabel>{title}</CardGroupLabel>
