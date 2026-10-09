@@ -1,5 +1,6 @@
 import { ChevronsLeft, ChevronsRight } from "lucide-react";
 import { memo } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 
 function CollapseToggleImpl({
@@ -11,11 +12,17 @@ function CollapseToggleImpl({
   visible: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Button
       variant="ghost"
       size="small"
-      tooltip={collapsed ? "Show toolbar" : "Hide toolbar"}
+      tooltip={
+        collapsed
+          ? t("database.toolbar.showToolbar")
+          : t("database.toolbar.hideToolbar")
+      }
       onClick={onToggle}
       style={{
         background: "transparent",
