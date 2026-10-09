@@ -1,0 +1,101 @@
+// The sync status pill in the toolbar, and its popover.
+.sync-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--tt-text-primary);
+  background: color-mix(in srgb, var(--tt-text-primary) 7%, transparent);
+  white-space: nowrap;
+}
+
+.sync-status--button {
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 12%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--tt-brand-color-500);
+    outline-offset: 2px;
+  }
+}
+
+.sync-status__spin {
+  animation: sync-status-spin 1s linear infinite;
+}
+
+@keyframes sync-status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sync-status__card.tiptap-card {
+  width: 280px;
+  // The card centres its children by default; this one reads top-down.
+  align-items: stretch;
+
+  .tiptap-card-body {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 12px 12px;
+  }
+}
+
+.sync-status__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tt-text-primary);
+}
+
+.sync-status__text {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--tt-text-secondary);
+}
+
+.sync-status__section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.sync-status__section-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--tt-text-secondary);
+}
+
+.sync-status__pages {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--tt-text-primary);
+
+  li {
+    overflow: hidden;
+    padding: 2px 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.sync-status__more {
+  color: var(--tt-text-secondary);
+}
+
+.sync-status__try.tiptap-button {
+  align-self: flex-start;
+  margin-top: 10px;
+  border: 1px solid var(--tt-border-color);
+}

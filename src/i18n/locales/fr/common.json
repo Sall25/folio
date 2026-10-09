@@ -34,6 +34,14 @@
     "clear": "Effacer"
   },
   "chat": {
+    "outbox": {
+      "waiting": "En attente d'envoi",
+      "sending": "Envoi…",
+      "failed": "Non envoyé.",
+      "retry": "Réessayer",
+      "delete": "Supprimer",
+      "fileWaiting": "En attente de connexion"
+    },
     "title": "Discussions",
     "activeNow": "Actives maintenant",
     "rooms": "Salons",
@@ -317,6 +325,31 @@
   "offline.syncedPages_other": "Les modifications faites hors ligne sur {{count}} pages sont synchronisées.",
   "offline.unsentSignIn": "Tu as des modifications sur cet appareil qui n'ont pas encore été envoyées. Reconnecte-toi avec {{email}} pour les envoyer.",
   "offline.unsentSignInNoEmail": "Tu as des modifications sur cet appareil qui n'ont pas encore été envoyées. Reconnecte-toi pour les envoyer.",
+  "offline.status.offline": "Hors ligne",
+  "offline.status.unreachable": "Folio injoignable",
+  "offline.status.saving": "Enregistrement…",
+  "offline.status.saved": "Toutes les modifications sont enregistrées",
+  "offline.status.waiting_one": "{{count}} modification en attente de synchronisation",
+  "offline.status.waiting_other": "{{count}} modifications en attente de synchronisation",
+  "offline.status.waitingShort_one": "{{count}} en attente",
+  "offline.status.waitingShort_other": "{{count}} en attente",
+  "offline.status.offlineHint": "Vous êtes hors ligne. Les pages déjà ouvertes sur cet appareil restent disponibles, et vos modifications seront envoyées au retour de la connexion.",
+  "offline.status.unreachableHint": "Vous êtes connecté à un réseau, mais les serveurs de Folio ne répondent pas. Vos modifications restent sur cet appareil en attendant.",
+  "offline.status.pagesTitle": "Pages en attente de synchronisation",
+  "offline.status.morePages_one": "+{{count}} autre",
+  "offline.status.morePages_other": "+{{count}} autres",
+  "offline.status.otherChanges_one": "{{count}} autre modification (base de données, commentaire ou paramètre). Gardez cet onglet ouvert jusqu'à son envoi.",
+  "offline.status.otherChanges_other": "{{count}} autres modifications (base de données, commentaires ou paramètres). Gardez cet onglet ouvert jusqu'à leur envoi.",
+  "offline.status.tryNow": "Réessayer",
+  "offline.status.chatMessages_one": "{{count}} message de discussion en attente d'envoi.",
+  "offline.status.chatMessages_other": "{{count}} messages de discussion en attente d'envoi.",
+  "offline.keep.page": "Disponible hors ligne",
+  "offline.keep.teamspace": "Espace d'équipe disponible hors ligne",
+  "offline.keep.viaTeamspace": "Disponible hors ligne avec son espace d'équipe",
+  "offline.keep.viaFavorites": "Disponible hors ligne comme favori",
+  "offline.keep.badge": "Disponible hors ligne",
+  "offline.unavailable.title": "Cette page n'est pas encore sur cet appareil",
+  "offline.unavailable.body": "Ouvrez-la une fois en ligne, ou activez « Disponible hors ligne » dans le menu de la page, pour qu'elle soit prête la prochaine fois.",
   "inbox.invite.title": "Rejoindre {{workspace}}",
   "inbox.invite.aWorkspace": "un espace de travail",
   "inbox.invite.someone": "Quelqu’un",
@@ -662,8 +695,8 @@
     "mySettings": {
       "theme": "Thème",
       "themeDesc": "Ton propre thème pour cet appareil. Remplace le thème par défaut de l'espace de travail.",
-      "language": "Langue",
-      "languageDesc": "Ta propre langue pour l'interface.",
+      "offlineFavorites": "Garder les favoris disponibles hors ligne",
+      "offlineFavoritesDesc": "Vos pages favorites sont téléchargées sur cet appareil et tenues à jour, pour s'ouvrir sans connexion.",
       "offlineStorage": "Stockage hors ligne",
       "offlineStorageDesc": "Pages et images enregistrées sur cet appareil pour s'ouvrir sans connexion. Vider garde les modifications pas encore envoyées.",
       "offlineStorageClear": "Vider"
@@ -1258,6 +1291,15 @@
       "hideAll": "Tout masquer",
       "showProperty": "Afficher la propriété",
       "hideProperty": "Masquer la propriété"
+    "selectionActions": {
+      "addToFavorites": "Ajouter aux favoris",
+      "removeFromFavorites": "Retirer des favoris",
+      "editIcon": "Modifier l'icône",
+      "editProperty": "Modifier une propriété",
+      "layout": "Disposition",
+      "propertyVisibility": "Visibilité des propriétés",
+      "openIn": "Ouvrir dans",
+      "noResults": "Aucune action trouvée"
     },
     "person": {
       "me": "Moi",

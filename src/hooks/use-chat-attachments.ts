@@ -16,6 +16,9 @@ import {
 } from "src/api/chat-attachments";
 import type { ChatMessage } from "src/types";
 import { chatKeys } from "./use-chat";
+import { useCurrentPerson } from "./use-session";
+import { enqueueChatMessage } from "src/lib/chat-outbox";
+import { isNetworkError, isOfflineNow } from "src/lib/sync-status";
 
 const attachmentsKey = (roomId: string) =>
   ["chat", "attachments", roomId] as const;
@@ -72,23 +75,45 @@ export function useSignedUrls(paths: string[]) {
 }
 
 // Send text + uploaded files in one call; the result lands in both caches.
+// Without a connection the message goes to the outbox instead
+// (chat-outbox.ts) and is sent later — see useSendMessage.
 export function useSendWithAttachments(roomId: string | null) {
   const qc = useQueryClient();
+  const { person } = useCurrentPerson();
   return useMutation({
-    mutationFn: (args: {
+    networkMode: "always",
+    mutationFn: async (args: {
       body: string;
       replyToId: string | null;
       attachments: UploadedFile[];
-    }) => {
-      if (!roomId) throw new Error("Not ready");
-      return sendMessageWithAttachments({
-        id: crypto.randomUUID(),
-        roomId,
-        ...args,
-      });
+    }): Promise<{
+      message: ChatMessage;
+      attachments: ChatAttachment[];
+    } | null> => {
+      if (!roomId || !person) throw new Error("Not ready");
+      const id = crypto.randomUUID();
+      const queue = async () => {
+        await enqueueChatMessage({
+          id,
+          personId: person.id,
+          roomId,
+          body: args.body,
+          replyToId: args.replyToId,
+          uploaded: args.attachments,
+        });
+        return null;
+      };
+      if (isOfflineNow()) return queue();
+      try {
+        return await sendMessageWithAttachments({ id, roomId, ...args });
+      } catch (error) {
+        if (isNetworkError(error)) return queue();
+        throw error;
+      }
     },
-    onSuccess: ({ message, attachments }) => {
-      if (!roomId) return;
+    onSuccess: (result) => {
+      if (!roomId || !result) return;
+      const { message, attachments } = result;
       qc.setQueryData<ChatMessage[]>(chatKeys.messages(roomId), (old) =>
         !old || old.some((m) => m.id === message.id) ? old : [...old, message],
       );
@@ -108,7 +133,9 @@ export function useSendWithAttachments(roomId: string | null) {
 export interface UploadItem {
   id: string;
   file: File;
-  status: "uploading" | "done" | "error";
+  /** "waiting": no connection — kept here and uploaded once back online,
+   *  or sent with the message through the outbox. */
+  status: "uploading" | "done" | "error" | "waiting";
   path: string | null;
   previewUrl: string | null;
   error: string | null;
@@ -117,6 +144,10 @@ export interface UploadItem {
 // Files attached in the composer: each uploads immediately; the composer
 // sends once all are done. Files attached but never sent are deleted from
 // storage when removed or when the room closes.
+//
+// Offline (or when an upload can't reach the server), a file waits instead
+// of failing: it uploads by itself once the connection is back, or, if the
+// message is sent first, goes into the outbox with it.
 export function useChatUploads(roomId: string) {
   const [items, setItems] = useState<UploadItem[]>([]);
   const itemsRef = useRef(items);
@@ -129,18 +160,55 @@ export function useChatUploads(roomId: string) {
       prev.map((it) => (it.id === id ? { ...it, ...change } : it)),
     );
 
+  const start = useCallback(
+    (item: UploadItem) => {
+      uploadChatFile(roomId, item.file)
+        .then((path) => {
+          // Removed while uploading → clean up the orphan.
+          if (!itemsRef.current.some((it) => it.id === item.id)) {
+            removeChatFile(path).catch(() => {});
+            return;
+          }
+          patch(item.id, { status: "done", path });
+        })
+        .catch((error) =>
+          patch(
+            item.id,
+            isNetworkError(error)
+              ? { status: "waiting" }
+              : { status: "error", error: "failed" },
+          ),
+        );
+    },
+    [roomId],
+  );
+
+  // Back online: upload what was waiting.
+  useEffect(() => {
+    const onOnline = () => {
+      for (const it of itemsRef.current) {
+        if (it.status !== "waiting") continue;
+        patch(it.id, { status: "uploading" });
+        start(it);
+      }
+    };
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [start]);
+
   const add = useCallback(
     (files: File[]): string | null => {
       const room = CHAT_MAX_FILES - itemsRef.current.length;
       if (room <= 0) return "tooMany";
       const accepted = files.slice(0, room);
 
+      const offline = isOfflineNow();
       const next: UploadItem[] = accepted.map((file) => {
         const tooBig = file.size > CHAT_MAX_FILE_BYTES;
         return {
           id: crypto.randomUUID(),
           file,
-          status: tooBig ? "error" : "uploading",
+          status: tooBig ? "error" : offline ? "waiting" : "uploading",
           path: null,
           previewUrl: file.type.startsWith("image/")
             ? URL.createObjectURL(file)
@@ -151,22 +219,12 @@ export function useChatUploads(roomId: string) {
       setItems((prev) => [...prev, ...next]);
 
       for (const item of next) {
-        if (item.status !== "uploading") continue;
-        uploadChatFile(roomId, item.file)
-          .then((path) => {
-            // Removed while uploading → clean up the orphan.
-            if (!itemsRef.current.some((it) => it.id === item.id)) {
-              removeChatFile(path).catch(() => {});
-              return;
-            }
-            patch(item.id, { status: "done", path });
-          })
-          .catch(() => patch(item.id, { status: "error", error: "failed" }));
+        if (item.status === "uploading") start(item);
       }
 
       return files.length > accepted.length ? "tooMany" : null;
     },
-    [roomId],
+    [start],
   );
 
   const remove = useCallback((id: string) => {
@@ -211,6 +269,8 @@ export function useChatUploads(roomId: string) {
     remove,
     reset,
     done,
+    /** Files still waiting for a connection (sent through the outbox). */
+    waiting: items.filter((it) => it.status === "waiting").map((it) => it.file),
     uploading: items.some((it) => it.status === "uploading"),
   };
 }

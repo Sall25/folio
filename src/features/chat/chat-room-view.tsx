@@ -8,6 +8,13 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+import {
+  enqueueChatMessage,
+  outboxToMessage,
+  useOutboxEntry,
+  useOutboxMessages,
+} from "src/lib/chat-outbox";
+import { OutboxNote } from "./outbox-note";
 import type { JSONContent } from "@tiptap/core";
 import { useLocation, useNavigate } from "@tanstack/react-location";
 import {
@@ -226,7 +233,14 @@ export function RoomContent({
 
   const myMembership = room.members.find((m) => m.personId === meId);
   const isMember = !!myMembership;
-  const { data: messages = [] } = useChatMessages(room.id);
+  const { data: serverMessages } = useChatMessages(room.id);
+  // Your messages still in the outbox (written offline) show in place,
+  // marked "Waiting to send", until they're sent.
+  const queued = useOutboxMessages(meId ?? null, room.id);
+  const messages = useMemo(() => {
+    const list = serverMessages ?? [];
+    return queued.length ? [...list, ...queued.map(outboxToMessage)] : list;
+  }, [serverMessages, queued]);
   const { loadOlder, hasMore, isLoadingOlder } = useLoadOlderMessages(room.id);
   useMarkRoomRead(isMember ? room.id : null, messages.length);
   const { present, typing, setTyping } = useRoomPresence(
@@ -531,14 +545,36 @@ export function RoomContent({
 
   const teamspaceId = space.kind === "teamspace" ? space.id : null;
 
+  // Files that couldn't upload yet (no connection): the whole message goes
+  // to the outbox and is sent once Folio is reachable.
+  const queueWithFiles = (
+    body: string,
+    replyToId: string | null,
+    files: UploadedFile[],
+    waiting: File[],
+  ) => {
+    if (!meId) return;
+    void enqueueChatMessage({
+      personId: meId,
+      roomId: room.id,
+      body,
+      replyToId,
+      uploaded: files,
+      files: waiting,
+    });
+  };
+
   const onSend = (
     body: string,
     files: UploadedFile[],
     block: SharedBlockDraft | null,
+    waiting: File[],
   ) => {
     stick.current = true;
     const replyToId = replyTo?.id ?? null;
-    if (block) {
+    if (waiting.length) {
+      queueWithFiles(body, replyToId, files, waiting);
+    } else if (block) {
       sendBlock.mutate({
         body,
         replyToId,
@@ -558,8 +594,16 @@ export function RoomContent({
 
   // A reply posted from the side view goes into that block's thread.
   const onSendThreadReply =
-    (parentId: string) => (body: string, files: UploadedFile[]) => {
-      if (files.length) {
+    (parentId: string) =>
+    (
+      body: string,
+      files: UploadedFile[],
+      _block: SharedBlockDraft | null,
+      waiting: File[],
+    ) => {
+      if (waiting.length) {
+        queueWithFiles(body, parentId, files, waiting);
+      } else if (files.length) {
         sendWithFiles.mutate({ body, replyToId: parentId, attachments: files });
       } else {
         send.mutate({ body, replyToId: parentId });
@@ -1674,6 +1718,9 @@ function MessageRow({
     minute: "2-digit",
   });
   const pending = msg.id.startsWith("pending-");
+  // Written offline and still in the outbox: waiting, or refused.
+  const outbox = useOutboxEntry(msg.id);
+  const failed = outbox?.status === "failed";
   const deleted = msg.deletedAt != null;
   const name = author?.name ?? t("chat.unknown", "Someone");
   const mentionsMe =
@@ -1696,7 +1743,8 @@ function MessageRow({
         "chat-msg",
         compact && "chat-msg--compact",
         mentionsMe && "chat-msg--mentions-me",
-        pending && "is-pending",
+        pending && !failed && "is-pending",
+        failed && "is-failed",
         pickerOpen && "has-picker",
       ]
         .filter(Boolean)
@@ -1789,6 +1837,7 @@ function MessageRow({
                 signedUrls={signedUrls}
               />
             )}
+            {outbox && <OutboxNote entry={outbox} />}
           </>
         )}
 
@@ -2428,6 +2477,8 @@ function Composer({
     body: string,
     files: UploadedFile[],
     block: SharedBlockDraft | null,
+    /** Files that couldn't upload yet (no connection). */
+    waiting: File[],
   ) => void;
   onTyping: (typing: boolean) => void;
   /** The side view's composer doesn't take shared blocks. */
@@ -2573,11 +2624,19 @@ function Composer({
   const canSend =
     !uploads.uploading &&
     !sending &&
-    (value.trim().length > 0 || uploads.done.length > 0 || !!block);
+    (value.trim().length > 0 ||
+      uploads.done.length > 0 ||
+      uploads.waiting.length > 0 ||
+      !!block);
 
   const submit = () => {
     if (!canSend) return;
-    onSend(serializeDraft(value.trim(), mentions), uploads.done, block);
+    onSend(
+      serializeDraft(value.trim(), mentions),
+      uploads.done,
+      block,
+      uploads.waiting,
+    );
     setValue("");
     setMentions([]);
     setTrigger(null);
@@ -2683,11 +2742,13 @@ function Composer({
                 >
                   {it.status === "uploading"
                     ? t("chat.uploading", "Uploading…")
-                    : it.status === "error"
-                      ? it.error === "tooLarge"
-                        ? t("chat.fileTooLarge", "Over 25 MB")
-                        : t("chat.uploadFailed", "Upload failed")
-                      : formatSize(it.file.size)}
+                    : it.status === "waiting"
+                      ? t("chat.outbox.fileWaiting")
+                      : it.status === "error"
+                        ? it.error === "tooLarge"
+                          ? t("chat.fileTooLarge", "Over 25 MB")
+                          : t("chat.uploadFailed", "Upload failed")
+                        : formatSize(it.file.size)}
                 </span>
               </span>
               <button

@@ -1,0 +1,60 @@
+// Under a message written offline: its files and its sending status.
+.chat-outbox-note {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--tt-text-secondary);
+}
+
+.chat-outbox-note__files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 220px;
+    padding: 2px 8px;
+    border: 1px solid var(--tt-border-color);
+    border-radius: 6px;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+.chat-outbox-note__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  &.is-failed {
+    color: var(--tt-color-red-base, #d44c47);
+  }
+
+  button {
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    color: var(--tt-text-primary);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+// A refused message stays fully visible (not faded like a waiting one), so
+// Retry and Delete are easy to find.
+.chat-msg.is-failed .chat-msg__body {
+  color: var(--tt-text-secondary);
+}

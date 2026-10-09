@@ -28,6 +28,8 @@ import { fetchChatMessagesBefore } from "src/api/chat-history";
 import { useCurrentPerson } from "./use-session";
 import { useCurrentWorkspace } from "./use-workspaces";
 import { useCurrentSpace } from "./use-current-space";
+import { enqueueChatMessage } from "src/lib/chat-outbox";
+import { isNetworkError, isOfflineNow } from "src/lib/sync-status";
 
 export const chatKeys = {
   all: ["chat"] as const,
@@ -236,15 +238,39 @@ export function useSendMessage(roomId: string | null) {
   const { person } = useCurrentPerson();
 
   return useMutation({
-    mutationFn: (args: { body: string; replyToId?: string | null }) => {
+    // Offline, React Query would pause this and lose it on reload. Run it
+    // anyway: without a connection the message goes to the outbox
+    // (chat-outbox.ts), which keeps it on this device and sends it later.
+    networkMode: "always",
+    mutationFn: async (args: {
+      body: string;
+      replyToId?: string | null;
+    }): Promise<ChatMessage | null> => {
       if (!roomId || !person) throw new Error("Not ready");
-      return sendChatMessage({
-        id: crypto.randomUUID(),
-        roomId,
-        authorId: person.id,
-        body: args.body,
-        replyToId: args.replyToId,
-      });
+      const id = crypto.randomUUID();
+      const queue = async () => {
+        await enqueueChatMessage({
+          id,
+          personId: person.id,
+          roomId,
+          body: args.body,
+          replyToId: args.replyToId ?? null,
+        });
+        return null;
+      };
+      if (isOfflineNow()) return queue();
+      try {
+        return await sendChatMessage({
+          id,
+          roomId,
+          authorId: person.id,
+          body: args.body,
+          replyToId: args.replyToId,
+        });
+      } catch (error) {
+        if (isNetworkError(error)) return queue();
+        throw error;
+      }
     },
     onMutate: async (args) => {
       if (!roomId || !person) return;
@@ -266,6 +292,8 @@ export function useSendMessage(roomId: string | null) {
       qc.setQueryData<ChatMessage[]>(chatKeys.messages(roomId), (old) => {
         if (!old) return old;
         const withoutPending = old.filter((m) => m.id !== ctx?.optimisticId);
+        // Queued in the outbox: the room shows it from there.
+        if (!saved) return withoutPending;
         return withoutPending.some((m) => m.id === saved.id)
           ? withoutPending
           : [...withoutPending, saved];

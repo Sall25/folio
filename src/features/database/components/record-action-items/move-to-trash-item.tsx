@@ -1,15 +1,21 @@
 import { Trash2 } from "lucide-react";
-import { MenuRow } from "../menu-row";
-import { ConfirmDialog } from "src/features/shell/confirm-dialog";
 import { useState } from "react";
+import { ConfirmDialog } from "src/features/shell/confirm-dialog";
+import { MenuRow } from "../menu-row";
 
-export function MoveToTrashItem({ onDelete }: { onDelete: () => void }) {
+export function MoveToTrashItem({
+  onDelete,
+  label = "Move to Trash",
+}: {
+  onDelete: () => void;
+  label?: string;
+}) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   return (
     <>
       <MenuRow
         Icon={Trash2}
-        label="Move to Trash"
+        label={label}
         shortcut="Del"
         danger
         onClick={() => setConfirmOpen(true)}

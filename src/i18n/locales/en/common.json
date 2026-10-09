@@ -34,6 +34,14 @@
     "clear": "Clear"
   },
   "chat": {
+    "outbox": {
+      "waiting": "Waiting to send",
+      "sending": "Sending…",
+      "failed": "Not sent.",
+      "retry": "Retry",
+      "delete": "Delete",
+      "fileWaiting": "Waiting for connection"
+    },
     "title": "Chats",
     "activeNow": "Active now",
     "rooms": "Rooms",
@@ -379,6 +387,31 @@
   "offline.syncedPages_other": "Edits made offline on {{count}} pages are now synced.",
   "offline.unsentSignIn": "You have edits on this device that haven't been sent yet. Sign in again as {{email}} to send them.",
   "offline.unsentSignInNoEmail": "You have edits on this device that haven't been sent yet. Sign in again to send them.",
+  "offline.status.offline": "Offline",
+  "offline.status.unreachable": "Can't reach Folio",
+  "offline.status.saving": "Saving…",
+  "offline.status.saved": "All changes saved",
+  "offline.status.waiting_one": "{{count}} change waiting to sync",
+  "offline.status.waiting_other": "{{count}} changes waiting to sync",
+  "offline.status.waitingShort_one": "{{count}} waiting",
+  "offline.status.waitingShort_other": "{{count}} waiting",
+  "offline.status.offlineHint": "You're offline. Pages you've opened on this device still work, and your edits are sent when you're back online.",
+  "offline.status.unreachableHint": "You're connected to a network, but Folio's servers aren't answering. Your edits stay on this device until they do.",
+  "offline.status.pagesTitle": "Pages waiting to sync",
+  "offline.status.morePages_one": "+{{count}} more",
+  "offline.status.morePages_other": "+{{count}} more",
+  "offline.status.otherChanges_one": "{{count}} other change (a database edit, comment or setting). Keep this tab open until it's sent.",
+  "offline.status.otherChanges_other": "{{count}} other changes (database edits, comments or settings). Keep this tab open until they're sent.",
+  "offline.status.tryNow": "Try now",
+  "offline.status.chatMessages_one": "{{count}} chat message waiting to be sent.",
+  "offline.status.chatMessages_other": "{{count}} chat messages waiting to be sent.",
+  "offline.keep.page": "Available offline",
+  "offline.keep.teamspace": "Teamspace available offline",
+  "offline.keep.viaTeamspace": "Available offline with its teamspace",
+  "offline.keep.viaFavorites": "Available offline as a favorite",
+  "offline.keep.badge": "Available offline",
+  "offline.unavailable.title": "This page isn't on this device yet",
+  "offline.unavailable.body": "Open it once while you're online, or turn on “Available offline” in the page menu, so it's ready next time.",
   "inbox.invite.title": "Join {{workspace}}",
   "inbox.invite.aWorkspace": "a workspace",
   "inbox.invite.someone": "Someone",
@@ -734,8 +767,8 @@
     "mySettings": {
       "theme": "Theme",
       "themeDesc": "Your own theme for this device. Overrides the workspace default.",
-      "language": "Language",
-      "languageDesc": "Your own language for the interface.",
+      "offlineFavorites": "Keep favorites available offline",
+      "offlineFavoritesDesc": "Your favorite pages are downloaded to this device and kept up to date, so they open without a connection.",
       "offlineStorage": "Offline storage",
       "offlineStorageDesc": "Pages and images saved on this device so they open without a connection. Clearing keeps edits that haven't been sent yet.",
       "offlineStorageClear": "Clear"
@@ -1258,6 +1291,15 @@
       "hideAll": "Hide all",
       "showProperty": "Show property",
       "hideProperty": "Hide property"
+    "selectionActions": {
+      "addToFavorites": "Add to Favorites",
+      "removeFromFavorites": "Remove from Favorites",
+      "editIcon": "Edit icon",
+      "editProperty": "Edit property",
+      "layout": "Layout",
+      "propertyVisibility": "Property visibility",
+      "openIn": "Open in",
+      "noResults": "No actions found"
     },
     "person": {
       "me": "Me",

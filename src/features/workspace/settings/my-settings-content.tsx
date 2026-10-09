@@ -8,8 +8,11 @@ import {
 } from "src/lib/offline-storage";
 import { useLocalStorage } from "../../../hooks/use-local-storage";
 import { THEME_KEY } from "src/hooks/use-apply-theme";
-import type { Theme, WorkspaceLanguage } from "src/types";
+import type { Theme } from "src/types";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
+import { useSession } from "src/hooks/use-session";
+import { Toggle } from "src/components/tiptap-ui-primitive/toggle";
+import { setKeepFavorites, useKeepChoices } from "src/lib/offline-keep";
 import "./workspace-settings-content.scss";
 
 function SettingRow({
@@ -108,7 +111,7 @@ function OfflineStorageRow() {
 }
 
 export function MySettingsContent() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { workspace } = useCurrentWorkspace();
 
   // Personal theme — the actual applied value in THIS browser, independent
@@ -140,24 +143,30 @@ export function MySettingsContent() {
         />
       </SettingRow>
 
-      <SettingRow
-        label={t("settings.mySettings.language", "Language")}
-        description={t(
-          "settings.mySettings.languageDesc",
-          "Your own language for the interface.",
-        )}
-      >
-        <Select<WorkspaceLanguage>
-          value={i18n.language as WorkspaceLanguage}
-          onChange={(v) => i18n.changeLanguage(v)}
-          options={[
-            { value: "en", label: "English" },
-            { value: "fr", label: "Français" },
-          ]}
-        />
-      </SettingRow>
-
+      <OfflineFavoritesRow />
       <OfflineStorageRow />
     </div>
+  );
+}
+
+// Downloads your favorite pages to this device and keeps them fresh
+// (offline-keep.ts), so they open without a connection.
+function OfflineFavoritesRow() {
+  const { t } = useTranslation();
+  const { session } = useSession();
+  const personId = session?.user?.id ?? null;
+  const { favorites } = useKeepChoices(personId);
+  if (!personId) return null;
+
+  return (
+    <SettingRow
+      label={t("settings.mySettings.offlineFavorites")}
+      description={t("settings.mySettings.offlineFavoritesDesc")}
+    >
+      <Toggle
+        checked={favorites}
+        onChangeAsync={async (on) => setKeepFavorites(personId, on)}
+      />
+    </SettingRow>
   );
 }

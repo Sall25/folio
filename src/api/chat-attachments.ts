@@ -66,12 +66,22 @@ export async function fetchRoomAttachments(
   return ((data ?? []) as AttachmentRow[]).map(toAttachment);
 }
 
+/** Where a chat file is stored: the room's folder (storage policies check
+ *  it), a folder of its own, and a storage-safe name. */
+export function chatFilePath(
+  roomId: string,
+  fileId: string,
+  name: string,
+): string {
+  return `${roomId}/${fileId}/${safeFileName(name)}`;
+}
+
 // Upload into the room's folder; returns the storage path.
 export async function uploadChatFile(
   roomId: string,
   file: File,
 ): Promise<string> {
-  const path = `${roomId}/${crypto.randomUUID()}/${safeFileName(file.name)}`;
+  const path = chatFilePath(roomId, crypto.randomUUID(), file.name);
   const { error } = await supabase.storage.from(CHAT_BUCKET).upload(path, file, {
     contentType: file.type || "application/octet-stream",
     upsert: false,

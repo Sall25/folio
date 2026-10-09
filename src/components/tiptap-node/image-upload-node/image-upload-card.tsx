@@ -4,6 +4,7 @@ import { useDebounce } from "use-debounce";
 import {
   AlertCircle,
   ArrowDown,
+  CloudOff,
   Image as ImageIcon,
   Link2,
   Search,
@@ -13,6 +14,7 @@ import {
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { listUploads } from "src/api/uploads";
 import { searchPhotos } from "src/api/photos";
+import { isNetworkError, isOfflineNow } from "src/lib/sync-status";
 import "./image-upload-card.scss";
 
 // The card an empty image block shows: upload (click, drop or paste), pick a
@@ -52,8 +54,24 @@ interface UploadItem {
 interface CardError {
   title: string;
   body: string;
-  /** The file to try again, when the upload itself failed. */
-  retry?: File;
+  /** The files to try again, when the upload itself failed. */
+  retry?: File[];
+  /** No connection: the files upload by themselves once it's back. */
+  waiting?: boolean;
+}
+
+// Offline (or the server can't be reached): keep the files and upload them
+// when the connection is back, while this page stays open.
+function waitingError(files: File[]): CardError {
+  return {
+    title:
+      files.length === 1
+        ? `${files[0].name} will upload when you're back online`
+        : `${files.length} images will upload when you're back online`,
+    body: "You're offline. Keep this page open and the image is added as soon as the connection is back.",
+    retry: files,
+    waiting: true,
+  };
 }
 
 const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|avif)$/i;
@@ -123,6 +141,11 @@ export function ImageUploadCard({
         }
       }
 
+      if (isOfflineNow()) {
+        setError(waitingError(picked));
+        return;
+      }
+
       const batch: UploadItem[] = picked.map((file) => ({
         id: crypto.randomUUID(),
         file,
@@ -131,6 +154,7 @@ export function ImageUploadCard({
       }));
       setItems(batch);
 
+      const unreachable: File[] = [];
       const results = await Promise.all(
         batch.map(async (item) => {
           try {
@@ -147,12 +171,16 @@ export function ImageUploadCard({
             return { src, alt: baseName(item.file.name) } as InsertedImage;
           } catch (err) {
             if (item.controller.signal.aborted) return null;
+            if (isNetworkError(err)) {
+              unreachable.push(item.file);
+              return null;
+            }
             const e = err instanceof Error ? err : new Error(String(err));
             onError?.(e);
             setError({
               title: `${item.file.name} couldn't be uploaded`,
               body: `${e.message}. Check your connection and try again.`,
-              retry: item.file,
+              retry: [item.file],
             });
             return null;
           }
@@ -160,11 +188,21 @@ export function ImageUploadCard({
       );
 
       setItems([]);
+      if (unreachable.length) setError(waitingError(unreachable));
       const done = results.filter((r): r is InsertedImage => r !== null);
       if (done.length > 0) onInsert(done);
     },
     [upload, limit, maxSize, onError, onInsert],
   );
+
+  // Waiting for the connection: upload as soon as it's back.
+  useEffect(() => {
+    if (!error?.waiting || !error.retry) return;
+    const files = error.retry;
+    const onOnline = () => void uploadAll(files);
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [error, uploadAll]);
 
   const cancel = (id: string) => {
     setItems((prev) => {
@@ -260,7 +298,7 @@ export function ImageUploadCard({
               error={error}
               onChoose={() => inputRef.current?.click()}
               onRetry={
-                error.retry ? () => void uploadAll([error.retry!]) : undefined
+                error.retry ? () => void uploadAll(error.retry!) : undefined
               }
               onLink={() => {
                 setError(null);
@@ -410,9 +448,12 @@ function ErrorPanel({
 }) {
   return (
     <div className="image-upload-card__error-wrap">
-      <div className="image-upload-card__error" role="alert">
+      <div
+        className={`image-upload-card__error${error.waiting ? " is-waiting" : ""}`}
+        role={error.waiting ? "status" : "alert"}
+      >
         <span className="image-upload-card__error-icon">
-          <AlertCircle size={17} />
+          {error.waiting ? <CloudOff size={17} /> : <AlertCircle size={17} />}
         </span>
         <div>
           <div className="image-upload-card__error-title">{error.title}</div>
