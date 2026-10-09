@@ -269,3 +269,11 @@
     line-height: 1;
   }
 }
+
+// A page (or teamspace) marked "Available offline": a small cloud after
+// the title.
+.page-item .page-item-offline {
+  flex-shrink: 0;
+  margin-left: 4px;
+  color: var(--tt-text-secondary);
+}

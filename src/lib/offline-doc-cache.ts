@@ -219,12 +219,31 @@ export function isDocOpen(pageId: string): boolean {
 /** How many page copies each person keeps on this device. */
 export const MAX_DOC_COPIES = 200;
 
+/** When this page's local copy was last saved (ms), or null without one. */
+export async function getDocSavedAt(
+  personId: string,
+  pageId: string,
+): Promise<number | null> {
+  try {
+    const [update, seen] = await Promise.all([
+      request<unknown>("readonly", (s) => s.get(docKey(personId, pageId))),
+      request<unknown>("readonly", (s) => s.get(seenKey(personId, pageId))),
+    ]);
+    if (!(update instanceof Uint8Array)) return null;
+    return typeof seen === "number" ? seen : 0;
+  } catch {
+    return null;
+  }
+}
+
 /** Drops this person's oldest page copies beyond `max`, by when they were
- *  last saved. Never drops a page with unsent edits or one open in this tab.
- *  Resolves with how many copies were dropped. */
+ *  last saved. Never drops a page with unsent edits, one open in this tab,
+ *  or one `kept` says to keep ("Available offline" — those don't count
+ *  towards `max` either). Resolves with how many copies were dropped. */
 export async function pruneDocCache(
   personId: string,
   max = MAX_DOC_COPIES,
+  kept: (pageId: string) => boolean = () => false,
 ): Promise<number> {
   try {
     const keys = await request<IDBValidKey[]>("readonly", (s) =>
@@ -240,7 +259,8 @@ export async function pruneDocCache(
     const pageIds = keys
       .filter((k): k is string => typeof k === "string")
       .filter((k) => k.startsWith(docPrefix))
-      .map((k) => k.slice(docPrefix.length));
+      .map((k) => k.slice(docPrefix.length))
+      .filter((pageId) => !kept(pageId));
     if (pageIds.length <= max) return 0;
 
     // Copies saved before "seen" existed count as the oldest.

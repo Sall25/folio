@@ -24,6 +24,8 @@ import EditedTimeButton from "../pages/edited-time-button/edited-time-button";
 import { PageCategorySelect } from "../pages/page-category-select";
 import type { ID, Page, PageCategory } from "src/types";
 import { ShortcutsButton } from "src/components/tiptap-ui/shortcut-sheet";
+import { useTranslation } from "react-i18next";
+import { useAvailableOffline } from "../pages/available-offline";
 
 export function MorePopover({
   includeUndoRedo = false,
@@ -58,6 +60,17 @@ export function MorePopover({
     activePage?.settings.locked === true,
   );
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
+  const offline = useAvailableOffline(activePage);
+  const offlineLabel = !offline
+    ? ""
+    : offline.locked
+      ? offline.by === "favorites"
+        ? t("offline.keep.viaFavorites")
+        : t("offline.keep.viaTeamspace")
+      : offline.isTeamspaceRoot
+        ? t("offline.keep.teamspace")
+        : t("offline.keep.page");
 
   const onFullWidthChangeAsync = useCallback(
     async (checked: boolean) => {
@@ -175,6 +188,15 @@ export function MorePopover({
                 onChangedAsync={onLockedChangeAsync}
                 checked={locked}
               />
+              {offline && (
+                <SettingsToggleButton
+                  target="offline"
+                  text={offlineLabel}
+                  checked={offline.kept}
+                  disabled={offline.locked}
+                  onChangedAsync={async (on) => offline.set(on)}
+                />
+              )}
             </CardItemGroup>
             <Separator orientation="horizontal" />
             <CardItemGroup className="more-item">

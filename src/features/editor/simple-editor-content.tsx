@@ -30,6 +30,7 @@ import { useSyncThreadsToEditor } from "src/features/comments/hooks/use-sync-thr
 import { BlockCommentHandle } from "src/features/comments/block-comment-handle";
 import { useLayoutMode } from "../shell/hooks/use-layout-mode";
 import { calculatePaddingLeft, calculateSidebarWidth } from "src/lib/utils";
+import { UnavailableOffline } from "./unavailable-offline";
 
 // ============================================================
 // Memoized leaves
@@ -56,10 +57,12 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
   const { editor } = useCurrentEditor();
   const { activePage } = useActivePageState();
   const { collapsed } = useEditorLayoutState();
-  const { isSyncing } = useEditorSync();
+  const { isSyncing, unavailableOffline } = useEditorSync();
 
   useRecordPropertyPanel(editor, activePage ?? null);
   usePageComment(editor, activePage ?? null);
+
+  if (unavailableOffline && !editor) return <UnavailableOffline />;
 
   if (isSyncing || !editor) {
     return (

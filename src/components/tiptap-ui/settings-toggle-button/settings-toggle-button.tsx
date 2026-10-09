@@ -3,14 +3,14 @@ import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Toggle } from "src/components/tiptap-ui-primitive/toggle";
 
 import "./settings-toggle-button.scss";
-import { AArrowDown, LockKeyhole } from "lucide-react";
+import { AArrowDown, CloudDownload, LockKeyhole } from "lucide-react";
 import { FitToWidthIcon } from "src/components/tiptap-icons";
 
 export interface SettingsToggleProps {
   text?: string;
   checked?: boolean;
   disabled?: boolean;
-  target: "text" | "width" | "lock";
+  target: "text" | "width" | "lock" | "offline";
   onChangedAsync?: (checked: boolean) => Promise<void>;
 }
 
@@ -27,6 +27,8 @@ export function SettingsToggleButton({
         <AArrowDown />
       ) : target === "width" ? (
         <FitToWidthIcon />
+      ) : target === "offline" ? (
+        <CloudDownload />
       ) : (
         <LockKeyhole />
       )}

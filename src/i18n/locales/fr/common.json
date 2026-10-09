@@ -333,6 +333,13 @@
   "offline.status.otherChanges_one": "{{count}} autre modification (base de données, commentaire ou paramètre). Gardez cet onglet ouvert jusqu'à son envoi.",
   "offline.status.otherChanges_other": "{{count}} autres modifications (base de données, commentaires ou paramètres). Gardez cet onglet ouvert jusqu'à leur envoi.",
   "offline.status.tryNow": "Réessayer",
+  "offline.keep.page": "Disponible hors ligne",
+  "offline.keep.teamspace": "Espace d'équipe disponible hors ligne",
+  "offline.keep.viaTeamspace": "Disponible hors ligne avec son espace d'équipe",
+  "offline.keep.viaFavorites": "Disponible hors ligne comme favori",
+  "offline.keep.badge": "Disponible hors ligne",
+  "offline.unavailable.title": "Cette page n'est pas encore sur cet appareil",
+  "offline.unavailable.body": "Ouvrez-la une fois en ligne, ou activez « Disponible hors ligne » dans le menu de la page, pour qu'elle soit prête la prochaine fois.",
   "inbox.invite.title": "Rejoindre {{workspace}}",
   "inbox.invite.aWorkspace": "un espace de travail",
   "inbox.invite.someone": "Quelqu’un",
@@ -678,6 +685,8 @@
     "mySettings": {
       "theme": "Thème",
       "themeDesc": "Ton propre thème pour cet appareil. Remplace le thème par défaut de l'espace de travail.",
+      "offlineFavorites": "Garder les favoris disponibles hors ligne",
+      "offlineFavoritesDesc": "Vos pages favorites sont téléchargées sur cet appareil et tenues à jour, pour s'ouvrir sans connexion.",
       "offlineStorage": "Stockage hors ligne",
       "offlineStorageDesc": "Pages et images enregistrées sur cet appareil pour s'ouvrir sans connexion. Vider garde les modifications pas encore envoyées.",
       "offlineStorageClear": "Vider"

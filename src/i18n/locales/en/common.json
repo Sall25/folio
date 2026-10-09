@@ -395,6 +395,13 @@
   "offline.status.otherChanges_one": "{{count}} other change (a database edit, comment or setting). Keep this tab open until it's sent.",
   "offline.status.otherChanges_other": "{{count}} other changes (database edits, comments or settings). Keep this tab open until they're sent.",
   "offline.status.tryNow": "Try now",
+  "offline.keep.page": "Available offline",
+  "offline.keep.teamspace": "Teamspace available offline",
+  "offline.keep.viaTeamspace": "Available offline with its teamspace",
+  "offline.keep.viaFavorites": "Available offline as a favorite",
+  "offline.keep.badge": "Available offline",
+  "offline.unavailable.title": "This page isn't on this device yet",
+  "offline.unavailable.body": "Open it once while you're online, or turn on “Available offline” in the page menu, so it's ready next time.",
   "inbox.invite.title": "Join {{workspace}}",
   "inbox.invite.aWorkspace": "a workspace",
   "inbox.invite.someone": "Someone",
@@ -750,6 +757,8 @@
     "mySettings": {
       "theme": "Theme",
       "themeDesc": "Your own theme for this device. Overrides the workspace default.",
+      "offlineFavorites": "Keep favorites available offline",
+      "offlineFavoritesDesc": "Your favorite pages are downloaded to this device and kept up to date, so they open without a connection.",
       "offlineStorage": "Offline storage",
       "offlineStorageDesc": "Pages and images saved on this device so they open without a connection. Clearing keeps edits that haven't been sent yet.",
       "offlineStorageClear": "Clear"

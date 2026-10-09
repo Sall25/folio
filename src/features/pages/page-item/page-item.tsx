@@ -33,6 +33,8 @@ import { useEditorLayoutActions } from "../../shell/context/editor-layout-contex
 import { usePinControl } from "../../workspace/context/teamspace-pin-context";
 import { getActiveEditor } from "../../editor/context/active-editor-store";
 import { setEditorTitle } from "../../editor/utils/doc-title";
+import { CloudDownload } from "lucide-react";
+import { useAvailableOffline } from "../available-offline";
 
 interface PageItemProps {
   page: Page;
@@ -95,6 +97,15 @@ function PageItemView({
   const { mutateAsync } = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const mutateAsyncRef = useRef(mutateAsync);
   const createPage = useCreatePage();
+
+  // Marked "Available offline" itself (a page, or a teamspace on its root
+  // row). Pages kept through a teamspace or as favorites aren't marked one
+  // by one — that would mark every row.
+  const offline = useAvailableOffline(page);
+  const markedOffline =
+    !!offline &&
+    (offline.by === "page" ||
+      (offline.isTeamspaceRoot && offline.by === "teamspace"));
 
   const pin = usePinControl();
   const pinnable =
@@ -245,6 +256,17 @@ function PageItemView({
           </span>
         ) : (
           <span className="page-item-title">{title}</span>
+        )}
+
+        {markedOffline && !editing && (
+          <CloudDownload
+            size={12}
+            className="page-item-offline"
+            role="img"
+            aria-label={t("offline.keep.badge")}
+          >
+            <title>{t("offline.keep.badge")}</title>
+          </CloudDownload>
         )}
 
         {(canEditContent || pinnable || isTeamspaceRoot) && (
