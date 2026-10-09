@@ -1141,6 +1141,16 @@
     "failed": "Impossible de déplacer vers {{title}}. Les blocs sont toujours ici."
   },
   "database": {
+    "selectionActions": {
+      "addToFavorites": "Ajouter aux favoris",
+      "removeFromFavorites": "Retirer des favoris",
+      "editIcon": "Modifier l'icône",
+      "editProperty": "Modifier une propriété",
+      "layout": "Disposition",
+      "propertyVisibility": "Visibilité des propriétés",
+      "openIn": "Ouvrir dans",
+      "noResults": "Aucune action trouvée"
+    },
     "person": {
       "me": "Moi",
       "meHint": "La personne qui regarde",
