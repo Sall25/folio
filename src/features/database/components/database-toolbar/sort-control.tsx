@@ -1,4 +1,5 @@
 import { ArrowUpDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Popover,
@@ -34,12 +35,18 @@ function SortControlImpl({
   showSortChips: boolean;
   onShowSortChipsChange: (show: boolean) => void;
 }) {
+  const { t } = useTranslation();
+
   if (activeSortCount > 0) {
     return (
       <Button
         variant="ghost"
         size="small"
-        tooltip={showSortChips ? "Hide sorts" : "Show sorts"}
+        tooltip={
+          showSortChips
+            ? t("database.toolbar.hideSorts")
+            : t("database.toolbar.showSorts")
+        }
         data-active-state="on"
         onClick={() => onShowSortChipsChange(!showSortChips)}
         style={CONTROL_BUTTON_STYLE}
@@ -53,7 +60,7 @@ function SortControlImpl({
     <Popover>
       <PopoverTrigger asChild>
         <Button
-          tooltip="Sort"
+          tooltip={t("database.toolbar.sort")}
           variant="ghost"
           size="small"
           data-active-state="off"
