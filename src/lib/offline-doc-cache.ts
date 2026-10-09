@@ -93,14 +93,31 @@ export function saveDocCache(
   ).catch(() => {});
 }
 
+// Told whenever a page gains or loses unsent edits (the sync status pill
+// counts them).
+const dirtyListeners = new Set<() => void>();
+
+export function subscribeDirtyDocs(listener: () => void): () => void {
+  dirtyListeners.add(listener);
+  return () => {
+    dirtyListeners.delete(listener);
+  };
+}
+
+function notifyDirty() {
+  dirtyListeners.forEach((l) => l());
+}
+
 export function markDocDirty(personId: string, pageId: string): void {
-  request("readwrite", (s) => s.put(true, dirtyKey(personId, pageId))).catch(
+  request("readwrite", (s) => s.put(true, dirtyKey(personId, pageId))).then(
+    notifyDirty,
     () => {},
   );
 }
 
 export function markDocClean(personId: string, pageId: string): void {
-  request("readwrite", (s) => s.delete(dirtyKey(personId, pageId))).catch(
+  request("readwrite", (s) => s.delete(dirtyKey(personId, pageId))).then(
+    notifyDirty,
     () => {},
   );
 }

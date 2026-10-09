@@ -8,7 +8,7 @@ import {
 } from "src/lib/offline-storage";
 import { useLocalStorage } from "../../../hooks/use-local-storage";
 import { THEME_KEY } from "src/hooks/use-apply-theme";
-import type { Theme, WorkspaceLanguage } from "src/types";
+import type { Theme } from "src/types";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import "./workspace-settings-content.scss";
 
@@ -108,7 +108,7 @@ function OfflineStorageRow() {
 }
 
 export function MySettingsContent() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { workspace } = useCurrentWorkspace();
 
   // Personal theme — the actual applied value in THIS browser, independent
@@ -136,23 +136,6 @@ export function MySettingsContent() {
             { value: "system", label: t("settings.theme.system", "System") },
             { value: "light", label: t("settings.theme.light", "Light") },
             { value: "dark", label: t("settings.theme.dark", "Dark") },
-          ]}
-        />
-      </SettingRow>
-
-      <SettingRow
-        label={t("settings.mySettings.language", "Language")}
-        description={t(
-          "settings.mySettings.languageDesc",
-          "Your own language for the interface.",
-        )}
-      >
-        <Select<WorkspaceLanguage>
-          value={i18n.language as WorkspaceLanguage}
-          onChange={(v) => i18n.changeLanguage(v)}
-          options={[
-            { value: "en", label: "English" },
-            { value: "fr", label: "Français" },
           ]}
         />
       </SettingRow>

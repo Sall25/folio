@@ -29,7 +29,7 @@ import { useIsMobile, useIsTablet } from "src/hooks/use-breakpoint";
 import { ShareButton } from "../pages/share/share-button";
 import { useEffect, useRef, useState } from "react";
 import { usePageCapabilities } from "src/hooks/use-page-role";
-import { OfflineIndicator } from "./offline/offline-indicator";
+import { SyncStatus } from "./offline/sync-status";
 import { ToolbarPresence } from "../editor/presence/toolbar-presence";
 import { useLayoutMode } from "./hooks/use-layout-mode";
 import { calculateSidebarWidth } from "src/lib/utils";
@@ -224,7 +224,7 @@ function TitleGroup({ view }: { view: View }) {
         pageLocation &&
         canEditContent &&
         !isLoading && <PageCategorySelect {...pageLocation} />}
-      <OfflineIndicator />
+      <SyncStatus />
     </ToolbarGroup>
   );
 }
@@ -327,6 +327,7 @@ export const MobileToolbarContent = ({ view }: ContentProps) => {
       <Spacer />
 
       <ToolbarGroup>
+        <SyncStatus compact />
         <QuickOpenTrigger compact />
         {view === "page" && (
           <>

@@ -10,6 +10,7 @@ import {
   noteDocOpened,
   saveDocCache,
 } from "src/lib/offline-doc-cache";
+import { trackProvider } from "src/lib/sync-status";
 
 const HOCUSPOCUS_URL = import.meta.env.VITE_HOCUSPOCUS_URL;
 
@@ -100,6 +101,8 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
     // While open here, this provider delivers the page's edits; the
     // background sync leaves it alone.
     const closeDoc = noteDocOpened(pageId);
+    // The sync status pill follows this connection.
+    const untrack = trackProvider(provider);
 
     setDoc({ ydoc, provider });
 
@@ -232,6 +235,7 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
           saveDocCache(personId, pageId, Y.encodeStateAsUpdate(ydoc));
         }
       }
+      untrack();
       provider.destroy();
       ydoc.destroy();
       closeDoc();
