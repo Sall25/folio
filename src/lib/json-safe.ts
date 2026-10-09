@@ -102,3 +102,5 @@ export function findJsonUnsafeCached(value: unknown): string | null {
   verdicts.set(value, verdict);
   return verdict;
 }
+
+const broken: number = 'oops';
