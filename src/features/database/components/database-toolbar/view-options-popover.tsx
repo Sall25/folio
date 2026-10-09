@@ -449,6 +449,7 @@ export function ViewOptionsPopover({
   onOpenChange?: (o: boolean) => void;
   onCopyLink?: () => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -512,8 +513,6 @@ export function ViewOptionsPopover({
       </div>
     ) : null;
   }
-
-  const { t } = useTranslation();
 
   if (!open) {
     return (
