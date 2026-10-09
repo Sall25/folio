@@ -53,16 +53,6 @@ import { usePanelTransition } from "../../hooks/use-panel-transition";
 import { SpinnerRing } from "src/components/tiptap-ui-primitive/spinner-ring";
 import { PanelSlide } from "../panel-slide";
 
-const PANEL_TITLES: Record<Exclude<PanelView["type"], "main">, string> = {
-  properties: "Properties",
-  filter: "Filter",
-  sort: "Sort",
-  layout: "Layouts",
-  "open-pages-in": "Open pages in",
-  group: "Group",
-  "sub-items": "Sub-items",
-};
-
 function SubPanelHeader({
   title,
   onBack,
