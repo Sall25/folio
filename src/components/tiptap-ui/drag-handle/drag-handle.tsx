@@ -24,10 +24,12 @@ import { insertBlockWithMenu } from "./insert-block";
 import {
   extendSelectionToBlock,
   rangeContains,
+  selectBlockRange,
   selectedBlockRange,
   startMultiBlockDrag,
   type BlockRange,
 } from "./multi-block-drag";
+import type { ComputePositionConfig, Middleware } from "@floating-ui/dom";
 
 const NODE_LABELS: Record<string, string> = {
   paragraph: "Text",
@@ -53,6 +55,40 @@ const NODE_LABELS: Record<string, string> = {
   ctaButton: "Button",
   container: "Container",
 };
+
+/**
+ * Where the first line of text in a block sits, vertically (its middle, in
+ * viewport pixels). Text in parts that aren't editable (a callout's icon, a
+ * code block's language label) is skipped. A block without text (an empty
+ * paragraph, an image) gives the middle of its first line box.
+ */
+function firstLineMiddle(block: HTMLElement): number {
+  const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, {
+    acceptNode(text) {
+      if (!text.textContent?.trim()) return NodeFilter.FILTER_SKIP;
+      const fixed = text.parentElement?.closest('[contenteditable="false"]');
+      return fixed && block.contains(fixed)
+        ? NodeFilter.FILTER_SKIP
+        : NodeFilter.FILTER_ACCEPT;
+    },
+  });
+  const text = walker.nextNode();
+  if (text) {
+    const range = document.createRange();
+    range.setStart(text, 0);
+    range.setEnd(text, 1);
+    const glyph = range.getClientRects()[0];
+    if (glyph) return glyph.top + glyph.height / 2;
+  }
+  const style = getComputedStyle(block);
+  const fontSize = parseFloat(style.fontSize) || 16;
+  const lineHeight = parseFloat(style.lineHeight) || fontSize * 1.5;
+  return (
+    block.getBoundingClientRect().top +
+    (parseFloat(style.paddingTop) || 0) +
+    lineHeight / 2
+  );
+}
 
 const nestedOptions = {
   enabled: true,
@@ -113,6 +149,26 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
   const shiftClickRef = useRef(false);
   const gripRef = useRef<HTMLButtonElement>(null);
 
+  // The handle sits beside the block, centred on its first line of text —
+  // not on the top of the block's box, which put it too high next to
+  // headings (taller lines) and callouts / code blocks (padding, a header).
+  // The library places it at the block's top-left ("left-start"); this
+  // moves it down to the line. Database rows keep their own tuned spot.
+  const computePositionConfig = useMemo<Partial<ComputePositionConfig>>(() => {
+    const centerOnFirstLine: Middleware = {
+      name: "centerOnFirstLine",
+      fn({ y, rects, elements }) {
+        if (!editor || targetRef.current === "Record") return {};
+        const block = editor.view.nodeDOM(posRef.current);
+        if (!(block instanceof HTMLElement)) return {};
+        const top = elements.reference.getBoundingClientRect().top;
+        const middle = firstLineMiddle(block);
+        return { y: y + (middle - top) - rects.floating.height / 2 };
+      },
+    };
+    return { placement: "left-start", middleware: [centerOnFirstLine] };
+  }, [editor]);
+
   // Hide the drag handle while a column is being resized to avoid
   // it flickering or repositioning during the resize interaction
   const [isColumnResizing, setIsColumnResizing] = useState(false);
@@ -166,8 +222,8 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
               onAction={onAction}
               target={target}
               editor={editor!}
-              side="bottom"
-              align="start"
+              side="left"
+              align="center"
               sideOffset={4}
             />,
             document.body,
@@ -185,9 +241,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
         target === "Record" ? "is-record" : ""
       } ${hideHandle ? "hide" : ""}`}
       editor={editor}
-      computePositionConfig={{
-        placement: "left-start",
-      }}
+      computePositionConfig={computePositionConfig}
       onNodeChange={({ node, pos: newPos }) => {
         if (newPos === -1 || node === null) {
           // Handle detached from any node — no record is hovered.
@@ -398,7 +452,9 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
       }}
       nestedOptions={nestedOptions as unknown as NormalizedNestedOptions}
     >
-      <CardItemGroup orientation="horizontal">
+      {/* Positioned: the menu's anchor (below) is laid over the whole
+          handle, + and grip. */}
+      <CardItemGroup orientation="horizontal" style={{ position: "relative" }}>
         <Button
           className="plus-button"
           type="button"
@@ -418,14 +474,20 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
           <Plus className="tiptap-button-icon" />
         </Button>
 
-        <DropdownMenu open={open} onOpenChange={handleOpenChange}>
+        {/* Not modal: the items with a submenu open it as a flyout
+            (NavigableMenuItem, a popover of its own), and a modal menu
+            keeps focus to itself, so the flyout's search box (Move to)
+            couldn't be typed in. */}
+        <DropdownMenu open={open} onOpenChange={handleOpenChange} modal={false}>
           <ColorDropdownProvider>
-            {/* The grip, with the menu's anchor at its bottom-left corner:
-                the menu opens right under the grip (flipping above it near
-                the bottom of the screen) instead of at the page edge. The
-                anchor is 1px and sits beside the grip, never over it, so it
-                can't get in the way of grabbing the grip. */}
-            <span style={{ position: "relative", display: "inline-flex" }}>
+            {/* The grip. The menu's anchor (after it) is laid over the
+                whole handle, + and grip: the menu opens to the side of the
+                handle, in the page margin, its top level with the handle's
+                — on the left, or on the right when the margin is too
+                narrow (phones), and slid up or down to stay on screen. The
+                anchor lets every pointer event through, so it can't get in
+                the way of grabbing the grip. */}
+            <span style={{ display: "inline-flex" }}>
               {/* Grip button — selecting the node on pointer down ensures
                   it's selected before the drag starts, giving ProseMirror
                   the right context for the drag operation */}
@@ -446,11 +508,13 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
                     return;
                   }
                   shiftClickRef.current = false;
-                  // Inside a multi-block selection: keep it, so dragging
-                  // moves every selected block.
+                  // Inside a multi-block selection: keep it, as whole
+                  // blocks, so dragging moves every selected block and the
+                  // menu acts on all of them.
                   const range = selectedBlockRange(editor);
                   if (range && rangeContains(range, pos)) {
                     multiRangeRef.current = range;
+                    selectBlockRange(editor, range);
                     return;
                   }
                   multiRangeRef.current = null;
@@ -480,10 +544,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
                   tabIndex={-1}
                   style={{
                     position: "absolute",
-                    left: 0,
-                    bottom: 0,
-                    width: 1,
-                    height: 1,
+                    inset: 0,
                     pointerEvents: "none",
                   }}
                 />

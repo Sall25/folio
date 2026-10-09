@@ -9,12 +9,13 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view";
 // Installed with @tiptap/extension-drag-handle (its peer dependency).
 import { NodeRangeSelection } from "@tiptap/extension-node-range";
 
-// Whole-block selection, as made by the drag-box (BlockMarquee): the
-// selected blocks get a light-blue highlight instead of the text-selection
-// colour. It is a real editor selection, so Backspace / Delete remove the
-// blocks, Ctrl+C / Ctrl+X copy and cut them, typing replaces them, and
-// dragging any of their handles moves them all. Escape puts the cursor back
-// at the end of the last block.
+// Whole-block selection, as made by the drag-box (BlockMarquee) or by
+// Shift+click on grips: the selected blocks get a light-blue highlight
+// instead of the text-selection colour. It is a real editor selection, so
+// Backspace / Delete remove the blocks, Ctrl+C / Ctrl+X copy and cut them,
+// typing replaces them, dragging any of their handles moves them all, and
+// the block menu (the grip's menu) acts on all of them. Escape puts the
+// cursor back at the end of the last block.
 
 export const blockSelectionKey = new PluginKey("blockSelection");
 
@@ -27,6 +28,40 @@ export const BlockSelection = Extension.create({
     return [
       new Plugin({
         key: blockSelectionKey,
+        // Keeps blocks selected inside a callout or a column selected after
+        // an edit. NodeRangeSelection forgets its depth when it's carried
+        // through a change (its map() rebuilds it without one), and without
+        // a depth, blocks inside a callout become the callout itself — a
+        // colour picked for two paragraphs would leave the whole callout
+        // selected. Rebuilt here at the depth it had.
+        appendTransaction(transactions, oldState, newState) {
+          const before = oldState.selection;
+          const after = newState.selection;
+          if (
+            !(before instanceof NodeRangeSelection) ||
+            !(after instanceof NodeRangeSelection) ||
+            transactions.some((tr) => tr.selectionSet)
+          ) {
+            return null;
+          }
+          const depth = before.$from.depth;
+          if (after.$from.depth === depth) return null;
+          let { anchor, head } = before;
+          for (const tr of transactions) {
+            anchor = tr.mapping.map(anchor);
+            head = tr.mapping.map(head);
+          }
+          try {
+            if (newState.doc.resolve(anchor).depth !== depth) return null;
+            return newState.tr
+              .setSelection(
+                NodeRangeSelection.create(newState.doc, anchor, head, depth),
+              )
+              .setMeta("addToHistory", false);
+          } catch {
+            return null;
+          }
+        },
         props: {
           decorations(state) {
             const { selection } = state;

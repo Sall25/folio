@@ -8,6 +8,7 @@ import {
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
 import { NodeSelection } from "@tiptap/pm/state";
+import { getSelectedBlocks } from "src/lib/block-selection";
 import { Editor } from "@tiptap/react";
 import { useHotkeys } from "react-hotkeys-hook";
 
@@ -42,6 +43,15 @@ function deleteNode(editor: Editor | null): boolean {
     if (from + node.nodeSize > state.doc.nodeSize) return false;
 
     dispatch(state.tr.delete(from, from + node.nodeSize));
+    editor.view.focus();
+    return true;
+  }
+
+  // Case 1b: several whole blocks (drag-box, Shift+click on grips) — all
+  // of them. (Case 3 below would throw: the selection starts between
+  // blocks, where there's no block "around" it.)
+  if (getSelectedBlocks(selection)) {
+    dispatch(state.tr.deleteSelection().scrollIntoView());
     editor.view.focus();
     return true;
   }

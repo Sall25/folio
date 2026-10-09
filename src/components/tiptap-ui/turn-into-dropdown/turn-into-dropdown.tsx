@@ -22,6 +22,9 @@ import { toggleList } from "../list-button";
 import { toggleCodeBlock } from "../code-block-button";
 import { TurnIntoPageButton } from "../turn-into-page-button";
 import { useTranslation } from "react-i18next";
+import { useEditorState } from "@tiptap/react";
+import { getSelectedBlocks } from "src/lib/block-selection";
+import { turnBlocksInto } from "./turn-blocks-into";
 
 interface TurnIntoDropdownProps {
   editor?: Editor | null;
@@ -112,6 +115,11 @@ function unwrapAround(editor: Editor): string | null {
 }
 
 function turnInto(editor: Editor, option: BlockTypeOption) {
+  // Several whole blocks (drag-box, Shift+click on grips): each of them.
+  if (getSelectedBlocks(editor.state.selection)) {
+    turnBlocksInto(editor, option);
+    return;
+  }
   const target = option.type;
   // Already this wrapper: nothing to do.
   if (WRAPPERS.includes(target) && editor.isActive(target)) return;
@@ -200,6 +208,15 @@ export function TurnIntoDropdown({
   const { open, setOpen, handleMouseEnter, handleMouseLeave } =
     useHoverMenu(150);
 
+  // "Turn into page" makes a page from one paragraph: not offered for
+  // several blocks.
+  const isBlockSelection =
+    useEditorState({
+      editor,
+      selector: ({ editor }) =>
+        !!editor && getSelectedBlocks(editor.state.selection) !== null,
+    }) ?? false;
+
   const { t } = useTranslation();
 
   if (!isVisible && hideWhenUnavailable) return null;
@@ -265,15 +282,17 @@ export function TurnIntoDropdown({
               </DropdownMenuItem>
             );
           })}
-          <DropdownMenuItem asChild>
-            <TurnIntoPageButton
-              editor={editor}
-              text={t("blockTypes.turnIntoPage")}
-              hideWhenUnavailable={false}
-              onTurnedIntoPage={() => setOpen(false)}
-              style={{ minWidth: "145px" }}
-            />
-          </DropdownMenuItem>
+          {!isBlockSelection && (
+            <DropdownMenuItem asChild>
+              <TurnIntoPageButton
+                editor={editor}
+                text={t("blockTypes.turnIntoPage")}
+                hideWhenUnavailable={false}
+                onTurnedIntoPage={() => setOpen(false)}
+                style={{ minWidth: "145px" }}
+              />
+            </DropdownMenuItem>
+          )}
         </Card>
       </DropdownMenuContent>
     </DropdownMenu>

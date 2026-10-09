@@ -8,6 +8,7 @@ import {
   TextSelection,
 } from "@tiptap/pm/state";
 import { cellAround, CellSelection } from "@tiptap/pm/tables";
+import { getSelectedBlocks } from "src/lib/block-selection";
 import {
   findParentNodeClosestToPos,
   type Editor,
@@ -719,6 +720,13 @@ export function getSelectedNodesOfType(
       results.push({ node, pos });
     }
     return results;
+  }
+
+  // A block selection: every selected block of an allowed type (an image
+  // among paragraphs is skipped, not a reason to do nothing).
+  const blocks = getSelectedBlocks(selection);
+  if (blocks) {
+    return blocks.filter(({ node }) => allowed.has(node.type.name));
   }
 
   const { $anchor } = selection;

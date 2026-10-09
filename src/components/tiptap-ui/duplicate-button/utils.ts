@@ -2,6 +2,7 @@
 
 import type { Editor } from "@tiptap/core";
 import { NodeSelection } from "@tiptap/pm/state";
+import { getSelectedBlocks, selectBlocks } from "src/lib/block-selection";
 
 /**
  * canDuplicateNode(editor)
@@ -12,6 +13,7 @@ export function canDuplicateNode(editor: Editor) {
   const { selection } = editor.state;
 
   if (selection instanceof NodeSelection) return true;
+  if (getSelectedBlocks(selection)?.length) return true;
 
   return false;
 }
@@ -26,6 +28,19 @@ export function duplicateNode(editor: Editor) {
 
   const { state, dispatch } = editor.view;
   const { selection, tr } = state;
+
+  // Several whole blocks: the copies go right after the last one and
+  // become the selection, like Notion.
+  if (getSelectedBlocks(selection)) {
+    const { from, to } = selection;
+    const copies = state.doc.slice(from, to).content;
+    tr.insert(to, copies);
+    selectBlocks(tr, to, to + copies.size);
+    dispatch(tr.scrollIntoView());
+    editor.commands.focus();
+    return true;
+  }
+
   const { from, node } = selection as NodeSelection;
 
   const insertPos = from + node.nodeSize;

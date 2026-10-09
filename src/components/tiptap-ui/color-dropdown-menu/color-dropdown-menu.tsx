@@ -25,6 +25,7 @@ import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { useRef, type Ref } from "react";
 import { useTranslation } from "react-i18next";
 import { useColorDropdownContext } from "./use-color-dropdown-context";
+import { NavigableMenuItem } from "src/features/database/components/navigable-menu-item";
 
 interface ColorDropdownMenuProps {
   editor?: Editor | null;
@@ -32,6 +33,9 @@ interface ColorDropdownMenuProps {
   hideWhenUnavailable?: boolean;
   onAction?: () => void;
   className?: string;
+  /** In the block (drag handle) menu: a row whose colours open as a side
+   *  flyout (NavigableMenuItem), instead of a dropdown of its own. */
+  flyout?: boolean;
 }
 
 export default function ColorDropdownMenu({
@@ -53,6 +57,7 @@ export default function ColorDropdownMenu({
   hideWhenUnavailable,
   onAction,
   className,
+  flyout = false,
 }: ColorDropdownMenuProps) {
   const { t } = useTranslation();
   const { editor } = useTiptapEditor(providedEditor);
@@ -70,6 +75,74 @@ export default function ColorDropdownMenu({
 
   if (hideWhenUnavailable && !isVisible) return null;
   if (!editor) return null;
+
+  const panel = (
+    <Card
+      style={{
+        alignItems: "flex-start",
+        padding: "5px 10px",
+      }}
+    >
+      <CardItemGroup
+        style={{
+          width: "100%",
+        }}
+      >
+        {recentColors.length !== 0 && (
+          <>
+            <CardItemGroup>
+              <DropdownMenuItem>
+                <CardGroupLabel>{t("colors.recent")}</CardGroupLabel>
+              </DropdownMenuItem>
+              <ColorRecentMenuList editor={editor} />
+            </CardItemGroup>
+
+            <Separator orientation="horizontal" />
+          </>
+        )}
+
+        <CardItemGroup>
+          <CardGroupLabel>{t("colors.label")}</CardGroupLabel>
+          <ColorTextMenuList
+            editor={editor}
+            onAction={() => {
+              onAction?.();
+            }}
+          />
+        </CardItemGroup>
+      </CardItemGroup>
+
+      <Separator orientation="horizontal" />
+
+      <CardItemGroup style={{ width: "100%" }}>
+        <CardGroupLabel>{t("colors.background")}</CardGroupLabel>
+        <ColorHighlightMenuList
+          editor={editor}
+          onAction={() => {
+            // closeImmediately();
+            onAction?.();
+          }}
+        />
+      </CardItemGroup>
+    </Card>
+  );
+
+  if (flyout) {
+    return (
+      <NavigableMenuItem
+        Icon={PaintBucket}
+        label={t("colors.label")}
+        side="right"
+        align="start"
+        sideOffset={8}
+        collisionPadding={8}
+        zIndex={10000}
+      >
+        {/* Same class as the dropdown's content: card colours, width. */}
+        <div className="color-menu-content">{panel}</div>
+      </NavigableMenuItem>
+    );
+  }
 
   return (
     <div
@@ -97,54 +170,7 @@ export default function ColorDropdownMenu({
           align="center"
           className="color-menu-content"
         >
-          <Card
-            style={{
-              alignItems: "flex-start",
-              padding: "5px 10px",
-            }}
-          >
-            <CardItemGroup
-              style={{
-                width: "100%",
-              }}
-            >
-              {recentColors.length !== 0 && (
-                <>
-                  <CardItemGroup>
-                    <DropdownMenuItem>
-                      <CardGroupLabel>{t("colors.recent")}</CardGroupLabel>
-                    </DropdownMenuItem>
-                    <ColorRecentMenuList editor={editor} />
-                  </CardItemGroup>
-
-                  <Separator orientation="horizontal" />
-                </>
-              )}
-
-              <CardItemGroup>
-                <CardGroupLabel>{t("colors.label")}</CardGroupLabel>
-                <ColorTextMenuList
-                  editor={editor}
-                  onAction={() => {
-                    onAction?.();
-                  }}
-                />
-              </CardItemGroup>
-            </CardItemGroup>
-
-            <Separator orientation="horizontal" />
-
-            <CardItemGroup style={{ width: "100%" }}>
-              <CardGroupLabel>{t("colors.background")}</CardGroupLabel>
-              <ColorHighlightMenuList
-                editor={editor}
-                onAction={() => {
-                  // closeImmediately();
-                  onAction?.();
-                }}
-              />
-            </CardItemGroup>
-          </Card>
+          {panel}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

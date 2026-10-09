@@ -23,7 +23,14 @@ export function DragHandleMenu(props: DragHandleMenuProps) {
       side={side}
       sideOffset={sideOffset}
       collisionPadding={8}
-      //side={side ?? "left"}
+      // Closed: back to the editor (not to the grip), so Backspace, Escape
+      // or Ctrl+C act on the blocks still selected. Unless an action moved
+      // focus somewhere on purpose (the comment box, say).
+      onCloseAutoFocus={(event) => {
+        event.preventDefault();
+        const active = document.activeElement;
+        if (!active || active === document.body) editor.view.focus();
+      }}
     >
       {/* `target` is both the human label (title) AND the branch key: Menu shows
           the record menu when target is the databaseRecord label ("Record"),

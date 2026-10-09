@@ -895,6 +895,8 @@
   "blockMenu": {
     "discussInChat": "En discuter dans le chat…",
     "unwrapColumns": "Défaire les colonnes",
+    "blocksSelected_one": "{{count}} bloc",
+    "blocksSelected_other": "{{count}} blocs",
     "text": "Texte",
     "turnInto": "Transformer en",
     "comment": "Commenter",

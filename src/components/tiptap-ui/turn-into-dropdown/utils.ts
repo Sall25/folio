@@ -2,6 +2,8 @@ import type { Editor } from "@tiptap/core";
 import type { BlockTypeOption, ShouldShowTurnIntoParams } from "./types";
 import { DEFAULT_BLOCK_TYPE_OPTIONS } from "./block-type-options";
 import { NodeSelection } from "@tiptap/pm/state";
+import { getSelectedBlocks } from "src/lib/block-selection";
+import { canTurnBlocksInto } from "./turn-blocks-into";
 
 export function getActiveBlockType(
   editor: Editor,
@@ -36,6 +38,9 @@ export function canTurnInto(
   if (!editor || !editor.isEditable) return false;
 
   const { selection } = editor.state;
+  // Several whole blocks: possible when one of them has text to convert.
+  if (getSelectedBlocks(selection)) return canTurnBlocksInto(editor);
+
   const node =
     selection instanceof NodeSelection
       ? selection.node

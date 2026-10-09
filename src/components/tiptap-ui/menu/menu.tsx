@@ -26,6 +26,10 @@ import { useOptionalActivePage } from "src/features/pages/context/active-page-co
 import { requestDiscussBlock } from "src/features/chat/block-share-store";
 import { SuggestButton } from "../../../features/comments/suggest-button";
 import { MoveToDropdown } from "src/components/tiptap-ui/move-to-dropdown";
+import {
+  countSelectedBlocks,
+  getSelectedBlocks,
+} from "src/lib/block-selection";
 
 const SNAPSHOT_MAX = 600;
 
@@ -39,6 +43,11 @@ function isColumnsBlock(editor: Editor): boolean {
     selection.node.type.name === "columnBlock"
   ) {
     return true;
+  }
+  // A block selection: only when it's that one columns block.
+  const blocks = getSelectedBlocks(selection);
+  if (blocks) {
+    return blocks.length === 1 && blocks[0].node.type.name === "columnBlock";
   }
   const { $from } = selection;
   for (let d = $from.depth; d > 0; d--) {
@@ -55,6 +64,14 @@ function getSelectedBlock(editor: Editor): { id: string; text: string } | null {
   if (selection instanceof NodeSelection) {
     const id = selection.node.attrs?.id as string | undefined;
     if (id) return { id, text: selection.node.textContent };
+  }
+  // A block selection: shared when it's one block (a discussion points at
+  // one block).
+  const blocks = getSelectedBlocks(selection);
+  if (blocks) {
+    const node = blocks.length === 1 ? blocks[0].node : null;
+    const id = node?.attrs?.id as string | undefined;
+    return node && id ? { id, text: node.textContent } : null;
   }
   const { $from } = selection;
   for (let d = $from.depth; d > 0; d--) {
@@ -88,10 +105,17 @@ export function Menu({
   // }
 
   const block = activePageId ? getSelectedBlock(editor) : null;
+  // Opened on a selection of several blocks (drag-box, Shift+click on
+  // grips): every action applies to all of them; the ones made for a
+  // single block (suggest an edit, copy its link) are left out.
+  const blockCount = countSelectedBlocks(editor.state.selection);
+  const several = blockCount > 1;
 
   return (
     <Card className="menu">
-      <CardGroupLabel className="title">{title}</CardGroupLabel>
+      <CardGroupLabel className="title">
+        {several ? t("blockMenu.blocksSelected", { count: blockCount }) : title}
+      </CardGroupLabel>
       <CardItemGroup className="group" orientation="vertical">
         <DropdownMenuItem asChild>
           <ColorDropdownMenu
@@ -157,17 +181,19 @@ export function Menu({
                 onClick={onAction}
               />
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <SuggestButton
-                style={{
-                  justifyContent: "flex-start",
-                }}
-                showTooltip={false}
-                text="Suggest"
-                editor={editor}
-                onClick={onAction}
-              />
-            </DropdownMenuItem>
+            {!several && (
+              <DropdownMenuItem asChild>
+                <SuggestButton
+                  style={{
+                    justifyContent: "flex-start",
+                  }}
+                  showTooltip={false}
+                  text="Suggest"
+                  editor={editor}
+                  onClick={onAction}
+                />
+              </DropdownMenuItem>
+            )}
           </>
         )}
         {block && activePageId && (
@@ -214,13 +240,15 @@ export function Menu({
           editor={editor}
           onCopied={onAction}
         />
-        <CopyAnchorLinkButton
-          text={t("blockMenu.copyAnchorLink")}
-          showShortcut={true}
-          hideWhenUnavailable={false}
-          editor={editor}
-          onCopied={onAction}
-        />
+        {!several && (
+          <CopyAnchorLinkButton
+            text={t("blockMenu.copyAnchorLink")}
+            showShortcut={true}
+            hideWhenUnavailable={false}
+            editor={editor}
+            onCopied={onAction}
+          />
+        )}
       </CardItemGroup>
       <Separator orientation="horizontal" />
 

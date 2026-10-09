@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import type { Editor } from "@tiptap/core";
+import { getSelectedBlocks } from "src/lib/block-selection";
 import type { BlockTypeOption } from "src/components/tiptap-ui/turn-into-dropdown/types";
 import { getFilteredBlockTypeOptions } from "src/components/tiptap-ui/turn-into-dropdown/utils";
 
@@ -25,6 +26,16 @@ export function useVisible(
 
       if (!filteredOptions.length) {
         setIsVisible(false);
+        return;
+      }
+
+      // Several whole blocks: shown when one of them is of a type this
+      // menu is for (they may be of different types, so no single type is
+      // "active").
+      const blocks = getSelectedBlocks(editor.state.selection);
+      if (blocks) {
+        const types = new Set(filteredOptions.map((o) => o.type));
+        setIsVisible(blocks.some(({ node }) => types.has(node.type.name)));
         return;
       }
 

@@ -42,6 +42,7 @@ export function NavigableMenuItem({
   alignOffset = 0,
   avoidCollisions = true,
   collisionPadding,
+  zIndex = 999,
 }: {
   Icon?: ComponentType<{ className?: string; size?: number }>;
   label: string;
@@ -67,6 +68,10 @@ export function NavigableMenuItem({
   collisionPadding?:
     | number
     | Partial<Record<"top" | "right" | "bottom" | "left", number>>;
+  /** Stacking of the flyout. Raise it when the menu holding the row sits
+   *  higher (the block menu is at 9999), or a flyout that flips over the
+   *  menu would open underneath it. Default 999. */
+  zIndex?: number;
 }) {
   const [open, setOpen] = useState(false);
   const openTimer = useRef<number | undefined>(undefined);
@@ -149,7 +154,12 @@ export function NavigableMenuItem({
           onPointerLeave={scheduleClose}
           // Don't steal focus / close on the interactions inside.
           onOpenAutoFocus={(e) => e.preventDefault()}
-          style={{ zIndex: 999 }}
+          // Closed by the pointer leaving (above) or a click outside, not by
+          // focus moving: inside another menu (the block menu), hovering
+          // its items moves focus back to that menu, which closed the
+          // flyout before the pointer reached it.
+          onFocusOutside={(e) => e.preventDefault()}
+          style={{ zIndex }}
           className="db-actions-menu__flyout"
         >
           {children}
