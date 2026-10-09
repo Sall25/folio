@@ -18,8 +18,10 @@ const OWNER_KEY = "folio-cache-owner";
  *  restored queries aren't garbage-collected right away. */
 export const QUERY_CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 7; // 7 days
 
-/** Bump when a cached shape changes incompatibly — old caches are dropped. */
-export const QUERY_CACHE_BUSTER = "v1";
+/** Bump when a cached shape changes incompatibly — old caches are dropped.
+ *  v2: caches saved before Map/Set data was skipped held chat block/row
+ *  refs as `{}`, which crashed the chat room after a reload. */
+export const QUERY_CACHE_BUSTER = "v2";
 
 // Query keys (first segment) never written to disk:
 //   notifications — Notification.timestamp is a Date, which JSON turns into a
@@ -103,6 +105,11 @@ export const queryPersister = createAsyncStoragePersister({
 /** Which queries get written to disk: successful ones, minus the denylist. */
 export function shouldPersistQuery(query: Query): boolean {
   if (query.state.status !== "success") return false;
+  // The cache is saved as JSON, which turns a Map or Set into a plain `{}`.
+  // Restored, it would break every `.get()` / `.forEach()` on it (the chat
+  // room's block and row refs are Maps). Those are fetched again instead.
+  const data = query.state.data;
+  if (data instanceof Map || data instanceof Set) return false;
   const head = query.queryKey[0];
   return !(typeof head === "string" && NOT_PERSISTED.has(head));
 }
