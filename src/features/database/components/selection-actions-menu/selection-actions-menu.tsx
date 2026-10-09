@@ -1,6 +1,17 @@
-import { useMemo, useState } from "react";
+import "./selection-actions-menu.scss";
 import { ArrowUpRight, ChevronLeft, ListIcon } from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+import { Input } from "src/components/tiptap-ui-primitive/input";
+import { Separator } from "src/components/tiptap-ui-primitive/separator";
+import { DynamicIcon } from "src/features/pages/cover/dynamic-icon";
+import type { DatabaseProperty, ID } from "src/types";
+import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
+import { EditPropertyList } from "../edit-property-list";
+import { NavigableMenuItem } from "../navigable-menu-item";
+import { OpenInFlyout, type OpenInMode } from "../open-in-flyout";
+
 import {
   Card,
   CardBody,
@@ -8,12 +19,7 @@ import {
   CardHeader,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
-import { Input } from "src/components/tiptap-ui-primitive/input";
-import { Separator } from "src/components/tiptap-ui-primitive/separator";
-import { DynamicIcon } from "src/features/pages/cover/dynamic-icon";
-import { PROPERTY_TYPE_ICONS } from "src/types/property-type-meta";
-import type { DatabaseProperty, ID } from "src/types";
-import "./selection-actions-menu.scss";
+
 import {
   AddToFavoritesItem,
   CommentItem,
@@ -25,9 +31,6 @@ import {
   MoveToTrashItem,
   PropertyVisibilityItem,
 } from "../record-action-items";
-import { EditPropertyList } from "../edit-property-list";
-import { NavigableMenuItem } from "../navigable-menu-item";
-import { OpenInFlyout, type OpenInMode } from "../open-in-flyout";
 
 type Panel =
   | { type: "main" }
@@ -78,7 +81,7 @@ export function SelectionActionsMenu({
   onClose,
   isFavorite,
   onPickProperty,
-  //  onOpenEditProperty
+  // onOpenEditProperty
 }: {
   recordIds: string[];
   properties: DatabaseProperty[];
@@ -106,23 +109,24 @@ export function SelectionActionsMenu({
   isFavorite?: boolean;
   onPickProperty?: (id: ID) => void;
 }) {
+  const { t } = useTranslation();
   const [panel, setPanel] = useState<Panel>({ type: "main" });
   const [query, setQuery] = useState("");
 
   const q = query.trim().toLowerCase();
+
+  const matchesAction = (label: string): boolean => {
+    return label.toLowerCase().includes(q);
+  };
 
   const activeProp =
     panel.type === "property"
       ? properties.find((p) => p.id === panel.propertyId)
       : undefined;
 
-  const filteredProps = useMemo(
-    () =>
-      q
-        ? properties.filter((p) => p.name.toLowerCase().includes(q))
-        : properties,
-    [properties, q],
-  );
+  const filteredProps = q
+    ? properties.filter((p) => p.name.toLowerCase().includes(q))
+    : properties;
 
   const run = (fn?: () => void) => {
     fn?.();
@@ -130,6 +134,7 @@ export function SelectionActionsMenu({
   };
 
   // ── Property value panel ────────────────────────────────────────────────
+
   if (panel.type === "property" && activeProp) {
     return (
       <Card className="db-actions-menu">
@@ -143,6 +148,7 @@ export function SelectionActionsMenu({
           </Button>
           <CardGroupLabel>{activeProp.name}</CardGroupLabel>
         </CardHeader>
+
         <CardBody style={{ width: "100%" }}>
           <CardItemGroup>
             {!isBulkEditable(activeProp) ? (
@@ -198,6 +204,7 @@ export function SelectionActionsMenu({
   }
 
   // ── Property list ───────────────────────────────────────────────────────
+
   if (panel.type === "properties") {
     return (
       <Card className="db-actions-menu">
@@ -211,6 +218,7 @@ export function SelectionActionsMenu({
           </Button>
           <CardGroupLabel>Edit property</CardGroupLabel>
         </CardHeader>
+
         <CardBody style={{ width: "100%" }}>
           <CardItemGroup>
             {filteredProps.length === 0 ? (
@@ -246,7 +254,42 @@ export function SelectionActionsMenu({
   }
 
   // ── Main ────────────────────────────────────────────────────────────────
+
   const plural = recordIds.length > 1;
+
+  const favoriteLabel = isFavorite
+    ? t("database.selectionActions.removeFromFavorites")
+    : t("database.selectionActions.addToFavorites");
+
+  // Determine whether each group contains any matching action.
+  const showPageActions = [
+    favoriteLabel,
+    t("database.selectionActions.editIcon"),
+    t("database.selectionActions.editProperty"),
+  ].some(matchesAction);
+
+  const showLayoutActions = [
+    t("database.selectionActions.layout"),
+    t("database.selectionActions.propertyVisibility"),
+  ].some(matchesAction);
+
+  const showOpenActions = [
+    t("database.selectionActions.openIn"),
+    t("blockMenu.comment"),
+  ].some(matchesAction);
+
+  const showRecordActions = [
+    t("people.copyLink"),
+    t("actions.duplicate"),
+    t("moveTo.label"),
+    t("ui.moveToTrash"),
+  ].some(matchesAction);
+
+  const hasMatches =
+    showPageActions ||
+    showLayoutActions ||
+    showOpenActions ||
+    showRecordActions;
 
   return (
     <Card className="db-actions-menu">
@@ -256,48 +299,162 @@ export function SelectionActionsMenu({
           value={query}
           placeholder="Search actions..."
           onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== "ArrowDown" && e.key !== "Enter") return;
+
+            if (e.key === "Enter" && !q) return;
+
+            const firstItem = e.currentTarget
+              .closest(".db-actions-menu")
+              ?.querySelector<HTMLButtonElement>(
+                '[role="menuitem"]:not([disabled])',
+              );
+
+            if (!firstItem) return;
+
+            e.preventDefault();
+
+            if (e.key === "ArrowDown") {
+              firstItem.focus();
+            } else {
+              firstItem.click();
+            }
+          }}
           style={{ height: 30, width: "100%" }}
         />
       </div>
 
       <CardBody style={{ width: "100%" }}>
-        <CardItemGroup>
-          <CardGroupLabel>{plural ? "Pages" : "Page"}</CardGroupLabel>
-          <AddToFavoritesItem
-            isFavorite={isFavorite}
-            onToggle={() => onAddToFavorites?.()}
-          />
-          <EditIconItem onOpen={() => run(() => onEditIcon?.())} />
-          <NavigableMenuItem Icon={ListIcon} label="Edit property">
-            <EditPropertyList
-              properties={properties}
-              onPick={(propertyId) => run(() => onPickProperty?.(propertyId))}
-            />
-          </NavigableMenuItem>
-        </CardItemGroup>
+        {/* ── Page actions ───────────────────────────────────── */}
 
-        <Separator orientation="horizontal" />
+        {showPageActions && (
+          <CardItemGroup>
+            <CardGroupLabel>{plural ? "Pages" : "Page"}</CardGroupLabel>
 
-        <CardItemGroup>
-          <LayoutItem onOpen={() => run(onLayout)} />
-          <PropertyVisibilityItem onOpen={() => run(onPropertyVisibility)} />
-        </CardItemGroup>
-        <Separator orientation="horizontal" style={{ height: 0.5 }} />
-        <CardItemGroup>
-          <NavigableMenuItem Icon={ArrowUpRight} label="Open in">
-            <OpenInFlyout onOpen={(mode) => run(() => onOpenIn?.(mode))} />
-          </NavigableMenuItem>
-          <CommentItem onComment={() => {}} />
-        </CardItemGroup>
+            {matchesAction(favoriteLabel) && (
+              <AddToFavoritesItem
+                label={favoriteLabel}
+                isFavorite={isFavorite}
+                onToggle={() => onAddToFavorites?.()}
+              />
+            )}
 
-        <Separator orientation="horizontal" />
+            {matchesAction(t("database.selectionActions.editIcon")) && (
+              <EditIconItem
+                label={t("database.selectionActions.editIcon")}
+                onOpen={() => run(() => onEditIcon?.())}
+              />
+            )}
 
-        <CardItemGroup>
-          <CopyLinkItem onCopyLink={() => onCopyLink?.()} />
-          <DuplicateRecordItem onDuplicate={() => onDuplicate?.()} />
-          <MoveToItem onOpen={() => {}} />
-          <MoveToTrashItem onDelete={() => onDelete?.()} />
-        </CardItemGroup>
+            {matchesAction(t("database.selectionActions.editProperty")) && (
+              <NavigableMenuItem
+                Icon={ListIcon}
+                label={t("database.selectionActions.editProperty")}
+              >
+                <EditPropertyList
+                  properties={properties}
+                  onPick={(propertyId) =>
+                    run(() => onPickProperty?.(propertyId))
+                  }
+                />
+              </NavigableMenuItem>
+            )}
+          </CardItemGroup>
+        )}
+
+        {/* ── Layout actions ─────────────────────────────────── */}
+
+        {showPageActions && showLayoutActions && (
+          <Separator orientation="horizontal" />
+        )}
+
+        {showLayoutActions && (
+          <CardItemGroup>
+            {matchesAction(t("database.selectionActions.layout")) && (
+              <LayoutItem
+                label={t("database.selectionActions.layout")}
+                onOpen={() => run(onLayout)}
+              />
+            )}
+
+            {matchesAction(
+              t("database.selectionActions.propertyVisibility"),
+            ) && (
+              <PropertyVisibilityItem
+                label={t("database.selectionActions.propertyVisibility")}
+                onOpen={() => run(onPropertyVisibility)}
+              />
+            )}
+          </CardItemGroup>
+        )}
+
+        {/* ── Open / comment actions ────────────────────────── */}
+
+        {(showPageActions || showLayoutActions) && showOpenActions && (
+          <Separator orientation="horizontal" style={{ height: 0.5 }} />
+        )}
+
+        {showOpenActions && (
+          <CardItemGroup>
+            {matchesAction(t("database.selectionActions.openIn")) && (
+              <NavigableMenuItem
+                Icon={ArrowUpRight}
+                label={t("database.selectionActions.openIn")}
+              >
+                <OpenInFlyout onOpen={(mode) => run(() => onOpenIn?.(mode))} />
+              </NavigableMenuItem>
+            )}
+
+            {matchesAction(t("blockMenu.comment")) && (
+              <CommentItem
+                label={t("blockMenu.comment")}
+                onComment={() => {}}
+              />
+            )}
+          </CardItemGroup>
+        )}
+
+        {/* ── Record actions ────────────────────────────────── */}
+
+        {(showPageActions || showLayoutActions || showOpenActions) &&
+          showRecordActions && <Separator orientation="horizontal" />}
+
+        {showRecordActions && (
+          <CardItemGroup>
+            {matchesAction(t("people.copyLink")) && (
+              <CopyLinkItem
+                label={t("people.copyLink")}
+                onCopyLink={() => onCopyLink?.()}
+              />
+            )}
+
+            {matchesAction(t("actions.duplicate")) && (
+              <DuplicateRecordItem
+                label={t("actions.duplicate")}
+                onDuplicate={() => onDuplicate?.()}
+              />
+            )}
+
+            {matchesAction(t("moveTo.label")) && (
+              <MoveToItem label={t("moveTo.label")} onOpen={() => {}} />
+            )}
+
+            {matchesAction(t("ui.moveToTrash")) && (
+              <MoveToTrashItem
+                label={t("ui.moveToTrash")}
+                onDelete={() => onDelete?.()}
+              />
+            )}
+          </CardItemGroup>
+        )}
+
+        {!hasMatches && (
+          <CardItemGroup>
+            <span className="db-panel__empty">
+              {t("database.selectionActions.noResults")}
+            </span>
+          </CardItemGroup>
+        )}
       </CardBody>
 
       {(lastEditedBy || lastEditedAt) && (

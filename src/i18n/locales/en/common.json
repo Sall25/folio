@@ -1141,6 +1141,16 @@
     "failed": "Couldn't move to {{title}}. The blocks are still here."
   },
   "database": {
+    "selectionActions": {
+      "addToFavorites": "Add to Favorites",
+      "removeFromFavorites": "Remove from Favorites",
+      "editIcon": "Edit icon",
+      "editProperty": "Edit property",
+      "layout": "Layout",
+      "propertyVisibility": "Property visibility",
+      "openIn": "Open in",
+      "noResults": "No actions found"
+    },
     "person": {
       "me": "Me",
       "meHint": "Whoever is viewing",
