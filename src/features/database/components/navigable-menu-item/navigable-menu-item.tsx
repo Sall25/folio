@@ -31,7 +31,8 @@ const OPEN_DELAY = 60; // ms — avoids opening on a quick pass-through.
 
 export function NavigableMenuItem({
   Icon,
-  label,
+  label = "",
+  anchor,
   shortcut,
   sub,
   children,
@@ -45,12 +46,17 @@ export function NavigableMenuItem({
   zIndex = 999,
 }: {
   Icon?: ComponentType<{ className?: string; size?: number }>;
-  label: string;
+  /** The row's text. Not needed when `anchor` is given. */
+  label?: string;
+  /** Hovered instead of the standard row (MenuRow) — e.g. a notification
+   *  in the inbox, whose full text opens in the flyout. */
+  anchor?: ReactNode;
   shortcut?: string;
   /** Trailing sub-label (e.g. the current value, like "Page content"). */
   sub?: string;
-  /** The submenu content shown in the flyout. */
-  children: ReactNode;
+  /** The submenu content shown in the flyout. A function receives
+   *  `close`, for content that closes the flyout itself (an Open button). */
+  children: ReactNode | ((close: () => void) => ReactNode);
   container?: HTMLElement | null;
   /** Which side of the row the flyout opens on. Default "right". */
   side?: "top" | "right" | "bottom" | "left";
@@ -131,13 +137,15 @@ export function NavigableMenuItem({
             setOpen((v) => !v);
           }}
         >
-          <MenuRow
-            Icon={Icon}
-            label={label}
-            shortcut={shortcut}
-            sub={sub}
-            navigable
-          />
+          {anchor ?? (
+            <MenuRow
+              Icon={Icon}
+              label={label}
+              shortcut={shortcut}
+              sub={sub}
+              navigable
+            />
+          )}
         </div>
       </PopoverAnchor>
       <PopoverPortal container={portalContainer}>
@@ -162,7 +170,9 @@ export function NavigableMenuItem({
           style={{ zIndex }}
           className="db-actions-menu__flyout"
         >
-          {children}
+          {typeof children === "function"
+            ? children(() => setOpen(false))
+            : children}
         </PopoverContent>
       </PopoverPortal>
     </Popover>

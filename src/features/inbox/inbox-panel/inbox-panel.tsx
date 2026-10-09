@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Inbox as InboxIcon,
@@ -13,11 +13,14 @@ import { useNotifications } from "src/features/inbox/notification/notification-c
 import type { Notification, NotificationType } from "src/types";
 import { useOpenNotification } from "./use-open-notification";
 import { WorkspaceInvites } from "./workspace-invites";
+import { NotificationCard } from "./notification-card";
+import { NavigableMenuItem } from "src/features/database/components/navigable-menu-item";
+import { formatRelativeTime } from "src/utils/format-relative";
 import { useMyWorkspaceInvites } from "src/hooks/use-workspace-members";
 import "./inbox-panel.scss";
 
 export function InboxPanel({ onOpened }: { onOpened?: () => void } = {}) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // Already scoped to this workspace and to your notification settings.
   const {
     notifications,
@@ -30,23 +33,57 @@ export function InboxPanel({ onOpened }: { onOpened?: () => void } = {}) {
   const { data: invites = [] } = useMyWorkspaceInvites();
   const [showElsewhere, setShowElsewhere] = useState(false);
 
+  // How the last press on a notification was made: a tap opens its card
+  // (no hover on touch screens) instead of opening it straight away.
+  const pointerType = useRef("mouse");
+
+  // A short preview in the list; hovering (or tapping) it opens the whole
+  // notification on a side card, with Open / Mark as read / Dismiss.
   const item = (n: Notification) => (
-    <button
-      type="button"
+    <NavigableMenuItem
       key={n.id}
-      className={`inbox-item${n.read ? "" : " is-unread"}`}
-      onClick={() => void open(n)}
+      side="right"
+      align="start"
+      sideOffset={10}
+      collisionPadding={8}
+      anchor={
+        <button
+          type="button"
+          className={`inbox-item${n.read ? "" : " is-unread"}`}
+          onPointerDown={(e) => {
+            pointerType.current = e.pointerType;
+          }}
+          onClick={() => {
+            if (pointerType.current === "touch") return;
+            void open(n);
+          }}
+        >
+          <span className="inbox-item__icon">
+            <NotifIcon type={n.type} />
+          </span>
+          <span className="inbox-item__text">
+            <span className="inbox-item__title">{n.title}</span>
+            {n.message && (
+              <span className="inbox-item__message">{n.message}</span>
+            )}
+            <span className="inbox-item__time">
+              {formatRelativeTime(n.timestamp.getTime(), t, i18n.language)}
+            </span>
+          </span>
+          {!n.read && <span className="inbox-item__dot" />}
+          <ChevronRight size={14} className="inbox-item__more" />
+        </button>
+      }
     >
-      <span className="inbox-item__icon">
-        <NotifIcon type={n.type} />
-      </span>
-      <span className="inbox-item__text">
-        <span className="inbox-item__title">{n.title}</span>
-        <span className="inbox-item__message">{n.message}</span>
-        <span className="inbox-item__time">{n.timestamp.toLocaleString()}</span>
-      </span>
-      {!n.read && <span className="inbox-item__dot" />}
-    </button>
+      {(close) => (
+        <NotificationCard
+          notification={n}
+          icon={<NotifIcon type={n.type} />}
+          onOpen={() => void open(n)}
+          onClose={close}
+        />
+      )}
+    </NavigableMenuItem>
   );
 
   return (
