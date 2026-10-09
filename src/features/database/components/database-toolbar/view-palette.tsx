@@ -18,6 +18,8 @@ const VIEW_ICONS = {
   timeline: ChartGantt,
 } as const;
 
+import { useTranslation } from "react-i18next";
+
 function ViewPalette({
   type,
   active,
@@ -27,7 +29,8 @@ function ViewPalette({
   active?: boolean;
   onSelect: (type: DatabaseView["type"]) => void;
 }) {
-  const label = type.charAt(0).toUpperCase() + type.slice(1);
+  const { t } = useTranslation();
+  const label = t(`database.views.${type}`);
   const Icon = VIEW_ICONS[type] ?? ChartGantt;
 
   return (
