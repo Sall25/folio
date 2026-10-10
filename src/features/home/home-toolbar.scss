@@ -1,0 +1,156 @@
+// The app toolbar on the home view: Home / teamspace / date on the left;
+// search-or-create, templates and New page on the right.
+.home-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 6px;
+  font-size: 0.875rem;
+  color: var(--tt-theme-text);
+
+  &__crumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-weight: 500;
+    white-space: nowrap;
+
+    &--home {
+      font-weight: 700;
+    }
+
+    .page-icon {
+      width: 14px;
+      height: 14px;
+      flex: none;
+    }
+  }
+
+  &__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__sep {
+    color: var(--tt-text-secondary);
+    opacity: 0.6;
+  }
+
+  &__date {
+    color: var(--tt-text-secondary);
+    white-space: nowrap;
+  }
+}
+
+.home-toolbar__actions {
+  gap: 8px;
+}
+
+// ── Search or create ────────────────────────────────────────────────────────
+.home-search {
+  &__box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 240px;
+    height: 32px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border-radius: var(--tt-radius-sm);
+    border: 1px solid var(--tt-border-color);
+    background: var(--tt-card-bg-color);
+    cursor: text;
+
+    &:focus-within {
+      border-color: var(--tt-brand-color-400);
+      box-shadow: 0 0 0 3px
+        color-mix(in srgb, var(--tt-brand-color-400) 25%, transparent);
+    }
+  }
+
+  &__icon {
+    flex: none;
+    color: var(--tt-text-secondary);
+  }
+
+  &__input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--tt-theme-text);
+    font: inherit;
+    font-size: 13px;
+
+    &::placeholder {
+      color: var(--tt-text-secondary);
+    }
+  }
+}
+
+// The results, in a popover under the box (wider than it).
+.home-search-list.tiptap-popover {
+  width: max(var(--radix-popover-trigger-width, 240px), 320px);
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid var(--tt-border-color);
+  background: var(--tt-card-bg-color);
+  box-shadow: var(--tt-shadow-elevated-md);
+  color: var(--tt-theme-text);
+}
+
+.home-search-list {
+  &__options {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    text-align: left;
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    padding: 0 10px;
+    border-radius: var(--tt-radius-md);
+    font-size: 14px;
+    cursor: pointer;
+
+    &[aria-selected="true"] {
+      background: var(--tt-border-color-tint);
+    }
+
+    &--create {
+      color: var(--tt-brand-color-700);
+      font-weight: 500;
+      .dark & {
+        color: var(--tt-brand-color-200);
+      }
+    }
+
+    .page-icon {
+      width: 16px;
+      height: 16px;
+      flex: none;
+    }
+  }
+
+  &__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.home-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

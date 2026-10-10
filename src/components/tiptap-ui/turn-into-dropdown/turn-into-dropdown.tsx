@@ -2,19 +2,13 @@ import type { Editor } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { useTurnIntoDropdown } from "./use-turn-into-dropdown";
 import type { BlockTypeOption } from "./types";
-import { ChevronRight } from "lucide-react";
 import type { Level } from "@tiptap/extension-heading";
 import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { useMenuNavigation } from "src/hooks/use-menu-navigation";
 import { useRef } from "react";
-import { useHoverMenu } from "../color-dropdown-menu/useHoverMenu";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "src/components/tiptap-ui-primitive/dropdown-menu";
+import { DropdownMenuItem } from "src/components/tiptap-ui-primitive/dropdown-menu";
+import { NavigableMenuItem } from "src/features/database/components/navigable-menu-item";
 
 import "./turn-into-dropdown.scss";
 import { Card } from "src/components/tiptap-ui-primitive/card";
@@ -183,7 +177,7 @@ export function TurnIntoDropdown({
   onOpenChange,
 }: TurnIntoDropdownProps) {
   const { editor } = useTiptapEditor(providedEditor);
-  const { isVisible, canToggle, filteredOptions, Icon } = useTurnIntoDropdown({
+  const { isVisible, filteredOptions, Icon } = useTurnIntoDropdown({
     editor,
     hideWhenUnavailable,
     blockTypes,
@@ -205,9 +199,6 @@ export function TurnIntoDropdown({
     },
   });
 
-  const { open, setOpen, handleMouseEnter, handleMouseLeave } =
-    useHoverMenu(150);
-
   // "Turn into page" makes a page from one paragraph: not offered for
   // several blocks.
   const isBlockSelection =
@@ -221,35 +212,22 @@ export function TurnIntoDropdown({
 
   if (!isVisible && hideWhenUnavailable) return null;
 
+  // A row of the block menu whose options open as a side flyout.
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        asChild
-      >
-        <Button
-          type="button"
-          variant="ghost"
-          disabled={!canToggle}
-          aria-label={t("blockMenu.turnInto")}
-          className="menu-button"
-        >
-          <Icon className="tiptap-button-icon" />
-          <span>{t("blockMenu.turnInto")}</span>
-          <ChevronRight className="tiptap-button-icon chevron" />
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent
+    <NavigableMenuItem
+      Icon={Icon}
+      label={t("blockMenu.turnInto")}
+      side="right"
+      align="start"
+      sideOffset={8}
+      collisionPadding={8}
+      zIndex={10000}
+    >
+      {/* Same class as the old dropdown's content: card colours, widths. */}
+      <div
         ref={containerRef}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
         tabIndex={0}
-        side="right"
-        align="center"
         className={`${useCardLayout ? "tiptap-card" : ""} turninto-content`}
-        sideOffset={8}
       >
         <Card
           style={{
@@ -288,13 +266,12 @@ export function TurnIntoDropdown({
                 editor={editor}
                 text={t("blockTypes.turnIntoPage")}
                 hideWhenUnavailable={false}
-                onTurnedIntoPage={() => setOpen(false)}
                 style={{ minWidth: "145px" }}
               />
             </DropdownMenuItem>
           )}
         </Card>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </div>
+    </NavigableMenuItem>
   );
 }

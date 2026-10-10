@@ -1,0 +1,44 @@
+// Home / teamspace / date, in the app toolbar on the home view.
+.home-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 6px;
+  font-size: 0.875rem;
+  color: var(--tt-theme-text);
+
+  &__crumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-weight: 500;
+    white-space: nowrap;
+
+    &--home {
+      font-weight: 700;
+    }
+
+    .page-icon {
+      width: 14px;
+      height: 14px;
+      flex: none;
+    }
+  }
+
+  &__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__sep {
+    color: var(--tt-text-secondary);
+    opacity: 0.6;
+  }
+
+  &__date {
+    color: var(--tt-text-secondary);
+    white-space: nowrap;
+  }
+}

@@ -1,6 +1,8 @@
-// Home: one calm centred column — search or create, favourites, inbox and
-// rooms, teamspaces, recent by day, the next guide. Colours come from the
-// theme so light and dark both work.
+// Home: the greeting, "For you" (a card of the latest notifications and
+// unread rooms), the pages table (Recent / Favorites or Pinned / Created by
+// me), then the next guide. Search, New page and templates are in the home
+// toolbar (home-toolbar.tsx).
+// Colours come from the theme so light and dark both work.
 
 .home-page-content {
   --home-muted: var(--tt-text-secondary);
@@ -25,83 +27,64 @@
   }
 }
 
-.home-visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
 
-.home-calm {
-  max-width: 760px;
+.home-dense {
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 36px 0 72px;
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
+  padding: 0 0 64px;
   color: var(--tt-theme-text);
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
   -webkit-font-smoothing: auto;
+  font-size: 14px;
 
-  @media (max-width: 600px) {
-    padding: 28px 0 48px;
-    gap: 32px;
-  }
-
-  &__header {
+  // ── Body ──
+  &__body {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 18px;
-    text-align: center;
-  }
-
-  &__space {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: -10px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--home-muted);
-  }
-
-  &__actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  &__templates {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 8px;
-    text-align: left;
-  }
-
-  &__section {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    gap: 36px;
+    padding-top: 32px;
   }
 
   &__label {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    margin: 0 0 6px;
-    font-size: 13px;
+    margin: 0;
+    font-size: 12px;
     font-weight: 600;
+    color: var(--home-muted);
+  }
+
+  &__link {
+    padding: 2px 4px;
+    border: 0;
+    border-radius: var(--tt-radius-xs, 4px);
+    background: transparent;
+    color: var(--tt-brand-color-500);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    .dark & {
+      color: var(--tt-brand-color-300);
+    }
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__pages {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__none {
+    margin: 0;
+    padding: 14px 8px;
+    font-size: 13px;
     color: var(--home-muted);
   }
 
   &__more {
     align-self: flex-start;
-    margin-top: 6px;
     padding: 6px 10px;
     border: 0;
     border-radius: var(--tt-radius-sm);
@@ -118,459 +101,25 @@
   }
 }
 
-// ── Inbox + rooms, side by side (stacked on phones) ─────────────────────────
-.home-activity {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  align-items: start;
-
-  @media (max-width: 700px) {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-// ── Teamspaces ──────────────────────────────────────────────────────────────
-.home-spaces {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 10px;
-}
-
-.home-space {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid var(--tt-border-color);
-  background: var(--tt-card-bg-color);
-  color: var(--tt-theme-text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.12s ease;
-
-  &:hover {
-    background: var(--home-hover);
-  }
-
-  &.is-current {
-    border-color: var(--tt-brand-color-400);
-  }
-
-  &__icon {
-    flex: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: var(--tt-radius-md);
-    background: var(--home-soft);
-  }
-
-  &__text {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  &__name {
-    font-size: 14px;
-    font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__meta {
-    font-size: 12px;
-    color: var(--home-muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-// ── Chips (actions) ─────────────────────────────────────────────────────────
-.home-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid var(--tt-border-color);
-  background: var(--tt-card-bg-color);
-  color: var(--tt-theme-text);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-
-  &:hover {
-    background: var(--home-hover);
-  }
-
-  &[aria-expanded="true"] {
-    border-color: var(--tt-brand-color-400);
-    background: var(--home-soft);
-  }
-
-  &__icon {
-    width: 15px;
-    height: 15px;
-  }
-
-  &__badge {
-    min-width: 18px;
-    padding: 0 6px;
-    border-radius: 999px;
-    background: var(--tt-brand-color-500);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 600;
-    line-height: 18px;
-    text-align: center;
-  }
-}
-
-.home-template {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 0 12px;
-  border-radius: var(--tt-radius-md);
-  border: 1px solid var(--tt-border-color);
-  background: var(--tt-card-bg-color);
-  color: var(--tt-theme-text);
-  font: inherit;
-  font-size: 14px;
-  text-align: left;
-  cursor: pointer;
-
-  &:hover {
-    background: var(--home-hover);
-  }
-
-  &:disabled {
-    cursor: progress;
-    opacity: 0.6;
-  }
-
-  &__title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-// ── Search or create ────────────────────────────────────────────────────────
-.home-search {
-  position: relative;
-  width: 100%;
-
-  &__box {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    height: 52px;
-    padding: 0 16px;
-    box-sizing: border-box;
-    border-radius: var(--tt-radius-lg);
-    border: 1px solid var(--tt-border-color);
-    background: var(--tt-card-bg-color);
-    box-shadow: var(--tt-shadow-elevated-sm);
-    .dark & {
-      box-shadow: var(--tt-shadow-elevated-md);
-    }
-    cursor: text;
-
-    &:focus-within {
-      border-color: var(--tt-brand-color-400);
-      box-shadow:
-        0 0 0 3px color-mix(in srgb, var(--tt-brand-color-400) 25%, transparent),
-        var(--tt-shadow-elevated-sm);
-    }
-  }
-
-  &__icon {
-    flex: none;
-    color: var(--home-muted);
-  }
-
-  &__input {
-    flex: 1;
-    min-width: 0;
-    border: 0;
-    outline: none;
-    background: transparent;
-    color: var(--tt-theme-text);
-    font: inherit;
-    font-size: 15px;
-
-    &::placeholder {
-      color: var(--home-muted);
-    }
-  }
-
-  &__list {
-    position: absolute;
-    z-index: 5;
-    top: calc(100% + 6px);
-    left: 0;
-    right: 0;
-    margin: 0;
-    padding: 6px;
-    list-style: none;
-    text-align: left;
-    border-radius: 12px;
-    border: 1px solid var(--tt-border-color);
-    background: var(--tt-card-bg-color);
-    box-shadow: var(--tt-shadow-elevated-md);
-  }
-
-  &__option {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 40px;
-    padding: 0 10px;
-    border-radius: var(--tt-radius-md);
-    cursor: pointer;
-
-    &[aria-selected="true"] {
-      background: var(--home-hover);
-    }
-
-    &--create {
-      color: var(--home-soft-text);
-      font-weight: 500;
-    }
-  }
-
-  &__option-title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-// ── Favourites / pinned ─────────────────────────────────────────────────────
-// Small cards that keep their own width and wrap onto the next line.
-.home-pinned {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.home-pin {
-  flex: none;
-  width: 172px;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
+// ── For you ─────────────────────────────────────────────────────────────────
+// A card: a header (label + Open inbox), rows split by hairlines (unread dot,
+// who and where, the quoted text, how long ago), and a Show more footer.
+// Read items step back.
+.home-foryou.tiptap-card {
+  align-items: stretch;
   overflow: hidden;
-  border-radius: 10px;
-  border: 1px solid var(--tt-border-color);
-  background: var(--tt-card-bg-color);
-  color: var(--tt-theme-text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: box-shadow 0.15s ease;
-
-  &:hover {
-    box-shadow: var(--tt-shadow-elevated-sm);
-  }
-
-  // Phones: two a row.
-  @media (max-width: 600px) {
-    width: calc(50% - 5px);
-  }
-
-  &__cover {
-    height: 34px;
-  }
-
-  &__body {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    padding: 10px 12px 11px;
-    min-width: 0;
-  }
-
-  &__title {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    min-width: 0;
-    font-size: 13.5px;
-    font-weight: 600;
-
-    span:last-child {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-
-  &__meta {
-    font-size: 12px;
-    color: var(--home-muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-// ── Recent ──────────────────────────────────────────────────────────────────
-.home-recent {
-  margin: 0;
   padding: 0;
-  list-style: none;
-
-  &__day {
-    margin: 0;
-    padding: 10px 0 4px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--home-muted);
-  }
-
-  &__row {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-height: 44px;
-    padding: 0 8px;
-    margin: 0 -8px;
-    box-sizing: content-box;
-    border: 0;
-    border-bottom: 1px solid var(--tt-border-color-tint);
-    border-radius: 0;
-    background: transparent;
-    color: var(--tt-theme-text);
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-
-    &:hover {
-      background: var(--home-hover);
-      border-radius: var(--tt-radius-md);
-    }
-  }
-
-  &__icon {
-    flex: none;
-    display: inline-flex;
-    color: var(--home-muted);
-  }
-
-  &__title {
-    flex: 1;
-    min-width: 0;
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__place {
-    flex: none;
-    max-width: 30%;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: var(--home-hover);
-    color: var(--home-muted);
-    font-size: 12px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-
-    @media (max-width: 600px) {
-      display: none;
-    }
-  }
-
-  &__when {
-    flex: none;
-    min-width: 64px;
-    text-align: right;
-    font-size: 12px;
-    color: var(--home-muted);
-  }
+  border-radius: var(--tt-radius-lg, 12px);
+  background: var(--tt-bg-color);
+  box-shadow: none;
 }
 
-// ── Rail cards (inbox, rooms, teamspaces) ───────────────────────────────────
-.home-card {
-  display: flex;
-  flex-direction: column;
-  border-radius: 12px;
-  border: 1px solid var(--tt-border-color);
-  background: var(--tt-card-bg-color);
-  overflow: hidden;
-
+.home-foryou {
   &__head {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 44px;
-    padding: 0 8px 0 14px;
-  }
-
-  &__head-icon {
-    flex: none;
-    width: 16px;
-    height: 16px;
-    color: var(--home-muted);
-  }
-
-  &__title {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-  }
-
-  &__badge {
-    min-width: 18px;
-    padding: 0 6px;
-    box-sizing: border-box;
-    border-radius: 999px;
-    background: var(--tt-brand-color-500);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 600;
-    line-height: 18px;
-    text-align: center;
-  }
-
-  &__link {
-    margin-left: auto;
-    padding: 4px 8px;
-    border: 0;
-    border-radius: var(--tt-radius-sm);
-    background: transparent;
-    color: var(--home-soft-text);
-    font: inherit;
-    font-size: 12.5px;
-    cursor: pointer;
-
-    &:hover {
-      background: var(--home-hover);
-    }
-  }
-
-  &__empty {
-    margin: 0;
-    padding: 4px 14px 14px;
-    font-size: 13px;
-    color: var(--home-muted);
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 12px 10px 10px 16px;
   }
 
   &__list {
@@ -580,17 +129,15 @@
   }
 
   &__row {
-    width: 100%;
     display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 48px;
-    padding: 8px 14px;
-    box-sizing: border-box;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 16px;
     border: 0;
-    border-top: 1px solid var(--tt-border-color-tint);
+    border-top: 1px solid var(--tt-border-color);
+    border-radius: 0;
     background: transparent;
-    color: var(--tt-theme-text);
+    color: inherit;
     font: inherit;
     text-align: left;
     cursor: pointer;
@@ -599,82 +146,176 @@
       background: var(--home-hover);
     }
 
-    &.is-current {
-      background: var(--home-soft);
+    &:focus-visible {
+      outline-offset: -2px;
     }
-  }
-
-  &__row-icon {
-    flex: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    border-radius: var(--tt-radius-md);
-    background: var(--home-hover);
-    color: var(--home-muted);
-  }
-
-  &__row-text {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  &__row-title,
-  &__row-sub {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__row-title {
-    font-size: 13px;
-    font-weight: 500;
-  }
-
-  &__row.is-unread &__row-title {
-    font-weight: 600;
-  }
-
-  &__row-sub {
-    font-size: 12.5px;
-    color: var(--home-muted);
-  }
-
-  &__row-meta,
-  &__row-aside {
-    font-size: 12px;
-    color: var(--home-muted);
-  }
-
-  &__row-aside {
-    flex: none;
   }
 
   &__dot {
     flex: none;
     width: 7px;
     height: 7px;
+    margin-top: 6px;
     border-radius: 50%;
-    background: var(--tt-brand-color-400);
+
+    .is-unread & {
+      background: var(--tt-brand-color-500);
+    }
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-weight: 500;
+    color: var(--home-muted);
+
+    .is-unread & {
+      color: var(--tt-theme-text);
+    }
   }
 
   &__count {
-    flex: none;
-    min-width: 18px;
-    padding: 0 5px;
-    box-sizing: border-box;
-    border-radius: 999px;
-    background: var(--home-soft);
-    color: var(--home-soft-text);
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 18px;
-    text-align: center;
+    font-weight: 400;
+    color: var(--home-muted);
+  }
+
+  &__quote {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--home-muted);
+
+    .is-unread & {
+      color: var(--tt-theme-text);
+    }
+  }
+
+  &__time {
+    font-size: 12px;
+    color: var(--home-muted);
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 14px 16px;
+    border-top: 1px solid var(--tt-border-color);
+    font-size: 13px;
+    color: var(--home-muted);
+  }
+
+  &__more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px 16px;
+    border: 0;
+    border-top: 1px solid var(--tt-border-color);
+    border-radius: 0;
+    background: transparent;
+    color: var(--home-muted);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--home-hover);
+      color: var(--tt-theme-text);
+    }
+
+    &:focus-visible {
+      outline-offset: -2px;
+    }
+  }
+}
+
+// ── Pages table ─────────────────────────────────────────────────────────────
+.home-table__scroll {
+  overflow-x: auto;
+}
+
+.home-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th {
+    padding: 8px;
+    border-bottom: 1px solid var(--tt-border-color);
+    text-align: left;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--home-muted);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 9px 8px;
+    border-bottom: 1px solid var(--tt-border-color-tint);
+    color: var(--home-muted);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    cursor: pointer;
+
+    &:hover td {
+      background: var(--home-hover);
+    }
+
+    &:last-child td {
+      border-bottom: 0;
+    }
+  }
+
+  &__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 420px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--tt-theme-text);
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  & &__when {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+  }
+
+  // Phones: page and when only.
+  @media (max-width: 640px) {
+    &__in,
+    &__by {
+      display: none;
+    }
   }
 }
 
@@ -857,6 +498,7 @@
 }
 
 // ── Empty and loading ───────────────────────────────────────────────────────
+
 .home-empty {
   display: flex;
   flex-direction: column;
@@ -890,18 +532,16 @@
   border-radius: var(--tt-radius-sm);
 }
 
+
 // Visible focus for keyboard users on everything clickable here.
-.home-chip,
-.home-template,
-.home-pin,
-.home-recent__row,
+.home-foryou__row,
+.home-foryou__more,
+.home-table__title,
+.home-dense__link,
+.home-dense__more,
 .home-learn__next,
 .home-learn__toggle,
-.home-learn__row,
-.home-space,
-.home-calm__more,
-.home-card__row,
-.home-card__link {
+.home-learn__row {
   &:focus-visible {
     outline: 2px solid var(--tt-brand-color-400);
     outline-offset: 2px;
@@ -909,15 +549,15 @@
 }
 
 // Page icons here are small: the shared icon draws at sidebar-header size.
-.home-calm .page-icon {
-  width: 18px;
-  height: 18px;
+.home-dense .page-icon {
+  width: 16px;
+  height: 16px;
   flex: none;
 
   > svg,
   > span {
-    width: 18px !important;
-    height: 18px !important;
-    font-size: 18px !important;
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 16px !important;
   }
 }

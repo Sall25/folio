@@ -25,9 +25,11 @@ function getPeriod(): Period {
 interface GreetingProps {
   name?: string;
   className?: string;
+  /** A smaller line without the emoji (home's top of page). */
+  compact?: boolean;
 }
 
-export function Greeting({ name, className }: GreetingProps) {
+export function Greeting({ name, className, compact = false }: GreetingProps) {
   const { t } = useTranslation();
   const [period, setPeriod] = useState(getPeriod);
 
@@ -57,19 +59,21 @@ export function Greeting({ name, className }: GreetingProps) {
         fontFamily: "inherit",
         // 30px from ~600px wide up; scales down to 20px on phones
         // (≈20px at 375px) so the greeting stays one calm line.
-        fontSize: "clamp(20px, 5vw, 30px)",
+        fontSize: compact ? 20 : "clamp(20px, 5vw, 30px)",
         overflowWrap: "break-word",
         maxWidth: "100%",
-        fontWeight: 700,
+        fontWeight: compact ? 600 : 700,
         lineHeight: 1.2,
-        letterSpacing: "-0.02em",
+        letterSpacing: compact ? "-0.01em" : "-0.02em",
         color: "inherit",
       }}
     >
       {/* Decorative: screen readers just read the greeting. */}
-      <span aria-hidden="true" style={{ marginRight: "0.3em" }}>
-        {EMOJI[period]}
-      </span>
+      {!compact && (
+        <span aria-hidden="true" style={{ marginRight: "0.3em" }}>
+          {EMOJI[period]}
+        </span>
+      )}
       {name ? t("greeting.withName", { greeting: text, name }) : text}
     </h1>
   );
