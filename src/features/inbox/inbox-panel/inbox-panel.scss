@@ -5,20 +5,7 @@
   height: 100%;
   min-height: 0;
   line-height: 1.4;
-  font-family:
-    ui-sans-serif,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI Variable Display",
-    "Segoe UI",
-    Helvetica,
-    "Apple Color Emoji",
-    "Noto Sans Arabic",
-    "Noto Sans Hebrew",
-    Arial,
-    sans-serif,
-    "Segoe UI Emoji",
-    "Segoe UI Symbol";
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
   -webkit-font-smoothing: auto;
   &__header {
     display: flex;
@@ -35,21 +22,8 @@
     font-weight: 600;
     color: var(--tt-text-primary);
     line-height: 1.4;
-    font-family:
-      ui-sans-serif,
-      -apple-system,
-      BlinkMacSystemFont,
-      "Segoe UI Variable Display",
-      "Segoe UI",
-      Helvetica,
-      "Apple Color Emoji",
-      "Noto Sans Arabic",
-      "Noto Sans Hebrew",
-      Arial,
-      sans-serif,
-      "Segoe UI Emoji",
-      "Segoe UI Symbol";
-    -webkit-font-smoothing: auto;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  -webkit-font-smoothing: auto;
   }
 
   &__count {
@@ -78,14 +52,9 @@
     font-weight: 500;
     padding: 4px 8px;
     border-radius: var(--tt-radius-sm, 4px);
-    color: var(
-      --tt-text-color-subtle,
-      color-mix(in srgb, var(--tt-text-color) 55%, transparent)
-    );
+    color: var(--tt-text-color-subtle, color-mix(in srgb, var(--tt-text-color) 55%, transparent));
     cursor: pointer;
-    transition:
-      background 0.1s ease,
-      color 0.1s ease;
+    transition: background 0.1s ease, color 0.1s ease;
 
     &:hover {
       color: var(--tt-text-primary);
@@ -109,14 +78,8 @@
     align-items: center;
     gap: 10px;
     padding: 56px 16px;
-    color: var(
-      --tt-text-color-subtle,
-      color-mix(in srgb, var(--tt-text-color) 45%, transparent)
-    );
-    p {
-      font-size: 13px;
-      margin: 0;
-    }
+    color: var(--tt-text-color-subtle, color-mix(in srgb, var(--tt-text-color) 45%, transparent));
+    p { font-size: 13px; margin: 0; }
   }
 }
 
@@ -132,26 +95,10 @@
   text-align: left;
   width: 100%;
   position: relative;
-  transition:
-    background 0.12s ease,
-    box-shadow 0.12s ease,
-    transform 0.12s ease;
+  transition: background 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
   color: var(--tt-text-primary);
   line-height: 1.4;
-  font-family:
-    ui-sans-serif,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI Variable Display",
-    "Segoe UI",
-    Helvetica,
-    "Apple Color Emoji",
-    "Noto Sans Arabic",
-    "Noto Sans Hebrew",
-    Arial,
-    sans-serif,
-    "Segoe UI Emoji",
-    "Segoe UI Symbol";
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
   -webkit-font-smoothing: auto;
   font-size: 14px;
   border: 1px solid var(--tt-border-color);
@@ -161,20 +108,12 @@
   }
 
   &.is-unread {
-    background: color-mix(
-      in srgb,
-      var(--tt-color-red-dec-2) 7%,
-      var(--tt-gray-light-50)
-    );
-    box-shadow: none;
+    background: color-mix(in srgb, var(--tt-color-red-dec-2) 7%, var(--tt-gray-light-50));
+    box-shadow: none; 
 
     .dark & {
-      background: color-mix(
-        in srgb,
-        var(--tt-color-red-inc-2) 13%,
-        var(--tt-gray-dark-100)
-      );
-      box-shadow: none;
+      background: color-mix(in srgb, var(--tt-color-red-inc-2) 13%, var(--tt-gray-dark-100));
+      box-shadow: none;  
     }
   }
 }
@@ -186,13 +125,8 @@
 }
 
 @keyframes scroll-flash-anim {
-  0%,
-  20% {
-    background-color: color-mix(
-      in srgb,
-      var(--tt-brand-color-500, #2b7fff) 22%,
-      transparent
-    );
+  0%, 20% {
+    background-color: color-mix(in srgb, var(--tt-brand-color-500, #2b7fff) 22%, transparent);
     border-radius: 4px;
   }
   100% {
@@ -218,10 +152,7 @@
   border-radius: var(--tt-radius-sm, 4px);
   font-size: 12.5px;
   font-weight: 500;
-  color: var(
-    --tt-text-color-subtle,
-    color-mix(in srgb, var(--tt-text-color) 60%, transparent)
-  );
+  color: var(--tt-text-color-subtle, color-mix(in srgb, var(--tt-text-color) 60%, transparent));
   cursor: pointer;
 
   &:hover {
@@ -248,11 +179,7 @@
   gap: 10px;
   padding: 8px 10px;
   border-radius: var(--tt-radius-sm, 4px);
-  background: color-mix(
-    in srgb,
-    var(--tt-brand-color-500, #6229ff) 6%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--tt-brand-color-500, #6229ff) 6%, transparent);
 }
 
 .inbox-invite__actions {
@@ -327,4 +254,10 @@
     color: var(--tt-text-secondary);
     opacity: 0.6;
   }
+}
+
+.inbox-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }

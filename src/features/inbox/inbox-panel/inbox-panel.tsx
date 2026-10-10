@@ -14,6 +14,7 @@ import type { Notification, NotificationType } from "src/types";
 import { useOpenNotification } from "./use-open-notification";
 import { WorkspaceInvites } from "./workspace-invites";
 import { NotificationCard } from "./notification-card";
+import { DevTestNotifications } from "./dev-test-notifications";
 import { NavigableMenuItem } from "src/features/database/components/navigable-menu-item";
 import { formatRelativeTime } from "src/utils/format-relative";
 import { useMyWorkspaceInvites } from "src/hooks/use-workspace-members";
@@ -97,16 +98,20 @@ export function InboxPanel({ onOpened }: { onOpened?: () => void } = {}) {
             </>
           )}
         </span>
-        {unreadCount > 0 && (
-          <button
-            type="button"
-            className="inbox-panel__mark-all"
-            onClick={() => markAllRead()}
-          >
-            <Check size={13} />
-            <span>{t("inbox.markAllRead", "Mark all read")}</span>
-          </button>
-        )}
+        <span className="inbox-panel__actions">
+          {/* Development only: send yourself test notifications. */}
+          {import.meta.env.DEV && <DevTestNotifications />}
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              className="inbox-panel__mark-all"
+              onClick={() => markAllRead()}
+            >
+              <Check size={13} />
+              <span>{t("inbox.markAllRead", "Mark all read")}</span>
+            </button>
+          )}
+        </span>
       </div>
 
       <div className="inbox-panel__body">
