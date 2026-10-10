@@ -119,6 +119,7 @@ export function Menu({
       <CardItemGroup className="group" orientation="vertical">
         <DropdownMenuItem asChild>
           <ColorDropdownMenu
+            flyout
             className="menu-button"
             hideWhenUnavailable={true}
             editor={editor}
@@ -127,6 +128,7 @@ export function Menu({
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <AlignmentDropdownMenu
+            flyout
             className="menu-button"
             hideWhenUnavailable={true}
             editor={editor}

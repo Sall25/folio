@@ -312,6 +312,7 @@
     },
     "search": {
       "label": "Search or create a page",
+      "short": "Search or create a page",
       "placeholder": "Search your pages, or type a title to create one",
       "create": "Create “{{title}}”"
     },
@@ -334,6 +335,9 @@
     "pinned": "Pinned",
     "recent": "Recent",
     "showMore": "Show more",
+    "showLess": "Show less",
+    "showMoreCount_one": "Show {{count}} more",
+    "showMoreCount_other": "Show {{count}} more",
     "pageCount_one": "{{count}} page",
     "pageCount_other": "{{count}} pages",
     "viewAll": "View all",
@@ -361,7 +365,26 @@
       "yesterday": "yesterday",
       "daysAgo": "{{count}}d ago"
     },
-    "newPage": "New Page"
+    "newPage": "New Page",
+    "forYou": "For you",
+    "openInbox": "Open inbox",
+    "badgeNew": "New",
+    "read": "Read",
+    "newCount_one": "{{count}} new",
+    "newCount_other": "{{count}} new",
+    "allCaughtUp": "You're all caught up.",
+    "newMessages_one": "{{count}} new message",
+    "newMessages_other": "{{count}} new messages",
+    "pages": "Pages",
+    "createdByMe": "Created by me",
+    "nothingHere": "Nothing here yet.",
+    "you": "You",
+    "table": {
+      "page": "Page",
+      "in": "In",
+      "editedBy": "Last edit",
+      "when": "When"
+    }
   },
   "trash.title": "Trash",
   "trash.empty": "Empty",

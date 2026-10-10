@@ -1,18 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "@tanstack/react-location";
-import {
-  AtSign,
-  Calendar,
-  Hash,
-  Link2,
-  Lock,
-  MessagesSquare,
-  Users,
-} from "lucide-react";
-import type { ChatRoom, NotificationType, Page, Teamspace } from "src/types";
-import { InboxIcon } from "src/components/tiptap-icons";
-import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
+import { Check, ChevronDown, ChevronUp, Hash, Lock } from "lucide-react";
+import { Card } from "src/components/tiptap-ui-primitive/card";
+import type { ChatRoom, Notification } from "src/types";
 import { useNotificationState } from "src/features/inbox/notification/notification-context";
 import { useOpenNotification } from "src/features/inbox/inbox-panel/use-open-notification";
 import {
@@ -25,123 +15,83 @@ import {
   useChatRooms,
   useUnreadCounts,
 } from "src/hooks/use-chat";
-import { useTeamspaces } from "src/hooks/use-teamspaces";
 import { useCurrentPerson } from "src/hooks/use-session";
-import { spaceHomePath } from "src/hooks/use-current-space";
-import { formatRelativeTime } from "src/utils/format-relative";
-import { PageItemIcon } from "../pages/page-item/page-item-icon";
+import { homeWhen } from "./home-time";
 
-// Home's activity: what's waiting for you (inbox, rooms) and where your team
-// works (teamspaces). The cards show a few items and link to the full list
-// in the sidebar.
+// "For you": what's waiting, in a card — notifications (mentions, comments,
+// reminders…) and the chat rooms with unread messages, newest first. It shows
+// the 2 latest; "Show more" expands it (up to FOR_YOU_MAX). The header counts
+// what's unread. Each row: who and where, the notification's text (the
+// sentence it quotes), then its status and how long ago — unread rows get a
+// red dot, a tint and a "New" badge; read ones are muted with "✓ Read".
 
-const RAIL_MAX = 4;
-const EMPTY_TEAMSPACES: Teamspace[] = [];
+const FOR_YOU_COLLAPSED = 2;
+const FOR_YOU_MAX = 10;
 
-function Badge({ value }: { value: number }) {
-  if (value <= 0) return null;
-  return <span className="home-card__badge">{value > 99 ? "99+" : value}</span>;
-}
+type Item =
+  | {
+      kind: "notification";
+      key: string;
+      at: number;
+      unread: boolean;
+      n: Notification;
+    }
+  | {
+      kind: "room";
+      key: string;
+      at: number;
+      unread: true;
+      room: ChatRoom;
+      count: number;
+    };
 
-function NotifIcon({ type }: { type: NotificationType }) {
-  switch (type) {
-    case "user-mention":
-    case "comment-mention":
-      return <AtSign size={14} aria-hidden />;
-    case "chat-mention":
-      return <MessagesSquare size={14} aria-hidden />;
-    case "date-due":
-    case "date-overdue":
-      return <Calendar size={14} aria-hidden />;
-    case "backlink":
-      return <Link2 size={14} aria-hidden />;
-    default:
-      return <InboxIcon size={14} aria-hidden />;
-  }
-}
-
-// ── Inbox ─────────────────────────────────────────────────────────────────
-export function HomeInboxCard({ onViewAll }: { onViewAll: () => void }) {
-  const { t, i18n } = useTranslation();
-  const { notifications, unreadCount } = useNotificationState();
-  const open = useOpenNotification();
-  const items = notifications.slice(0, RAIL_MAX);
-
-  return (
-    <section className="home-card" aria-labelledby="home-card-inbox">
-      <header className="home-card__head">
-        <InboxIcon className="home-card__head-icon" aria-hidden />
-        <h2 id="home-card-inbox" className="home-card__title">
-          {t("home.actions.inbox")}
-        </h2>
-        <Badge value={unreadCount} />
-        <button type="button" className="home-card__link" onClick={onViewAll}>
-          {t("home.viewAll", "View all")}
-        </button>
-      </header>
-      {items.length === 0 ? (
-        <p className="home-card__empty">{t("inbox.empty")}</p>
-      ) : (
-        <ul className="home-card__list">
-          {items.map((n) => (
-            <li key={n.id}>
-              <button
-                type="button"
-                className={`home-card__row${n.read ? "" : " is-unread"}`}
-                onClick={() => void open(n)}
-              >
-                <span className="home-card__row-icon">
-                  <NotifIcon type={n.type} />
-                </span>
-                <span className="home-card__row-text">
-                  <span className="home-card__row-title">{n.title}</span>
-                  {n.message && (
-                    <span className="home-card__row-sub">{n.message}</span>
-                  )}
-                  <span className="home-card__row-meta">
-                    {formatRelativeTime(
-                      new Date(n.timestamp).getTime(),
-                      t,
-                      i18n.language,
-                    )}
-                  </span>
-                </span>
-                {!n.read && <span className="home-card__dot" aria-hidden />}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-// ── Rooms ─────────────────────────────────────────────────────────────────
-// This space's rooms and your DMs: unread first, then the latest activity.
-export function HomeRoomsCard({ onViewAll }: { onViewAll: () => void }) {
+export function HomeForYou({ onOpenInbox }: { onOpenInbox: () => void }) {
   const { t, i18n } = useTranslation();
   const { person } = useCurrentPerson();
+  const { notifications } = useNotificationState();
+  const openNotification = useOpenNotification();
   const { rooms, dms } = useChatRooms();
   const { data: unread = {} } = useUnreadCounts();
   const openRoom = useOpenChatRoom();
+  const [expanded, setExpanded] = useState(false);
 
-  const items = useMemo(
-    () =>
-      [...rooms, ...dms]
-        .sort(
-          (a, b) =>
-            Number((unread[b.id] ?? 0) > 0) - Number((unread[a.id] ?? 0) > 0) ||
-            (b.lastMessageAt ?? b.createdAt) - (a.lastMessageAt ?? a.createdAt),
-        )
-        .slice(0, RAIL_MAX),
-    [rooms, dms, unread],
-  );
-  const total = Object.values(unread).reduce((a, b) => a + b, 0);
+  const { items, unreadTotal } = useMemo(() => {
+    const list: Item[] = notifications.map((n) => ({
+      kind: "notification",
+      key: `n:${n.id}`,
+      at: new Date(n.timestamp).getTime(),
+      unread: !n.read,
+      n,
+    }));
+    for (const room of [...rooms, ...dms]) {
+      const count = unread[room.id] ?? 0;
+      if (count > 0) {
+        list.push({
+          kind: "room",
+          key: `r:${room.id}`,
+          at: room.lastMessageAt ?? room.createdAt,
+          unread: true,
+          room,
+          count,
+        });
+      }
+    }
+    return {
+      items: list.sort((a, b) => b.at - a.at).slice(0, FOR_YOU_MAX),
+      unreadTotal: list.filter((it) => it.unread).length,
+    };
+  }, [notifications, rooms, dms, unread]);
 
+  const shown = expanded ? items : items.slice(0, FOR_YOU_COLLAPSED);
+  const hidden = items.length - FOR_YOU_COLLAPSED;
+
+  // Direct messages are titled with the other person's name.
   const partnerIds = useMemo(
     () =>
       items
-        .filter((r) => r.kind === "dm")
+        .flatMap((it) =>
+          it.kind === "room" && it.room.kind === "dm" ? [it.room] : [],
+        )
         .map((r) => otherDmMember(r, person?.id))
         .filter((id): id is string => !!id),
     [items, person?.id],
@@ -152,144 +102,123 @@ export function HomeRoomsCard({ onViewAll }: { onViewAll: () => void }) {
     [people],
   );
 
-  const icon = (room: ChatRoom, title: string) => {
-    if (room.kind === "dm") {
-      const partner = peopleById.get(otherDmMember(room, person?.id) ?? "");
-      return (
-        <Avatar size="sm" src={partner?.avatarUrl ?? undefined} name={title} />
-      );
-    }
-    return room.visibility === "private" ? (
-      <Lock size={14} aria-hidden />
-    ) : (
-      <Hash size={14} aria-hidden />
-    );
-  };
+  const ago = (at: number) => homeWhen(at, t, i18n.language);
+
+  // Status line: "New · 12m ago" or "✓ Read · 2h ago".
+  const status = (isUnread: boolean, at: number) => (
+    <span className="home-foryou__meta">
+      {isUnread ? (
+        <span className="home-foryou__badge">{t("home.badgeNew")}</span>
+      ) : (
+        <span className="home-foryou__read">
+          <Check size={12} strokeWidth={2.5} aria-hidden />
+          {t("home.read")}
+        </span>
+      )}
+      <span aria-hidden>·</span>
+      <span className="home-foryou__time">{ago(at)}</span>
+    </span>
+  );
 
   return (
-    <section className="home-card" aria-labelledby="home-card-rooms">
-      <header className="home-card__head">
-        <MessagesSquare className="home-card__head-icon" aria-hidden />
-        <h2 id="home-card-rooms" className="home-card__title">
-          {t("home.rooms", "Rooms")}
+    <Card role="region" className="home-foryou" aria-labelledby="home-foryou">
+      <div className="home-foryou__head">
+        <h2 id="home-foryou" className="home-dense__label home-foryou__label">
+          {t("home.forYou")}
+          {unreadTotal > 0 && (
+            <span className="home-foryou__unread">
+              {t("home.newCount", { count: unreadTotal })}
+            </span>
+          )}
         </h2>
-        <Badge value={total} />
-        <button type="button" className="home-card__link" onClick={onViewAll}>
-          {t("home.allChats", "All chats")}
+        <button
+          type="button"
+          className="home-dense__link home-foryou__link"
+          onClick={onOpenInbox}
+        >
+          {t("home.openInbox")}
         </button>
-      </header>
+      </div>
+
       {items.length === 0 ? (
-        <p className="home-card__empty">{t("home.noRooms", "No rooms yet")}</p>
+        <p className="home-foryou__empty">{t("home.allCaughtUp")}</p>
       ) : (
-        <ul className="home-card__list">
-          {items.map((room) => {
-            const title = roomTitle(room, peopleById, person?.id, t);
-            const count = unread[room.id] ?? 0;
+        <ul id="home-foryou-list" className="home-foryou__list">
+          {shown.map((it) => {
+            if (it.kind === "notification") {
+              const { n } = it;
+              return (
+                <li key={it.key}>
+                  <button
+                    type="button"
+                    className={`home-foryou__row${it.unread ? " is-unread" : ""}`}
+                    onClick={() => void openNotification(n)}
+                  >
+                    <span className="home-foryou__dot" aria-hidden />
+                    <span className="home-foryou__text">
+                      <span className="home-foryou__title">{n.title}</span>
+                      {n.message && (
+                        <span className="home-foryou__quote">{n.message}</span>
+                      )}
+                      {status(it.unread, it.at)}
+                    </span>
+                  </button>
+                </li>
+              );
+            }
+            const title = roomTitle(it.room, peopleById, person?.id, t);
             return (
-              <li key={room.id}>
+              <li key={it.key}>
                 <button
                   type="button"
-                  className={`home-card__row${count > 0 ? " is-unread" : ""}`}
-                  onClick={() => openRoom(room)}
+                  className="home-foryou__row is-unread"
+                  onClick={() => openRoom(it.room)}
                 >
-                  <span className="home-card__row-icon">
-                    {icon(room, title)}
-                  </span>
-                  <span className="home-card__row-text">
-                    <span className="home-card__row-title">{title}</span>
-                    <span className="home-card__row-meta">
-                      {room.lastMessageAt
-                        ? formatRelativeTime(
-                            room.lastMessageAt,
-                            t,
-                            i18n.language,
-                          )
-                        : t("chat.noMessages", "No messages yet")}
+                  <span className="home-foryou__dot" aria-hidden />
+                  <span className="home-foryou__text">
+                    <span className="home-foryou__title">
+                      {it.room.kind !== "dm" &&
+                        (it.room.visibility === "private" ? (
+                          <Lock size={13} aria-hidden />
+                        ) : (
+                          <Hash size={13} aria-hidden />
+                        ))}
+                      {title}
+                      <span className="home-foryou__count">
+                        {" · "}
+                        {t("home.newMessages", { count: it.count })}
+                      </span>
                     </span>
+                    {status(true, it.at)}
                   </span>
-                  {count > 0 && (
-                    <span className="home-card__count">
-                      {count > 99 ? "99+" : count}
-                    </span>
-                  )}
                 </button>
               </li>
             );
           })}
         </ul>
       )}
-    </section>
-  );
-}
 
-// ── Teamspaces ────────────────────────────────────────────────────────────
-// The current workspace's teamspaces as tiles. Name and icon live on each
-// teamspace's root page (same id), so they come from the pages you already
-// have, and so does the page count.
-export function HomeTeamspaces({
-  pages,
-  currentId,
-}: {
-  pages: Page[];
-  currentId: string | null;
-}) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { data } = useTeamspaces();
-  const teamspaces = (data as Teamspace[] | undefined) ?? EMPTY_TEAMSPACES;
-
-  const items = useMemo(() => {
-    const byId = new Map(pages.map((p) => [p.id, p]));
-    const pageCount = new Map<string, number>();
-    for (const p of pages) {
-      if (p.teamspaceId && p.id !== p.teamspaceId && p.sourceId == null) {
-        pageCount.set(p.teamspaceId, (pageCount.get(p.teamspaceId) ?? 0) + 1);
-      }
-    }
-    return teamspaces
-      .flatMap((ts) => {
-        const page = byId.get(ts.id);
-        return page ? [{ ts, page, count: pageCount.get(ts.id) ?? 0 }] : [];
-      })
-      .sort((a, b) => (a.page.title || "").localeCompare(b.page.title || ""));
-  }, [teamspaces, pages]);
-
-  if (items.length === 0) return null;
-
-  return (
-    <section className="home-calm__section" aria-labelledby="home-teamspaces">
-      <h2 id="home-teamspaces" className="home-calm__label">
-        <Users size={14} aria-hidden />
-        {t("home.teamspaces", "Teamspaces")}
-      </h2>
-      <div className="home-spaces">
-        {items.map(({ ts, page, count }) => (
-          <button
-            key={ts.id}
-            type="button"
-            className={`home-space${ts.id === currentId ? " is-current" : ""}`}
-            aria-current={ts.id === currentId ? "page" : undefined}
-            onClick={() => navigate({ to: spaceHomePath(ts.id) })}
-          >
-            <span className="home-space__icon">
-              <PageItemIcon
-                cover={page.cover}
-                styles={{ width: 18, height: 18, fontSize: 18 }}
-              />
-            </span>
-            <span className="home-space__text">
-              <span className="home-space__name">
-                {page.title || t("teamspaces.untitled")}
-              </span>
-              <span className="home-space__meta">
-                {t("teamspaces.memberCount", { count: ts.memberIds.length })}
-                {" · "}
-                {t("home.pageCount", { count })}
-              </span>
-            </span>
-          </button>
-        ))}
-      </div>
-    </section>
+      {hidden > 0 && (
+        <button
+          type="button"
+          className="home-foryou__more"
+          aria-expanded={expanded}
+          aria-controls="home-foryou-list"
+          onClick={() => setExpanded((v) => !v)}
+        >
+          {expanded ? (
+            <>
+              {t("home.showLess")}
+              <ChevronUp size={14} aria-hidden />
+            </>
+          ) : (
+            <>
+              {t("home.showMoreCount", { count: hidden })}
+              <ChevronDown size={14} aria-hidden />
+            </>
+          )}
+        </button>
+      )}
+    </Card>
   );
 }

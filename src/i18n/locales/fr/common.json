@@ -782,6 +782,7 @@
     },
     "search": {
       "label": "Rechercher ou créer une page",
+      "short": "Chercher ou créer une page",
       "placeholder": "Cherchez une page ou créez-en une",
       "create": "Créer « {{title}} »"
     },
@@ -804,6 +805,9 @@
     "pinned": "Épinglées",
     "recent": "Récent",
     "showMore": "Afficher plus",
+    "showLess": "Afficher moins",
+    "showMoreCount_one": "Afficher {{count}} de plus",
+    "showMoreCount_other": "Afficher {{count}} de plus",
     "pageCount_one": "{{count}} page",
     "pageCount_other": "{{count}} pages",
     "viewAll": "Tout voir",
@@ -831,7 +835,26 @@
       "yesterday": "hier",
       "daysAgo": "il y a {{count}} j"
     },
-    "newPage": "Nouvelle Page"
+    "newPage": "Nouvelle Page",
+    "forYou": "Pour vous",
+    "openInbox": "Ouvrir la boîte de réception",
+    "badgeNew": "Nouveau",
+    "read": "Lu",
+    "newCount_one": "{{count}} nouvelle",
+    "newCount_other": "{{count}} nouvelles",
+    "allCaughtUp": "Vous êtes à jour.",
+    "newMessages_one": "{{count}} nouveau message",
+    "newMessages_other": "{{count}} nouveaux messages",
+    "pages": "Pages",
+    "createdByMe": "Créées par moi",
+    "nothingHere": "Rien ici pour l'instant.",
+    "you": "Vous",
+    "table": {
+      "page": "Page",
+      "in": "Dans",
+      "editedBy": "Dernière modif.",
+      "when": "Quand"
+    }
   },
   "greeting": {
     "morning": "Bonjour",

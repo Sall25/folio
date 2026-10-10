@@ -13,7 +13,7 @@ import { LinkIcon } from "src/components/tiptap-icons/link-icon";
 import { MorePopover } from "./more-popover";
 import { useActivePageState } from "../pages/context/active-page-context";
 import type { ID, PageCategory, View } from "src/types";
-import { Home, LibraryBig, Menu, MessageSquareText } from "lucide-react";
+import { LibraryBig, Menu, MessageSquareText } from "lucide-react";
 import { PageCategorySelect } from "../pages/page-category-select";
 import { Breadcrumbs } from "./breadcrumbs";
 import { usePatchPage } from "src/hooks/use-patch-page";
@@ -34,10 +34,10 @@ import { ToolbarPresence } from "../editor/presence/toolbar-presence";
 import { useLayoutMode } from "./hooks/use-layout-mode";
 import { calculateSidebarWidth } from "src/lib/utils";
 import { StarIcon } from "src/components/tiptap-icons";
-import { QuickOpenTrigger } from "./search/quick-open-trigger";
 import { useSearch } from "./search/search-context";
 import { requestFindFocus } from "src/lib/find-store";
 import { UserMenu } from "./user-menu/user-menu";
+import { HomeToolbar } from "../home/home-toolbar";
 
 function Expand() {
   const { collapsed } = useEditorLayoutState();
@@ -201,14 +201,6 @@ function TitleGroup({ view }: { view: View }) {
     <ToolbarGroup>
       {collapsed && <Expand />}
 
-      {view === "home" && (
-        <Button variant="ghost">
-          <Home className="tiptap-button-icon" strokeWidth={2} />
-          <span className="tiptap-button-text" style={{ fontWeight: "bold" }}>
-            {t("sidebar.home")}
-          </span>
-        </Button>
-      )}
       {view === "library" && (
         <Button variant="ghost">
           <LibraryBig className="tiptap-button-icon" strokeWidth={2} />
@@ -238,12 +230,6 @@ export const DesktopToolbarContent = ({ view }: ContentProps) => {
   return (
     <>
       <TitleGroup view={view} />
-      {view === "page" && (
-        <>
-          <Spacer />
-          <QuickOpenTrigger />
-        </>
-      )}
       <Spacer />
 
       <ToolbarGroup>
@@ -288,8 +274,6 @@ export const TabletToolbarContent = ({ view }: ContentProps) => {
       <Spacer />
 
       <ToolbarGroup>
-        <QuickOpenTrigger compact />
-
         {view !== "home" && activePage && (
           <>
             <UndoRedoButton action="undo" />
@@ -328,7 +312,6 @@ export const MobileToolbarContent = ({ view }: ContentProps) => {
 
       <ToolbarGroup>
         <SyncStatus compact />
-        <QuickOpenTrigger compact />
         {view === "page" && (
           <>
             <MorePopover
@@ -390,7 +373,7 @@ export const SimpleEditorToolbar = ({ view }: SimpleEditorToolbarProps) => {
   }, [isMobile, mobileView]);
 
   // Global shortcuts (the toolbar is always mounted):
-  //   Ctrl/⌘+P        → quick open
+  //   Ctrl/⌘+P        → quick open (shortcut only; no toolbar button)
   //   Ctrl/⌘+Shift+F  → find in pages
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -414,6 +397,15 @@ export const SimpleEditorToolbar = ({ view }: SimpleEditorToolbarProps) => {
   const isTabletBp = useIsTablet();
 
   const renderMain = () => {
+    // Home has its own toolbar (Home / date, search, templates, New page).
+    if (view === "home") {
+      return (
+        <HomeToolbar
+          leading={collapsed && <Expand />}
+          size={isMobileBp ? "mobile" : isTabletBp ? "tablet" : "desktop"}
+        />
+      );
+    }
     if (isMobileBp) return <MobileToolbarContent view={view} />;
     if (isTabletBp) return <TabletToolbarContent view={view} />;
     return <DesktopToolbarContent view={view} />;

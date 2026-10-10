@@ -28,6 +28,7 @@ import type { Ref } from "react";
 import { useTranslation } from "react-i18next";
 import { useEditorState } from "@tiptap/react";
 import { isAligned } from "./use-alignment-active";
+import { NavigableMenuItem } from "src/features/database/components/navigable-menu-item";
 
 interface AlignmentDropdownMenuProps {
   editor?: Editor | null;
@@ -35,6 +36,9 @@ interface AlignmentDropdownMenuProps {
   hideWhenUnavailable?: boolean;
   onAction?: () => void;
   className?: string;
+  /** In the block (drag handle) menu: a row whose options open as a side
+   *  flyout (NavigableMenuItem), instead of a dropdown of its own. */
+  flyout?: boolean;
 }
 
 export default function AlignmentDropdownMenu({
@@ -50,6 +54,7 @@ export default function AlignmentDropdownMenu({
   hideWhenUnavailable,
   onAction,
   className,
+  flyout = false,
 }: AlignmentDropdownMenuProps) {
   const { t } = useTranslation();
   const { editor } = useTiptapEditor(providedEditor);
@@ -79,6 +84,121 @@ export default function AlignmentDropdownMenu({
 
   if (hideWhenUnavailable && !isVisible) return null;
 
+  const panel = (
+    <Card
+      style={{
+        alignItems: "center",
+        padding: "5px 10px",
+      }}
+    >
+      <CardItemGroup>
+        <CardItemGroup>
+          <DropdownMenuItem className="menu-item" asChild>
+            <Button
+              role="menuitem"
+              variant="ghost"
+              data-active-state={alignState?.left ? "on" : "off"}
+              onClick={() => {
+                editor.commands.align("left");
+                onAction?.();
+              }}
+            >
+              <AlignLeftIcon className="tiptap-button-icon" />
+              <span>{t("alignment.left")}</span>
+            </Button>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="menu-item" asChild>
+            <Button
+              variant="ghost"
+              data-active-state={alignState?.center ? "on" : "off"}
+              onClick={() => {
+                editor.commands.align("center");
+                onAction?.();
+              }}
+            >
+              <AlignCenterIcon className="tiptap-button-icon" />
+              <span>{t("alignment.center")}</span>
+            </Button>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="menu-item" asChild>
+            <Button
+              variant="ghost"
+              data-active-state={alignState?.right ? "on" : "off"}
+              onClick={() => {
+                editor.commands.align("right");
+                onAction?.();
+              }}
+            >
+              <AlignRightIcon className="tiptap-button-icon" />
+              <span>{t("alignment.right")}</span>
+            </Button>
+          </DropdownMenuItem>
+        </CardItemGroup>
+
+        <Separator orientation="horizontal" />
+
+        <CardItemGroup>
+          <DropdownMenuItem className="menu-item" asChild>
+            <Button
+              variant="ghost"
+              data-active-state={alignState?.top ? "on" : "off"}
+              onClick={() => {
+                editor.commands.align("top");
+                onAction?.();
+              }}
+            >
+              <AlignTopIcon className="tiptap-button-icon" />
+              <span>{t("alignment.top")}</span>
+            </Button>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="menu-item" asChild>
+            <Button
+              variant="ghost"
+              data-active-state={alignState?.middle ? "on" : "off"}
+              onClick={() => {
+                editor.commands.align("middle");
+                onAction?.();
+              }}
+            >
+              <AlignMiddleIcon className="tiptap-button-icon" />
+              <span>{t("alignment.middle")}</span>
+            </Button>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="menu-item" asChild>
+            <Button
+              variant="ghost"
+              data-active-state={alignState?.bottom ? "on" : "off"}
+              onClick={() => {
+                editor.commands.align("bottom");
+                onAction?.();
+              }}
+            >
+              <AlignBottomIcon className="tiptap-button-icon" />
+              <span>{t("alignment.bottom")}</span>
+            </Button>
+          </DropdownMenuItem>
+        </CardItemGroup>
+      </CardItemGroup>
+    </Card>
+  );
+
+  if (flyout) {
+    return (
+      <NavigableMenuItem
+        Icon={AlignmentIcon}
+        label={t("alignment.label")}
+        side="right"
+        align="start"
+        sideOffset={8}
+        collisionPadding={8}
+        zIndex={10000}
+      >
+        {/* Same class as the dropdown's content: card colours, widths. */}
+        <div className="alignment-menu-content">{panel}</div>
+      </NavigableMenuItem>
+    );
+  }
+
   return (
     <div
       ref={containerRef as Ref<HTMLDivElement>}
@@ -105,101 +225,7 @@ export default function AlignmentDropdownMenu({
           align="center"
           className="alignment-menu-content"
         >
-          <Card
-            style={{
-              alignItems: "center",
-              padding: "5px 10px",
-            }}
-          >
-            <CardItemGroup>
-              <CardItemGroup>
-                <DropdownMenuItem className="menu-item" asChild>
-                  <Button
-                    role="menuitem"
-                    variant="ghost"
-                    data-active-state={alignState?.left ? "on" : "off"}
-                    onClick={() => {
-                      editor.commands.align("left");
-                      onAction?.();
-                    }}
-                  >
-                    <AlignLeftIcon className="tiptap-button-icon" />
-                    <span>{t("alignment.left")}</span>
-                  </Button>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="menu-item" asChild>
-                  <Button
-                    variant="ghost"
-                    data-active-state={alignState?.center ? "on" : "off"}
-                    onClick={() => {
-                      editor.commands.align("center");
-                      onAction?.();
-                    }}
-                  >
-                    <AlignCenterIcon className="tiptap-button-icon" />
-                    <span>{t("alignment.center")}</span>
-                  </Button>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="menu-item" asChild>
-                  <Button
-                    variant="ghost"
-                    data-active-state={alignState?.right ? "on" : "off"}
-                    onClick={() => {
-                      editor.commands.align("right");
-                      onAction?.();
-                    }}
-                  >
-                    <AlignRightIcon className="tiptap-button-icon" />
-                    <span>{t("alignment.right")}</span>
-                  </Button>
-                </DropdownMenuItem>
-              </CardItemGroup>
-
-              <Separator orientation="horizontal" />
-
-              <CardItemGroup>
-                <DropdownMenuItem className="menu-item" asChild>
-                  <Button
-                    variant="ghost"
-                    data-active-state={alignState?.top ? "on" : "off"}
-                    onClick={() => {
-                      editor.commands.align("top");
-                      onAction?.();
-                    }}
-                  >
-                    <AlignTopIcon className="tiptap-button-icon" />
-                    <span>{t("alignment.top")}</span>
-                  </Button>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="menu-item" asChild>
-                  <Button
-                    variant="ghost"
-                    data-active-state={alignState?.middle ? "on" : "off"}
-                    onClick={() => {
-                      editor.commands.align("middle");
-                      onAction?.();
-                    }}
-                  >
-                    <AlignMiddleIcon className="tiptap-button-icon" />
-                    <span>{t("alignment.middle")}</span>
-                  </Button>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="menu-item" asChild>
-                  <Button
-                    variant="ghost"
-                    data-active-state={alignState?.bottom ? "on" : "off"}
-                    onClick={() => {
-                      editor.commands.align("bottom");
-                      onAction?.();
-                    }}
-                  >
-                    <AlignBottomIcon className="tiptap-button-icon" />
-                    <span>{t("alignment.bottom")}</span>
-                  </Button>
-                </DropdownMenuItem>
-              </CardItemGroup>
-            </CardItemGroup>
-          </Card>
+          {panel}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
