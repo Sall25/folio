@@ -137,12 +137,25 @@ body,
     // Don't skip databases — they have interactive content
     content-visibility: visible;
   }
+
+  // A block with someone's caret in it: content-visibility also clips what
+  // a block draws outside itself, which cut the collaborator's name label
+  // (it sits above the caret, over the line before) in half.
+  > *:has(.collaboration-carets__caret) {
+    content-visibility: visible;
+  }
 }
  
 .tiptap.ProseMirror {
   content-visibility: auto;
   contain-intrinsic-size: 1px 30px;
   contain: layout style;
+
+  // Same for the editor itself: a caret on the first line would have its
+  // name label cut at the editor's top edge.
+  &:has(.collaboration-carets__caret) {
+    content-visibility: visible;
+  }
   font-family:  'Inter', sans-serif;
   
   $highlight-colors: purple, yellow, blue, red, green, orange;

@@ -16,10 +16,10 @@ import { CommentBody } from "./comment-body";
 import { CommentMentionEditor, type CommentEditorRef } from "../editor";
 import { ReactionChips } from "./reaction-chips";
 import { ReactionPicker } from "./reaction-picker";
-import type { Person, Reactions, ThreadSuggestion } from "src/types";
+import type { Reactions, ThreadSuggestion } from "src/types";
 import { toggleReaction, parseReactions } from "src/lib/comment-reactions";
 import { useCurrentPerson } from "src/hooks/use-session";
-import { usePeople } from "src/hooks/use-people";
+import { usePeopleById } from "src/hooks/use-people";
 import { usePersonNames } from "src/hooks/use-person-names";
 import { formatRelativeTime } from "src/utils/format-relative";
 import { useNotificationActions } from "../../inbox/notification/notification-context";
@@ -81,14 +81,13 @@ export const CommentCard = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const editRef = useRef<CommentEditorRef>(null);
   const { person } = useCurrentPerson();
-  const { data: people = [] } = usePeople();
-
-  // The author's real avatar (the people list is one shared query).
-  const avatarUrl = useMemo(() => {
-    if (!authorId) return undefined;
-    const author = (people as Person[]).find((p) => p.id === authorId);
-    return author?.avatarUrl ?? undefined;
-  }, [people, authorId]);
+  // The author's real avatar — also for someone outside this workspace
+  // (a former member, a guest), fetched by id when needed.
+  const authorIds = useMemo(() => [authorId], [authorId]);
+  const peopleById = usePeopleById(authorIds);
+  const avatarUrl = authorId
+    ? (peopleById.get(authorId)?.avatarUrl ?? undefined)
+    : undefined;
 
   const reactions = parseReactions(rawReactions);
 
