@@ -1,5 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNotificationActions } from "./notification-context";
+import { useCurrentPerson } from "src/hooks/use-session";
+
+// A mention notification waits this long before it's sent, so the sentence
+// around it is written by then and goes along as its message. Sent at once
+// if the mention leaves the screen first (the page is closed…).
+const MENTION_DELAY_MS = 8000;
 
 // PATCHED useMentionNotification — user mentions now target the MENTIONED
 // PERSON as recipient (so it lands in THEIR bell, cross-user), with a DB-level
@@ -15,6 +21,7 @@ export function useMentionNotification({
   sourcePageTitle,
   targetNodeId,
   remind,
+  getContext,
 }: {
   mentionId: string;
   mentionLabel: string;
@@ -24,9 +31,31 @@ export function useMentionNotification({
   sourcePageTitle?: string;
   targetNodeId?: string;
   remind?: string | null;
+  /** The sentence around the mention, quoted as the notification's
+   *  message so it makes sense without opening the page. */
+  getContext?: () => string;
 }) {
   const { hasNotified, addNotification, registerNotified } =
     useNotificationActions();
+  const { person } = useCurrentPerson();
+  const authorName = person?.name;
+
+  // Read when the notification is sent, not when the hook first ran.
+  const getContextRef = useRef(getContext);
+  useEffect(() => {
+    getContextRef.current = getContext;
+  });
+  const quote = () => {
+    try {
+      return getContextRef.current?.() ?? "";
+    } catch {
+      return "";
+    }
+  };
+  const page = sourcePageTitle || "a page";
+  /** "Reminder due today · Lab report", so the list says where. */
+  const inPage = (title: string) =>
+    sourcePageTitle ? `${title} · ${sourcePageTitle}` : title;
 
   // ── User mention → notify the MENTIONED PERSON ──────────────────────────
   useEffect(() => {
@@ -36,18 +65,32 @@ export function useMentionNotification({
     if (hasNotified(key)) return;
     registerNotified(key);
 
-    addNotification({
-      type: "user-mention",
-      title: "New mention",
-      message: `You were mentioned in ${sourcePageTitle ?? "a note"}.`,
-      recipientId: mentionId,
-      dedupKey: key,
-      mentionId,
-      mentionLabel,
-      sourcePageId,
-      sourcePageTitle,
-      targetNodeId,
-    });
+    // Sent a little later, with the sentence the mention ended up in.
+    let sent = false;
+    const firstQuote = quote();
+    const send = () => {
+      if (sent) return;
+      sent = true;
+      addNotification({
+        type: "user-mention",
+        title: authorName
+          ? `${authorName} mentioned you in ${page}`
+          : `You were mentioned in ${page}`,
+        message: quote() || firstQuote || `You were mentioned in ${page}.`,
+        recipientId: mentionId,
+        dedupKey: key,
+        mentionId,
+        mentionLabel,
+        sourcePageId,
+        sourcePageTitle,
+        targetNodeId,
+      });
+    };
+    const timer = window.setTimeout(send, MENTION_DELAY_MS);
+    return () => {
+      window.clearTimeout(timer);
+      send();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isUserMention, mentionId, targetNodeId]);
 
@@ -71,12 +114,14 @@ export function useMentionNotification({
       registerNotified(key);
       addNotification({
         type: "date-overdue",
-        title: "Overdue reminder",
-        message: `A reminder set for ${date.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })} is past due.`,
+        title: inPage("Overdue reminder"),
+        message:
+          quote() ||
+          `A reminder set for ${date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })} is past due.`,
         dedupKey: key,
         mentionId,
         mentionLabel,
@@ -90,8 +135,8 @@ export function useMentionNotification({
       registerNotified(key);
       addNotification({
         type: "date-due",
-        title: "Reminder due today",
-        message: `Your reminder for today is due.`,
+        title: inPage("Reminder due today"),
+        message: quote() || `Your reminder for today is due.`,
         dedupKey: key,
         mentionId,
         mentionLabel,
@@ -105,8 +150,8 @@ export function useMentionNotification({
       registerNotified(key);
       addNotification({
         type: "date-due",
-        title: "Reminder due tomorrow",
-        message: `You have a reminder set for tomorrow.`,
+        title: inPage("Reminder due tomorrow"),
+        message: quote() || `You have a reminder set for tomorrow.`,
         dedupKey: key,
         mentionId,
         mentionLabel,
@@ -144,11 +189,12 @@ export function useMentionNotification({
           registerNotified(key);
           addNotification({
             type: "date-due",
-            title: "Reminder",
+            title: inPage("Reminder"),
             message:
-              remind === "on_day"
+              quote() ||
+              (remind === "on_day"
                 ? `Reminder for ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
-                : `${remindLabels[remind]} reminder for ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+                : `${remindLabels[remind]} reminder for ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`),
             dedupKey: key,
             mentionId,
             mentionLabel,

@@ -3,6 +3,7 @@ import type { Editor, JSONContent } from "@tiptap/core";
 import type { ID } from "src/types";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { extractMentionIds } from "src/utils/extract-mention-ids";
+import { commentText } from "src/lib/notification-context-text";
 import { useActivePageState } from "src/features/pages/context/active-page-context";
 import { useNotificationActions } from "../inbox/notification/notification-context";
 import { commentThreadPluginKey } from "./extensions";
@@ -34,12 +35,17 @@ export function useNotifyMentions() {
   return useCallback(
     (json: JSONContent, commentId: ID, threadId: ID) => {
       if (!person) return;
+      // The comment itself is the message, so it reads without opening it.
+      const quote = commentText(json);
+      const page = activePage?.title;
       for (const personId of extractMentionIds(json)) {
         if (personId === person.id) continue;
         addNotification({
           type: "comment-mention",
-          title: "Mentioned in a comment",
-          message: `${person.name} mentioned you in a comment.`,
+          title: page
+            ? `${person.name} mentioned you in a comment · ${page}`
+            : `${person.name} mentioned you in a comment`,
+          message: quote || `${person.name} mentioned you in a comment.`,
           recipientId: personId,
           dedupKey: `comment-mention:${commentId}:${personId}`,
           sourcePageId: activePageId ?? undefined,

@@ -1,4 +1,5 @@
 import { NodeViewWrapper, type ReactNodeViewProps } from "@tiptap/react";
+import { textAroundNode } from "src/lib/notification-context-text";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Popover,
@@ -41,7 +42,12 @@ function legacyDate(id: unknown): Date | undefined {
   return d;
 }
 
-export function MentionView({ node, updateAttributes }: ReactNodeViewProps) {
+export function MentionView({
+  node,
+  updateAttributes,
+  editor,
+  getPos,
+}: ReactNodeViewProps) {
   const { i18n } = useTranslation();
   const locale = localeOf(i18n.language);
 
@@ -103,6 +109,11 @@ export function MentionView({ node, updateAttributes }: ReactNodeViewProps) {
     sourcePageTitle: activePage?.title || "New Page",
     targetNodeId: node.attrs.nodeId,
     remind,
+    // The sentence this mention sits in, quoted in the notification.
+    getContext: () => {
+      const pos = typeof getPos === "function" ? getPos() : undefined;
+      return typeof pos === "number" ? textAroundNode(editor, pos) : "";
+    },
   });
   const endDateValue = node.attrs.endDate ? new Date(node.attrs.endDate) : null;
 

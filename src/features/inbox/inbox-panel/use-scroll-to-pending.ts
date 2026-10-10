@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import type { Editor } from "@tiptap/core";
 import {
   consumePendingScrollTarget,
+  setPendingScrollTarget,
   subscribePendingScrollTarget,
   type FindTarget,
 } from "./pending-scroll-target";
@@ -13,6 +14,22 @@ import { buildMatcher } from "src/lib/find-in-pages";
 // rendered. Handles inline threads (scroll to anchor + select), page-level
 // comments (scroll to the page-comment node), editor mentions, and
 // find-in-pages matches (select the matched text).
+//
+// A page opened from a notification is often still loading (its content
+// syncing, threads being fetched, node views rendering), so the target is
+// looked for again on every content change and every POLL_MS for up to
+// MAX_WAIT_MS. Once found, it's re-centred twice while the page settles
+// (content loading above it pushes it down). Scrolling, clicking or typing
+// stops all of this: the page never jumps away from what the person is
+// doing. When the page's editor is replaced while loading, the target is
+// handed on to the new one.
+
+type Target = { targetNodeId?: string; type?: string; find?: FindTarget };
+
+const MAX_WAIT_MS = 12_000;
+const POLL_MS = 150;
+const SETTLE_MS = [350, 1000];
+
 export function useScrollToPendingTarget(
   editor: Editor | null,
   pageId: string | null,
@@ -20,85 +37,133 @@ export function useScrollToPendingTarget(
   useEffect(() => {
     if (!editor || !pageId) return;
 
-    let tries = 0;
-    let rafId: number | null = null;
+    // The element the target points at, if it's on the page yet.
+    const findElement = (target: Target): Element | null => {
+      if (target.targetNodeId) {
+        const id = target.targetNodeId;
+        const thread = commentThreadPluginKey
+          .getState(editor.state)
+          ?.threads.find((t) => t.id === id);
+        if (thread) {
+          return (
+            document.querySelector(`[data-thread-id="${id}"]`) ||
+            document.querySelector(`[data-thread-list-item-id="${id}"]`)
+          );
+        }
+        const node =
+          document.querySelector(`[data-node-id="${id}"]`) ||
+          document.querySelector(`[data-id="${id}"]`);
+        if (node) return node;
+      }
+      if (target.type === "comment-mention") {
+        return document.querySelector('[data-type="page-comment"]');
+      }
+      return null;
+    };
 
-    const attempt = (target: {
-      targetNodeId?: string;
-      type?: string;
-      find?: FindTarget;
-    }): boolean => {
-      // ── Find-in-pages match: select the text itself. ──
+    // Scrolls to the target and activates it (selects a thread, flashes
+    // the block). False when it isn't there yet.
+    const attempt = (target: Target): boolean => {
       if (target.type === "find" && target.find) {
         return scrollToFindMatch(editor, target.find);
       }
-
-      // ── Inline thread: select it (opens the card) + scroll to its anchor. ──
-      if (target.targetNodeId) {
-        const pluginState = commentThreadPluginKey.getState(editor.state);
-        const thread = pluginState?.threads.find(
-          (t) => t.id === target.targetNodeId,
+      const el = findElement(target);
+      if (!el) return false;
+      const id = target.targetNodeId;
+      if (
+        id &&
+        commentThreadPluginKey
+          .getState(editor.state)
+          ?.threads.some((t) => t.id === id)
+      ) {
+        editor.view.dispatch(
+          editor.state.tr.setMeta(commentThreadPluginKey, {
+            type: "selectThread",
+            threadId: id,
+          }),
         );
-
-        if (thread) {
-          editor.view.dispatch(
-            editor.state.tr.setMeta(commentThreadPluginKey, {
-              type: "selectThread",
-              threadId: target.targetNodeId,
-            }),
-          );
-          const el =
-            document.querySelector(
-              `[data-thread-id="${target.targetNodeId}"]`,
-            ) ||
-            document.querySelector(
-              `[data-thread-list-item-id="${target.targetNodeId}"]`,
-            );
-          if (el) {
-            el.scrollIntoView({ behavior: "smooth", block: "center" });
-            flash(el);
-          }
-          return true;
-        }
-
-        const node =
-          document.querySelector(`[data-node-id="${target.targetNodeId}"]`) ||
-          document.querySelector(`[data-id="${target.targetNodeId}"]`);
-        if (node) {
-          node.scrollIntoView({ behavior: "smooth", block: "center" });
-          flash(node);
-          return true;
-        }
       }
-
-      // ── Page-level comment: scroll to the page-comment node. ──
-      if (target.type === "comment-mention") {
-        const node = document.querySelector('[data-type="page-comment"]');
-        if (node) {
-          node.scrollIntoView({ behavior: "smooth", block: "center" });
-          flash(node);
-          return true;
-        }
-      }
-
-      return false;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      flash(el);
+      return true;
     };
 
+    // Stops the current search; with `handBack`, an unfinished one leaves
+    // its target pending again (for the editor that replaces this one).
+    let stopCurrent: (handBack?: boolean) => void = () => {};
+
     const tryScroll = () => {
+      // A replaced editor's last call: leave the target for the new one.
+      if (editor.isDestroyed) return;
       const target = consumePendingScrollTarget(pageId);
       if (!target) return;
+      stopCurrent();
 
-      tries = 0;
-      const run = () => {
-        if (attempt(target) || tries > 40) {
-          rafId = null;
+      const started = Date.now();
+      const timers: number[] = [];
+      let userMoved = false;
+      let found = false;
+      const onUser = () => {
+        userMoved = true;
+      };
+      const USER_EVENTS = ["wheel", "touchstart", "keydown", "mousedown"];
+      USER_EVENTS.forEach((e) =>
+        window.addEventListener(e, onUser, { capture: true, passive: true }),
+      );
+
+      const stop = (handBack = false) => {
+        window.clearInterval(interval);
+        timers.forEach((t) => window.clearTimeout(t));
+        USER_EVENTS.forEach((e) =>
+          window.removeEventListener(e, onUser, { capture: true }),
+        );
+        if (!editor.isDestroyed) editor.off("update", look);
+        stopCurrent = () => {};
+        const unfinished =
+          !found && !userMoved && Date.now() - started <= MAX_WAIT_MS;
+        if (handBack && unfinished) setPendingScrollTarget(target);
+      };
+
+      // Found: keep it centred while the page finishes loading.
+      const settle = () => {
+        found = true;
+        window.clearInterval(interval);
+        if (!editor.isDestroyed) editor.off("update", look);
+        if (target.type === "find") return stop();
+        SETTLE_MS.forEach((ms, i) =>
+          timers.push(
+            window.setTimeout(() => {
+              const el =
+                !userMoved && !editor.isDestroyed && findElement(target);
+              if (el) {
+                const r = el.getBoundingClientRect();
+                const off = r.top + r.height / 2 - window.innerHeight / 2;
+                if (Math.abs(off) > 80) {
+                  el.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+              }
+              if (i === SETTLE_MS.length - 1) stop();
+            }, ms),
+          ),
+        );
+      };
+
+      function look() {
+        if (editor!.isDestroyed) {
+          // The page's editor was replaced while loading: hand the target
+          // to the new one (its hook picks it up).
+          stop(true);
           return;
         }
-        tries += 1;
-        rafId = requestAnimationFrame(run);
-      };
-      if (rafId !== null) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(run);
+        if (userMoved || Date.now() - started > MAX_WAIT_MS) return stop();
+        if (attempt(target!)) settle();
+      }
+
+      stopCurrent = stop;
+      const interval = window.setInterval(look, POLL_MS);
+      editor.on("update", look);
+      // After the first render.
+      timers.push(window.setTimeout(look, 0));
     };
 
     tryScroll();
@@ -107,8 +172,10 @@ export function useScrollToPendingTarget(
 
     return () => {
       unsub();
-      editor.off("create", tryScroll);
-      if (rafId !== null) cancelAnimationFrame(rafId);
+      if (!editor.isDestroyed) editor.off("create", tryScroll);
+      // Unmounted (the editor replaced, or another page): stop looking, and
+      // leave an unfinished target for the next editor of this page.
+      stopCurrent(true);
     };
   }, [editor, pageId]);
 }
