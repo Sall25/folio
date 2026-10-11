@@ -78,3 +78,4 @@ export * from "./file-text-icon";
 export * from "./grip-vertical-icon";
 export * from "./google-icon";
 export * from "./tabler-icons";
+export * from "./sidebar-icons";

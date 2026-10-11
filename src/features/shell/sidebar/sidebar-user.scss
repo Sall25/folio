@@ -1,6 +1,5 @@
-// The space switcher at the top of the sidebar: one button with the space's
-// tile, name, a line under it and ⇅, on a soft fill so it reads as the
-// "where am I" control.
+// The space switcher at the top of the sidebar: one quiet button with the
+// space's small tile, its name and a chevron.
 
 .sb-ws-row {
   display: flex;
@@ -17,19 +16,19 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-  height: 40px;
-  padding: 0 8px;
-  border-radius: var(--tt-radius-md);
+  gap: 8px;
+  height: 32px;
+  padding: 0 6px;
+  border-radius: 7px;
 
-  color: var(--tt-text-primary);
+  color: var(--sb-active-color);
   cursor: pointer;
   transition: background 0.15s ease;
 
-  // &:hover,
-  // &.is-open {
-  //   background: color-mix(in srgb, var(--tt-text-primary) 9%, transparent);
-  // }
+  &:hover,
+  &.is-open {
+    background: var(--sb-hover-bg);
+  }
 
   &:focus-visible {
     outline: 2px solid var(--tt-brand-color-500);
@@ -44,13 +43,13 @@
   &__tile {
     position: relative;
     flex-shrink: 0;
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 700;
     line-height: 1;
 
@@ -78,39 +77,25 @@
   }
 
   &__emoji {
-    font-size: 16px;
+    font-size: 14px;
     line-height: 1;
   }
 
-  &__text {
+  &__name {
     flex: 1 1 0;
     min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-
-  &__name {
     overflow: hidden;
-    font-size: 14.5px;
-    font-weight: 650;
+    font-family: var(--sb-font);
+    font-size: 14px;
+    font-weight: 600;
     line-height: 1.2;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  &__meta {
-    overflow: hidden;
-    font-size: 12px;
-    line-height: 1.25;
-    color: var(--tt-text-secondary);
     white-space: nowrap;
     text-overflow: ellipsis;
   }
 
   &__chevron {
     flex-shrink: 0;
-    color: var(--tt-text-secondary);
+    color: var(--sb-icon-color);
   }
 }
 
@@ -140,11 +125,6 @@
 
 @media (max-width: 768px) {
   .sb-ws {
-    height: 42px;
-
-    &__tile {
-      width: 26px;
-      height: 26px;
-    }
+    height: 38px;
   }
 }

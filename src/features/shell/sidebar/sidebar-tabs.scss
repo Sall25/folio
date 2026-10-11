@@ -4,7 +4,7 @@ $dur: 0.3s;
 // ── Top navigation: Home · Inbox · Chats side by side + search ──────────────
 // No bar behind the tabs: only the selected tab gets a raised pill.
 :root {
-  --sb-tab-h: 30px;
+  --sb-tab-h: 34px;
   --sb-tab-active-bg: #ffffff;
   --sb-tab-active-shadow: 0 1px 2px rgba(0, 0, 0, 0.08),
     0 0 0 1px rgba(0, 0, 0, 0.04);
@@ -20,7 +20,7 @@ $dur: 0.3s;
 
 @media (max-width: 768px) {
   :root {
-    --sb-tab-h: 36px;
+    --sb-tab-h: 40px;
   }
 }
 
@@ -136,7 +136,7 @@ $dur: 0.3s;
     width: var(--sb-tab-h);
     height: var(--sb-tab-h);
     border-radius: 8px;
-    color: var(--sb-icon-color);
+    color: var(--sb-row-color);
     cursor: pointer;
     transition:
       background 0.12s ease,
@@ -164,12 +164,12 @@ $dur: 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
   height: var(--sb-tab-h);
-  padding: 0 6px;
+  padding: 0 8px;
+  gap: 6px;
   border-radius: 8px;
   font-family: var(--sb-font);
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
@@ -196,16 +196,23 @@ $dur: 0.3s;
   }
 
   &.is-active {
-    background: var(--sb-tab-active-bg);
-    box-shadow: var(--sb-tab-active-shadow);
+    // background: var(--sb-tab-active-bg);
     color: var(--sb-active-color);
     font-weight: 600;
+     border: 1px solid var(--tt-border-color);
+
+    // .dark & {
+    //   border: 1px solid var(--tt-border-color);
+    //   background: transparent;
+    // }
   }
 
+  // Bigger glyphs in the row's own text colour (not the faint icon grey), so
+  // the tabs read at a glance.
   &__icon {
     display: flex;
     flex: none;
-    color: var(--sb-icon-color);
+    color: var(--sb-row-color);
     transition: color 0.12s ease;
 
     svg {
@@ -227,19 +234,24 @@ $dur: 0.3s;
 
   &__badge {
     flex: none;
-    min-width: 15px;
-    height: 15px;
-    padding: 0 4px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 5px;
     box-sizing: border-box;
-    border-radius: 8px;
-    background: var(--sb-tab-badge-bg);
-    color: #fff;
-    font-size: 9.5px;
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--tt-color-red-inc-4) 60%, transparent);
+    color: var(--tt-color-red-dec-1);
+    .dark & {
+      background: color-mix(in srgb, var(--tt-color-red-base) 22%, transparent);
+      color: var(--tt-color-red-inc-3);
+    }
+    font-size: 10.5px;
     font-weight: 700;
-    line-height: 15px;
+    line-height: 17px;
     text-align: center;
   }
 }
+
 
 // Library · Templates · Trash, under the page tree.
 .sb-nav-bottom {
@@ -251,14 +263,13 @@ $dur: 0.3s;
   border-top: 1px solid var(--sb-divider);
 }
 
-// ── Top row: workspace switcher, borderless ────────────────────────────────
+// ── Top row: space switcher, collapse, New page ────────────────────────────────
 .sb-top {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   width: 100%;
   min-width: 0;
- 
 
   &__switcher {
     flex: 1 1 0;
@@ -315,43 +326,40 @@ $dur: 0.3s;
     }
   }
 
-  // Collapse chevrons: take no space until the top row is hovered (or the
-  // button is focused), then slide open.
+  // Collapse and New page: two quiet 28px icon buttons after the switcher.
   &__collapse {
     display: inline-flex;
     align-items: center;
     flex-shrink: 0;
-    max-width: 0;
-    margin-left: 0;
-    overflow: hidden;
-    opacity: 0;
-    transition:
-      max-width 0.25s $ease-out,
-      margin 0.25s $ease-out,
-      opacity 0.18s ease;
+  }
+
+  // [data-size] outranks the Button primitive's own "large" sizing.
+  &__collapse .tiptap-button[data-size],
+  &__new.tiptap-button[data-size] {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    padding: 0;
+    justify-content: center;
+    border-radius: var(--sb-row-radius);
+    color: var(--sb-icon-color);
 
     .tiptap-button-icon {
-      color: var(--tt-text-secondary);
+      width: 15px;
+      height: 15px;
+      color: inherit;
     }
 
-    button:hover .tiptap-button-icon {
-      color: var(--tt-text-primary);
+    &:hover {
+      background: var(--sb-hover-bg);
+      color: var(--sb-active-color);
     }
   }
 
-  &:hover &__collapse,
-  &__collapse:focus-within {
-    max-width: 40px;
-    margin-left: 2px;
-    opacity: 1;
-  }
-}
-
-@media (hover: none) {
-  .sb-top__collapse {
-    max-width: 40px;
-    margin-left: 2px;
-    opacity: 1;
+  &__new.tiptap-button[data-size] .tiptap-button-icon {
+    width: 16px;
+    height: 16px;
   }
 }
 
@@ -381,7 +389,6 @@ $dur: 0.3s;
   .sb-nav-search > *,
   .sb-nav-row,
   .sb-tab,
-  .sb-top__collapse,
   .sb-top__back {
     transition-duration: 0s !important;
     transform: none !important;

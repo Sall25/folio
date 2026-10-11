@@ -1,6 +1,6 @@
 import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { TbSelector } from "src/components/tiptap-icons/tabler-icons";
+import { SbChevronDownIcon } from "src/components/tiptap-icons/sidebar-icons";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { useCurrentSpace } from "src/hooks/use-current-space";
@@ -28,7 +28,8 @@ const UserSkeleton = memo(() => {
 UserSkeleton.displayName = "UserSkeleton";
 
 // The current space — your workspace, or the teamspace you're in — as one
-// button: its tile, its name, a line under it, and ⇅. Clicking anywhere on
+// quiet button: a small tile, the name and a chevron (the member line shows
+// as its tooltip). Clicking anywhere on
 // it opens the space switcher. Inside a teamspace, a back arrow before it
 // returns to the workspace.
 export const User = memo(() => {
@@ -68,7 +69,7 @@ export const User = memo(() => {
     tile = space.page ? (
       <PageItemIcon
         cover={space.page.cover}
-        styles={{ width: 16, height: 16, fontSize: 16 }}
+        styles={{ width: 14, height: 14, fontSize: 14 }}
       />
     ) : (
       name.charAt(0).toUpperCase()
@@ -87,8 +88,8 @@ export const User = memo(() => {
           <DynamicIcon
             name={workspace.icon}
             style={{
-              width: 16,
-              height: 16,
+              width: 14,
+              height: 14,
               color: workspace.iconColor ?? "currentColor",
             }}
           />
@@ -111,6 +112,7 @@ export const User = memo(() => {
           name,
           defaultValue: "Switch space: {{name}}",
         })}
+        title={meta || undefined}
         onClick={() => setSwitcherOpen((v) => !v)}
       >
         <span className={`sb-ws__tile sb-ws__tile--${tileKind}`}>
@@ -119,16 +121,8 @@ export const User = memo(() => {
             <span className="workspace-notification-badge" />
           )}
         </span>
-        <span className="sb-ws__text">
-          <span className="sb-ws__name">{name}</span>
-          {meta && <span className="sb-ws__meta">{meta}</span>}
-        </span>
-        <TbSelector
-          size={15}
-          strokeWidth={1.6}
-          className="sb-ws__chevron"
-          aria-hidden
-        />
+        <span className="sb-ws__name">{name}</span>
+        <SbChevronDownIcon size={13} className="sb-ws__chevron" />
       </button>
 
       <WorkspaceSwitcherPopover

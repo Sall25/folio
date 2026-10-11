@@ -1,25 +1,8 @@
-// The sidebar's footer: one full-width New page button.
+// The sidebar's footer: your account row.
 .sb-footer {
   flex-shrink: 0;
-  padding: 6px 10px 10px;
-  border-top: 1px solid var(--sb-divider);
-}
-
-.sb-footer__new.tiptap-button {
   width: 100%;
-  justify-content: flex-start;
-  gap: 8px;
-  height: 36px;
-  padding: 0 10px;
-  color: var(--tt-text-secondary);
-
-  .tiptap-button-text {
-    font-family: var(--sb-font);
-    font-size: var(--sb-font-size);
-    font-weight: 500;
-  }
-
-  &:hover {
-    color: var(--tt-text-primary);
-  }
+  box-sizing: border-box;
+  padding: 3px;
+  border-top: 1px solid var(--sb-divider);
 }

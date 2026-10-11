@@ -460,6 +460,7 @@
   "inbox.kind.date-overdue": "Overdue",
   "inbox.kind.backlink": "Link to your page",
   "sidebar": {
+    "accountSettings": "Account & settings",
     "navigation": "Sidebar navigation",
     "home": "Home",
     "search": "Search",

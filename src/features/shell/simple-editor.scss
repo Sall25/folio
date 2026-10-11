@@ -79,23 +79,63 @@ body,
   height: 100% 
 }
 
+// ── Scrollbars ───────────────────────────────────────────────────────────────
+// One look everywhere: a slim rounded thumb in the app's warm grey (light) or
+// a soft white (dark), no track, no arrow buttons; a touch darker on hover.
+//
+// Chrome, Edge and Safari use the ::-webkit-scrollbar rules. They ignore those
+// rules on any element that sets the standard scrollbar-color/width (and then
+// draw the OS bar with arrows on Windows), so the standard properties go to
+// Firefox only.
+:root {
+  --app-scrollbar-thumb: rgba(55, 53, 47, 0.2);
+  --app-scrollbar-thumb-hover: rgba(55, 53, 47, 0.36);
+}
+
+.dark {
+  --app-scrollbar-thumb: rgba(255, 255, 255, 0.13);
+  --app-scrollbar-thumb-hover: rgba(255, 255, 255, 0.26);
+}
+
 ::-webkit-scrollbar {
-  width: 0.8rem;
-  z-index: 5000 !important;
+  width: 10px;
+  height: 10px;
 }
 
-* {
-  scrollbar-width:auto;
-  scrollbar-color: var(--tt-scrollbar-color) transparent;
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
-::-webkit-scrollbar-thumb {
-  background-color: var(--tt-scrollbar-color);
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-track {
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+// The 3px transparent border + padding-box keeps a gap around the thumb, so
+// it reads as a slim pill inside a 10px hit area.
+::-webkit-scrollbar-thumb {
+  min-height: 40px;
+  border: 3px solid transparent;
+  border-radius: 9999px;
+  background-color: var(--app-scrollbar-thumb);
+  background-clip: padding-box;
+
+  &:hover {
+    background-color: var(--app-scrollbar-thumb-hover);
+  }
+
+  &:active {
+    background-color: var(--app-scrollbar-thumb-hover);
+  }
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--app-scrollbar-thumb) transparent;
+  }
 }
 
 // ── Performance optimizations for large documents ─────────────────────────────

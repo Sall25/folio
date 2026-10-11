@@ -1,5 +1,7 @@
-import { TbChevronsLeft, TbChevronsRight } from "src/components/tiptap-icons/tabler-icons";
-import { SB_ICON } from "./sidebar-icon";
+import {
+  SbCollapseIcon,
+  SbExpandIcon,
+} from "src/components/tiptap-icons/sidebar-icons";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -14,10 +16,11 @@ import {
 } from "../context/editor-layout-context";
 import { User } from "./sidebar-user";
 import { SidebarTabs } from "./sidebar-tabs";
+import { NewPageButton } from "./new-page-button";
 import "./sidebar-tabs.scss";
 
-// The space switcher on top (the collapse chevrons appear on hover), the tab
-// strip (+ search) below it. New page lives in the footer (sidebar-footer).
+// Top row: the space switcher, collapse, and New page. Below it the tabs
+// (Home · Inbox · Chats, + search). Your account sits in the footer.
 export const SidebarHeader = memo(() => {
   const { t } = useTranslation();
   const { onCollapsedChange, collapseWithFloat } = useEditorLayoutActions();
@@ -36,7 +39,7 @@ export const SidebarHeader = memo(() => {
           minWidth: 0,
         }}
       >
-        <div className="sb-top" style={{ paddingTop: 6 }}>
+        <div className="sb-top" style={{ paddingTop: 4 }}>
           <User />
           {/* Revealed on hover/focus of the top row (always on touch). */}
           <span className="sb-top__collapse">
@@ -50,12 +53,13 @@ export const SidebarHeader = memo(() => {
               }}
             >
               {collapsed ? (
-                <TbChevronsRight {...SB_ICON} className="tiptap-button-icon" />
+                <SbExpandIcon size={15} className="tiptap-button-icon" />
               ) : (
-                <TbChevronsLeft {...SB_ICON} className="tiptap-button-icon" />
+                <SbCollapseIcon size={15} className="tiptap-button-icon" />
               )}
             </Button>
           </span>
+          <NewPageButton className="sb-top__new" />
         </div>
 
         <Spacer orientation="vertical" size={8} />

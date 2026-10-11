@@ -375,6 +375,7 @@
   "inbox.kind.date-overdue": "En retard",
   "inbox.kind.backlink": "Lien vers votre page",
   "sidebar": {
+    "accountSettings": "Compte et paramètres",
     "navigation": "Navigation de la barre latérale",
     "home": "Accueil",
     "search": "Rechercher",

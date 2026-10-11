@@ -25,7 +25,6 @@ import type {
 import { makePage } from "src/utils/make-page";
 import { patchPage as updatePage } from "src/api/pages";
 import { Card, CardBody } from "src/components/tiptap-ui-primitive/card";
-import { ScrollFog } from "src/components/tiptap-ui-primitive/scroll-frog";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { SidebarTree } from "./sidebar-tree";
 import { LibraryPaletteTrigger } from "./library-palette-trigger";
@@ -424,8 +423,7 @@ export const SidebarBody = memo(() => {
           <>
             {!peeking && (
               <>
-                <ScrollFog edge="top" color="var(--sidebar-fog-color)" />
-                <Spacer orientation="vertical" size={12} />
+                <Spacer orientation="vertical" size={4} />
               </>
             )}
             {renderView()}

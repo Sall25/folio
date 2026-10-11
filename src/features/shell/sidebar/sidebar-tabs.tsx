@@ -2,12 +2,12 @@ import { memo, useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-location";
 import {
-  TbHome,
-  TbInbox,
-  TbMessages,
-  TbSearch,
-  TbX,
-} from "src/components/tiptap-icons/tabler-icons";
+  SbChatsIcon,
+  SbHomeIcon,
+  SbInboxIcon,
+  SbSearchIcon,
+} from "src/components/tiptap-icons/sidebar-icons";
+import { TbX } from "src/components/tiptap-icons/tabler-icons";
 import { useNotificationState } from "src/features/inbox/notification/notification-context";
 import { useMyWorkspaceInvites } from "src/hooks/use-workspace-members";
 import { useUnreadCounts } from "src/hooks/use-chat";
@@ -29,7 +29,8 @@ import "./sidebar-tabs.scss";
 
 type TabId = Extract<SidebarView, "pages" | "inbox" | "chats" | "teams">;
 
-const TAB_ICON = { size: 16, strokeWidth: 1.6 } as const;
+// Folio's own glyphs, a size up from the page rows so the tabs stand out.
+const TAB_ICON = { size: 18, strokeWidth: 1.7 } as const;
 
 function Tab({
   icon,
@@ -138,14 +139,14 @@ export const SidebarTabs = memo(() => {
           aria-label={t("sidebar.navigation", "Sidebar")}
         >
           <Tab
-            icon={<TbHome {...TAB_ICON} />}
+            icon={<SbHomeIcon {...TAB_ICON} />}
             label={t("sidebar.home", "Home")}
             active={!isSearching && active === "pages"}
             tabIndex={hiddenTab}
             onClick={() => selectTab("pages")}
           />
           <Tab
-            icon={<TbInbox {...TAB_ICON} />}
+            icon={<SbInboxIcon {...TAB_ICON} />}
             label={t("sidebar.inbox", "Inbox")}
             active={!isSearching && active === "inbox"}
             count={unreadCount + invites.length}
@@ -153,7 +154,7 @@ export const SidebarTabs = memo(() => {
             onClick={() => selectTab("inbox")}
           />
           <Tab
-            icon={<TbMessages {...TAB_ICON} />}
+            icon={<SbChatsIcon {...TAB_ICON} />}
             label={t("chat.title", "Chats")}
             active={!isSearching && active === "chats"}
             count={chatTotal}
@@ -169,7 +170,7 @@ export const SidebarTabs = memo(() => {
           tabIndex={hiddenTab}
           onClick={openSearch}
         >
-          <TbSearch size={17} strokeWidth={1.6} />
+          <SbSearchIcon {...TAB_ICON} />
         </button>
       </div>
 

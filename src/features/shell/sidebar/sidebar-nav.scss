@@ -1,0 +1,107 @@
+$ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+
+// Home · Inbox · Chats · Search, one row each (SidebarNavRow).
+.sb-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
+  // Search shortcut, always shown, quiet.
+  &__kbd {
+    font-family: var(--sb-font);
+    font-size: 11px;
+    color: var(--sb-label-color);
+    white-space: nowrap;
+  }
+
+  // The Search row and the find input stacked in one cell; they cross-fade.
+  &__search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+
+    > * {
+      grid-area: 1 / 1;
+      min-width: 0;
+    }
+  }
+
+  &__search-row,
+  &__search.is-searching &__search-input {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition:
+      opacity 0.2s ease,
+      transform 0.3s $ease-out,
+      visibility 0s linear 0s;
+  }
+
+  &__search-input,
+  &__search.is-searching &__search-row {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 0.18s ease,
+      transform 0.3s $ease-out,
+      visibility 0s linear 0.3s;
+  }
+
+  &__search-input {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    transform: translateX(8px);
+
+    .sb-search {
+      flex: 1;
+      min-width: 0;
+      height: calc(var(--sb-row-h) + 2px);
+      min-height: 0;
+      padding: 0 2px 0 8px;
+      border-radius: var(--sb-row-radius);
+      font-family: var(--sb-font);
+    }
+
+    .sb-search__input {
+      font-family: var(--sb-font);
+      font-size: 13px;
+    }
+  }
+
+  &__search.is-searching &__search-row {
+    transform: translateX(-8px);
+  }
+
+  &__search-close {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: var(--sb-row-h);
+    height: var(--sb-row-h);
+    border-radius: var(--sb-row-radius);
+    color: var(--sb-icon-color);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--sb-hover-bg);
+      color: var(--sb-active-color);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--tt-brand-color-500);
+      outline-offset: -2px;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sb-nav__search > * {
+    transition-duration: 0s !important;
+    transform: none !important;
+  }
+}

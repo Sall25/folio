@@ -1,14 +1,14 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import { TbEdit } from "src/components/tiptap-icons/tabler-icons";
-import { SB_ICON } from "./sidebar-icon";
+import { SbPlusIcon } from "src/components/tiptap-icons/sidebar-icons";
 import { useCreatePageInSpace } from "src/api/use-create-page-in-space";
 import { useActivePageActions } from "../../pages/context/active-page-context";
 import { useIsMobile } from "src/hooks/use-breakpoint";
 import { useEditorLayoutActions } from "../context/editor-layout-context";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 
-// The footer's compose button: a new page in the current space.
+// New page in the current space: the "+" at the end of the sidebar's top
+// row.
 export const NewPageButton = memo(
   ({ className, label = false }: { className?: string; label?: boolean }) => {
     const { t } = useTranslation();
@@ -36,7 +36,7 @@ export const NewPageButton = memo(
         }}
         variant="ghost"
       >
-        <TbEdit {...SB_ICON} className="tiptap-button-icon" />
+        <SbPlusIcon size={16} className="tiptap-button-icon" />
         {label && (
           <span className="tiptap-button-text">{t("page.newPage")}</span>
         )}

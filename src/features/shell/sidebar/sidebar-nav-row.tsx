@@ -47,7 +47,7 @@ export const SidebarNavRow = forwardRef<HTMLButtonElement, SidebarNavRowProps>(
 );
 SidebarNavRow.displayName = "SidebarNavRow";
 
-/** Grey count pill for a row (unread notifications, chat messages). */
+/** Red count pill for a row (unread notifications, chat messages). */
 export function SidebarNavCount({ value }: { value: number }) {
   if (value <= 0) return null;
   return (
