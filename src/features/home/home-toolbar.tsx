@@ -19,8 +19,9 @@ import { HomeSearch } from "./home-search";
 import { useHomeActions } from "./use-home-actions";
 import "./home-toolbar.scss";
 
-// The app toolbar on the home view: Home / teamspace / today's date, then
-// search-or-create, start from a template, and New page.
+// The app toolbar on the home view: Home / teamspace / today's date on the
+// left, search-or-create in the middle, start from a template and New page on
+// the right.
 //   • `leading`: what the shell puts first (the sidebar toggle when collapsed).
 //   • tablet: no date, icon-only buttons.
 //   • mobile: no date, no search box (the sidebar's Search is there), icons.
@@ -32,15 +33,22 @@ export function HomeToolbar({
   size?: "desktop" | "tablet" | "mobile";
 }) {
   const compact = size !== "desktop";
+  // Three columns: crumbs | search | actions. The two sides share the free
+  // space equally, so the search sits in the middle of the toolbar.
   return (
     <>
-      <ToolbarGroup>
+      <ToolbarGroup className="home-toolbar__side">
         {leading}
         <HomeCrumbs showDate={!compact} />
       </ToolbarGroup>
-      <Spacer />
-      <ToolbarGroup className="home-toolbar__actions">
-        {size !== "mobile" && <HomeToolbarSearch />}
+      {size !== "mobile" ? (
+        <div className="home-toolbar__center">
+          <HomeToolbarSearch />
+        </div>
+      ) : (
+        <Spacer />
+      )}
+      <ToolbarGroup className="home-toolbar__side home-toolbar__actions">
         <HomeActions compact={compact} />
       </ToolbarGroup>
     </>

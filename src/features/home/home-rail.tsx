@@ -20,12 +20,12 @@ import { homeWhen } from "./home-time";
 
 // "For you": what's waiting, in a card — notifications (mentions, comments,
 // reminders…) and the chat rooms with unread messages, newest first. It shows
-// the 2 latest; "Show more" expands it (up to FOR_YOU_MAX). The header counts
+// the latest one; "Show more" expands it (up to FOR_YOU_MAX). The header counts
 // what's unread. Each row: who and where, the notification's text (the
 // sentence it quotes), then its status and how long ago — unread rows get a
 // red dot, a tint and a "New" badge; read ones are muted with "✓ Read".
 
-const FOR_YOU_COLLAPSED = 2;
+const FOR_YOU_COLLAPSED = 1;
 const FOR_YOU_MAX = 10;
 
 type Item =

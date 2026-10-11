@@ -12,7 +12,7 @@ $dur: 0.3s;
 }
 
 .dark {
-  --sb-tab-active-bg: #353533;
+  --sb-tab-active-bg: #1e1e1d;
   --sb-tab-active-shadow: 0 1px 2px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(255, 255, 255, 0.06);
   --sb-tab-badge-bg: #7c3aed;
@@ -196,7 +196,7 @@ $dur: 0.3s;
   }
 
   &.is-active {
-    // background: var(--sb-tab-active-bg);
+    background: var(--sb-tab-active-bg);
     color: var(--sb-active-color);
     font-weight: 600;
      border: 1px solid var(--tt-border-color);

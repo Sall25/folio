@@ -1,5 +1,5 @@
-// The app toolbar on the home view: Home / teamspace / date on the left;
-// search-or-create, templates and New page on the right.
+// The app toolbar on the home view: Home / teamspace / date on the left,
+// search-or-create in the middle, templates and New page on the right.
 .home-crumbs {
   display: flex;
   align-items: center;
@@ -44,8 +44,27 @@
   }
 }
 
+// Equal-width sides keep the search centred in the toolbar.
+.home-toolbar__side {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .home-toolbar__actions {
+  justify-content: flex-end;
   gap: 8px;
+}
+
+.home-toolbar__center {
+  flex: 0 1 360px;
+  min-width: 180px;
+  display: flex;
+  justify-content: center;
+  margin: 0 12px;
+
+  .home-search__box {
+    width: 100%;
+  }
 }
 
 // ── Search or create ────────────────────────────────────────────────────────
