@@ -1,5 +1,7 @@
 import {
   Check,
+  ChevronDown,
+  ChevronUp,
   ChevronsRight,
   Ellipsis,
   Link as LinkIcon,
@@ -26,6 +28,10 @@ import { useActivePageActions } from "./context/active-page-context";
 import { usePageViewActions } from "./context/page-view-context";
 import { FavoriteToggle } from "./favorite-toggle";
 import { ShareButton } from "./share/share-button";
+import {
+  moveRecordOpener,
+  openerRecordOrder,
+} from "src/features/database/utils/record-opener";
 import "./peek-toolbar.scss";
 
 // The bar on top of a page opened beside the page (side view) or over it
@@ -71,6 +77,19 @@ export function PeekToolbar({
   };
   const CurrentIcon =
     OPEN_MODES.find((m) => m.mode === mode)?.Icon ?? PanelRight;
+
+  // A database row opened from a view: step to the row above or below it
+  // in that view (its filters and sort), staying in this side / center view.
+  const order = pageId ? openerRecordOrder(pageId) : null;
+  const index = order && pageId ? order.indexOf(pageId) : -1;
+  const prevId = index > 0 ? order![index - 1] : null;
+  const nextId =
+    index !== -1 && order && index < order.length - 1 ? order[index + 1] : null;
+  const goTo = (id: string | null) => {
+    if (!id) return;
+    moveRecordOpener(id);
+    setTarget({ pageId: id, view: mode });
+  };
 
   const copyLink = async () => {
     if (!pageId) return;
@@ -140,6 +159,29 @@ export function PeekToolbar({
             </Card>
           </DropdownMenuContent>
         </DropdownMenu>
+        {index !== -1 && (
+          <>
+            <Separator orientation="vertical" className="peek-toolbar__sep" />
+            <Button
+              variant="ghost"
+              className="peek-toolbar__btn"
+              tooltip={t("peek.previous")}
+              disabled={!prevId}
+              onClick={() => goTo(prevId)}
+            >
+              <ChevronUp className="tiptap-button-icon" />
+            </Button>
+            <Button
+              variant="ghost"
+              className="peek-toolbar__btn"
+              tooltip={t("peek.next")}
+              disabled={!nextId}
+              onClick={() => goTo(nextId)}
+            >
+              <ChevronDown className="tiptap-button-icon" />
+            </Button>
+          </>
+        )}
       </div>
 
       <div className="peek-toolbar__group">

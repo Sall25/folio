@@ -676,6 +676,8 @@
     "path": "Path"
   },
   "peek": {
+    "previous": "Previous page",
+    "next": "Next page",
     "side": "Side peek",
     "center": "Center peek",
     "full": "Full page",

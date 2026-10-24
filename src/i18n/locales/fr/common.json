@@ -583,6 +583,8 @@
     "path": "Chemin"
   },
   "peek": {
+    "previous": "Page précédente",
+    "next": "Page suivante",
     "side": "Aperçu latéral",
     "center": "Aperçu centré",
     "full": "Pleine page",
