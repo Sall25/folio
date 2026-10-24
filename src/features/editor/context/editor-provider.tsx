@@ -237,6 +237,8 @@ function EditorInstance({
   useEffect(() => {
     if (!editor) return;
     editor.storage.paragraph.isDatabasePage = isDbPage;
+    // Lets CSS tell a database's own page apart (database-page.scss).
+    editor.view.dom.classList.toggle("is-database-page", isDbPage);
   }, [editor, isDbPage]);
 
   // ── Autosave — title only. Content persistence is now Yjs/Hocuspocus's

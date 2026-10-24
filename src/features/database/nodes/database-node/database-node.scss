@@ -941,3 +941,12 @@ body.db-row-dragselect {
     opacity: 0.8;
   }
 }
+// A database's own page is [title, database]. Older pages also kept an empty
+// paragraph after the database (the editor's end-of-page line, added before
+// the page was known to be a database page). It can't be removed from the
+// shared document safely, so it isn't shown.
+.tiptap.ProseMirror.is-database-page
+  > .react-renderer.node-database
+  ~ p:has(> .ProseMirror-trailingBreak:only-child) {
+  display: none;
+}
