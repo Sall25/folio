@@ -237,7 +237,7 @@ function EditorInstance({
   useEffect(() => {
     if (!editor) return;
     editor.storage.paragraph.isDatabasePage = isDbPage;
-    // Lets CSS tell a database's own page apart (database-page.scss).
+    // Lets CSS tell a database's own page apart (database-node.scss).
     editor.view.dom.classList.toggle("is-database-page", isDbPage);
   }, [editor, isDbPage]);
 
@@ -316,9 +316,8 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     [dataSources],
   );
 
-  const { ydoc, provider, isSynced, unavailableOffline } = useCollabDoc(
-    activePage ?? null,
-  );
+  const { ydoc, provider, isSynced, unavailableOffline, stalled, retry } =
+    useCollabDoc(activePage ?? null);
 
   useWhyDidYouRender("editor-provider", {
     extensions,
@@ -336,7 +335,9 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   const isSyncing = !!activePage && !ready;
 
   return (
-    <EditorSyncContext.Provider value={{ isSyncing, unavailableOffline }}>
+    <EditorSyncContext.Provider
+      value={{ isSyncing, unavailableOffline, stalled, retry }}
+    >
       <EditorRefsContext.Provider value={refsRef}>
         <CollabProviderContext.Provider value={provider ?? null}>
           {ready ? (

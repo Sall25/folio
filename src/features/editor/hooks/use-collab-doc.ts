@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import * as Y from "yjs";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import { useSession } from "src/hooks/use-session";
@@ -41,6 +41,14 @@ interface UseCollabDocResult {
   source: CollabDocSource | null;
   /** Offline and this page was never opened on this device: nothing to show. */
   unavailableOffline: boolean;
+  /** Online, but the server hasn't sent the page (no sync within
+   *  SYNC_TIMEOUT_MS, or it refused the connection) and there's no local
+   *  copy to open: say so and offer `retry`, instead of claiming we're
+   *  offline or showing the skeleton forever. Clears by itself if the page
+   *  arrives later. */
+  stalled: boolean;
+  /** Start over with a fresh connection. */
+  retry: () => void;
 }
 
 // One Y.Doc + HocuspocusProvider per open page, with a local copy in
@@ -77,6 +85,9 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
   } | null>(null);
   const [unavailableFor, setUnavailableFor] =
     useState<HocuspocusProvider | null>(null);
+  const [stalledFor, setStalledFor] = useState<HocuspocusProvider | null>(null);
+  // Bumped by retry(): a new provider, a new connection.
+  const [attempt, setAttempt] = useState(0);
 
   // Creation AND lifecycle ownership both live here: each effect run owns
   // the provider it created, so StrictMode's mount → cleanup → mount
@@ -88,6 +99,7 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
       setDoc({ ydoc: null, provider: null });
       setReady(null);
       setUnavailableFor(null);
+      setStalledFor(null);
       return;
     }
 
@@ -140,6 +152,9 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
         setReady((prev) =>
           prev?.provider === provider ? prev : { provider, source: "cache" },
         );
+      } else if (navigator.onLine) {
+        // Online: the server is slow or refusing, not "not on this device".
+        setStalledFor(provider);
       } else {
         setUnavailableFor(provider);
       }
@@ -171,6 +186,11 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
     const timeout = window.setTimeout(fallBackToCache, SYNC_TIMEOUT_MS);
     const onOffline = () => fallBackToCache();
     window.addEventListener("offline", onOffline);
+    // Back online: reconnect now rather than at the next backoff step.
+    const onOnline = () => {
+      if (!disposed && !liveSynced) void provider.connect();
+    };
+    window.addEventListener("online", onOnline);
 
     // Payload read defensively: only an explicit { state: false } means
     // "no longer synced".
@@ -183,6 +203,7 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
       hasLineage = true;
       setReady({ provider, source: "server" });
       setUnavailableFor((prev) => (prev === provider ? null : prev));
+      setStalledFor((prev) => (prev === provider ? null : prev));
       scheduleSave();
       // Unsent edits went out with this sync — once the connection has held
       // for a moment, the local copy is no longer dirty.
@@ -216,8 +237,13 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
       scheduleSave();
     };
 
+    // The server refused the connection (an expired or rejected token): it
+    // won't retry on its own, so don't wait out the timeout.
+    const handleAuthFailed = () => fallBackToCache();
+
     provider.on("synced", handleSynced);
     provider.on("status", handleStatus);
+    provider.on("authenticationFailed", handleAuthFailed);
     ydoc.on("update", handleUpdate);
 
     return () => {
@@ -225,8 +251,10 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
       window.clearTimeout(timeout);
       if (cleanTimer !== null) window.clearTimeout(cleanTimer);
       window.removeEventListener("offline", onOffline);
+      window.removeEventListener("online", onOnline);
       provider.off("synced", handleSynced);
       provider.off("status", handleStatus);
+      provider.off("authenticationFailed", handleAuthFailed);
       ydoc.off("update", handleUpdate);
       // Flush a pending save before the doc goes away (offline edits!).
       if (saveTimer !== null) {
@@ -241,12 +269,19 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
       closeDoc();
       setReady((prev) => (prev?.provider === provider ? null : prev));
       setUnavailableFor((prev) => (prev === provider ? null : prev));
+      setStalledFor((prev) => (prev === provider ? null : prev));
     };
-  }, [pageId, token, personId]);
+  }, [pageId, token, personId, attempt]);
 
   const isSynced = ready !== null && ready.provider === doc.provider;
   const unavailableOffline =
     !isSynced && unavailableFor !== null && unavailableFor === doc.provider;
+  const stalled =
+    !isSynced &&
+    !unavailableOffline &&
+    stalledFor !== null &&
+    stalledFor === doc.provider;
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
   return {
     ydoc: doc.ydoc,
@@ -254,5 +289,7 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
     isSynced,
     source: ready && ready.provider === doc.provider ? ready.source : null,
     unavailableOffline,
+    stalled,
+    retry,
   };
 }
