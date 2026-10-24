@@ -22,7 +22,10 @@ import {
 } from "../../hooks/use-timeline-layout";
 import { TimelineCardBody } from "../database-timeline-node-view/timeline-card-body";
 import { CalendarEventBar } from "../database-calendar-node-view/calendar-event-bar";
-import { ResizableNodeProvider, useResizableNode } from "src/components/tiptap-node/resizable-node";
+import {
+  ResizableNodeProvider,
+  useResizableNode,
+} from "src/components/tiptap-node/resizable-node";
 
 // Sits inside ResizableNodeProvider so it can consume the ref the provider
 // creates internally — that ref has to be attached to the actual DOM box
@@ -239,6 +242,35 @@ export default function DatabaseRecordNodeView({
     }
   }, [wrapperEl, isBoard, isGallery, isCalendar, isTimeline, recordId, data]);
 
+  // Conditional color: the row's colour, on the record's box (table and list
+  // rows, board and gallery cards, timeline bars); calendar bars get it below.
+  const rowColor = recordId ? data?.recordColors?.[recordId]?.row : undefined;
+  useLayoutEffect(() => {
+    const box = wrapperEl?.closest<HTMLElement>(
+      ".react-renderer.node-databaseRecord",
+    );
+    if (!box) return;
+    if (rowColor) {
+      box.setAttribute("data-cc", rowColor);
+      box.style.setProperty(
+        "--cc-accent",
+        `var(--tt-color-accent-${rowColor})`,
+      );
+    } else {
+      box.removeAttribute("data-cc");
+      box.style.removeProperty("--cc-accent");
+    }
+  }, [
+    wrapperEl,
+    isBoard,
+    isGallery,
+    isCalendar,
+    isTimeline,
+    recordId,
+    data,
+    rowColor,
+  ]);
+
   const isTableView = data?.view?.type === "table";
   const [pointerOnCheckbox, setPointerOnCheckbox] = useState(false);
   const showCheckbox =
@@ -335,6 +367,7 @@ export default function DatabaseRecordNodeView({
             recordId={recordId}
             editor={editor ?? null}
             setCellValue={data.setCellValue}
+            color={rowColor}
           />
         ))}
       </>

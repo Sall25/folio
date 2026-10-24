@@ -160,15 +160,25 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
 
   const record = data.recordsById.get(recordId) ?? null;
   const value = record?.values?.[propertyId] ?? null;
+  // Conditional color on this cell alone (a table's "cell only" rule).
+  const cellColor = data.recordColors?.[recordId]?.cells?.[propertyId];
 
   return (
     <NodeViewWrapper
       as="div"
       data-type="database-cell"
       data-cell-kind="atom"
+      data-cc={cellColor}
       className="db-node-cell db-node-cell--atom"
       contentEditable={false}
-      style={viewStyle}
+      style={
+        cellColor
+          ? {
+              ...viewStyle,
+              "--cc-accent": `var(--tt-color-accent-${cellColor})`,
+            }
+          : viewStyle
+      }
     >
       {record && (
         <Cell

@@ -18,6 +18,7 @@ import type {
 import type { GalleryPlacement } from "../hooks/use-gallery-layout";
 import type { CalendarPlacement } from "../hooks/use-calendar-layout";
 import type { TimelinePlacement } from "../hooks/use-timeline-layout";
+import type { RecordColors } from "./conditional-color";
 
 export interface DatabaseBridgeData {
   sourceId: ID | null;
@@ -39,6 +40,9 @@ export interface DatabaseBridgeData {
   // (frozenPropertyId lives on the view), so cells don't move — they just render
   // sticky. A property absent from this map is not frozen.
   stickyByProp: Record<ID, { left: number; isBoundary: boolean }>;
+  /** Conditional color, per record: the row's colour and, in a table, the
+   *  colour of single cells. Absent → no colour. */
+  recordColors?: Record<ID, RecordColors>;
   // Kept as functions — they close over the live DataSource hooks in the
   // database NodeView. Not serialized; storage just holds the references.
   setCellValue: (recordId: ID, propertyId: ID, value: CellValue | null) => void;

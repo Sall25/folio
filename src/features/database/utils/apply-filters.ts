@@ -271,10 +271,10 @@ function matchesRule(
     };
     const a = toDay(value);
     const b = toDay(ruleValue);
-    
+
     if (b == null) return true;
     if (a == null) return false;
-    
+
     switch (op) {
       case "is":
         return a === b;
@@ -361,6 +361,16 @@ function matchesGroup(
   if (group.operator === "and")
     return rules.every((r) => matchesRule(record, r, properties, ctx));
   return rules.some((r) => matchesRule(record, r, properties, ctx));
+}
+
+/** One condition on its own (conditional color uses these). */
+export function recordMatchesRule(
+  record: Page,
+  rule: FilterRule,
+  properties?: DatabaseProperty[],
+  ctx: FilterContext = {},
+): boolean {
+  return matchesRule(record, rule, properties, ctx);
 }
 
 export function recordMatchesFilters(

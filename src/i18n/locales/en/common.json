@@ -1302,6 +1302,15 @@
     "failed": "Couldn't move to {{title}}. The blocks are still here."
   },
   "database": {
+    "conditionalColor": {
+      "empty": "Color rows that match a rule. The first rule a row matches gives its color.",
+      "addRule": "Add rule",
+      "optionColor": "Option color",
+      "cellOnly": "Cell only",
+      "rulesCount_zero": "None",
+      "rulesCount_one": "{{count}} rule",
+      "rulesCount_other": "{{count}} rules"
+    },
     "recordPanel": {
       "addProperty": "Add a property"
     },
@@ -1328,6 +1337,7 @@
       "createTemplate": "Create a template"
     },
     "viewOptions": {
+      "conditionalColor": "Conditional color",
       "title": "View options",
       "settings": "Settings",
       "options": "Options",

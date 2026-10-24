@@ -20,6 +20,12 @@ import type { BoardLayout, BoardPlacement } from "./use-board-layout";
 import type { GalleryLayout, GalleryPlacement } from "./use-gallery-layout";
 import type { CalendarLayout, CalendarPlacement } from "./use-calendar-layout";
 import type { TimelineLayout, TimelinePlacement } from "./use-timeline-layout";
+import { useSession } from "src/hooks/use-session";
+import { usePageTitles } from "./use-page-titles";
+import {
+  computeRecordColors,
+  type RecordColors,
+} from "../utils/conditional-color";
 
 interface Params {
   editor: Editor | null;
@@ -48,6 +54,7 @@ const EMPTY_GALLERY_PLACEMENT: Record<string, GalleryPlacement> = {};
 const EMPTY_BOARD_PLACEMENT: BoardPlacement = {};
 const EMPTY_CALENDAR_PLACEMENT: Record<string, CalendarPlacement> = {};
 const EMPTY_TIMELINE_PLACEMENT: Record<string, TimelinePlacement> = {};
+const EMPTY_RECORD_COLORS: Record<string, RecordColors> = {};
 
 export function useDatabaseBridgePublish({
   editor,
@@ -122,6 +129,24 @@ export function useDatabaseBridgePublish({
     return out;
   }, [properties, activeView, columnWidthByProp]);
 
+  // Conditional color: worked out once per change, here, so each row and
+  // cell only looks its own colour up. Cells only in a table.
+  const meId = useSession().session?.user.id ?? null;
+  const titleOf = usePageTitles();
+  const recordColors = useMemo(
+    () =>
+      activeView?.colorRules?.length
+        ? computeRecordColors(
+            recordsById.values(),
+            activeView.colorRules,
+            properties,
+            { meId, titleOf },
+            activeView.type === "table",
+          )
+        : EMPTY_RECORD_COLORS,
+    [activeView, recordsById, properties, meId, titleOf],
+  );
+
   const bridgeData: DatabaseBridgeData = useMemo(
     () => ({
       sourceId: attrs.sourceId ?? null,
@@ -134,6 +159,7 @@ export function useDatabaseBridgePublish({
       columnWidthByProp,
       sortedRecordIds: rowSlots,
       stickyByProp,
+      recordColors,
       setCellValue: bridgeSetCellValue,
       columnValuesByProp:
         columnValuesByProp as DatabaseBridgeData["columnValuesByProp"],
@@ -165,6 +191,7 @@ export function useDatabaseBridgePublish({
       columnWidthByProp,
       rowSlots,
       stickyByProp,
+      recordColors,
       columnValuesByProp,
       bridgeSetCellValue,
       boardLayout,

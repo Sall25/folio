@@ -1,4 +1,4 @@
-import type { FilterOperator, FilterGroup } from "./filter-types";
+import type { FilterOperator, FilterGroup, FilterRule } from "./filter-types";
 import type { JSONContent } from "@tiptap/core";
 import type { Target } from "src/features/pages/cover/types";
 
@@ -423,6 +423,21 @@ interface BaseView {
   iconName?: string;
   target?: Target;
   color?: string;
+  /** Conditional color: rows (or, in a table, cells) painted by rules. The
+   *  first matching rule wins. */
+  colorRules?: ColorRule[];
+}
+
+/** One conditional-color rule: when a record matches `rule` (a filter
+ *  condition: property, operator, value), paint it `color`. */
+export interface ColorRule {
+  id: ID;
+  rule: FilterRule;
+  /** A pill colour name ("red", "blue"…). "default": the matched option's
+   *  own colour (select, multi-select, status), gray otherwise. */
+  color: string;
+  /** Table only: paint just this property's cell, not the whole row. */
+  cellOnly?: boolean;
 }
 
 export interface TableView extends BaseView {
@@ -537,6 +552,7 @@ export type PanelView =
   | { type: "layout" }
   | { type: "open-pages-in" }
   | { type: "group" }
+  | { type: "conditional-color" }
   | { type: "sub-items" };
 
 // ─────────────────────────────────────────────────────────────────────────────

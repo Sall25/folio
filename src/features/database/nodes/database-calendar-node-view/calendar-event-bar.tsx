@@ -28,6 +28,8 @@ interface CalendarEventBarProps {
     propertyId: string,
     value: CellValue,
   ) => void;
+  /** Conditional color (a pill colour name), when a rule matches. */
+  color?: string;
 }
 
 // Rendered INSIDE ResizableNodeProvider, so it's the only place that can
@@ -44,7 +46,9 @@ function CalendarBarInner({
   canResizeRight,
   colWidthPxRef,
   resizeIntentRef,
+  color,
 }: {
+  color?: string;
   record: Page;
   view: CalendarView;
   segment: CalendarSegment;
@@ -82,8 +86,12 @@ function CalendarBarInner({
       }}
       className="db-cal-bar"
       data-record-id={recordId}
+      data-cc={color}
       draggable
       style={{
+        ...(color
+          ? { "--cc-accent": `var(--tt-color-accent-${color})` }
+          : null),
         gridColumn: `${segment.colStart + 1} / span ${segment.colSpan}`,
         gridRow: segment.row + 1,
         transform: `translateY(${segment.track * RECORD_HEIGHT + CELL_HEADER_HEIGHT}px)`,
@@ -161,6 +169,7 @@ export function CalendarEventBar({
   recordId,
   editor,
   setCellValue,
+  color,
 }: CalendarEventBarProps) {
   const colWidthPxRef = useRef(0);
   const resizeIntentRef = useRef(false);
@@ -207,6 +216,7 @@ export function CalendarEventBar({
         canResizeRight={canResizeRight}
         colWidthPxRef={colWidthPxRef}
         resizeIntentRef={resizeIntentRef}
+        color={color}
       />
     </ResizableNodeProvider>,
     grid,

@@ -1302,6 +1302,15 @@
     "failed": "Impossible de déplacer vers {{title}}. Les blocs sont toujours ici."
   },
   "database": {
+    "conditionalColor": {
+      "empty": "Colorez les lignes qui correspondent à une règle. La première règle qu'une ligne remplit lui donne sa couleur.",
+      "addRule": "Ajouter une règle",
+      "optionColor": "Couleur de l'option",
+      "cellOnly": "Cellule seulement",
+      "rulesCount_zero": "Aucune",
+      "rulesCount_one": "{{count}} règle",
+      "rulesCount_other": "{{count}} règles"
+    },
     "recordPanel": {
       "addProperty": "Ajouter une propriété"
     },
@@ -1328,6 +1337,7 @@
       "createTemplate": "Créer un modèle"
     },
     "viewOptions": {
+      "conditionalColor": "Couleur conditionnelle",
       "title": "Options de la vue",
       "settings": "Paramètres",
       "options": "Options de vue",
