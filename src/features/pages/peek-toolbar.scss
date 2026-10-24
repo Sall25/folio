@@ -1,0 +1,139 @@
+// The side and center views of a page (page-peek-view, page-center-view):
+// their toolbar, and the page laid out the way a full page is — the cover
+// flush with the panel's edges and not as tall, the text set in from both
+// sides, the title close under the cover.
+
+.peek-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+
+  &__group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  &__btn.tiptap-button {
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    padding: 0;
+    color: var(--tt-text-secondary);
+    background: transparent;
+
+    .tiptap-button-icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover:not(:disabled) {
+      color: var(--tt-text-primary);
+      background: var(--tt-button-hover-bg-color);
+    }
+  }
+
+  &__sep {
+    height: 18px;
+    margin: 0 6px;
+  }
+}
+
+// ── The page inside ────────────────────────────────────────────────────────
+.page-peek,
+.page-create-modal {
+  // The body runs edge to edge: the cover meets the panel's sides.
+  padding: 0 !important;
+  gap: 0 !important;
+  // The side margin of the text (and the page icon) follows the panel's
+  // width: cqi is 1% of it.
+  container-type: inline-size;
+
+  > .tiptap-card-body {
+    padding: 0 !important;
+  }
+
+  // The page icon lines up with the text below it.
+  .cover-header-wrapper > div:last-child {
+    padding-left: var(--peek-gutter);
+    box-sizing: border-box;
+  }
+
+  // A shorter cover than a full page's.
+  .cover-image-root {
+    height: 200px !important;
+  }
+
+  // The title sits closer under the cover.
+  .tiptap.ProseMirror h1[data-type="title"] {
+    margin-top: 24px;
+  }
+}
+
+.page-peek {
+  --peek-gutter: clamp(24px, 11cqi, 96px);
+}
+.page-create-modal {
+  --peek-gutter: clamp(32px, 12cqi, 140px);
+}
+
+// Scroll bars, the browser's own full-width bar as on a full page.
+//
+// Side view: the page it opened from makes room for it instead of running
+// under it, so that page's bar ends at the panel's left edge, and the
+// panel's own bar is on its right edge. --peek-width is the panel's width
+// (page-peek-view.tsx keeps it on <html> while the panel is open).
+body:has(.page-peek) .simple-editor-main {
+  margin-right: var(--peek-width, 480px);
+}
+
+.page-peek > .tiptap-card-body {
+  scrollbar-width: auto;
+  scrollbar-color: rgba(55, 53, 47, 0.25) transparent;
+
+  .dark & {
+    scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+  }
+}
+
+.page-create-modal.page-create-modal > .tiptap-card-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(55, 53, 47, 0.25) transparent;
+
+  .dark & {
+    scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+  }
+}
+
+// Side view: the text is set in from both sides and fills the panel.
+.page-peek .page-peek-content {
+  max-width: none;
+  padding: 0 var(--peek-gutter) 64px;
+  font-size: 1rem;
+
+  .tiptap.ProseMirror h1[data-type="title"] {
+    font-size: 2.25rem;
+  }
+}
+
+// Center view: a framed window over the page — rounded, outlined, and as
+// wide as a page's text plus its margins.
+.page-create-modal {
+  width: min(1200px, calc(100vw - 96px)) !important;
+  height: calc(100vh - 140px) !important;
+  max-height: none !important;
+  border-radius: 12px !important;
+  box-shadow:
+    0 0 0 1px var(--tt-border-color),
+    var(--tt-shadow-elevated-md);
+
+  .page-create-content {
+    padding: 0 var(--peek-gutter) 64px;
+  }
+}

@@ -672,6 +672,11 @@
     "subpages": "Pages",
     "path": "Path"
   },
+  "peek": {
+    "close": "Close",
+    "openFull": "Open as full page",
+    "switchMode": "Switch between side and center view"
+  },
   "share": {
     "share": "Share",
     "addPlaceholder": "Add people or groups by name or email",

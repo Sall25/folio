@@ -1,17 +1,9 @@
 import { usePeekCollab } from "../editor/hooks/use-peek-collab";
 import { useSyncDocTitle } from "../editor/utils/doc-title";
 import { usePageCapabilities } from "src/hooks/use-page-role";
-import { useActivePageActions } from "./context/active-page-context";
 import type { Page } from "src/types";
 import { Editor, useEditor, type Extensions } from "@tiptap/react";
-import {
-  Card,
-  CardBody,
-  CardItemGroup,
-} from "src/components/tiptap-ui-primitive/card";
-import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Ellipsis, Maximize2 } from "lucide-react";
-import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { Card, CardBody } from "src/components/tiptap-ui-primitive/card";
 import { EditorContent } from "@tiptap/react";
 import React, {
   useCallback,
@@ -24,7 +16,7 @@ import type { Target } from "src/features/pages/cover/types";
 import { FloatingMenu } from "@tiptap/react/menus";
 import { FloatingActions } from "../shell/floating-actions";
 import { CoverHeader } from "src/features/pages/cover";
-import { usePageView, usePageViewActions } from "./context/page-view-context";
+import { usePageView } from "./context/page-view-context";
 import { useRecordPropertyPanel } from "../database/record-property-panel/use-record-property-panel";
 import type { Transaction } from "@tiptap/pm/state";
 import { usePage } from "src/hooks/use-pages";
@@ -33,11 +25,9 @@ import { patchPage } from "src/api/pages";
 import { useDebouncedCallback } from "use-debounce";
 import { TemplateChoicePanel } from "./templates/template-choice-panel";
 import { PageBodySkeleton } from "./page-body-skeleton";
-import { Bone } from "src/components/tiptap-ui-primitive/bone/bone";
 import { usePageComment } from "../comments/page-comment-node/use-page-comment";
-import { FavoriteToggle } from "./favorite-toggle";
-import { ShareButton } from "./share/share-button";
 import { useMentionData } from "src/components/tiptap-ui/mention-menu/use-mention-data";
+import { PeekToolbar } from "./peek-toolbar";
 
 // Backdrop overlay for the centered modal
 function ModalBackdrop({ onClose }: { onClose?: () => void }) {
@@ -182,9 +172,6 @@ function CenterFrame({
   onClose?: () => void;
   children: ReactNode;
 }) {
-  const { setTarget: setViewTarget } = usePageViewActions();
-  const { setActivePageId } = useActivePageActions();
-
   // Escape closes, loaded or not.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -199,44 +186,7 @@ function CenterFrame({
       <ModalBackdrop onClose={onClose} />
 
       <Card className="page-create-modal">
-        <CardItemGroup
-          orientation="horizontal"
-          style={{ width: "100%", justifyContent: "flex-start" }}
-        >
-          <Button
-            size="large"
-            variant="ghost"
-            disabled={!pageId}
-            onClick={() => {
-              if (!pageId) return;
-              setViewTarget(undefined);
-              setActivePageId(pageId);
-            }}
-            aria-label="Open full page"
-          >
-            <Maximize2 className="tiptap-button-icon" />
-          </Button>
-          <Spacer orientation="horizontal" />
-          <CardItemGroup orientation="horizontal">
-            {page ? (
-              <>
-                <ShareButton page={page} />
-                <Spacer orientation="horizontal" size={2} />
-                <FavoriteToggle page={page} />
-              </>
-            ) : (
-              <>
-                <Bone width={56} height={24} rounded />
-                <Spacer orientation="horizontal" size={2} />
-                <Bone width={28} height={28} rounded />
-              </>
-            )}
-            <Spacer orientation="horizontal" size={2} />
-            <Button variant="ghost">
-              <Ellipsis className="tiptap-button-icon" />
-            </Button>
-          </CardItemGroup>
-        </CardItemGroup>
+        <PeekToolbar mode="Center" pageId={pageId} page={page} />
 
         <CardBody style={{ width: "100%" }}>{children}</CardBody>
       </Card>

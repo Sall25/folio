@@ -1,21 +1,14 @@
 import { usePeekCollab } from "../editor/hooks/use-peek-collab";
 import { useSyncDocTitle } from "../editor/utils/doc-title";
 import { usePageCapabilities } from "src/hooks/use-page-role";
-import { useActivePageActions } from "./context/active-page-context";
 import type { Page } from "src/types";
 import { Editor, useEditor, type Extensions } from "@tiptap/react";
-import {
-  Card,
-  CardBody,
-  CardItemGroup,
-} from "src/components/tiptap-ui-primitive/card";
-import { Button } from "src/components/tiptap-ui-primitive/button";
-import { ChevronsRight, Ellipsis, Maximize2 } from "lucide-react";
-import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { Card, CardBody } from "src/components/tiptap-ui-primitive/card";
 import { EditorContent } from "@tiptap/react";
 import React, {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -30,18 +23,13 @@ import { PeekEditorProvider } from "../editor/context/peek-editor-provider";
 import { useDebouncedCallback } from "use-debounce";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
-import {
-  usePageViewActions,
-  usePageViewState,
-} from "./context/page-view-context";
+import { usePageViewState } from "./context/page-view-context";
 import { usePage } from "src/hooks/use-pages";
 import { useLocalStorage } from "../../hooks/use-local-storage";
 import "./page-peek-view.scss";
+import { PeekToolbar } from "./peek-toolbar";
 import { PageBodySkeleton } from "./page-body-skeleton";
-import { Bone } from "src/components/tiptap-ui-primitive/bone/bone";
 import { usePageComment } from "../comments/page-comment-node/use-page-comment";
-import { FavoriteToggle } from "./favorite-toggle";
-import { ShareButton } from "./share/share-button";
 import { useMentionData } from "src/components/tiptap-ui/mention-menu/use-mention-data";
 
 const FloatingMenuMemo = React.memo(function FloatingMenuMemo({
@@ -143,6 +131,13 @@ export function PagePeekView({ onClose }: { onClose?: () => void }) {
 const PEEK_MIN = 380;
 const PEEK_DEFAULT = 480; // ← set to your current .page-peek width
 
+/** The open side view's width, on <html> as --peek-width; null removes it. */
+function setPeekWidthVar(width: number | null) {
+  const root = document.documentElement.style;
+  if (width == null) root.removeProperty("--peek-width");
+  else root.setProperty("--peek-width", `${width}px`);
+}
+
 const clampWidth = (w: number) =>
   Math.min(Math.max(w, PEEK_MIN), Math.round(window.innerWidth * 0.9));
 
@@ -157,9 +152,6 @@ function PeekFrame({
   onClose?: () => void;
   children: ReactNode;
 }) {
-  const { setTarget: setViewTarget } = usePageViewActions();
-  const { setActivePageId } = useActivePageActions();
-
   // ── Resize ────────────────────────────────────────────────────────────────
   // Left-edge drag handle widens/narrows the right-anchored peek. Width persists
   // via useLocalStorage. During the drag we write straight to the card's DOM (no
@@ -183,6 +175,7 @@ function PeekFrame({
     const next = clampWidth(window.innerWidth - e.clientX);
     liveWidthRef.current = next;
     cardRef.current.style.width = `${next}px`; // DOM only — no re-render
+    setPeekWidthVar(next);
   }, []);
 
   const onResizeEnd = useCallback(
@@ -194,6 +187,12 @@ function PeekFrame({
     },
     [setWidth],
   );
+
+  // The page behind makes room for the panel (peek-toolbar.scss reads it).
+  useLayoutEffect(() => {
+    setPeekWidthVar(width);
+  }, [width]);
+  useLayoutEffect(() => () => setPeekWidthVar(null), []);
 
   return (
     <Card
@@ -219,56 +218,7 @@ function PeekFrame({
         onPointerCancel={onResizeEnd}
       />
 
-      <CardItemGroup
-        orientation="horizontal"
-        style={{ width: "100%", justifyContent: "flex-start" }}
-      >
-        <CardItemGroup orientation="horizontal">
-          <Button
-            size="large"
-            style={{ background: "transparent" }}
-            variant="ghost"
-            onClick={onClose}
-          >
-            <ChevronsRight
-              className="tiptap-button-icon"
-              strokeWidth={1}
-              style={{ width: 28, height: 22 }}
-            />
-          </Button>
-          <Button
-            variant="ghost"
-            disabled={!pageId}
-            onClick={() => {
-              if (!pageId) return;
-              setViewTarget(undefined);
-              setActivePageId(pageId);
-            }}
-          >
-            <Maximize2 className="tiptap-button-icon" />
-          </Button>
-        </CardItemGroup>
-        <Spacer orientation="horizontal" />
-        <CardItemGroup orientation="horizontal">
-          {page ? (
-            <>
-              <ShareButton page={page} />
-              <Spacer orientation="horizontal" size={2} />
-              <FavoriteToggle page={page} />
-            </>
-          ) : (
-            <>
-              <Bone width={56} height={24} rounded />
-              <Spacer orientation="horizontal" size={2} />
-              <Bone width={28} height={28} rounded />
-            </>
-          )}
-          <Spacer orientation="horizontal" size={2} />
-          <Button variant="ghost">
-            <Ellipsis className="tiptap-button-icon" />
-          </Button>
-        </CardItemGroup>
-      </CardItemGroup>
+      <PeekToolbar mode="Peek" pageId={pageId} page={page} onClose={onClose} />
       <CardBody style={{ width: "100%" }}>{children}</CardBody>
     </Card>
   );

@@ -579,6 +579,11 @@
     "subpages": "Pages",
     "path": "Chemin"
   },
+  "peek": {
+    "close": "Fermer",
+    "openFull": "Ouvrir en pleine page",
+    "switchMode": "Passer de la vue latérale à la vue centrée"
+  },
   "share": {
     "share": "Partager",
     "addPlaceholder": "Ajouter des personnes ou des groupes par nom ou e-mail",
