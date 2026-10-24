@@ -197,7 +197,9 @@ function TitleGroup({ view }: { view: View }) {
   const { canEditContent, isLoading } = usePageCapabilities(activePageId);
 
   return (
-    <ToolbarGroup>
+    // Shrinks before anything on the right does: the breadcrumbs give way
+    // (titles cut with "…") instead of pushing Share and the rest off screen.
+    <ToolbarGroup className="toolbar-title-group">
       {collapsed && <Expand />}
 
       {view === "library" && (

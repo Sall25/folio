@@ -14,6 +14,12 @@ import {
   CardHeader,
 } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "src/components/tiptap-ui-primitive/dropdown-menu";
 
 // how many crumbs before we collapse the middle
 const MAX_VISIBLE = 4;
@@ -55,6 +61,9 @@ export function Breadcrumbs({
 
   // index in `visible` where the ellipsis goes (after the root) when collapsed
   const ellipsisAfter = collapsed ? 0 : -1;
+  // The pages folded into the "…": everything between the root and the
+  // parent. Clicking the "…" lists them.
+  const hidden = collapsed ? chain.slice(1, chain.length - 2) : [];
 
   return (
     <nav className="breadcrumbs" aria-label="Breadcrumb">
@@ -73,12 +82,7 @@ export function Breadcrumbs({
             {!isLast && <Sep />}
             {i === ellipsisAfter && (
               <>
-                <span
-                  className="breadcrumbs__ellipsis"
-                  aria-label="Hidden pages"
-                >
-                  <MoreHorizontal size={14} />
-                </span>
+                <HiddenCrumbs pages={hidden} onPick={setActivePageId} />
                 <Sep />
               </>
             )}
@@ -86,6 +90,53 @@ export function Breadcrumbs({
         );
       })}
     </nav>
+  );
+}
+
+/** The "…" standing for the pages between the root and the parent: a menu
+ *  of them, top to bottom. */
+function HiddenCrumbs({
+  pages,
+  onPick,
+}: {
+  pages: Page[];
+  onPick: (id: ID) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className="breadcrumbs__ellipsis"
+          aria-label="Hidden pages"
+        >
+          <MoreHorizontal size={14} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <Card className="breadcrumbs__hidden-menu">
+          <CardBody>
+            {pages.map((page) => (
+              <DropdownMenuItem key={page.id} asChild>
+                <Button
+                  variant="ghost"
+                  className="breadcrumbs__hidden-item"
+                  onClick={() => onPick(page.id)}
+                >
+                  <PageItemIcon
+                    cover={page.cover}
+                    styles={{ width: 16, height: 16 }}
+                  />
+                  <span className="tiptap-button-text">
+                    {page.title || "Untitled"}
+                  </span>
+                </Button>
+              </DropdownMenuItem>
+            ))}
+          </CardBody>
+        </Card>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -162,6 +213,7 @@ function Crumb({
     <span
       ref={wrapRef}
       className="breadcrumbs__crumb-wrap"
+      data-last={isLast || undefined}
       onMouseEnter={openNow}
       onMouseLeave={closeSoon}
     >
