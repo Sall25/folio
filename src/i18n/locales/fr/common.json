@@ -583,6 +583,9 @@
     "path": "Chemin"
   },
   "peek": {
+    "side": "Aperçu latéral",
+    "center": "Aperçu centré",
+    "full": "Pleine page",
     "close": "Fermer",
     "openFull": "Ouvrir en pleine page",
     "switchMode": "Passer de la vue latérale à la vue centrée"

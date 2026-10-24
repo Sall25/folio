@@ -43,6 +43,23 @@
     height: 18px;
     margin: 0 6px;
   }
+
+  // How to open the page: side, center, full page.
+  &__menu {
+    min-width: 190px;
+    padding: 5px;
+  }
+
+  &__menu-item.tiptap-button {
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+  }
+
+  &__menu-check {
+    margin-left: auto;
+    color: var(--tt-text-secondary);
+  }
 }
 
 // ── The page inside ────────────────────────────────────────────────────────

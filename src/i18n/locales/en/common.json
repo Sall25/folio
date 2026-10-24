@@ -676,6 +676,9 @@
     "path": "Path"
   },
   "peek": {
+    "side": "Side peek",
+    "center": "Center peek",
+    "full": "Full page",
     "close": "Close",
     "openFull": "Open as full page",
     "switchMode": "Switch between side and center view"
