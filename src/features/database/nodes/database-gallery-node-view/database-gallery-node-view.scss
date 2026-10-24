@@ -28,11 +28,12 @@
 .db-new-card--gallery {
   display: flex;
   height: auto; // the Button primitive is 2rem tall; the tile fills its cell
+  min-height: 50px;
+  border-radius: 10px;
   align-items: center !important;
   justify-content: center !important;
   padding: 0 auto;
   border: 1px solid var(--tt-border-color);
-  border-radius: var(--tt-radius-lg);   // gallery cards use radius-lg
   background: transparent;
   color: var(--tt-text-secondary);
   cursor: pointer;

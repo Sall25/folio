@@ -62,7 +62,7 @@ export function ConfirmDialog({
         aria-describedby="confirm-dialog-desc"
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: 300,
+          width: "fit-content",
           maxWidth: "90vw",
           padding: 20,
           display: "flex",
@@ -99,10 +99,10 @@ export function ConfirmDialog({
               border: destructive
                 ? "1px solid var(--tt-color-text-red, #ef4444)"
                 : "1px solid var(--tt-brand-color-400)",
-              color: destructive
+              background: destructive
                 ? "var(--tt-color-text-red, #ef4444)"
                 : "var(--tt-brand-color-400)",
-              background: "transparent",
+              color: "white",
               cursor: "pointer",
             }}
           >

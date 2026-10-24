@@ -34,7 +34,9 @@ export function collectSubtree(pages: Page[], rootId: ID): Set<ID> {
 export function partitionPages(pageIds: Set<ID>, allSources: DataSource[]) {
   const containerSourceIds = new Set<ID>();
   for (const s of allSources) {
-    if (pageIds.has(s.pageId)) containerSourceIds.add(s.id);
+    // A database with no page of its own yet goes with the page holding it.
+    const owner = s.pageId ?? s.hostPageId ?? null;
+    if (owner != null && pageIds.has(owner)) containerSourceIds.add(s.id);
   }
   return { containerSourceIds };
 }
@@ -55,7 +57,8 @@ export function planSourceSweep(
   // owned page roots: each deleted source's container page + its row-pages
   const ownedPageRoots: ID[] = [];
   for (const s of allSources) {
-    if (deletedSourceIds.has(s.id)) ownedPageRoots.push(s.pageId);
+    if (deletedSourceIds.has(s.id) && s.pageId != null)
+      ownedPageRoots.push(s.pageId);
   }
   for (const p of allPages) {
     if (p.sourceId != null && deletedSourceIds.has(p.sourceId))

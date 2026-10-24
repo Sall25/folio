@@ -133,7 +133,7 @@ export function makeCellNode(prop: DatabaseProperty): JSONContent {
 }
 
 // properties is optional — only needed for board to auto-pick groupByPropertyId.
-// Status is preferred over select, matching Notion's behavior.
+// Status is preferred over select.
 export function makeDefaultView(
   type: DatabaseView["type"],
   name: string,
@@ -157,7 +157,7 @@ export function makeDefaultView(
       };
 
     case "board": {
-      // Prefer status → select → multi_select → checkbox, matching Notion
+      // Prefer status → select → multi_select → checkbox
       const groupProp =
         properties.find((p) => p.config.type === "status") ??
         properties.find((p) => p.config.type === "select") ??
@@ -168,7 +168,7 @@ export function makeDefaultView(
         ...base,
         type: "board",
         groupByPropertyId: groupProp?.id ?? "",
-        showEmptyGroups: false,
+        showEmptyGroups: true,
         cardPreview: "none",
         cardSize: "medium",
         coverFit: "cover",

@@ -13,9 +13,14 @@ export function useCreateDataSource() {
       // database row. A row-page has sourceId != null. Reject before creating.
       // This is what guarantees useDeleteDataSource never needs to recurse
       // (row-pages can't be containers).
-      const containerPage = await fetchPage(source.pageId);
-      if (containerPage.sourceId != null) {
-        throw new Error("Cannot create a database inside a database row");
+      // A database made from a block has no page yet: the page holding the
+      // block is the one checked.
+      const containerId = source.pageId ?? source.hostPageId ?? null;
+      if (containerId != null) {
+        const containerPage = await fetchPage(containerId);
+        if (containerPage.sourceId != null) {
+          throw new Error("Cannot create a database inside a database row");
+        }
       }
       return createDataSource(source);
     },
@@ -30,7 +35,7 @@ export function useCreateDataSource() {
       const cachedPage = qc
         .getQueriesData<Page[]>({ queryKey: queryKeys.pages.lists() })
         .flatMap(([, pages]) => pages ?? [])
-        .find((p) => p.id === source.pageId);
+        .find((p) => p.id === (source.pageId ?? source.hostPageId));
 
       const isRow = cachedPage?.sourceId != null;
       if (!isRow) {

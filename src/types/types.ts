@@ -69,7 +69,12 @@ export interface DataSource {
   /** the rows */
   createdAt: CreatedAt;
   updatedAt: UpdatedAt;
-  pageId: ID;
+  /** The database's own page. Null until the database is given a title: a
+   *  database made from a block is only a block until then. */
+  pageId: ID | null;
+  /** The page whose block made it, while it has no page of its own: who
+   *  can see and edit it, and where its rows live (migration 046). */
+  hostPageId?: ID | null;
   name: string;
   savedViews: SavedView[];
   views: DatabaseView[];
@@ -780,7 +785,7 @@ export interface WorkspaceSettings {
 
   sidebar: WorkspaceSidebarSettings;
 
-  // People-directory surface (Notion's three People-settings toggles).
+  // People-directory surface (the three People-settings toggles).
   peopleDirectoryEnabled: boolean;
   showRecentActivityOnProfiles: boolean;
   hoverCardsEnabled: boolean;
@@ -818,7 +823,7 @@ export interface PlanLimits {
   versionHistory: boolean;
 }
 
-/** Defaults for a freshly created workspace — matches Notion's on-state. */
+/** Defaults for a freshly created workspace — everything on. */
 export const DEFAULT_WORKSPACE_SETTINGS: WorkspaceSettings = {
   defaultTheme: "system",
   language: "en",
@@ -1037,7 +1042,7 @@ export interface NotificationContextValue {
 }
 
 // ── Add to src/types.ts ──────────────────────────────────────────────────────
-// Per-page permissions (Notion model). Roles are ordered view < comment < edit
+// Per-page permissions. Roles are ordered view < comment < edit
 // < full; the effective role is the highest reaching a person across direct
 // grants, group grants, inherited ancestor grants, and general access.
 
