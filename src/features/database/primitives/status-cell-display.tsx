@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check } from "lucide-react";
+import { Check } from "src/components/icons";
 import type { StatusGroup, StatusItem } from "src/types";
 import {
   Popover,

@@ -1,6 +1,6 @@
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
-import { Check, Edit, Ellipsis, RotateCcw, Trash } from "lucide-react";
+import { Check, Edit, Ellipsis, RotateCcw, Trash } from "src/components/icons";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {

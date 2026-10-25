@@ -576,11 +576,11 @@
       background: var(--home-hover);
     }
 
-    svg {
+    :is(svg, .material-icon) {
       transition: transform 0.15s ease;
     }
 
-    svg.is-open {
+    :is(svg, .material-icon).is-open {
       transform: rotate(180deg);
     }
   }
@@ -702,7 +702,7 @@
   height: 16px;
   flex: none;
 
-  > svg,
+  > :is(svg, .material-icon),
   > span {
     width: 16px !important;
     height: 16px !important;

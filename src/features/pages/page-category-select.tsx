@@ -8,7 +8,14 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { Star, Users, Lock, Building2, Check, ChevronDown } from "lucide-react";
+import {
+  Star,
+  Users,
+  Lock,
+  Building2,
+  Check,
+  ChevronDown,
+} from "src/components/icons";
 import type { ID, PageCategory } from "src/types";
 import "./page-category-select.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";

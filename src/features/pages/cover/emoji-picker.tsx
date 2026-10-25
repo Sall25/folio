@@ -11,7 +11,7 @@ import {
   Shuffle,
   Smile,
   type LucideIcon,
-} from "lucide-react";
+} from "src/components/icons";
 import {
   EMOJI_CATEGORIES,
   SKIN_TONES,

@@ -2,7 +2,7 @@
 // The "Open in" submenu content: New tab (full page) and Side peek. Rendered
 // inside a NavigableMenuItem flyout. Picking a mode opens the record's page that
 // way and closes the menu.
-import { ArrowUpRight, PanelRight } from "lucide-react";
+import { ArrowUpRight, PanelRight } from "src/components/icons";
 import { MenuRow } from "../menu-row";
 import { Card } from "src/components/tiptap-ui-primitive/card";
 

@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "src/components/icons";
 import type { Page, ID, PageCategory } from "src/types";
 import { useBreadcrumbs, usePagesByCategory } from "src/hooks/use-pages";
 import { useActivePageActions } from "src/features/pages/context/active-page-context";

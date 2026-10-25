@@ -6,7 +6,7 @@ import { supabase } from "src/api/supabase-client";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { GoogleIcon } from "src/components/tiptap-icons";
-import { Github, Mail } from "lucide-react";
+import { Github, Mail } from "src/components/icons";
 import "./workspace-settings-content.scss";
 
 const PROVIDERS: { id: Provider; label: string; icon: ReactNode }[] = [

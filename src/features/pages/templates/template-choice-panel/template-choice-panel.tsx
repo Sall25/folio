@@ -4,7 +4,7 @@ import { useTemplates } from "src/hooks/use-templates";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage as patchPageApi } from "src/api/pages";
 import { PageItemIcon } from "../../page-item/page-item-icon";
-import { FileText } from "lucide-react";
+import { FileText } from "src/components/icons";
 import "./template-choice-panel.scss";
 
 // Shown on an empty page. Mirrors RecordPropertyPanel: takes `page`, self-contained

@@ -7,7 +7,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "src/components/icons";
 import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 

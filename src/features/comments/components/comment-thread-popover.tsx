@@ -9,7 +9,7 @@ import {
 import { createPortal } from "react-dom";
 import type { Editor, JSONContent } from "@tiptap/core";
 import { useTranslation } from "react-i18next";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp } from "src/components/icons";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import type { ID } from "src/types";
 import { useThreadsByPage } from "src/hooks/use-threads";

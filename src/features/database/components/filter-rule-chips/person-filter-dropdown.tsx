@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { UserRound } from "lucide-react";
+import { UserRound } from "src/components/icons";
 import { useTranslation } from "react-i18next";
 import type { DatabaseProperty, ID } from "src/types";
 import type { PersonFilterRule } from "src/types/filter-types";

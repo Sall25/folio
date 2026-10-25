@@ -1,7 +1,7 @@
 import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "@tanstack/react-location";
-import { EyeOff, Hash, Layout, Lock } from "lucide-react";
+import { EyeOff, Hash, Layout, Lock } from "src/components/icons";
 import type { ChatRoom } from "src/types";
 import { useUnreadCounts } from "src/hooks/use-chat";
 import { useUnreadMentions } from "src/hooks/use-chat-mentions";

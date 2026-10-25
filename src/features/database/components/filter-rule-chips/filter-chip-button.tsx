@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDown } from "src/components/icons";
 import { forwardRef } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { DynamicIcon } from "src/features/pages/cover/dynamic-icon";

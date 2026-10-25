@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Copy, ExternalLink, Globe } from "lucide-react";
+import { Copy, ExternalLink, Globe } from "src/components/icons";
 import type { Page } from "src/types";
 import { useToast } from "src/features/shell/toast";
 import { publishedPageUrl, usePublishPage } from "src/hooks/use-publish-page";

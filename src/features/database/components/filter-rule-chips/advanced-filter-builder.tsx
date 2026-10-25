@@ -7,7 +7,7 @@ import type {
 import { FilterRow } from "./filter-row";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "src/components/icons";
 import "./advanced-filter-builder.scss";
 import { ConfirmDialog } from "src/features/shell/confirm-dialog";
 import { useCallback, useState } from "react";

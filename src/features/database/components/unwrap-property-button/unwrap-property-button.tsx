@@ -1,4 +1,4 @@
-import { WrapText } from "lucide-react";
+import { WrapText } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 

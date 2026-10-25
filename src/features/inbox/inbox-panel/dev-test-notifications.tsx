@@ -1,5 +1,5 @@
 import type { JSONContent } from "@tiptap/core";
-import { FlaskConical } from "lucide-react";
+import { FlaskConical } from "src/components/icons";
 import { useNotificationActions } from "src/features/inbox/notification/notification-context";
 import { useOptionalActivePage } from "src/features/pages/context/active-page-context";
 import { useCurrentPerson } from "src/hooks/use-session";

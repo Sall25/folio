@@ -13,7 +13,7 @@ import {
   Maximize2,
   SlidersHorizontal,
   Trash2,
-} from "lucide-react";
+} from "src/components/icons";
 
 // import "./view-name-popover.scss";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";

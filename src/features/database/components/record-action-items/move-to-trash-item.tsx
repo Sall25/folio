@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react";
+import { Trash2 } from "src/components/icons";
 import { useState } from "react";
 import { ConfirmDialog } from "src/features/shell/confirm-dialog";
 import { MenuRow } from "../menu-row";

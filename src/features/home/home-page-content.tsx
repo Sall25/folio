@@ -8,7 +8,7 @@ import {
   Clock,
   Layers,
   UserRound,
-} from "lucide-react";
+} from "src/components/icons";
 import { useRecentPages } from "src/hooks/use-pages";
 import { useActivePageActions } from "../pages/context/active-page-context";
 import { PageItemIcon } from "../pages/page-item/page-item-icon";

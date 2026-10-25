@@ -1,4 +1,10 @@
-import { Ellipsis, LayoutGrid, EyeOff, Trash2, Check } from "lucide-react";
+import {
+  Ellipsis,
+  LayoutGrid,
+  EyeOff,
+  Trash2,
+  Check,
+} from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Popover,

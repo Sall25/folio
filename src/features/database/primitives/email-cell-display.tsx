@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CellEditorPopover } from "./cell-editor-popover";
 import "./email-cell-display.scss";
-import { Pencil } from "lucide-react";
+import { Pencil } from "src/components/icons";
 import { Input } from "src/components/tiptap-ui-primitive/input";
 
 export interface EmailCellDisplayProps {

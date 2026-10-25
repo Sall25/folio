@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowLeftRight, Check, Database, Search } from "lucide-react";
+import { ArrowLeftRight, Check, Database, Search } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,
@@ -39,7 +39,6 @@ export function RelationEditDisplay({
   source?: DataSource;
   onChange: (config: RelationConfig, name?: string) => void;
 }) {
-  
   const { data: sources, isLoading } = useDataSources();
   const [query, setQuery] = useState("");
 

@@ -3,7 +3,7 @@ import { useActivePageState } from "../../context/active-page-context";
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Globe, LockIcon, Users } from "lucide-react";
+import { Globe, LockIcon, Users } from "src/components/icons";
 import { SharePanel } from "../share-panel";
 
 // The one Share button (toolbar, peek and center views). `page` is the page

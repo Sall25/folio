@@ -4,7 +4,7 @@
   gap: 4px;
   color: inherit;
 
-  svg{
+  :is(svg, .material-icon){
     margin-right: 5px;
     width: 1rem;
     height: 1rem;

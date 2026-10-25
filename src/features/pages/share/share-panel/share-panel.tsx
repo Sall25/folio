@@ -16,7 +16,7 @@ import {
   Users,
   Building2,
   Link2,
-} from "lucide-react";
+} from "src/components/icons";
 import { usePageAccess, useManagePageAccess } from "src/hooks/use-page-access";
 import { usePageCapabilities } from "src/hooks/use-page-role";
 import { usePeople, usePeopleById } from "src/hooks/use-people";

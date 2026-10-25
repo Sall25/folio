@@ -134,7 +134,7 @@
     background 0.12s ease,
     color 0.12s ease;
 
-  svg {
+  :is(svg, .material-icon) {
     flex: none;
     opacity: 0.75;
   }
@@ -143,7 +143,7 @@
     background: var(--tt-bg-subtle, rgba(0, 0, 0, 0.04));
     color: var(--tt-text-primary, rgba(0, 0, 0, 0.75));
 
-    svg {
+    :is(svg, .material-icon) {
       opacity: 1;
     }
   }

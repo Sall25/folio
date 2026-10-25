@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, FileText } from "lucide-react";
+import { ChevronRight, FileText } from "src/components/icons";
 import type { PageCover } from "src/types";
 import type { PublishedPageLink } from "src/api/pages";
 import { usePublishedPage } from "src/hooks/use-publish-page";

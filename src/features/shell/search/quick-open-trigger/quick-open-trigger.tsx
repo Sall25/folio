@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Search } from "src/components/icons";
 import { useTranslation } from "react-i18next";
 import { useSearch } from "../search-context";
 import "./quick-open-trigger.scss";

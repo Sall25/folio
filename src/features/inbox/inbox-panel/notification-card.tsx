@@ -1,5 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { Check, ExternalLink, FileText, MessagesSquare, X } from "lucide-react";
+import {
+  Check,
+  ExternalLink,
+  FileText,
+  MessagesSquare,
+  X,
+} from "src/components/icons";
 import { Card, CardBody } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";

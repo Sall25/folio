@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil } from "src/components/icons";
 import { CellEditorPopover } from "./cell-editor-popover";
 import { Input } from "src/components/tiptap-ui-primitive/input";
 

@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X } from "src/components/icons";
 import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import type { UseDatabaseReturn } from "../../hooks/use-database";

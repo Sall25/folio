@@ -39,7 +39,7 @@
   }
 
   .tiptap-button-icon,
-  svg {
+  :is(svg, .material-icon) {
     opacity: 0.75;
     flex-shrink: 0;
   }
@@ -63,7 +63,7 @@
     }
 
     .tiptap-button-icon,
-    svg {
+    :is(svg, .material-icon) {
       opacity: 1;
     }
 

@@ -1,4 +1,4 @@
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "src/components/icons";
 import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import type { SidebarSectionKey } from "../../hooks/use-sidebar-order";

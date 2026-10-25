@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus } from "src/components/icons";
 
 import { memo, useRef, useState, type CSSProperties } from "react";
 

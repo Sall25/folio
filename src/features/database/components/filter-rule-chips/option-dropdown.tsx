@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDown } from "src/components/icons";
 import { useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";

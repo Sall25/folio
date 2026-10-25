@@ -91,7 +91,7 @@
     flex: none;
     color: var(--page-starter-muted);
 
-    svg {
+    :is(svg, .material-icon) {
       display: block;
     }
   }

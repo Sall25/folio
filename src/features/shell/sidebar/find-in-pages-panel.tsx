@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronRight, X } from "src/components/icons";
 import { PageItemIcon } from "../../pages/page-item/page-item-icon";
 import { useFindInPages } from "src/hooks/use-find-in-pages";
 import type { FindMatch, FindOptions } from "src/lib/find-in-pages";

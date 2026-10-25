@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { Plus } from "lucide-react";
+import { Plus } from "src/components/icons";
 import { NodeViewWrapper, NodeViewContent } from "@tiptap/react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { DatabaseCalculations } from "../../components/database-calculations";

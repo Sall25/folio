@@ -1,5 +1,5 @@
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
-import { LayoutTemplate, FileText } from "lucide-react";
+import { LayoutTemplate, FileText } from "src/components/icons";
 import { useActivePageState } from "src/features/pages/context/active-page-context";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";

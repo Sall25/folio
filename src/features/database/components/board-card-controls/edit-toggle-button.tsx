@@ -1,4 +1,4 @@
-import { Pencil, SquareSquare } from "lucide-react";
+import { Pencil, SquareSquare } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import "./edit-toggle-button.scss";
 

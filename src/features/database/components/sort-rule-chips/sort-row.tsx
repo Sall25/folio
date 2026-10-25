@@ -5,7 +5,7 @@ import {
   GripVertical,
   Ellipsis,
   Trash2,
-} from "lucide-react";
+} from "src/components/icons";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import {
   DropdownMenu,

@@ -6,7 +6,7 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import { Check } from "lucide-react";
+import { Check } from "src/components/icons";
 import { pillClass } from "../utils/pill-colors";
 import "./select-cell-display.scss";
 

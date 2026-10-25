@@ -9,7 +9,7 @@ import type {
 import { useDatabaseContext } from "../../context/database-context";
 import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { PanelRight, Check, SquareSquare, Square } from "lucide-react";
+import { PanelRight, Check, SquareSquare, Square } from "src/components/icons";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import {
   Card,

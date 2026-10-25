@@ -1,4 +1,4 @@
-import { Copy } from "lucide-react";
+import { Copy } from "src/components/icons";
 import { MenuRow } from "../menu-row";
 
 export function DuplicateRecordItem({

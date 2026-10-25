@@ -1,4 +1,4 @@
-import { CircleAlert, Clock, FileText } from "lucide-react";
+import { CircleAlert, Clock, FileText } from "src/components/icons";
 import { useTranslation } from "react-i18next";
 import {
   deleteOutboxMessage,

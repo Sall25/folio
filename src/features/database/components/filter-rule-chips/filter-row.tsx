@@ -1,4 +1,4 @@
-import { ChevronDown, Ellipsis, Trash } from "lucide-react";
+import { ChevronDown, Ellipsis, Trash } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import {

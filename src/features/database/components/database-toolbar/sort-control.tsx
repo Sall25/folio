@@ -1,4 +1,4 @@
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown } from "src/components/icons";
 import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {

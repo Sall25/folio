@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search } from "src/components/icons";
 import type { Page } from "src/types";
 import {
   Popover,

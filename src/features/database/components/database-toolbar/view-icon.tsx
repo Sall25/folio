@@ -6,7 +6,7 @@ import {
   LayoutGrid,
   List,
   Table,
-} from "lucide-react";
+} from "src/components/icons";
 import { DynamicIcon } from "src/features/pages/cover/dynamic-icon";
 
 export function ViewIcon({ view }: { view: DatabaseView }) {

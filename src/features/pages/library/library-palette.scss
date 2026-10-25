@@ -149,7 +149,7 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
 
-    svg {
+    :is(svg, .material-icon) {
       opacity: 0.5;
     }
   }

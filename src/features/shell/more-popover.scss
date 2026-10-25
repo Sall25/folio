@@ -23,7 +23,7 @@
     padding: 0;
     background-color: transparent;
 
-    svg{
+    :is(svg, .material-icon){
       width: 19px;
       height: 19px;
     }

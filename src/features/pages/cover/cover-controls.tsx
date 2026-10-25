@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useRef } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "src/components/icons";
 import { createPortal } from "react-dom";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";

@@ -7,7 +7,7 @@ import {
   Users,
   PanelRight,
   Users2,
-} from "lucide-react";
+} from "src/components/icons";
 import type { ID, Page, PageCategory, Person } from "src/types";
 import { PageItemIcon } from "../page-item/page-item-icon";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
@@ -32,7 +32,8 @@ import { useCurrentSpace } from "src/hooks/use-current-space";
 import { useCreatePageInSpace } from "src/api/use-create-page-in-space";
 
 export type LibraryTab =
-  Exclude<PageCategory, "Template" | "Recent"> | "Recents";
+  | Exclude<PageCategory, "Template" | "Recent">
+  | "Recents";
 
 // Inside a teamspace only two tabs make sense: its recents, and its pages
 // (the "Teamspaces" tab, relabelled). Favorites / Shared / Private are

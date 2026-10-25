@@ -1,6 +1,6 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { X, WifiOff, AlertCircle, CheckCircle2 } from "lucide-react";
+import { X, WifiOff, AlertCircle, CheckCircle2 } from "src/components/icons";
 import { Card } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {

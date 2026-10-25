@@ -111,7 +111,7 @@
   line-height: 1;
 
   // Scale down direct icon/image children to the box.
-  svg,
+  :is(svg, .material-icon),
   img {
     width: 100%;
     height: 100%;

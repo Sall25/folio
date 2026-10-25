@@ -1,4 +1,4 @@
-import { Plus, Trash } from "lucide-react";
+import { Plus, Trash } from "src/components/icons";
 import {
   Card,
   CardFooter,

@@ -5,7 +5,7 @@ import {
   PopoverPortal,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { Image, MessageSquareText, Smile } from "lucide-react";
+import { Image, MessageSquareText, Smile } from "src/components/icons";
 import { useTranslation } from "react-i18next";
 import type { Target } from "src/features/pages/cover/types";
 import { IconPickerCard } from "src/features/pages/cover/icon-picker-card";

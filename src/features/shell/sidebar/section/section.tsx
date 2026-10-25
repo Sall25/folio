@@ -9,7 +9,7 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
-import { Check } from "lucide-react";
+import { Check } from "src/components/icons";
 import {
   TbBooks,
   TbChevronDown,

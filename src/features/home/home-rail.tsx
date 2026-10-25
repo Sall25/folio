@@ -7,7 +7,7 @@ import {
   ChevronUp,
   Hash,
   Lock,
-} from "lucide-react";
+} from "src/components/icons";
 import { Card } from "src/components/tiptap-ui-primitive/card";
 import type { ChatRoom, Notification } from "src/types";
 import { useNotificationState } from "src/features/inbox/notification/notification-context";

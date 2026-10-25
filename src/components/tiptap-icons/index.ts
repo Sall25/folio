@@ -1,3 +1,5 @@
+import { createIcon as icon } from "../icons";
+
 export * from "./align-center-icon";
 export * from "./align-justify-icon";
 export * from "./align-left-icon";
@@ -80,3 +82,4 @@ export * from "./google-icon";
 export * from "./tabler-icons";
 export * from "./sidebar-icons";
 export * from "./page-starter-icons";
+export const UploadCloud = icon("UploadCloud", "cloud_upload");

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Timer, X } from "lucide-react";
+import { Timer, X } from "src/components/icons";
 import "./version-history.scss";
 import { VersionHistoryList } from "./version-history-list";
 import { useVersionHistory } from "./use-version-history";

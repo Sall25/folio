@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { Check, ChevronDown, Plus } from "lucide-react";
+import { Check, ChevronDown, Plus } from "src/components/icons";
 import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";

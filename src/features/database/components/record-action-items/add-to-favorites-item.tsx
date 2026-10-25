@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { Star } from "src/components/icons";
 import { MenuRow } from "../menu-row";
 
 export function AddToFavoritesItem({

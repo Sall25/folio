@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-location";
-import { Mail, UserPlus, X } from "lucide-react";
+import { Mail, UserPlus, X } from "src/components/icons";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import { usePeople } from "src/hooks/use-people";
 import { useCurrentPerson } from "src/hooks/use-session";

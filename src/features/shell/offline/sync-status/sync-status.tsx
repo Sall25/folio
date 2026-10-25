@@ -1,7 +1,12 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
-import { CloudCheck, CloudOff, CloudUpload, LoaderCircle } from "lucide-react";
+import {
+  CloudCheck,
+  CloudOff,
+  CloudUpload,
+  LoaderCircle,
+} from "src/components/icons";
 import {
   Popover,
   PopoverContent,

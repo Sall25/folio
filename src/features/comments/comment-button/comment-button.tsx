@@ -6,7 +6,7 @@ import { forwardRef } from "react";
 import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
 
 // --- Icons ---
-import { MessageSquareText } from "lucide-react";
+import { MessageSquareText } from "src/components/icons";
 
 // --- UI Primitives ---
 import type { ButtonProps } from "src/components/tiptap-ui-primitive/button";

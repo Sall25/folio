@@ -37,7 +37,7 @@ import {
   Trash2,
   UserPlus,
   X,
-} from "lucide-react";
+} from "src/components/icons";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {

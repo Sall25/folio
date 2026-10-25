@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import type { Editor, JSONContent } from "@tiptap/core";
 import { useTranslation } from "react-i18next";
-import { ArrowUp, Check, X } from "lucide-react";
+import { ArrowUp, Check, X } from "src/components/icons";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import type { ID, Thread } from "src/types";
 import { useCommentsByThread } from "src/hooks/use-comments";

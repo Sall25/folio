@@ -1,6 +1,6 @@
 import type { Editor } from "@tiptap/core";
 import { useCallback, useRef, useState } from "react";
-import { MessageSquarePlus } from "lucide-react";
+import { MessageSquarePlus } from "src/components/icons";
 import { DragHandle as TiptapDragHandle } from "../../../components/tiptap-ui/drag-handle/drag-handle-extension-react";
 import { normalizeNestedOptions } from "@tiptap/extension-drag-handle";
 

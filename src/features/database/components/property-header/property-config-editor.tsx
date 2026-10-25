@@ -16,7 +16,7 @@ import { NumberEditDisplay } from "../number-edit-display";
 import { DateEditDisplay } from "../date-edit-display/date-edit-display";
 import { PersonEditDisplay } from "../person-edit-display";
 import { MenuRow } from "../menu-row";
-import { MoveHorizontal, Smile } from "lucide-react";
+import { MoveHorizontal, Smile } from "src/components/icons";
 import { useMemo, useState } from "react";
 import { Input } from "src/components/tiptap-ui-primitive/input";
 import { formatUniqueId } from "src/lib/unique-id";

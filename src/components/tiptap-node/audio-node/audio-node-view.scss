@@ -224,7 +224,7 @@
   }
 
   // Slightly offset play icon for optical centering
-  svg[data-lucide="play"] {
+  :is(svg, .material-icon)[data-lucide="play"] {
     transform: translateX(1px);
   }
 }

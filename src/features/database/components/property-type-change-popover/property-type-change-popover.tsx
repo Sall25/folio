@@ -1,4 +1,4 @@
-import { ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight } from "src/components/icons";
 import type { ReactNode } from "react";
 import { Card } from "src/components/tiptap-ui-primitive/card";
 import { NavigableMenuItem } from "src/features/database/components/navigable-menu-item";
