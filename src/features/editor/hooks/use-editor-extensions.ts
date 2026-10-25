@@ -102,6 +102,9 @@ export function useEditorExtensions(
     () => [
       // --- Core ---
       StarterKit.configure({
+        // The line that shows where a dragged block lands: 4px, so it's easy
+        // to see (the default is 1px; CSS can't override its inline height).
+        dropcursor: { width: 4 },
         paragraph: false,
         horizontalRule: false,
         listItem: false,

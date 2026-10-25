@@ -110,6 +110,7 @@ export function DatabaseProvider({
   const { resolvedTitle: title, handleTitleChange: onTitleChange } =
     useDatabaseTitle({
       attrs,
+      source,
       sourceName: source?.name,
       sourcePageId: source?.pageId,
       updateSourceMetaAsync,

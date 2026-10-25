@@ -58,12 +58,13 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
   const { editor } = useCurrentEditor();
   const { activePage } = useActivePageState();
   const { collapsed } = useEditorLayoutState();
-  const { isSyncing, unavailableOffline } = useEditorSync();
+  const { isSyncing, unavailableOffline, stalled, retry } = useEditorSync();
 
   useRecordPropertyPanel(editor, activePage ?? null);
   usePageComment(editor, activePage ?? null);
 
   if (unavailableOffline && !editor) return <UnavailableOffline />;
+  if (stalled && !editor) return <UnavailableOffline stalled onRetry={retry} />;
 
   if (isSyncing || !editor) {
     return (

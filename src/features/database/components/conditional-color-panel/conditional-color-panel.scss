@@ -1,0 +1,78 @@
+.cc-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+
+  &__empty {
+    margin: 4px 2px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--tt-text-secondary);
+  }
+
+  &__add {
+    justify-content: flex-start;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--tt-text-secondary);
+  }
+}
+
+// One rule: its colour (and "cell only" in a table) above the condition.
+.cc-rule {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--tt-border-color);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__color {
+    gap: 8px;
+    height: 28px;
+    min-height: 28px;
+    padding: 0 6px;
+    font-size: 12.5px;
+  }
+
+  &__cell-only {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+  }
+
+  // The filter row, folded for the narrow panel: property and operator side
+  // by side, the value on its own line, no "Where".
+  .db-filter-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 28px;
+
+    > :first-child {
+      display: none;
+    }
+  }
+
+  .db-filter-row__value {
+    grid-column: 1 / -1;
+    grid-row: 2;
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  .db-filter-row__menu {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}

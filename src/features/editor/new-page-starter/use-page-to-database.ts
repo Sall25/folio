@@ -37,13 +37,17 @@ export function usePageToDatabase(editor: Editor, page: Page) {
           page.title?.trim() ||
           "Untitled";
         const sourceId = newId();
-        await createDataSource.mutateAsync(
-          makeDataSource({ name, pageId: page.id, sourceId }),
-        );
+        const source = makeDataSource({
+          name,
+          pageId: page.id,
+          sourceId,
+          viewType: type,
+        });
+        await createDataSource.mutateAsync(source);
 
         const at = pageBodyStart(editor.state.doc);
         if (at === null) return;
-        const view = makeDefaultView(type, viewName);
+        const view = makeDefaultView(type, viewName, source.properties);
         const database = editor.schema.nodeFromJSON({
           type: "database",
           attrs: {

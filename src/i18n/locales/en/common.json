@@ -445,6 +445,9 @@
   "offline.keep.badge": "Available offline",
   "offline.unavailable.title": "This page isn't on this device yet",
   "offline.unavailable.body": "Open it once while you're online, or turn on “Available offline” in the page menu, so it's ready next time.",
+  "offline.stalled.title": "Can't reach this page right now",
+  "offline.stalled.body": "The server isn't answering yet. It may be waking up: try again in a moment.",
+  "offline.stalled.retry": "Try again",
   "inbox.invite.title": "Join {{workspace}}",
   "inbox.invite.aWorkspace": "a workspace",
   "inbox.invite.someone": "Someone",
@@ -671,6 +674,16 @@
     "madeWith": "Made with Folio",
     "subpages": "Pages",
     "path": "Path"
+  },
+  "peek": {
+    "previous": "Previous page",
+    "next": "Next page",
+    "side": "Side peek",
+    "center": "Center peek",
+    "full": "Full page",
+    "close": "Close",
+    "openFull": "Open as full page",
+    "switchMode": "Switch between side and center view"
   },
   "share": {
     "share": "Share",
@@ -1302,6 +1315,15 @@
     "failed": "Couldn't move to {{title}}. The blocks are still here."
   },
   "database": {
+    "conditionalColor": {
+      "empty": "Color rows that match a rule. The first rule a row matches gives its color.",
+      "addRule": "Add rule",
+      "optionColor": "Option color",
+      "cellOnly": "Cell only",
+      "rulesCount_zero": "None",
+      "rulesCount_one": "{{count}} rule",
+      "rulesCount_other": "{{count}} rules"
+    },
     "recordPanel": {
       "addProperty": "Add a property"
     },
@@ -1328,6 +1350,7 @@
       "createTemplate": "Create a template"
     },
     "viewOptions": {
+      "conditionalColor": "Conditional color",
       "title": "View options",
       "settings": "Settings",
       "options": "Options",

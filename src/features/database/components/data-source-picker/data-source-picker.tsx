@@ -1,13 +1,19 @@
 import {
   ArrowLeft,
+  ArrowUpDown,
   ArrowUpRight,
   Calendar,
+  ChevronDown,
   Columns3,
   Database,
   GanttChart,
   LayoutGrid,
   List as ListIcon,
+  ListFilter,
+  Maximize2,
   Plus,
+  Search,
+  SlidersHorizontal,
   Table,
   X,
   type LucideIcon,
@@ -20,12 +26,8 @@ import { PageItemIcon } from "src/features/pages/page-item/page-item-icon";
 import { useDataSources } from "src/hooks/use-data-sources";
 import { useCreateDataSource } from "src/hooks/use-create-data-source";
 import { makeDataSource } from "src/utils/make-data-source";
-import { makeDatabasePage } from "src/utils/make-page";
-import { useCreatePage } from "src/hooks/use-create-page";
 import { usePages } from "src/hooks/use-pages";
 import { newId } from "src/lib/id";
-import { useCurrentPerson } from "src/hooks/use-session";
-import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { ViewPlaceholder } from "./view-placeholder";
 import { makeDefaultView } from "../../utils";
 import "./data-source-picker.scss";
@@ -42,9 +44,10 @@ const VIEW_ICON: Record<DatabaseView["type"], LucideIcon> = {
 
 /**
  * A database block that has no data source yet (just inserted from the slash
- * menu), as in Notion: a faded preview of the view it was inserted as, with
- * the "New database" menu beside it — create a new data source (the block
- * keeps its view, so a list stays a list) or link an existing one.
+ * menu): the database itself, faded — title, view tab, toolbar and the
+ * view's empty body — with the "New database" menu beside it. Click the
+ * database or "New empty data source" to create it (the block keeps its
+ * view, so a list stays a list), or link an existing one.
  */
 export function DataSourcePicker({
   viewType,
@@ -63,12 +66,9 @@ export function DataSourcePicker({
 }) {
   const { t } = useTranslation();
   const { data: sources, isLoading } = useDataSources();
-  const createPage = useCreatePage();
   const createDataSource = useCreateDataSource();
-  const { activePageId, activePage } = useActivePageState();
+  const { activePageId } = useActivePageState();
   const { data: pages } = usePages();
-  const { person } = useCurrentPerson();
-  const { workspaceId } = useCurrentWorkspace();
 
   // menu: the two choices; link: the list of data sources; closed: × hides
   // the menu (clicking the preview brings it back).
@@ -76,35 +76,34 @@ export function DataSourcePicker({
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
 
-  const filtered = ((sources as DataSource[]) ?? []).filter((s) =>
-    s.name?.toLowerCase().includes(query.trim().toLowerCase()),
+  // Only databases with a page of their own (a title): one made from a
+  // block and never named is still just that block.
+  const filtered = ((sources as DataSource[]) ?? []).filter(
+    (s) =>
+      s.pageId != null &&
+      s.name?.toLowerCase().includes(query.trim().toLowerCase()),
   );
 
+  // A new database is only a data source at first, held by this page: it
+  // gets its own page when it's given a title (useDatabaseTitle).
   async function handleNew() {
-    if (creating || !person || !workspaceId) return;
+    if (creating) return;
     setCreating(true);
     try {
-      const sourceId = newId();
-      const name = t("database.picker.newDatabase");
-      const dbPage = makeDatabasePage({
-        sourceId,
-        name,
-        parentId: activePageId,
-        category: activePage?.category,
-        ownerId: person.id,
-        workspaceId,
-        teamspaceId: activePage?.teamspaceId ?? null,
+      const source = makeDataSource({
+        name: "",
+        pageId: null,
+        hostPageId: activePageId ?? null,
+        sourceId: newId(),
+        viewType,
       });
-      const source = makeDataSource({ name, pageId: dbPage.id, sourceId });
-
-      await createPage.mutateAsync(dbPage);
       await createDataSource.mutateAsync(source);
 
-      // The view the block was inserted as, made again now that the data
-      // source has properties (a board needs one to group by).
+      // The view the block was inserted as, made with the new properties (a
+      // board groups by its Status, a calendar uses its Date).
       onSelect(
         source.id,
-        dbPage.id,
+        undefined,
         false,
         makeDefaultView(
           viewType,
@@ -117,19 +116,48 @@ export function DataSourcePicker({
     }
   }
 
+  const TabIcon = VIEW_ICON[viewType] ?? Table;
+
   return (
     <Card
       className="db-setup"
       data-view-type={viewType}
       aria-label={t(`database.picker.selectFor.${viewType}`)}
     >
+      {/* The database as it will be — title, view tab, toolbar and the
+          view's empty body — faded until it exists. Clicking it creates it. */}
       <div
         className="db-setup__preview"
-        aria-hidden="true"
-        onClick={() => panel === "closed" && setPanel("menu")}
+        role="button"
+        tabIndex={0}
+        aria-label={t("database.picker.newEmpty")}
+        aria-disabled={creating || undefined}
+        onClick={() => void handleNew()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            void handleNew();
+          }
+        }}
       >
         <div className="db-setup__title">
           {t("database.picker.newDatabase")}
+        </div>
+        <div className="db-setup__toolbar" aria-hidden="true">
+          <span className="db-setup__tab">
+            <TabIcon size={16} />
+            {t(`database.views.${viewType}`)}
+          </span>
+          <span className="db-setup__spacer" />
+          <Search size={16} />
+          <ListFilter size={16} />
+          <ArrowUpDown size={16} />
+          <Maximize2 size={14} />
+          <SlidersHorizontal size={16} />
+          <span className="db-setup__new">
+            {t("database.toolbar.new")}
+            <ChevronDown size={14} />
+          </span>
         </div>
         <ViewPlaceholder type={viewType} />
       </div>
@@ -227,7 +255,9 @@ export function DataSourcePicker({
                         <button
                           type="button"
                           className="db-setup__item db-setup__item--source"
-                          onClick={() => onSelect(s.id, s.pageId, true)}
+                          onClick={() =>
+                            onSelect(s.id, s.pageId ?? undefined, true)
+                          }
                         >
                           <span
                             className="db-setup__item-icon"
@@ -251,7 +281,9 @@ export function DataSourcePicker({
                               key={v.id}
                               type="button"
                               className="db-setup__item db-setup__item--view"
-                              onClick={() => onSelect(s.id, s.pageId, true, v)}
+                              onClick={() =>
+                                onSelect(s.id, s.pageId ?? undefined, true, v)
+                              }
                             >
                               <span
                                 className="db-setup__item-icon"

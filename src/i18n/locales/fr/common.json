@@ -352,6 +352,9 @@
   "offline.keep.badge": "Disponible hors ligne",
   "offline.unavailable.title": "Cette page n'est pas encore sur cet appareil",
   "offline.unavailable.body": "Ouvrez-la une fois en ligne, ou activez « Disponible hors ligne » dans le menu de la page, pour qu'elle soit prête la prochaine fois.",
+  "offline.stalled.title": "Impossible d'ouvrir cette page pour le moment",
+  "offline.stalled.body": "Le serveur ne répond pas encore. Il est peut-être en train de redémarrer : réessayez dans un instant.",
+  "offline.stalled.retry": "Réessayer",
   "inbox.invite.title": "Rejoindre {{workspace}}",
   "inbox.invite.aWorkspace": "un espace de travail",
   "inbox.invite.someone": "Quelqu’un",
@@ -578,6 +581,16 @@
     "madeWith": "Fait avec Folio",
     "subpages": "Pages",
     "path": "Chemin"
+  },
+  "peek": {
+    "previous": "Page précédente",
+    "next": "Page suivante",
+    "side": "Aperçu latéral",
+    "center": "Aperçu centré",
+    "full": "Pleine page",
+    "close": "Fermer",
+    "openFull": "Ouvrir en pleine page",
+    "switchMode": "Passer de la vue latérale à la vue centrée"
   },
   "share": {
     "share": "Partager",
@@ -1302,6 +1315,15 @@
     "failed": "Impossible de déplacer vers {{title}}. Les blocs sont toujours ici."
   },
   "database": {
+    "conditionalColor": {
+      "empty": "Colorez les lignes qui correspondent à une règle. La première règle qu'une ligne remplit lui donne sa couleur.",
+      "addRule": "Ajouter une règle",
+      "optionColor": "Couleur de l'option",
+      "cellOnly": "Cellule seulement",
+      "rulesCount_zero": "Aucune",
+      "rulesCount_one": "{{count}} règle",
+      "rulesCount_other": "{{count}} règles"
+    },
     "recordPanel": {
       "addProperty": "Ajouter une propriété"
     },
@@ -1328,6 +1350,7 @@
       "createTemplate": "Créer un modèle"
     },
     "viewOptions": {
+      "conditionalColor": "Couleur conditionnelle",
       "title": "Options de la vue",
       "settings": "Paramètres",
       "options": "Options de vue",

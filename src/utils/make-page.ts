@@ -1,4 +1,10 @@
-import type { Page, PageCategory, ID, PageCover } from "src/types";
+import type {
+  DatabaseView,
+  Page,
+  PageCategory,
+  ID,
+  PageCover,
+} from "src/types";
 import { newId } from "src/lib/id";
 import type { JSONContent } from "@tiptap/core";
 import { makeDefaultView } from "src/utils/make-default-view";
@@ -103,8 +109,12 @@ export function makePageFromTemplate(
   };
 }
 
-function databasePageContent(sourceId: ID, name: string): JSONContent {
-  const view = makeDefaultView("table", "Table");
+function databasePageContent(
+  sourceId: ID,
+  name: string,
+  firstView?: DatabaseView,
+): JSONContent {
+  const view = firstView ?? makeDefaultView("table", "Table");
   return {
     type: "doc",
     content: [
@@ -125,6 +135,8 @@ function databasePageContent(sourceId: ID, name: string): JSONContent {
 }
 
 export function makeDatabasePage(opts: {
+  /** The view its page opens in (a table when left out). */
+  view?: DatabaseView;
   ownerId: ID;
   workspaceId: ID;
   teamspaceId?: ID | null;
@@ -143,7 +155,7 @@ export function makeDatabasePage(opts: {
       parentId: opts.parentId ?? null,
       category: opts.category ?? "Private",
     }),
-    content: databasePageContent(opts.sourceId, name),
+    content: databasePageContent(opts.sourceId, name, opts.view),
     settings: { width: "full", text: "normal", locked: false },
     cover: {
       iconName: "table",

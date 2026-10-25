@@ -51,7 +51,9 @@ export function makeRow(
     ...makePage({
       ownerId: opts.ownerId,
       title: opts.title ?? opts.template?.name ?? "",
-      parentId: source.pageId,
+      // Under the database's page; before it has one, under the page
+      // holding its block (same access as the database).
+      parentId: source.pageId ?? source.hostPageId ?? null,
       category: opts.category ?? "Private",
       cover: opts.cover ?? undefined,
       workspaceId: opts.workspaceId,

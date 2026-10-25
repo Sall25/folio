@@ -8,6 +8,7 @@ import {
   Link as LinkIcon,
   ListFilter,
   Lock,
+  Palette,
   SlidersHorizontal,
   Trash2,
   X,
@@ -45,6 +46,7 @@ import { SortPanel } from "../sort-panel";
 import { Input } from "src/components/tiptap-ui-primitive/input";
 import { SettingsSlidersIcon } from "src/components/tiptap-icons";
 import { GroupPanel } from "../group-panel";
+import { ConditionalColorPanel } from "../conditional-color-panel/conditional-color-panel";
 import { DynamicIcon } from "src/features/pages/cover/dynamic-icon";
 import { IconPickerPopover } from "src/features/pages/cover";
 import { MenuRow } from "../menu-row";
@@ -138,6 +140,7 @@ function ViewOptionsContent({
     layout: t("database.viewOptions.layouts"),
     "open-pages-in": t("database.layout.openPagesIn"),
     group: t("database.viewOptions.group"),
+    "conditional-color": t("database.viewOptions.conditionalColor"),
     "sub-items": t("database.viewOptions.subItems"),
   };
 
@@ -263,6 +266,13 @@ function ViewOptionsContent({
               )}
               {panel.type === "layout" && (
                 <LayoutPanel bare view={view} db={db} />
+              )}
+              {panel.type === "conditional-color" && (
+                <ConditionalColorPanel
+                  properties={properties}
+                  db={db}
+                  activeView={view}
+                />
               )}
               {panel.type === "open-pages-in" && (
                 <OpenPagesInPanel bare db={db} />
@@ -402,6 +412,16 @@ function ViewOptionsContent({
             sub={groupLabel}
             navigable
             onClick={() => db.pushPanel({ type: "group" })}
+            disabled={locked}
+          />
+          <MenuRow
+            Icon={Palette}
+            label={t("database.viewOptions.conditionalColor")}
+            sub={t("database.conditionalColor.rulesCount", {
+              count: view.colorRules?.length ?? 0,
+            })}
+            navigable
+            onClick={() => db.pushPanel({ type: "conditional-color" })}
             disabled={locked}
           />
           {/* Sub-items (#166) and notifications come back with their features. */}

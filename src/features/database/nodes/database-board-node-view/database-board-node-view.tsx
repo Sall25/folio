@@ -12,6 +12,7 @@ import { BoardColumnMenu } from "../../components/board-column-menu";
 import type { BoardView, DatabaseProperty, ID } from "src/types";
 import type { DragStorage } from "../../extensions";
 import { normalizeColor } from "../../utils/pill-colors";
+import { BoardStarter } from "./board-starter";
 
 // A coloured column's accent (see pill-colors.scss), or null for a column
 // without a colour.
@@ -171,7 +172,7 @@ export function DatabaseBoardNodeViewImpl() {
   }, [editor, autoScroll]);
 
   if (columns.length === 0) {
-    return <div className="db-board-empty">No groups to display</div>;
+    return <BoardStarter />;
   }
 
   return (

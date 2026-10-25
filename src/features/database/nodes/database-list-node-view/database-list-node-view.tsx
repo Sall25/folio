@@ -9,10 +9,8 @@ import { useNewRecordSkeleton } from "../database-table-node/use-new-record-skel
 import { GroupHeaders } from "../../components/group-headers/group-headers";
 import "./database-list-node-view.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { useTranslation } from "react-i18next";
 
 export function DatabaseListNodeView() {
-  const { t } = useTranslation();
   const {
     db,
     attrs,
@@ -36,7 +34,7 @@ export function DatabaseListNodeView() {
 
   // One track per visible property, in their order (the cells' order). The
   // title takes the free space; every other property hugs its widest value,
-  // so each one lines up across the rows at the right edge (Notion's list).
+  // so each one lines up across the rows at the right edge.
   // Each row is a subgrid of these tracks (database-list-node-view.scss).
   const gridTemplateColumns =
     visibleProperties
@@ -62,8 +60,6 @@ export function DatabaseListNodeView() {
     sortedRecords.length,
     onNewRecord,
   );
-
-  const isEmpty = sortedRecords.length === 0;
 
   return (
     <div
@@ -107,13 +103,6 @@ export function DatabaseListNodeView() {
           </div>
         )}
       </div>
-
-      {/* Nothing in it yet: say so (the list would otherwise be blank). */}
-      {headers.length === 0 && isEmpty && !creating && (
-        <div className="db-list-empty" contentEditable={false}>
-          {t("database.emptyList")}
-        </div>
-      )}
 
       {/* Ungrouped gets one trailing New page — also when empty, so there's
           always a way to add the first one; grouped views get one per group

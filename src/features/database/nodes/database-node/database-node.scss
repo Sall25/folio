@@ -56,9 +56,9 @@
     }
   }
 
-  // ── Selected CELL (Notion style) ──────────────────────────────────────────
+  // ── Selected CELL ──────────────────────────────────────────
   // A single selected cell gets a ring + a small corner handle dot (bottom
-  // right), like Notion. PM marks the cell renderer with .ProseMirror-
+  // right). PM marks the cell renderer with .ProseMirror-
   // selectednode. We suppress the default outline and draw our own inset ring
   // so it hugs the cell without shifting layout.
   .react-renderer.node-databaseCell.ProseMirror-selectednode {
@@ -89,7 +89,7 @@
 
   // ── Editing a content cell (text) ─────────────────────────────────────────
   // When the cursor is inside a text cell, give it a subtle filled background +
-  // soft border (Notion's edit-mode look).
+  // soft border (the edit-mode look).
   .db-node-cell--content:focus-within,
   .db-node-cell--content:has([data-editing="true"]) {
     background: color-mix(
@@ -190,7 +190,7 @@
 }
 
 // ── PM node-selected record (single-cell / node selection path) ─────────────
-// Inset ring + corner dot, matching the Notion cell look. Was an outset border
+// Inset ring + corner dot, matching the selected-cell look. Was an outset border
 // with squared corners, which shifted layout and read as a flat outline.
 .react-renderer.node-databaseRecord {
   .ProseMirror-selectednode {
@@ -940,4 +940,69 @@ body.db-row-dragselect {
     font-size: 12px;
     opacity: 0.8;
   }
+}
+// ── Conditional color (view settings › Conditional color) ───────────────────
+// A matching rule's colour arrives as --cc-accent (one of the pill accents,
+// --tt-color-accent-<name>) on the record's box, a calendar bar or a single
+// table cell, marked [data-cc]. Every surface mixes it with the page, so text
+// keeps its normal colour and stays readable in both themes. Selected rows
+// (the !important rules above) still show as selected.
+[data-cc] {
+  --cc-bg: color-mix(in srgb, var(--cc-accent) 14%, var(--tt-bg-color));
+  --cc-line: color-mix(in srgb, var(--cc-accent) 40%, var(--tt-bg-color));
+}
+.dark [data-cc] {
+  --cc-bg: color-mix(in srgb, var(--cc-accent) 24%, var(--tt-bg-color));
+  --cc-line: color-mix(in srgb, var(--cc-accent) 50%, var(--tt-bg-color));
+}
+
+// Table: the cells paint the row. A cell with its own colour (a "cell only"
+// rule) has its own --cc-bg, so it wins over the row's.
+.db-node-grid .react-renderer.node-databaseRecord[data-cc]
+  :is(.db-node-cell, .db-node-cell--atom),
+.db-node-grid .react-renderer.node-databaseRecord
+  :is(.db-node-cell, .db-node-cell--atom)[data-cc] {
+  background: var(--cc-bg);
+
+  .db-cell-editor__display,
+  .tiptap-card-item-group {
+    background-color: transparent !important;
+  }
+}
+
+// List: the row box is painted; its cells see through.
+.db-list-grid .react-renderer.node-databaseRecord[data-cc] {
+  background-color: var(--cc-bg);
+
+  .db-node-cell,
+  .db-node-cell--atom {
+    background: transparent;
+  }
+}
+
+// Board and gallery cards.
+.react-renderer.node-databaseRecord[data-cc] .db-board-card {
+  background-color: var(--cc-bg) !important;
+  box-shadow: inset 0 0 0 1px var(--cc-line);
+}
+
+// Timeline and calendar bars.
+.react-renderer.node-databaseRecord[data-cc] .db-tl-bar,
+.db-cal-bar.db-cal-bar[data-cc] {
+  background: var(--cc-bg);
+  border-color: var(--cc-line);
+
+  &:hover {
+    background: color-mix(in srgb, var(--cc-accent) 30%, var(--tt-bg-color));
+  }
+}
+
+// A database's own page is [title, database]. Older pages also kept an empty
+// paragraph after the database (the editor's end-of-page line, added before
+// the page was known to be a database page). It can't be removed from the
+// shared document safely, so it isn't shown.
+.tiptap.ProseMirror.is-database-page
+  > .react-renderer.node-database
+  ~ p:has(> .ProseMirror-trailingBreak:only-child) {
+  display: none;
 }
