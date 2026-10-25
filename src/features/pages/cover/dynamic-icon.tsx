@@ -1,16 +1,17 @@
 import { memo } from "react";
-import { DynamicIcon as LucideDynamicIcon } from "lucide-react/dynamic";
+import { MaterialIcon } from "src/components/icons";
 import { resolveIconName } from "./icon-name";
 import "./dynamic-icon.scss";
 
-// `lucide-react/dynamic` lazily imports a single icon by its kebab-case name,
-// so the page-header icon stays a one-icon fetch. Names are validated and
-// mapped in ./icon-name.
+// A page or property icon by name. The name is resolved in ./icon-name
+// (older names map to their Material glyph, unknown ones to the default).
 function DynamicIconImpl({
   name,
   size = 16,
   className,
   style,
+  weight,
+  filled,
 }: {
   name?: string;
   size?: number;
@@ -20,9 +21,11 @@ function DynamicIconImpl({
   filled?: boolean;
 }) {
   return (
-    <LucideDynamicIcon
-      name={resolveIconName(name) as never}
+    <MaterialIcon
+      name={resolveIconName(name)}
       size={size}
+      weight={weight}
+      filled={filled}
       className={["dynamic-icon", className].filter(Boolean).join(" ")}
       style={style}
     />

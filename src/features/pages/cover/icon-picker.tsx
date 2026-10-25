@@ -112,7 +112,12 @@ export function IconPicker({
   const filtered = useMemo(
     () =>
       getIconList().filter((e) =>
-        e.name.toLowerCase().includes(deferred.toLowerCase()),
+        e.name.includes(
+          deferred
+            .trim()
+            .toLowerCase()
+            .replace(/[\s-]+/g, "_"),
+        ),
       ),
     [deferred],
   );

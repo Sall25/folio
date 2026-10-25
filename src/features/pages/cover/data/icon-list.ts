@@ -1,4 +1,4 @@
-import { iconNames } from "lucide-react/dynamic";
+import { MATERIAL_ICON_NAMES } from "./material-icon-names";
 
 /**
  
@@ -31,10 +31,9 @@ export type IconColor = (typeof ICON_COLORS)[number];
 export type IconColorValue = IconColor["value"];
 export const DEFAULT_ICON_COLOR = ICON_COLORS[0];
 
-// An entry is just a name + default color. The name is now a Lucide kebab-case
-// name ("house", "chevron-right", "file-text") — the same string DynamicIcon
-// resolves and page.cover.iconName stores. No component is bundled here; the
-// grid draws each cell through DynamicIcon, which lazy-loads one icon at a time.
+// An entry is just a name + default color. The name is a Material Symbols
+// name ("home", "chevron_right", "description") — the same string DynamicIcon
+// draws and page.cover.iconName stores.
 export type IconEntry = {
   name: string;
   color: IconColorValue;
@@ -43,15 +42,18 @@ export type IconEntry = {
 
 export type IconName = string;
 
-// Built lazily on first call, then cached. `iconNames` is Lucide's own kebab
-// list of everything the lazy loader can render, so the picker can never list a
-// name DynamicIcon fails to draw.
+// Built lazily on first call, then cached: every Material Symbols glyph, so
+// the picker can never list a name DynamicIcon can't draw.
 let _iconList: IconEntry[] | null = null;
 
 export function getIconList(): IconEntry[] {
   if (_iconList) return _iconList;
-  _iconList = (iconNames as readonly string[])
-    .map((name) => ({ name, color: DEFAULT_ICON_COLOR.value }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  // Names starting with a digit ("10k", "360") go last.
+  const words = MATERIAL_ICON_NAMES.filter((n) => !/^\d/.test(n));
+  const numbers = MATERIAL_ICON_NAMES.filter((n) => /^\d/.test(n));
+  _iconList = [...words, ...numbers].map((name) => ({
+    name,
+    color: DEFAULT_ICON_COLOR.value,
+  }));
   return _iconList;
 }
