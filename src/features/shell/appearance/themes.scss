@@ -1030,6 +1030,11 @@ html:root[data-theme="midnight"] {
   --sb-scrlbr-width: thin;
   --sb-scrlbr-color: rgba(36, 50, 79, 0.2) transparent;
 
+  // A chat page has its own line under its header, so no second line above it.
+  &:has(.chat-room-shell:not(.is-overlay)) .tiptap-toolbar[data-variant="fixed"] {
+    box-shadow: none;
+  }
+
   // The right page: flush against the sidebar (theme-sheet.tsx adds 24px
   // for the floating themes), a shadow in the fold, binder holes and a red
   // margin line along its left edge.
