@@ -1,3 +1,4 @@
+import { splitIconName } from "src/components/icons/icon-style";
 import { MATERIAL_ICON_NAMES } from "./data/material-icon-names";
 
 // Page icons, property icons and the icon picker draw Material Symbols
@@ -8,7 +9,9 @@ import { MATERIAL_ICON_NAMES } from "./data/material-icon-names";
 //     switch, still saved on pages and in recent icons. These map to the
 //     closest glyph below, or to the same words in snake_case when Material
 //     has that name ("chevron-right" → "chevron_right").
-// Anything else draws the default page icon.
+// Anything else draws the default page icon. A name may carry the icon's own
+// look after the glyph ("description;fill:0", see icon-style.ts); only the
+// glyph is resolved here.
 const VALID = new Set<string>(MATERIAL_ICON_NAMES);
 
 const OLD_NAMES: Record<string, string> = {
@@ -225,8 +228,9 @@ const FALLBACK = "description";
 
 /** The Material Symbols glyph an icon name draws. Shared by DynamicIcon and
  *  the browser-tab favicon so both show the same icon. */
-export function resolveIconName(name?: string): string {
-  if (!name) return FALLBACK;
+export function resolveIconName(stored?: string): string {
+  if (!stored) return FALLBACK;
+  const name = splitIconName(stored).glyph;
   if (VALID.has(name)) return name;
   const mapped = OLD_NAMES[name];
   if (mapped) return mapped;

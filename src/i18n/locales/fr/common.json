@@ -729,6 +729,27 @@
       "members": "Membres"
     }
   },
+  "iconStyle": {
+    "style": "Style",
+    "weight": "Épaisseur",
+    "fill": "Remplissage",
+    "outlined": "Contour",
+    "rounded": "Arrondi",
+    "sharp": "Anguleux",
+    "thin": "Fin",
+    "light": "Léger",
+    "regular": "Normal",
+    "bold": "Gras",
+    "filled": "Plein",
+    "outlinedFill": "Contour",
+    "defaultStyle": "Style par défaut",
+    "defaultWeight": "Épaisseur par défaut",
+    "defaultFill": "Remplissage par défaut",
+    "reset": "Réinitialiser",
+    "search": "Rechercher une icône…",
+    "noResults": "Aucune icône trouvée",
+    "icons": "Icônes"
+  },
   "settings": {
     "notifications": {
       "loading": "Chargement…",
@@ -753,7 +774,13 @@
       "offlineStorageDesc": "Pages et images enregistrées sur cet appareil pour s'ouvrir sans connexion. Vider garde les modifications pas encore envoyées.",
       "offlineStorageClear": "Vider",
       "appearance": "Apparence",
-      "appearanceDesc": "Change le style de toute l'app. Toi seul le vois, sur cet appareil."
+      "appearanceDesc": "Change le style de toute l'app. Toi seul le vois, sur cet appareil.",
+      "iconStyle": "Style des icônes",
+      "iconStyleDesc": "L’apparence des icônes dans Folio sur cet appareil. Les icônes de page qui ont leur propre style le gardent.",
+      "iconWeight": "Épaisseur des icônes",
+      "iconWeightDesc": "Des traits plus fins ou plus épais.",
+      "iconFilled": "Icônes pleines",
+      "iconFilledDesc": "Des icônes pleines plutôt que des contours."
     },
     "title": "Paramètres",
     "appearance": "Apparence",

@@ -1,8 +1,9 @@
 import { forwardRef, type CSSProperties, type HTMLAttributes } from "react";
+import { ICON_FAMILIES, type IconVariant } from "./icon-style";
 import "./material-icon.scss";
 
 // One Material Symbols glyph, drawn from the variable font
-// (material-symbols/outlined.css, imported in main.tsx).
+// (material-symbols/*.css, imported in main.tsx).
 //
 // It takes the same props as the line icons it replaces, so a call site only
 // changes its import:
@@ -10,7 +11,9 @@ import "./material-icon.scss";
 //     icon (.tiptap-button-icon …) still wins. The glyph fills the box.
 //   • color — the glyph's colour (it follows currentColor otherwise).
 //   • strokeWidth, absoluteStrokeWidth, fill, stroke — line-icon props, accepted
-//     and ignored. Weight comes from `weight` or the --mi-wght variable.
+//     and ignored.
+// filled, weight and variant override the app's icon style (icon-style.ts)
+// for this icon only.
 // The glyph's name is drawn from a data attribute, so it never shows up as
 // text (copying, textContent, screen readers).
 
@@ -18,10 +21,12 @@ export interface MaterialIconProps
   extends Omit<HTMLAttributes<HTMLSpanElement>, "color"> {
   size?: number | string;
   color?: string;
-  /** Filled (default) or outlined. */
+  /** Filled or outlined. */
   filled?: boolean;
-  /** The font's weight axis, 100–700 (default 300, from the CSS). */
+  /** The font's weight axis, 100–700. */
   weight?: number;
+  /** Outlined, rounded or sharp. */
+  variant?: IconVariant;
   strokeWidth?: number | string;
   absoluteStrokeWidth?: boolean;
   fill?: string;
@@ -38,6 +43,7 @@ export const MaterialIcon = forwardRef<
     color,
     filled,
     weight,
+    variant,
     strokeWidth,
     absoluteStrokeWidth,
     fill,
@@ -59,6 +65,7 @@ export const MaterialIcon = forwardRef<
   }
   if (filled != null) vars["--mi-fill"] = filled ? "1" : "0";
   if (weight != null) vars["--mi-wght"] = String(weight);
+  if (variant) vars["--mi-family"] = `"${ICON_FAMILIES[variant]}"`;
   if (color) vars.color = color;
 
   return (

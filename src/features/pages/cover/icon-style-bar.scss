@@ -1,0 +1,44 @@
+.icon-style-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+
+  &__select {
+    appearance: none;
+    min-width: 0;
+    flex: 1;
+    height: 26px;
+    padding: 0 22px 0 8px;
+    font: inherit;
+    font-size: 12.5px;
+    color: var(--tt-text-color);
+    background-color: var(--tt-bg-color);
+    border: 0.5px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-md, 6px);
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+
+    &:hover {
+      background-color: var(--tt-button-hover-bg-color);
+    }
+  }
+
+  &__reset {
+    all: unset;
+    flex: none;
+    height: 26px;
+    padding: 0 6px;
+    font-size: 12.5px;
+    color: var(--tt-text-secondary, #8a8883);
+    border-radius: var(--tt-radius-md, 6px);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--tt-text-primary);
+      background: var(--tt-button-hover-bg-color);
+    }
+  }
+}

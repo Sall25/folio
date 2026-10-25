@@ -6,6 +6,7 @@
 import { createIcon as icon } from "./create-icon";
 
 export { MaterialIcon, type MaterialIconProps } from "./material-icon";
+export * from "./icon-style";
 export { createIcon, type IconComponent, type IconProps } from "./create-icon";
 export type {
   IconComponent as LucideIcon,
@@ -214,3 +215,4 @@ export const ArrowDownToLine = icon("ArrowDownToLine", "vertical_align_bottom");
 export const Apple = icon("Apple", "nutrition");
 export const AlarmClock = icon("AlarmClock", "alarm");
 export const AArrowDown = icon("AArrowDown", "text_decrease");
+export const UploadCloud = icon("UploadCloud", "cloud_upload");

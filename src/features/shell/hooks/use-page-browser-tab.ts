@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { useBrowserTab, type BrowserTabIcon } from "./use-browser-tab";
 import { useActivePageState } from "../../pages/context/active-page-context";
 import { resolveIconName } from "../../pages/cover/icon-name";
+import {
+  ICON_FAMILIES,
+  splitIconName,
+} from "src/components/icons/icon-style";
 
 function resolveColor(raw: string | null): string {
   const FALLBACK = "#5b5b5b";
@@ -23,9 +27,9 @@ function resolveColor(raw: string | null): string {
 
 // Page icons are Material Symbols glyphs (see DynamicIcon). Draw the same
 // glyph from the icon font onto a canvas and use it as a PNG data-URL, so the
-// tab shows the icon the page shows. A canvas can't set the font's fill axis,
-// so the tab draws the glyph's outlined form.
-const ICON_FONT = '"Material Symbols Outlined"';
+// tab shows the icon the page shows, in its style and weight (the icon's own,
+// else the app's). A canvas can't set the font's fill axis, so the tab draws
+// the glyph's outlined form.
 const FAVICON_SIZE = 64;
 
 async function materialIconToFaviconHref(
@@ -33,8 +37,18 @@ async function materialIconToFaviconHref(
   color: string,
 ): Promise<string | null> {
   const glyph = resolveIconName(name);
+  const { override } = splitIconName(name);
+  const app = getComputedStyle(document.documentElement);
+  const family = override.variant
+    ? `"${ICON_FAMILIES[override.variant]}"`
+    : app.getPropertyValue("--mi-family").trim() ||
+      `"${ICON_FAMILIES.outlined}"`;
+  const weight =
+    override.weight ?? (Number(app.getPropertyValue("--mi-wght")) || 400);
+  const font = `${weight} ${FAVICON_SIZE}px ${family}`;
+
   try {
-    await document.fonts.load(`${FAVICON_SIZE}px ${ICON_FONT}`, glyph);
+    await document.fonts.load(font, glyph);
   } catch {
     return null;
   }
@@ -45,7 +59,7 @@ async function materialIconToFaviconHref(
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
 
-  ctx.font = `${FAVICON_SIZE}px ${ICON_FONT}`;
+  ctx.font = font;
   ctx.fillStyle = color;
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
