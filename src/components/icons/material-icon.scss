@@ -7,15 +7,16 @@
 //   --mi-family  "Material Symbols Outlined" (default) or "Material Symbols Rounded"
 
 // The box: zero specificity, so any rule that sizes an icon wins — the same
-// as an <svg>'s width/height attributes.
+// as an <svg>'s width/height attributes. Like an <svg> it keeps square and
+// shrinks to fit a smaller flex box or a max-width (height follows width).
 :where(.material-icon) {
   width: var(--mi-size, 24px);
-  height: var(--mi-size, 24px);
+  aspect-ratio: 1;
+  min-width: 0;
 }
 
 .material-icon {
   display: inline-flex;
-  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   vertical-align: middle;
