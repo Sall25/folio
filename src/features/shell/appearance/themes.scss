@@ -1084,6 +1084,29 @@ html:root[data-theme="midnight"] {
     box-shadow: inset 0 -1px 0 rgba(36, 50, 79, 0.1);
   }
 
+  // Covers start past the margin line too, so the binder holes and the red
+  // line stay visible. --cover-sheet-offset (cover-header.tsx) is where the
+  // sheet starts inside the cover; the line is 64px into the sheet.
+  .cover-image-root,
+  .gradient-cover {
+    clip-path: inset(0 0 0 calc(var(--cover-sheet-offset, 0px) + 66px));
+  }
+
+  &:has(.theme-sheet--flush) {
+    .cover-image-root,
+    .gradient-cover {
+      clip-path: none;
+    }
+  }
+
+  .page-peek,
+  .page-create-modal {
+    .cover-image-root,
+    .gradient-cover {
+      clip-path: none;
+    }
+  }
+
   // Menus and popovers are index cards.
   .tiptap-card {
     border-radius: 6px;

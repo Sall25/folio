@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, memo } from "react";
+import { useState, useCallback, useRef, memo, type CSSProperties } from "react";
 import { DynamicIcon } from "./dynamic-icon";
 import "./cover-header.scss";
 import {
@@ -247,11 +247,17 @@ export function CoverHeader({
       }}
     >
       <div
-        style={{
-          width: `calc(100vw)`,
-          marginLeft: isMobile ? "0px !important" : marginLeft,
-          transition: "margin-left 0.2s ease, width 0.2s ease",
-        }}
+        style={
+          {
+            width: `calc(100vw)`,
+            marginLeft: isMobile ? "0px !important" : marginLeft,
+            transition: "margin-left 0.2s ease, width 0.2s ease",
+            // Where the page's sheet starts, measured from this box's left
+            // edge: the box sits half a sidebar to the left of the sheet.
+            // Themes that draw on the sheet's edge clip the cover there.
+            "--cover-sheet-offset": `${isPanel ? 0 : marginLeft}px`,
+          } as CSSProperties
+        }
       >
         {hasCoverImage && (
           <CoverImage page={page} onRemoveCoverAsync={handleRemoveCover} />
