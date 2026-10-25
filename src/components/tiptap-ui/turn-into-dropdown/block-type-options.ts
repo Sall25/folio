@@ -11,7 +11,7 @@ import {
   Quote,
   Type,
   TypeOutline,
-} from "lucide-react";
+} from "src/components/icons";
 import type { BlockTypeOption } from "./types";
 import { TodoListIcon } from "src/components/tiptap-icons";
 

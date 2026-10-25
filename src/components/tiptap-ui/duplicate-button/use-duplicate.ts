@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Editor } from "@tiptap/core";
 import { canDuplicateNode, duplicateNode } from "./utils";
-import { CopyIcon } from "lucide-react";
+import { CopyIcon } from "src/components/icons";
 
 interface Props {
-  editor: Editor | null
-  hideWhenUnavailable: boolean
-  onDuplicated?: () => void
+  editor: Editor | null;
+  hideWhenUnavailable: boolean;
+  onDuplicated?: () => void;
 }
 
 // ─── Hook ──────────────────────────────────────────────────────────────────────
@@ -15,7 +15,11 @@ interface Props {
  * useDuplicate({ editor, hideWhenUnavailable, onDuplicated })
  * Headless hook — wire up any UI you like.
  */
-export function useDuplicate({ editor, hideWhenUnavailable = false, onDuplicated }: Props) {
+export function useDuplicate({
+  editor,
+  hideWhenUnavailable = false,
+  onDuplicated,
+}: Props) {
   const [canDuplicate, setCanDuplicate] = useState(false);
 
   // Re-evaluate on every selection / transaction change

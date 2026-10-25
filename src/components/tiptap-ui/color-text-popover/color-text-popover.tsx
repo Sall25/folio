@@ -8,7 +8,7 @@ import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
 
 // --- Icons ---
 import { BanIcon } from "src/components/tiptap-icons/ban-icon";
-import { Paintbrush as TextIcon } from "lucide-react";
+import { Paintbrush as TextIcon } from "src/components/icons";
 
 // --- UI Primitives ---
 import type { ButtonProps } from "src/components/tiptap-ui-primitive/button";

@@ -5,7 +5,7 @@ import type { CSSProperties } from "react";
 
 import { useDuplicate } from "./use-duplicate";
 import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";

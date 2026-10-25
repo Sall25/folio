@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { LucideIcon } from "lucide-react";
-import { AlertCircle, ArrowDown, Link2, Upload, X } from "lucide-react";
+import type { LucideIcon } from "src/components/icons";
+import { AlertCircle, ArrowDown, Link2, Upload, X } from "src/components/icons";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 // Same look as the image and file blocks' card.
 import "src/components/tiptap-node/image-upload-node/image-upload-card.scss";

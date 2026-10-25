@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Editor } from "@tiptap/core";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
-import { FileIcon } from "lucide-react";
+import { FileIcon } from "src/components/icons";
 import { useOptionalActivePage } from "src/features/pages/context/active-page-context";
 import { useCreatePage } from "src/hooks/use-create-page";
 import { makePage } from "src/utils/make-page";

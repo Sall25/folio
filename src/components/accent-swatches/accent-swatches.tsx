@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus } from "src/components/icons";
 import "./accent-swatches.scss";
 
 /** The colours offered for a workspace or teamspace accent. */

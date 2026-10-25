@@ -5,7 +5,7 @@ import {
   type NodeViewProps,
 } from "@tiptap/react";
 import { useState, useContext, type CSSProperties, type Ref } from "react";
-import { Settings2 } from "lucide-react";
+import { Settings2 } from "src/components/icons";
 import {
   Popover,
   PopoverContent,

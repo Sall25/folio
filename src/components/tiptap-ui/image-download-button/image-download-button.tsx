@@ -4,7 +4,7 @@ import {
 } from "src/components/tiptap-ui-primitive/button";
 import { useImageDownload } from "./use-image-download";
 import type { Editor } from "@tiptap/core";
-import { DownloadIcon } from "lucide-react";
+import { DownloadIcon } from "src/components/icons";
 
 interface ImageDownloadButtonProps extends Pick<
   ButtonProps,

@@ -1,4 +1,4 @@
-import { ArrowDownUp, Check, ChevronRight } from "lucide-react";
+import { ArrowDownUp, Check, ChevronRight } from "src/components/icons";
 import { useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";

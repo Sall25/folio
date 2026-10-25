@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import type { Editor } from "@tiptap/core";
 import { useEditorState } from "@tiptap/react";
 import type { BlockTypeOption } from "./types";
-import { Repeat2, type LucideIcon } from "lucide-react";
+import { Repeat2, type LucideIcon } from "src/components/icons";
 import { getFilteredBlockTypeOptions, canTurnInto } from "./utils";
 
 // Both read the editor through useEditorState: the selector runs on editor

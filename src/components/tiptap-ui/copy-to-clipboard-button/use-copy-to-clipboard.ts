@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Editor } from "@tiptap/core";
-
 import { canCopyToClipboard, copyToClipboard } from "./utils";
-import { Check, CopyIcon } from "lucide-react";
+import { Check, CopyIcon, type IconComponent } from "src/components/icons";
 import { useCopyToast } from "src/hooks/use-copy-toast";
 
 export interface UseCopyToClipboardOptions {
@@ -32,7 +31,7 @@ export interface UseCopyToClipboardReturn {
   /** Keyboard shortcut string for display. */
   shortcutKeys: string;
   /** Copy icon — swaps to check icon when isCopied is true. */
-  Icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  Icon: IconComponent;
 }
 
 export function useCopyToClipboard({

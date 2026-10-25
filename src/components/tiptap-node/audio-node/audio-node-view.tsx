@@ -8,7 +8,7 @@ import {
   Music,
   Loader2,
   AlertCircle,
-} from "lucide-react";
+} from "src/components/icons";
 
 import type { AudioAttrs } from "./types";
 import type { AudioOptions } from "./audio-node";

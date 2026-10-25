@@ -12,7 +12,7 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { useHoverMenu } from "src/components/tiptap-ui/color-dropdown-menu/useHoverMenu";
 import { useAlignmentDropdown } from "./use-alignment-dropdown";
 import { AlignmentIcon } from "src/components/tiptap-icons";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "src/components/icons";
 
 import "./alignment-dropdown-menu.scss";
 import {

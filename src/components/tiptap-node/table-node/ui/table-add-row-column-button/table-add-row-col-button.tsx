@@ -1,5 +1,5 @@
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon } from "src/components/icons";
 import { useTableOverlays } from "../table-overlays";
 
 export function TableAddRowColButton({

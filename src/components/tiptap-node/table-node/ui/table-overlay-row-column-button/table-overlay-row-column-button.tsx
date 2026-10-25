@@ -1,5 +1,5 @@
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
-import { GripHorizontal, GripVertical } from "lucide-react";
+import { GripHorizontal, GripVertical } from "src/components/icons";
 import { useTableOverlays } from "../table-overlays";
 import {
   DropdownMenu,

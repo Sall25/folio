@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { Keyboard, Search, X } from "lucide-react";
+import { Keyboard, Search, X } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { isMac } from "src/lib/tiptap-utils";
 import { SHORTCUT_SECTIONS, type Lang, type Shortcut } from "./shortcuts";

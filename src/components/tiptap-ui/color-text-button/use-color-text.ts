@@ -16,7 +16,7 @@ import {
 } from "src/lib/tiptap-utils";
 
 // --- Icons ---
-import { Paintbrush as TextIcon } from "lucide-react";
+import { Paintbrush as TextIcon } from "src/components/icons";
 
 export const COLOR_TEXT_SHORTCUT_KEY = "mod+shift+t";
 export const TEXT_COLORS = [

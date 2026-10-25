@@ -8,7 +8,7 @@ import {
   Link2,
   Pencil,
   RefreshCw,
-} from "lucide-react";
+} from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { fetchLinkPreview } from "src/api/link-preview";
 import type { BookmarkAttrs } from "./bookmark-node-extension";

@@ -10,7 +10,7 @@ import {
   Search,
   Upload,
   X,
-} from "lucide-react";
+} from "src/components/icons";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { listUploads } from "src/api/uploads";
 import { searchPhotos } from "src/api/photos";

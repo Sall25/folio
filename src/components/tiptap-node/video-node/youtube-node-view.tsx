@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
-import { Youtube, Link } from "lucide-react";
+import { Youtube, Link } from "src/components/icons";
 import {
   getEmbedUrlFromYoutubeUrl,
   isValidYoutubeUrl,

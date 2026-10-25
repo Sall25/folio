@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
-import { AlertCircle, Loader2, Video } from "lucide-react";
+import { AlertCircle, Loader2, Video } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import type { VideoAttrs } from "./types";
 import type { VideoOptions } from "./video-node";
