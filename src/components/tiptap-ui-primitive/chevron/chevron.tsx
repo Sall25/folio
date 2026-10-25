@@ -4,7 +4,7 @@ import { cn } from "src/lib/tiptap-utils";
 import { TriangleChevronIcon } from "src/components/tiptap-icons";
 
 import "./chevron.scss";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "src/components/icons";
 
 export type ChevronSize = "small" | "default" | "large" | "extra-small";
 
@@ -40,8 +40,7 @@ export const Chevron = forwardRef<HTMLButtonElement, ChevronProps>(
         aria-label={ariaLabel ?? (expanded ? "Collapse" : "Expand")}
         {...props}
       >
-        {size === "extra-small" ? <ChevronRight /> :  <TriangleChevronIcon />}
-       
+        {size === "extra-small" ? <ChevronRight /> : <TriangleChevronIcon />}
       </button>
     );
   },

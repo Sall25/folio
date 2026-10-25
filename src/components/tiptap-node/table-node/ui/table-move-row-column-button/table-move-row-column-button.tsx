@@ -5,7 +5,7 @@ import {
   MoveLeftIcon,
   MoveRightIcon,
   MoveUpIcon,
-} from "lucide-react";
+} from "src/components/icons";
 
 type OrientationMap = { row: "up" | "down"; col: "left" | "right" };
 

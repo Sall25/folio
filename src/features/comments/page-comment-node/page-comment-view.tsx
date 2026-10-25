@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import type { JSONContent } from "@tiptap/core";
 import { useTranslation } from "react-i18next";
-import { ArrowUp, Check, RotateCcw } from "lucide-react";
+import { ArrowUp, Check, RotateCcw } from "src/components/icons";
 import { useThreadsByPage } from "src/hooks/use-threads";
 import { useCommentsByThread } from "src/hooks/use-comments";
 import { useDeleteComment } from "src/hooks/use-delete-comment";

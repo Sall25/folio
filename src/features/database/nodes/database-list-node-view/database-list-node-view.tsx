@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Plus } from "lucide-react";
+import { Plus } from "src/components/icons";
 import { NodeViewContent } from "@tiptap/react";
 import type { ListView } from "src/types";
 import { recordSelection } from "../../utils/record-selection-store";

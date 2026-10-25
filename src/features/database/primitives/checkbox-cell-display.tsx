@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import "./checkbox-cell-display.scss";
 

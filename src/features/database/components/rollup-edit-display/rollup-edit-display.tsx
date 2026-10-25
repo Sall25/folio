@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ArrowRight, Check, Sigma } from "lucide-react";
+import { ArrowRight, Check, Sigma } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,

@@ -1,7 +1,7 @@
 // components/CopyAnchorLinkButton.tsx
 import type { Editor } from "@tiptap/react";
 import { useCopyAnchorLink } from "./use-copy-anchor-link";
-import { Link, Check } from "lucide-react";
+import { Link, Check } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import { useTiptapEditor } from "src/hooks/use-tiptap-editor";

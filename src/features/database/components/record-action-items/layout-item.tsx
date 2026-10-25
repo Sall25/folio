@@ -1,4 +1,4 @@
-import { LayoutIcon } from "lucide-react";
+import { LayoutIcon } from "src/components/icons";
 import { MenuRow } from "../menu-row";
 
 export function LayoutItem({

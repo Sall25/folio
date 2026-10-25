@@ -3,7 +3,7 @@ import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Toggle } from "src/components/tiptap-ui-primitive/toggle";
 
 import "./settings-toggle-button.scss";
-import { AArrowDown, CloudDownload, LockKeyhole } from "lucide-react";
+import { AArrowDown, CloudDownload, LockKeyhole } from "src/components/icons";
 import { FitToWidthIcon } from "src/components/tiptap-icons";
 
 export interface SettingsToggleProps {

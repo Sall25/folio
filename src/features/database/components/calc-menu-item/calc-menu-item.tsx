@@ -1,4 +1,4 @@
-import { Sigma } from "lucide-react";
+import { Sigma } from "src/components/icons";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { MenuRow } from "../menu-row";

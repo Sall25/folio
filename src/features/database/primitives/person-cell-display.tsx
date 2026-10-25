@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react";
+import { Check, X } from "src/components/icons";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";

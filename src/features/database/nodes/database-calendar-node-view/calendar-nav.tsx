@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   useCalendarViewActions,

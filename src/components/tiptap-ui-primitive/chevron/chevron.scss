@@ -21,7 +21,7 @@
     background 150ms ease,
     color 150ms ease;
 
-  svg {
+  :is(svg, .material-icon) {
     width: 14px;
     height: 14px;
     transition: transform 180ms ease;
@@ -30,7 +30,7 @@
   &[data-expanded="true"] {
     color: var(--tt-text-primary);
 
-    svg {
+    :is(svg, .material-icon) {
       transform: rotate(90deg);
     }
   }
@@ -68,7 +68,7 @@
     width: 16px;
     height: 16px;
 
-    svg {
+    :is(svg, .material-icon) {
       width: 12px;
       height: 12px;
     }
@@ -78,7 +78,7 @@
     width: 20px;
     height: 24px;
 
-    svg {
+    :is(svg, .material-icon) {
       width: 18px;
       height: 18px;
     }

@@ -1,4 +1,4 @@
-import { Smile } from "lucide-react";
+import { Smile } from "src/components/icons";
 import { MenuRow } from "../menu-row";
 
 export function EditIconItem({

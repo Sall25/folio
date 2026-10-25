@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, Sparkles, X } from "lucide-react";
+import { ChevronLeft, Sparkles, X } from "src/components/icons";
 import {
   DEFAULT_SETTINGS_NAV,
   type SettingsNavItem,

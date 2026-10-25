@@ -6,7 +6,7 @@ import {
   type Editor,
   type JSONContent,
 } from "@tiptap/react";
-import { ImageIcon, Smile } from "lucide-react";
+import { ImageIcon, Smile } from "src/components/icons";
 import { BubbleMenu } from "src/components/tiptap-ui/bubble-menu/bubble-menu";
 import { DragHandle } from "src/components/tiptap-ui/drag-handle/drag-handle";
 import { Button } from "src/components/tiptap-ui-primitive/button";

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Hash, Lock, MessageSquarePlus, Plus } from "lucide-react";
+import { Hash, Lock, MessageSquarePlus, Plus } from "src/components/icons";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import {
   isRoomActive,

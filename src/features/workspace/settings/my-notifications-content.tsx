@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { AtSign, Calendar, Link2 } from "lucide-react";
+import { AtSign, Calendar, Link2 } from "src/components/icons";
 import {
   useCurrentPerson,
   queryKeys as sessionQueryKeys,

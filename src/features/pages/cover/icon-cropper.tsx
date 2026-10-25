@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import "./icon-cropper.scss";
 

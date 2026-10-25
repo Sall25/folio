@@ -5,7 +5,7 @@ import {
   LayoutGrid,
   List,
   Table,
-} from "lucide-react";
+} from "src/components/icons";
 import type { DatabaseView } from "src/types";
 import "./view-palette.scss";
 

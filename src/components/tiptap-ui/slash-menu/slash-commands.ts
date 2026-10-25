@@ -1,5 +1,5 @@
 import { Editor } from "@tiptap/core";
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "src/components/icons";
 import type { TFunction } from "i18next";
 import {
   AtSign,
@@ -37,7 +37,7 @@ import {
   Table,
   TypeOutline,
   Video,
-} from "lucide-react";
+} from "src/components/icons";
 import { TodoListIcon, CodeBlockIcon } from "src/components/tiptap-icons";
 import type { Page } from "src/types";
 

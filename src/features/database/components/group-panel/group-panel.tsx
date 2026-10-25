@@ -1,4 +1,4 @@
-import { Check, Eye, EyeOff } from "lucide-react";
+import { Check, Eye, EyeOff } from "src/components/icons";
 import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {

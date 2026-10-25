@@ -11,7 +11,7 @@ import {
   Mail,
   ArrowUpCircle,
   UserPlus,
-} from "lucide-react";
+} from "src/components/icons";
 import { useCurrentWorkspace, useMyWorkspaces } from "src/hooks/use-workspaces";
 import {
   useCreateWorkspace,

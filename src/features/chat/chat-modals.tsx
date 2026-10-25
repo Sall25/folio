@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { Check, Database, Hash, Lock, Sparkles, X } from "lucide-react";
+import { Check, Database, Hash, Lock, Sparkles, X } from "src/components/icons";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import type { ChatPerson, ChatRoom, ChatVisibility, Page } from "src/types";

@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { ArrowUpDown, ChevronDown } from "lucide-react";
+import { ArrowUpDown, ChevronDown } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import type { DatabaseProperty } from "src/types";
 

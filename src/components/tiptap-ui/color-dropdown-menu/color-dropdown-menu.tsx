@@ -17,7 +17,7 @@ import { ColorRecentMenuList } from "./color-recent-menu-list";
 import { ColorHighlightMenuList } from "./color-highlight-menu-list";
 import { useColorDropdown } from "./use-color-dropdown";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { ChevronRight, PaintBucket } from "lucide-react";
+import { ChevronRight, PaintBucket } from "src/components/icons";
 
 import "./color-dropdown-menu.scss";
 import { useHoverMenu } from "./useHoverMenu";

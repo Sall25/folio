@@ -1,4 +1,4 @@
-import { Settings2 } from "lucide-react";
+import { Settings2 } from "src/components/icons";
 import type { ReactNode } from "react";
 import { NavigableMenuItem } from "src/features/database/components/navigable-menu-item";
 

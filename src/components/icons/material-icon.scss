@@ -1,0 +1,58 @@
+// Material Symbols glyphs (see material-icon.tsx).
+//
+// Knobs, set on the icon or any ancestor (a theme, a toolbar):
+//   --mi-fill    1 filled (default) · 0 outlined
+//   --mi-wght    100–700, default 300
+//   --mi-grad    -50–200, default 0 (thicker without changing size)
+//   --mi-family  "Material Symbols Outlined" (default) or "Material Symbols Rounded"
+
+// The box: zero specificity, so any rule that sizes an icon wins — the same
+// as an <svg>'s width/height attributes. Like an <svg> it keeps square and
+// shrinks to fit a smaller flex box or a max-width (height follows width).
+:where(.material-icon) {
+  width: var(--mi-size, 24px);
+  aspect-ratio: 1;
+  min-width: 0;
+}
+
+.material-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
+  user-select: none;
+  // The glyph is sized from the box (cqmin = the box's smaller side).
+  container-type: size;
+}
+
+.material-icon__glyph {
+  display: block;
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+  font-size: 100cqmin;
+
+  &::before {
+    content: attr(data-icon);
+    display: block;
+    font-family: var(--mi-family, "Material Symbols Outlined");
+    font-weight: normal;
+    font-style: normal;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-feature-settings: "liga";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-variation-settings:
+      "FILL" var(--mi-fill, 1),
+      "wght" var(--mi-wght, 300),
+      "GRAD" var(--mi-grad, 0),
+      "opsz" 20;
+  }
+}

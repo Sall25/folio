@@ -29,7 +29,7 @@ import {
   Video,
   WifiOff,
   type LucideIcon,
-} from "lucide-react";
+} from "src/components/icons";
 import {
   LANDING_COPY,
   TOUR,

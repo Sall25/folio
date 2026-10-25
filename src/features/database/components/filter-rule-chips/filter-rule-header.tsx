@@ -1,4 +1,4 @@
-import { ListFilter, MoreHorizontal, Trash2 } from "lucide-react";
+import { ListFilter, MoreHorizontal, Trash2 } from "src/components/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,

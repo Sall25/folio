@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Plus } from "lucide-react";
+import { Plus } from "src/components/icons";
 import { chunk } from "lodash";
 import {
   Card,

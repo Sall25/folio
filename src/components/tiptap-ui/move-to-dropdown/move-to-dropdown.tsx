@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Editor } from "@tiptap/core";
 import { useTranslation } from "react-i18next";
-import { CornerUpRight, Search } from "lucide-react";
+import { CornerUpRight, Search } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card } from "src/components/tiptap-ui-primitive/card";
 import { NavigableMenuItem } from "src/features/database/components/navigable-menu-item";

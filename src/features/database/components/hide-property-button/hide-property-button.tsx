@@ -1,4 +1,4 @@
-import { EyeOff } from "lucide-react";
+import { EyeOff } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 
 export function HidePropertyButton({ onHide }: { onHide: () => void }) {

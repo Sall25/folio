@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { nanoid } from "nanoid";
-import { Plus } from "lucide-react";
+import { Plus } from "src/components/icons";
 import {
   Card,
   CardBody,

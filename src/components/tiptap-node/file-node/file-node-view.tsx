@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { NodeViewProps } from "@tiptap/react";
 import { NodeViewWrapper } from "@tiptap/react";
-import { AlertCircle, ArrowDown, Paperclip, X } from "lucide-react";
+import { AlertCircle, ArrowDown, Paperclip, X } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { isValidPosition } from "src/lib/tiptap-utils";
 import type { FileAttachment, FileNodeOptions } from "./file-node-extension";

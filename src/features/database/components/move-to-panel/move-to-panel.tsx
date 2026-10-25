@@ -8,7 +8,7 @@
 // destination with a link to open it.
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Search } from "lucide-react";
+import { Search } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card } from "src/components/tiptap-ui-primitive/card";
 import { PageItemIcon } from "src/features/pages/page-item/page-item-icon";

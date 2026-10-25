@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Trash2, RotateCcw, FileText } from "lucide-react";
+import { Trash2, RotateCcw, FileText } from "src/components/icons";
 import {
   useTrashedPages,
   useRestorePage,

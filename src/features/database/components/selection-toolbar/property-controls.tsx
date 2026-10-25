@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check } from "src/components/icons";
 import { Fragment, memo, useMemo, useRef } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {

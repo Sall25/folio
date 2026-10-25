@@ -6,7 +6,7 @@ import { useEditorState } from "@tiptap/react";
 import { DragHandleMenu } from "./drag-handle-menu/drag-handle-menu";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Plus } from "lucide-react";
+import { Plus } from "src/components/icons";
 import {
   DropdownMenu,
   DropdownMenuTrigger,

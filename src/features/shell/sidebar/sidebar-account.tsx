@@ -1,7 +1,7 @@
 import { memo, useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-import { LogOut, Settings, UserCircle } from "lucide-react";
+import { LogOut, Settings, UserCircle } from "src/components/icons";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardBody } from "src/components/tiptap-ui-primitive/card";

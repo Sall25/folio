@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { X, ExternalLink } from "lucide-react";
+import { X, ExternalLink } from "src/components/icons";
 import type { Page, PageTreeNode, PageCategory, ID } from "src/types";
 import { usePageTree } from "src/hooks/use-pages";
 import { PageItemIcon } from "src/features/pages/page-item/page-item-icon";

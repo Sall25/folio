@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeftRight, Settings, Users } from "lucide-react";
+import { ArrowLeftRight, Settings, Users } from "src/components/icons";
 import { WorkspaceSettingsModal } from "./workspace-settings-modal";
 import {
   ACCOUNT_NAV_SECTION,

@@ -161,7 +161,7 @@
     color: var(--tt-text-primary);
     cursor: pointer;
 
-    svg {
+    :is(svg, .material-icon) {
       flex-shrink: 0;
       color: var(--tt-text-secondary);
     }

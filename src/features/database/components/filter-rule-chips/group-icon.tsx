@@ -3,7 +3,7 @@ import {
   CircleDashed,
   CircleDotDashed,
   CircleCheck,
-} from "lucide-react";
+} from "src/components/icons";
 import {
   colorForGroup,
   getColor,

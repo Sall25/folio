@@ -554,7 +554,7 @@
   background: color-mix(in srgb, var(--tt-brand-color-400) 12%, transparent);
   border-radius: 999px;
 
-  svg {
+  :is(svg, .material-icon) {
     display: block;
   }
 }

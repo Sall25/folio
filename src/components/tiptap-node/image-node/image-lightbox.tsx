@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import "./image-lightbox.scss";
 

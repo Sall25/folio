@@ -58,7 +58,7 @@
     width: 16px;
     height: 16px;
 
-    svg,
+    :is(svg, .material-icon),
     img {
       width: 16px;
       height: 16px;

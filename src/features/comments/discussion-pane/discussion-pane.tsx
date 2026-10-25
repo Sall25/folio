@@ -2,7 +2,7 @@ import { useMemo, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import type { Editor } from "@tiptap/core";
 import { useTranslation } from "react-i18next";
-import { MessageSquareText, ListFilter, X } from "lucide-react";
+import { MessageSquareText, ListFilter, X } from "src/components/icons";
 import type { Thread } from "src/types";
 import { useThreadsByPage } from "src/hooks/use-threads";
 import { commentThreadPluginKey } from "../extensions";

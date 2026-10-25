@@ -27,7 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { ArrowDownToLine, ChevronRight } from "lucide-react";
+import { ArrowDownToLine, ChevronRight } from "src/components/icons";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Card } from "src/components/tiptap-ui-primitive/card";
 

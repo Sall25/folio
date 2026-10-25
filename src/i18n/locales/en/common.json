@@ -822,6 +822,27 @@
       "members": "Members"
     }
   },
+  "iconStyle": {
+    "style": "Style",
+    "weight": "Weight",
+    "fill": "Fill",
+    "outlined": "Outlined",
+    "rounded": "Rounded",
+    "sharp": "Sharp",
+    "thin": "Thin",
+    "light": "Light",
+    "regular": "Regular",
+    "bold": "Bold",
+    "filled": "Filled",
+    "outlinedFill": "Outline",
+    "defaultStyle": "Default style",
+    "defaultWeight": "Default weight",
+    "defaultFill": "Default fill",
+    "reset": "Reset",
+    "search": "Search icons…",
+    "noResults": "No icons found",
+    "icons": "Icons"
+  },
   "settings": {
     "title": "Settings",
     "appearance": "Appearance",
@@ -898,7 +919,13 @@
       "offlineStorageDesc": "Pages and images saved on this device so they open without a connection. Clearing keeps edits that haven't been sent yet.",
       "offlineStorageClear": "Clear",
       "appearance": "Appearance",
-      "appearanceDesc": "Restyle the whole app. Only you see it, on this device."
+      "appearanceDesc": "Restyle the whole app. Only you see it, on this device.",
+      "iconStyle": "Icon style",
+      "iconStyleDesc": "How icons look across Folio on this device. Page icons with their own look keep it.",
+      "iconWeight": "Icon weight",
+      "iconWeightDesc": "Thinner or bolder lines.",
+      "iconFilled": "Filled icons",
+      "iconFilledDesc": "Solid icons instead of outlines."
     },
     "nav": {
       "account": "Account",

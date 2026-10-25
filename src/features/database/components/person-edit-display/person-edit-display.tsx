@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "src/components/icons";
 import { useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {

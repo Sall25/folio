@@ -12,7 +12,7 @@ import {
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { ChevronRight, GripVertical, Plus } from "lucide-react";
+import { ChevronRight, GripVertical, Plus } from "src/components/icons";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
 import {

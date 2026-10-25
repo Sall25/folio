@@ -7,7 +7,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Plus,
-} from "lucide-react";
+} from "src/components/icons";
 import {
   memo,
   useEffect,

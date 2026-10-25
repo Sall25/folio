@@ -26,6 +26,6 @@
   }
   &__delete {
     color: var(--tt-text-secondary);
-    svg { color: var(--tt-text-secondary); }
+    :is(svg, .material-icon) { color: var(--tt-text-secondary); }
   }
 }

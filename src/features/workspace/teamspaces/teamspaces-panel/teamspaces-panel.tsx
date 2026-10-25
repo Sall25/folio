@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-location";
-import { Check, Plus, Users, Users2 } from "lucide-react";
+import { Check, Plus, Users, Users2 } from "src/components/icons";
 import { useCurrentSpace } from "src/hooks/use-current-space";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { useGroups } from "src/hooks/use-groups";

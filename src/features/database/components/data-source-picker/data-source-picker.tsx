@@ -17,7 +17,7 @@ import {
   Table,
   X,
   type LucideIcon,
-} from "lucide-react";
+} from "src/components/icons";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useActivePageState } from "src/features/pages/context/active-page-context";

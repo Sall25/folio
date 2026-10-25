@@ -15,7 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { Bell } from "lucide-react";
+import { Bell } from "src/components/icons";
 import { useNotifications } from "./notification-context";
 import { useOpenNotification } from "../inbox-panel/use-open-notification";
 

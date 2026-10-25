@@ -3,7 +3,7 @@ import type { Editor } from "@tiptap/core";
 import type { CSSProperties } from "react";
 import { useTurnIntoPage } from "./use-turn-into-page";
 import { useTiptapEditor } from "src/hooks/use-tiptap-editor";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 
 interface TurnIntoPageButtonProps {

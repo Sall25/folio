@@ -1,4 +1,4 @@
-import { Frame } from "lucide-react";
+import { Frame } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 
 export function AspectButton({ onAspect }: { onAspect: () => void }) {

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-location";
-import { Building2 } from "lucide-react";
+import { Building2 } from "src/components/icons";
 import {
   useAcceptWorkspaceInvite,
   useDeclineWorkspaceInvite,

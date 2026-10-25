@@ -40,7 +40,7 @@ import { PropertyTypeChangePopover } from "../property-type-change-popover";
 import "./property-header.scss";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Input } from "src/components/tiptap-ui-primitive/input";
-import { Group, ListFilter, SortAscIcon } from "lucide-react";
+import { Group, ListFilter, SortAscIcon } from "src/components/icons";
 import { InsertPropertyButton } from "../insert-property-button";
 
 import { nanoid } from "nanoid";

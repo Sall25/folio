@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { FileText, Hash, Lock, X } from "lucide-react";
+import { FileText, Hash, Lock, X } from "src/components/icons";
 import { useChatRooms } from "src/hooks/use-chat";
 import { useCurrentPerson } from "src/hooks/use-session";
 import {

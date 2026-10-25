@@ -7,7 +7,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Page } from "src/types";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { FileX2, Trash2 } from "lucide-react";
+import { FileX2, Trash2 } from "src/components/icons";
 import { computePosition, flip, offset, shift } from "@floating-ui/dom";
 import { useActivePageActions } from "src/features/pages/context/active-page-context";
 import { usePage, usePagesBase } from "src/hooks/use-pages";

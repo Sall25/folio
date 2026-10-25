@@ -9,7 +9,7 @@ import {
   Image,
   Paperclip,
   Trash2,
-} from "lucide-react";
+} from "src/components/icons";
 import { type FileAttachment } from "./file-node-extension";
 import {
   canPreview,

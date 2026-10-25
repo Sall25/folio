@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus } from "src/components/icons";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import "./database-board-node-view.scss";
 import { useBoardLayout } from "../../hooks";

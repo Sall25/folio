@@ -12,7 +12,7 @@ import { Card, CardGroupLabel } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 
 import "./mention-list.scss";
-import { AlarmClock, Clock, File, Rows3, Users } from "lucide-react";
+import { AlarmClock, Clock, File, Rows3, Users } from "src/components/icons";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import { PageItemIcon } from "src/features/pages/page-item/page-item-icon";

@@ -39,7 +39,7 @@
   // min-height: 16px;
   
 
-  svg {
+  :is(svg, .material-icon) {
     stroke: white;
     color: white;
   }

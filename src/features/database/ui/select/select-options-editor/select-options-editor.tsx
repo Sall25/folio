@@ -1,5 +1,11 @@
 import { useState, useCallback, useRef, useMemo } from "react";
-import { Check, ChevronRight, GripVertical, Plus, Trash2 } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  GripVertical,
+  Plus,
+  Trash2,
+} from "src/components/icons";
 import { v4 as uuid } from "uuid";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {

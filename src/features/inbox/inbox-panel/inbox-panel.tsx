@@ -9,7 +9,7 @@ import {
   ChevronRight,
   MessagesSquare,
   Eye,
-} from "lucide-react";
+} from "src/components/icons";
 import { useNotifications } from "src/features/inbox/notification/notification-context";
 import type { Notification, NotificationType } from "src/types";
 import { useOpenNotification } from "./use-open-notification";

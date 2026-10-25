@@ -1,7 +1,7 @@
 import type { Editor } from "@tiptap/core";
 import type { Node as PMNode } from "@tiptap/pm/model";
 import { NodeSelection } from "@tiptap/pm/state";
-import { FileText, Table2 } from "lucide-react";
+import { FileText, Table2 } from "src/components/icons";
 import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { DropdownMenuItem } from "src/components/tiptap-ui-primitive/dropdown-menu";

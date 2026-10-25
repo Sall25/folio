@@ -3,7 +3,7 @@ import "./database-gallery-node-view.scss";
 import { memo, useCallback, useEffect, useRef } from "react";
 import { useDatabaseContext } from "../../context/database-context";
 import { NodeViewContent, useCurrentEditor } from "@tiptap/react";
-import { Plus } from "lucide-react";
+import { Plus } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import type { DragStorage } from "../../extensions";
 import {

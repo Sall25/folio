@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus } from "src/components/icons";
 import type { DatabaseProperty } from "src/types";
 
 const EMPTY_PLACEHOLDER_ROWS = 3;

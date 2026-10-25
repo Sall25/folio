@@ -7,7 +7,7 @@ import { useActivePageActions } from "../pages/context/active-page-context";
 import { useTeamspaceMemberList } from "src/hooks/use-teamspace-members";
 import { TeamspaceMembersModal } from "../workspace/teamspaces/teamspace-members/teamspace-members-modal";
 import { colorForPersonId } from "src/lib/person-color";
-import { ChevronRight, FileText, UserPlus } from "lucide-react";
+import { ChevronRight, FileText, UserPlus } from "src/components/icons";
 import "./teamspace-hero.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card } from "src/components/tiptap-ui-primitive/card";

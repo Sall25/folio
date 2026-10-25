@@ -26,7 +26,7 @@ import { Input, InputGroup } from "src/components/tiptap-ui-primitive/input";
 
 import { CornerDownLeftIcon } from "src/components/tiptap-icons/corner-down-left-icon";
 
-import { Maximize2 } from "lucide-react";
+import { Maximize2 } from "src/components/icons";
 
 import { OPEN_LIGHTBOX_EVENT } from "src/components/tiptap-node/image-node/image-lightbox";
 

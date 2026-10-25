@@ -29,6 +29,7 @@ import { useTranslation } from "react-i18next";
 import { useCurrentSpace } from "src/hooks/use-current-space";
 import { useTeamspaces } from "src/hooks/use-teamspaces";
 import { useToast } from "./toast";
+import { useApplyIconStyle } from "src/components/icons";
 
 // A /t/:id address for a teamspace you're not in any more (you left, were
 // removed, or it was deleted) → back to the workspace instead of an empty
@@ -83,6 +84,7 @@ export function SimpleEditor({ view }: { view: View }) {
   // (i.e. on switch). No per-person localStorage override anymore — that was
   // what made theme follow the person across workspaces.
   useApplyTheme(workspace?.settings.defaultTheme ?? "system");
+  useApplyIconStyle();
   useApplyLanguage(workspace?.settings.language);
 
   return (

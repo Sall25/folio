@@ -13,7 +13,7 @@ import { LinkIcon } from "src/components/tiptap-icons/link-icon";
 import { MorePopover } from "./more-popover";
 import { useActivePageState } from "../pages/context/active-page-context";
 import type { ID, PageCategory, View } from "src/types";
-import { LibraryBig, Menu, MessageSquareText } from "lucide-react";
+import { LibraryBig, Menu, MessageSquareText } from "src/components/icons";
 import { PageCategorySelect } from "../pages/page-category-select";
 import { Breadcrumbs } from "./breadcrumbs";
 import { usePatchPage } from "src/hooks/use-patch-page";

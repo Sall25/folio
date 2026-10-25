@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
-import { Ellipsis, Eye, EyeOff, Plus } from "lucide-react";
+import { Ellipsis, Eye, EyeOff, Plus } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import "./database-title-bar.scss";
 import {

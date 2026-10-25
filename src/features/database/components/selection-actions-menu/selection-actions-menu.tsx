@@ -6,7 +6,7 @@ import {
   ChevronLeft,
   Eye,
   ListIcon,
-} from "lucide-react";
+} from "src/components/icons";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";

@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useMenuNavigation } from "src/hooks/use-menu-navigation";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { useColorDropdownContext } from "./use-color-dropdown-context";
-import { BanIcon } from "lucide-react";
+import { BanIcon } from "src/components/icons";
 import { DropdownMenuItem } from "src/components/tiptap-ui-primitive/dropdown-menu";
 
 // Derive an i18n key from the color's CSS variable, e.g.

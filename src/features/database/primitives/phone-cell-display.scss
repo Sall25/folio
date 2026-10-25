@@ -45,7 +45,7 @@
       text-decoration: underline;
     }
 
-    svg {
+    :is(svg, .material-icon) {
       flex-shrink: 0;
     }
   }

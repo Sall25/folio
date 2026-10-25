@@ -438,7 +438,7 @@
 
 // Page icons draw at their own size by default (32px): fit them to the slot.
 .sp-row__icon .page-icon,
-.sp-row__icon .page-icon > svg {
+.sp-row__icon .page-icon > :is(svg, .material-icon) {
   display: grid;
   place-items: center;
   width: 18px !important;
@@ -446,7 +446,7 @@
 }
 
 .sp-preview__icon .page-icon,
-.sp-preview__icon .page-icon > svg {
+.sp-preview__icon .page-icon > :is(svg, .material-icon) {
   display: grid;
   place-items: center;
   width: 44px !important;

@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus } from "src/components/icons";
 import { useTranslation } from "react-i18next";
 import type { DatabaseView } from "src/types";
 

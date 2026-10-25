@@ -1,5 +1,5 @@
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Pin } from "lucide-react";
+import { Pin } from "src/components/icons";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 
 export function FreezePropertyButton({

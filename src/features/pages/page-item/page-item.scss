@@ -66,11 +66,11 @@
       opacity 100ms ease,
       background-color 100ms ease;
 
-    svg {
+    :is(svg, .material-icon) {
       transition: transform 120ms ease;
     }
 
-    &[data-expanded="true"] svg {
+    &[data-expanded="true"] :is(svg, .material-icon) {
       transform: rotate(90deg);
     }
 
@@ -145,7 +145,7 @@
     color: var(--sb-icon-color);
     opacity: 1 !important;
 
-    svg {
+    :is(svg, .material-icon) {
       display: block;
     }
   }
@@ -163,7 +163,7 @@
       color: var(--sb-icon-color);
       opacity: 1 !important;
 
-      svg {
+      :is(svg, .material-icon) {
         display: block;
       }
     }
@@ -409,12 +409,12 @@
   color: var(--sb-icon-color);
   cursor: pointer;
 
-  svg {
+  :is(svg, .material-icon) {
     display: block;
     transition: transform 0.15s ease;
   }
 
-  &[data-expanded="true"] svg {
+  &[data-expanded="true"] :is(svg, .material-icon) {
     transform: rotate(90deg);
   }
 
@@ -448,7 +448,7 @@
     height: 20px;
     color: var(--sb-icon-color);
 
-    svg {
+    :is(svg, .material-icon) {
       max-width: 18px;
       max-height: 18px;
     }
@@ -488,7 +488,7 @@
     justify-content: center;
     color: var(--ts-tint);
 
-    svg {
+    :is(svg, .material-icon) {
       max-width: 15px;
       max-height: 15px;
     }

@@ -12,7 +12,7 @@ import {
   SlidersHorizontal,
   Trash2,
   X,
-} from "lucide-react";
+} from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Card,

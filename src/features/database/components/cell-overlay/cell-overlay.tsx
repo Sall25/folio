@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Check, MessageSquareText, PenLine } from "lucide-react";
+import { Copy, Check, MessageSquareText, PenLine } from "src/components/icons";
 import "./cell-overlay.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import type { DatabaseView } from "src/types";

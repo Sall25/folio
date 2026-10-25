@@ -65,7 +65,7 @@
     justify-content: flex-start;
     font-size: 14px;
     background: transparent;
-    svg{
+    :is(svg, .material-icon){
      margin-right: 5px;
       width:14px;
       height: 14px;
@@ -82,7 +82,7 @@
     margin-top: 5px;
     min-height: 25px;
 
-    svg{
+    :is(svg, .material-icon){
       width:14px;
       height: 14px;
     }

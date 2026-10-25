@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Chevron } from "src/components/tiptap-ui-primitive/chevron";
 import { SpinnerRing } from "src/components/tiptap-ui-primitive/spinner-ring";

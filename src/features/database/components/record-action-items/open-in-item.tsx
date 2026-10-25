@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "src/components/icons";
 import { MenuRow } from "../menu-row";
 
 // Open in — navigates to the New tab / Side peek submenu.

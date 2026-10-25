@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
+import { X } from "src/components/icons";
 import { ShowcaseViewer } from "./showcase-viewer";
 import {
   getShowcase,

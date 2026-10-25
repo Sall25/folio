@@ -1,4 +1,4 @@
-import { SmilePlus } from "lucide-react";
+import { SmilePlus } from "src/components/icons";
 import {
   Popover,
   PopoverContent,

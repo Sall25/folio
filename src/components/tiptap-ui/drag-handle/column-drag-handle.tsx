@@ -5,7 +5,7 @@ import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import type { NormalizedNestedOptions } from "@tiptap/extension-drag-handle";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { GripVertical } from "lucide-react";
+import { GripVertical } from "src/components/icons";
 import {
   DropdownMenu,
   DropdownMenuTrigger,

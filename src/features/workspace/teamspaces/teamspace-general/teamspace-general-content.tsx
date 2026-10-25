@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-location";
-import { Trash2 } from "lucide-react";
+import { Trash2 } from "src/components/icons";
 import { Input } from "src/components/tiptap-ui-primitive/input";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";

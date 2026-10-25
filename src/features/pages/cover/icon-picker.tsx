@@ -19,6 +19,21 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { RecentIconRow } from "src/features/shell/sidebar/recent-icon-row/recent-icon-row.js";
 import { useIconRecents } from "src/features/pages/cover/use-icon-recents.js";
 import { Input } from "src/components/tiptap-ui-primitive/input/input.js";
+import { useTranslation } from "react-i18next";
+import { useLocalStorage } from "src/hooks/use-local-storage";
+import {
+  joinIconName,
+  splitIconName,
+  type IconOverride,
+} from "src/components/icons/icon-style";
+import { IconStyleBar } from "./icon-style-bar";
+
+// The look last chosen in the picker, kept for the next pick.
+const PICKER_STYLE_KEY = "folio-icon-picker-style";
+
+/** "calendar_today;fill:0" → "calendar today" (the button's tooltip). */
+const iconLabel = (name: string) =>
+  splitIconName(name).glyph.replace(/_/g, " ");
 
 interface IconPopoverProps {
   name: string;
@@ -38,7 +53,11 @@ function IconPopover({ name, color, onSelect }: IconPopoverProps) {
   const [open, setOpen] = useState(false);
   if (!open)
     return (
-      <Button variant="ghost" tooltip={name} onClick={() => setOpen(true)}>
+      <Button
+        variant="ghost"
+        tooltip={iconLabel(name)}
+        onClick={() => setOpen(true)}
+      >
         <DynamicIcon
           className="tiptap-button-icon"
           name={name}
@@ -49,7 +68,7 @@ function IconPopover({ name, color, onSelect }: IconPopoverProps) {
   return (
     <Popover open onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" tooltip={name}>
+        <Button variant="ghost" tooltip={iconLabel(name)}>
           <DynamicIcon
             className="tiptap-button-icon"
             name={name}
@@ -107,12 +126,18 @@ export function IconPicker({
   const deferred = useDeferredValue(query);
   const isStale = query !== deferred;
 
+  const { t } = useTranslation();
   const { recents } = useIconRecents();
+  // Style, weight and fill for the icon about to be picked. Each grid icon
+  // shows it, and the picked name carries it ("description;fill:0").
+  const [look, setLook] = useLocalStorage<IconOverride>(PICKER_STYLE_KEY, {});
 
   const filtered = useMemo(
     () =>
       getIconList().filter((e) =>
-        e.name.toLowerCase().includes(deferred.toLowerCase()),
+        e.name.includes(
+          deferred.trim().toLowerCase().replace(/[\s-]+/g, "_"),
+        ),
       ),
     [deferred],
   );
@@ -147,10 +172,12 @@ export function IconPicker({
           ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search icons…"
+          placeholder={t("iconStyle.search")}
         />
         <Spacer orientation="horizontal" size={5} />
       </CardItemGroup>
+      <Spacer orientation="vertical" size={6} />
+      <IconStyleBar value={look} onChange={setLook} />
       <Spacer orientation="vertical" />
       <CardBody
         ref={scrollRef}
@@ -163,7 +190,7 @@ export function IconPicker({
       >
         <RecentIconRow target="Icons" recents={recents} onSelect={onSelect} />
         <Spacer orientation="vertical" size={5} />
-        <CardGroupLabel>Icons</CardGroupLabel>
+        <CardGroupLabel>{t("iconStyle.icons")}</CardGroupLabel>
         <Spacer orientation="vertical" size={2} />
 
         <div>
@@ -177,7 +204,7 @@ export function IconPicker({
                 display: "block",
               }}
             >
-              No icons found
+              {t("iconStyle.noResults")}
             </span>
           ) : (
             <div
@@ -205,7 +232,7 @@ export function IconPicker({
                     {row.map(({ name, color }) => (
                       <IconPopover
                         key={name}
-                        name={name}
+                        name={joinIconName(name, look)}
                         color={color}
                         onSelect={onSelect}
                       />

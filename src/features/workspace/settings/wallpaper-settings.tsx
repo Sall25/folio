@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { UploadCloud } from "lucide-react";
+import { CloudUpload as UploadCloud } from "src/components/icons";
 import { uploadFile } from "src/api/uploads";
 import { usePages } from "src/hooks/use-pages";
 import {

@@ -8,7 +8,7 @@ import {
 } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 import { Fragment } from "@tiptap/pm/model";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check } from "src/components/icons";
 import {
   TabList,
   TabItem,

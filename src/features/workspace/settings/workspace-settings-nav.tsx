@@ -12,7 +12,7 @@ import {
   SlidersHorizontal,
   UserCircle,
   Users,
-} from "lucide-react";
+} from "src/components/icons";
 
 // The settings modal's nav: sections of items. Kept out of the modal's file
 // so it can share these with workspace-settings.tsx (a component file may

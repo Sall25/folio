@@ -4,7 +4,13 @@ import {
   type NodeViewProps,
 } from "@tiptap/react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { Check, ChevronDown, Copy, ListOrdered, WrapText } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  ListOrdered,
+  WrapText,
+} from "src/components/icons";
 import "./code-block-node.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {

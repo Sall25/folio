@@ -8,7 +8,7 @@
 //
 // A footer "Edit property" opens the property CONFIG panel (edit the property
 // itself, not its value) — the distinction the second screenshot shows.
-import { Settings2 } from "lucide-react";
+import { Settings2 } from "src/components/icons";
 import { Cell } from "../cells/cell";
 import { MenuRow } from "../menu-row";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";

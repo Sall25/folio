@@ -10,7 +10,7 @@ import "./menu-row.scss";
 //     row toggles; the Toggle reflects state. Button + sibling Toggle (not
 //     nested) avoids nested-interactive / double-fire.
 //   - SELECT row (pass `selected`): a ghost <Button> with a trailing check.
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronRight } from "src/components/icons";
 import type { ComponentType, ReactNode } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";

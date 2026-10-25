@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X } from "src/components/icons";
 import { memo } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 

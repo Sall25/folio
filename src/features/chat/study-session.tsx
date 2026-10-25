@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Square, Timer } from "lucide-react";
+import { Square, Timer } from "src/components/icons";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import type { ChatPerson } from "src/types";
 import {

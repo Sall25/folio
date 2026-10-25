@@ -7,7 +7,7 @@ import {
   type ReactNode,
   useEffect,
 } from "react";
-import { Pencil, Trash2, EyeOff, Layout } from "lucide-react";
+import { Pencil, Trash2, EyeOff, Layout } from "src/components/icons";
 import {
   DndContext,
   PointerSensor,

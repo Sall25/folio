@@ -33,7 +33,7 @@ import { useEditorLayoutActions } from "../../shell/context/editor-layout-contex
 import { usePinControl } from "../../workspace/context/teamspace-pin-context";
 import { getActiveEditor } from "../../editor/context/active-editor-store";
 import { setEditorTitle } from "../../editor/utils/doc-title";
-import { CloudDownload } from "lucide-react";
+import { CloudDownload } from "src/components/icons";
 import { useAvailableOffline } from "../available-offline";
 import { SbChevronRightIcon } from "src/components/tiptap-icons/sidebar-icons";
 import { teamspaceTint } from "src/lib/teamspace-color";

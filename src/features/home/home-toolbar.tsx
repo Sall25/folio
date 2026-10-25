@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, Home, LayoutTemplate, Plus } from "lucide-react";
+import { ChevronDown, Home, LayoutTemplate, Plus } from "src/components/icons";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardBody } from "src/components/tiptap-ui-primitive/card";
 import {

@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-import { dynamicIconImports } from "lucide-react/dynamic";
 import { useBrowserTab, type BrowserTabIcon } from "./use-browser-tab";
 import { useActivePageState } from "../../pages/context/active-page-context";
 import { resolveIconName } from "../../pages/cover/icon-name";
+import {
+  ICON_FAMILIES,
+  splitIconName,
+} from "src/components/icons/icon-style";
 
 function resolveColor(raw: string | null): string {
   const FALLBACK = "#5b5b5b";
@@ -22,50 +25,47 @@ function resolveColor(raw: string | null): string {
   return resolved || FALLBACK;
 }
 
-type IconNode = [tag: string, attrs: Record<string, string>][];
+// Page icons are Material Symbols glyphs (see DynamicIcon). Draw the same
+// glyph from the icon font onto a canvas and use it as a PNG data-URL, so the
+// tab shows the icon the page shows, in its style and weight (the icon's own,
+// else the app's). A canvas can't set the font's fill axis, so the tab draws
+// the glyph's outlined form.
+const FAVICON_SIZE = 64;
 
-const escapeAttr = (v: string) =>
-  v
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-
-// Page icons are Lucide icons (see DynamicIcon). Load the same icon's shapes
-// and turn them into an SVG data-URL, so the tab shows exactly the icon the
-// page shows — for every icon, not only the few names an icon font knows.
-async function lucideIconToFaviconHref(
+async function materialIconToFaviconHref(
   name: string,
   color: string,
 ): Promise<string | null> {
-  const key = resolveIconName(name) as keyof typeof dynamicIconImports;
-  const load = dynamicIconImports[key];
-  if (!load) return null;
+  const glyph = resolveIconName(name);
+  const { override } = splitIconName(name);
+  const app = getComputedStyle(document.documentElement);
+  const family = override.variant
+    ? `"${ICON_FAMILIES[override.variant]}"`
+    : app.getPropertyValue("--mi-family").trim() ||
+      `"${ICON_FAMILIES.outlined}"`;
+  const weight =
+    override.weight ?? (Number(app.getPropertyValue("--mi-wght")) || 400);
+  const font = `${weight} ${FAVICON_SIZE}px ${family}`;
 
-  let node: IconNode | undefined;
   try {
-    node = ((await load()) as { __iconNode?: IconNode }).__iconNode;
+    await document.fonts.load(font, glyph);
   } catch {
     return null;
   }
-  if (!node?.length) return null;
 
-  const children = node
-    .map(([tag, attrs]) => {
-      const a = Object.entries(attrs)
-        .filter(([k]) => k !== "key")
-        .map(([k, v]) => `${k}="${escapeAttr(String(v))}"`)
-        .join(" ");
-      return `<${tag} ${a}/>`;
-    })
-    .join("");
+  const canvas = document.createElement("canvas");
+  canvas.width = FAVICON_SIZE;
+  canvas.height = FAVICON_SIZE;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
 
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" ` +
-    `fill="none" stroke="${escapeAttr(color)}" stroke-width="2" ` +
-    `stroke-linecap="round" stroke-linejoin="round">${children}</svg>`;
-
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  ctx.font = font;
+  ctx.fillStyle = color;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  // The glyphs sit on the baseline and fill the em square above it.
+  ctx.fillText(glyph, FAVICON_SIZE / 2, FAVICON_SIZE);
+  return canvas.toDataURL("image/png");
 }
 
 /**
@@ -105,7 +105,7 @@ export function usePageBrowserTab(
     const resolvedColor = resolveColor(color);
 
     let cancelled = false;
-    lucideIconToFaviconHref(iconName, resolvedColor).then((href) => {
+    materialIconToFaviconHref(iconName, resolvedColor).then((href) => {
       if (!cancelled && href) setResolved({ key: iconKey, href });
     });
     return () => {

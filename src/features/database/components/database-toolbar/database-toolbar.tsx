@@ -1,5 +1,5 @@
 import { memo, useCallback, useInsertionEffect, useRef, useState } from "react";
-import { Maximize2 } from "lucide-react";
+import { Maximize2 } from "src/components/icons";
 import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";

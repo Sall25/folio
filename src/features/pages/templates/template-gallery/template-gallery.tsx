@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Page, PageCover, ID } from "src/types";
-import { FileText, Plus, X } from "lucide-react";
+import { FileText, Plus, X } from "src/components/icons";
 import { PageItemIcon } from "../../page-item/page-item-icon";
 import { useActivePageActions } from "../../context/active-page-context";
 import { makePage } from "src/utils/make-page";

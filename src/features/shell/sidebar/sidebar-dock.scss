@@ -45,7 +45,7 @@
       background 0.12s ease,
       color 0.12s ease;
 
-    svg {
+    :is(svg, .material-icon) {
       display: block;
     }
 

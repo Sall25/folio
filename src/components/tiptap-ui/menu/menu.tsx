@@ -6,7 +6,7 @@ import {
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import type { Editor } from "@tiptap/core";
 import { NodeSelection } from "@tiptap/pm/state";
-import { Columns2, MessagesSquare, Search } from "lucide-react";
+import { Columns2, MessagesSquare, Search } from "src/components/icons";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import ColorDropdownMenu from "src/components/tiptap-ui/color-dropdown-menu";
 import AlignmentDropdownMenu from "src/components/tiptap-ui/alignment-dropdown-menu";

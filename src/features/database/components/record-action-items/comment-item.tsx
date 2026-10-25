@@ -1,4 +1,4 @@
-import { MessageSquare } from "lucide-react";
+import { MessageSquare } from "src/components/icons";
 import { MenuRow } from "../menu-row";
 
 export function CommentItem({

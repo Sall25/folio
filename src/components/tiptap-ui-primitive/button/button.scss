@@ -148,7 +148,7 @@
   }
 
   /* button only has icons */
-  &:has(> svg):not(:has(> :not(svg))) {
+  &:has(> :is(svg, .material-icon)):not(:has(> :not(:is(svg, .material-icon)))) {
     gap: 0.125rem;
 
     &[data-size="large"],
@@ -158,8 +158,8 @@
   }
 
   /* button only has 2 icons and one of them is dropdown small */
-  &:has(> svg:nth-of-type(2)):has(> .tiptap-button-dropdown-small):not(
-      :has(> svg:nth-of-type(3))
+  &:has(> :is(svg, .material-icon):nth-of-type(2)):has(> .tiptap-button-dropdown-small):not(
+      :has(> :is(svg, .material-icon):nth-of-type(3))
     ):not(:has(> .tiptap-button-text)) {
     gap: 0;
     padding-right: 0.25rem;

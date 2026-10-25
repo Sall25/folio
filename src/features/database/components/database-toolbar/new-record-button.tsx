@@ -1,4 +1,10 @@
-import { Plus, Check, Maximize2, ChevronDown, Trash2 } from "lucide-react";
+import {
+  Plus,
+  Check,
+  Maximize2,
+  ChevronDown,
+  Trash2,
+} from "src/components/icons";
 import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";

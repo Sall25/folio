@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { CaseSensitive, Regex, WholeWord, X } from "lucide-react";
+import { CaseSensitive, Regex, WholeWord, X } from "src/components/icons";
 import { useEditorLayout } from "../context/editor-layout-context";
 import { useSearch } from "../search/search-context";
 import { isMac } from "src/lib/tiptap-utils";
