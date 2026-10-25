@@ -1030,6 +1030,11 @@ html:root[data-theme="midnight"] {
   --sb-scrlbr-width: thin;
   --sb-scrlbr-color: rgba(36, 50, 79, 0.2) transparent;
 
+  // A chat page has its own line under its header, so no second line above it.
+  &:has(.chat-room-shell:not(.is-overlay)) .tiptap-toolbar[data-variant="fixed"] {
+    box-shadow: none;
+  }
+
   // The right page: flush against the sidebar (theme-sheet.tsx adds 24px
   // for the floating themes), a shadow in the fold, binder holes and a red
   // margin line along its left edge.
@@ -1082,6 +1087,29 @@ html:root[data-theme="midnight"] {
   .tiptap-toolbar[data-variant="fixed"] {
     padding-left: 84px !important;
     box-shadow: inset 0 -1px 0 rgba(36, 50, 79, 0.1);
+  }
+
+  // Covers start past the margin line too, so the binder holes and the red
+  // line stay visible. --cover-sheet-offset (cover-header.tsx) is where the
+  // sheet starts inside the cover; the line is 64px into the sheet.
+  .cover-image-root,
+  .gradient-cover {
+    clip-path: inset(0 0 0 calc(var(--cover-sheet-offset, 0px) + 66px));
+  }
+
+  &:has(.theme-sheet--flush) {
+    .cover-image-root,
+    .gradient-cover {
+      clip-path: none;
+    }
+  }
+
+  .page-peek,
+  .page-create-modal {
+    .cover-image-root,
+    .gradient-cover {
+      clip-path: none;
+    }
   }
 
   // Menus and popovers are index cards.
