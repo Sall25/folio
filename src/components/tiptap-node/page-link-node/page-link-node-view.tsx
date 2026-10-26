@@ -11,24 +11,64 @@ import { FileX2, Trash2 } from "src/components/icons";
 import { computePosition, flip, offset, shift } from "@floating-ui/dom";
 import { useActivePageActions } from "src/features/pages/context/active-page-context";
 import { usePage, usePagesBase } from "src/hooks/use-pages";
-import { Breadcrumbs } from "src/features/shell/breadcrumbs";
 
-function getContentExcerpt(page: Page): string {
+// ── The page in miniature ───────────────────────────────────────────────────
+// The preview shows the start of the page, small: headings, paragraphs and
+// list items as text (no editor), cut off with a fade at the bottom.
+
+const PREVIEW_BLOCKS = 8;
+
+type PreviewLine = {
+  kind: "heading" | "text" | "bullet" | "number" | "todo";
+  text: string;
+  checked?: boolean;
+};
+
+const textOf = (node: any): string =>
+  node?.type === "text"
+    ? (node.text ?? "")
+    : (node?.content ?? []).map(textOf).join("");
+
+function previewLines(page: Page): PreviewLine[] {
+  const lines: PreviewLine[] = [];
   try {
-    const content = page.content?.content ?? [];
-    for (const node of content) {
-      if (node.type === "paragraph" && node.content?.length) {
-        const text = node.content
-          .filter((n: any) => n.type === "text")
-          .map((n: any) => n.text)
-          .join("");
-        if (text.trim()) return text;
+    for (const node of page.content?.content ?? []) {
+      if (lines.length >= PREVIEW_BLOCKS) break;
+      switch (node.type) {
+        case "heading":
+          lines.push({ kind: "heading", text: textOf(node) });
+          break;
+        case "paragraph": {
+          const text = textOf(node);
+          if (text.trim()) lines.push({ kind: "text", text });
+          break;
+        }
+        case "bulletList":
+        case "orderedList":
+        case "taskList":
+          for (const item of node.content ?? []) {
+            if (lines.length >= PREVIEW_BLOCKS) break;
+            lines.push({
+              kind:
+                node.type === "taskList"
+                  ? "todo"
+                  : node.type === "orderedList"
+                    ? "number"
+                    : "bullet",
+              text: textOf(item.content?.[0]),
+              checked: !!item.attrs?.checked,
+            });
+          }
+          break;
+        default:
+          // title, databases, images…: left out of the miniature.
+          break;
       }
     }
   } catch {
-    // ignore
+    // a malformed document just shows no preview
   }
-  return "";
+  return lines;
 }
 
 const ENTER_DELAY = 500;
@@ -52,7 +92,11 @@ function PageLinkPreview({
 }) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
-  const excerpt = getContentExcerpt(page);
+  const lines = previewLines(page);
+  // The page it sits in, shown above the title.
+  const { data: parent } = usePage(page.parentId ?? null);
+  const { coverImage, gradient } = page.cover;
+  const hasCover = !!coverImage || !!gradient;
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -89,14 +133,43 @@ function PageLinkPreview({
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
     >
-      <div className="page-link-preview__icon">
-        <PageItemIcon cover={page.cover} styles={{ fontSize: 32 }} />
+      {hasCover && (
+        <div
+          className="page-link-preview__cover"
+          style={gradient && !coverImage ? { background: gradient } : undefined}
+        >
+          {coverImage && <img src={coverImage} alt="" />}
+        </div>
+      )}
+      <div
+        className="page-link-preview__body"
+        data-cover={hasCover || undefined}
+      >
+        {page.cover.iconName && (
+          <div className="page-link-preview__icon">
+            <PageItemIcon cover={page.cover} styles={{ fontSize: 30 }} />
+          </div>
+        )}
+        {parent?.title && (
+          <p className="page-link-preview__parent">{parent.title}</p>
+        )}
+        <p className="page-link-preview__title">
+          {page.title || t("page.newPage")}
+        </p>
+        {lines.length > 0 && (
+          <div className="page-link-preview__page" aria-hidden="true">
+            {lines.map((line, i) => (
+              <p
+                key={i}
+                className={`page-link-preview__line is-${line.kind}`}
+                data-checked={line.checked || undefined}
+              >
+                {line.text}
+              </p>
+            ))}
+          </div>
+        )}
       </div>
-      <Breadcrumbs pageId={page.id} showDropdown={false} />
-      <p className="page-link-preview__title">
-        {page.title || t("page.newPage")}
-      </p>
-      {excerpt && <p className="page-link-preview__excerpt">{excerpt}</p>}
     </div>,
     document.body,
   );
@@ -104,7 +177,7 @@ function PageLinkPreview({
 
 export function PageLinkNodeView({ node, editor, getPos }: NodeViewProps) {
   const { t } = useTranslation();
-  const { pageId, title: storedTitle, showIcon } = node.attrs;
+  const { pageId, title: storedTitle } = node.attrs;
 
   // Live: read from the pages list (kept fresh by the app), so a rename or
   // a new icon shows here at once. The page's own query covers a page the
@@ -208,7 +281,7 @@ export function PageLinkNodeView({ node, editor, getPos }: NodeViewProps) {
     return (
       <NodeViewWrapper data-drag-handle data-node-id={node.attrs.nodeId}>
         <div className="page-link-node is-trashed" contentEditable={false}>
-          {showIcon && <PageItemIcon cover={page!.cover} />}
+          <PageItemIcon cover={page!.cover} />
           <span className="page-link-node__title">
             {page!.title || t("page.newPage")}
           </span>
@@ -248,7 +321,7 @@ export function PageLinkNodeView({ node, editor, getPos }: NodeViewProps) {
           }
         }}
       >
-        {showIcon && <PageItemIcon cover={page!.cover} />}
+        <PageItemIcon cover={page!.cover} />
         <span
           className="page-link-node__title"
           style={{ color: page!.cover?.color ?? undefined }}
