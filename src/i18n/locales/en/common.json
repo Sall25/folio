@@ -1401,7 +1401,8 @@
       "copied": "Copied!",
       "duplicate": "Duplicate view",
       "delete": "Delete view",
-      "exportCsv": "Export as CSV"
+      "exportCsv": "Export as CSV",
+      "importCsv": "Import CSV…"
     },
     "views": {
       "table": "Table",
@@ -1647,6 +1648,37 @@
       "sortedTitle": "This view is sorted.",
       "sortedBody": "Remove the sort to put rows in your own order? The rows keep their current order, with your move applied.",
       "removeSort": "Remove sort"
+    },
+    "import": {
+      "title": "Import into {{name}}",
+      "fileInfo": "{{rows}} rows · {{columns}} columns · separated by {{separator}}",
+      "tab": "tabs",
+      "readError": "This file couldn't be read. Is it a CSV file?",
+      "columnInFile": "Column in the file",
+      "goesInto": "Goes into",
+      "firstRows": "First rows",
+      "titleColumn": "Name (the title)",
+      "existing": "Existing properties",
+      "newProperty": "New property",
+      "newOfType": "New property · {{type}}",
+      "skip": "Don't import",
+      "empty": "empty",
+      "detected": "detected: {{type}}",
+      "newOptions_one": "{{count}} new option",
+      "newOptions_other": "{{count}} new options",
+      "unreadable_one": "{{count}} value can't be read",
+      "unreadable_other": "{{count}} values can't be read",
+      "unknownPeople_one": "{{count}} person not in this workspace",
+      "unknownPeople_other": "{{count}} people not in this workspace",
+      "warnings_one": "{{count}} value will be left empty",
+      "warnings_other": "{{count}} values will be left empty",
+      "failed": "The import failed. Nothing was added; try again.",
+      "progress": "Importing {{done}} of {{total}}…",
+      "cancel": "Cancel",
+      "submit_one": "Import {{count}} row",
+      "submit_other": "Import {{count}} rows",
+      "done_one": "{{count}} row imported",
+      "done_other": "{{count}} rows imported"
     }
   },
   "toolbar": {

@@ -1401,7 +1401,8 @@
       "copied": "Copié !",
       "duplicate": "Dupliquer la vue",
       "delete": "Supprimer la vue",
-      "exportCsv": "Exporter en CSV"
+      "exportCsv": "Exporter en CSV",
+      "importCsv": "Importer un CSV…"
     },
     "views": {
       "table": "Tableau",
@@ -1647,6 +1648,37 @@
       "sortedTitle": "Cette vue est triée.",
       "sortedBody": "Retirer le tri pour ranger les lignes à votre façon ? Elles gardent leur ordre actuel, avec votre déplacement.",
       "removeSort": "Retirer le tri"
+    },
+    "import": {
+      "title": "Importer dans {{name}}",
+      "fileInfo": "{{rows}} lignes · {{columns}} colonnes · séparées par {{separator}}",
+      "tab": "des tabulations",
+      "readError": "Ce fichier n’a pas pu être lu. Est-ce bien un fichier CSV ?",
+      "columnInFile": "Colonne du fichier",
+      "goesInto": "Va dans",
+      "firstRows": "Premières lignes",
+      "titleColumn": "Nom (le titre)",
+      "existing": "Propriétés existantes",
+      "newProperty": "Nouvelle propriété",
+      "newOfType": "Nouvelle propriété · {{type}}",
+      "skip": "Ne pas importer",
+      "empty": "vide",
+      "detected": "détecté : {{type}}",
+      "newOptions_one": "{{count}} nouvelle option",
+      "newOptions_other": "{{count}} nouvelles options",
+      "unreadable_one": "{{count}} valeur illisible",
+      "unreadable_other": "{{count}} valeurs illisibles",
+      "unknownPeople_one": "{{count}} personne absente de cet espace",
+      "unknownPeople_other": "{{count}} personnes absentes de cet espace",
+      "warnings_one": "{{count}} valeur restera vide",
+      "warnings_other": "{{count}} valeurs resteront vides",
+      "failed": "L’import a échoué. Rien n’a été ajouté ; réessayez.",
+      "progress": "Import de {{done}} sur {{total}}…",
+      "cancel": "Annuler",
+      "submit_one": "Importer {{count}} ligne",
+      "submit_other": "Importer {{count}} lignes",
+      "done_one": "{{count}} ligne importée",
+      "done_other": "{{count}} lignes importées"
     }
   },
   "toolbar": {

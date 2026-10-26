@@ -38,6 +38,7 @@ import { useWorkspacePeople } from "../hooks/use-workspace-people";
 import { CalendarViewProvider } from "./calendar-view-provider";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog } from "src/features/shell/confirm-dialog";
+import { CsvImportHost } from "../components/csv-import/csv-import-dialog";
 import { usePageTitles } from "../hooks/use-page-titles";
 import { sortRecords } from "../utils/apply-sorts";
 import {
@@ -475,6 +476,13 @@ export function DatabaseProvider({
           <TimelineViewProvider>{children}</TimelineViewProvider>
         </CalendarViewProvider>
       </CardActionsProvider>
+
+      {/* The CSV import dialog, opened from the view options. */}
+      <CsvImportHost
+        databaseId={attrs.id}
+        sourceId={source?.id}
+        title={title}
+      />
 
       <ConfirmDialog
         open={pendingOrder !== null}
