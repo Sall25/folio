@@ -61,7 +61,9 @@ const toSnake = (s: string) =>
 const toCamel = (s: string) =>
   s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
 
-function keysToSnake(obj: unknown): unknown {
+/** App shape → DB row(s) (camelCase → snake_case, jsonb left as-is). For
+ *  writes that don't go through http(), e.g. inserting many rows at once. */
+export function keysToSnake(obj: unknown): unknown {
   if (Array.isArray(obj)) return obj.map(keysToSnake);
   if (obj && typeof obj === "object") {
     const out: Record<string, unknown> = {};

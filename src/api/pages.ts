@@ -1,6 +1,6 @@
 import type { ID, Page, PageCover, PageSettings } from "src/types";
 import type { JSONContent } from "@tiptap/react";
-import { http, keysToCamel } from "./client";
+import { http, keysToCamel, keysToSnake } from "./client";
 import { supabase } from "./supabase-client";
 
 // No workspace filter: pages_select RLS defines exactly the readable set —
@@ -39,6 +39,23 @@ export const deletePage = (id: ID) =>
 
 export const createPage = (page: Page) =>
   http<Page>("/pages", { method: "POST", body: JSON.stringify(page) });
+
+/** Many pages in one request per `chunk` (an import's rows). `onProgress`
+ *  gets the number created so far. */
+export async function createPages(
+  pages: Page[],
+  onProgress?: (done: number) => void,
+  chunk = 100,
+): Promise<void> {
+  for (let i = 0; i < pages.length; i += chunk) {
+    const part = pages.slice(i, i + chunk);
+    const { error } = await supabase
+      .from("pages")
+      .insert(keysToSnake(part) as Record<string, unknown>[]);
+    if (error) throw new Error(`Error POST /pages: ${error.message}`);
+    onProgress?.(Math.min(i + chunk, pages.length));
+  }
+}
 
 // ── Publish to the web (migration 042) ──────────────────────────────────
 

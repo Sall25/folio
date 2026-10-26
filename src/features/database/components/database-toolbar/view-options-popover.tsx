@@ -11,6 +11,7 @@ import {
   Palette,
   SlidersHorizontal,
   Trash2,
+  Upload,
   X,
 } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -56,6 +57,7 @@ import { PanelSlide } from "../panel-slide";
 import { ConfirmDialog } from "src/features/shell/confirm-dialog";
 import { useDatabaseContext } from "../../context/database-context";
 import { downloadCsv, toCsv } from "../../utils/csv-export";
+import { csvImportStore } from "../../utils/csv-import-store";
 
 // The delete confirmation is portaled to <body>, outside the options panel:
 // pressing inside it must not count as a click outside the panel.
@@ -162,12 +164,29 @@ function ViewOptionsContent({
 
   // Export as CSV: this view's rows (its filters, search and sort; all of
   // them, past the load limit) and its visible columns, in order.
-  const { title, sortedRecords, visibleProperties } = useDatabaseContext();
+  const { title, sortedRecords, visibleProperties, attrs, editor } =
+    useDatabaseContext();
   const handleExportCsv = () => {
     downloadCsv(
       title || t("database.picker.newDatabase"),
       toCsv(visibleProperties, sortedRecords),
     );
+    (onDone ?? onClose)?.();
+  };
+
+  // Import a CSV: pick the file, then the database opens the import dialog
+  // (csv-import-dialog.tsx). The input isn't part of this panel, which
+  // closes right away.
+  const canImport = !db.locked && editor.isEditable;
+  const handleImportCsv = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv,.tsv,text/csv,text/tab-separated-values";
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (file) csvImportStore.open(attrs.id, file);
+    };
+    input.click();
     (onDone ?? onClose)?.();
   };
 
@@ -446,6 +465,12 @@ function ViewOptionsContent({
                 : t("database.viewOptions.copyLink")
             }
             onClick={handleCopy}
+          />
+          <MenuRow
+            Icon={Upload}
+            label={t("database.viewOptions.importCsv")}
+            onClick={canImport ? handleImportCsv : undefined}
+            disabled={!canImport}
           />
           <MenuRow
             Icon={Download}
