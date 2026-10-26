@@ -4,8 +4,16 @@
   display: flex !important;      // force the row (override any conflicting rule)
   flex-direction: row !important;
   align-items: flex-start;
-  gap: 6px;
   margin: 4px 0;
+  
+  // Blocks in a toggle reach back over the caret column, so the drag handle's
+  // hit test lands on the block, not on the toggle. A transparent border (not
+  // padding) so lists keep their own indent; the text doesn't move.
+  .appendix-content > :is(p, h1, h2, h3, h4, h5, h6, ul, ol,
+      ul[data-type="taskList"], [data-type="pageLink"], .appendix) {
+    margin-left: -28px;
+    border-left: 28px solid transparent;
+  }
 
   // Caret: fixed size, never grows, sits at the start of the row.
   > .appendix__caret {
