@@ -1065,12 +1065,7 @@
     "deleteNode": "Delete node",
     "resetFormatting": "Reset Formatting",
     "search": "Search actions…",
-    "noResults": "No actions found",
-    "addIcon": "Add icon",
-    "removeIcon": "Remove icon",
-    "editIcon": "Edit icon",
-    "addBorder": "Add border",
-    "removeBorder": "Remove border"
+    "noResults": "No actions found"
   },
   "blockTypes": {
     "paragraph": "Paragraph",
@@ -1304,9 +1299,28 @@
       "dates": "Dates",
       "pages": "Pages",
       "people": "People",
-      "rows": "Rows"
+      "rows": "Rows",
+      "linkToPage": "Link to page",
+      "newPage": "New page"
     },
-    "noResults": "No results"
+    "noResults": "No results",
+    "moreResults_one": "{{count}} more result",
+    "moreResults_other": "{{count}} more results",
+    "invite": "Invite…",
+    "inviteEmail": "Invite {{email}}",
+    "addSubPage": "Add new sub-page",
+    "addPageIn": "Add new page in…",
+    "back": "Back",
+    "chooseParent": "Add the new page in…",
+    "inviteTitle": "Invite and mention",
+    "addEmails": "Add emails…",
+    "inviteMember": "Add to workspace",
+    "inviteMemberHint": "Invite as a member",
+    "inviteGuest": "Guest",
+    "inviteGuestHint": "Invite as a guest",
+    "inviteFailed": "The invite couldn't be sent. Try again.",
+    "inviting": "Inviting…",
+    "inviteButton": "Invite"
   },
   "rowMention": {
     "in": "in {{name}}",

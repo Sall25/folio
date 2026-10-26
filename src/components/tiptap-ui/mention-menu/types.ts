@@ -9,9 +9,19 @@ export type MentionItem = {
   label: string;
   avatar?: string;
   role?: string;
-  title?: "Date" | "People" | "Pages" | "Rows";
+  title?: "Date" | "People" | "Pages" | "Rows" | "NewPage";
   date?: string;
-  type?: "user" | "page" | "date" | "row" | "divider";
+  type?: "user" | "page" | "date" | "row" | "divider" | "action" | "more";
+  /** Action items: what choosing it does. "createIn" is the page picked
+   *  after "Add new page in…" (parentId says where). */
+  action?: "invite" | "subpage" | "pageIn" | "createIn";
+  /** The title a new page gets (what was typed after "@"). */
+  newTitle?: string;
+  parentId?: string | null;
+  /** Page items: where the page is ("Reading List / Books"). */
+  path?: string;
+  /** "More results" items: how many are hidden. */
+  count?: number;
   /** Row items: the row's ID ("TASK-12"), when its database has one. */
   idText?: string;
   cover?: Page["cover"];
@@ -31,6 +41,8 @@ export type MentionListRef = {
 export type MentionListProps = {
   items: MentionItem[];
   command: (item: MentionItem) => void;
+  /** What was typed after "@" (the suggestion's query). */
+  query?: string;
 };
 
 /** A database row the @ menu can mention (set by the menu from the loaded

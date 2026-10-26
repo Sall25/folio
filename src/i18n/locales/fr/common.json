@@ -1065,12 +1065,7 @@
     "deleteNode": "Supprimer le nœud",
     "resetFormatting": "Effacer la mise en forme",
     "search": "Rechercher une action…",
-    "noResults": "Aucune action trouvée",
-    "addIcon": "Ajouter une icône",
-    "removeIcon": "Retirer l’icône",
-    "editIcon": "Modifier l’icône",
-    "addBorder": "Ajouter une bordure”",
-    "removeBorder": "Retirer la bordure"
+    "noResults": "Aucune action trouvée"
   },
   "blockTypes": {
     "paragraph": "Paragraphe",
@@ -1304,9 +1299,28 @@
       "dates": "Dates",
       "pages": "Pages",
       "people": "Personnes",
-      "rows": "Lignes"
+      "rows": "Lignes",
+      "linkToPage": "Lien vers une page",
+      "newPage": "Nouvelle page"
     },
-    "noResults": "Aucun résultat"
+    "noResults": "Aucun résultat",
+    "moreResults_one": "{{count}} autre résultat",
+    "moreResults_other": "{{count}} autres résultats",
+    "invite": "Inviter…",
+    "inviteEmail": "Inviter {{email}}",
+    "addSubPage": "Ajouter une sous-page",
+    "addPageIn": "Ajouter une page dans…",
+    "back": "Retour",
+    "chooseParent": "Ajouter la nouvelle page dans…",
+    "inviteTitle": "Inviter et mentionner",
+    "addEmails": "Ajouter des e-mails…",
+    "inviteMember": "Ajouter à l’espace",
+    "inviteMemberHint": "Inviter comme membre",
+    "inviteGuest": "Invité",
+    "inviteGuestHint": "Inviter comme invité",
+    "inviteFailed": "L’invitation n’a pas pu être envoyée. Réessayez.",
+    "inviting": "Invitation…",
+    "inviteButton": "Inviter"
   },
   "rowMention": {
     "in": "dans {{name}}",

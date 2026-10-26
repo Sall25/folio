@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import type { Editor } from "@tiptap/react";
 import { usePeople } from "src/hooks/use-people";
 import { usePages, usePagesBase } from "src/hooks/use-pages";
@@ -6,6 +6,8 @@ import { useDataSources } from "src/hooks/use-data-sources";
 import type { DataSource, Page, Person } from "src/types";
 import { rowIdText } from "src/features/database/utils/row-summary";
 import type { RowMentionEntry } from "./types";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
+import { inviteToWorkspace } from "src/api/workspace-members";
 
 // Every page's title, to name a row's database.
 const selectTitles = (pages: Page[]) =>
@@ -58,30 +60,53 @@ export function useMentionData(editor: Editor | null) {
     });
   }, [rowPages, sources, titleOf]);
 
+  // "Invite…" in the menu: invite each address to this workspace.
+  const { workspaceId } = useCurrentWorkspace();
+  const invite = useCallback(
+    async (emails: string[], role: "member" | "guest") => {
+      if (!workspaceId) throw new Error("No workspace");
+      for (const email of emails) {
+        await inviteToWorkspace(workspaceId, email, role);
+      }
+    },
+    [workspaceId],
+  );
+
   useEffect(() => {
     if (editor) {
       writeMentionData(editor, {
         people: people as Person[],
         pages: pages as Page[],
         rows,
+        invite,
       });
     }
-  }, [editor, people, pages, rows]);
+  }, [editor, people, pages, rows, invite]);
 }
 
 /** Into the storage the menu's items() reads (no transaction — see above). */
 function writeMentionData(
   editor: Editor,
-  data: { people: Person[]; pages: Page[]; rows: RowMentionEntry[] },
+  data: {
+    people: Person[];
+    pages: Page[];
+    rows: RowMentionEntry[];
+    invite: (emails: string[], role: "member" | "guest") => Promise<void>;
+  },
 ) {
   if (editor.isDestroyed) return;
   const storage = editor.storage as unknown as {
-    mention?: { people: Person[]; rows: RowMentionEntry[] };
+    mention?: {
+      people: Person[];
+      rows: RowMentionEntry[];
+      invite?: (emails: string[], role: "member" | "guest") => Promise<void>;
+    };
     pageLink?: { pages: Page[] };
   };
   if (storage.mention) {
     storage.mention.people = data.people;
     storage.mention.rows = data.rows;
+    storage.mention.invite = data.invite;
   }
   if (storage.pageLink) storage.pageLink.pages = data.pages;
 }

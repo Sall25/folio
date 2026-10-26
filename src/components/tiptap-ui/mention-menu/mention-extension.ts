@@ -25,6 +25,7 @@ import { getDateSuggestions } from "./date-suggestions";
 
 import "./mention-extension.scss";
 import { MentionView } from "./mention-view";
+import { openInviteMentionPanel } from "./open-invite-mention-panel";
 import type { Page, Person } from "src/types";
 
 const FORBIDDEN_BLOCKS = ["codeBlock", "code"] as const;
@@ -45,6 +46,8 @@ declare module "@tiptap/core" {
 interface MentionStorage {
   people: Person[];
   rows: RowMentionEntry[];
+  /** Invites people to the workspace by email (set by useMentionData). */
+  invite?: (emails: string[], role: "member" | "guest") => Promise<void>;
 }
 
 declare module "@tiptap/core" {
@@ -52,6 +55,22 @@ declare module "@tiptap/core" {
     mention: MentionStorage;
   }
 }
+
+/** Where a page is: its parents' titles, nearest last ("Reading List /
+ *  Books"), at most `depth` levels. */
+function pagePath(page: Page, byId: Map<string, Page>, depth = 2): string {
+  const titles: string[] = [];
+  let parentId = page.parentId;
+  while (parentId && titles.length < depth) {
+    const parent = byId.get(parentId);
+    if (!parent) break;
+    titles.unshift(parent.title || "New Page");
+    parentId = parent.parentId;
+  }
+  return titles.join(" / ");
+}
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const MentionWithView = Mention.extend({
   addAttributes() {
@@ -129,21 +148,25 @@ export const MentionExtension = MentionWithView.configure({
       const people = editor.storage.mention.people ?? [];
 
       const matchedUsers = people
-        .filter((u) => u.name?.toLowerCase().includes(q))
+        .filter((u) =>
+          `${u.name ?? ""} ${u.email ?? ""}`.toLowerCase().includes(q),
+        )
         .map((p) => ({
           id: String(p.id),
-          label: p.name,
-          role: "user",
+          label: p.name || p.email,
+          avatar: p.avatarUrl ?? undefined,
           type: "user" as const,
         }));
 
-      const matchedPages = pages
+      const byId = new Map(pages.map((p) => [p.id, p] as const));
+      const matchedPages: MentionItem[] = pages
         .filter((p) => (p.title || "New Page").toLowerCase().includes(q))
         .map((p) => ({
           id: String(p.id),
           label: p.title || "New Page",
           type: "page" as const,
           cover: p.cover,
+          path: pagePath(p, byId),
         }));
 
       // Rows: by title, like pages, or by their ID ("TASK-12", "task-1"…)
@@ -187,47 +210,58 @@ export const MentionExtension = MentionWithView.configure({
       );
 
       const result: MentionItem[] = [];
-
-      if (matchedPages.length) {
+      const section = (title: NonNullable<MentionItem["title"]>) =>
         result.push({
-          id: "divider-pages",
+          id: `divider-${title}`,
           label: "",
-          title: "Pages",
+          title,
           type: "divider",
         });
+
+      if (matchedDates.length) {
+        section("Date");
+        result.push(...matchedDates);
+      }
+
+      // People, then "Invite…" (with the address when one was typed).
+      section("People");
+      result.push(...matchedUsers);
+      const typed = query.trim();
+      result.push({
+        id: "action-invite",
+        label: EMAIL.test(typed) ? typed : "",
+        type: "action",
+        action: "invite",
+      });
+
+      if (matchedPages.length) {
+        section("Pages");
         result.push(...matchedPages);
       }
 
       if (matchedRows.length) {
-        result.push({
-          id: "divider-rows",
-          label: "",
-          title: "Rows",
-          type: "divider",
-        });
+        section("Rows");
         result.push(...matchedRows);
       }
 
-      if (matchedDates.length) {
-        result.push({
-          id: "divider-date",
+      // A new page titled with what was typed.
+      section("NewPage");
+      result.push(
+        {
+          id: "action-subpage",
           label: "",
-          title: "Date",
-          type: "divider",
-        });
-        result.push(...matchedDates);
-      }
-      if (matchedUsers.length) {
-        result.push({
-          id: "divider-people",
+          type: "action",
+          action: "subpage",
+          newTitle: typed,
+        },
+        {
+          id: "action-page-in",
           label: "",
-          title: "People",
-          type: "divider",
-        });
-        result.push(
-          ...matchedUsers.map((u) => ({ ...u, type: "user" as const })),
-        );
-      }
+          type: "action",
+          action: "pageIn",
+          newTitle: typed,
+        },
+      );
 
       return result;
     },
@@ -241,15 +275,52 @@ export const MentionExtension = MentionWithView.configure({
       range: any;
       props: any;
     }) => {
+      if (props.type === "action") {
+        const slash = editor.storage.slashCommand ?? {};
+        if (props.action === "invite") {
+          // The panel replaces the menu; the mention goes where "@" was.
+          editor.chain().focus().deleteRange(range).run();
+          openInviteMentionPanel(editor, range.from, props.label || "");
+          return;
+        }
+        if (props.action === "subpage" || props.action === "createIn") {
+          const parentId =
+            props.action === "createIn"
+              ? (props.parentId ?? null)
+              : (slash.activePageId ?? null);
+          const add = slash.addPageAsync as
+            | ((o: { title: string; parentId: string | null }) => Promise<{
+                id: string;
+              }>)
+            | undefined;
+          if (!add) return;
+          editor.chain().focus().deleteRange(range).run();
+          const at = editor.state.selection.from;
+          void add({ title: props.newTitle ?? "", parentId }).then((page) => {
+            if (editor.isDestroyed) return;
+            editor
+              .chain()
+              .insertContentAt(Math.min(at, editor.state.doc.content.size), {
+                type: "pageLink",
+                attrs: {
+                  pageId: page.id,
+                  parentId: slash.activePageId ?? null,
+                  title: "",
+                  nodeId: `pageLink-${Date.now()}`,
+                },
+              })
+              .run();
+          });
+        }
+        return;
+      }
       if (props.type === "page") {
         editor.chain().focus().deleteRange(range).run();
         editor.commands.insertContent({
           type: "pageLink",
           attrs: {
             pageId: props.id,
-            parentId: editor.storage.slashCommand.activePage?.id
-              ? editor.storage.slashCommand.activePage?.id
-              : null,
+            parentId: editor.storage.slashCommand?.activePageId ?? null,
             title: "",
             nodeId: `pageLink-${Date.now()}`,
           },
