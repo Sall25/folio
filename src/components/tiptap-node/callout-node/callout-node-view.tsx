@@ -70,6 +70,7 @@ export function CalloutNodeView({ node, updateAttributes }: NodeViewProps) {
         {/* ── Icon (only when enabled) ── */}
         {showIcon && (
           <IconPickerPopover
+            onRemove={() => updateAttributes({ showIcon: false })}
             onSelect={(name, color, target) => {
               updateAttributes({ iconName: name, color, target: target });
             }}
