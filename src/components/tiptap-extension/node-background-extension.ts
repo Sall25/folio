@@ -150,12 +150,39 @@ export const NodeBackground = Extension.create<NodeBackgroundOptions>({
       setNodeBackgroundColor: executeBackgroundCommand(
         (_, inputColor) => inputColor || null,
       ),
-
       /**
-       * Remove background color
+       * Remove background color. A callout's "no colour" is "transparent"
+       * (null means its default grey); every other node goes back to null.
        */
-      unsetNodeBackgroundColor: executeBackgroundCommand(() => null),
+      unsetNodeBackgroundColor:
+        () =>
+        ({
+          state,
+          tr,
+          dispatch,
+        }: {
+          state: EditorState;
+          tr: Transaction;
+          dispatch: DispatchFn;
+        }) => {
+          const targets = getSelectedNodesOfType(
+            state.selection,
+            this.options.types,
+          );
+          if (targets.length === 0) return false;
 
+          if (dispatch) {
+            for (const { node, pos } of targets) {
+              tr.setNodeAttribute(
+                pos,
+                "backgroundColor",
+                node.type.name === "callout" ? "transparent" : null,
+              );
+            }
+            dispatch(tr);
+          }
+          return true;
+        },
       /**
        * Toggle background color (set if different/missing, unset if all have it)
        */

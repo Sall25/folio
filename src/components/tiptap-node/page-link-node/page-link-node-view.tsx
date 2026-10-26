@@ -104,7 +104,7 @@ function PageLinkPreview({
 
 export function PageLinkNodeView({ node, editor, getPos }: NodeViewProps) {
   const { t } = useTranslation();
-  const { pageId, title: storedTitle } = node.attrs;
+  const { pageId, title: storedTitle, showIcon } = node.attrs;
 
   // Live: read from the pages list (kept fresh by the app), so a rename or
   // a new icon shows here at once. The page's own query covers a page the
@@ -208,7 +208,7 @@ export function PageLinkNodeView({ node, editor, getPos }: NodeViewProps) {
     return (
       <NodeViewWrapper data-drag-handle data-node-id={node.attrs.nodeId}>
         <div className="page-link-node is-trashed" contentEditable={false}>
-          <PageItemIcon cover={page!.cover} />
+          {showIcon && <PageItemIcon cover={page!.cover} />}
           <span className="page-link-node__title">
             {page!.title || t("page.newPage")}
           </span>
@@ -248,7 +248,7 @@ export function PageLinkNodeView({ node, editor, getPos }: NodeViewProps) {
           }
         }}
       >
-        <PageItemIcon cover={page!.cover} />
+        {showIcon && <PageItemIcon cover={page!.cover} />}
         <span
           className="page-link-node__title"
           style={{ color: page!.cover?.color ?? undefined }}

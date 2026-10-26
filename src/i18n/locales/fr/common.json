@@ -1065,7 +1065,12 @@
     "deleteNode": "Supprimer le nœud",
     "resetFormatting": "Effacer la mise en forme",
     "search": "Rechercher une action…",
-    "noResults": "Aucune action trouvée"
+    "noResults": "Aucune action trouvée",
+    "addIcon": "Ajouter une icône",
+    "removeIcon": "Retirer l’icône",
+    "editIcon": "Modifier l’icône",
+    "addBorder": "Ajouter une bordure”",
+    "removeBorder": "Retirer la bordure"
   },
   "blockTypes": {
     "paragraph": "Paragraphe",

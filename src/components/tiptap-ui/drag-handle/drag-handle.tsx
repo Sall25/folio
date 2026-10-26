@@ -33,6 +33,7 @@ import {
 } from "./multi-block-drag";
 import type { ComputePositionConfig, Middleware } from "@floating-ui/dom";
 import { startDragAutoscroll } from "./drag-autoscroll";
+import { NodeIconPickerHost } from "../node-icon-actions";
 
 const NODE_LABELS: Record<string, string> = {
   paragraph: "Text",
@@ -922,6 +923,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
             </span>
 
             {menu}
+            <NodeIconPickerHost editor={editor} />
           </ColorDropdownProvider>
         </DropdownMenu>
       </CardItemGroup>

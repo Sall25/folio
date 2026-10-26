@@ -32,6 +32,7 @@ import {
   countSelectedBlocks,
   getSelectedBlocks,
 } from "src/lib/block-selection";
+import { NodeIconActions } from "../node-icon-actions";
 
 const SNAPSHOT_MAX = 600;
 
@@ -199,6 +200,7 @@ export function Menu({
       <CardGroupLabel className="title">
         {several ? t("blockMenu.blocksSelected", { count: blockCount }) : title}
       </CardGroupLabel>
+      {!several && <NodeIconActions editor={editor} onAction={onAction} />}
       <CardItemGroup className="group" orientation="vertical">
         <DropdownMenuItem asChild>
           <ColorDropdownMenu

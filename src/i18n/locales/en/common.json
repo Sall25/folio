@@ -1065,7 +1065,12 @@
     "deleteNode": "Delete node",
     "resetFormatting": "Reset Formatting",
     "search": "Search actions…",
-    "noResults": "No actions found"
+    "noResults": "No actions found",
+    "addIcon": "Add icon",
+    "removeIcon": "Remove icon",
+    "editIcon": "Edit icon",
+    "addBorder": "Add border",
+    "removeBorder": "Remove border"
   },
   "blockTypes": {
     "paragraph": "Paragraph",
