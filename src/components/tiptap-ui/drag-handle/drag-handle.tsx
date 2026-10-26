@@ -418,8 +418,14 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
       );
     };
     anchor();
+    // Box or Shift selection drawn upwards: the first block kept changing while
+    // the button was down, and the handle couldn't move then. Place it again
+    // once the button is up.
+    const onUp = () => requestAnimationFrame(anchor);
+    document.addEventListener("mouseup", onUp, { once: true });
     return () => {
       cancelled = true;
+      document.removeEventListener("mouseup", onUp);
     };
   }, [editor, multiFirstPos, open]);
 
