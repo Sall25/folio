@@ -328,6 +328,18 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
           y: y + (middle - ref.top) - rects.floating.height / 2,
         };
 
+        // Blocks that reach back over their container (toggle, callout) carry a
+        // transparent left border: put the grip beside the text, 12px short of it.
+        const reach = parseFloat(getComputedStyle(block).borderLeftWidth) || 0;
+        if (reach > 0) next.x = x + reach - 12;
+        // Node-view blocks (page links…) are wrapped by Tiptap; the wrapper has no
+        // border, so fall back to the container's known inset.
+        else if (
+          block.parentElement?.closest(".appendix-content") ||
+          block.parentElement?.closest(".callout-content")
+        )
+          next.x = x + 16;
+
         // A database's box starts at the editor's far left (it spans the
         // full width so wide tables can scroll), so "left of the block" put
         // the handle under the sidebar. Anchor it beside the database's
@@ -342,10 +354,6 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
           }
         }
 
-        if (block.parentElement?.closest(".appendix-content")) {
-          // The border reaches 28px back; stop the grip 12px short of the text.
-          next.x = x + 16;
-        }
         return next;
       },
     };

@@ -22,6 +22,19 @@
     border-color var(--tt-transition-duration-default);
 }
 
+// How far the content starts from the callout's left edge: padding 16 +
+// icon 26 + gap 8, or just the padding without an icon.
+.callout-root { --callout-inset: 50px; }
+.callout-root--no-icon { --callout-inset: 16px; }
+
+// Blocks in a callout reach back to its left edge, so the drag handle's hit
+// test lands on them, not on the callout. The text doesn't move.
+.callout-content [data-node-view-content-react] > :is(p, h1, h2, h3, h4, h5, h6,
+    ul, ol, ul[data-type="taskList"], [data-type="pageLink"], .appendix) {
+  margin-left: calc(-1 * var(--callout-inset));
+  border-left: var(--callout-inset) solid transparent;
+}
+
 // ── Icon ──────────────────────────────────────────────────────────────────────
 
 .callout-icon-wrap {
@@ -44,6 +57,8 @@
   transition: background var(--tt-transition-duration-short);
   user-select: none;
   color: var(--tt-theme-text);
+  position: relative;
+  z-index: 1;
 
   &:hover {
     background: rgba(0, 0, 0, 0.06);
