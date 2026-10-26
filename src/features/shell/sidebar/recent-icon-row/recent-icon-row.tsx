@@ -1,8 +1,11 @@
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { UploadedIcon } from "src/components/uploaded-icon/uploaded-icon";
-import { DynamicIcon } from "src/features/pages/cover/dynamic-icon";
+import { IconColorPopover } from "src/features/pages/cover/icon-color-popover";
 import type { Target } from "src/features/pages/cover/types";
-import type { IconRecents, RecentIcon } from "../../../pages/cover/use-icon-recents";
+import type {
+  IconRecents,
+  RecentIcon,
+} from "../../../pages/cover/use-icon-recents";
 import "./recent-icon-row.scss";
 
 export function RecentIconRow({
@@ -40,22 +43,14 @@ export function RecentIconRow({
 
         {target === "Icons" &&
           recents.icon.map((it: RecentIcon) => (
-            <Button
+            // A popover with the colours, like the picker's grid.
+            <IconColorPopover
               key={it.name}
-              variant="ghost"
+              name={it.name}
+              color={it.color ?? "var(--tt-text-primary)"}
+              onSelect={onSelect}
               className="icon-recents__item"
-              onClick={() => onSelect(it.name, it.color)}
-            >
-              <DynamicIcon
-                name={it.name}
-                size={18}
-                style={{
-                  color: it.color ?? "var(--tt-text-primary)",
-                  width: 20,
-                  height: 20,
-                }}
-              />
-            </Button>
+            />
           ))}
 
         {target === "Upload" &&
