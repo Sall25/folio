@@ -1,92 +1,150 @@
-:root{
+:root {
   --tt-combobox-bg-color: var(--white);
   --tt-combobox-border-color: var(--tt-card-bg-color);
   --tt-combobox-text-color: var(--tt-gray-light-a-600);
 }
 
-.dark{
+.dark {
   --tt-combobox-border-color: var(--tt-border-color);
   --tt-combobox-bg-color: var(--tt-card-bg-color);
   --tt-combobox-text-color: var(--tt-gray-dark-a-600);
 }
 
-.menu{
+.menu {
   z-index: 9999;
-  min-width: 15rem;
-  --padding: .375rem;
+  min-width: 16rem;
+  --padding: 0.375rem;
   --border-width: 1px;
-  border-radius: var(--tt-radius-lg);
   border: var(--border-width) solid var(--tt-combobox-border-color);
   background-color: var(--tt-combobox-bg-color);
-  height: 100%;
   color: var(--tt-combobox-text-color);
-  padding: var(--padding);
+  padding: var(--padding) 0;
   box-shadow: var(--tt-shadow-elevated-md);
   max-width: 18rem;
-  max-height: var(--popover-available-height);
+  // A fixed height: the list scrolls under the search (.menu-scroll), and
+  // the search finds what's out of view.
+  max-height: min(420px, var(--popover-available-height, 420px));
   outline: none;
-  margin-block:.375rem;overflow-y: auto;
-  align-items: flex-start;
-
-
-  .title{
+  margin-block: 0.375rem;
+  overflow: hidden;
+  align-items: stretch;
+ 
+  .title {
     margin-bottom: 7px !important;
   }
-  .group{
+  .group {
     width: 100%;
-    gap: .3rem;
+    gap: 0.3rem;
   }
 
-  .tiptap-button{
+  .tiptap-button {
     cursor: pointer;
   }
 
-  .menu-button{
+  .menu-button {
     width: 100%;
   }
 
-  .delete-node-button{
-    &:hover{
+  .delete-node-button {
+    &:hover {
       color: var(--tt-color-red-dec-1);
-      .tiptap-button-icon{
+      .tiptap-button-icon {
         color: var(--tt-color-red-dec-1);
       }
       .dark & {
         color: var(--tt-color-red-inc-2);
-        .tiptap-button-icon{
+        .tiptap-button-icon {
           color: var(--tt-color-red-inc-2);
-        } 
+        }
       }
     }
   }
 }
 
-// Search actions, at the top of the block menu.
-.menu-search {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 6px;
-  padding: 5px 8px;
-  border-radius: 6px;
-  border: 1px solid var(--tt-border-color);
-  color: var(--tt-color-text-gray);
+// The scrolling part, under the search. Its edges fade while there's more to
+// scroll that way (data-scrolled / data-more, set in menu.tsx).
+.menu-scroll {
+  --fog: 28px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 var(--padding);
+  // Slim pill like the app's other scroll areas. Only the ::-webkit rules:
+  // scrollbar-width / scrollbar-color make Chrome ignore them.
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    min-height: 24px;
+    border: 0;
+    border-radius: 9999px;
+    background-color: var(--app-scrollbar-thumb);
 
-  &:focus-within {
-    border-color: var(--tt-brand-color-400);
+    &:hover {
+      background-color: var(--app-scrollbar-thumb-hover);
+    }
   }
 
-  input {
-    flex: 1;
-    min-width: 0;
-    border: none;
-    outline: none;
-    background: transparent;
-    font: inherit;
+  // Firefox has no ::-webkit-scrollbar.
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--app-scrollbar-thumb) transparent;
+  }
+
+  &[data-more] {
+    mask-image: linear-gradient(
+      to bottom,
+      #000 calc(100% - var(--fog)),
+      transparent
+    );
+  }
+
+  &[data-scrolled] {
+    mask-image: linear-gradient(to bottom, transparent, #000 var(--fog));
+  }
+
+  &[data-scrolled][data-more] {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--fog),
+      #000 calc(100% - var(--fog)),
+      transparent
+    );
+  }
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+// Search actions, pinned at the top of the block menu: the Input primitive
+// with the search icon laid inside it.
+.menu-search {
+  position: relative;
+  flex: none;
+  margin: 0 var(--padding) 6px;
+
+  &__icon {
+    position: absolute;
+    top: 50%;
+    left: 9px;
+    transform: translateY(-50%);
+    color: var(--tt-color-text-gray);
+    pointer-events: none;
+  }
+
+  .tiptap-input.menu-search__input {
+    height: 30px;
+    padding-left: 28px;
     font-size: 13px;
-    color: var(--tt-text-color, inherit);
   }
 }
 
@@ -97,7 +155,7 @@
 }
 
 // While searching, the results are one list: no title, no separators.
-.menu[data-searching] {
+.menu[data-searching] .menu-list {
   > .title,
   > .tiptap-separator {
     display: none;

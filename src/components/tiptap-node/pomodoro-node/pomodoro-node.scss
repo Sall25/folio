@@ -1,0 +1,502 @@
+// The Pomodoro block (pomodoro-view.tsx). --pomo-color is the block's colour.
+
+// Selected (drag handle, marquee, click): the highlight fits the card, not
+// the full-width row the block sits in.
+.react-renderer.node-pomodoro:is(
+    .is-block-selected,
+    .ProseMirror-selectednode
+  ) {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+
+  > :first-child::after {
+    content: none !important;
+  }
+
+  .pomodoro__card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: rgba(35, 131, 226, 0.14);
+    box-shadow: 0 0 0 2px rgba(35, 131, 226, 0.14);
+    pointer-events: none;
+
+    .dark & {
+      background-color: rgba(35, 131, 226, 0.22);
+      box-shadow: 0 0 0 2px rgba(35, 131, 226, 0.22);
+    }
+  }
+}
+
+.pomodoro {
+  margin: 8px 0;
+  user-select: none;
+
+  &__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    max-width: 300px;
+    padding: 14px 16px 16px;
+    border-radius: 14px;
+    background: var(--tt-card-bg-color, #fff);
+    box-shadow: 0 0 0 1px var(--tt-border-color);
+  }
+
+  &[data-size="small"] &__card {
+    max-width: 230px;
+  }
+
+  &[data-size="full"] &__card {
+    max-width: none;
+  }
+
+  &[data-look="line"] &__card {
+    max-width: 520px;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--tt-text-secondary);
+  }
+
+  &__head-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--pomo-color);
+  }
+
+  &__round {
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  &__face {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  &__time {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    color: var(--tt-text-primary);
+
+    &.is-small {
+      font-size: 22px;
+      text-align: center;
+    }
+
+    &.is-inline {
+      font-size: 14px;
+      font-weight: 600;
+    }
+  }
+
+  &__sub {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--tt-text-secondary);
+  }
+
+  &__controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  &__btn {
+    all: unset;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--tt-bg-subtle, rgba(55, 53, 47, 0.06));
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+
+    .material-icon,
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    &.is-main {
+      background: var(--pomo-color);
+      color: #fff;
+    }
+
+    &:hover:not(:disabled) {
+      filter: brightness(0.95);
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.5;
+    }
+  }
+
+  &__line-controls {
+    position: absolute;
+    right: 14px;
+    bottom: 12px;
+
+    .pomodoro__btn {
+      width: 28px;
+      height: 28px;
+    }
+  }
+}
+
+// ── Ring ──────────────────────────────────────────────────────────────────
+.pomodoro-ring {
+  position: relative;
+  width: 168px;
+  height: 168px;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  &__track,
+  &__bar {
+    fill: none;
+    stroke-width: 10;
+  }
+
+  &__track {
+    stroke: var(--tt-bg-subtle, rgba(55, 53, 47, 0.08));
+  }
+
+  &__bar {
+    stroke: var(--pomo-color);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.25s linear;
+  }
+
+  &__center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+// ── Clock ─────────────────────────────────────────────────────────────────
+.pomodoro-clock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  svg {
+    width: 160px;
+    height: 160px;
+  }
+
+  &__face {
+    fill: var(--tt-card-bg-color, #fff);
+    stroke: var(--tt-text-primary);
+    stroke-width: 2;
+  }
+
+  &__wedge {
+    fill: var(--pomo-color);
+    opacity: 0.18;
+  }
+
+  &__tick {
+    stroke: var(--tt-text-primary);
+    stroke-width: 1;
+    stroke-linecap: round;
+
+    &.is-hour {
+      stroke-width: 2;
+    }
+  }
+
+  &__hand {
+    stroke: var(--pomo-color);
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+
+  &__pin {
+    fill: var(--pomo-color);
+  }
+}
+
+// ── Line ──────────────────────────────────────────────────────────────────
+.pomodoro-line {
+  width: 100%;
+  padding-right: 110px;
+  box-sizing: border-box;
+
+  &__top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+
+  &__track {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--tt-bg-subtle, rgba(55, 53, 47, 0.08));
+  }
+
+  &__bar {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--pomo-color);
+    transition: width 0.25s linear;
+  }
+}
+
+// ── Flip ──────────────────────────────────────────────────────────────────
+.pomodoro-flip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  &__digits {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    perspective: 400px;
+  }
+
+  &__digit {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 64px;
+    border-radius: 8px;
+    background: #2c2c2b;
+    color: #fff;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 38px;
+    font-weight: 700;
+    animation: pomodoro-flip-in 0.35s ease-out;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  &__colon {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--tt-text-primary);
+  }
+}
+
+@keyframes pomodoro-flip-in {
+  from {
+    transform: rotateX(-90deg);
+  }
+  to {
+    transform: rotateX(0);
+  }
+}
+
+// ── Sheet: paper pages on rings, one turns over each minute ───────────────
+.pomodoro-sheet {
+  padding-top: 10px;
+
+  &__stack {
+    position: relative;
+    width: 196px;
+    height: 150px;
+    perspective: 600px;
+  }
+
+  &__under {
+    position: absolute;
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px rgba(15, 15, 15, 0.06);
+
+    &.is-1 {
+      inset: 5px 3px -3px;
+      background: #f8f6f1;
+    }
+
+    &.is-2 {
+      inset: 10px 6px -6px;
+      background: #f3f1ec;
+    }
+  }
+
+  &__page {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: #fffdf8;
+    box-shadow:
+      0 1px 0 rgba(15, 15, 15, 0.08),
+      inset 0 0 0 1px rgba(15, 15, 15, 0.06);
+
+    &.is-turning {
+      z-index: 2;
+      transform-origin: 50% 0;
+      backface-visibility: hidden;
+      animation: pomodoro-sheet-turn 0.9s cubic-bezier(0.45, 0.05, 0.3, 1)
+        forwards;
+    }
+  }
+
+  &__num {
+    font-size: 64px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: #2c2c2b;
+  }
+
+  &__ring {
+    position: absolute;
+    top: -9px;
+    z-index: 3;
+    width: 10px;
+    height: 18px;
+    border: 2px solid #9b9a97;
+    border-radius: 5px;
+
+    &.is-left {
+      left: 48px;
+    }
+
+    &.is-right {
+      right: 48px;
+    }
+  }
+}
+
+@keyframes pomodoro-sheet-turn {
+  from {
+    transform: rotateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: rotateX(-180deg);
+    opacity: 0;
+  }
+}
+
+// ── Block menu rows (pomodoro-menu-actions.tsx) ─────────────────────────
+// The flyouts opened from Look, Colour, Size and Timing.
+.pomodoro-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 180px;
+  padding: 6px;
+  border-radius: var(--tt-radius-md);
+  background: var(--tt-card-bg-color);
+  border: 1px solid var(--tt-border-color);
+  box-shadow: var(--tt-shadow-elevated-md);
+  font-size: 14px;
+  color: var(--tt-text-primary);
+
+  &.is-timing {
+    width: 260px;
+  }
+
+  &__colors {
+    display: grid;
+    grid-template-columns: repeat(3, 24px);
+    gap: 12px;
+    padding: 8px;
+
+    button {
+      all: unset;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+
+      &:focus-visible,
+      &[data-active] {
+        box-shadow:
+          0 0 0 2px var(--tt-card-bg-color),
+          0 0 0 4px var(--swatch);
+      }
+    }
+  }
+
+  &__num {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    padding: 0 8px;
+
+    > span:first-child {
+      flex: 1;
+    }
+
+    input {
+      width: 48px;
+      appearance: textfield;
+      -moz-appearance: textfield;
+      height: 26px;
+      padding: 0 6px;
+      box-sizing: border-box;
+      text-align: center;
+      font: inherit;
+      font-variant-numeric: tabular-nums;
+      color: inherit;
+      background: var(--tt-bg-color);
+      border: 1px solid var(--tt-border-color);
+      border-radius: 6px;
+
+      &:focus {
+        outline: none;
+        border-color: var(--tt-brand-color-400);
+      }
+
+      // No spinner arrows: they cover the digits in a field this narrow.
+      &::-webkit-outer-spin-button,
+      &::-webkit-inner-spin-button {
+        margin: 0;
+        -webkit-appearance: none;
+      }
+    }
+  }
+
+  &__unit {
+    width: 46px;
+    font-size: 12.5px;
+    color: var(--tt-text-secondary);
+  }
+}

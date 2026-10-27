@@ -1065,7 +1065,12 @@
     "deleteNode": "Delete node",
     "resetFormatting": "Reset Formatting",
     "search": "Search actions…",
-    "noResults": "No actions found"
+    "noResults": "No actions found",
+    "addIcon": "Add icon",
+    "removeIcon": "Remove icon",
+    "editIcon": "Edit icon",
+    "addBorder": "Add border",
+    "removeBorder": "Remove border"
   },
   "blockTypes": {
     "paragraph": "Paragraph",
@@ -1273,6 +1278,10 @@
       "timelineView": {
         "title": "Timeline view",
         "description": "Plan pages over time."
+      },
+      "pomodoro": {
+        "title": "Pomodoro timer",
+        "description": "Focus and break rounds, with a timer"
       }
     },
     "colors": {
@@ -1786,5 +1795,40 @@
     "hint": "Drag to move, slide to zoom.",
     "uploading": "Uploading…",
     "use": "Use as icon"
+  },
+  "pomodoro": {
+    "focus": "Focus",
+    "shortBreak": "Short break",
+    "longBreak": "Long break",
+    "round": "{{round}} of {{rounds}}",
+    "reset": "Reset",
+    "start": "Start",
+    "pause": "Pause",
+    "skip": "Skip to the next round",
+    "left": "left",
+    "minutesLeft": "minutes left",
+    "look": "Look",
+    "looks": {
+      "ring": "Ring",
+      "clock": "Clock",
+      "line": "Line",
+      "flip": "Flip",
+      "sheet": "Sheet"
+    },
+    "color": "Colour",
+    "size": "Size",
+    "sizes": {
+      "small": "Small",
+      "medium": "Medium",
+      "full": "Full width"
+    },
+    "timing": "Timing",
+    "longBreakEvery": "Long break every",
+    "sound": "Sound at the end",
+    "autoStart": "Auto-start next round",
+    "min": "min",
+    "rounds_one": "round",
+    "rounds_other": "rounds",
+    "resetTimer": "Reset timer"
   }
 }

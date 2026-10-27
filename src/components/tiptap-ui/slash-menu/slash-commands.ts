@@ -35,6 +35,7 @@ import {
   Sigma,
   Smile,
   Table,
+  Timer,
   TypeOutline,
   Video,
 } from "src/components/icons";
@@ -392,6 +393,15 @@ export function getSlashCommands(t: TFunction): SlashCommand[] {
       description: t("slash.items.callout.description"),
       icon: TypeOutline,
       run: (e) => e.chain().focus().insertCallout().run(),
+    },
+    // ─── Pomodoro timer ───────────────────────────────────────
+    {
+      id: "pomodoro",
+      type: "command",
+      title: t("slash.items.pomodoro.title"),
+      description: t("slash.items.pomodoro.description"),
+      icon: Timer,
+      run: (e) => e.chain().focus().insertPomodoro().run(),
     },
     // ─── Appendix ─────────────────────────────────────────────
     {

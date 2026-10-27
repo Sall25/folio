@@ -1065,7 +1065,12 @@
     "deleteNode": "Supprimer le nœud",
     "resetFormatting": "Effacer la mise en forme",
     "search": "Rechercher une action…",
-    "noResults": "Aucune action trouvée"
+    "noResults": "Aucune action trouvée",
+    "addIcon": "Ajouter une icône",
+    "removeIcon": "Supprimer l'icône",
+    "editIcon": "Modifier l'icône",
+    "addBorder": "Ajouter une bordure",
+    "removeBorder": "Supprimer la bordure"
   },
   "blockTypes": {
     "paragraph": "Paragraphe",
@@ -1273,6 +1278,10 @@
       "timelineView": {
         "title": "Vue chronologie",
         "description": "Planifiez les pages dans le temps."
+      },
+      "pomodoro": {
+        "title": "Minuteur Pomodoro",
+        "description": "Des tours de concentration et de pause, avec un minuteur"
       }
     },
     "colors": {
@@ -1786,5 +1795,40 @@
     "hint": "Glissez pour déplacer, utilisez le curseur pour zoomer.",
     "uploading": "Envoi…",
     "use": "Utiliser comme icône"
+  },
+  "pomodoro": {
+    "focus": "Concentration",
+    "shortBreak": "Pause courte",
+    "longBreak": "Pause longue",
+    "round": "{{round}} sur {{rounds}}",
+    "reset": "Réinitialiser",
+    "start": "Démarrer",
+    "pause": "Pause",
+    "skip": "Passer au tour suivant",
+    "left": "restantes",
+    "minutesLeft": "minutes restantes",
+    "look": "Apparence",
+    "looks": {
+      "ring": "Anneau",
+      "clock": "Horloge",
+      "line": "Ligne",
+      "flip": "Flip",
+      "sheet": "Feuille"
+    },
+    "color": "Couleur",
+    "size": "Taille",
+    "sizes": {
+      "small": "Petite",
+      "medium": "Moyenne",
+      "full": "Pleine largeur"
+    },
+    "timing": "Durées",
+    "longBreakEvery": "Longue pause tous les",
+    "sound": "Son à la fin",
+    "autoStart": "Lancer le cycle suivant",
+    "min": "min",
+    "rounds_one": "cycle",
+    "rounds_other": "cycles",
+    "resetTimer": "Réinitialiser le minuteur"
   }
 }
