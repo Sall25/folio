@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import { SbComposeIcon } from "src/components/tiptap-icons/sidebar-icons";
+import { SquarePen } from "lucide-react";
 import { useCreatePageInSpace } from "src/api/use-create-page-in-space";
 import { useActivePageActions } from "../../pages/context/active-page-context";
 import { useIsMobile } from "src/hooks/use-breakpoint";
@@ -36,11 +36,13 @@ export const NewPageButton = memo(
         }}
         variant="ghost"
       >
-        <SbComposeIcon
-          size={18}
-          fill="var(--accent)"
+        <SquarePen
+          size={14}
+          stroke="var(--accent)"
+          strokeWidth={1.6}
           className="tiptap-button-icon"
         />
+
         {label && (
           <span className="tiptap-button-text">{t("page.newPage")}</span>
         )}
