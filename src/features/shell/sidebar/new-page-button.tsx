@@ -36,7 +36,11 @@ export const NewPageButton = memo(
         }}
         variant="ghost"
       >
-        <SbComposeIcon size={18} className="tiptap-button-icon" />
+        <SbComposeIcon
+          size={18}
+          fill="var(--accent)"
+          className="tiptap-button-icon"
+        />
         {label && (
           <span className="tiptap-button-text">{t("page.newPage")}</span>
         )}

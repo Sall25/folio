@@ -19,14 +19,9 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background-color: rgba(35, 131, 226, 0.14);
-    box-shadow: 0 0 0 2px rgba(35, 131, 226, 0.14);
+    background-color: var(--accent-tint);
+    box-shadow: 0 0 0 2px var(--accent-tint);
     pointer-events: none;
-
-    .dark & {
-      background-color: rgba(35, 131, 226, 0.22);
-      box-shadow: 0 0 0 2px rgba(35, 131, 226, 0.22);
-    }
   }
 }
 

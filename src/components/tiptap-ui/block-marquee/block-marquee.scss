@@ -39,9 +39,8 @@ body.is-marquee-selecting {
   .is-block-selected {
     position: relative;
     border-radius: 4px;
-    background-color: var(--tt-selection-color);
+    background-color: var(--accent-tint);
     box-shadow: 0 0 0 2px var(--tt-selection-color);
-
   }
 
   &.has-block-selection {

@@ -1900,9 +1900,9 @@ html:root[data-theme="retro"] {
 
   // The page: glass in the picture's colour.
   .theme-sheet {
-    top: 12px;
+    top: 4px;
     right: 14px;
-    bottom: 14px;
+    bottom: 8px;
     border-radius: 22px;
     background: var(--wp-glass);
     backdrop-filter: blur(var(--wp-blur)) saturate(1.3);
@@ -1916,12 +1916,11 @@ html:root[data-theme="retro"] {
 
   // ── Sidebar: a floating glass panel ──
   .sidebar:not(.sidebar-mobile) {
-    padding: 14px 10px 14px 18px;
+    // padding: 14px 10px 14px 18px;
 
     &::before {
-      inset: 12px 6px 12px 12px;
+      // inset: 12px 6px 12px 12px;
       filter: none;
-      border-radius: 20px;
       background: var(--wp-glass);
       backdrop-filter: blur(var(--wp-blur)) saturate(1.3);
       box-shadow: inset 0 1px 0 var(--wp-hair), inset 0 0 0 1px var(--wp-hair), 0 18px 50px rgba(0, 0, 0, 0.25);
@@ -2128,7 +2127,12 @@ html:root[data-theme="wallpaper"] {
   --tt-paragraph-text-color: var(--wp-ink);
 }
 
-// The accent glow at the foot of the sidebar fights a pattern: off there.
-:root[data-theme="retro"] .sidebar::before {
+:root:is(
+    [data-theme="midnight"],
+    [data-theme="notebook"],
+    [data-theme="retro"],
+    [data-theme="wallpaper"]
+  )
+  .sidebar--accent::after {
   display: none;
 }

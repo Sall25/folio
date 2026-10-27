@@ -32,8 +32,8 @@
 
   &:focus,
   &:focus-visible {
-    border-color: var(--tt-input-border-focus, #2383e2);
-    box-shadow: 0 0 0 2px var(--tt-input-ring, rgba(35, 131, 226, 0.28));
+    border-color: var(--tt-input-border-focus, var(--accent));
+    box-shadow: 0 0 0 2px var(--tt-input-ring, var(--accent-tint));
   }
 
   &:disabled {
@@ -112,11 +112,11 @@
 
   &:hover,
   &:focus-visible {
-    color: var(--tt-input-border-focus, #2383e2);
+    color: var(--tt-input-border-focus, var(--accent));
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 2px var(--tt-input-ring, rgba(35, 131, 226, 0.28));
+    box-shadow: 0 0 0 2px var(--tt-input-ring, var(--accent-tint));
   }
 }
 

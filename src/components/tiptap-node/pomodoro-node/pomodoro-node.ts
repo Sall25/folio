@@ -2,6 +2,7 @@ import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { PomodoroView } from "./pomodoro-view";
 import { POMODORO_DEFAULTS, type PomodoroAttrs } from "./pomodoro-timing";
+import { passMousemove } from "src/lib/pass-mousemove";
 
 // A Pomodoro timer block (/pomodoro): focus and break rounds, in one of five
 // looks (ring, clock, line, flip, sheet), set per block. See
@@ -58,20 +59,7 @@ export const PomodoroExtension = Node.create({
   },
 
   addNodeView() {
-    const render = ReactNodeViewRenderer(PomodoroView);
-    // Tiptap's node view stops every mousemove inside an atom block, and
-    // the drag handle follows mousemove through ProseMirror, so it never
-    // reached this block. Let mousemove through; every other event keeps
-    // Tiptap's own handling.
-    return (props) => {
-      const view = render(props);
-      if ("stopEvent" in view && typeof view.stopEvent === "function") {
-        const stopEvent = view.stopEvent.bind(view);
-        view.stopEvent = (event: Event) =>
-          event.type === "mousemove" ? false : stopEvent(event);
-      }
-      return view;
-    };
+    return passMousemove(ReactNodeViewRenderer(PomodoroView));
   },
 
   addCommands() {

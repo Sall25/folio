@@ -3,6 +3,7 @@ import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { TocNodeView } from "./toc-node-view";
 import "./toc-node.scss";
+import { passMousemove } from "src/lib/pass-mousemove";
 
 export interface TocNodeOptions {
   topOffset: number;
@@ -59,7 +60,7 @@ export const TocNode = Node.create<TocNodeOptions>({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(TocNodeView);
+    return passMousemove(ReactNodeViewRenderer(TocNodeView));
   },
 
   addCommands() {

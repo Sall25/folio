@@ -5,7 +5,7 @@
   --sb-dock-bg: #ffffff;
   --sb-dock-shadow: 0 0 0 1px rgba(55, 53, 47, 0.1),
     0 4px 12px rgba(0, 0, 0, 0.06);
-  --sb-dock-active-bg: rgba(98, 41, 255, 0.08);
+  --sb-dock-active-bg: var(--accent-tint);
   --sb-dock-active-color: #5b21e6;
   --sb-doc-tab-height: 32px;
   --sb-doc-tab-flex: 1 1 0;
@@ -15,8 +15,15 @@
   --sb-dock-bg: #262626;
   --sb-dock-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08),
     0 6px 16px rgba(0, 0, 0, 0.35);
-  --sb-dock-active-bg: rgba(124, 92, 255, 0.18);
+  --sb-dock-active-bg: var(--accent-tint);
   --sb-dock-active-color: #d3c7ff;
+}
+
+.sb-top .tiptap-button.sb-top__new[data-style="ghost"] {
+  --tt-button-default-icon-color: var(--accent);
+  --tt-button-hover-bg-color: var(--accent-tint);
+  --tt-button-hover-icon-color: var(--accent);
+  --tt-button-active-bg-color: color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 .sb-dock {
@@ -115,18 +122,20 @@
 
   .sb-search {
     width: 100%;
-    height: 32px;
+    height: 35px;
     min-height: 0;
     padding: 0 4px 0 10px;
     border: 0;
-    border-radius: 6px;
+    border-radius: 8px;
     background: transparent;
-    box-shadow: inset 0 0 0 1px
-    color-mix(in srgb, var(--tt-text-primary) 10%, transparent);
+   // box-shadow: inset 0 0 0 1px
+    border: 1px solid var(--accent-tint); //var(--tt-border-color);
+   // color-mix(in srgb, var(--tt-text-primary) 10%, transparent);
     font-family: var(--sb-search-font);
+    font-weight: 300 !important;
 
     &:hover {
-      background: color-mix(in srgb, var(--tt-bg-color) 7%, transparent);
+      background: color-mix(in srgb, var(--tt-accent-tint) 7%, transparent);
     }
 
     &:focus-within,
@@ -147,7 +156,8 @@
     height: 20px;
     padding: 0 6px;
     border-radius: 4px;
-    background: color-mix(in srgb, var(--tt-text-primary) 9%, transparent);
+    color: var(--accent);
+    background: var(--accent-tint); //color-mix(in srgb, var(--tt-text-primary) 9%, transparent);
     font-family: var(--sb-search-font);
     font-size: 11.5px;
     line-height: 20px;
