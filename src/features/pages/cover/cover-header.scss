@@ -79,3 +79,7 @@
   color: var(--tt-theme-text) !important;
   // &:hover { background: var(--tt-gray-light-a-100); }
 }
+.gradient-cover {
+  position: absolute;
+  inset: 0;
+}
