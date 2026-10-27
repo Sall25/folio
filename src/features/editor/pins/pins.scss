@@ -1,0 +1,173 @@
+
+// The rail beside the page: fixed, right of the content, left of the TOC
+// minimap (toc.scss, right: 20px). Hidden while empty.
+.pin-rail {
+  position: fixed;
+  top: calc(var(--tt-toolbar-height, 44px) + 24px);
+  right: 56px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 260px;
+  max-height: calc(100vh - var(--tt-toolbar-height, 44px) - 48px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  &:empty {
+    display: none;
+  }
+
+  &::-webkit-scrollbar {
+    width: 0;
+  }
+}
+
+.pin-frame {
+  flex: none;
+  padding: 10px 12px 12px;
+  border-radius: 10px;
+  background: var(--tt-card-bg-color);
+  box-shadow:
+    0 0 0 1px var(--tt-border-color),
+    0 4px 14px rgba(0, 0, 0, 0.06);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  &__name {
+    all: unset;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &:hover {
+      color: var(--tt-text-primary);
+    }
+  }
+
+  &__unpin {
+    all: unset;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    color: var(--tt-brand-color-500, #2383e2);
+    cursor: pointer;
+    --mi-fill: 1;
+
+    &:hover {
+      background: var(--tt-button-hover-bg-color);
+    }
+  }
+
+  // Blocks drawn here lose their own outer spacing and frame.
+  &__body {
+    > .pomodoro {
+      margin: 0;
+    }
+    .pomodoro__card {
+      max-width: none;
+      padding: 0;
+      box-shadow: none;
+      background: transparent;
+    }
+    .pomodoro__head {
+      display: none;
+    }
+    .toc-node {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+    .toc-node__title {
+      display: none;
+    }
+  }
+}
+
+// Left in the page where the block lives.
+.pin-stub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  margin: 6px 0;
+  padding: 0 6px 0 10px;
+  border: 1px dashed var(--tt-border-color);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--tt-text-secondary);
+  user-select: none;
+
+  b {
+    font-weight: 500;
+    color: var(--tt-text-primary);
+  }
+
+  &__text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__btn {
+    all: unset;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    background: var(--tt-button-hover-bg-color);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--tt-text-primary);
+    }
+  }
+}
+
+// The top-bar slot; hidden while empty.
+.pin-top-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 8px;
+
+  &:empty {
+    display: none;
+  }
+}
+
+// The Pin flyout in the block menu.
+.pin-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 220px;
+  padding: 6px;
+  border-radius: var(--tt-radius-md);
+  background: var(--tt-card-bg-color);
+  border: 1px solid var(--tt-border-color);
+  box-shadow: var(--tt-shadow-elevated-md);
+}

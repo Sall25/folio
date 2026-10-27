@@ -1830,5 +1830,25 @@
     "rounds_one": "round",
     "rounds_other": "rounds",
     "resetTimer": "Reset timer"
+  },
+  "pins": {
+    "pin": "Pin",
+    "side": "Pin to side",
+    "top": "Pin to top",
+    "unpin": "Unpin",
+    "unpinAll": "Unpin everywhere",
+    "subSide": "Side",
+    "subTop": "Top",
+    "subBoth": "Side, Top",
+    "pinnedTo": "pinned to {{where}}",
+    "whereSide": "side",
+    "whereTop": "top",
+    "whereBoth": "side and top",
+    "showHere": "Show here",
+    "goTo": "Go to the block",
+    "labels": {
+      "pomodoro": "Pomodoro",
+      "tocNode": "Table of contents"
+    }
   }
 }

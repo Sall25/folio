@@ -23,6 +23,7 @@ declare module "@tiptap/core" {
 export const TocNode = Node.create<TocNodeOptions>({
   name: "tocNode",
   group: "block",
+  content: "block*",
   atom: true, // treated as a single unit, not editable inside
 
   addOptions() {

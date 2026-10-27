@@ -1830,5 +1830,25 @@
     "rounds_one": "cycle",
     "rounds_other": "cycles",
     "resetTimer": "Réinitialiser le minuteur"
+  },
+  "pins": {
+    "pin": "Épingler",
+    "side": "Épingler sur le côté",
+    "top": "Épingler en haut",
+    "unpin": "Désépingler",
+    "unpinAll": "Désépingler partout",
+    "subSide": "Côté",
+    "subTop": "Haut",
+    "subBoth": "Côté, haut",
+    "pinnedTo": "épinglé {{where}}",
+    "whereSide": "sur le côté",
+    "whereTop": "en haut",
+    "whereBoth": "sur le côté et en haut",
+    "showHere": "Afficher ici",
+    "goTo": "Aller au bloc",
+    "labels": {
+      "pomodoro": "Pomodoro",
+      "tocNode": "Table des matières"
+    }
   }
 }

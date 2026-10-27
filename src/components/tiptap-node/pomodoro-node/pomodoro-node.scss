@@ -500,3 +500,56 @@
     color: var(--tt-text-secondary);
   }
 }
+
+// ── Pinned to top: the chip in the top bar ─────────────────────────────────
+.pomodoro-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 4px 0 10px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--pomo-color) 14%, transparent);
+  color: var(--pomo-color);
+  font-size: 13px;
+  font-weight: 600;
+
+  &__label {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  &__icon {
+    width: 15px;
+    height: 15px;
+  }
+
+  &__btn {
+    all: unset;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--pomo-color);
+    color: #fff;
+    cursor: pointer;
+    --mi-fill: 1;
+
+    .material-icon,
+    svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+}
