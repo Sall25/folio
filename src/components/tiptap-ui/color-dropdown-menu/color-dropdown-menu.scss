@@ -2,28 +2,60 @@
   width: 100%;
 }
 
-.menu{
-  border-radius: var(--tt-radius-sm);
-  width: fit-content;
-  border: 2px solid white;
-}
+// (The global `.menu { … border: 2px solid white }` rule that was here is
+// gone: `.menu` is the block menu's class, and it overrode its border.)
 
-
-.color-menu-content{
-  min-width: 15rem;
+.color-menu-content {
+  min-width: 16rem;
   justify-content: flex-start;
   align-items: flex-start;
-  
-   /* Animation states */
+  gap: 5px;
+
+  .tiptap-card {
+    border-radius: var(--tt-radius-md);
+    
+
+    // Never taller than the space on screen; the rest scrolls.
+    max-height: min(420px, var(--radix-popover-content-available-height, 420px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    // Slim pill like the block menu. Only the ::-webkit rules:
+    // scrollbar-width / scrollbar-color make Chrome ignore them.
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      min-height: 24px;
+      border: 0;
+      border-radius: 9999px;
+      background-color: var(--app-scrollbar-thumb);
+
+      &:hover {
+        background-color: var(--app-scrollbar-thumb-hover);
+      }
+    }
+
+    // Firefox has no ::-webkit-scrollbar.
+    @supports not selector(::-webkit-scrollbar) {
+      scrollbar-width: thin;
+      scrollbar-color: var(--app-scrollbar-thumb) transparent;
+    }
+  }
+
+  /* Animation states */
   &[data-state="open"] {
     animation:
-      fadeIn 150ms var(--tt-transition-easing-cubic) /*cubic-bezier(0.16, 1, 0.3, 1)*/,
-      zoomIn 150ms var(--tt-transition-easing-cubic) /*cubic-bezier(0.16, 1, 0.3, 1)*/;
+      fadeIn 150ms var(--tt-transition-easing-cubic),
+      zoomIn 150ms var(--tt-transition-easing-cubic);
   }
 
   &[data-state="closed"] {
     animation:
-      fadeOut 0ms var(--tt-transition-easing-cubic) /*150ms cubic-bezier(0.16, 1, 0.3, 1)*/,
-      zoomOut 0ms var(--tt-transition-easing-cubic) /*150ms cubic-bezier(0.16, 1, 0.3, 1)*/;
+      fadeOut 0ms var(--tt-transition-easing-cubic),
+      zoomOut 0ms var(--tt-transition-easing-cubic);
   }
 }

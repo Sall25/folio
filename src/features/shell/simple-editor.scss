@@ -198,8 +198,9 @@ body,
   }
   font-family:  'Inter', sans-serif;
   
-  $highlight-colors: purple, yellow, blue, red, green, orange;
+  $highlight-colors: purple, yellow, blue, red, green, orange, pink, gray, brown, lime, mint, teal, cyan, slate, indigo, violet, magenta;
   $block-elements: p, h1, h2, h3, h4, h5, h6, blockquote, li, ul, ol, th, td, div;
+
 
     @each $color in $highlight-colors {
       $var: var(--tt-color-highlight-#{$color});
