@@ -176,14 +176,8 @@
   padding: 0;
   border-radius: var(--tt-radius-lg, 12px);
   border: none !important;
-  background: var(--tt-bg-color);
-  box-shadow:
-  0 1px 2px rgba(15, 15, 15, 0.06),
-  0 6px 20px rgba(15, 15, 15, 0.08);
-  .dark & {
-    background: color-mix(in srgb, var(--white) 4%, var(--tt-bg-color));
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
-  }
+  background: var(--accent-tint);
+  box-shadow: 0 0 0 1px var(--accent-tint);
 }
 
 .home-foryou {

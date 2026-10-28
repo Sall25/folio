@@ -7,6 +7,7 @@ import { useIsMutating } from "@tanstack/react-query";
 import { EditorContentSkeletonFull } from "../skeletons";
 import { PageOverlays } from "./page-overlays";
 import { SimpleEditorContent } from "../../editor/simple-editor-content";
+import { PinRail } from "../../editor/pins";
 
 function PageEditorLayoutImpl() {
   // A page create is in flight (sidebar "+", or "add page to section").
@@ -14,7 +15,10 @@ function PageEditorLayoutImpl() {
   // only fires in .then()) as well as the moment right after it moves but
   // usePage(newId) hasn't resolved.
   const isCreatingPage =
-    useIsMutating({ mutationKey: createPageMutationKey }) > 0;
+    useIsMutating({
+      mutationKey: createPageMutationKey,
+      predicate: (m) => !m.state.isPaused,
+    }) > 0;
 
   return (
     <EditorProvider>
@@ -35,6 +39,7 @@ function PageEditorLayoutImpl() {
           <aside className="simple-editor-sidebar-right" />
         </div>
         <TocSidebar topOffset={100} maxShowCount={20} />
+        <PinRail />
       </TocProvider>
       <PageOverlays />
     </EditorProvider>

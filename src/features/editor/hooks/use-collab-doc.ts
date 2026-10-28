@@ -11,6 +11,7 @@ import {
   saveDocCache,
 } from "src/lib/offline-doc-cache";
 import { trackProvider } from "src/lib/sync-status";
+import { isLocalPage } from "src/lib/local-pages";
 
 const HOCUSPOCUS_URL = import.meta.env.VITE_HOCUSPOCUS_URL;
 
@@ -125,13 +126,13 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
     // local copy (which came from the server). Before that nothing is saved
     // or marked — the doc may be empty.
     let hasLineage = false;
-    let cacheLoaded = false;
     let cachedUpdate: Uint8Array | null = null;
     let cacheApplied = false;
-    let fallbackWanted = false;
     let dirtyMarked = false;
     let saveTimer: number | null = null;
     let cleanTimer: number | null = null;
+    let cacheLoaded = false;
+    let fallbackWanted = false;
 
     const applyCache = () => {
       if (cacheApplied || !cachedUpdate) return;
@@ -141,6 +142,7 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
     };
 
     // Open from the local copy (offline / server not answering).
+    // Open from the local copy (offline / server not answering).
     const fallBackToCache = () => {
       if (disposed || liveSynced) return;
       if (!cacheLoaded) {
@@ -148,7 +150,12 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
         return;
       }
       applyCache();
-      if (cacheApplied) {
+      if (!cacheApplied && isLocalPage(pageId)) {
+        // Created on this device and not on the server yet: this doc IS the
+        // page's first version, nothing to overwrite. Open it empty.
+        hasLineage = true;
+      }
+      if (cacheApplied || hasLineage) {
         setReady((prev) =>
           prev?.provider === provider ? prev : { provider, source: "cache" },
         );

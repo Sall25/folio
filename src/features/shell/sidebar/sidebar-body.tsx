@@ -316,7 +316,8 @@ export const SidebarBody = memo(() => {
                 workspaceId: hostWs,
                 teamspaceId,
               });
-        createPage.mutateAsync(p).then((page) => setActivePageId(page.id));
+        createPage.mutate(p);
+        setActivePageId(p.id);
         return;
       }
 

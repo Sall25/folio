@@ -53,6 +53,7 @@ export const PageLinkNode = Node.create<PageLinkOptions, PageLinkStorage>({
         default: null,
       },
       nodeId: { default: null },
+      showIcon: { default: true },
     };
   },
 

@@ -16,16 +16,31 @@ body.is-marquee-selecting {
 
 // Blocks selected as whole blocks: a light-blue box, no text highlight.
 .tiptap.ProseMirror {
+  // Node views (callout, code block, toggle…) paint their own background over
+  // the wrapper's, so the highlight goes on top of their root instead.
+  .react-renderer:is(.is-block-selected, .ProseMirror-selectednode):not(
+      [class*="node-database"]
+    )
+    > :first-child {
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 4px;
+      background: var(--tt-selection-color);
+      pointer-events: none;
+      z-index: 2;
+
+     
+    }
+  }
   .is-block-selected {
     position: relative;
     border-radius: 4px;
-    background-color: rgba(35, 131, 226, 0.14);
-    box-shadow: 0 0 0 2px rgba(35, 131, 226, 0.14);
-
-    .dark & {
-      background-color: rgba(35, 131, 226, 0.22);
-      box-shadow: 0 0 0 2px rgba(35, 131, 226, 0.22);
-    }
+    background-color: var(--accent-tint);
+    box-shadow: 0 0 0 2px var(--tt-selection-color);
   }
 
   &.has-block-selection {

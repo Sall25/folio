@@ -47,10 +47,10 @@
   &__count {
     padding: 1px 7px;
     border-radius: 10px;
-    background: color-mix(in srgb, var(--tt-text-primary) 7%, transparent);
+    background: var(--accent-tint);
     font-size: 12px;
     font-weight: 500;
-    color: color-mix(in srgb, var(--tt-text-primary) 60%, transparent);
+    color: var(--accent);
   }
 
   &__spacer {

@@ -57,9 +57,32 @@ function hoverAt(
   const { doc } = view.state;
   const $hit = doc.resolve(hit.pos);
   if ($hit.depth < 1) return null;
-  const pos = $hit.before(1);
-  const node = doc.nodeAt(pos);
-  if (!node || NOT_IN_COLUMNS.has(node.type.name)) return null;
+  const { columnBlock } = view.state.schema.nodes;
+  // Containers that keep their own rules: a column's blocks use the column
+  // drop zones (column-view), list items and table cells don't take columns.
+  const SKIP_PARENTS = new Set([
+    "column",
+    "listItem",
+    "taskItem",
+    "tableCell",
+    "tableHeader",
+  ]);
+
+  let pos = -1;
+  let node: PMNode | null = null;
+  for (let d = $hit.depth; d >= 1; d--) {
+    const candidate = $hit.node(d);
+    const parent = $hit.node(d - 1);
+    const index = $hit.index(d - 1);
+    if (!candidate.isBlock || NOT_IN_COLUMNS.has(candidate.type.name)) continue;
+    if (SKIP_PARENTS.has(parent.type.name)) continue;
+    // The parent's schema must allow a columns block in this child's place.
+    if (!parent.canReplaceWith(index, index + 1, columnBlock)) continue;
+    pos = $hit.before(d);
+    node = candidate;
+    break;
+  }
+  if (!node || pos < 0) return null;
 
   const dom = view.nodeDOM(pos);
   if (!(dom instanceof HTMLElement)) return null;

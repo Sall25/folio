@@ -109,7 +109,7 @@
         }
 
         input[type="checkbox"]:checked + span {
-          background: var(--tt-checklist-bg-active-color);
+          background: var(--accent);
           border-color: var(--tt-checklist-border-active-color);
 
           &::before {

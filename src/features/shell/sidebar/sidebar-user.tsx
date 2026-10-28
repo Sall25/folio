@@ -98,8 +98,8 @@ export const User = memo(() => {
           <DynamicIcon
             name={workspace.icon}
             style={{
-              width: 14,
-              height: 14,
+              width: 18,
+              height: 18,
               color: workspace.iconColor ?? "currentColor",
             }}
           />
@@ -132,7 +132,11 @@ export const User = memo(() => {
           )}
         </span>
         <span className="sb-ws__name">{name}</span>
-        <SbChevronDownIcon size={13} className="sb-ws__chevron" />
+        <SbChevronDownIcon
+          stroke="var(--accent)"
+          size={14}
+          className="sb-ws__chevron"
+        />
       </button>
 
       <WorkspaceSwitcherPopover

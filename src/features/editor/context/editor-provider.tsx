@@ -36,6 +36,7 @@ import {
   RESTRUCTURE_META,
 } from "../new-page-starter/new-page-starter-extension";
 import { useMentionData } from "src/components/tiptap-ui/mention-menu/use-mention-data";
+import { isLocalPage } from "src/lib/local-pages";
 
 // Exactly the array type useEditorExtensions produces — derived so it can't
 // drift from the real return, whatever member types are in it (one of them
@@ -187,6 +188,24 @@ function EditorInstance({
   });
   // What the @ menu offers, ready before its first open.
   useMentionData(editor);
+
+  // A page created on this device while offline: the server hasn't added its
+  // title yet (ensureTitle in hocuspocus-server), so add the same skeleton
+  // here. It syncs up like any other edit once the connection is back.
+  useEffect(() => {
+    if (!isLocalPage(page.id)) return;
+    if (editor.state.doc.firstChild?.type.name === "title") return;
+    editor.commands.setContent({
+      type: "doc",
+      content: [
+        {
+          type: "title",
+          content: page.title ? [{ type: "text", text: page.title }] : [],
+        },
+        { type: "paragraph" },
+      ],
+    });
+  }, [editor, page.id, page.title]);
 
   const { canEditContent, isLoading } = usePageCapabilities(page.id);
   useEffect(() => {

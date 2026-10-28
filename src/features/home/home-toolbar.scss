@@ -25,6 +25,7 @@
       width: 14px;
       height: 14px;
       flex: none;
+      color: var(--accent);
     }
   }
 
@@ -39,7 +40,8 @@
   }
 
   &__date {
-    color: var(--tt-text-secondary);
+    color: var(--accent);
+   
     white-space: nowrap;
   }
 }

@@ -44,8 +44,8 @@
     display: grid;
     place-items: center;
     min-width: 0;
-    height: 28px !important;
-    min-height: 28px !important;
+    height: 24px !important;
+    min-height: 24px !important;
     padding: 0 !important;
     border-radius: 4px;
     align-self: center;
@@ -61,6 +61,20 @@
       --tt-button-hover-icon-color: rgba(255, 255, 255, 0.5);
       --tt-button-hover-bg-color: rgba(255, 255, 255, 0.055);
       --tt-button-active-bg-color: rgba(255, 255, 255, 0.055);
+    }
+  }
+
+  // The grip while its menu is open: stays tinted (the menu turns its
+  // pointer events off, so :hover can't do it).
+  .tiptap-button.grip-button.is-open {
+    background: rgba(55, 53, 47, 0.08);
+    color: rgba(55, 53, 47, 0.6);
+    --tt-button-default-icon-color: rgba(55, 53, 47, 0.6);
+
+    .dark & {
+      background: rgba(255, 255, 255, 0.094);
+      color: rgba(255, 255, 255, 0.5);
+      --tt-button-default-icon-color: rgba(255, 255, 255, 0.5);
     }
   }
 
@@ -130,9 +144,11 @@
   }
 }
 
-.column-drag-handle{
+.column-drag-handle {
   position: absolute;
   transform: translateX(-20px);
   pointer-events: auto;
-  transition: top 0.25s ease-out, left 0.25s ease-out;
+  transition:
+    top 0.25s ease-out,
+    left 0.25s ease-out;
 }

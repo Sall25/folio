@@ -1,5 +1,3 @@
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Callout block
 // ─────────────────────────────────────────────────────────────────────────────
@@ -20,6 +18,19 @@
   transition:
     background var(--tt-transition-duration-default),
     border-color var(--tt-transition-duration-default);
+}
+
+// How far the content starts from the callout's left edge: padding 16 +
+// icon 26 + gap 8, or just the padding without an icon.
+.callout-root { --callout-inset: 50px; }
+.callout-root--no-icon { --callout-inset: 16px; }
+
+// Blocks in a callout reach back to its left edge, so the drag handle's hit
+// test lands on them, not on the callout. The text doesn't move.
+.callout-content [data-node-view-content-react] > :is(p, h1, h2, h3, h4, h5, h6,
+    ul, ol, ul[data-type="taskList"], [data-type="pageLink"], .appendix) {
+  margin-left: calc(-1 * var(--callout-inset));
+  border-left: var(--callout-inset) solid transparent;
 }
 
 // ── Icon ──────────────────────────────────────────────────────────────────────
@@ -44,6 +55,8 @@
   transition: background var(--tt-transition-duration-short);
   user-select: none;
   color: var(--tt-theme-text);
+  position: relative;
+  z-index: 1;
 
   &:hover {
     background: rgba(0, 0, 0, 0.06);
@@ -314,113 +327,3 @@
   .dark & { color: var(--tt-gray-dark-a-800); }
 }
 
-
-// ── Hover options (⋯) ─────────────────────────────────────────────────────────
-// The only entry point once the icon is removed — hence always present (not
-// gated on showIcon), revealed on callout hover.
-
-.callout-options-btn {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  border-radius: var(--tt-radius-sm);
-  color: var(--tt-theme-text);
-  cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
-  opacity: 0;
-  transition:
-    opacity var(--tt-transition-duration-short),
-    background var(--tt-transition-duration-short);
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.06);
-    .dark & { background: rgba(255, 255, 255, 0.08); }
-  }
-}
-
-.callout-root:hover .callout-options-btn { opacity: 0.6; }
-.callout-options-btn:hover { opacity: 1; }
-
-.callout-options-menu {
-  min-width: 160px;
-  background: var(--tt-bg-color);
-  border: 0.5px solid var(--tt-border-color);
-  border-radius: var(--tt-radius-lg);
-  box-shadow: var(--tt-shadow-elevated-md);
-  padding: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.callout-options-item {
-  text-align: left;
-  padding: 6px 8px;
-  border: none;
-  background: transparent;
-  border-radius: var(--tt-radius-sm);
-  font-size: 13px;
-  font-family: inherit;
-  color: var(--tt-theme-text);
-  cursor: pointer;
-  transition: background var(--tt-transition-duration-short);
-
-  &:hover {
-    background: var(--tt-gray-light-a-100);
-    .dark & { background: var(--tt-gray-dark-a-100); }
-  }
-}
-// Background presets in the ⋯ menu.
-.callout-options-label {
-  padding: 4px 8px 2px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--tt-theme-muted, rgba(0, 0, 0, 0.45));
-}
-
-.callout-swatches {
-  display: grid;
-  grid-template-columns: repeat(5, 24px);
-  gap: 6px;
-  padding: 4px 8px 6px;
-}
-
-.callout-swatch {
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 1px solid var(--tt-border-color);
-  border-radius: 6px;
-  cursor: pointer;
-
-  &[data-active="on"] {
-    outline: 2px solid var(--tt-brand-color-500);
-    outline-offset: 1px;
-  }
-
-  // "None": a crossed-out square.
-  &--none {
-    background: linear-gradient(
-      to top right,
-      transparent calc(50% - 1px),
-      var(--tt-color-red-base, #e03e3e) 50%,
-      transparent calc(50% + 1px)
-    );
-  }
-}
-
-.callout-options-sep {
-  height: 1px;
-  margin: 2px 4px;
-  background: var(--tt-border-color);
-}

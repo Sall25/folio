@@ -1065,7 +1065,12 @@
     "deleteNode": "Delete node",
     "resetFormatting": "Reset Formatting",
     "search": "Search actions…",
-    "noResults": "No actions found"
+    "noResults": "No actions found",
+    "addIcon": "Add icon",
+    "removeIcon": "Remove icon",
+    "editIcon": "Edit icon",
+    "addBorder": "Add border",
+    "removeBorder": "Remove border"
   },
   "blockTypes": {
     "paragraph": "Paragraph",
@@ -1273,6 +1278,10 @@
       "timelineView": {
         "title": "Timeline view",
         "description": "Plan pages over time."
+      },
+      "pomodoro": {
+        "title": "Pomodoro timer",
+        "description": "Focus and break rounds, with a timer"
       }
     },
     "colors": {
@@ -1299,9 +1308,28 @@
       "dates": "Dates",
       "pages": "Pages",
       "people": "People",
-      "rows": "Rows"
+      "rows": "Rows",
+      "linkToPage": "Link to page",
+      "newPage": "New page"
     },
-    "noResults": "No results"
+    "noResults": "No results",
+    "moreResults_one": "{{count}} more result",
+    "moreResults_other": "{{count}} more results",
+    "invite": "Invite…",
+    "inviteEmail": "Invite {{email}}",
+    "addSubPage": "Add new sub-page",
+    "addPageIn": "Add new page in…",
+    "back": "Back",
+    "chooseParent": "Add the new page in…",
+    "inviteTitle": "Invite and mention",
+    "addEmails": "Add emails…",
+    "inviteMember": "Add to workspace",
+    "inviteMemberHint": "Invite as a member",
+    "inviteGuest": "Guest",
+    "inviteGuestHint": "Invite as a guest",
+    "inviteFailed": "The invite couldn't be sent. Try again.",
+    "inviting": "Inviting…",
+    "inviteButton": "Invite"
   },
   "rowMention": {
     "in": "in {{name}}",
@@ -1767,5 +1795,60 @@
     "hint": "Drag to move, slide to zoom.",
     "uploading": "Uploading…",
     "use": "Use as icon"
+  },
+  "pomodoro": {
+    "focus": "Focus",
+    "shortBreak": "Short break",
+    "longBreak": "Long break",
+    "round": "{{round}} of {{rounds}}",
+    "reset": "Reset",
+    "start": "Start",
+    "pause": "Pause",
+    "skip": "Skip to the next round",
+    "left": "left",
+    "minutesLeft": "minutes left",
+    "look": "Look",
+    "looks": {
+      "ring": "Ring",
+      "clock": "Clock",
+      "line": "Line",
+      "flip": "Flip",
+      "sheet": "Sheet"
+    },
+    "color": "Colour",
+    "size": "Size",
+    "sizes": {
+      "small": "Small",
+      "medium": "Medium",
+      "full": "Full width"
+    },
+    "timing": "Timing",
+    "longBreakEvery": "Long break every",
+    "sound": "Sound at the end",
+    "autoStart": "Auto-start next round",
+    "min": "min",
+    "rounds_one": "round",
+    "rounds_other": "rounds",
+    "resetTimer": "Reset timer"
+  },
+  "pins": {
+    "pin": "Pin",
+    "side": "Pin to side",
+    "top": "Pin to top",
+    "unpin": "Unpin",
+    "unpinAll": "Unpin everywhere",
+    "subSide": "Side",
+    "subTop": "Top",
+    "subBoth": "Side, Top",
+    "pinnedTo": "pinned to {{where}}",
+    "whereSide": "side",
+    "whereTop": "top",
+    "whereBoth": "side and top",
+    "showHere": "Show here",
+    "goTo": "Go to the block",
+    "labels": {
+      "pomodoro": "Pomodoro",
+      "tocNode": "Table of contents"
+    }
   }
 }

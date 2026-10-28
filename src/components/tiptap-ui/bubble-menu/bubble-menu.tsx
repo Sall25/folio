@@ -33,6 +33,7 @@ import { useEffect, useRef, useState } from "react";
 import { NodeSelection } from "@tiptap/pm/state";
 import { CommentButton } from "src/features/comments/comment-button";
 import { SuggestButton } from "../../../features/comments/suggest-button";
+import { NodeRangeSelection } from "@tiptap/extension-node-range";
 
 interface MoreOptionsPopoverProps
   extends Omit<ButtonProps, "type">, UseMarkConfig {}
@@ -162,7 +163,10 @@ export function BubbleMenu({
             }
 
             const selection = state.tr.selection;
-            if (selection instanceof NodeSelection) {
+            if (
+              selection instanceof NodeSelection ||
+              selection instanceof NodeRangeSelection // a box or Shift block selection
+            ) {
               return false;
             }
 

@@ -1065,7 +1065,12 @@
     "deleteNode": "Supprimer le nœud",
     "resetFormatting": "Effacer la mise en forme",
     "search": "Rechercher une action…",
-    "noResults": "Aucune action trouvée"
+    "noResults": "Aucune action trouvée",
+    "addIcon": "Ajouter une icône",
+    "removeIcon": "Supprimer l'icône",
+    "editIcon": "Modifier l'icône",
+    "addBorder": "Ajouter une bordure",
+    "removeBorder": "Supprimer la bordure"
   },
   "blockTypes": {
     "paragraph": "Paragraphe",
@@ -1273,6 +1278,10 @@
       "timelineView": {
         "title": "Vue chronologie",
         "description": "Planifiez les pages dans le temps."
+      },
+      "pomodoro": {
+        "title": "Minuteur Pomodoro",
+        "description": "Des tours de concentration et de pause, avec un minuteur"
       }
     },
     "colors": {
@@ -1299,9 +1308,28 @@
       "dates": "Dates",
       "pages": "Pages",
       "people": "Personnes",
-      "rows": "Lignes"
+      "rows": "Lignes",
+      "linkToPage": "Lien vers une page",
+      "newPage": "Nouvelle page"
     },
-    "noResults": "Aucun résultat"
+    "noResults": "Aucun résultat",
+    "moreResults_one": "{{count}} autre résultat",
+    "moreResults_other": "{{count}} autres résultats",
+    "invite": "Inviter…",
+    "inviteEmail": "Inviter {{email}}",
+    "addSubPage": "Ajouter une sous-page",
+    "addPageIn": "Ajouter une page dans…",
+    "back": "Retour",
+    "chooseParent": "Ajouter la nouvelle page dans…",
+    "inviteTitle": "Inviter et mentionner",
+    "addEmails": "Ajouter des e-mails…",
+    "inviteMember": "Ajouter à l’espace",
+    "inviteMemberHint": "Inviter comme membre",
+    "inviteGuest": "Invité",
+    "inviteGuestHint": "Inviter comme invité",
+    "inviteFailed": "L’invitation n’a pas pu être envoyée. Réessayez.",
+    "inviting": "Invitation…",
+    "inviteButton": "Inviter"
   },
   "rowMention": {
     "in": "dans {{name}}",
@@ -1767,5 +1795,60 @@
     "hint": "Glissez pour déplacer, utilisez le curseur pour zoomer.",
     "uploading": "Envoi…",
     "use": "Utiliser comme icône"
+  },
+  "pomodoro": {
+    "focus": "Concentration",
+    "shortBreak": "Pause courte",
+    "longBreak": "Pause longue",
+    "round": "{{round}} sur {{rounds}}",
+    "reset": "Réinitialiser",
+    "start": "Démarrer",
+    "pause": "Pause",
+    "skip": "Passer au tour suivant",
+    "left": "restantes",
+    "minutesLeft": "minutes restantes",
+    "look": "Apparence",
+    "looks": {
+      "ring": "Anneau",
+      "clock": "Horloge",
+      "line": "Ligne",
+      "flip": "Flip",
+      "sheet": "Feuille"
+    },
+    "color": "Couleur",
+    "size": "Taille",
+    "sizes": {
+      "small": "Petite",
+      "medium": "Moyenne",
+      "full": "Pleine largeur"
+    },
+    "timing": "Durées",
+    "longBreakEvery": "Longue pause tous les",
+    "sound": "Son à la fin",
+    "autoStart": "Lancer le cycle suivant",
+    "min": "min",
+    "rounds_one": "cycle",
+    "rounds_other": "cycles",
+    "resetTimer": "Réinitialiser le minuteur"
+  },
+  "pins": {
+    "pin": "Épingler",
+    "side": "Épingler sur le côté",
+    "top": "Épingler en haut",
+    "unpin": "Désépingler",
+    "unpinAll": "Désépingler partout",
+    "subSide": "Côté",
+    "subTop": "Haut",
+    "subBoth": "Côté, haut",
+    "pinnedTo": "épinglé {{where}}",
+    "whereSide": "sur le côté",
+    "whereTop": "en haut",
+    "whereBoth": "sur le côté et en haut",
+    "showHere": "Afficher ici",
+    "goTo": "Aller au bloc",
+    "labels": {
+      "pomodoro": "Pomodoro",
+      "tocNode": "Table des matières"
+    }
   }
 }

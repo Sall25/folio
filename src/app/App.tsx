@@ -9,6 +9,8 @@ import {
   queryPersister,
   shouldPersistQuery,
 } from "../lib/query-persistence";
+import { createPageMutationKey } from "src/hooks/use-create-page";
+import { createPage } from "src/api/pages";
 
 // The signed-in app (providers, router, sidebar, pages) is its own chunk,
 // downloaded only after sign-in; see signed-in-app.tsx.
@@ -28,6 +30,7 @@ const client = new QueryClient({
     },
   },
 });
+client.setMutationDefaults(createPageMutationKey, { mutationFn: createPage });
 
 function App() {
   return (
@@ -39,13 +42,13 @@ function App() {
         buster: QUERY_CACHE_BUSTER,
         dehydrateOptions: {
           shouldDehydrateQuery: shouldPersistQuery,
-          // Paused mutations can't be resumed after a reload (their
-          // functions aren't registered as defaults) — don't save them.
-          shouldDehydrateMutation: () => false,
+
+          shouldDehydrateMutation: (m) =>
+            m.state.isPaused && m.options.mutationKey?.[0] === "pages",
         },
       }}
       // Anything queued while restoring goes out once the cache is back.
-      onSuccess={() => void client.resumePausedMutations()}
+      onSuccess={() => client.resumePausedMutations()}
     >
       {isPublishedPath ? (
         <Suspense fallback={<GateLoading />}>

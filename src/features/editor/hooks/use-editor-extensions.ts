@@ -58,6 +58,8 @@ import { DiffExtension } from "src/features/versions/version-history";
 import type { EditorExtensionRefs } from "../context/editor-extension-refs";
 import { CodeBlockNode } from "src/components/tiptap-node/code-block-node";
 import { CalloutExtension } from "src/components/tiptap-node/callout-node";
+import { PomodoroExtension } from "src/components/tiptap-node/pomodoro-node";
+import { PinnableExtension } from "src/features/editor/pins";
 import { AudioExtension } from "src/components/tiptap-node/audio-node";
 import {
   VideoExtension,
@@ -217,6 +219,8 @@ export function useEditorExtensions(
         onNavigate: (pageId) => refsRef.current?.setActivePageId(pageId),
       }),
       CalloutExtension,
+      PomodoroExtension,
+      PinnableExtension,
       UniqueID.configure({
         types: [
           "paragraph",

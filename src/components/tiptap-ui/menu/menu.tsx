@@ -20,6 +20,7 @@ import { DeleteNodeButton } from "src/components/tiptap-ui/delete-node-button";
 import "./menu.scss";
 import { DropdownMenuItem } from "src/components/tiptap-ui-primitive/dropdown-menu";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+import { Input } from "src/components/tiptap-ui-primitive/input";
 import { CommentButton } from "../../../features/comments/comment-button";
 import { useTranslation } from "react-i18next";
 //import { RecordDragMenu } from "src/features/database/components/record-drag-menu";
@@ -32,6 +33,12 @@ import {
   countSelectedBlocks,
   getSelectedBlocks,
 } from "src/lib/block-selection";
+import { PinMenuActions } from "src/features/editor/pins";
+import { NodeIconActions } from "src/components/tiptap-ui/node-icon-actions/node-icon-actions";
+import {
+  PomodoroMenuActions,
+  isPomodoroMenu,
+} from "src/components/tiptap-node/pomodoro-node";
 
 const SNAPSHOT_MAX = 600;
 
@@ -40,6 +47,17 @@ const normalize = (s: string) =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
+
+// The list scrolls under the pinned search. Its edges fade (menu.scss) while
+// there's more to scroll that way: data-scrolled for the top, data-more for
+// the bottom. Set on the element directly, so scrolling doesn't re-render.
+function updateFog(el: HTMLElement) {
+  el.toggleAttribute("data-scrolled", el.scrollTop > 1);
+  el.toggleAttribute(
+    "data-more",
+    el.scrollTop + el.clientHeight < el.scrollHeight - 1,
+  );
+}
 
 const firstVisibleItem = (card: HTMLElement | null) =>
   Array.from(
@@ -125,11 +143,16 @@ export function Menu({
   // single block (suggest an edit, copy its link) are left out.
   const blockCount = countSelectedBlocks(editor.state.selection);
   const several = blockCount > 1;
+  // A Pomodoro block: its own rows first; text-only actions are left out.
+  const pomodoro = !several && isPomodoroMenu(editor);
 
-  // Search actions: the rows whose text doesn't match are hidden (by their
+  // Search actions (pinned above the list): the rows whose text doesn't
+  // match are hidden (by their
   // own visible text, so every row is covered, dropdowns included), along
   // with groups left empty and the separators.
   const cardRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const emptyRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
@@ -140,8 +163,26 @@ export function Menu({
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  // Fog: on scroll, and whenever the list changes height (search, rows
+  // appearing).
   useLayoutEffect(() => {
-    const card = cardRef.current;
+    const el = scrollRef.current;
+    const list = listRef.current;
+    if (!el || !list) return;
+    const update = () => updateFog(el);
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    observer.observe(list);
+    return () => {
+      el.removeEventListener("scroll", update);
+      observer.disconnect();
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const card = listRef.current;
     if (!card) return;
     const q = normalize(query.trim());
     let any = false;
@@ -162,6 +203,8 @@ export function Menu({
       if (groupAny) any = true;
     });
     if (emptyRef.current) emptyRef.current.hidden = any;
+    // A new search starts from the top.
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [query]);
 
   return (
@@ -170,10 +213,11 @@ export function Menu({
       className="menu"
       data-searching={query.trim() ? "" : undefined}
     >
-      <label className="menu-search">
-        <Search size={14} aria-hidden />
-        <input
+      <div className="menu-search">
+        <Search size={14} aria-hidden className="menu-search__icon" />
+        <Input
           ref={inputRef}
+          className="menu-search__input"
           value={query}
           placeholder={t("blockMenu.search")}
           aria-label={t("blockMenu.search")}
@@ -192,161 +236,183 @@ export function Menu({
             }
           }}
         />
-      </label>
-      <div ref={emptyRef} className="menu-empty" hidden>
-        {t("blockMenu.noResults")}
       </div>
-      <CardGroupLabel className="title">
-        {several ? t("blockMenu.blocksSelected", { count: blockCount }) : title}
-      </CardGroupLabel>
-      <CardItemGroup className="group" orientation="vertical">
-        <DropdownMenuItem asChild>
-          <ColorDropdownMenu
-            flyout
-            className="menu-button"
-            hideWhenUnavailable={true}
-            editor={editor}
-            onAction={onAction}
-          />
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <AlignmentDropdownMenu
-            flyout
-            className="menu-button"
-            hideWhenUnavailable={true}
-            editor={editor}
-            onAction={onAction}
-          />
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <TurnIntoDropdown hideWhenUnavailable={true} editor={editor} />
-        </DropdownMenuItem>
-        {!several && <DatabasePageToggle editor={editor} onAction={onAction} />}
-        {isColumnsBlock(editor) && (
-          <DropdownMenuItem asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              className="menu-button"
-              style={{ justifyContent: "flex-start", width: "100%" }}
-              onClick={() => {
-                editor.chain().focus().unwrapColumns().run();
-                onAction?.();
-              }}
-            >
-              <Columns2 className="tiptap-button-icon" />
-              <span className="tiptap-button-text">
-                {t("blockMenu.unwrapColumns", "Unwrap columns")}
-              </span>
-            </Button>
-          </DropdownMenuItem>
-        )}
-        {activePageId && (
-          <DropdownMenuItem asChild>
-            <MoveToDropdown editor={editor} onAction={onAction} />
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuItem asChild>
-          <ResetFormattingButton
-            text={t("blockMenu.resetFormatting")}
-            hideWhenUnavailable={true}
-            editor={editor}
-            onResetAllFormatting={onAction}
-          />
-        </DropdownMenuItem>
-        {activePageId && (
-          <>
-            <DropdownMenuItem asChild>
-              <CommentButton
-                style={{
-                  justifyContent: "flex-start",
-                }}
-                showTooltip={false}
-                text="Comment"
-                editor={editor}
-                onClick={onAction}
-              />
-            </DropdownMenuItem>
-            {!several && (
+      <div ref={scrollRef} className="menu-scroll">
+        <div ref={listRef} className="menu-list">
+          <div ref={emptyRef} className="menu-empty" hidden>
+            {t("blockMenu.noResults")}
+          </div>
+          <CardGroupLabel className="title">
+            {several
+              ? t("blockMenu.blocksSelected", { count: blockCount })
+              : title}
+          </CardGroupLabel>
+          {pomodoro && (
+            <>
+              <CardItemGroup className="group" orientation="vertical">
+                <PomodoroMenuActions editor={editor} onAction={onAction} />
+              </CardItemGroup>
+              <Separator orientation="horizontal" />
+            </>
+          )}
+          <CardItemGroup className="group" orientation="vertical">
+            <NodeIconActions editor={editor} onAction={onAction} />
+            {!several && <PinMenuActions editor={editor} onAction={onAction} />}
+            {!pomodoro && (
               <DropdownMenuItem asChild>
-                <SuggestButton
-                  style={{
-                    justifyContent: "flex-start",
-                  }}
-                  showTooltip={false}
-                  text="Suggest"
+                <ColorDropdownMenu
+                  flyout
+                  className="menu-button"
+                  hideWhenUnavailable={true}
                   editor={editor}
-                  onClick={onAction}
+                  onAction={onAction}
                 />
               </DropdownMenuItem>
             )}
-          </>
-        )}
-        {block && activePageId && (
-          <DropdownMenuItem asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              style={{ justifyContent: "flex-start", width: "100%" }}
-              onClick={() => {
-                const text = block.text.trim().replace(/\s+/g, " ");
-                requestDiscussBlock({
-                  pageId: activePageId,
-                  blockId: block.id,
-                  snapshot:
-                    text.length > SNAPSHOT_MAX
-                      ? `${text.slice(0, SNAPSHOT_MAX)}…`
-                      : text,
-                  pageTitle: activePage?.title ?? "",
-                });
-                onAction?.();
-              }}
-            >
-              <MessagesSquare className="tiptap-button-icon" />
-              <span className="tiptap-button-text">
-                {t("blockMenu.discussInChat", "Discuss in chat…")}
-              </span>
-            </Button>
-          </DropdownMenuItem>
-        )}
-      </CardItemGroup>
-      <Separator orientation="horizontal" />
-      <CardItemGroup className="group" orientation="vertical">
-        <DuplicateButton
-          text={t("blockMenu.duplicateNode")}
-          showShortcut={true}
-          hideWhenUnavailable={false}
-          editor={editor}
-          onDuplicated={onAction}
-        />
-        <CopyToClipboardButton
-          text={t("blockMenu.copyToClipboard")}
-          showShortcut={true}
-          hideWhenUnavailable={true}
-          editor={editor}
-          onCopied={onAction}
-        />
-        {!several && (
-          <CopyAnchorLinkButton
-            text={t("blockMenu.copyAnchorLink")}
-            showShortcut={true}
-            hideWhenUnavailable={false}
-            editor={editor}
-            onCopied={onAction}
-          />
-        )}
-      </CardItemGroup>
-      <Separator orientation="horizontal" />
+            <DropdownMenuItem asChild>
+              <AlignmentDropdownMenu
+                flyout
+                className="menu-button"
+                hideWhenUnavailable={true}
+                editor={editor}
+                onAction={onAction}
+              />
+            </DropdownMenuItem>
+            {!pomodoro && (
+              <DropdownMenuItem asChild>
+                <TurnIntoDropdown hideWhenUnavailable={true} editor={editor} />
+              </DropdownMenuItem>
+            )}
+            {!several && (
+              <DatabasePageToggle editor={editor} onAction={onAction} />
+            )}
+            {isColumnsBlock(editor) && (
+              <DropdownMenuItem asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="menu-button"
+                  style={{ justifyContent: "flex-start", width: "100%" }}
+                  onClick={() => {
+                    editor.chain().focus().unwrapColumns().run();
+                    onAction?.();
+                  }}
+                >
+                  <Columns2 className="tiptap-button-icon" />
+                  <span className="tiptap-button-text">
+                    {t("blockMenu.unwrapColumns", "Unwrap columns")}
+                  </span>
+                </Button>
+              </DropdownMenuItem>
+            )}
+            {activePageId && (
+              <DropdownMenuItem asChild>
+                <MoveToDropdown editor={editor} onAction={onAction} />
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem asChild>
+              <ResetFormattingButton
+                text={t("blockMenu.resetFormatting")}
+                hideWhenUnavailable={true}
+                editor={editor}
+                onResetAllFormatting={onAction}
+              />
+            </DropdownMenuItem>
+            {activePageId && (
+              <>
+                <DropdownMenuItem asChild>
+                  <CommentButton
+                    style={{
+                      justifyContent: "flex-start",
+                    }}
+                    showTooltip={false}
+                    text="Comment"
+                    editor={editor}
+                    onClick={onAction}
+                  />
+                </DropdownMenuItem>
+                {!several && (
+                  <DropdownMenuItem asChild>
+                    <SuggestButton
+                      style={{
+                        justifyContent: "flex-start",
+                      }}
+                      showTooltip={false}
+                      text="Suggest"
+                      editor={editor}
+                      onClick={onAction}
+                    />
+                  </DropdownMenuItem>
+                )}
+              </>
+            )}
+            {block && activePageId && (
+              <DropdownMenuItem asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  style={{ justifyContent: "flex-start", width: "100%" }}
+                  onClick={() => {
+                    const text = block.text.trim().replace(/\s+/g, " ");
+                    requestDiscussBlock({
+                      pageId: activePageId,
+                      blockId: block.id,
+                      snapshot:
+                        text.length > SNAPSHOT_MAX
+                          ? `${text.slice(0, SNAPSHOT_MAX)}…`
+                          : text,
+                      pageTitle: activePage?.title ?? "",
+                    });
+                    onAction?.();
+                  }}
+                >
+                  <MessagesSquare className="tiptap-button-icon" />
+                  <span className="tiptap-button-text">
+                    {t("blockMenu.discussInChat", "Discuss in chat…")}
+                  </span>
+                </Button>
+              </DropdownMenuItem>
+            )}
+          </CardItemGroup>
+          <Separator orientation="horizontal" />
+          <CardItemGroup className="group" orientation="vertical">
+            <DuplicateButton
+              text={t("blockMenu.duplicateNode")}
+              showShortcut={true}
+              hideWhenUnavailable={false}
+              editor={editor}
+              onDuplicated={onAction}
+            />
+            <CopyToClipboardButton
+              text={t("blockMenu.copyToClipboard")}
+              showShortcut={true}
+              hideWhenUnavailable={true}
+              editor={editor}
+              onCopied={onAction}
+            />
+            {!several && (
+              <CopyAnchorLinkButton
+                text={t("blockMenu.copyAnchorLink")}
+                showShortcut={true}
+                hideWhenUnavailable={false}
+                editor={editor}
+                onCopied={onAction}
+              />
+            )}
+          </CardItemGroup>
+          <Separator orientation="horizontal" />
 
-      <CardItemGroup className="group" orientation="vertical">
-        <DeleteNodeButton
-          showTooltip={false}
-          showShortcut={true}
-          text={t("blockMenu.deleteNode")}
-          onDeleted={onAction}
-          className="delete-node-button"
-        />
-      </CardItemGroup>
+          <CardItemGroup className="group" orientation="vertical">
+            <DeleteNodeButton
+              showTooltip={false}
+              showShortcut={true}
+              text={t("blockMenu.deleteNode")}
+              onDeleted={onAction}
+              className="delete-node-button"
+            />
+          </CardItemGroup>
+        </div>
+      </div>
     </Card>
   );
 }

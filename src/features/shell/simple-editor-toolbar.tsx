@@ -37,6 +37,7 @@ import { StarIcon } from "src/components/tiptap-icons";
 import { useSearch } from "./search/search-context";
 import { requestFindFocus } from "src/lib/find-store";
 import { HomeToolbar } from "../home/home-toolbar";
+import { PinTopSlot } from "../editor/pins";
 
 function Expand() {
   const { collapsed } = useEditorLayoutState();
@@ -234,6 +235,7 @@ export const DesktopToolbarContent = ({ view }: ContentProps) => {
       <Spacer />
 
       <ToolbarGroup>
+        {view === "page" && <PinTopSlot />}
         <ToolbarPresence />
 
         {view === "page" && activePage && (

@@ -49,21 +49,22 @@ export default function SlashList(props: Props) {
         const parentId = activePageId;
         if (parentId === null || !activePage) return;
         const page = makeChildPage(activePage, t("page.newPage"));
-        createPage.mutateAsync(page).then((newPage) => {
-          editor.storage.pageLink.pages = [
-            ...editor.storage.pageLink.pages,
-            newPage,
-          ];
-          editor.commands.insertContent({
-            type: "pageLink",
-            attrs: {
-              pageId: newPage.id,
-              parentId: parentId,
-              title: newPage.title,
-            },
-          });
-          setActivePageId(newPage.id);
+        createPage.mutate(page);
+
+        // eslint-disable-next-line react-hooks/immutability
+        editor.storage.pageLink.pages = [
+          ...editor.storage.pageLink.pages,
+          page,
+        ];
+        editor.commands.insertContent({
+          type: "pageLink",
+          attrs: {
+            pageId: page.id,
+            parentId: parentId,
+            title: page.title,
+          },
         });
+        setActivePageId(page.id);
       }
     },
     onClose() {

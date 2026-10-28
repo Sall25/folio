@@ -42,7 +42,7 @@
 
   // --sidebar-text-color: #e4e4e4;
   --sidebar-text-color: #e4e4e4b7;
-  --sidebar-accent: #a78bfa;
+  --sidebar-accent: var(--accent);
   --sidebar-border-color: var(--tt-border-color);
   --sidebar-stroke-color: var(--sidebar-bg-color);
   --sidebar-fog-color: #1f1e1ec4;

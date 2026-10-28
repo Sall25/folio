@@ -4,6 +4,8 @@
   background-color:var(--tt-toolbar-bg-color);
   font-family: var(--font-ui);
   padding: .188rem;
+  --tt-button-active-bg-color: var(--accent-tint);
+  --tt-button-active-icon-color: var(--accent);
 }
 .bubble-show {
   animation: float-in 0.15s ease-out both;

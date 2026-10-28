@@ -18,6 +18,9 @@
   --tt-brand-color-900: color-mix(in srgb, var(--space-accent) 36%, #000);
   --tt-brand-color-950: color-mix(in srgb, var(--space-accent) 22%, #000);
   --tt-selection-color: color-mix(in srgb, var(--space-accent) 20%, transparent);
+  --accent: var(--tt-brand-color-400);
+  --accent-tint: color-mix(in srgb, var(--accent) 14%, transparent);
+  --accent-line: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 // The whole app (on <html>). `:root.space-accent` outranks the `:root`

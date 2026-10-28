@@ -4,8 +4,16 @@
   display: flex !important;      // force the row (override any conflicting rule)
   flex-direction: row !important;
   align-items: flex-start;
-  gap: 6px;
   margin: 4px 0;
+  
+  // Blocks in a toggle reach back over the caret column, so the drag handle's
+  // hit test lands on the block, not on the toggle. A transparent border (not
+  // padding) so lists keep their own indent; the text doesn't move.
+  .appendix-content > :is(p, h1, h2, h3, h4, h5, h6, ul, ol,
+      ul[data-type="taskList"], [data-type="pageLink"], .appendix) {
+    margin-left: -28px;
+    border-left: 28px solid transparent;
+  }
 
   // Caret: fixed size, never grows, sits at the start of the row.
   > .appendix__caret {
@@ -17,6 +25,7 @@
     align-items: center;
     justify-content: center;
     color: var(--tt-text-color-subtle, color-mix(in srgb, var(--tt-text-color) 50%, transparent));
+    :is(svg, .material-icon) { width: 24px; height: 20px; }
   }
 
   // Body column: title + content stacked, takes the rest of the width.
@@ -72,6 +81,6 @@ div[data-type="appendix-content"] .is-empty[data-placeholder]:has(> .ProseMirror
   font-weight: 700;
   line-height: 1.3;
 }
-.appendix[data-level="1"] .appendix-summary { font-size: 1.875rem; }
-.appendix[data-level="2"] .appendix-summary { font-size: 1.5rem; }
+.appendix[data-level="1"] .appendix-summary { font-size: 24px; }
+.appendix[data-level="2"] .appendix-summary { font-size: 22px; }
 .appendix[data-level="3"] .appendix-summary { font-size: 1.25rem; }

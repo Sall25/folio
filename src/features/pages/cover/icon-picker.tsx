@@ -1,20 +1,11 @@
 import { useState, useRef, useEffect, useMemo, useDeferredValue } from "react";
-import { ICON_COLORS, getIconList, type IconName } from "./data/icon-list.js";
-import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
+import { getIconList, type IconName } from "./data/icon-list.js";
 import {
-  Card,
   CardBody,
   CardGroupLabel,
   CardItemGroup,
 } from "src/components/tiptap-ui-primitive/card";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer/spacer.js";
-import { DynamicIcon } from "src/features/pages/cover/dynamic-icon";
-import {
-  Popover,
-  PopoverContent,
-  PopoverPortal,
-  PopoverTrigger,
-} from "src/components/tiptap-ui-primitive/popover/popover.js";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { RecentIconRow } from "src/features/shell/sidebar/recent-icon-row/recent-icon-row.js";
 import { useIconRecents } from "src/features/pages/cover/use-icon-recents.js";
@@ -23,96 +14,15 @@ import { useTranslation } from "react-i18next";
 import { useLocalStorage } from "src/hooks/use-local-storage";
 import {
   joinIconName,
-  splitIconName,
   type IconOverride,
 } from "src/components/icons/icon-style";
 import { IconStyleBar } from "./icon-style-bar";
+import { IconColorPopover } from "./icon-color-popover";
 
 // The look last chosen in the picker, kept for the next pick.
 const PICKER_STYLE_KEY = "folio-icon-picker-style";
 
-/** "calendar_today;fill:0" → "calendar today" (the button's tooltip). */
-const iconLabel = (name: string) =>
-  splitIconName(name).glyph.replace(/_/g, " ");
-
-interface IconPopoverProps {
-  name: string;
-  color: string;
-  onSelect: (name: string, color?: string) => void;
-}
-
-const COLORS_PER_ROW = 5;
 const ICONS_PER_ROW = 9;
-
-const colorRows = Array.from(
-  { length: Math.ceil(ICON_COLORS.length / COLORS_PER_ROW) },
-  (_, i) => ICON_COLORS.slice(i * COLORS_PER_ROW, (i + 1) * COLORS_PER_ROW),
-);
-
-function IconPopover({ name, color, onSelect }: IconPopoverProps) {
-  const [open, setOpen] = useState(false);
-  if (!open)
-    return (
-      <Button
-        variant="ghost"
-        tooltip={iconLabel(name)}
-        onClick={() => setOpen(true)}
-      >
-        <DynamicIcon
-          className="tiptap-button-icon"
-          name={name}
-          style={{ color, width: 20, height: 20 }}
-        />
-      </Button>
-    );
-  return (
-    <Popover open onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" tooltip={iconLabel(name)}>
-          <DynamicIcon
-            className="tiptap-button-icon"
-            name={name}
-            style={{ color, width: 20, height: 20 }}
-          />
-        </Button>
-      </PopoverTrigger>
-      <PopoverPortal container={document.getElementById("root")}>
-        <PopoverContent style={{ position: "fixed", zIndex: 9999 }}>
-          <Card style={{ minWidth: 200, padding: "5px 10px" }}>
-            <CardItemGroup orientation="vertical">
-              {colorRows.map((row, rowIndex) => (
-                <ButtonGroup
-                  key={rowIndex}
-                  style={{ gap: "5px" }}
-                  orientation="horizontal"
-                >
-                  {row.map((c, index) => (
-                    <Button
-                      key={index}
-                      variant="ghost"
-                      onClick={() => {
-                        setOpen(false);
-                        onSelect(name, c.value);
-                      }}
-                    >
-                      <DynamicIcon
-                        className="tiptap-button-icon"
-                        name={name}
-                        size={36}
-                        style={{ color: c.value }}
-                      />
-                    </Button>
-                  ))}
-                </ButtonGroup>
-              ))}
-            </CardItemGroup>
-          </Card>
-        </PopoverContent>
-      </PopoverPortal>
-    </Popover>
-  );
-}
-
 type IconColor = string;
 
 export function IconPicker({
@@ -136,7 +46,10 @@ export function IconPicker({
     () =>
       getIconList().filter((e) =>
         e.name.includes(
-          deferred.trim().toLowerCase().replace(/[\s-]+/g, "_"),
+          deferred
+            .trim()
+            .toLowerCase()
+            .replace(/[\s-]+/g, "_"),
         ),
       ),
     [deferred],
@@ -230,7 +143,7 @@ export function IconPicker({
                     }}
                   >
                     {row.map(({ name, color }) => (
-                      <IconPopover
+                      <IconColorPopover
                         key={name}
                         name={joinIconName(name, look)}
                         color={color}
