@@ -5,6 +5,7 @@ import { fetchPages, fetchPageOrShared } from "../api/pages";
 import { useMemo } from "react";
 import type { PageTreeNode } from "../types";
 import { useCurrentWorkspace } from "./use-workspaces";
+import { withLocalPages } from "src/lib/local-pages";
 
 // ─── the ONE base query — everything below is a lens over this ──────────────
 // The workspace id stays in the query key even though fetchPages no longer
@@ -15,7 +16,7 @@ export function usePagesBase<T>(select?: (pages: Page[]) => T) {
   const { workspaceId } = useCurrentWorkspace();
   return useQuery({
     queryKey: queryKeys.pages.lists(workspaceId ?? ""),
-    queryFn: () => fetchPages(),
+    queryFn: async () => withLocalPages(await fetchPages()),
     enabled: !!workspaceId,
     select,
   });

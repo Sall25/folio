@@ -54,7 +54,8 @@ function readStoredSession(): Session | null {
       const raw = localStorage.getItem(key);
       if (!raw) continue;
       const parsed = JSON.parse(raw) as
-        (Session & { currentSession?: Session }) | null;
+        | (Session & { currentSession?: Session })
+        | null;
       // Older SDK versions nested it under currentSession.
       const stored = parsed?.currentSession ?? parsed;
       if (stored?.user?.id && stored.refresh_token) return stored;
@@ -80,9 +81,16 @@ export function useSession() {
   const { data: session, isLoading: loading } = useQuery({
     queryKey: queryKeys.session,
     queryFn: async (): Promise<Session | null> => {
-      const { data, error } = await supabase.auth.getSession();
-      if (data.session) return data.session;
-      return error ? readStoredSession() : null;
+      // Offline: the stored session, straight away. getSession() would try
+      // to refresh an expired token and keep retrying while offline.
+      if (!navigator.onLine) return readStoredSession();
+      // Online but the network may still be failing: don't wait forever.
+      const result = await Promise.race([
+        supabase.auth.getSession(),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+      ]);
+      if (result?.data.session) return result.data.session;
+      return readStoredSession();
     },
     staleTime: Infinity,
     // Resolving the session reads local storage — it must run offline too
@@ -92,7 +100,6 @@ export function useSession() {
 
   return { session: session ?? null, loading };
 }
-
 /**
  * Keeps the session entry in sync with Supabase auth events. Call ONCE, at
  * the app root (AuthGate) — useSession runs in dozens of components, and a

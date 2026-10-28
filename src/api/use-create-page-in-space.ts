@@ -46,7 +46,8 @@ export function useCreatePageInSpace() {
     async (title: string): Promise<Page | null> => {
       const page = buildPage(title);
       if (!page) return null;
-      return createPage.mutateAsync(page);
+      createPage.mutate(page);
+      return page;
     },
     [buildPage, createPage],
   );

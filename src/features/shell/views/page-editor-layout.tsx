@@ -15,7 +15,10 @@ function PageEditorLayoutImpl() {
   // only fires in .then()) as well as the moment right after it moves but
   // usePage(newId) hasn't resolved.
   const isCreatingPage =
-    useIsMutating({ mutationKey: createPageMutationKey }) > 0;
+    useIsMutating({
+      mutationKey: createPageMutationKey,
+      predicate: (m) => !m.state.isPaused,
+    }) > 0;
 
   return (
     <EditorProvider>

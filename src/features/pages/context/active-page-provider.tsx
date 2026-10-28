@@ -13,6 +13,7 @@ import {
   type ActivePageActions,
   type ActivePageState,
 } from "./active-page-context";
+import { isLocalPage } from "src/lib/local-pages";
 
 export function ActivePageProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
@@ -64,6 +65,9 @@ export function ActivePageProvider({ children }: { children: ReactNode }) {
   // workspace's list, so wait for its own fetch before deciding.
   useEffect(() => {
     if (activePageId == null || allPages == null || isLoading) return;
+    // Created on this device and not on the server yet: it exists, the
+    // list just hasn't caught up (offline, the create is still queued).
+    if (isLocalPage(activePageId)) return;
     // Moved to the trash counts as gone (also when a parent was trashed).
     const stillExists =
       allPages.some((p) => p.id === activePageId && p.deletedAt == null) ||

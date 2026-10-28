@@ -75,7 +75,8 @@ export async function loadDocCache(
       update: update instanceof Uint8Array ? update : null,
       dirty: dirty === true,
     };
-  } catch {
+  } catch (e) {
+    console.warn("[offline] cache read failed", e);
     return { update: null, dirty: false };
   }
 }

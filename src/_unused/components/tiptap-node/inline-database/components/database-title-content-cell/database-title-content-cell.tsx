@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { PanelRightOpen } from "lucide-react";
+import { PanelRightOpen } from "src/components/icons";
 import { NodeViewContent } from "@tiptap/react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { PageItemIcon } from "src/features/pages/page-item/page-item-icon";
