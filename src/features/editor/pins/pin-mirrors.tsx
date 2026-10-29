@@ -20,9 +20,24 @@ import { PinFrame } from "./pin-parts";
 type Pinned = { pos: number; node: PMNode };
 
 const ICONS: Record<string, string> = {
+  paragraph: "notes",
+  heading: "title",
+  blockquote: "format_quote",
+  bulletList: "format_list_bulleted",
+  orderedList: "format_list_numbered",
   taskList: "checklist",
+  codeBlock: "code",
+  horizontalRule: "horizontal_rule",
   callout: "campaign",
+  appendix: "arrow_right",
   image: "image",
+  video: "movie",
+  audio: "graphic_eq",
+  file: "attach_file",
+  bookmark: "bookmark",
+  mathBlock: "function",
+  pageLink: "description",
+  tableWrapper: "table",
 };
 
 /** The mirrored blocks pinned to the side, in page order. */
@@ -92,15 +107,28 @@ function MirrorCard({ editor, pin }: { editor: Editor; pin: Pinned }) {
       onGoTo={() => scrollToBlock(editor, pos)}
       onUnpin={unpin}
     >
-      {type === "taskList" ? (
-        <TaskListMirror editor={editor} node={node} pos={pos} />
-      ) : type === "image" ? (
-        <ImageMirror node={node} />
-      ) : (
-        <ContentMirror editor={editor} node={node} />
-      )}
+      <MirrorBody editor={editor} node={node} pos={pos} />
     </PinFrame>
   );
+}
+
+// What each block can DO in the rail. Anything not listed is drawn
+// read-only with the editor's own HTML (ContentMirror).
+type BodyProps = { editor: Editor; node: PMNode; pos: number };
+const BODIES: Record<string, (p: BodyProps) => React.ReactNode> = {
+  taskList: (p) => <TaskListMirror {...p} />,
+  appendix: (p) => <ToggleMirror {...p} />,
+  codeBlock: ({ node }) => <CodeMirror node={node} />,
+  image: ({ node }) => <ImageMirror node={node} />,
+  video: ({ node }) => <MediaMirror node={node} kind="video" />,
+  audio: ({ node }) => <MediaMirror node={node} kind="audio" />,
+  file: ({ node }) => <FileMirror node={node} />,
+  bookmark: ({ node }) => <BookmarkMirror node={node} />,
+};
+
+function MirrorBody(props: BodyProps) {
+  const body = BODIES[props.node.type.name];
+  return body ? <>{body(props)}</> : <ContentMirror {...props} />;
 }
 
 /** Each item with a working checkbox; nested lists are indented. */
@@ -162,19 +190,25 @@ function TaskListMirror({
 }
 
 /** Any block, drawn read-only with the editor's own HTML. */
-function ContentMirror({ editor, node }: { editor: Editor; node: PMNode }) {
+function ContentMirror({ editor, node }: BodyProps) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const serializer = DOMSerializer.fromSchema(editor.schema);
-    el.replaceChildren(serializer.serializeFragment(node.content));
+    // The block itself (a heading stays a heading); a callout's frame is
+    // drawn by the card, so only its content.
+    el.replaceChildren(
+      node.type.name === "callout"
+        ? serializer.serializeFragment(node.content)
+        : serializer.serializeNode(node),
+    );
   }, [editor, node]);
   const bg = node.attrs.backgroundColor as string | null | undefined;
   return (
     <div
       ref={ref}
-      className="pin-mirror__content tiptap"
+      className="pin-mirror__content tiptap ProseMirror"
       style={bg && bg !== "transparent" ? { background: bg } : undefined}
     />
   );
@@ -184,10 +218,134 @@ function ImageMirror({ node }: { node: PMNode }) {
   const src = node.attrs.src as string | null;
   if (!src) return null;
   return (
-    <img
-      className="pin-mirror__image"
-      src={src}
-      alt={(node.attrs.alt as string | null) ?? ""}
-    />
+    <a href={src} target="_blank" rel="noreferrer" title={src}>
+      <img
+        className="pin-mirror__image"
+        src={src}
+        alt={(node.attrs.alt as string | null) ?? ""}
+      />
+    </a>
+  );
+}
+
+/** The summary, and the content when open; the arrow opens / closes it in
+ *  the page too. */
+function ToggleMirror({ editor, node, pos }: BodyProps) {
+  const open = node.attrs.open !== false;
+  const summary = node.firstChild?.textContent ?? "";
+  const content = node.child(1);
+  return (
+    <div className="pin-mirror__toggle">
+      <button
+        type="button"
+        className="pin-mirror__toggle-head"
+        aria-expanded={open}
+        disabled={!editor.isEditable}
+        onClick={() =>
+          editor
+            .chain()
+            .command(({ tr }) => {
+              tr.setNodeAttribute(pos, "open", !open);
+              return true;
+            })
+            .run()
+        }
+      >
+        <span className="pin-mirror__chevron" data-open={open || undefined}>
+          ▸
+        </span>
+        <span>{summary || "\u00a0"}</span>
+      </button>
+      {open && content && (
+        <ContentMirror editor={editor} node={content} pos={pos} />
+      )}
+    </div>
+  );
+}
+
+function CodeMirror({ node }: { node: PMNode }) {
+  const { t } = useTranslation();
+  return (
+    <div className="pin-mirror__code">
+      <pre>
+        <code>{node.textContent}</code>
+      </pre>
+      <button
+        type="button"
+        onClick={() => void navigator.clipboard?.writeText(node.textContent)}
+      >
+        {t("pins.copy")}
+      </button>
+    </div>
+  );
+}
+
+function MediaMirror({
+  node,
+  kind,
+}: {
+  node: PMNode;
+  kind: "audio" | "video";
+}) {
+  const src = node.attrs.src as string | null;
+  if (!src) return null;
+  const name = (node.attrs.fileName as string | null) ?? "";
+  return (
+    <div className="pin-mirror__media">
+      {kind === "audio" ? (
+        <audio controls preload="metadata" src={src} />
+      ) : (
+        <video
+          controls
+          preload="metadata"
+          src={src}
+          poster={(node.attrs.poster as string | null) ?? undefined}
+        />
+      )}
+      {name && <span className="pin-mirror__caption">{name}</span>}
+    </div>
+  );
+}
+
+type Attachment = { id: string; name: string; url: string; size: number };
+
+function FileMirror({ node }: { node: PMNode }) {
+  const files = (node.attrs.files as Attachment[] | null) ?? [];
+  return (
+    <div className="pin-mirror__files">
+      {files.map((f) => (
+        <a
+          key={f.id}
+          href={f.url}
+          download={f.name}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <span className="pin-mirror__file-name">{f.name}</span>
+          <span className="pin-mirror__caption">
+            {(f.size / 1024 / 1024).toFixed(1)} MB
+          </span>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function BookmarkMirror({ node }: { node: PMNode }) {
+  const url = node.attrs.url as string | null;
+  if (!url) return null;
+  const title = (node.attrs.title as string | null) || url;
+  return (
+    <a
+      className="pin-mirror__bookmark"
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+    >
+      <span className="pin-mirror__file-name">{title}</span>
+      <span className="pin-mirror__caption">
+        {new URL(url, location.href).host}
+      </span>
+    </a>
   );
 }

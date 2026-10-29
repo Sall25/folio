@@ -9,9 +9,29 @@ export type PinPlace = "side" | "top";
 
 /** Blocks that MOVE into the rail (their node views draw themselves there). */
 export const PORTAL_TYPES = ["pomodoro", "tocNode"];
-/** Blocks with text inside: they stay in the page and the rail shows a
- *  mirror of them (pin-mirrors.tsx). */
-export const MIRROR_TYPES = ["taskList", "callout", "image"];
+/** Every other block that can be pinned: it stays in the page and the rail
+ *  shows a mirror of it (pin-mirrors.tsx). Not pinnable: the title, columns
+ *  (pin what's inside them), and inline databases (for now). */
+export const MIRROR_TYPES = [
+  "paragraph",
+  "heading",
+  "blockquote",
+  "bulletList",
+  "orderedList",
+  "taskList",
+  "codeBlock",
+  "horizontalRule",
+  "callout",
+  "appendix",
+  "image",
+  "video",
+  "audio",
+  "file",
+  "bookmark",
+  "mathBlock",
+  "pageLink",
+  "tableWrapper",
+];
 /** Every block that can be pinned. */
 export const PINNABLE_TYPES = [...PORTAL_TYPES, ...MIRROR_TYPES];
 

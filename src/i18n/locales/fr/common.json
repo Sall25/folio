@@ -1846,12 +1846,28 @@
     "whereBoth": "sur le côté et en haut",
     "showHere": "Afficher ici",
     "goTo": "Aller au bloc",
+    "copy": "Copier",
     "labels": {
       "pomodoro": "Pomodoro",
       "tocNode": "Table des matières",
       "taskList": "Liste de tâches",
       "callout": "Encadré",
-      "image": "Image"
+      "image": "Image",
+      "paragraph": "Texte",
+      "heading": "Titre",
+      "blockquote": "Citation",
+      "bulletList": "Liste à puces",
+      "orderedList": "Liste numérotée",
+      "codeBlock": "Code",
+      "horizontalRule": "Séparateur",
+      "appendix": "Bloc dépliable",
+      "video": "Vidéo",
+      "audio": "Audio",
+      "file": "Fichier",
+      "bookmark": "Signet",
+      "mathBlock": "Équation",
+      "pageLink": "Page",
+      "tableWrapper": "Tableau"
     }
   }
 }

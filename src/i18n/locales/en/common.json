@@ -1846,12 +1846,28 @@
     "whereBoth": "side and top",
     "showHere": "Show here",
     "goTo": "Go to the block",
+    "copy": "Copy",
     "labels": {
       "pomodoro": "Pomodoro",
       "tocNode": "Table of contents",
       "taskList": "To-do list",
       "callout": "Callout",
-      "image": "Image"
+      "image": "Image",
+      "paragraph": "Text",
+      "heading": "Heading",
+      "blockquote": "Quote",
+      "bulletList": "Bulleted list",
+      "orderedList": "Numbered list",
+      "codeBlock": "Code",
+      "horizontalRule": "Divider",
+      "appendix": "Toggle",
+      "video": "Video",
+      "audio": "Audio",
+      "file": "File",
+      "bookmark": "Bookmark",
+      "mathBlock": "Equation",
+      "pageLink": "Page",
+      "tableWrapper": "Table"
     }
   }
 }

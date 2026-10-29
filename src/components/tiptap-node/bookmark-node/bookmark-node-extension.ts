@@ -24,6 +24,7 @@ declare module "@tiptap/core" {
 export const BookmarkNode = Node.create({
   name: "bookmark",
   group: "block",
+  content: "block*",
   atom: true,
   draggable: true,
   selectable: true,

@@ -4,7 +4,7 @@ import { NodeSelection } from "@tiptap/pm/state";
 import { getSelectedBlocks } from "src/lib/block-selection";
 import { PINNABLE_TYPES } from "./pin-targets";
 
-// Which pinnable block the block menu is for (pin-menu-actions.tsx).
+const ITEM_TYPES = new Set(["listItem", "taskItem"]);
 
 export type PinTarget = { node: PMNode; pos: number };
 
@@ -20,10 +20,11 @@ export function pinMenuTarget(editor: Editor): PinTarget | null {
   if (!target) return null;
   // The drag handle selects a to-do ITEM (lists aren't dragged whole): the
   // pin is for the list it's in.
-  if (target.node.type.name === "taskItem") {
+  if (ITEM_TYPES.has(target.node.type.name)) {
     const $pos = editor.state.doc.resolve(target.pos);
     const list = $pos.parent;
-    if (list.type.name !== "taskList" || $pos.depth === 0) return null;
+    if (!PINNABLE_TYPES.includes(list.type.name) || $pos.depth === 0)
+      return null;
     return { node: list, pos: $pos.before($pos.depth) };
   }
   return PINNABLE_TYPES.includes(target.node.type.name) ? target : null;

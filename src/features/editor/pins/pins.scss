@@ -247,3 +247,37 @@
     }
   }
 }
+
+.pin-mirror__toggle-head {
+  all: unset; display: flex; align-items: center; gap: 6px; width: 100%;
+  padding: 2px 0; font-size: 13.5px; font-weight: 500; cursor: pointer;
+}
+.pin-mirror__chevron {
+  display: inline-block; transition: transform 0.15s ease;
+  &[data-open] { transform: rotate(90deg); }
+}
+.pin-mirror__code {
+  position: relative;
+  pre {
+    margin: 0; max-height: 240px; overflow: auto; padding: 8px 10px;
+    border-radius: 7px; background: var(--tt-codeblock-bg, rgba(127, 127, 127, 0.1));
+    font-size: 12px; line-height: 1.55;
+  }
+  button {
+    position: absolute; top: 6px; right: 6px; padding: 2px 7px; border: 0;
+    border-radius: 5px; font-size: 11px; background: var(--tt-button-hover-bg-color);
+    color: var(--tt-text-primary); cursor: pointer;
+  }
+}
+.pin-mirror__media {
+  display: flex; flex-direction: column; gap: 4px;
+  audio, video { width: 100%; border-radius: 8px; }
+}
+.pin-mirror__files, .pin-mirror__bookmark { display: flex; flex-direction: column; gap: 4px; }
+.pin-mirror__files a, .pin-mirror__bookmark {
+  display: flex; flex-direction: column; padding: 6px 8px; border-radius: 7px;
+  color: inherit; text-decoration: none; background: var(--tt-button-hover-bg-color);
+}
+.pin-mirror__file-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pin-mirror__caption { font-size: 11.5px; color: var(--tt-text-secondary); }
+
