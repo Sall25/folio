@@ -30,4 +30,46 @@
   }
 
   &__done { width: 100%; margin-top: 8px; }
+
+    
+  // "Pages shown" under Recent.
+  &__sub {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px 8px 22px;
+    font-size: 12.5px;
+    color: var(--tt-text-secondary);
+  }
+
+  &__sub-label { flex: 1; }
+
+  &__step {
+    all: unset;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    font-size: 14px;
+    line-height: 1;
+    color: var(--tt-text-primary);
+    cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--tt-gray-light-a-100);
+    .dark & { background: var(--tt-gray-dark-a-100); }
+  }
+
+  &:disabled { opacity: 0.35; cursor: default; }
+
+  &:focus-visible { box-shadow: 0 0 0 2px var(--tt-brand-color-400); }
+  }
+
+  &__count {
+    min-width: 2ch;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    color: var(--tt-text-primary);
+  }
 }

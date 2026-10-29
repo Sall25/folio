@@ -60,10 +60,10 @@ import { TeamspaceMembersModal } from "../../workspace/teamspaces/teamspace-memb
 import { SidebarNavRow } from "./sidebar-nav-row";
 import { SB_ICON } from "./sidebar-icon";
 import "./sidebar-tabs.scss";
+import { useRecentLimit } from "../hooks/use-recent-limit";
 
 const EMPTY_TEAMSPACES: Teamspace[] = [];
 const EMPTY_GROUPS: Group[] = [];
-const RECENT_LIMIT = 6;
 // The body is a flex column that overflows; without this the bottom fog
 // (an empty box) would shrink to nothing.
 const FOG_NO_SHRINK = { flexShrink: 0 } as const;
@@ -222,6 +222,7 @@ export const SidebarBody = memo(() => {
   const showContent = isMobile ? true : !collapsed || floatingActive;
 
   const { data: allRecentPages } = useRecentPages();
+  const { limit: recentLimit } = useRecentLimit();
   const { workspaceId } = useCurrentWorkspace();
   const sidebarTree = useMemo<Record<PageCategory, PageTreeNode[]>>(() => {
     const result = {} as Record<PageCategory, PageTreeNode[]>;
@@ -243,7 +244,7 @@ export const SidebarBody = memo(() => {
             p.id !== teamspaceId &&
             p.category !== "Template",
         )
-        .slice(0, RECENT_LIMIT)
+        .slice(0, recentLimit)
         .map(toLeaf);
       result.Template = all
         .filter(
@@ -257,10 +258,10 @@ export const SidebarBody = memo(() => {
     Object.assign(result, tree);
     result.Recent = all
       .filter((p) => p.workspaceId === workspaceId && p.category !== "Template")
-      .slice(0, RECENT_LIMIT)
+      .slice(0, recentLimit)
       .map(toLeaf);
     return result;
-  }, [tree, allRecentPages, teamspaceId, pinnedIds, workspaceId]);
+  }, [tree, allRecentPages, teamspaceId, pinnedIds, workspaceId, recentLimit]);
 
   const teamspaceLabels = useMemo(
     () => ({
