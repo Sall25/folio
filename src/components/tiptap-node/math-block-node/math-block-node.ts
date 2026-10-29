@@ -13,6 +13,7 @@ declare module "@tiptap/core" {
 export const MathBlockNode = Node.create({
   name: "mathBlock",
   group: "block",
+  content: "block*",
   atom: true,
   selectable: true,
   draggable: true,

@@ -19,6 +19,7 @@ declare module "@tiptap/core" {
 export const BreadcrumbNode = Node.create<BreadcrumbOptions>({
   name: "breadcrumb",
   group: "block",
+  content: "block*",
   atom: true,
   selectable: false,
   draggable: false,
