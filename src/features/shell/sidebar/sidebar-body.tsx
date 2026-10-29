@@ -199,6 +199,7 @@ export const SidebarBody = memo(() => {
       const raf = requestAnimationFrame(() => setPeekEntered(true));
       return () => cancelAnimationFrame(raf);
     }
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPeekEntered(false);
   }, [isFloating]);
@@ -221,7 +222,7 @@ export const SidebarBody = memo(() => {
   const showContent = isMobile ? true : !collapsed || floatingActive;
 
   const { data: allRecentPages } = useRecentPages();
-
+  const { workspaceId } = useCurrentWorkspace();
   const sidebarTree = useMemo<Record<PageCategory, PageTreeNode[]>>(() => {
     const result = {} as Record<PageCategory, PageTreeNode[]>;
     const all = allRecentPages ?? [];
@@ -254,9 +255,12 @@ export const SidebarBody = memo(() => {
     }
 
     Object.assign(result, tree);
-    result.Recent = all.slice(0, RECENT_LIMIT).map(toLeaf);
+    result.Recent = all
+      .filter((p) => p.workspaceId === workspaceId && p.category !== "Template")
+      .slice(0, RECENT_LIMIT)
+      .map(toLeaf);
     return result;
-  }, [tree, allRecentPages, teamspaceId, pinnedIds]);
+  }, [tree, allRecentPages, teamspaceId, pinnedIds, workspaceId]);
 
   const teamspaceLabels = useMemo(
     () => ({
@@ -291,7 +295,6 @@ export const SidebarBody = memo(() => {
     [patchPage],
   );
 
-  const { workspaceId } = useCurrentWorkspace();
   const handleAddPageToSection = useCallback(
     (category: PageCategory) => {
       if (!person || !workspaceId) return null;
