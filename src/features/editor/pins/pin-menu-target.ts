@@ -17,7 +17,14 @@ export function pinMenuTarget(editor: Editor): PinTarget | null {
       : sel instanceof NodeSelection
         ? { node: sel.node, pos: sel.from }
         : null;
-  return target && PINNABLE_TYPES.includes(target.node.type.name)
-    ? target
-    : null;
+  if (!target) return null;
+  // The drag handle selects a to-do ITEM (lists aren't dragged whole): the
+  // pin is for the list it's in.
+  if (target.node.type.name === "taskItem") {
+    const $pos = editor.state.doc.resolve(target.pos);
+    const list = $pos.parent;
+    if (list.type.name !== "taskList" || $pos.depth === 0) return null;
+    return { node: list, pos: $pos.before($pos.depth) };
+  }
+  return PINNABLE_TYPES.includes(target.node.type.name) ? target : null;
 }

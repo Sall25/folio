@@ -7,7 +7,7 @@ import { useIsMutating } from "@tanstack/react-query";
 import { EditorContentSkeletonFull } from "../skeletons";
 import { PageOverlays } from "./page-overlays";
 import { SimpleEditorContent } from "../../editor/simple-editor-content";
-import { PinRail } from "../../editor/pins";
+import { PinRail, PinMirrors } from "../../editor/pins";
 
 function PageEditorLayoutImpl() {
   // A page create is in flight (sidebar "+", or "add page to section").
@@ -40,6 +40,7 @@ function PageEditorLayoutImpl() {
         </div>
         <TocSidebar topOffset={100} maxShowCount={20} />
         <PinRail />
+        <PinMirrors />
       </TocProvider>
       <PageOverlays />
     </EditorProvider>

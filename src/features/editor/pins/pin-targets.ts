@@ -7,8 +7,13 @@ import type { Editor } from "@tiptap/core";
 
 export type PinPlace = "side" | "top";
 
-/** Blocks that can be pinned (their node views draw the pinned copy). */
-export const PINNABLE_TYPES = ["pomodoro", "tocNode"];
+/** Blocks that MOVE into the rail (their node views draw themselves there). */
+export const PORTAL_TYPES = ["pomodoro", "tocNode"];
+/** Blocks with text inside: they stay in the page and the rail shows a
+ *  mirror of them (pin-mirrors.tsx). */
+export const MIRROR_TYPES = ["taskList", "callout", "image"];
+/** Every block that can be pinned. */
+export const PINNABLE_TYPES = [...PORTAL_TYPES, ...MIRROR_TYPES];
 
 const targets: Record<PinPlace, HTMLElement | null> = {
   side: null,

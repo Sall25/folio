@@ -1,24 +1,66 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { MaterialIcon } from "src/components/icons";
 import { useMediaQuery } from "src/hooks/use-breakpoint";
 import { pinTargets } from "./pin-targets";
 import "./pins.scss";
 
-// The places pinned blocks are drawn (the rail, the top-bar slot), the frame
-// around a block in the rail, and the stub left where the block lives.
-
 /** The rail beside the page. Only on wide screens: narrower, pinned blocks
- *  stay in the page (nothing registers, so they draw in place). */
+ *  stay in the page (nothing registers, so they draw in place). Its top
+ *  follows the page's icon — or its title — so it starts under the cover,
+ *  then stays just under the top bar once that has scrolled away. */
 export function PinRail() {
   const wide = useMediaQuery("min", "xl");
+  const railRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!wide) return;
+    let frame = 0;
+    const place = () => {
+      frame = 0;
+      const rail = railRef.current;
+      if (!rail) return;
+      const anchor = document.querySelector<HTMLElement>(
+        '.simple-editor-main h1[data-type="title"]',
+      );
+      const toolbar =
+        document
+          .querySelector<HTMLElement>('.tiptap-toolbar[data-variant="fixed"]')
+          ?.getBoundingClientRect().bottom ?? 44;
+      const min = toolbar + 16;
+      const top = anchor
+        ? Math.max(min, anchor.getBoundingClientRect().top)
+        : min;
+      rail.style.setProperty("--pin-rail-top", `${Math.round(top)}px`);
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(place);
+    };
+    place();
+    // Any scroll container (capture), window size, and page switches / the
+    // cover loading (the interval: cheap, and catches what events miss).
+    document.addEventListener("scroll", schedule, true);
+    window.addEventListener("resize", schedule);
+    const interval = window.setInterval(schedule, 400);
+    return () => {
+      document.removeEventListener("scroll", schedule, true);
+      window.removeEventListener("resize", schedule);
+      window.clearInterval(interval);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [wide]);
+
   if (!wide) return null;
   return (
     <aside
       className="pin-rail"
       ref={(el) => {
+        railRef.current = el;
         pinTargets.set("side", el);
-        return () => pinTargets.set("side", null);
+        return () => {
+          railRef.current = null;
+          pinTargets.set("side", null);
+        };
       }}
     />
   );

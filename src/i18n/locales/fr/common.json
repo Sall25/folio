@@ -1848,7 +1848,10 @@
     "goTo": "Aller au bloc",
     "labels": {
       "pomodoro": "Pomodoro",
-      "tocNode": "Table des matières"
+      "tocNode": "Table des matières",
+      "taskList": "Liste de tâches",
+      "callout": "Encadré",
+      "image": "Image"
     }
   }
 }
