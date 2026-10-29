@@ -48,6 +48,9 @@ const EXCLUDE = [
  *  selection (tables, databases) or aren't content (the title). */
 const TEXT_ONLY = new Set(["title", "database", "tableWrapper", "table"]);
 
+/** Lists: a box or a drag inside one picks its items, not the whole list. */
+const LISTS = new Set(["bulletList", "orderedList", "taskList"]);
+
 /** Pixels the pointer must move before a press becomes a drag-box. */
 const THRESHOLD = 5;
 /** Distance from the edge of the scroll area where auto-scroll starts. */
@@ -106,7 +109,12 @@ export function BlockMarquee({ editor }: { editor: Editor | null }) {
     /** Where blocks are picked from: the column `$pos` is in, else the page. */
     const containerDepth = ($pos: ResolvedPos, upTo = $pos.depth) => {
       let depth = upTo;
-      while (depth > 0 && $pos.node(depth).type.name !== "column") depth--;
+      while (
+        depth > 0 &&
+        $pos.node(depth).type.name !== "column" &&
+        !LISTS.has($pos.node(depth).type.name)
+      )
+        depth--;
       return depth;
     };
 
@@ -231,6 +239,29 @@ export function BlockMarquee({ editor }: { editor: Editor | null }) {
       return { from, to, depth: view.state.doc.resolve(from).depth };
     };
 
+    /** The items of the list at `listPos` the box touches (nested lists
+     *  inside an item come with it). */
+    const itemsInList = (
+      listPos: number,
+      list: PMNode,
+      rect: DOMRect,
+    ): Blocks | null => {
+      let from = -1;
+      let to = -1;
+      list.forEach((item, offset) => {
+        const pos = listPos + 1 + offset;
+        const dom = view.nodeDOM(pos);
+        if (!(dom instanceof HTMLElement)) return;
+        const r = dom.getBoundingClientRect();
+        if (rect.top < r.bottom && rect.bottom > r.top) {
+          if (from === -1) from = pos;
+          to = pos + item.nodeSize;
+        }
+      });
+      if (from === -1) return null;
+      return { from, to, depth: view.state.doc.resolve(from).depth };
+    };
+
     const select = (rect: DOMRect) => {
       const { doc } = view.state;
       const editorBox = view.dom.getBoundingClientRect();
@@ -260,6 +291,11 @@ export function BlockMarquee({ editor }: { editor: Editor | null }) {
       if (only?.type.name === "columnBlock" && to === from + only.nodeSize) {
         const inner = blocksInColumn(from, only, rect);
         if (inner) return selectRange(inner);
+      }
+      // Only one list, and the box inside it: the items it touches.
+      if (only && LISTS.has(only.type.name) && to === from + only.nodeSize) {
+        const items = itemsInList(from, only, rect);
+        if (items) return selectRange(items);
       }
       const key = `${from}:${to}:0`;
       if (key === lastRange) return;
