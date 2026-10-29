@@ -26,6 +26,7 @@ import {
 import { useActivePageState } from "src/features/pages/context/active-page-context";
 import type { Thread } from "src/types";
 import "./page-comment-view.scss";
+import { useToggleCommentReaction } from "src/hooks/use-toggle-comment-reaction";
 
 // Page-level comments. Each thread is a discussion card: a header
 // (Discussion · count, Resolve), the comments joined by a thread line, and a
@@ -124,6 +125,8 @@ function PageThread({ thread }: { thread: Thread }) {
       patch: { status: resolved ? "open" : "resolved" },
     });
 
+  const react = useToggleCommentReaction();
+
   if (comments.length === 0) return null;
 
   return (
@@ -170,9 +173,7 @@ function PageThread({ thread }: { thread: Thread }) {
             pageId={thread.pageId}
             pageTitle={activePage?.title}
             threadId={thread.id}
-            onReact={(next) =>
-              updateComment.mutate({ id: c.id, patch: { reactions: next } })
-            }
+            onReact={(emoji, next) => react.mutate({ id: c.id, emoji, next })}
             onEdit={(val) =>
               updateComment.mutate({ id: c.id, patch: { body: val } })
             }

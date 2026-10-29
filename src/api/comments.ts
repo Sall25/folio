@@ -1,5 +1,6 @@
 import type { Comment, ID } from "src/types";
 import { http } from "./client";
+import { supabase } from "./supabase-client";
 
 export const fetchComments = () => http<Comment[]>("/comments");
 
@@ -23,3 +24,12 @@ export const createComment = (comment: Comment) => {
     body: JSON.stringify(comment),
   });
 };
+
+export async function toggleCommentReaction(commentId: ID, emoji: string) {
+  const { data, error } = await supabase.rpc("toggle_comment_reaction", {
+    p_comment_id: commentId,
+    p_emoji: emoji,
+  });
+  if (error) throw error;
+  return data as Record<string, string[]>;
+}

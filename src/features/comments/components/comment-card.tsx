@@ -37,7 +37,7 @@ interface CommentCardProps {
   threadId?: string;
   onEdit: (content: string) => void;
   onDelete: () => void;
-  onReact?: (next: Reactions) => void;
+  onReact?: (emoji: string, next: Reactions) => void;
   /** The commented text, shown as a quote under the header (first comment). */
   quote?: string;
   /** A suggested replacement: shown instead of the quote (old → new). */
@@ -99,7 +99,7 @@ export const CommentCard = ({
 
     // Was this an ADD (person not yet in this emoji's list)?
     const alreadyReacted = (reactions[emoji] ?? []).includes(person.id);
-    onReact(toggleReaction(reactions, emoji, person.id));
+    onReact(emoji, toggleReaction(reactions, emoji, person.id));
 
     // Notify the comment author on ADD only, and never for reacting to your own
     // comment.

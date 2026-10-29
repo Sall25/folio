@@ -22,6 +22,7 @@ import { CommentMentionEditor, type CommentEditorRef } from "../editor";
 import { CommentCard } from "./comment-card";
 import "./comment-thread-popover.scss";
 import { anchorText, useNotifyMentions } from "../utils";
+import { useToggleCommentReaction } from "src/hooks/use-toggle-comment-reaction";
 
 // An existing thread: its comments (quote on the first one), reactions,
 // resolve / re-open, edit / delete, and an "Add a comment…" reply row.
@@ -59,6 +60,8 @@ export function ThreadConversation({
   const suggestion = thread.suggestion ?? null;
   const pending = !!suggestion && suggestion.state === "pending" && !resolved;
   const [stale, setStale] = useState(false);
+
+  const react = useToggleCommentReaction();
 
   // Accept: replace the anchored text with the suggestion ("" deletes it),
   // then resolve. Refuses when the text changed since it was suggested, so an
@@ -182,9 +185,7 @@ export function ThreadConversation({
             pageId={thread.pageId}
             pageTitle={activePage?.title}
             threadId={thread.id}
-            onReact={(next) =>
-              updateComment.mutate({ id: c.id, patch: { reactions: next } })
-            }
+            onReact={(emoji, next) => react.mutate({ id: c.id, emoji, next })}
             onEdit={(val) =>
               updateComment.mutate({ id: c.id, patch: { body: val } })
             }
