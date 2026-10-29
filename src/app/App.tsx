@@ -1,6 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { lazy, Suspense } from "react";
 import { AuthGate, GateLoading } from "../features/auth/auth-gate";
 import {
@@ -61,7 +60,6 @@ function App() {
           </Suspense>
         </AuthGate>
       )}
-      <ReactQueryDevtools initialIsOpen={false} />
     </PersistQueryClientProvider>
   );
 }
