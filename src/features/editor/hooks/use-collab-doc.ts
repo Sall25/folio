@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as Y from "yjs";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import { useSession } from "src/hooks/use-session";
@@ -12,6 +12,7 @@ import {
 } from "src/lib/offline-doc-cache";
 import { trackProvider } from "src/lib/sync-status";
 import { isLocalPage } from "src/lib/local-pages";
+import { collabToken } from "src/lib/collab-token";
 
 const HOCUSPOCUS_URL = import.meta.env.VITE_HOCUSPOCUS_URL;
 
@@ -29,6 +30,12 @@ const SAVE_DELAY_MS = 400;
 const CLEAN_DELAY_MS = 1500;
 // Transaction origin for applying the local copy (not a local edit).
 const CACHE_ORIGIN = "offline-cache";
+// The server refused the connection: try again after this, doubling each
+// time up to AUTH_RETRY_MAX_MS. It refuses a page that doesn't exist yet
+// (one created offline, still on its way: PageOutboxSync) and a token that
+// can't be refreshed yet; neither lasts.
+const AUTH_RETRY_MS = 3000;
+const AUTH_RETRY_MAX_MS = 60_000;
 
 /** Where the doc currently shown came from. */
 export type CollabDocSource = "server" | "cache";
@@ -72,6 +79,13 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
   const pageId = page?.id ?? null;
   const token = session?.access_token ?? null;
   const personId = session?.user?.id ?? null;
+  const signedIn = token !== null;
+  // Read at each connect (collabToken), so a refreshed token doesn't
+  // rebuild the page's doc and connection.
+  const tokenRef = useRef(token);
+  useEffect(() => {
+    tokenRef.current = token;
+  }, [token]);
 
   const [doc, setDoc] = useState<{
     ydoc: Y.Doc | null;
@@ -95,7 +109,7 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
   // destroys the first instance and the remount connects a genuinely new
   // one (see git history for the full story).
   useEffect(() => {
-    if (!pageId || !token || !personId) {
+    if (!pageId || !signedIn || !personId) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setDoc({ ydoc: null, provider: null });
       setReady(null);
@@ -109,7 +123,8 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
       url: HOCUSPOCUS_URL,
       name: `page:${pageId}`,
       document: ydoc,
-      token,
+      // A fresh token on every connect and reconnect.
+      token: () => collabToken(tokenRef.current ?? ""),
     });
     // While open here, this provider delivers the page's edits; the
     // background sync leaves it alone.
@@ -133,6 +148,8 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
     let cleanTimer: number | null = null;
     let cacheLoaded = false;
     let fallbackWanted = false;
+    let authFailures = 0;
+    let authRetryTimer: number | null = null;
 
     const applyCache = () => {
       if (cacheApplied || !cachedUpdate) return;
@@ -208,6 +225,7 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
       }
       liveSynced = true;
       hasLineage = true;
+      authFailures = 0;
       setReady({ provider, source: "server" });
       setUnavailableFor((prev) => (prev === provider ? null : prev));
       setStalledFor((prev) => (prev === provider ? null : prev));
@@ -244,9 +262,24 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
       scheduleSave();
     };
 
-    // The server refused the connection (an expired or rejected token): it
-    // won't retry on its own, so don't wait out the timeout.
-    const handleAuthFailed = () => fallBackToCache();
+    // The server refused the connection. Open the local copy now rather
+    // than waiting out the timeout, and connect again later: the provider
+    // won't on its own. Reconnecting the same provider keeps the doc and the
+    // editor (no skeleton) and signs in with a fresh token.
+    const handleAuthFailed = () => {
+      fallBackToCache();
+      if (disposed || authRetryTimer !== null) return;
+      const delay = Math.min(
+        AUTH_RETRY_MS * 2 ** authFailures,
+        AUTH_RETRY_MAX_MS,
+      );
+      authFailures++;
+      provider.disconnect();
+      authRetryTimer = window.setTimeout(() => {
+        authRetryTimer = null;
+        if (!disposed && !liveSynced) void provider.connect();
+      }, delay);
+    };
 
     provider.on("synced", handleSynced);
     provider.on("status", handleStatus);
@@ -257,6 +290,7 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
       disposed = true;
       window.clearTimeout(timeout);
       if (cleanTimer !== null) window.clearTimeout(cleanTimer);
+      if (authRetryTimer !== null) window.clearTimeout(authRetryTimer);
       window.removeEventListener("offline", onOffline);
       window.removeEventListener("online", onOnline);
       provider.off("synced", handleSynced);
@@ -278,7 +312,7 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
       setUnavailableFor((prev) => (prev === provider ? null : prev));
       setStalledFor((prev) => (prev === provider ? null : prev));
     };
-  }, [pageId, token, personId, attempt]);
+  }, [pageId, signedIn, personId, attempt]);
 
   const isSynced = ready !== null && ready.provider === doc.provider;
   const unavailableOffline =

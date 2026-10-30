@@ -3,10 +3,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createPage } from "src/api/pages";
 import { queryKeys } from "src/lib/queryKeys";
 import { localPages, removeLocalPage } from "src/lib/local-pages";
+import { requestSyncNow } from "src/lib/sync-status";
 
 // Sends pages created offline (src/lib/local-pages.ts) once the server can
-// be reached: on start and whenever the browser comes back online.
+// be reached: on start, whenever the browser comes back online, and every
+// RETRY_MS while some are still waiting (a try that failed — server waking
+// up, network not ready yet — used to wait for the next reload). Once one
+// is created, the edits made in it offline are sent right away
+// (requestSyncNow) instead of at OfflineDocSync's next timed run.
 // Mount once, next to ChatOutboxSync. Renders nothing.
+const RETRY_MS = 30_000;
 export function PageOutboxSync() {
   const qc = useQueryClient();
 
@@ -31,12 +37,21 @@ export function PageOutboxSync() {
         }
       }
       running = false;
-      if (sent) void qc.invalidateQueries({ queryKey: queryKeys.pages.all });
+      if (sent) {
+        void qc.invalidateQueries({ queryKey: queryKeys.pages.all });
+        requestSyncNow();
+      }
     };
 
     void flush();
     window.addEventListener("online", flush);
-    return () => window.removeEventListener("online", flush);
+    const id = window.setInterval(() => {
+      if (localPages().length > 0) void flush();
+    }, RETRY_MS);
+    return () => {
+      window.removeEventListener("online", flush);
+      window.clearInterval(id);
+    };
   }, [qc]);
 
   return null;

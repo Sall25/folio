@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { HocuspocusProvider } from "@hocuspocus/provider";
+import { collabToken } from "src/lib/collab-token";
 import {
   getDocSavedAt,
   isDocOpen,
@@ -47,7 +48,8 @@ function downloadPage(
       url: HOCUSPOCUS_URL!,
       name: `page:${pageId}`,
       document: ydoc,
-      token,
+      // Current at connect time: the one passed in may have expired.
+      token: () => collabToken(token),
     });
 
     let done = false;
