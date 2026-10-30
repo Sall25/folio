@@ -17,6 +17,7 @@ const SideIcon = createIcon("PinSide", "right_panel_open");
 const TopIcon = createIcon("PinTop", "top_panel_open");
 const UnpinIcon = createIcon("PinOff", "keep_off");
 const MineIcon = createIcon("PinMine", "person");
+const TeamIcon = createIcon("PinTeam", "groups");
 
 /** Blocks with a top-bar version. */
 const TOP_TYPES = new Set(["pomodoro"]);
@@ -49,7 +50,8 @@ export function PinMenuActions({
     editor,
     selector: ({ editor: e }) => (e ? pinMenuTarget(e) : null),
   });
-  const { activePageId } = useOptionalActivePage();
+  const { activePageId, activePage } = useOptionalActivePage();
+  const teamspaceId = activePage?.teamspaceId ?? null;
   const { data: pins } = usePins();
   const createPin = useCreatePin();
   const deletePin = useDeletePin();
@@ -71,6 +73,27 @@ export function PinMenuActions({
             p.blockId === blockId,
         )
       : undefined;
+  // The open page's teamspace: a pin every member sees in their Team tab.
+  const teamPin =
+    blockId && activePageId && teamspaceId
+      ? pins?.find(
+          (p) =>
+            p.scope === "teamspace" &&
+            p.teamspaceId === teamspaceId &&
+            p.pageId === activePageId &&
+            p.blockId === blockId,
+        )
+      : undefined;
+  const toggleTeam = () => {
+    if (teamPin) deletePin.mutate(teamPin.id);
+    else if (blockId && activePageId && teamspaceId)
+      createPin.mutate({
+        pageId: activePageId,
+        blockId,
+        scope: "teamspace",
+        teamspaceId,
+      });
+  };
   const toggleMine = () => {
     if (minePin) deletePin.mutate(minePin.id);
     else if (blockId && activePageId)
@@ -80,6 +103,7 @@ export function PinMenuActions({
     side ? t("pins.subSide") : null,
     top ? t("pins.subTop") : null,
     minePin ? t("pins.mine") : null,
+    teamPin ? t("pins.team") : null,
   ].filter(Boolean);
   const sub = where.length ? where.join(", ") : undefined;
 
@@ -111,6 +135,17 @@ export function PinMenuActions({
           disabled={!blockId || !activePageId}
           onToggle={toggleMine}
         />
+        {teamspaceId && (
+          <MenuRow
+            toggle
+            Icon={TeamIcon}
+            label={t("pins.team")}
+            sub={t("pins.teamHint")}
+            checked={!!teamPin}
+            disabled={!blockId || !activePageId}
+            onToggle={toggleTeam}
+          />
+        )}
         {hasTop && (
           <MenuRow
             toggle

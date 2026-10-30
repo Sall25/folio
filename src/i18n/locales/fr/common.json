@@ -1846,17 +1846,6 @@
     "whereBoth": "sur le côté et en haut",
     "showHere": "Afficher ici",
     "goTo": "Aller au bloc",
-    "copy": "Copier",
-    "tabs": {
-      "page": "Cette page",
-      "mine": "Les miens"
-    },
-    "pinnedBlock": "Bloc épinglé",
-    "removed": "Ce bloc a été supprimé de sa page",
-    "noAccess": "Vous n'avez pas accès à la page de ce bloc",
-    "mine": "Juste moi",
-    "mineHint": "Dans votre rail sur toutes les pages",
-    "onPage": "Sur cette page",
     "labels": {
       "pomodoro": "Pomodoro",
       "tocNode": "Table des matières",
@@ -1878,6 +1867,22 @@
       "mathBlock": "Équation",
       "pageLink": "Page",
       "tableWrapper": "Tableau"
-    }
+    },
+    "copy": "Copier",
+    "tabs": {
+      "page": "Cette page",
+      "mine": "Les miens",
+      "team": "Équipe"
+    },
+    "pinnedBlock": "Bloc épinglé",
+    "removed": "Ce bloc a été supprimé de sa page.",
+    "noAccess": "Vous n'avez pas accès à la page de ce bloc.",
+    "mine": "Juste moi",
+    "mineHint": "Dans votre rail sur toutes les pages",
+    "onPage": "Sur cette page",
+    "team": "Espace d'équipe",
+    "teamHint": "Tous les membres de l'espace le voient",
+    "mineEmpty": "Rien pour l’instant. Utilisez Épingler → Juste moi sur un bloc.",
+    "teamEmpty": "Rien de partagé pour l’instant. Utilisez Épingler → Espace d’équipe sur un bloc."
   }
 }

@@ -6,6 +6,8 @@ import type { Node as PMNode } from "@tiptap/pm/model";
 import { useCurrentEditor } from "@tiptap/react";
 import { MaterialIcon } from "src/components/icons";
 import { usePage } from "src/hooks/use-pages";
+import { usePeopleBase } from "src/hooks/use-people";
+import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import { useDeletePin, usePins } from "src/hooks/use-pins";
 import type { Pin } from "src/api/pins";
 import { useOptionalActivePage } from "src/features/pages/context/active-page-context";
@@ -15,8 +17,9 @@ import { PinFrame } from "./pin-parts";
 import { MirrorBody } from "./pin-mirrors";
 import { PIN_ICONS as ICONS } from "./pin-icons";
 
-// The rail's tabs (This page · Mine) and the "Mine" pins: blocks from any
-// page, pinned for yourself (the pins table, migration 048).
+// The rail's tabs (This page · Mine · Team) and the pins across pages
+// (the pins table, migration 048): "Mine" are yours, on every page; "Team"
+// belong to the open page's teamspace, for all its members.
 //
 // A pin's block is read from its page's saved content by block id. On the
 // page it comes from, the live block is used instead (interactive, like a
@@ -25,33 +28,81 @@ import { PIN_ICONS as ICONS } from "./pin-icons";
 // cards), so switching tabs doesn't re-render the editor.
 
 const TAB_KEY = "folio:pin-tab";
-type Tab = "page" | "mine";
+type Tab = "page" | "mine" | "team";
 
 function readTab(): Tab {
   try {
-    return localStorage.getItem(TAB_KEY) === "mine" ? "mine" : "page";
+    const v = localStorage.getItem(TAB_KEY);
+    return v === "mine" || v === "team" ? v : "page";
   } catch {
     return "page";
   }
 }
 
 export function MinePins() {
+  const { t } = useTranslation();
   const { editor } = useCurrentEditor();
   const side = useSyncExternalStore(pinTargets.subscribe, () =>
     pinTargets.get("side"),
   );
+  const { activePage } = useOptionalActivePage();
+  const teamspaceId = activePage?.teamspaceId ?? null;
   const { data: pins } = usePins();
   const mine = useMemo(
     () => (pins ?? []).filter((p) => p.scope === "mine"),
     [pins],
   );
+  const team = useMemo(
+    () =>
+      teamspaceId
+        ? (pins ?? []).filter(
+            (p) => p.scope === "teamspace" && p.teamspaceId === teamspaceId,
+          )
+        : [],
+    [pins, teamspaceId],
+  );
 
   if (!editor || !side) return null;
   return createPortal(
     <>
-      {mine.length > 0 && <PinTabs rail={side} mineCount={mine.length} />}
+      <PinTabs
+        rail={side}
+        mineCount={mine.length}
+        teamCount={teamspaceId ? team.length : null}
+      />
+      {mine.length === 0 && (
+        <div
+          className="pin-frame is-mine pin-mine__empty"
+          style={{ order: 10_000 }}
+        >
+          {t("pins.mineEmpty")}
+        </div>
+      )}
       {mine.map((pin, i) => (
-        <MinePinCard key={pin.id} editor={editor} pin={pin} order={i} />
+        <PinCard
+          key={pin.id}
+          editor={editor}
+          pin={pin}
+          order={10_000 + i}
+          className="is-mine"
+        />
+      ))}
+      {teamspaceId && team.length === 0 && (
+        <div
+          className="pin-frame is-team pin-mine__empty"
+          style={{ order: 20_000 }}
+        >
+          {t("pins.teamEmpty")}
+        </div>
+      )}
+      {team.map((pin, i) => (
+        <PinCard
+          key={pin.id}
+          editor={editor}
+          pin={pin}
+          order={20_000 + i}
+          className="is-team"
+        />
       ))}
     </>,
     side,
@@ -61,12 +112,17 @@ export function MinePins() {
 function PinTabs({
   rail,
   mineCount,
+  teamCount,
 }: {
   rail: HTMLElement;
   mineCount: number;
+  /** null: the open page isn't in a teamspace (no Team tab). */
+  teamCount: number | null;
 }) {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<Tab>(readTab);
+  const [chosen, setTab] = useState<Tab>(readTab);
+  // No Team tab outside a teamspace: show This page instead.
+  const tab: Tab = chosen === "team" && teamCount === null ? "page" : chosen;
   // The rail is outside React's tree here: its attribute is set directly.
   useEffect(() => {
     rail.setAttribute("data-tab", tab);
@@ -101,6 +157,18 @@ function PinTabs({
         {t("pins.tabs.mine")}
         <span className="pin-tabs__count">{mineCount}</span>
       </button>
+      {teamCount !== null && (
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === "team"}
+          className="pin-tabs__tab"
+          onClick={() => choose("team")}
+        >
+          {t("pins.tabs.team")}
+          <span className="pin-tabs__count">{teamCount}</span>
+        </button>
+      )}
     </div>
   );
 }
@@ -133,19 +201,27 @@ function findLive(editor: Editor, id: string) {
   return found as { node: PMNode; pos: number } | null;
 }
 
-function MinePinCard({
+function PinCard({
   editor,
   pin,
   order,
+  className,
 }: {
   editor: Editor;
   pin: Pin;
   order: number;
+  className: string;
 }) {
   const { t } = useTranslation();
   const { activePageId, setActivePageId } = useOptionalActivePage();
   const { data: page, isLoading } = usePage(pin.pageId);
   const remove = useDeletePin();
+  // Team pins: who pinned it.
+  const { data: pinner } = usePeopleBase((people) =>
+    pin.scope === "teamspace"
+      ? (people.find((p) => p.id === pin.personId) ?? null)
+      : null,
+  );
 
   const onThisPage = pin.pageId === activePageId;
   const live = onThisPage ? findLive(editor, pin.blockId) : null;
@@ -172,10 +248,15 @@ function MinePinCard({
   const type = node?.type.name ?? "";
   return (
     <PinFrame
-      className="is-mine"
+      className={className}
       icon={ICONS[type] ?? "keep"}
       label={type ? t(`pins.labels.${type}`) : t("pins.pinnedBlock")}
-      order={10_000 + order}
+      order={order}
+      extra={
+        pinner ? (
+          <Avatar name={pinner.name} src={pinner.avatarUrl} size="xs" />
+        ) : undefined
+      }
       onGoTo={goTo}
       onUnpin={() => remove.mutate(pin.id)}
     >
