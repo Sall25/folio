@@ -81,11 +81,14 @@
   }
 
   &--midnight {
-    background: radial-gradient(1px 1px at 20px 14px, #fff 50%, transparent 51%),
+    // A black sky, a few stars and the moon in the corner.
+    background: radial-gradient(circle at calc(100% - 16px) 14px, #f6ecd1 0 6px, rgba(255, 243, 214, 0.25) 7px, transparent 16px),
+      radial-gradient(1px 1px at 20px 14px, #fff 50%, transparent 51%),
       radial-gradient(1px 1px at 90px 40px, #fff 50%, transparent 51%),
-      linear-gradient(180deg, #151b3d, #090c1a);
-    --sw-bar: rgba(255, 255, 255, 0.14);
-    --sw-on: rgba(190, 242, 100, 0.6);
+      radial-gradient(1px 1px at 54px 28px, rgba(255, 255, 255, 0.6) 50%, transparent 51%),
+      linear-gradient(180deg, #0b0c12, #07080c);
+    --sw-bar: rgba(255, 255, 255, 0.12);
+    --sw-on: rgba(246, 236, 209, 0.6);
   }
 
   &--notebook {

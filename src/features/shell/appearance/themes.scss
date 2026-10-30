@@ -549,77 +549,78 @@ html:root[data-theme="aurora"] {
   --tt-paragraph-text-color: #1f1b3a;
 }
 
-// ─── Midnight: a night sky with a moon, smoked-glass page, lime light ──────
-// Stars, a violet and a teal glow and moonlight on the window; the sidebar
-// sits straight on the sky; the page is a smoked-glass sheet with a crescent
-// moon in its top corner. Lime marks what's active or primary, starlight
-// blue is for icons and links.
+// ─── Midnight: a real night — black sky, stars, a full moon ────────────────
+// A near-black sky with stars (some twinkle slowly, a shooting star now and
+// then: .theme-sky), a full moon in the page's top corner whose light falls
+// on the glass; the sidebar and the page are neutral smoked glass. Moonlight
+// (a pale warm silver) marks what's active or primary; silver for icons.
 :root[data-theme="midnight"] {
   @include theme-font(("Inter", system-ui, sans-serif));
 
-  --mn-lime: #c4f25c;
-  --mn-lime-ink: #10140a;
-  --mn-lime-soft: rgba(196, 242, 92, 0.14);
-  --mn-lime-ring: rgba(196, 242, 92, 0.4);
-  --mn-lime-glow: 0 0 20px rgba(196, 242, 92, 0.3);
-  --mn-star: #9db4ff;
-  --mn-moon: #fff3cf;
-  --mn-text: #e8eaf6;
-  --mn-soft: #c9cde6;
-  --mn-muted: #9aa0c2;
-  --mn-faint: #7d84aa;
-  --mn-hair: rgba(157, 180, 255, 0.14);
-  --mn-glass: rgba(12, 16, 40, 0.7);
+  --mn-lime: #f6ecd1;
+  --mn-lime-ink: #15130d;
+  --mn-lime-soft: rgba(246, 236, 209, 0.14);
+  --mn-lime-ring: rgba(246, 236, 209, 0.4);
+  --mn-lime-glow: 0 0 20px rgba(246, 236, 209, 0.3);
+  --mn-star: #c9ccd6;
+  --mn-moon: #f6ecd1;
+  --mn-text: #ecebe6;
+  --mn-soft: #cfcdc6;
+  --mn-muted: #a6a49d;
+  --mn-faint: #8d8b84;
+  --mn-hair: rgba(255, 255, 255, 0.084);
+  --mn-glass: rgba(12, 13, 18, 0.72);
   --mn-display: "Sora", "Inter", system-ui, sans-serif;
 
   --theme-accent: var(--mn-lime);
   --theme-window:
-    radial-gradient(260px 260px at calc(100% - 120px) 60px, rgba(255, 232, 163, 0.16), transparent 70%),
-    radial-gradient(40% 35% at 72% 18%, rgba(124, 92, 255, 0.16), transparent 70%),
-    radial-gradient(35% 30% at 30% 92%, rgba(45, 212, 191, 0.09), transparent 70%),
-    radial-gradient(1px 1px at 30px 40px, #ffffff 50%, transparent 51%) 0 0 / 160px 170px,
-    radial-gradient(1.5px 1.5px at 110px 120px, rgba(255, 255, 255, 0.8) 50%, transparent 51%) 0 0 / 160px 170px,
-    radial-gradient(1px 1px at 70px 150px, rgba(157, 180, 255, 0.9) 50%, transparent 51%) 0 0 / 230px 260px,
+    radial-gradient(420px 320px at calc(100% - 130px) 70px, rgba(255, 243, 214, 0.09), transparent 70%),
+    radial-gradient(60% 50% at 8% 100%, rgba(70, 72, 90, 0.16), transparent 70%),
+    radial-gradient(1px 1px at 30px 40px, rgba(255, 255, 255, 0.85) 50%, transparent 51%) 0 0 / 160px 170px,
+    radial-gradient(1px 1px at 110px 120px, rgba(255, 255, 255, 0.5) 50%, transparent 51%) 0 0 / 160px 170px,
+    radial-gradient(1px 1px at 70px 150px, rgba(255, 255, 255, 0.35) 50%, transparent 51%) 0 0 / 230px 260px,
     radial-gradient(1px 1px at 190px 60px, rgba(255, 255, 255, 0.6) 50%, transparent 51%) 0 0 / 230px 260px,
-    linear-gradient(180deg, #0c1233 0%, #070a1c 100%);
-  --tt-bg-color: #0d1126;
-  --tiptap-card-bg-color: rgba(16, 21, 50, 0.94);
+    radial-gradient(1.5px 1.5px at 260px 210px, rgba(255, 255, 255, 0.7) 50%, transparent 51%) 0 0 / 340px 380px,
+    radial-gradient(1px 1px at 20px 300px, rgba(255, 255, 255, 0.3) 50%, transparent 51%) 0 0 / 340px 380px,
+    linear-gradient(180deg, #07080c 0%, #0b0c12 55%, #0e0f15 100%);
+  --tt-bg-color: #0e0f14;
+  --tiptap-card-bg-color: rgba(20, 21, 27, 0.95);
   --tiptap-card-border-color: var(--mn-hair);
-  --tt-card-bg-color: rgba(16, 21, 50, 0.94);
-  --tt-border-color: rgba(157, 180, 255, 0.12);
-  --tt-border-color-tint: rgba(157, 180, 255, 0.06);
+  --tt-card-bg-color: rgba(20, 21, 27, 0.95);
+  --tt-border-color: rgba(255, 255, 255, 0.072);
+  --tt-border-color-tint: rgba(255, 255, 255, 0.036);
   --tt-shadow-elevated-sm: inset 0 0 0 1px var(--mn-hair), 0 6px 16px rgba(0, 0, 0, 0.35);
   --tt-shadow-elevated-md: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 0 1px var(--mn-hair), 0 20px 50px rgba(0, 0, 0, 0.5);
   --tt-shadow-elevated-lg: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 0 1px var(--mn-hair), 0 30px 80px rgba(0, 0, 0, 0.55);
 
   // Sidebar: a darker tinted pane over the sky — the stars still show
   // through, but it reads as its own surface, with a lit edge.
-  --sidebar-bg-color: #0b0e20;
-  --sidebar-surface: linear-gradient(180deg, rgba(22, 28, 66, 0.62) 0%, rgba(8, 11, 28, 0.72) 100%);
-  --sidebar-fog-color: rgba(11, 14, 32, 0.6);
+  --sidebar-bg-color: #0b0c10;
+  --sidebar-surface: linear-gradient(180deg, rgba(24, 25, 32, 0.6) 0%, rgba(9, 10, 14, 0.72) 100%);
+  --sidebar-fog-color: rgba(11, 12, 16, 0.6);
   --sidebar-accent: var(--mn-lime);
-  --sidebar-border-color: rgba(157, 180, 255, 0.22);
-  --sidebar-edge-shadow: 1px 0 0 rgba(157, 180, 255, 0.06), 12px 0 30px -14px rgba(0, 0, 0, 0.7);
+  --sidebar-border-color: rgba(255, 255, 255, 0.132);
+  --sidebar-edge-shadow: 1px 0 0 rgba(255, 255, 255, 0.036), 12px 0 30px -14px rgba(0, 0, 0, 0.7);
   --sidebar-text-color: var(--mn-soft);
   --sb-row-color: var(--mn-soft);
-  --sb-active-color: #f4ffd9;
+  --sb-active-color: #fffaf0;
   --sb-icon-color: var(--mn-star);
   --sb-label-color: var(--mn-faint);
   --sb-hover-bg: rgba(255, 255, 255, 0.05);
-  --sb-active-bg: linear-gradient(90deg, rgba(196, 242, 92, 0.14), rgba(196, 242, 92, 0.02));
+  --sb-active-bg: linear-gradient(90deg, rgba(246, 236, 209, 0.14), rgba(246, 236, 209, 0.02));
   --sb-count-bg: rgba(255, 255, 255, 0.06);
   --sb-count-color: var(--mn-muted);
-  --sb-divider: rgba(157, 180, 255, 0.1);
+  --sb-divider: rgba(255, 255, 255, 0.06);
   --sb-dock-bg: rgba(255, 255, 255, 0.04);
-  --sb-dock-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 0 1px rgba(157, 180, 255, 0.12);
+  --sb-dock-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.072);
   --theme-dock-active-bg: var(--mn-lime-soft);
   --theme-dock-active-color: var(--mn-lime);
   --sb-dock-active-bg: var(--theme-dock-active-bg);
   --sb-dock-active-color: var(--theme-dock-active-color);
   --sb-scrlbr-width: thin;
-  --sb-scrlbr-color: rgba(157, 180, 255, 0.2) transparent;
-  --app-scrollbar-thumb: rgba(157, 180, 255, 0.18);
-  --app-scrollbar-thumb-hover: rgba(157, 180, 255, 0.32);
+  --sb-scrlbr-color: rgba(255, 255, 255, 0.12) transparent;
+  --app-scrollbar-thumb: rgba(255, 255, 255, 0.108);
+  --app-scrollbar-thumb-hover: rgba(255, 255, 255, 0.192);
 
   // The page: smoked glass over the sky, with a crescent moon in its corner.
   .theme-sheet {
@@ -629,24 +630,34 @@ html:root[data-theme="aurora"] {
     border-radius: 18px;
     background: var(--mn-glass);
     backdrop-filter: blur(18px);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 0 1px rgba(157, 180, 255, 0.12), 0 30px 80px rgba(0, 0, 0, 0.45);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.072), 0 30px 80px rgba(0, 0, 0, 0.45);
 
-    // The moon: a lit disc with two faint craters, and a disc of the sheet's
-    // colour laid over it, offset, to cut the crescent.
+    // Moonlight on the glass, from the moon in the top corner.
+    background:
+      radial-gradient(55% 40% at 100% 0%, rgba(255, 243, 214, 0.07), transparent 70%),
+      var(--mn-glass);
+
+    // The moon: a full disc, lit from the top left, a few faint craters, a
+    // soft shadow on its far side and a halo.
     &::after {
       content: "";
       position: absolute;
-      top: 78px;
+      top: 64px;
       right: 64px;
       width: 96px;
       height: 96px;
-      opacity: 0.55;
+      border-radius: 50%;
       background:
-        radial-gradient(circle at 64% 38%, #0c1036 0 36px, transparent 37px),
-        radial-gradient(circle at 30% 60%, rgba(120, 110, 80, 0.18) 0 6px, transparent 7px),
-        radial-gradient(circle at 40% 30%, rgba(120, 110, 80, 0.14) 0 4px, transparent 5px),
-        radial-gradient(circle at 50% 50%, var(--mn-moon) 0 40px, transparent 41px);
-      filter: drop-shadow(0 0 22px rgba(255, 232, 163, 0.45));
+        radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.9) 0%, transparent 28%),
+        radial-gradient(circle at 64% 38%, rgba(160, 150, 128, 0.42) 0 6px, transparent 7px),
+        radial-gradient(circle at 40% 66%, rgba(160, 150, 128, 0.36) 0 8px, transparent 9px),
+        radial-gradient(circle at 72% 70%, rgba(160, 150, 128, 0.4) 0 4px, transparent 5px),
+        radial-gradient(circle at 30% 44%, rgba(160, 150, 128, 0.28) 0 3px, transparent 4px),
+        radial-gradient(circle at 40% 36%, #fffaf0 0%, #f4ead2 45%, #d9cdb0 100%);
+      box-shadow:
+        inset -14px -9px 24px rgba(60, 52, 36, 0.35),
+        0 0 28px rgba(255, 243, 214, 0.5),
+        0 0 90px rgba(255, 243, 214, 0.22);
       pointer-events: none;
     }
 
@@ -696,12 +707,12 @@ html:root[data-theme="aurora"] {
 
     .page-item-icon {
       color: var(--mn-lime);
-      box-shadow: inset 0 0 0 1px var(--mn-lime-ring), 0 0 10px rgba(196, 242, 92, 0.25);
+      box-shadow: inset 0 0 0 1px var(--mn-lime-ring), 0 0 10px rgba(246, 236, 209, 0.25);
     }
   }
 
   .page-item-face {
-    box-shadow: 0 0 0 2px #0a0e24;
+    box-shadow: 0 0 0 2px #0b0c11;
   }
 
   .sidebar .sb-search {
@@ -722,7 +733,7 @@ html:root[data-theme="aurora"] {
   }
 
   .sb-dock__tab.is-active {
-    box-shadow: inset 0 0 0 1px var(--mn-lime-ring), 0 0 16px rgba(196, 242, 92, 0.2);
+    box-shadow: inset 0 0 0 1px var(--mn-lime-ring), 0 0 16px rgba(246, 236, 209, 0.2);
   }
 
   // ── Buttons ──
@@ -732,7 +743,7 @@ html:root[data-theme="aurora"] {
 
   .tiptap-button[data-style="primary"] {
     --tt-button-default-bg-color: var(--mn-lime);
-    --tt-button-hover-bg-color: #d2f77a;
+    --tt-button-hover-bg-color: #fbf4e1;
     --tt-button-default-text-color: var(--mn-lime-ink);
     --tt-button-hover-text-color: var(--mn-lime-ink);
     --tt-button-default-icon-color: var(--mn-lime-ink);
@@ -742,7 +753,7 @@ html:root[data-theme="aurora"] {
     transition: box-shadow 0.15s ease;
 
     &:hover {
-      box-shadow: 0 0 0 1px rgba(196, 242, 92, 0.6), 0 0 26px rgba(196, 242, 92, 0.45);
+      box-shadow: 0 0 0 1px rgba(246, 236, 209, 0.6), 0 0 26px rgba(246, 236, 209, 0.45);
     }
   }
 
@@ -751,7 +762,7 @@ html:root[data-theme="aurora"] {
     position: relative;
     border: 0;
     border-radius: 18px;
-    background: linear-gradient(160deg, rgba(124, 92, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 45%), rgba(255, 255, 255, 0.025);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.02) 45%), rgba(255, 255, 255, 0.025);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 0 1px var(--mn-hair);
     overflow: hidden;
 
@@ -764,7 +775,7 @@ html:root[data-theme="aurora"] {
       width: 300px;
       height: 140px;
       opacity: 0.35;
-      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 140'%3E%3Cpath d='M20 90 L80 40 L140 70 L200 20 L270 55' fill='none' stroke='%239db4ff' stroke-dasharray='3 4'/%3E%3Ccircle cx='20' cy='90' r='2' fill='%23fff'/%3E%3Ccircle cx='80' cy='40' r='2.5' fill='%23fff'/%3E%3Ccircle cx='140' cy='70' r='1.8' fill='%23fff'/%3E%3Ccircle cx='200' cy='20' r='2.8' fill='%23c4f25c'/%3E%3Ccircle cx='270' cy='55' r='2' fill='%23fff'/%3E%3C/svg%3E") center / contain no-repeat;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 140'%3E%3Cpath d='M20 90 L80 40 L140 70 L200 20 L270 55' fill='none' stroke='%23c9ccd6' stroke-dasharray='3 4'/%3E%3Ccircle cx='20' cy='90' r='2' fill='%23fff'/%3E%3Ccircle cx='80' cy='40' r='2.5' fill='%23fff'/%3E%3Ccircle cx='140' cy='70' r='1.8' fill='%23fff'/%3E%3Ccircle cx='200' cy='20' r='2.8' fill='%23f6ecd1'/%3E%3Ccircle cx='270' cy='55' r='2' fill='%23fff'/%3E%3C/svg%3E") center / contain no-repeat;
       pointer-events: none;
     }
 
@@ -774,15 +785,15 @@ html:root[data-theme="aurora"] {
 
     .ts-hero__icon {
       border-radius: 14px;
-      background: rgba(196, 242, 92, 0.1);
-      box-shadow: inset 0 0 0 1px var(--mn-lime-ring), 0 0 30px rgba(196, 242, 92, 0.2);
+      background: rgba(246, 236, 209, 0.1);
+      box-shadow: inset 0 0 0 1px var(--mn-lime-ring), 0 0 30px rgba(246, 236, 209, 0.2);
       color: var(--mn-lime);
     }
 
     .ts-hero__btn {
       border-radius: 10px;
       background: transparent;
-      box-shadow: inset 0 0 0 1px rgba(157, 180, 255, 0.25);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
       color: var(--mn-soft);
     }
 
@@ -811,12 +822,12 @@ html:root[data-theme="aurora"] {
       z-index: 1;
       border-radius: 12px;
       background: rgba(255, 255, 255, 0.03);
-      box-shadow: inset 0 0 0 1px rgba(157, 180, 255, 0.12);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.072);
       transition: background 0.15s ease, box-shadow 0.15s ease;
 
       &:hover {
-        background: rgba(157, 180, 255, 0.08);
-        box-shadow: inset 0 0 0 1px rgba(157, 180, 255, 0.3);
+        background: rgba(255, 255, 255, 0.048);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
       }
     }
   }
@@ -826,7 +837,7 @@ html:root[data-theme="aurora"] {
     font-weight: 600;
     letter-spacing: -0.025em;
     color: #ffffff;
-    text-shadow: 0 0 24px rgba(196, 242, 92, 0.25);
+    text-shadow: 0 0 24px rgba(246, 236, 209, 0.25);
   }
 
   .home-foryou {
@@ -861,14 +872,14 @@ html:root[data-theme="aurora"] {
 
   // Tabs: a thin lime underline that glows.
   .home-dense__tabs.tab-list {
-    box-shadow: inset 0 -1px 0 rgba(157, 180, 255, 0.12);
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.072);
 
     .tab-item.is-active {
-      color: #f4ffd9;
+      color: #fffaf0;
 
       &::after {
         background: var(--mn-lime);
-        box-shadow: 0 0 10px rgba(196, 242, 92, 0.8);
+        box-shadow: 0 0 10px rgba(246, 236, 209, 0.8);
       }
     }
   }
@@ -876,7 +887,7 @@ html:root[data-theme="aurora"] {
   // ── Page content ──
   .tiptap.ProseMirror {
     --tt-checklist-bg-active-color: var(--mn-lime);
-    --tt-checklist-border-color: rgba(157, 180, 255, 0.4);
+    --tt-checklist-border-color: rgba(255, 255, 255, 0.24);
     --tt-checklist-border-active-color: var(--mn-lime);
     --tt-checklist-check-icon-color: var(--mn-lime-ink);
     --tt-checklist-text-active: var(--mn-faint);
@@ -897,18 +908,18 @@ html:root[data-theme="aurora"] {
     }
 
     ul[data-type="taskList"] li label input[type="checkbox"]:checked + span {
-      box-shadow: 0 0 10px rgba(196, 242, 92, 0.45);
+      box-shadow: 0 0 10px rgba(246, 236, 209, 0.45);
     }
 
     ul[data-type="taskList"] li[data-checked="true"] > div {
-      text-decoration-color: rgba(196, 242, 92, 0.6);
+      text-decoration-color: rgba(246, 236, 209, 0.6);
     }
 
     :not(pre) > code {
       border-radius: 6px;
-      background: rgba(196, 242, 92, 0.08);
-      box-shadow: inset 0 0 0 1px rgba(196, 242, 92, 0.2);
-      color: #d9f99d;
+      background: rgba(246, 236, 209, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(246, 236, 209, 0.2);
+      color: #f3e6c4;
     }
 
     blockquote {
@@ -918,7 +929,7 @@ html:root[data-theme="aurora"] {
     .callout-root {
       border-color: transparent;
       border-radius: 14px;
-      box-shadow: inset 0 0 0 1px rgba(157, 180, 255, 0.18);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.108);
     }
   }
 
@@ -936,30 +947,32 @@ html:root[data-theme="aurora"] {
 }
 
 html:root[data-theme="midnight"] {
-  --tt-brand-color-50: #f7fee7;
-  --tt-brand-color-100: #ecfccb;
-  --tt-brand-color-200: #d9f99d;
-  --tt-brand-color-300: #c4f25c;
-  --tt-brand-color-400: #c4f25c;
-  --tt-brand-color-500: #4d7c0f; // other filled brand surfaces: white text stays readable
-  --tt-brand-color-600: #3f6212;
-  --tt-brand-color-700: #365314;
-  --tt-brand-color-800: #2b420f;
-  --tt-brand-color-900: #1f300b;
-  --tt-brand-color-950: #111c05;
-  --tt-selection-color: rgba(196, 242, 92, 0.2);
+  // Moonlight. The 500–700 steps stay dark enough for white text on the
+  // filled brand surfaces that use them.
+  --tt-brand-color-50: #fffcf5;
+  --tt-brand-color-100: #fbf4e1;
+  --tt-brand-color-200: #f6ecd1;
+  --tt-brand-color-300: #f6ecd1;
+  --tt-brand-color-400: #e6d8b4;
+  --tt-brand-color-500: #7a6b45; // other filled brand surfaces: white text stays readable
+  --tt-brand-color-600: #66593a;
+  --tt-brand-color-700: #52482f;
+  --tt-brand-color-800: #3e3624;
+  --tt-brand-color-900: #2a2519;
+  --tt-brand-color-950: #17140d;
+  --tt-selection-color: rgba(246, 236, 209, 0.18);
 }
 
 :root[data-theme="midnight"] body {
-  --tt-text-primary: #e8eaf6;
-  --tt-theme-text: #e8eaf6;
-  --tt-text-color: #c9cde6;
-  --tt-text-secondary: #9aa0c2;
-  --tt-text-tertiary: #7d84aa;
+  --tt-text-primary: #ecebe6;
+  --tt-theme-text: #ecebe6;
+  --tt-text-color: #cfcdc6;
+  --tt-text-secondary: #a6a49d;
+  --tt-text-tertiary: #8d8b84;
 }
 
 :root[data-theme="midnight"] .tiptap.ProseMirror {
-  --tt-paragraph-text-color: #e8eaf6;
+  --tt-paragraph-text-color: #ecebe6;
 }
 
 // ─── Notebook: an open notebook — kraft left page, cream right page ───────
