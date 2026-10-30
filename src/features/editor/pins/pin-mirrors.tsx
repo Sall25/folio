@@ -9,6 +9,8 @@ import { MIRROR_TYPES, pinTargets, scrollToBlock } from "./pin-targets";
 import { PinFrame } from "./pin-parts";
 import { PIN_ICONS as ICONS } from "./pin-icons";
 import { useOptionalActivePage } from "src/features/pages/context/active-page-context";
+import { PomodoroMirror } from "src/components/tiptap-node/pomodoro-node/pomodoro-card";
+import type { PomodoroAttrs } from "src/components/tiptap-node/pomodoro-node/pomodoro-timing";
 
 // Blocks with editable text inside (to-do list, callout, image caption…)
 // can't be moved out of the page: ProseMirror owns their content there. So
@@ -118,7 +120,35 @@ const BODIES: Record<string, (p: BodyProps) => React.ReactNode> = {
   audio: ({ node }) => <MediaMirror node={node} kind="audio" />,
   file: ({ node }) => <FileMirror node={node} />,
   bookmark: ({ node }) => <BookmarkMirror node={node} />,
+  pomodoro: (p) => <PomodoroBody {...p} />,
 };
+
+/** The timer, ticking. In this page: its controls work on the block (which
+ *  rings and moves on itself). From another page: shown, controls off; it
+ *  still rings when the phase ends. */
+function PomodoroBody({ editor, node, pos, readOnly }: BodyProps) {
+  const live = !readOnly && editor.isEditable;
+  return (
+    <PomodoroMirror
+      attrs={node.attrs as PomodoroAttrs}
+      update={
+        live
+          ? (attrs) =>
+              editor
+                .chain()
+                .command(({ tr }) => {
+                  for (const [key, value] of Object.entries(attrs)) {
+                    tr.setNodeAttribute(pos, key, value);
+                  }
+                  return true;
+                })
+                .run()
+          : null
+      }
+      onEnd={readOnly ? "bell" : "none"}
+    />
+  );
+}
 
 export function MirrorBody(props: BodyProps) {
   const body = BODIES[props.node.type.name];
