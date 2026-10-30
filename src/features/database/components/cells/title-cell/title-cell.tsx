@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import type { JSONContent } from "@tiptap/core";
 import { TitleCellDisplay } from "../../../primitives/title-cell-display";
 import type {
   DatabaseView,
@@ -41,22 +40,14 @@ export function TitleCell({
   const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
   const openRecord = useOpenRecord(view);
 
+  // The title only. This used to also write `content`, rebuilt from the
+  // row's cached copy of the page: that could put an old version of the
+  // page over what its live document had saved since. The page's title
+  // block follows the column when the page is next opened (useSyncDocTitle).
   function handleChange(next: string) {
     onChange(next);
     if (pageId) {
-      const content = record.content as JSONContent;
-      const updatedContent: JSONContent = content?.content?.length
-        ? {
-            ...content,
-            content: content.content.map((n, i) =>
-              i !== 0 ? n : { ...n, content: [{ type: "text", text: next }] },
-            ),
-          }
-        : content;
-      mutatePage.mutate({
-        id: pageId,
-        patch: { title: next, content: updatedContent },
-      });
+      mutatePage.mutate({ id: pageId, patch: { title: next } });
     }
   }
 

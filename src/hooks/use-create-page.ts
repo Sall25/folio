@@ -3,6 +3,7 @@ import type { Page } from "../types";
 import { createPage } from "../api/pages";
 import { queryKeys } from "../lib/queryKeys";
 import { addLocalPage, removeLocalPage } from "src/lib/local-pages";
+import { pageWritesScope } from "./use-patch-page";
 
 export const createPageMutationKey = ["pages", "create"] as const;
 
@@ -10,6 +11,9 @@ export function useCreatePage() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: createPageMutationKey,
+    // In order with the page's later patches (use-patch-page.ts): a rename
+    // never reaches the server before the page exists.
+    scope: pageWritesScope,
     mutationFn: async (page: Page) => {
       try {
         const saved = await createPage(page);
@@ -25,10 +29,6 @@ export function useCreatePage() {
       addLocalPage(page);
       await qc.cancelQueries({ queryKey: queryKeys.pages.all });
 
-      const previousPageList = qc.getQueriesData<Page[]>({
-        queryKey: queryKeys.pages.all,
-      });
-
       // The `.all` prefix matches BOTH list entries (Page[]) and detail
       // entries (a single Page). Only push onto arrays — spreading a
       // page-detail object threw "pages is not iterable".
@@ -38,17 +38,22 @@ export function useCreatePage() {
       qc.setQueryData(queryKeys.pages.detail(page.id), page);
 
       qc.setQueryData(["page-role", page.id], "full");
-
-      return { previousPageList };
     },
-    onError: (_error, vars, ctx) => {
+    // Take out THIS page only. Restoring a copy of the whole list (as
+    // before) also removed every page created while this request was out:
+    // they vanished until the next refetch brought them back.
+    onError: (_error, vars) => {
       removeLocalPage(vars.id);
-      ctx?.previousPageList.forEach(([key, data]) =>
-        qc.setQueryData(key, data),
+      qc.setQueriesData<Page[]>({ queryKey: queryKeys.pages.all }, (pages) =>
+        Array.isArray(pages) ? pages.filter((p) => p.id !== vars.id) : pages,
       );
+      qc.removeQueries({ queryKey: queryKeys.pages.detail(vars.id) });
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.pages.all });
+      // Another page write still queued: refetching now would show the
+      // server's list before it lands.
+      if (qc.isMutating({ mutationKey: ["pages"] }) > 1) return;
+      void qc.invalidateQueries({ queryKey: queryKeys.pages.all });
     },
   });
 }

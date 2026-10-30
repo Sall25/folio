@@ -9,7 +9,8 @@ import {
   shouldPersistQuery,
 } from "../lib/query-persistence";
 import { createPageMutationKey } from "src/hooks/use-create-page";
-import { createPage } from "src/api/pages";
+import { createPage, patchPage } from "src/api/pages";
+import { patchPageMutationKey } from "src/hooks/use-patch-page";
 
 // The signed-in app (providers, router, sidebar, pages) is its own chunk,
 // downloaded only after sign-in; see signed-in-app.tsx.
@@ -30,6 +31,11 @@ const client = new QueryClient({
   },
 });
 client.setMutationDefaults(createPageMutationKey, { mutationFn: createPage });
+// A page save restored after a reload (queued offline) needs its function.
+client.setMutationDefaults(patchPageMutationKey, {
+  mutationFn: ({ id, patch }: { id: string; patch: Parameters<typeof patchPage>[1] }) =>
+    patchPage(id, patch),
+});
 
 function App() {
   return (
