@@ -28,10 +28,13 @@ function safeFileName(name: string): string {
   return cleaned.slice(-120) || "file";
 }
 
+// From the session the SDK keeps on this device: no request (getUser() asked
+// the auth server every time, before every upload and every list).
 async function currentUserId(): Promise<string> {
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) throw new Error("Sign in to upload files.");
-  return data.user.id;
+  const { data } = await supabase.auth.getSession();
+  const id = data.session?.user?.id;
+  if (!id) throw new Error("Sign in to upload files.");
+  return id;
 }
 
 // The workspace you're in right now (people.workspace_id), read fresh each
@@ -53,6 +56,27 @@ async function folderPath(folder: UploadFolder): Promise<string> {
   if (folder === "avatar") return `u/${userId}`;
   const workspaceId = await currentWorkspaceId(userId);
   return `w/${workspaceId}/${folder}`;
+}
+
+// ── Files uploaded in this session, kept on this device ────────────────────
+// Right after an upload, the image is shown from the file itself instead of
+// downloading back what was just sent (a cover or a 2000px photo took
+// seconds to appear). Keyed by public URL; lives until the tab closes.
+const localCopies = new Map<string, string>();
+
+/** A local address for a file uploaded in this session, or null. */
+export function localCopy(url: string | null | undefined): string | null {
+  return url ? (localCopies.get(url) ?? null) : null;
+}
+
+// ── Recent uploads, per folder ──────────────────────────────────────────────
+// The last list read, so the picker shows it at once next time and refreshes
+// behind it. An upload is added to the front.
+const listCache = new Map<string, string[]>();
+
+/** The recent uploads last read for this folder (empty if none yet). */
+export function peekUploads(folder: Exclude<UploadFolder, "avatar">): string[] {
+  return listCache.get(folder) ?? [];
 }
 
 export function publicUrl(path: string): string {
@@ -128,7 +152,12 @@ export async function uploadFile(
     xhr.send(file);
   });
 
-  return publicUrl(path);
+  const url = publicUrl(path);
+  localCopies.set(url, URL.createObjectURL(file));
+  if (folder !== "avatar" && listCache.has(folder)) {
+    listCache.set(folder, [url, ...(listCache.get(folder) ?? [])]);
+  }
+  return url;
 }
 
 /** Public URLs of the most recent uploads in a folder, newest first. */
@@ -141,7 +170,9 @@ export async function listUploads(
     .from(UPLOADS_BUCKET)
     .list(dir, { limit, sortBy: { column: "created_at", order: "desc" } });
   if (error) throw new Error(error.message);
-  return (data ?? [])
+  const urls = (data ?? [])
     .filter((item) => item.id) // folders come back without an id
     .map((item) => publicUrl(`${dir}/${item.name}`));
+  listCache.set(folder, urls);
+  return urls;
 }

@@ -12,7 +12,7 @@ import {
   X,
 } from "src/components/icons";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
-import { listUploads } from "src/api/uploads";
+import { listUploads, localCopy, peekUploads } from "src/api/uploads";
 import { searchPhotos } from "src/api/photos";
 import { isNetworkError, isOfflineNow } from "src/lib/sync-status";
 import "./image-upload-card.scss";
@@ -481,7 +481,10 @@ function ErrorPanel({
 // The workspace's recent uploads (images only). Hidden when there are none
 // or when there's no account (the landing page).
 function RecentUploads({ onPick }: { onPick: (src: string) => void }) {
-  const [urls, setUrls] = useState<string[]>([]);
+  // The last list read shows at once; the fresh one replaces it.
+  const [urls, setUrls] = useState<string[]>(() =>
+    peekUploads("content").filter((u) => IMAGE_EXT.test(u)),
+  );
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
@@ -522,7 +525,12 @@ function RecentUploads({ onPick }: { onPick: (src: string) => void }) {
             aria-label={`Recent image ${i + 1}`}
             onClick={() => onPick(url)}
           >
-            <img src={url} alt="" loading="lazy" />
+            <img
+              src={localCopy(url) ?? url}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
           </button>
         ))}
       </div>

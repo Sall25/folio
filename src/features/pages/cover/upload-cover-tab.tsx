@@ -1,5 +1,10 @@
 import { useRef, useState, useEffect } from "react";
-import { listUploads, uploadFile } from "src/api/uploads";
+import {
+  listUploads,
+  localCopy,
+  peekUploads,
+  uploadFile,
+} from "src/api/uploads";
 
 // Largest edge we keep on upload. Notion stores the full image and crops at
 // display time, so we only shrink oversized files to keep uploads lean.
@@ -64,7 +69,10 @@ export function UploadCoverTab({ onSelect }: UploadCoverTabProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [previous, setPrevious] = useState<string[]>([]);
+  // The last list read shows at once; the fresh one replaces it.
+  const [previous, setPrevious] = useState<string[]>(() =>
+    peekUploads("covers"),
+  );
 
   useEffect(() => {
     listUploads("covers")
@@ -90,7 +98,7 @@ export function UploadCoverTab({ onSelect }: UploadCoverTabProps) {
       setPreview(URL.createObjectURL(processedFile));
 
       const url = await uploadFile(processedFile, "covers");
-      setPrevious((prev) => [url, ...prev]);
+      setPrevious((prev) => [url, ...prev.filter((u) => u !== url)]);
       onSelect(url);
     } catch {
       setError("Upload failed. Please try again.");
@@ -257,7 +265,11 @@ export function UploadCoverTab({ onSelect }: UploadCoverTabProps) {
                 }
               >
                 <img
-                  src={url}
+                  // Thumbnails: only those scrolled into view download, and
+                  // one uploaded just now shows from the file itself.
+                  src={localCopy(url) ?? url}
+                  loading="lazy"
+                  decoding="async"
                   alt=""
                   style={{
                     width: "100%",

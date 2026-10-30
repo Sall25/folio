@@ -203,13 +203,19 @@ const makeNestedOptions = (editor: Editor | null) => ({
           return 1000;
         }
 
-        // A list item's first line is the item; a callout's first line is
-        // the callout.
+        // A list item's first line is the item; a callout's first block
+        // is the callout, whatever it is (a heading, code, an image…: only
+        // a paragraph counted, so a callout starting with anything else
+        // could only be grabbed by its thin padding — hardest in a column).
+        // A list keeps its items' own handles.
         if (
           isFirst &&
           (parentName === "listItem" ||
             parentName === "taskItem" ||
-            (parentName === "callout" && name === "paragraph"))
+            (parentName === "callout" &&
+              name !== "bulletList" &&
+              name !== "orderedList" &&
+              name !== "taskList"))
         ) {
           return 1000;
         }

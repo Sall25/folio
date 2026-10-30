@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef, memo } from "react";
+import { localCopy } from "src/api/uploads";
 import type { Page } from "src/types";
 import CoverControlsGroup from "./cover-controls";
 import { usePatchPage } from "src/hooks/use-patch-page";
@@ -109,7 +110,8 @@ export const CoverImage = memo(function CoverImage({
       )}
 
       <img
-        src={coverImage ?? ""}
+        // Just uploaded: from the file itself, no download.
+        src={localCopy(coverImage) ?? coverImage ?? ""}
         alt="cover"
         draggable={false}
         data-collapsed={collapsed ? "true" : undefined}

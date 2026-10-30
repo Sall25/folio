@@ -1,4 +1,5 @@
 import type { NodeViewProps } from "@tiptap/core";
+import { localCopy } from "src/api/uploads";
 import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
 import type { ImageOptions } from "./image";
 import {
@@ -245,7 +246,8 @@ function ImageViewInner(props: NodeViewProps) {
 
         <img
           ref={imgRef}
-          src={props.node.attrs.src}
+          // Just uploaded here: from the file itself, no download.
+          src={localCopy(props.node.attrs.src) ?? props.node.attrs.src}
           alt={props.node.attrs.alt ?? ""}
           title={props.node.attrs.title ?? undefined}
           onLoad={handleLoad}
