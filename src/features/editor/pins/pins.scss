@@ -25,11 +25,13 @@
 .pin-frame {
   flex: none;
   padding: 10px 12px 12px;
-  border-radius: 10px;
+  border-radius: var(--tt-radius-sm);
   background: var(--tt-card-bg-color);
-  box-shadow:
-    0 0 0 1px var(--tt-border-color),
-    0 4px 14px rgba(0, 0, 0, 0.06);
+  //border: 1px solid var(--tt-border-color);
+  box-shadow: var(--tt-shadow-elevated-sm);
+  .dark & {
+    box-shadow: var(--tt-shadow-elevated-md);
+  }
 
   &__head {
     display: flex;
@@ -343,7 +345,7 @@
   padding: 3px;
   border-radius: 9px;
   background: var(--tt-card-bg-color);
-  box-shadow: 0 0 0 1px var(--tt-border-color);
+  box-shadow: var(--tt-shadow-elevated-sm);
 
   &__tab {
     all: unset;
