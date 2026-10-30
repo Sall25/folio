@@ -28,6 +28,16 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
   const [expandedWidth, setExpandedWidth] = useState<number>(loadStoredWidth);
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   const [discussionOpen, setDiscussionOpen] = useState(false);
+  const [pinsOpen, setPinsOpen] = useState(false);
+  // The comments and the pins pane share the right side: one at a time.
+  const onDiscussionOpenChanged = useCallback((open: boolean) => {
+    setDiscussionOpen(open);
+    if (open) setPinsOpen(false);
+  }, []);
+  const onPinsOpenChanged = useCallback((open: boolean) => {
+    setPinsOpen(open);
+    if (open) setDiscussionOpen(false);
+  }, []);
   const [sidebarView, setSidebarView] = useState<SidebarView>("pages");
   const [commentModeOverride, setCommentModeOverride] =
     useState<CommentDisplayMode | null>(null);
@@ -153,7 +163,8 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
       closePeek,
       setSidebarView,
       setCommentDisplayMode,
-      onDiscussionOpenChanged: setDiscussionOpen,
+      onDiscussionOpenChanged,
+      onPinsOpenChanged,
       setCustomizeSidebarOpen,
       editorWrapperRef,
       translateX: TRANSLATE_X,
@@ -168,7 +179,8 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
       closePeek,
       setSidebarView,
       setCommentDisplayMode,
-      setDiscussionOpen,
+      onDiscussionOpenChanged,
+      onPinsOpenChanged,
       setCustomizeSidebarOpen,
       editorWrapperRef,
     ],
@@ -180,6 +192,7 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
       collapsed,
       sidebarView,
       discussionOpen,
+      pinsOpen,
       commentDisplayMode,
       customizeSidebarOpen,
     }),
@@ -187,6 +200,7 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
       collapsed,
       sidebarView,
       discussionOpen,
+      pinsOpen,
       commentDisplayMode,
       customizeSidebarOpen,
     ],

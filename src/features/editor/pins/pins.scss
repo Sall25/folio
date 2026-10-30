@@ -1,31 +1,159 @@
-// Pinned blocks (pin-parts.tsx).
+// Pinned blocks: the pins pane, its cards, the stub left in the page, the
+// top-bar slot, and dropping a pin into the page.
 
-// The rail beside the page: fixed, right of the content, left of the TOC
-// minimap (toc.scss, right: 20px). Hidden while empty.
-.pin-rail {
-  // Lined up with the page title (--pin-rail-top, set by PinRail), never
-  // higher than just under the top bar.
-  --pin-rail-min: calc(var(--tt-toolbar-height, 44px) + 24px);
+// The pins pane (pins-pane.tsx): full height on the right, like the
+// comments pane (discussion-pane.tsx). Drawn on <body>.
+.pins-pane {
   position: fixed;
-  top: max(var(--pin-rail-min), var(--pin-rail-top, 0px));
-  right: 56px;
-  z-index: 20;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  // PANE_WIDTH in pin-targets.ts.
+  width: min(320px, 100vw);
+  height: 100dvh;
+  // As the comments pane: above the toolbar, below popovers and menus.
+  z-index: 900;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 260px;
-  max-height: calc(
-    100vh - max(var(--pin-rail-min), var(--pin-rail-top, 0px)) - 24px
-  );
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  background: var(--tt-bg-color);
+  border-left: 0.5px solid var(--tt-border-color);
 
-  &:empty {
-    display: none;
+  &__head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: var(--tt-toolbar-height, 44px);
+    padding: 0 10px 0 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--tt-text-primary);
   }
 
-  &::-webkit-scrollbar {
-    width: 0;
+  &__title {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__close {
+    all: unset;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--tt-button-hover-bg-color);
+      color: var(--tt-text-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent, var(--tt-brand-color-500, #2383e2));
+    }
+  }
+
+  .pin-tabs {
+    flex: none;
+    margin: 4px 12px 10px;
+  }
+
+  &__empty {
+    margin: 0 16px 8px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--tt-text-secondary);
+  }
+
+  // Where the pinned blocks are drawn ("side" in pin-targets.ts).
+  &__body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 12px 16px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+// One tab's cards at a time (data-tab, set by the pane). The page's own
+// pins have no class; Mine / Team cards are .is-mine / .is-team.
+.pins-pane__body[data-tab="page"] > .pin-frame:is(.is-mine, .is-team),
+.pins-pane__body[data-tab="mine"] > .pin-frame:not(.is-mine),
+.pins-pane__body[data-tab="team"] > .pin-frame:not(.is-team) {
+  display: none;
+}
+
+// While the pane is open the page makes room: its content moves left by
+// half the pane, so it stays centred in what's left.
+body:has(.pins-pane) .simple-editor-main {
+  .tiptap.ProseMirror {
+    position: relative;
+    left: -160px;
+  }
+  .cover-icon-btn {
+    translate: -160px 0;
+  }
+}
+
+// The toolbar's pin button (simple-editor-toolbar.tsx).
+.pins-trigger__badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  color: #fff;
+  background: var(--accent, var(--tt-brand-color-500, #2383e2));
+}
+
+// After a pin is dropped in the page (pin-drop-menu.tsx).
+.pin-drop-menu {
+  position: fixed;
+  // Above the block menu (9999), like its flyouts.
+  z-index: 10000;
+
+  &__item {
+    all: unset;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 8px;
+    border-radius: var(--tt-radius-sm, 6px);
+    color: var(--tt-text-primary);
+    cursor: pointer;
+
+    > :first-child {
+      margin-top: 1px;
+      color: var(--tt-text-secondary);
+    }
+
+    b {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 500;
+    }
+
+    small {
+      display: block;
+      margin-top: 1px;
+      font-size: 11.5px;
+      color: var(--tt-text-secondary);
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: var(--tt-button-hover-bg-color);
+    }
   }
 }
 
@@ -34,10 +162,9 @@
   padding: 10px 12px 12px;
   border-radius: 10px;
   background: var(--tt-card-bg-color);
-  box-shadow: var(--tt-shadow-elevated-sm);
-  .dark & {
-    box-shadow: var(--tt-shadow-elevated-md);
-  }
+  box-shadow:
+    0 0 0 1px var(--tt-border-color),
+    0 4px 14px rgba(0, 0, 0, 0.06);
 
   &__head {
     display: flex;
@@ -68,6 +195,25 @@
 
     &:hover {
       color: var(--tt-text-primary);
+    }
+  }
+
+  &__grip {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    color: var(--tt-text-secondary);
+    cursor: grab;
+
+    &:hover {
+      background: var(--tt-button-hover-bg-color);
+      color: var(--tt-text-primary);
+    }
+
+    &:active {
+      cursor: grabbing;
     }
   }
 
@@ -321,18 +467,14 @@
   color: var(--tt-text-secondary);
 }
 
-// Tabs (mine-pins.tsx): the rail shows one tab's cards at a time.
+// The pane's tabs (pins-pane.tsx).
 .pin-tabs {
-  order: -1;
-  position: sticky;
-  top: 0;
-  z-index: 1;
   display: flex;
   gap: 2px;
   padding: 3px;
   border-radius: 9px;
   background: var(--tt-card-bg-color);
-  box-shadow: var(--tt-shadow-elevated-md);
+  box-shadow: 0 0 0 1px var(--tt-border-color);
 
   &__tab {
     all: unset;
@@ -362,20 +504,6 @@
   }
 }
 
-// One tab at a time (data-tab, set by PinTabs).
-.pin-rail:not([data-tab]) > .pin-frame:is(.is-mine, .is-team),
-.pin-rail[data-tab="page"] > .pin-frame:is(.is-mine, .is-team),
-.pin-rail[data-tab="mine"] > .pin-frame:not(.is-mine),
-.pin-rail[data-tab="team"] > .pin-frame:not(.is-team) {
-  display: none;
-}
-
-.pin-mine__empty {
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--tt-text-secondary);
-}
-
 .pin-mine__source {
   all: unset;
   display: flex;
@@ -403,28 +531,4 @@
   gap: 8px;
   font-size: 12.5px;
   color: var(--tt-text-secondary);
-}
-
-
-// Room for the rail while it holds something (wide screens only): the
-// page column moves left by half the rail's footprint instead of getting
-// narrower. `left` on a relative element, not a transform: a transform
-// would turn the editor into the reference box for every fixed popover
-// inside it (menus, the drag handle).
-@media (min-width: 1280px) {
-  .simple-editor-main:has(~ .pin-rail:not(:empty)) {
-    --pin-shift: calc(-1 * (260px + 36px + 5px) / 2);
-
-    .simple-editor-content .tiptap.ProseMirror {
-      position: relative;
-      left: var(--pin-shift);
-      transition: left 0.2s ease;
-    }
-
-    // The page icon sits in the cover header, outside the editor: same shift.
-    .cover-icon-btn {
-      translate: var(--pin-shift) 0;
-      transition: translate 0.2s ease;
-    }
-  }
 }

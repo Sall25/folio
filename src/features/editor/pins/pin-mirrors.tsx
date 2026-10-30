@@ -8,15 +8,16 @@ import { useCurrentEditor, useEditorState } from "@tiptap/react";
 import { MIRROR_TYPES, pinTargets, scrollToBlock } from "./pin-targets";
 import { PinFrame } from "./pin-parts";
 import { PIN_ICONS as ICONS } from "./pin-icons";
+import { useOptionalActivePage } from "src/features/pages/context/active-page-context";
 
 // Blocks with editable text inside (to-do list, callout, image caption…)
 // can't be moved out of the page: ProseMirror owns their content there. So
-// the rail shows a MIRROR of them — a read-only copy redrawn from the editor
+// the pins pane shows a MIRROR of them — a read-only copy redrawn from the editor
 // state as it changes — while the block stays in place. Small actions write
 // back to the page by position (ticking a to-do ticks it in the page);
 // clicking the name scrolls to the block for real editing.
 //
-// Mounted once next to the rail (page-editor-layout.tsx).
+// Mounted once next to the pins pane (page-editor-layout.tsx).
 
 type Pinned = { pos: number; node: PMNode };
 
@@ -66,7 +67,9 @@ export function PinMirrors() {
 
 function MirrorCard({ editor, pin }: { editor: Editor; pin: Pinned }) {
   const { t } = useTranslation();
+  const { activePageId } = useOptionalActivePage();
   const { node, pos } = pin;
+  const blockId = (node.attrs.id as string | null) ?? null;
   const type = node.type.name;
   const unpin = editor.isEditable
     ? () =>
@@ -86,13 +89,18 @@ function MirrorCard({ editor, pin }: { editor: Editor; pin: Pinned }) {
       order={pos}
       onGoTo={() => scrollToBlock(editor, pos)}
       onUnpin={unpin}
+      drag={() =>
+        blockId && activePageId
+          ? { pageId: activePageId, blockId, node: node.toJSON() }
+          : null
+      }
     >
       <MirrorBody editor={editor} node={node} pos={pos} />
     </PinFrame>
   );
 }
 
-// What each block can DO in the rail. Anything not listed is drawn
+// What each block can DO in the pane. Anything not listed is drawn
 // read-only with the editor's own HTML (ContentMirror).
 export type BodyProps = {
   editor: Editor;

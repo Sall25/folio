@@ -14,7 +14,7 @@ import {
 
 import "./drag-handle.scss";
 import { ColorDropdownProvider } from "../color-dropdown-menu/color-dropdown-provider";
-import { Node, ResolvedPos } from "@tiptap/pm/model";
+import { Node } from "@tiptap/pm/model";
 import type { NormalizedNestedOptions } from "@tiptap/extension-drag-handle";
 import { createPortal } from "react-dom";
 import { recordSelection } from "src/features/database/utils/record-selection-store";
@@ -33,7 +33,6 @@ import {
 } from "./multi-block-drag";
 import type { ComputePositionConfig, Middleware } from "@floating-ui/dom";
 import { startDragAutoscroll } from "./drag-autoscroll";
-import { NodeIconPickerHost } from "../node-icon-actions";
 
 const NODE_LABELS: Record<string, string> = {
   paragraph: "Text",
@@ -58,6 +57,8 @@ const NODE_LABELS: Record<string, string> = {
   callout: "Callout",
   ctaButton: "Button",
   container: "Container",
+  pomodoro: "Pomodoro",
+  blockRef: "Live view",
 };
 
 // The handle's library builds the drag image by copying the dragged block
@@ -147,78 +148,6 @@ function firstLineMiddle(block: HTMLElement): number {
 // controls; the handle goes to the database itself there.
 const ROW_VIEWS = new Set(["table", "list"]);
 
-function basePenalty(
-  editor: Editor | null,
-  node: Node,
-  parent: Node | null,
-  isFirst: boolean,
-) {
-  const name = node.type.name;
-  const parentName = parent?.type.name;
-  if (name === "column" || name === "columnBlock" || name === "title") {
-    return 1000;
-  }
-
-  // Parts of a block, never moved on their own: a table's rows and
-  // cells (they have their own grips), a toggle's title and body, a
-  // tab, a code group's file.
-  if (
-    name === "tableRow" ||
-    name === "tableCell" ||
-    name === "tableHeader" ||
-    name === "appendixSummary" ||
-    name === "tab" ||
-    name === "codeGroupItem"
-  ) {
-    return 1000;
-  }
-
-  // A plain cell (just its text): the table is what's dragged. A cell
-  // with blocks (a list, a callout, code…) gives each its own handle.
-  if (
-    (parentName === "tableCell" || parentName === "tableHeader") &&
-    parent?.childCount === 1 &&
-    name === "paragraph"
-  ) {
-    return 1000;
-  }
-
-  // A list item's first line is the item; a callout's first line is
-  // the callout.
-  if (
-    isFirst &&
-    (parentName === "listItem" ||
-      parentName === "taskItem" ||
-      (parentName === "callout" && name === "paragraph"))
-  ) {
-    return 1000;
-  }
-
-  // Items are dragged, not their whole list.
-  if (name === "bulletList" || name === "orderedList" || name === "taskList") {
-    return 1000;
-  }
-
-  if (name === "databaseRecord") {
-    const databaseId = node.attrs.databaseId as string | null;
-    const viewType =
-      editor && databaseId
-        ? readDatabaseData(editor, databaseId)?.view?.type
-        : undefined;
-    if (viewType && !ROW_VIEWS.has(viewType)) return 1000;
-    // A row beats its database (below), so the handle stays on rows.
-    return -300;
-  }
-
-  // A database over whatever it sits in.
-  if (name === "database") return -250;
-
-  // A quote moves as one block, its lines with it.
-  if (name === "blockquote") return -200;
-
-  return 500;
-}
-
 const makeNestedOptions = (editor: Editor | null) => ({
   enabled: true,
   edgeDetection: {
@@ -238,28 +167,80 @@ const makeNestedOptions = (editor: Editor | null) => ({
         node,
         parent,
         isFirst,
-        depth,
-        $pos,
       }: {
         node: Node;
         parent: Node | null;
         isFirst: boolean;
-        depth: number;
-        $pos: ResolvedPos;
       }) => {
-        const penalty = basePenalty(editor, node, parent, isFirst);
-        if (penalty >= 1000) return penalty; // never a target: unchanged
-
-        // Inside a toggle's content, at any depth: beat the edge rule, which
-        // takes 500 × depth once the pointer moves left onto the handle.
-        // Deeper blocks get a bigger bonus, so the innermost one still wins,
-        // and the relative order of the other rules is kept.
-        for (let d = depth - 1; d > 0; d--) {
-          if ($pos.node(d).type.name === "appendixContent") {
-            return penalty - (500 * depth - 400);
-          }
+        const name = node.type.name;
+        const parentName = parent?.type.name;
+        if (name === "column" || name === "columnBlock" || name === "title") {
+          return 1000;
         }
-        return penalty;
+
+        // Parts of a block, never moved on their own: a table's rows and
+        // cells (they have their own grips), a toggle's title and body, a
+        // tab, a code group's file.
+        if (
+          name === "tableRow" ||
+          name === "tableCell" ||
+          name === "tableHeader" ||
+          name === "appendixSummary" ||
+          name === "appendixContent" ||
+          name === "tab" ||
+          name === "codeGroupItem"
+        ) {
+          return 1000;
+        }
+
+        // A plain cell (just its text): the table is what's dragged. A cell
+        // with blocks (a list, a callout, code…) gives each its own handle.
+        if (
+          (parentName === "tableCell" || parentName === "tableHeader") &&
+          parent?.childCount === 1 &&
+          name === "paragraph"
+        ) {
+          return 1000;
+        }
+
+        // A list item's first line is the item; a callout's first line is
+        // the callout.
+        if (
+          isFirst &&
+          (parentName === "listItem" ||
+            parentName === "taskItem" ||
+            (parentName === "callout" && name === "paragraph"))
+        ) {
+          return 1000;
+        }
+
+        // Items are dragged, not their whole list.
+        if (
+          name === "bulletList" ||
+          name === "orderedList" ||
+          name === "taskList"
+        ) {
+          return 1000;
+        }
+
+        if (name === "databaseRecord") {
+          const databaseId = node.attrs.databaseId as string | null;
+          const viewType =
+            editor && databaseId
+              ? readDatabaseData(editor, databaseId)?.view?.type
+              : undefined;
+          if (viewType && !ROW_VIEWS.has(viewType)) return 1000;
+          // A row beats its database (below), so the handle stays on rows.
+          return -300;
+        }
+
+        // A database over whatever it sits in.
+        if (name === "database") return -250;
+
+        // A quote moves as one block, its lines with it.
+        if (name === "blockquote") return -200;
+
+        return 500;
       },
     },
   ],
@@ -329,18 +310,6 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
           y: y + (middle - ref.top) - rects.floating.height / 2,
         };
 
-        // Blocks that reach back over their container (toggle, callout) carry a
-        // transparent left border: put the grip beside the text, 12px short of it.
-        const reach = parseFloat(getComputedStyle(block).borderLeftWidth) || 0;
-        if (reach > 0) next.x = x + reach - 12;
-        // Node-view blocks (page links…) are wrapped by Tiptap; the wrapper has no
-        // border, so fall back to the container's known inset.
-        else if (
-          block.parentElement?.closest(".appendix-content") ||
-          block.parentElement?.closest(".callout-content")
-        )
-          next.x = x + 16;
-
         // A database's box starts at the editor's far left (it spans the
         // full width so wide tables can scroll), so "left of the block" put
         // the handle under the sidebar. Anchor it beside the database's
@@ -354,7 +323,6 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
             next.x = x + (content.getBoundingClientRect().left - ref.left);
           }
         }
-
         return next;
       },
     };
@@ -418,14 +386,8 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
       );
     };
     anchor();
-    // Box or Shift selection drawn upwards: the first block kept changing while
-    // the button was down, and the handle couldn't move then. Place it again
-    // once the button is up.
-    const onUp = () => requestAnimationFrame(anchor);
-    document.addEventListener("mouseup", onUp, { once: true });
     return () => {
       cancelled = true;
-      document.removeEventListener("mouseup", onUp);
     };
   }, [editor, multiFirstPos, open]);
 
@@ -500,6 +462,33 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
       release();
     };
   }, [editor]);
+
+  // Atom blocks at the top level (a Pomodoro timer, a page link…): the
+  // nested search only weighs the blocks around the point under the
+  // pointer, and nothing is around a top-level atom, so the handle never
+  // reached one. Over such a block, the plain top-level search is used
+  // (the plugin reads nestedOptions.enabled on every move).
+  useEffect(() => {
+    if (!editor) return;
+    const onMove = (e: MouseEvent) => {
+      if (editor.isDestroyed) return;
+      const view = editor.view;
+      if (!view.dom.contains(e.target as globalThis.Node)) return;
+      const hit = view.posAtCoords({ left: e.clientX, top: e.clientY });
+      if (!hit) return;
+      const atom = hit.inside >= 0 ? view.state.doc.nodeAt(hit.inside) : null;
+      const topLevelAtom =
+        !!atom?.isAtom &&
+        atom.isBlock &&
+        view.state.doc.resolve(hit.inside).depth === 0;
+      nestedOptions.enabled = !topLevelAtom;
+    };
+    document.addEventListener("mousemove", onMove, true);
+    return () => {
+      document.removeEventListener("mousemove", onMove, true);
+      nestedOptions.enabled = true;
+    };
+  }, [editor, nestedOptions]);
 
   const onAction = useCallback(() => {
     setOpen(false);
@@ -857,7 +846,7 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
                 role="button"
                 size="large"
                 ref={gripRef}
-                className="grip-button"
+                className={open ? "grip-button is-open" : "grip-button"}
                 tabIndex={-1}
                 aria-label={t("dragHandle.grip")}
                 tooltip={
@@ -929,7 +918,6 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
             </span>
 
             {menu}
-            <NodeIconPickerHost editor={editor} />
           </ColorDropdownProvider>
         </DropdownMenu>
       </CardItemGroup>

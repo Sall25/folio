@@ -34,6 +34,7 @@ import {
   getSelectedBlocks,
 } from "src/lib/block-selection";
 import { PinMenuActions } from "src/features/editor/pins";
+import { BlockRefMenuActions } from "src/components/tiptap-node/block-ref-node";
 import { NodeIconActions } from "src/components/tiptap-ui/node-icon-actions/node-icon-actions";
 import {
   PomodoroMenuActions,
@@ -258,6 +259,9 @@ export function Menu({
           <CardItemGroup className="group" orientation="vertical">
             <NodeIconActions editor={editor} onAction={onAction} />
             {!several && <PinMenuActions editor={editor} onAction={onAction} />}
+            {!several && (
+              <BlockRefMenuActions editor={editor} onAction={onAction} />
+            )}
             {!pomodoro && (
               <DropdownMenuItem asChild>
                 <ColorDropdownMenu

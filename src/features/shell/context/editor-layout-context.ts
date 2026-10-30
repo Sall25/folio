@@ -9,12 +9,7 @@ export type LayoutMode = "mobile" | "tablet" | "desktop";
 export type CommentDisplayMode = "sidebar" | "popover";
 // The sidebar's tabs ("pages" = Home / the page tree) plus the find panel.
 export type SidebarView =
-  | "pages"
-  | "inbox"
-  | "chats"
-  | "teams"
-  | "trash"
-  | "search";
+  "pages" | "inbox" | "chats" | "teams" | "trash" | "search";
 
 export interface EditorLayoutActions {
   onCollapsedChange: (collapsed: boolean) => void;
@@ -27,6 +22,9 @@ export interface EditorLayoutActions {
   setSidebarView: (v: SidebarView) => void;
   setCommentDisplayMode: (m: CommentDisplayMode) => void;
   onDiscussionOpenChanged: (open: boolean) => void;
+  /** The pins pane (pins-pane.tsx). It and the comments share the right
+   *  side: opening one closes the other. */
+  onPinsOpenChanged: (open: boolean) => void;
   setCustomizeSidebarOpen: (open: boolean) => void;
   editorWrapperRef: React.RefObject<HTMLDivElement | null>;
   translateX: number;
@@ -36,6 +34,7 @@ export interface EditorLayoutState {
   collapsed: boolean;
   sidebarView: SidebarView;
   discussionOpen: boolean;
+  pinsOpen: boolean;
   commentDisplayMode: CommentDisplayMode;
   customizeSidebarOpen: boolean;
 }

@@ -1,7 +1,12 @@
 export { PinnableExtension } from "./pinnable-extension";
-export { PinRail, PinTopSlot, PinFrame, PinStub } from "./pin-parts";
+export { PinTopSlot, PinFrame, PinStub } from "./pin-parts";
 export { PinMenuActions } from "./pin-menu-actions";
+export { PinMirrors } from "./pin-mirrors";
 export { usePinTarget } from "./use-pin-target";
 export { scrollToBlock } from "./pin-targets";
-export { PinMirrors } from "./pin-mirrors";
 export { MinePins } from "./mine-pins";
+export { PinsPane } from "./pins-pane";
+export { PinDropExtension } from "./pin-drop";
+export { PinDropMenu } from "./pin-drop-menu";
+export { usePinCounts } from "./use-pin-counts";
+export { findBlock, findLive, asCopy } from "./pin-blocks";

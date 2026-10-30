@@ -1833,17 +1833,17 @@
   },
   "pins": {
     "pin": "Épingler",
-    "side": "Épingler sur le côté",
+    "side": "Épingler dans le panneau",
     "top": "Épingler en haut",
     "unpin": "Désépingler",
     "unpinAll": "Désépingler partout",
-    "subSide": "Côté",
+    "subSide": "Panneau",
     "subTop": "Haut",
-    "subBoth": "Côté, haut",
+    "subBoth": "Panneau, haut",
     "pinnedTo": "épinglé {{where}}",
-    "whereSide": "sur le côté",
+    "whereSide": "dans le panneau des épingles",
     "whereTop": "en haut",
-    "whereBoth": "sur le côté et en haut",
+    "whereBoth": "dans le panneau et en haut",
     "showHere": "Afficher ici",
     "goTo": "Aller au bloc",
     "labels": {
@@ -1878,11 +1878,26 @@
     "removed": "Ce bloc a été supprimé de sa page.",
     "noAccess": "Vous n'avez pas accès à la page de ce bloc.",
     "mine": "Juste moi",
-    "mineHint": "Dans votre rail sur toutes les pages",
+    "mineHint": "Dans votre panneau des épingles, sur toutes les pages",
     "onPage": "Sur cette page",
     "team": "Espace d'équipe",
     "teamHint": "Tous les membres de l'espace le voient",
     "mineEmpty": "Rien pour l’instant. Utilisez Épingler → Juste moi sur un bloc.",
-    "teamEmpty": "Rien de partagé pour l’instant. Utilisez Épingler → Espace d’équipe sur un bloc."
+    "teamEmpty": "Rien de partagé pour l’instant. Utilisez Épingler → Espace d’équipe sur un bloc.",
+    "panel": "Épingles",
+    "close": "Fermer les épingles",
+    "drag": "Glisser dans la page",
+    "pageEmpty": "Aucun bloc épinglé sur cette page. Utilisez Épingler → Épingler dans le panneau sur un bloc.",
+    "drop": {
+      "title": "Insérer le bloc épinglé",
+      "copy": "Copier ici",
+      "copyHint": "Un bloc normal, modifiable, sans lien",
+      "live": "Vue en direct",
+      "liveHint": "Affiche l’original et suit ses modifications"
+    },
+    "live": {
+      "from": "En direct de",
+      "toCopy": "Transformer en copie"
+    }
   }
 }

@@ -141,6 +141,14 @@ const TocNode = Node.create({
   addAttributes: () => attrs(["id", "topOffset", "maxShowCount", "showTitle"]),
 });
 
+// A live view of a block from another page (blockRef).
+const BlockRef = Node.create({
+  name: "blockRef",
+  group: "block",
+  atom: true,
+  addAttributes: () => attrs(["id", "pageId", "blockId"]),
+});
+
 // ── Callout ───────────────────────────────────────────────────────────────
 const Callout = Node.create({
   name: "callout",
@@ -300,6 +308,7 @@ export const seedExtensions = [
   Bookmark,
   PageLink,
   TocNode,
+  BlockRef,
   Callout,
   BulletList,
   OrderedListItem,

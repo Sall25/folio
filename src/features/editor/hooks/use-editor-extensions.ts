@@ -59,7 +59,9 @@ import type { EditorExtensionRefs } from "../context/editor-extension-refs";
 import { CodeBlockNode } from "src/components/tiptap-node/code-block-node";
 import { CalloutExtension } from "src/components/tiptap-node/callout-node";
 import { PomodoroExtension } from "src/components/tiptap-node/pomodoro-node";
-import { PinnableExtension } from "src/features/editor/pins";
+import { PinDropExtension, PinnableExtension } from "src/features/editor/pins";
+import { BlockRefExtension } from "src/components/tiptap-node/block-ref-node";
+import { PINNABLE_TYPES } from "src/features/editor/pins/pin-targets";
 import { AudioExtension } from "src/components/tiptap-node/audio-node";
 import {
   VideoExtension,
@@ -89,7 +91,6 @@ import {
   DatabaseActiveCell,
   DatabaseOpenRecord,
 } from "src/features/database/extensions";
-import { PINNABLE_TYPES } from "../pins/pin-targets";
 
 export function useEditorExtensions(
   refsRef: React.RefObject<EditorExtensionRefs>,
@@ -222,7 +223,11 @@ export function useEditorExtensions(
       CalloutExtension,
       PomodoroExtension,
       PinnableExtension,
+      BlockRefExtension,
+      PinDropExtension,
       UniqueID.configure({
+        // Every pinnable block needs a stable id: pins on other pages find
+        // it by this id (src/features/editor/pins).
         types: [
           ...new Set([
             "paragraph",
@@ -233,6 +238,7 @@ export function useEditorExtensions(
             "table",
             "callout",
             ...PINNABLE_TYPES,
+            "blockRef",
           ]),
         ],
         attributeName: "id",

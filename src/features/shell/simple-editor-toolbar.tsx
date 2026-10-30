@@ -16,6 +16,8 @@ import type { ID, PageCategory, View } from "src/types";
 import { LibraryBig, Menu, MessageSquareText } from "src/components/icons";
 import { PageCategorySelect } from "../pages/page-category-select";
 import { Breadcrumbs } from "./breadcrumbs";
+import { PinTopSlot, usePinCounts } from "../editor/pins";
+import { createIcon } from "src/components/icons";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
 import EditedTimeButton from "../pages/edited-time-button/edited-time-button";
@@ -37,7 +39,6 @@ import { StarIcon } from "src/components/tiptap-icons";
 import { useSearch } from "./search/search-context";
 import { requestFindFocus } from "src/lib/find-store";
 import { HomeToolbar } from "../home/home-toolbar";
-import { PinTopSlot } from "../editor/pins";
 
 function Expand() {
   const { collapsed } = useEditorLayoutState();
@@ -127,6 +128,41 @@ function DiscussionTrigger() {
         className="tiptap-button-icon"
         style={{ color: "var(--tt-text-primary)" }}
       />
+    </Button>
+  );
+}
+
+const PinsIcon = createIcon("ToolbarPins", "keep");
+
+/** Opens the pins pane; the badge counts this page's pins, yours and the
+ *  teamspace's. */
+function PinsTrigger() {
+  const { t } = useTranslation();
+  const { pinsOpen } = useEditorLayoutState();
+  const { onPinsOpenChanged } = useEditorLayoutActions();
+  const { total } = usePinCounts();
+  return (
+    <Button
+      variant="ghost"
+      size="large"
+      data-active={pinsOpen}
+      aria-pressed={pinsOpen}
+      onClick={() => onPinsOpenChanged(!pinsOpen)}
+      tooltip={t("pins.panel")}
+      className="pins-trigger"
+      style={{
+        height: "1.25rem",
+        minWidth: "1.25rem",
+        minHeight: "1.25rem",
+        padding: total > 0 ? "0 2px" : 0,
+      }}
+    >
+      <PinsIcon
+        className="tiptap-button-icon"
+        filled={pinsOpen}
+        style={{ color: "var(--tt-text-primary)" }}
+      />
+      {total > 0 && <span className="pins-trigger__badge">{total}</span>}
     </Button>
   );
 }
@@ -255,6 +291,13 @@ export const DesktopToolbarContent = ({ view }: ContentProps) => {
           </>
         )}
 
+        {view === "page" && (
+          <>
+            <PinsTrigger />
+            <Spacer orientation="horizontal" size={8} />
+          </>
+        )}
+
         {view === "page" && <MorePopover />}
       </ToolbarGroup>
     </>
@@ -352,7 +395,7 @@ export const MobileSubToolbarContent = ({
 export const SimpleEditorToolbar = ({ view }: SimpleEditorToolbarProps) => {
   const [mobileView, setMobileView] = useState<MobileView>("main");
   const toolbarRef = useRef<HTMLDivElement | null>(null);
-  const { collapsed } = useEditorLayoutState();
+  const { collapsed, discussionOpen, pinsOpen } = useEditorLayoutState();
   const { onCollapsedChange, setSidebarView } = useEditorLayoutActions();
   const { isMobile } = useLayoutMode();
   const { expandedWidth } = useEditorLayoutTransient();
@@ -410,6 +453,12 @@ export const SimpleEditorToolbar = ({ view }: SimpleEditorToolbarProps) => {
       style={
         {
           "--sidebar-width": `${sidebarWidth}px`,
+          // The pane on the right (comments / pins): the bar ends at its
+          // edge instead of running under it.
+          "--version-sidebar-width":
+            mode === "desktop" && (discussionOpen || pinsOpen)
+              ? "320px"
+              : undefined,
           padding: collapsed ? "10px 0px !important" : 10,
         } as React.CSSProperties
       }

@@ -1833,17 +1833,17 @@
   },
   "pins": {
     "pin": "Pin",
-    "side": "Pin to side",
+    "side": "Pin to pins panel",
     "top": "Pin to top",
     "unpin": "Unpin",
     "unpinAll": "Unpin everywhere",
-    "subSide": "Side",
+    "subSide": "Panel",
     "subTop": "Top",
-    "subBoth": "Side, Top",
+    "subBoth": "Panel, Top",
     "pinnedTo": "pinned to {{where}}",
-    "whereSide": "side",
+    "whereSide": "the pins panel",
     "whereTop": "top",
-    "whereBoth": "side and top",
+    "whereBoth": "the pins panel and top",
     "showHere": "Show here",
     "goTo": "Go to the block",
     "labels": {
@@ -1878,11 +1878,26 @@
     "removed": "This block was removed from its page.",
     "noAccess": "You don't have access to this block's page.",
     "mine": "Just me",
-    "mineHint": "In your rail on every page",
+    "mineHint": "In your pins panel on every page",
     "onPage": "On this page",
     "team": "Teamspace",
     "teamHint": "Everyone in this teamspace sees it",
     "mineEmpty": "Nothing here yet. Use Pin → Just me on any block.",
-    "teamEmpty": "Nothing shared yet. Use Pin → Teamspace on any block."
+    "teamEmpty": "Nothing shared yet. Use Pin → Teamspace on any block.",
+    "panel": "Pins",
+    "close": "Close pins",
+    "drag": "Drag into the page",
+    "pageEmpty": "No blocks pinned on this page. Use Pin → Pin to pins panel on any block.",
+    "drop": {
+      "title": "Insert pinned block",
+      "copy": "Copy here",
+      "copyHint": "A normal block. Yours to edit, no link",
+      "live": "Live view",
+      "liveHint": "Shows the original, updates with it"
+    },
+    "live": {
+      "from": "Live from",
+      "toCopy": "Turn into copy"
+    }
   }
 }

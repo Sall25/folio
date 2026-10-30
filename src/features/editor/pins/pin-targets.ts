@@ -1,15 +1,15 @@
 import type { Editor } from "@tiptap/core";
 
-// Where pinned blocks are drawn: the rail beside the page ("side") and the
-// slot in the top bar ("top"). Each registers its element here when it
+// Where pinned blocks are drawn: the pins pane's This page tab ("side") and
+// the slot in the top bar ("top"). Each registers its element here when it
 // mounts; a pinned block's node view draws itself there (a React portal).
 // The top bar sits outside the editor, hence a store rather than context.
 
 export type PinPlace = "side" | "top";
 
-/** Blocks that MOVE into the rail (their node views draw themselves there). */
+/** Blocks that MOVE into the pane (their node views draw themselves there). */
 export const PORTAL_TYPES = ["pomodoro", "tocNode"];
-/** Every other block that can be pinned: it stays in the page and the rail
+/** Every other block that can be pinned: it stays in the page and the pane
  *  shows a mirror of it (pin-mirrors.tsx). Not pinnable: the title, columns
  *  (pin what's inside them), and inline databases (for now). */
 export const MIRROR_TYPES = [
@@ -52,6 +52,29 @@ export const pinTargets = {
     listeners.add(listener);
     return () => {
       listeners.delete(listener);
+    };
+  },
+};
+
+/** The pins pane's width (pins-pane.tsx); the page moves left by half. */
+export const PANE_WIDTH = 320;
+
+/** How many blocks of the open page are pinned to the pane (This page tab).
+ *  Written by PagePinCount inside the editor, read by the toolbar's button,
+ *  which sits outside it. */
+let pageCount = 0;
+const countListeners = new Set<() => void>();
+export const pagePinCount = {
+  set(n: number) {
+    if (n === pageCount) return;
+    pageCount = n;
+    countListeners.forEach((l) => l());
+  },
+  get: () => pageCount,
+  subscribe(listener: () => void) {
+    countListeners.add(listener);
+    return () => {
+      countListeners.delete(listener);
     };
   },
 };

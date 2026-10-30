@@ -1,0 +1,69 @@
+// A live view of a block from another page (block-ref-view.tsx).
+.block-ref {
+  --block-ref-line: color-mix(
+    in srgb,
+    var(--accent, var(--tt-brand-color-500, #2383e2)) 45%,
+    transparent
+  );
+  margin: 6px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--block-ref-line);
+
+  &[data-selected] {
+    box-shadow: 0 0 0 2px var(--accent, var(--tt-brand-color-500, #2383e2));
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+    background: color-mix(
+      in srgb,
+      var(--accent, var(--tt-brand-color-500, #2383e2)) 9%,
+      transparent
+    );
+    user-select: none;
+  }
+
+  &__source {
+    all: unset;
+    font-weight: 500;
+    color: var(--tt-text-primary);
+    text-decoration: underline;
+    text-decoration-color: var(--block-ref-line);
+    text-underline-offset: 2px;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent, var(--tt-brand-color-500, #2383e2));
+      outline-offset: 2px;
+      border-radius: 3px;
+    }
+  }
+
+  &__body {
+    padding: 8px 10px;
+
+    // The mirror's rail sizing doesn't apply here: show it whole.
+    .pin-mirror__content {
+      max-height: none;
+      padding: 0;
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+  }
+
+  &__loading {
+    height: 36px;
+    border-radius: 6px;
+    background: var(--tt-button-hover-bg-color);
+  }
+}

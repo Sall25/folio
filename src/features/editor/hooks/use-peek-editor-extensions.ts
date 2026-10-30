@@ -25,6 +25,7 @@ import { CodeBlockNode } from "src/components/tiptap-node/code-block-node";
 import { CalloutExtension } from "src/components/tiptap-node/callout-node";
 import { PomodoroExtension } from "src/components/tiptap-node/pomodoro-node";
 import { PinnableExtension } from "src/features/editor/pins";
+import { BlockRefExtension } from "src/components/tiptap-node/block-ref-node";
 import { Column, ColumnBlock } from "src/components/tiptap-node/column-node";
 import { TableKit } from "@tiptap/extension-table";
 import { TableContextExtension } from "src/components/tiptap-node/table-node";
@@ -117,6 +118,7 @@ export function usePeekEditorExtensions(onNavigate?: (pageId: ID) => void) {
       CalloutExtension,
       PomodoroExtension,
       PinnableExtension,
+      BlockRefExtension,
       AudioExtension,
       RecordPropertyPanelNode,
       PageComment,
