@@ -89,6 +89,7 @@ export function PinFrame({
   onGoTo,
   onUnpin,
   children,
+  className,
 }: {
   icon: string;
   label: string;
@@ -97,10 +98,14 @@ export function PinFrame({
   onGoTo: () => void;
   onUnpin?: () => void;
   children: ReactNode;
+  className?: string;
 }) {
   const { t } = useTranslation();
   return (
-    <section className="pin-frame" style={{ order }}>
+    <section
+      className={className ? `pin-frame ${className}` : "pin-frame"}
+      style={{ order }}
+    >
       <header className="pin-frame__head">
         <button
           type="button"

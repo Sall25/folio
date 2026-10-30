@@ -1,4 +1,3 @@
-
 // The rail beside the page: fixed, right of the content, left of the TOC
 // minimap (toc.scss, right: 20px). Hidden while empty.
 .pin-rail {
@@ -12,13 +11,11 @@
   flex-direction: column;
   gap: 12px;
   width: 260px;
- // max-height: calc(100vh - var(--tt-toolbar-height, 44px) - 48px);
+  // max-height: calc(100vh - var(--tt-toolbar-height, 44px) - 48px);
   overflow-y: auto;
   overscroll-behavior: contain;
 
-  &:empty {
-    display: none;
-  }
+ 
 
   &::-webkit-scrollbar {
     width: 0;
@@ -175,7 +172,11 @@
 }
 
 // Mirrors of blocks with text (pin-mirrors.tsx): read-only, compact.
-.pin-mirror__tasks { display: flex; flex-direction: column; gap: 2px; }
+.pin-mirror__tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 
 .pin-mirror__task {
   display: flex;
@@ -213,8 +214,12 @@
   -webkit-mask-image: linear-gradient(#000 calc(100% - 24px), transparent);
   mask-image: linear-gradient(#000 calc(100% - 24px), transparent);
 
-  > :first-child { margin-top: 0; }
-  > :last-child { margin-bottom: 0; }
+  > :first-child {
+    margin-top: 0;
+  }
+  > :last-child {
+    margin-bottom: 0;
+  }
 }
 
 .pin-mirror__image {
@@ -232,7 +237,7 @@
 // inside it (menus, the drag handle).
 @media (min-width: 1280px) {
   .simple-editor-main:has(~ .pin-rail:not(:empty)) {
-    --pin-shift: calc(-1 * (260px + 56px + 24px) / 2);
+    --pin-shift: calc(-1 * (260px + 36px + 5px) / 2);
 
     .simple-editor-content .tiptap.ProseMirror {
       position: relative;
@@ -249,35 +254,153 @@
 }
 
 .pin-mirror__toggle-head {
-  all: unset; display: flex; align-items: center; gap: 6px; width: 100%;
-  padding: 2px 0; font-size: 13.5px; font-weight: 500; cursor: pointer;
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 2px 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
 }
 .pin-mirror__chevron {
-  display: inline-block; transition: transform 0.15s ease;
-  &[data-open] { transform: rotate(90deg); }
+  display: inline-block;
+  transition: transform 0.15s ease;
+  &[data-open] {
+    transform: rotate(90deg);
+  }
 }
 .pin-mirror__code {
   position: relative;
   pre {
-    margin: 0; max-height: 240px; overflow: auto; padding: 8px 10px;
-    border-radius: 7px; background: var(--tt-codeblock-bg, rgba(127, 127, 127, 0.1));
-    font-size: 12px; line-height: 1.55;
+    margin: 0;
+    max-height: 240px;
+    overflow: auto;
+    padding: 8px 10px;
+    border-radius: 7px;
+    background: var(--tt-codeblock-bg, rgba(127, 127, 127, 0.1));
+    font-size: 12px;
+    line-height: 1.55;
   }
   button {
-    position: absolute; top: 6px; right: 6px; padding: 2px 7px; border: 0;
-    border-radius: 5px; font-size: 11px; background: var(--tt-button-hover-bg-color);
-    color: var(--tt-text-primary); cursor: pointer;
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    padding: 2px 7px;
+    border: 0;
+    border-radius: 5px;
+    font-size: 11px;
+    background: var(--tt-button-hover-bg-color);
+    color: var(--tt-text-primary);
+    cursor: pointer;
   }
 }
 .pin-mirror__media {
-  display: flex; flex-direction: column; gap: 4px;
-  audio, video { width: 100%; border-radius: 8px; }
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  audio,
+  video {
+    width: 100%;
+    border-radius: 8px;
+  }
 }
-.pin-mirror__files, .pin-mirror__bookmark { display: flex; flex-direction: column; gap: 4px; }
-.pin-mirror__files a, .pin-mirror__bookmark {
-  display: flex; flex-direction: column; padding: 6px 8px; border-radius: 7px;
-  color: inherit; text-decoration: none; background: var(--tt-button-hover-bg-color);
+.pin-mirror__files,
+.pin-mirror__bookmark {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-.pin-mirror__file-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pin-mirror__caption { font-size: 11.5px; color: var(--tt-text-secondary); }
+.pin-mirror__files a,
+.pin-mirror__bookmark {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px;
+  border-radius: 7px;
+  color: inherit;
+  text-decoration: none;
+  background: var(--tt-button-hover-bg-color);
+}
+.pin-mirror__file-name {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pin-mirror__caption {
+  font-size: 11.5px;
+  color: var(--tt-text-secondary);
+}
 
+.pin-tabs {
+  order: -1;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--tt-card-bg-color);
+  box-shadow: 0 0 0 1px var(--tt-border-color);
+
+  &__tab {
+    all: unset;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 26px;
+    border-radius: 7px;
+    font-size: 12.5px;
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+    &[aria-selected="true"] {
+      background: var(--tt-button-hover-bg-color);
+      color: var(--tt-text-primary);
+      font-weight: 600;
+    }
+  }
+  &__count {
+    padding: 0 5px;
+    border-radius: 8px;
+    font-size: 10.5px;
+    background: var(--tt-button-hover-bg-color);
+  }
+}
+
+.pin-rail[data-tab="mine"] > .pin-frame:not(.is-mine),
+.pin-rail:not([data-tab="mine"]) > .pin-frame.is-mine {
+  display: none;
+}
+
+.pin-mine__source {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  &:hover {
+    color: var(--tt-text-primary);
+  }
+}
+
+.pin-mine__missing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--tt-text-secondary);
+}
+
+  .pin-rail:not(:has(.pin-frame)) { display: none; }

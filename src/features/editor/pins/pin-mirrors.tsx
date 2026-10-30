@@ -7,6 +7,7 @@ import { DOMSerializer } from "@tiptap/pm/model";
 import { useCurrentEditor, useEditorState } from "@tiptap/react";
 import { MIRROR_TYPES, pinTargets, scrollToBlock } from "./pin-targets";
 import { PinFrame } from "./pin-parts";
+import { PIN_ICONS as ICONS } from "./pin-icons";
 
 // Blocks with editable text inside (to-do list, callout, image caption…)
 // can't be moved out of the page: ProseMirror owns their content there. So
@@ -18,27 +19,6 @@ import { PinFrame } from "./pin-parts";
 // Mounted once next to the rail (page-editor-layout.tsx).
 
 type Pinned = { pos: number; node: PMNode };
-
-const ICONS: Record<string, string> = {
-  paragraph: "notes",
-  heading: "title",
-  blockquote: "format_quote",
-  bulletList: "format_list_bulleted",
-  orderedList: "format_list_numbered",
-  taskList: "checklist",
-  codeBlock: "code",
-  horizontalRule: "horizontal_rule",
-  callout: "campaign",
-  appendix: "arrow_right",
-  image: "image",
-  video: "movie",
-  audio: "graphic_eq",
-  file: "attach_file",
-  bookmark: "bookmark",
-  mathBlock: "function",
-  pageLink: "description",
-  tableWrapper: "table",
-};
 
 /** The mirrored blocks pinned to the side, in page order. */
 function pinnedMirrors(editor: Editor): Pinned[] {
@@ -114,7 +94,13 @@ function MirrorCard({ editor, pin }: { editor: Editor; pin: Pinned }) {
 
 // What each block can DO in the rail. Anything not listed is drawn
 // read-only with the editor's own HTML (ContentMirror).
-type BodyProps = { editor: Editor; node: PMNode; pos: number };
+export type BodyProps = {
+  editor: Editor;
+  node: PMNode;
+  pos: number;
+  /** A block from another page: shown, but nothing writes back. */
+  readOnly?: boolean;
+};
 const BODIES: Record<string, (p: BodyProps) => React.ReactNode> = {
   taskList: (p) => <TaskListMirror {...p} />,
   appendix: (p) => <ToggleMirror {...p} />,
@@ -126,7 +112,7 @@ const BODIES: Record<string, (p: BodyProps) => React.ReactNode> = {
   bookmark: ({ node }) => <BookmarkMirror node={node} />,
 };
 
-function MirrorBody(props: BodyProps) {
+export function MirrorBody(props: BodyProps) {
   const body = BODIES[props.node.type.name];
   return body ? <>{body(props)}</> : <ContentMirror {...props} />;
 }
@@ -136,13 +122,9 @@ function TaskListMirror({
   editor,
   node,
   pos,
+  readOnly = false,
   depth = 0,
-}: {
-  editor: Editor;
-  node: PMNode;
-  pos: number;
-  depth?: number;
-}) {
+}: BodyProps & { depth?: number }) {
   const rows: React.ReactNode[] = [];
   node.forEach((item, offset) => {
     const itemPos = pos + 1 + offset;
@@ -157,7 +139,7 @@ function TaskListMirror({
         <input
           type="checkbox"
           checked={checked}
-          disabled={!editor.isEditable}
+          disabled={readOnly || !editor.isEditable}
           onChange={() =>
             editor
               .chain()
@@ -180,6 +162,7 @@ function TaskListMirror({
             editor={editor}
             node={child}
             pos={itemPos + 1 + childOffset}
+            readOnly={readOnly}
             depth={depth + 1}
           />,
         );
@@ -230,7 +213,7 @@ function ImageMirror({ node }: { node: PMNode }) {
 
 /** The summary, and the content when open; the arrow opens / closes it in
  *  the page too. */
-function ToggleMirror({ editor, node, pos }: BodyProps) {
+function ToggleMirror({ editor, node, pos, readOnly }: BodyProps) {
   const open = node.attrs.open !== false;
   const summary = node.firstChild?.textContent ?? "";
   const content = node.child(1);
@@ -240,7 +223,7 @@ function ToggleMirror({ editor, node, pos }: BodyProps) {
         type="button"
         className="pin-mirror__toggle-head"
         aria-expanded={open}
-        disabled={!editor.isEditable}
+        disabled={readOnly || !editor.isEditable}
         onClick={() =>
           editor
             .chain()

@@ -89,6 +89,7 @@ import {
   DatabaseActiveCell,
   DatabaseOpenRecord,
 } from "src/features/database/extensions";
+import { PINNABLE_TYPES } from "../pins/pin-targets";
 
 export function useEditorExtensions(
   refsRef: React.RefObject<EditorExtensionRefs>,
@@ -223,13 +224,16 @@ export function useEditorExtensions(
       PinnableExtension,
       UniqueID.configure({
         types: [
-          "paragraph",
-          "heading",
-          "blockquote",
-          "figure",
-          "codeBlock",
-          "table",
-          "callout",
+          ...new Set([
+            "paragraph",
+            "heading",
+            "blockquote",
+            "figure",
+            "codeBlock",
+            "table",
+            "callout",
+            ...PINNABLE_TYPES,
+          ]),
         ],
         attributeName: "id",
       }),

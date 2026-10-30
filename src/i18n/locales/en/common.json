@@ -1847,6 +1847,16 @@
     "showHere": "Show here",
     "goTo": "Go to the block",
     "copy": "Copy",
+    "tabs": {
+      "page": "This page",
+      "mine": "Mine"
+    },
+    "pinnedBlock": "Pinned block",
+    "removed": "This block was removed from its page",
+    "noAccess": "You don't have access to this block's page",
+    "mine": "Just me",
+    "mineHint": "In your rail on every page",
+    "onPage": "On this page",
     "labels": {
       "pomodoro": "Pomodoro",
       "tocNode": "Table of contents",

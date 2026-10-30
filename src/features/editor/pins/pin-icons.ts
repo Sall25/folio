@@ -1,0 +1,21 @@
+// The icon shown in a pin's header, per block type.
+export const PIN_ICONS: Record<string, string> = {
+  paragraph: "notes",
+  heading: "title",
+  blockquote: "format_quote",
+  bulletList: "format_list_bulleted",
+  orderedList: "format_list_numbered",
+  taskList: "checklist",
+  codeBlock: "code",
+  horizontalRule: "horizontal_rule",
+  callout: "campaign",
+  appendix: "arrow_right",
+  image: "image",
+  video: "movie",
+  audio: "graphic_eq",
+  file: "attach_file",
+  bookmark: "bookmark",
+  mathBlock: "function",
+  pageLink: "description",
+  tableWrapper: "table",
+};
