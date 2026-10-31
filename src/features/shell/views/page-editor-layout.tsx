@@ -8,6 +8,13 @@ import { EditorContentSkeletonFull } from "../skeletons";
 import { PageOverlays } from "./page-overlays";
 import { SimpleEditorContent } from "../../editor/simple-editor-content";
 import { MinePins, PinDropMenu, PinMirrors, PinsPane } from "../../editor/pins";
+import {
+  BackToChat,
+  PageChatSwitch,
+  PageChatView,
+  usePageTab,
+} from "src/features/comments/page-chat";
+import { useOptionalActivePage } from "src/features/pages/context/active-page-context";
 
 function PageEditorLayoutImpl() {
   // A page create is in flight (sidebar "+", or "add page to section").
@@ -21,12 +28,17 @@ function PageEditorLayoutImpl() {
       // this one: no skeleton over it.
       predicate: (m) => !m.options.meta?.quiet,
     }) > 0;
+  // Page or Chat (the page's comment threads as one chat): on Chat the
+  // editor stays mounted, hidden (page-chat.scss), so switching is instant.
+  const { activePageId } = useOptionalActivePage();
+  const { tab } = usePageTab(activePageId);
 
   return (
     <EditorProvider>
       <TocProvider>
         <div
           className="simple-editor-main"
+          data-page-tab={tab}
           style={{
             transition: "margin-right 0.2s ease",
             // marginTop: isMobile ? "0px" : undefined,
@@ -39,8 +51,11 @@ function PageEditorLayoutImpl() {
           )}
           <SimpleEditorContent />
           <aside className="simple-editor-sidebar-right" />
+          <PageChatView />
         </div>
-        <TocSidebar topOffset={100} maxShowCount={20} />
+        {tab === "page" && <TocSidebar topOffset={100} maxShowCount={20} />}
+        <BackToChat />
+        <PageChatSwitch />
         <PinsPane />
         <PinMirrors />
         <MinePins />

@@ -30,3 +30,21 @@ export function useComment(id: ID | null) {
     enabled: id != null,
   });
 }
+
+// When each thread started (its first comment), for ordering threads by
+// time (the page chat). Threads with no comment yet aren't in the map.
+// A stable function, so React Query keeps the result between renders.
+function toThreadStarts(comments: Comment[]): Map<ID, number> {
+  const starts = new Map<ID, number>();
+  for (const c of comments) {
+    const prev = starts.get(c.threadId);
+    if (prev === undefined || c.createdAt < prev) {
+      starts.set(c.threadId, c.createdAt);
+    }
+  }
+  return starts;
+}
+
+export function useThreadStartTimes() {
+  return useCommentsBase(toThreadStarts);
+}

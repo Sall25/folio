@@ -1910,5 +1910,17 @@
     "createdIn": "Dans {{name}}",
     "also": "aussi",
     "alsoHint": "Son espace de travail est un autre ; vous l’affichez aussi ici"
+  },
+  "pageChat": {
+    "switch": "Page ou discussion",
+    "page": "Page",
+    "chat": "Discussion",
+    "empty": "Aucun commentaire sur cette page. Lancez la discussion ci-dessous.",
+    "onText": "Dans la page",
+    "onPage": "Sur toute la page",
+    "resolved": "Résolu",
+    "seeInPage": "Voir dans la page",
+    "placeholder": "Commenter cette page…",
+    "back": "Retour à la discussion"
   }
 }

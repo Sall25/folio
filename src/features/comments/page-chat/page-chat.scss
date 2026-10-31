@@ -1,0 +1,231 @@
+// The page's Chat tab (page-chat-view.tsx) and its switch in the top bar
+// (page-chat-switch.tsx).
+
+// ── Page · Chat: a small floating switch, bottom right ──
+// Two icon tabs in one pill; the open one in the accent colour. Moves left
+// when a pane (comments, pins) takes the right side.
+.page-chat-switch {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 650;
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--tt-card-bg-color, #fff);
+  box-shadow:
+    0 0 0 1px var(--tt-border-color),
+    0 6px 20px rgba(15, 15, 15, 0.12);
+  transition: right 0.2s ease;
+
+  .tiptap-button.page-chat-switch__tab {
+    position: relative;
+    width: 34px;
+    min-width: 34px;
+    height: 30px;
+    min-height: 30px;
+    padding: 0;
+    border-radius: 9px;
+    --tt-button-default-bg-color: transparent;
+    --tt-button-hover-bg-color: color-mix(
+      in srgb,
+      var(--tt-text-primary, #37352f) 7%,
+      transparent
+    );
+    --tt-button-default-icon-color: var(--tt-text-secondary);
+    --tt-button-hover-icon-color: var(--tt-text-primary);
+
+    // The open tab: the accent, as a tint with an accent icon and edge.
+    &[aria-selected="true"] {
+      --tt-button-default-bg-color: var(--accent-tint);
+      --tt-button-hover-bg-color: var(--accent-tint);
+      --tt-button-default-icon-color: var(--accent);
+      --tt-button-hover-icon-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent-line);
+    }
+  }
+
+  // Open threads: a badge on the chat icon's corner.
+  &__count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    font-size: 9.5px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    background: var(--tt-brand-color-500, #2383e2);
+    box-shadow: 0 0 0 2px var(--tt-card-bg-color, #fff);
+    pointer-events: none;
+  }
+}
+
+body:has(.pins-pane, .discussion-pane) .page-chat-switch {
+  right: 340px;
+}
+
+// ── The Chat tab: it replaces the page, which stays mounted, hidden ──
+.simple-editor-main[data-page-tab="chat"] > :not(.page-chat) {
+  display: none !important;
+}
+
+.page-chat {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+
+  &__scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 24px 16px;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 80px 0;
+    color: var(--tt-text-secondary);
+
+    p {
+      margin: 0;
+      font-size: 14px;
+    }
+  }
+
+  &__thread {
+    border-radius: 12px;
+    background: var(--tt-card-bg-color);
+    box-shadow: 0 0 0 1px var(--tt-border-color);
+    overflow: hidden;
+  }
+
+  &__thread-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px 0;
+    font-size: 11.5px;
+    color: var(--tt-text-secondary);
+  }
+
+  &__resolved {
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--tt-button-hover-bg-color);
+  }
+
+  &__see {
+    all: unset;
+    margin-left: auto;
+    font-weight: 500;
+    color: var(--accent, var(--tt-brand-color-500, #2383e2));
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+      border-radius: 3px;
+    }
+  }
+
+  &__composer {
+    flex: none;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 8px 24px 20px;
+    box-sizing: border-box;
+  }
+
+  &__field {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 6px 6px 6px 12px;
+    border-radius: 12px;
+    background: var(--tt-card-bg-color);
+    box-shadow:
+      0 0 0 1px var(--tt-border-color),
+      0 4px 14px rgba(15, 15, 15, 0.06);
+
+    > :first-child {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  &__send {
+    all: unset;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    color: #fff;
+    background: var(--accent, var(--tt-brand-color-500, #2383e2));
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+}
+
+// ── On the page after "See in page" ──
+.page-chat-back {
+  all: unset;
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 700;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--tt-text-primary);
+  background: var(--tt-card-bg-color);
+  box-shadow:
+    0 0 0 1px var(--tt-border-color),
+    0 10px 30px rgba(15, 15, 15, 0.16);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--tt-button-hover-bg-color);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent, var(--tt-brand-color-500, #2383e2));
+    outline-offset: 2px;
+  }
+}

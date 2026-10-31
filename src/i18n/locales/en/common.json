@@ -1910,5 +1910,17 @@
     "createdIn": "In {{name}}",
     "also": "also",
     "alsoHint": "Its home is another workspace; you also show it here"
+  },
+  "pageChat": {
+    "switch": "Page or chat",
+    "page": "Page",
+    "chat": "Chat",
+    "empty": "No comments on this page yet. Start the conversation below.",
+    "onText": "On the page",
+    "onPage": "On the whole page",
+    "resolved": "Resolved",
+    "seeInPage": "See in page",
+    "placeholder": "Comment on this page…",
+    "back": "Back to chat"
   }
 }
