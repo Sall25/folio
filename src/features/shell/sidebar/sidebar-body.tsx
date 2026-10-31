@@ -260,7 +260,9 @@ export const SidebarBody = memo(() => {
     }
 
     Object.assign(result, tree);
-    const homeOf = new Map(teamspaces.map((ts) => [ts.id, ts.workspaceId]));
+    const homeOf = new Map(
+      (teamspaces as Teamspace[]).map((ts) => [ts.id, ts.workspaceId]),
+    );
     result.Teamspaces = (tree.Teamspaces ?? []).filter(
       (n) =>
         (homeOf.get(n.page.id) ?? n.page.workspaceId) === workspaceId ||
