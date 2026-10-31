@@ -17,6 +17,7 @@ import { IconPicker } from "src/features/pages/cover/icon-picker";
 import { getIconList } from "src/features/pages/cover/data/icon-list";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
+import { useTranslation } from "react-i18next";
 
 import "./create-teamspace-modal.scss";
 import { DynamicIcon } from "src/features/pages/cover/dynamic-icon";
@@ -63,6 +64,7 @@ export function CreateTeamspaceModal({
   const create = useCreateTeamspaceWithPage();
   const { person } = useCurrentPerson();
   const { workspace } = useCurrentWorkspace();
+  const { t } = useTranslation();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -203,6 +205,12 @@ export function CreateTeamspaceModal({
             }}
             placeholder="e.g. Finance"
           />
+          {/* Where it will live: the workspace you're in (its home). */}
+          {workspace && (
+            <span className="cts-field__hint">
+              {t("teamspacePlacement.createdIn", { name: workspace.name })}
+            </span>
+          )}
         </label>
 
         {/* Description */}

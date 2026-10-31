@@ -4,6 +4,7 @@ import { useEditorLayout } from "../context/editor-layout-context";
 import { useLayoutMode } from "../hooks/use-layout-mode";
 import { usePageTree, useRecentPages } from "src/hooks/use-pages";
 import { useTeamspaces } from "src/hooks/use-teamspaces";
+import { usePlacedHere } from "src/hooks/use-teamspace-placements";
 import { useGroups } from "src/hooks/use-groups";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { useCreatePage } from "src/hooks/use-create-page";
@@ -224,6 +225,9 @@ export const SidebarBody = memo(() => {
   const { data: allRecentPages } = useRecentPages();
   const { limit: recentLimit } = useRecentLimit();
   const { workspaceId } = useCurrentWorkspace();
+  // Teamspaces show in their home workspace, plus where you chose to also
+  // show them (migration 050).
+  const placedHere = usePlacedHere(workspaceId);
   const sidebarTree = useMemo<Record<PageCategory, PageTreeNode[]>>(() => {
     const result = {} as Record<PageCategory, PageTreeNode[]>;
     const all = allRecentPages ?? [];
@@ -256,12 +260,27 @@ export const SidebarBody = memo(() => {
     }
 
     Object.assign(result, tree);
+    const homeOf = new Map(teamspaces.map((ts) => [ts.id, ts.workspaceId]));
+    result.Teamspaces = (tree.Teamspaces ?? []).filter(
+      (n) =>
+        (homeOf.get(n.page.id) ?? n.page.workspaceId) === workspaceId ||
+        placedHere.has(n.page.id),
+    );
     result.Recent = all
       .filter((p) => p.workspaceId === workspaceId && p.category !== "Template")
       .slice(0, recentLimit)
       .map(toLeaf);
     return result;
-  }, [tree, allRecentPages, teamspaceId, pinnedIds, workspaceId, recentLimit]);
+  }, [
+    tree,
+    allRecentPages,
+    teamspaceId,
+    pinnedIds,
+    workspaceId,
+    recentLimit,
+    teamspaces,
+    placedHere,
+  ]);
 
   const teamspaceLabels = useMemo(
     () => ({

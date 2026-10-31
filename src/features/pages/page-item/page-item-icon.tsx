@@ -7,7 +7,9 @@ import { UploadedIcon } from "src/components/uploaded-icon/uploaded-icon";
 import "./page-item-icon.scss";
 
 interface PageItemIconProps {
-  cover: Page["cover"];
+  /** Can be missing: a row without a cover object (an older page, or one
+   *  only partly loaded) gets the plain page icon. */
+  cover: Page["cover"] | null | undefined;
   styles?: CSSProperties;
   usePrimaryColor?: boolean;
   /** Sidebar rows: pages without an icon get the sidebar's Tabler file
@@ -20,11 +22,11 @@ export function PageItemIcon({
   styles,
   variant = "default",
 }: PageItemIconProps) {
-  const hasIcon = Boolean(cover.iconName);
+  const hasIcon = Boolean(cover?.iconName);
 
   if (variant === "sidebar" && !hasIcon) {
     const tint =
-      cover.target === "Icons" &&
+      cover?.target === "Icons" &&
       cover.color &&
       cover.color !== "var(--tt-text-color)"
         ? cover.color
@@ -43,7 +45,7 @@ export function PageItemIcon({
 
   // An uploaded picture: a circle, like a profile picture, at the size the
   // caller gives the icon (18 px by default, the sidebar's icon size).
-  if (cover.target === "Upload" && hasIcon) {
+  if (cover?.target === "Upload" && hasIcon) {
     const size = typeof styles?.width === "number" ? styles.width : 18;
     return (
       <span
@@ -56,7 +58,7 @@ export function PageItemIcon({
     );
   }
 
-  if (cover.target === "Emoji" && hasIcon) {
+  if (cover?.target === "Emoji" && hasIcon) {
     return (
       <span
         className="page-icon page-icon--emoji"
@@ -68,7 +70,7 @@ export function PageItemIcon({
     );
   }
 
-  if (cover.target === "Icons") {
+  if (cover?.target === "Icons") {
     return (
       <span className="page-icon" style={{ ...styles }} aria-hidden="true">
         {hasIcon ? (

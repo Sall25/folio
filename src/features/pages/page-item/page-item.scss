@@ -549,3 +549,10 @@
     font-size: 8.5px;
   }
 }
+// A teamspace shown here besides its home workspace (teamspace placements).
+.page-item-also {
+  flex: none;
+  margin-left: 4px;
+  font-size: 11px;
+  color: var(--tt-text-secondary);
+}

@@ -1899,5 +1899,16 @@
       "from": "Live from",
       "toCopy": "Turn into copy"
     }
+  },
+  "teamspacePlacement": {
+    "showIn": "Show in",
+    "title": "Show in your sidebar",
+    "home": "Home",
+    "moveTo": "Move to (for everyone)",
+    "moveConfirm": "Move this teamspace to {{name}}? It will show there for everyone, and no longer in its current workspace.",
+    "move": "Move",
+    "createdIn": "In {{name}}",
+    "also": "also",
+    "alsoHint": "Its home is another workspace; you also show it here"
   }
 }

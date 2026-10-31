@@ -1899,5 +1899,16 @@
       "from": "En direct de",
       "toCopy": "Transformer en copie"
     }
+  },
+  "teamspacePlacement": {
+    "showIn": "Afficher dans",
+    "title": "Afficher dans votre barre latérale",
+    "home": "Accueil",
+    "moveTo": "Déplacer vers (pour tous)",
+    "moveConfirm": "Déplacer cet espace d’équipe vers {{name}} ? Il y apparaîtra pour tout le monde, et plus dans son espace de travail actuel.",
+    "move": "Déplacer",
+    "createdIn": "Dans {{name}}",
+    "also": "aussi",
+    "alsoHint": "Son espace de travail est un autre ; vous l’affichez aussi ici"
   }
 }

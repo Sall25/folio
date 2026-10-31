@@ -273,3 +273,9 @@
   background: var(--tt-brand-color-500, var(--tt-brand-color-400));
   color: #fff;
 }
+// "In School": the workspace the new teamspace will live in.
+.cts-field__hint {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--tt-text-secondary);
+}

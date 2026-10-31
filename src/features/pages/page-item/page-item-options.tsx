@@ -23,6 +23,7 @@ import {
 } from "src/hooks/use-workspaces";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { canBeWorkspaceBanner } from "src/lib/banner-page";
+import { TeamspacePlacementMenu } from "src/features/workspace/teamspaces/teamspace-placement-menu";
 
 interface PageItemOptionsProps {
   page: Page;
@@ -30,12 +31,16 @@ interface PageItemOptionsProps {
   /** Told when the menu opens and closes (the row keeps its buttons shown
    *  while it's open). */
   onOpenChange: (v: boolean) => void;
+  /** Rename, add a page, banner and trash need edit rights; a teamspace's
+   *  "Show in" doesn't (it's your own sidebar). Defaults to true. */
+  canEdit?: boolean;
 }
 
 export function PageItemOptions({
   page,
   onRenameAsync,
   onOpenChange,
+  canEdit = true,
 }: PageItemOptionsProps) {
   const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -130,6 +135,8 @@ export function PageItemOptions({
               }}
               orientation="vertical"
             >
+              {canEdit && (
+                <>
               <Button
                 variant="ghost"
                 style={{
@@ -170,7 +177,10 @@ export function PageItemOptions({
                 </span>
               </Button>
 
-              {(canSetBanner || isBanner) && (
+                </>
+              )}
+
+              {canEdit && (canSetBanner || isBanner) && (
                 <Button
                   variant="ghost"
                   style={{
@@ -193,6 +203,11 @@ export function PageItemOptions({
                 </Button>
               )}
 
+              {page.teamspaceId === page.id && (
+                <TeamspacePlacementMenu teamspaceId={page.id} />
+              )}
+
+              {canEdit && (
               <Button
                 variant="ghost"
                 style={{
@@ -212,6 +227,7 @@ export function PageItemOptions({
                   {t("ui.moveToTrash")}
                 </span>
               </Button>
+              )}
             </ButtonGroup>
           </Card>
         </PopoverContent>

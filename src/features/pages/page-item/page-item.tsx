@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, useState, type CSSProperties } from "react";
 import { UploadedIcon } from "src/components/uploaded-icon/uploaded-icon";
 import { useTranslation } from "react-i18next";
+import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { useNavigate } from "@tanstack/react-location";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import { PageItemIcon } from "./page-item-icon";
@@ -133,6 +134,14 @@ function PageItemView({
   // A teamspace's root page carries its own id as teamspace_id — that's how
   // this row knows it IS a teamspace, and offers to enter it.
   const isTeamspaceRoot = page.teamspaceId === page.id;
+  // A teamspace shown here though its home is another workspace (you chose
+  // to also show it here): a small "also" tag. Its root page lives in its
+  // home workspace.
+  const { workspaceId: currentWorkspaceId } = useCurrentWorkspace();
+  const shownAlsoHere =
+    isTeamspaceRoot &&
+    currentWorkspaceId != null &&
+    page.workspaceId !== currentWorkspaceId;
   const chosenTint = useTeamspaceAccentColor(isTeamspaceRoot ? page.id : null);
 
   // A page inside a teamspace (not the teamspace itself) gets a badge; the
@@ -320,6 +329,14 @@ function PageItemView({
         )}
 
         {withBadge && <TeamspaceBadge teamspaceId={page.teamspaceId!} />}
+        {shownAlsoHere && !editing && (
+          <span
+            className="page-item-also"
+            title={t("teamspacePlacement.alsoHint")}
+          >
+            {t("teamspacePlacement.also")}
+          </span>
+        )}
         {isTeamspaceRoot && !editing && (
           <TeamspaceFaces teamspaceId={page.id} />
         )}
@@ -346,6 +363,16 @@ function PageItemView({
                   <TbPin {...SB_ICON_SM} className="tiptap-button-icon" />
                 )}
               </Button>
+            )}
+            {/* A teamspace's menu also has "Show in", which needs no edit
+                rights: shown on its row for every member. */}
+            {!canEditContent && isTeamspaceRoot && (
+              <PageItemOptions
+                onOpenChange={setMenuOpen}
+                page={page}
+                onRenameAsync={async () => setEditing(true)}
+                canEdit={false}
+              />
             )}
             {canEditContent && (
               <>

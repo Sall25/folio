@@ -1,0 +1,28 @@
+// "Show in" (teamspace-placement-menu.tsx).
+.teamspace-placement {
+  min-width: 240px;
+  padding: 6px;
+
+  &__confirm {
+    padding: 4px 8px 6px;
+
+    p {
+      margin: 0 0 8px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--tt-text-secondary);
+    }
+  }
+
+  &__confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  &__count {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+  }
+}
