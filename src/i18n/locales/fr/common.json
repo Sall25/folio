@@ -1921,6 +1921,9 @@
     "resolved": "Résolu",
     "seeInPage": "Voir dans la page",
     "placeholder": "Commenter cette page…",
-    "back": "Retour à la discussion"
+    "back": "Retour à la discussion",
+    "openSide": "Ouvrir sur le côté",
+    "openCenter": "Ouvrir au centre",
+    "openPage": "Ouvrir la page"
   }
 }

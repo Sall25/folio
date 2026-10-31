@@ -1921,6 +1921,9 @@
     "resolved": "Resolved",
     "seeInPage": "See in page",
     "placeholder": "Comment on this page…",
-    "back": "Back to chat"
+    "back": "Back to chat",
+    "openSide": "Open in side peek",
+    "openCenter": "Open in centre peek",
+    "openPage": "Open the page"
   }
 }

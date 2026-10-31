@@ -48,11 +48,6 @@
   margin: 0px;
   z-index: 1000;
 
-  background-color: var(--tt-gray-light-50);
-  .dark & {
-    background-color: var(--tt-gray-dark-100);
-  }
-
   // Sizing
   width: min(960px, 94vw);
   max-height: min(90vh, 850px);

@@ -1,5 +1,6 @@
 import { usePeekCollab } from "../editor/hooks/use-peek-collab";
 import { useSyncDocTitle } from "../editor/utils/doc-title";
+import { usePeekThreadFocus } from "../comments/page-chat/peek-thread-focus";
 import { usePageCapabilities } from "src/hooks/use-page-role";
 import type { Page } from "src/types";
 import { Editor, useEditor, type Extensions } from "@tiptap/react";
@@ -286,6 +287,8 @@ function PagePeekEditor({
 
   // Renamed elsewhere (the sidebar) since it was last open → title block too.
   useSyncDocTitle(editor, page, canEditContent, roleLoading);
+  // Comment highlights, and opening at a thread (the page chat).
+  usePeekThreadFocus(editor, page.id);
 
   const onSelectAsync = useCallback(
     async (name: string, color?: string) => {

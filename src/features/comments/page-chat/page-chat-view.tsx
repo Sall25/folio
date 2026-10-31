@@ -2,7 +2,16 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { JSONContent } from "@tiptap/core";
 import { useCurrentEditor } from "@tiptap/react";
 import { useTranslation } from "react-i18next";
-import { ArrowUp, MessageSquareText } from "src/components/icons";
+import { ArrowUp, MaterialIcon, MessageSquareText } from "src/components/icons";
+import { Button } from "src/components/tiptap-ui-primitive/button";
+import { usePageViewActions } from "src/features/pages/context/page-view-context";
+import {
+  useEditorLayoutState,
+  useEditorLayoutTransient,
+} from "src/features/shell/context/editor-layout-context";
+import { useLayoutMode } from "src/features/shell/hooks/use-layout-mode";
+import { calculateSidebarWidth } from "src/lib/utils";
+import { focusThreadInPeek } from "./peek-thread-focus";
 import type { ID, Thread } from "src/types";
 import { useOptionalActivePage } from "src/features/pages/context/active-page-context";
 import { useCreateThread } from "src/hooks/use-create-thread";
@@ -21,9 +30,10 @@ import "./page-chat.scss";
 // newest at the bottom. Each thread is the same conversation as in the
 // comment popover and the comments pane — replies, reactions, resolve,
 // suggestions with Accept — so replying here replies in the thread. A
-// thread on a piece of the page has "See in page": back to the page,
-// scrolled to that text, with a "Back to chat" button. The box at the
-// bottom starts a comment on the whole page.
+// thread on a piece of the page opens the page at its text: in the side
+// peek or the centre peek (the chat stays), or the full page (with a "Back
+// to chat" button). The box at the bottom starts a comment on the whole
+// page.
 //
 // Mounted in the page area (page-editor-layout.tsx), only on the Chat tab;
 // the page's editor stays mounted underneath, hidden.
@@ -40,6 +50,16 @@ function ChatBody({ pageId }: { pageId: ID }) {
   const { editor } = useCurrentEditor();
   const threads = useChatThreads(pageId);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { setTarget } = usePageViewActions();
+
+  // The page area runs under the sidebar: centre the chat in what's left
+  // of it, not in the whole window.
+  const { collapsed } = useEditorLayoutState();
+  const { expandedWidth } = useEditorLayoutTransient();
+  const { mode, isMobile } = useLayoutMode();
+  const sidebarWidth = isMobile
+    ? 0
+    : calculateSidebarWidth(mode, collapsed, expandedWidth);
 
   // Open where you left it (coming back from the page), else at the bottom.
   useLayoutEffect(() => {
@@ -61,6 +81,11 @@ function ChatBody({ pageId }: { pageId: ID }) {
     }
   }, [seen]);
 
+  const peek = (thread: Thread, view: "Peek" | "Center") => {
+    focusThreadInPeek(pageId, thread);
+    setTarget({ pageId, view });
+  };
+
   const seeInPage = (thread: Thread) => {
     const el = scrollRef.current;
     pageTabs.set(pageId, {
@@ -77,7 +102,11 @@ function ChatBody({ pageId }: { pageId: ID }) {
   };
 
   return (
-    <section className="page-chat" aria-label={t("pageChat.chat")}>
+    <section
+      className="page-chat"
+      aria-label={t("pageChat.chat")}
+      style={{ paddingLeft: sidebarWidth }}
+    >
       <div ref={scrollRef} className="page-chat__scroll">
         <div className="page-chat__list">
           {threads.length === 0 ? (
@@ -100,13 +129,54 @@ function ChatBody({ pageId }: { pageId: ID }) {
                     </span>
                   )}
                   {thread.anchor && (
-                    <button
-                      type="button"
-                      className="page-chat__see"
-                      onClick={() => seeInPage(thread)}
+                    <div
+                      className="page-chat__open"
+                      role="group"
+                      aria-label={t("pageChat.seeInPage")}
                     >
-                      {t("pageChat.seeInPage")}
-                    </button>
+                      <span className="page-chat__open-label">
+                        {t("pageChat.seeInPage")}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        className="page-chat__open-btn"
+                        aria-label={t("pageChat.openSide")}
+                        tooltip={t("pageChat.openSide")}
+                        onClick={() => peek(thread, "Peek")}
+                      >
+                        <MaterialIcon
+                          name="right_panel_open"
+                          size={16}
+                          className="tiptap-button-icon"
+                        />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="page-chat__open-btn"
+                        aria-label={t("pageChat.openCenter")}
+                        tooltip={t("pageChat.openCenter")}
+                        onClick={() => peek(thread, "Center")}
+                      >
+                        <MaterialIcon
+                          name="pip"
+                          size={16}
+                          className="tiptap-button-icon"
+                        />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="page-chat__open-btn"
+                        aria-label={t("pageChat.openPage")}
+                        tooltip={t("pageChat.openPage")}
+                        onClick={() => seeInPage(thread)}
+                      >
+                        <MaterialIcon
+                          name="open_in_full"
+                          size={16}
+                          className="tiptap-button-icon"
+                        />
+                      </Button>
+                    </div>
                   )}
                 </header>
                 <ThreadConversation editor={editor} thread={thread} />
