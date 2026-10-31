@@ -34,7 +34,8 @@ export function useTurnIntoPage({
   onTurnedIntoPage,
 }: Props) {
   const [canTurn, setCanTurn] = useState(false);
-  const createPage = useCreatePage();
+  // Made in place (the open page stays): no skeleton over the editor.
+  const createPage = useCreatePage({ quiet: true });
   // Optional: also rendered on the landing, outside the app's providers.
   const { activePageId } = useOptionalActivePage();
 

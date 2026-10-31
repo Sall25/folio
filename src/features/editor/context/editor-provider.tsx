@@ -217,7 +217,8 @@ function EditorInstance({
 
   useScrollToPendingTarget(editor, page.id);
 
-  const { mutateAsync: createPage } = useCreatePage();
+  // The slash menu's "Page": a link here, the open page stays.
+  const { mutateAsync: createPage } = useCreatePage({ quiet: true });
   const { workspaceId } = useCurrentWorkspace();
 
   useEffect(() => {

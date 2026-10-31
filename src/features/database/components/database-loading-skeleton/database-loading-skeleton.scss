@@ -158,3 +158,9 @@
   width: 100%;
   transform: none;
 }
+// Nothing known about the view yet: a spinner in a short, steady box.
+.db-skeleton--spinner {
+  display: grid;
+  place-items: center;
+  min-height: 96px;
+}

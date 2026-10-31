@@ -48,7 +48,8 @@ export function useDatabaseTitle({
   useEffect(() => void (rowsRef.current = rows), [rows]);
 
   const mutatePage = usePatchPage(({ id, patch }) => patchPage(id, patch));
-  const createPage = useCreatePage();
+  // Made in place (the open page stays): no skeleton over the editor.
+  const createPage = useCreatePage({ quiet: true });
   const { person } = useCurrentPerson();
   const { workspaceId } = useCurrentWorkspace();
 

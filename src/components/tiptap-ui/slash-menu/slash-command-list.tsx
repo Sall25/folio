@@ -8,11 +8,7 @@ import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
 import "./slash-command-list.scss";
 import { useMenuNavigation } from "src/hooks/use-menu-navigation";
 import type { SlashCommand as SlashItem } from "./slash-commands";
-import { useOptionalActivePage } from "src/features/pages/context/active-page-context";
-import { useCreatePage } from "src/hooks/use-create-page";
-import { makeChildPage } from "src/utils/make-page";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
-import { baseSlashId } from "./slash-search";
 
 type Props = SuggestionProps<SlashItem> & {
   selectedIndex?: number;
@@ -23,10 +19,6 @@ type Props = SuggestionProps<SlashItem> & {
 export default function SlashList(props: Props) {
   const { items = [], onClickItem, onClose, editor } = props;
   const { t } = useTranslation();
-  const createPage = useCreatePage();
-  // Optional: the slash menu also runs in the landing's live editor, outside
-  // the app's providers (there, "new page" isn't offered).
-  const { activePageId, activePage, setActivePageId } = useOptionalActivePage();
   const isSelectable = (item: SlashItem) => item.type === "command";
 
   const selectableItems = useMemo(() => items.filter(isSelectable), [items]);
@@ -43,29 +35,11 @@ export default function SlashList(props: Props) {
     containerRef,
     orientation: "vertical",
     autoSelectFirstItem: true,
+    // Enter runs the item like a click. ("Page" used to also create a
+    // second page here, insert a second link and open it: its own command
+    // in slash-commands.ts already creates the page and inserts the link.)
     onSelect: (item) => {
       onClickItem?.(item);
-      if (baseSlashId(item.id) === "page-1") {
-        const parentId = activePageId;
-        if (parentId === null || !activePage) return;
-        const page = makeChildPage(activePage, t("page.newPage"));
-        createPage.mutate(page);
-
-        // eslint-disable-next-line react-hooks/immutability
-        editor.storage.pageLink.pages = [
-          ...editor.storage.pageLink.pages,
-          page,
-        ];
-        editor.commands.insertContent({
-          type: "pageLink",
-          attrs: {
-            pageId: page.id,
-            parentId: parentId,
-            title: page.title,
-          },
-        });
-        setActivePageId(page.id);
-      }
     },
     onClose() {
       onClose?.();

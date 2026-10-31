@@ -20,6 +20,14 @@ export function useViewSkeletonDims(databaseId: string, viewType: string) {
   const key = `db-view-dims:${databaseId}:${viewType}`;
   const fallback = DEFAULTS[viewType] ?? DEFAULTS.table;
   const [dims, setDims] = useLocalStorage<ViewDims>(key, fallback);
+  // Measured on this device before (a real count), or only the defaults:
+  // the loading state shows the view's skeleton only when it's known.
+  let known = false;
+  try {
+    known = localStorage.getItem(key) != null;
+  } catch {
+    /* storage blocked */
+  }
 
   const measure = useCallback(
     (next: Partial<ViewDims>) => {
@@ -38,7 +46,7 @@ export function useViewSkeletonDims(databaseId: string, viewType: string) {
     [setDims],
   );
 
-  return { dims, measure };
+  return { dims, measure, known };
 }
 
 export function useMeasureViewDims(

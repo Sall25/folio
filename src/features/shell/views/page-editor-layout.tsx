@@ -15,7 +15,12 @@ function PageEditorLayoutImpl() {
   // only fires in .then()) as well as the moment right after it moves but
   // usePage(newId) hasn't resolved.
   const isCreatingPage =
-    useIsMutating({ mutationKey: createPageMutationKey }) > 0;
+    useIsMutating({
+      mutationKey: createPageMutationKey,
+      // A page made in place (a link from the slash menu) doesn't leave
+      // this one: no skeleton over it.
+      predicate: (m) => !m.options.meta?.quiet,
+    }) > 0;
 
   return (
     <EditorProvider>

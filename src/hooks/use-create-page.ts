@@ -7,10 +7,14 @@ import { pageWritesScope } from "./use-patch-page";
 
 export const createPageMutationKey = ["pages", "create"] as const;
 
-export function useCreatePage() {
+/** `quiet`: a page made without leaving the open one (a page link inserted
+ *  from the slash menu). The editor isn't covered while it saves; see
+ *  page-editor-layout.tsx. */
+export function useCreatePage({ quiet = false }: { quiet?: boolean } = {}) {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: createPageMutationKey,
+    meta: quiet ? { quiet: true } : undefined,
     // In order with the page's later patches (use-patch-page.ts): a rename
     // never reaches the server before the page exists.
     scope: pageWritesScope,

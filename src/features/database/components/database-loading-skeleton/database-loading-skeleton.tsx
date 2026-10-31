@@ -27,13 +27,13 @@ export function DatabaseLoadingSkeleton({
       case "board":
         return (
           <div className="db-skeleton__board">
-            {Array.from({ length: 3 }).map((_, c) => (
+            {Array.from({ length: Math.min(Math.max(columns, 1), 5) }).map((_, c) => (
               <div key={c} className="db-skeleton__board-col">
                 <div className="db-skeleton__board-head">
                   <Bone width={14} height={14} rounded />
                   <Bone width={`${40 + (c % 3) * 12}%`} height={12} />
                 </div>
-                {Array.from({ length: 3 }).map((_, i) => (
+                {Array.from({ length: Math.min(Math.max(rows, 1), 6) }).map((_, i) => (
                   <div key={i} className="db-skeleton__card">
                     <Bone width={`${60 + ((c + i) % 3) * 12}%`} height={14} />
                     <Bone width={`${30 + ((c + i) % 4) * 10}%`} height={12} />
@@ -48,7 +48,7 @@ export function DatabaseLoadingSkeleton({
       case "gallery":
         return (
           <div className="db-skeleton__gallery">
-            {Array.from({ length: 8 }).map((_, i) => (
+            {Array.from({ length: Math.min(Math.max(rows, 1), 12) }).map((_, i) => (
               <div key={i} className="db-skeleton__gallery-card">
                 <div className="db-skeleton__cover">
                   <Bone width="100%" height={110} />
