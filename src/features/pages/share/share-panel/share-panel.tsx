@@ -300,6 +300,14 @@ function SharePanelInner({ page }: { page: Page }) {
     setQuery("");
   };
 
+  // What general access really is. "Everyone in the teamspace" on a page
+  // outside any teamspace grants nobody anything (a page moved out of one,
+  // or the column's default): it is "Only people invited", and shows so.
+  const generalValue: GeneralAccess =
+    page.generalAccess === "teamspace" && !page.teamspaceId
+      ? "private"
+      : page.generalAccess;
+
   // "Everyone in the teamspace" only makes sense for a page in one.
   const generalOptions = useMemo<GeneralAccess[]>(
     () =>
@@ -444,11 +452,11 @@ function SharePanelInner({ page }: { page: Page }) {
             </div>
             <div className="share-row">
               <div className="share-row__avatar is-icon">
-                {GENERAL_ICON[page.generalAccess]}
+                {GENERAL_ICON[generalValue]}
               </div>
               <div className="share-row__text">
                 <GeneralAccessMenu
-                  value={page.generalAccess}
+                  value={generalValue}
                   options={generalOptions}
                   disabled={!canManage}
                   onChange={(ga) =>
@@ -456,10 +464,10 @@ function SharePanelInner({ page }: { page: Page }) {
                   }
                 />
                 <span className="share-row__sub">
-                  {t(`share.generalDescriptions.${page.generalAccess}`)}
+                  {t(`share.generalDescriptions.${generalValue}`)}
                 </span>
               </div>
-              {page.generalAccess !== "private" && (
+              {generalValue !== "private" && (
                 <RoleMenu
                   value={page.generalAccessRole}
                   disabled={!canManage}

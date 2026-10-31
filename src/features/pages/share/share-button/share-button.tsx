@@ -25,12 +25,14 @@ export function ShareButton({ page: providedPage }: { page?: Page }) {
 
   if (!page) return null;
 
+  // "Everyone in the teamspace" outside any teamspace grants nobody
+  // anything: it's private (same rule as the share panel).
+  const access =
+    page.generalAccess === "teamspace" && !page.teamspaceId
+      ? "private"
+      : page.generalAccess;
   const Icon =
-    page.generalAccess === "public"
-      ? Globe
-      : page.generalAccess === "private"
-        ? LockIcon
-        : Users;
+    access === "public" ? Globe : access === "private" ? LockIcon : Users;
 
   return (
     <>

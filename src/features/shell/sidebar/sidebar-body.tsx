@@ -5,6 +5,7 @@ import { useLayoutMode } from "../hooks/use-layout-mode";
 import { usePageTree, useRecentPages } from "src/hooks/use-pages";
 import { useTeamspaces } from "src/hooks/use-teamspaces";
 import { usePlacedHere } from "src/hooks/use-teamspace-placements";
+import { requestTeamspaceMove } from "../../pages/teamspace-move";
 import { useGroups } from "src/hooks/use-groups";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { useCreatePage } from "src/hooks/use-create-page";
@@ -261,7 +262,7 @@ export const SidebarBody = memo(() => {
 
     Object.assign(result, tree);
     const homeOf = new Map(
-      (teamspaces as Teamspace[]).map((ts) => [ts.id, ts.workspaceId]),
+      (teamspaces as Teamspace[]).map((ts) => [ts.id, ts.workspaceId] as const),
     );
     result.Teamspaces = (tree.Teamspaces ?? []).filter(
       (n) =>
@@ -306,15 +307,27 @@ export const SidebarBody = memo(() => {
       newParentId: ID | null;
       category?: PageCategory;
     }) => {
-      patchPage.mutate({
-        id: pageId,
-        patch: {
-          parentId: newParentId,
-          ...(category ? { category } : {}),
-        },
-      });
+      const patch = {
+        parentId: newParentId,
+        ...(category ? { category } : {}),
+      };
+      // Dropped into a teamspace it isn't in yet: first ask who can open it
+      // and the pages inside it (teamspace-move).
+      const byId = new Map((allRecentPages ?? []).map((p) => [p.id, p]));
+      const moving = byId.get(pageId);
+      const parent = newParentId ? byId.get(newParentId) : undefined;
+      const destTeamspace = parent?.teamspaceId ?? null;
+      if (moving && destTeamspace && destTeamspace !== moving.teamspaceId) {
+        requestTeamspaceMove({
+          pageId,
+          teamspaceId: destTeamspace,
+          move: () => patchPage.mutateAsync({ id: pageId, patch }),
+        });
+        return;
+      }
+      patchPage.mutate({ id: pageId, patch });
     },
-    [patchPage],
+    [patchPage, allRecentPages],
   );
 
   const handleAddPageToSection = useCallback(

@@ -1925,5 +1925,18 @@
     "openSide": "Open in side peek",
     "openCenter": "Open in centre peek",
     "openPage": "Open the page"
+  },
+  "teamspaceMove": {
+    "title": "Move “{{page}}” into {{teamspace}}?",
+    "lead": "Who can open it, and every page inside it:",
+    "everyone": "Everyone in {{teamspace}}",
+    "everyoneHint": "Every member of the teamspace, with this role",
+    "privateHint": "Only the people and groups it's shared with",
+    "keep": "Keep each page's current access",
+    "keepHint": "Nothing changes; you can adjust it later in Share",
+    "role": "Role for teamspace members",
+    "move": "Move",
+    "failed": "Couldn't finish moving the page. Check its access in Share.",
+    "theTeamspace": "the teamspace"
   }
 }

@@ -39,6 +39,7 @@ import { StarIcon } from "src/components/tiptap-icons";
 import { useSearch } from "./search/search-context";
 import { requestFindFocus } from "src/lib/find-store";
 import { HomeToolbar } from "../home/home-toolbar";
+import { requestTeamspaceMove } from "../pages/teamspace-move";
 
 function Expand() {
   const { collapsed } = useEditorLayoutState();
@@ -214,10 +215,16 @@ function usePageLocation() {
           ? { category, parentId: null }
           : { category },
       }),
+    // Into a teamspace: first ask who can open it (teamspace-move).
     onMoveToTeamspace: (teamspaceId: ID) =>
-      mutateAsync({
-        id: activePageId,
-        patch: { parentId: teamspaceId, category: "Teamspaces" },
+      requestTeamspaceMove({
+        pageId: activePageId,
+        teamspaceId,
+        move: () =>
+          mutateAsync({
+            id: activePageId,
+            patch: { parentId: teamspaceId, category: "Teamspaces" },
+          }),
       }),
   };
 }

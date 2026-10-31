@@ -1925,5 +1925,18 @@
     "openSide": "Ouvrir sur le côté",
     "openCenter": "Ouvrir au centre",
     "openPage": "Ouvrir la page"
+  },
+  "teamspaceMove": {
+    "title": "Déplacer « {{page}} » dans {{teamspace}} ?",
+    "lead": "Qui peut l’ouvrir, ainsi que toutes les pages qu’elle contient :",
+    "everyone": "Tout le monde dans {{teamspace}}",
+    "everyoneHint": "Chaque membre de l’espace d’équipe, avec ce rôle",
+    "privateHint": "Seulement les personnes et groupes avec qui elle est partagée",
+    "keep": "Garder l’accès actuel de chaque page",
+    "keepHint": "Rien ne change ; vous pourrez l’ajuster plus tard dans Partager",
+    "role": "Rôle des membres de l’espace d’équipe",
+    "move": "Déplacer",
+    "failed": "Le déplacement n’a pas pu se terminer. Vérifiez l’accès dans Partager.",
+    "theTeamspace": "l’espace d’équipe"
   }
 }

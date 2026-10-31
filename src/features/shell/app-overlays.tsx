@@ -13,6 +13,7 @@ import { useTemplates as useTemplatesApi } from "src/hooks/use-templates";
 import { WorkspaceSettings } from "../workspace/settings";
 import { SpaceAccentRoot } from "./space-accent/space-accent-root";
 import { SignOutHost } from "../auth/sign-out";
+import { TeamspaceMoveDialog } from "../pages/teamspace-move";
 import { takePendingInvite } from "../workspace/join/pending-invite";
 import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-location";
@@ -101,6 +102,7 @@ function AppOverlaysImpl() {
       <SpaceAccentRoot />
       <WorkspaceSettings />
       <SignOutHost />
+      <TeamspaceMoveDialog />
       <PendingInviteRedirect />
     </>
   );

@@ -1,0 +1,135 @@
+// Moving a page into a teamspace: who can open it (teamspace-move-dialog.tsx).
+// The confirm dialog's look: a dimmed backdrop and a card.
+.ts-move {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 15, 15, 0.6);
+
+  &__card {
+    width: min(460px, 100%);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--tt-card-bg-color);
+    border: 0.5px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-lg);
+    box-shadow: var(--tt-shadow-elevated-lg);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--tt-text-primary);
+  }
+
+  &__lead {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--tt-text-secondary);
+  }
+
+  &__options {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--tt-radius-md, 8px);
+    box-shadow: inset 0 0 0 1px var(--tt-border-color);
+    cursor: pointer;
+
+    input[type="radio"] {
+      flex: none;
+      margin: 0;
+      accent-color: var(--accent, var(--tt-brand-color-500));
+    }
+
+    &[data-checked] {
+      background: var(--accent-tint, rgba(35, 131, 226, 0.08));
+      box-shadow: inset 0 0 0 1px var(--accent-line, rgba(35, 131, 226, 0.4));
+    }
+  }
+
+  &__option-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    b {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--tt-text-primary);
+    }
+
+    small {
+      font-size: 12px;
+      color: var(--tt-text-secondary);
+    }
+  }
+
+  &__role {
+    flex: none;
+    height: 28px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 13px;
+    color: var(--tt-text-primary);
+    background: var(--tt-button-hover-bg-color);
+
+    &:disabled {
+      opacity: 0.5;
+    }
+  }
+
+  &__actions {
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .tiptap-button.ts-move__confirm {
+    padding: 6px 14px;
+    border-radius: var(--tt-radius-md);
+    color: #fff;
+    background: var(--tt-brand-color-500);
+
+    &:hover {
+      background: var(--tt-brand-color-600, var(--tt-brand-color-500));
+    }
+  }
+
+  .tiptap-button.ts-move__cancel {
+    padding: 6px 14px;
+    border-radius: var(--tt-radius-md);
+    box-shadow: inset 0 0 0 1px var(--tt-border-color);
+  }
+}
