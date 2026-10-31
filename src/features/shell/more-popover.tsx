@@ -4,7 +4,6 @@ import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import {
   Popover,
   PopoverContent,
-  PopoverPortal,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 
@@ -138,75 +137,78 @@ export function MorePopover({
           <Ellipsis className="tiptap-button-icon" />
         </Button>
       </PopoverTrigger>
-      <PopoverPortal container={document.getElementById("#root")}>
-        <PopoverContent
-          style={{ position: "fixed", zIndex: 9999 }}
-          align="center"
-          side="bottom"
-        >
-          <Card className="more-content">
-            {/* Overflow section — controls folded off the bar on tablet/mobile.
-                Renders nothing on desktop, where these live on the toolbar. */}
-            {hasOverflow && (
-              <>
-                <CardItemGroup className="more-item">
-                  {category && <PageCategorySelect {...category} />}
+      {/* PopoverContent portals itself to <body>. The trigger is the last
+          button on the bar: the menu hangs from it, right edges lined up,
+          and stays on screen. */}
+      <PopoverContent
+        style={{ zIndex: 9999 }}
+        side="bottom"
+        align="end"
+        sideOffset={6}
+        collisionPadding={8}
+      >
+        <Card className="more-content">
+          {/* Overflow section — controls folded off the bar on tablet/mobile.
+              Renders nothing on desktop, where these live on the toolbar. */}
+          {hasOverflow && (
+            <>
+              <CardItemGroup className="more-item">
+                {category && <PageCategorySelect {...category} />}
 
-                  {editedPage && <EditedTimeButton page={editedPage} />}
+                {editedPage && <EditedTimeButton page={editedPage} />}
 
-                  {includeUndoRedo && (
-                    <div className="more-inline-row">
-                      <UndoRedoButton action="undo" />
-                      <UndoRedoButton action="redo" />
-                    </div>
-                  )}
+                {includeUndoRedo && (
+                  <div className="more-inline-row">
+                    <UndoRedoButton action="undo" />
+                    <UndoRedoButton action="redo" />
+                  </div>
+                )}
 
-                  {includeNotifications && <NotificationBell />}
+                {includeNotifications && <NotificationBell />}
 
-                  {includeTheme && <ThemeToggle />}
-                </CardItemGroup>
-                <Separator orientation="horizontal" />
-              </>
+                {includeTheme && <ThemeToggle />}
+              </CardItemGroup>
+              <Separator orientation="horizontal" />
+            </>
+          )}
+
+          <CardItemGroup className="more-item">
+            <SettingsToggleButton
+              target="width"
+              text="Full Width"
+              onChangedAsync={onFullWidthChangeAsync}
+              checked={fullWidth}
+            />
+            <SettingsToggleButton
+              target="text"
+              text="Small Text"
+              onChangedAsync={onSmallTextChangeAsync}
+              checked={smallText}
+            />
+            <SettingsToggleButton
+              target="lock"
+              text="Lock Page"
+              onChangedAsync={onLockedChangeAsync}
+              checked={locked}
+            />
+            {offline && (
+              <SettingsToggleButton
+                target="offline"
+                text={offlineLabel}
+                checked={offline.kept}
+                disabled={offline.locked}
+                onChangedAsync={async (on) => offline.set(on)}
+              />
             )}
-
-            <CardItemGroup className="more-item">
-              <SettingsToggleButton
-                target="width"
-                text="Full Width"
-                onChangedAsync={onFullWidthChangeAsync}
-                checked={fullWidth}
-              />
-              <SettingsToggleButton
-                target="text"
-                text="Small Text"
-                onChangedAsync={onSmallTextChangeAsync}
-                checked={smallText}
-              />
-              <SettingsToggleButton
-                target="lock"
-                text="Lock Page"
-                onChangedAsync={onLockedChangeAsync}
-                checked={locked}
-              />
-              {offline && (
-                <SettingsToggleButton
-                  target="offline"
-                  text={offlineLabel}
-                  checked={offline.kept}
-                  disabled={offline.locked}
-                  onChangedAsync={async (on) => offline.set(on)}
-                />
-              )}
-            </CardItemGroup>
-            <Separator orientation="horizontal" />
-            <CardItemGroup className="more-item">
-              <PageTemplateMenu />
-              <ExportButtons documentTitle={activePage?.title || undefined} />
-              <ShortcutsButton onOpen={() => setOpen(false)} />
-            </CardItemGroup>
-          </Card>
-        </PopoverContent>
-      </PopoverPortal>
+          </CardItemGroup>
+          <Separator orientation="horizontal" />
+          <CardItemGroup className="more-item">
+            <PageTemplateMenu />
+            <ExportButtons documentTitle={activePage?.title || undefined} />
+            <ShortcutsButton onOpen={() => setOpen(false)} />
+          </CardItemGroup>
+        </Card>
+      </PopoverContent>
     </Popover>
   );
 }

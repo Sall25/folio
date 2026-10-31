@@ -73,7 +73,10 @@
   }
 }
 
-// The floating sheet (theme-sheet.tsx): only some themes show it.
+// The page surface (theme-sheet.tsx) for themes that paint the window: it
+// fills the area right of the sidebar, edge to edge, so the page reads on
+// the picture / sky / clouds. Themes paint; they don't move anything: the
+// top bar, the editor and covers stay where the app puts them.
 .theme-sheet {
   display: none;
 }
@@ -82,59 +85,42 @@
 :root[data-theme="midnight"],
 :root[data-theme="retro"],
 :root[data-theme="wallpaper"] {
-  // The top bar sits on the sheet.
+  // The top bar sits on the page surface.
   --tt-toolbar-bg-color: transparent;
 
-  // Everything is fitted inside the sheet: the top bar is inset, the editor
-  // stops above the sheet's bottom edge, and covers start at the sheet's
-  // left edge instead of running under the sidebar.
-  .tiptap-toolbar[data-variant="fixed"] {
-    padding: 20px 40px !important;
-  }
-
-  .simple-editor-wrapper {
-    height: 96vh;
-  }
-
-  .cover-header-wrapper {
-    position: relative;
-  }
-
-  .cover-image-root {
-    width: 100% !important;
-
-    img {
-      position: absolute !important;
-      right: 0px;
-      left: 168px !important;
-    }
-
-    img[data-collapsed="true"] {
-      left: 24px !important;
-    }
-  }
-
+  // Covers start where the page starts, so they never show under the
+  // see-through sidebar. --cover-sheet-offset (cover-header.tsx) is that
+  // edge, measured inside the cover; it follows the sidebar's width and
+  // collapsing. Phones (the page fills the screen) and peeks: the whole
+  // cover.
+  .cover-image-root,
   .gradient-cover {
-    position: absolute !important;
-    width: 100% !important;
-    height: inherit;
-    right: 0px;
-    left: 168px !important;
+    clip-path: inset(0 0 0 var(--cover-sheet-offset, 0px));
   }
 
-  .gradient-cover[data-collapsed="true"] {
-    left: 24px !important;
+  &:has(.theme-sheet--flush) {
+    .cover-image-root,
+    .gradient-cover {
+      clip-path: none;
+    }
+  }
+
+  .page-peek,
+  .page-create-modal {
+    .cover-image-root,
+    .gradient-cover {
+      clip-path: none;
+    }
   }
 
   .theme-sheet {
     display: block;
     position: fixed;
-    top: 8px;
-    right: 10px;
-    bottom: 10px;
+    top: 0;
+    right: 0;
+    bottom: 0;
     z-index: -1;
     pointer-events: none;
-    border-radius: 16px;
     transition: left 0.2s ease;
 
     &--flush {
@@ -143,14 +129,6 @@
       box-shadow: none;
     }
   }
-}
-
-:root[data-theme="wallpaper"],
-:root[data-theme="midnight"],
-:root[data-theme="aurora"]{
-  .tiptap-toolbar[data-variant="fixed"] {
-    padding: 30px 40px !important;
-  } 
 }
 
 // ─── Aurora: colour clouds, floating glass panels, violet → indigo ─────────
@@ -219,15 +197,10 @@
   --sb-scrlbr-color: rgba(76, 57, 160, 0.2) transparent;
 
   
-  // The page: a frosted panel floating on the clouds.
+  // The page: frosted glass over the clouds.
   .theme-sheet {
-    top: 12px;
-    right: 14px;
-    bottom: 14px;
-    border-radius: 24px;
     background: var(--aurora-glass);
     backdrop-filter: blur(30px) saturate(1.4);
-    box-shadow: var(--aurora-glass-edge), 0 24px 70px rgba(76, 57, 160, 0.16);
   }
 
   // Menus, popovers, cards: brighter glass above the page.
@@ -622,28 +595,23 @@ html:root[data-theme="aurora"] {
   --app-scrollbar-thumb: rgba(255, 255, 255, 0.108);
   --app-scrollbar-thumb-hover: rgba(255, 255, 255, 0.192);
 
-  // The page: smoked glass over the sky, with a crescent moon in its corner.
+  // The page: smoked glass over the sky, clear enough for the stars and
+  // the moon's glow to show through, with the moon in its top corner.
   .theme-sheet {
-    top: 12px;
-    right: 14px;
-    bottom: 14px;
-    border-radius: 18px;
-    background: var(--mn-glass);
-    backdrop-filter: blur(18px);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.072), 0 30px 80px rgba(0, 0, 0, 0.45);
+    box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.06);
 
     // Moonlight on the glass, from the moon in the top corner.
     background:
       radial-gradient(55% 40% at 100% 0%, rgba(255, 243, 214, 0.07), transparent 70%),
-      var(--mn-glass);
+      rgba(10, 11, 15, 0.58);
 
     // The moon: a full disc, lit from the top left, a few faint craters, a
     // soft shadow on its far side and a halo.
     &::after {
       content: "";
       position: absolute;
-      top: 64px;
-      right: 64px;
+      top: 76px;
+      right: 72px;
       width: 96px;
       height: 96px;
       border-radius: 50%;
@@ -1048,16 +1016,14 @@ html:root[data-theme="midnight"] {
     box-shadow: none;
   }
 
-  // The right page: flush against the sidebar (theme-sheet.tsx adds 24px
-  // for the floating themes), a shadow in the fold, binder holes and a red
-  // margin line along its left edge.
+  // The right page: a shadow in the fold, binder holes and a red margin
+  // line along its left edge.
   .theme-sheet {
     display: block;
     position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
-    margin-left: -24px;
     z-index: -1;
     pointer-events: none;
     transition: left 0.2s ease;
@@ -1087,7 +1053,6 @@ html:root[data-theme="midnight"] {
 
     &--flush {
       inset: 0;
-      margin-left: 0;
 
       &::before,
       &::after {
@@ -1652,13 +1617,10 @@ html:root[data-theme="notebook"] {
   --sb-scrlbr-width: thin;
   --sb-scrlbr-color: rgba(29, 26, 43, 0.2) transparent;
 
-  // The page: an outlined paper card on the dots.
+  // The page: paper, with an ink edge against the sidebar.
   .theme-sheet {
-    right: 20px;
-    bottom: 20px;
-    border-radius: 16px;
     background: var(--retro-paper);
-    box-shadow: 0 0 0 2px var(--retro-ink), 6px 6px 0 var(--retro-ink);
+    box-shadow: inset 2px 0 0 var(--retro-ink);
   }
 
   .tiptap-card {
@@ -1913,13 +1875,8 @@ html:root[data-theme="retro"] {
 
   // The page: glass in the picture's colour.
   .theme-sheet {
-    top: 4px;
-    right: 14px;
-    bottom: 8px;
-    border-radius: 22px;
     background: var(--wp-glass);
     backdrop-filter: blur(var(--wp-blur)) saturate(1.3);
-    box-shadow: inset 0 1px 0 var(--wp-hair), inset 0 0 0 1px var(--wp-hair), 0 24px 70px rgba(0, 0, 0, 0.28);
   }
 
   .tiptap-card {
@@ -2119,13 +2076,12 @@ html:root[data-theme="retro"] {
 }
 
 // ─── Wallpaper v3: the picture is the hero ──────────────────────────────────
-// Full-bleed picture; the sidebar and the top bar float on light frosted
-// glass, the page is one more opaque glass card. Nothing paints a solid
-// colour over the picture.
+// Full-bleed picture; the sidebar and the top bar are light frosted glass,
+// the page a more opaque glass. Nothing paints a solid colour over the
+// picture, and nothing moves from where the app puts it.
 :root[data-theme="wallpaper"] {
   --wp-glass-chrome: rgba(var(--wp-tint), 0.45);
   --wp-glass-page: rgba(var(--wp-tint), 0.8);
-  --wp-gap: 12px;
 
   // Nothing between the picture and the glass.
   --tt-bg-color: transparent;
@@ -2136,43 +2092,25 @@ html:root[data-theme="retro"] {
     background: transparent !important;
   }
 
-  // Sidebar: a floating glass panel, inset from the window edges.
+  // Sidebar: light glass.
   .sidebar:not(.sidebar-mobile):not(.sidebar--floating) {
-    top: var(--wp-gap) !important;
-    left: var(--wp-gap) !important;
-    height: calc(100vh - 2 * var(--wp-gap)) !important;
-    border-radius: 14px !important;
-    overflow: hidden;
-
     &::before {
       background: var(--wp-glass-chrome);
       backdrop-filter: blur(26px) saturate(1.4);
     }
   }
 
-  // Top bar: a glass strip right of the sidebar.
+  // Top bar: light glass, a hairline under it.
   .tiptap-toolbar[data-variant="fixed"] {
-    top: var(--wp-gap);
-    left: calc(var(--sidebar-width, 240px) + 2 * var(--wp-gap));
-    right: var(--wp-gap);
-    width: auto;
-    min-height: 44px;
-    padding: 0 14px !important;
-    border-radius: 12px;
     background: var(--wp-glass-chrome);
     backdrop-filter: blur(20px) saturate(1.4);
-    box-shadow: inset 0 1px 0 var(--wp-hair), 0 10px 40px rgba(0, 0, 0, 0.18);
+    box-shadow: inset 0 -1px 0 var(--wp-hair);
   }
 
-  // The page: one glass card under the top bar, open at the bottom.
+  // The page: the more opaque glass.
   .theme-sheet {
-    top: calc(44px + 2 * var(--wp-gap)) !important;
-    right: calc(4 * var(--wp-gap)) !important;
-    bottom: 0 !important;
-    border-radius: 16px 16px 0 0 !important;
     background: var(--wp-glass-page) !important;
     backdrop-filter: blur(30px) saturate(1.3) !important;
-    box-shadow: inset 0 1px 0 var(--wp-hair), 0 20px 60px rgba(0, 0, 0, 0.25) !important;
   }
 }
 
@@ -2180,15 +2118,6 @@ html:root[data-theme="retro"] {
 :root[data-theme="wallpaper"].dark {
   --wp-glass-chrome: rgba(var(--wp-tint), 0.38);
   --wp-glass-page: rgba(var(--wp-tint), 0.72);
-}
-
-// Phones: no floating; the picture behind a simple glass page.
-@media (max-width: 768px) {
-  :root[data-theme="wallpaper"] .theme-sheet {
-    top: 0 !important;
-    right: 0 !important;
-    border-radius: 0 !important;
-  }
 }
 
 // Brand shades from the accent (links, focus rings, selection, cursor).
