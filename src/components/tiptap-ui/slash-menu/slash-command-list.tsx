@@ -17,7 +17,7 @@ type Props = SuggestionProps<SlashItem> & {
 };
 
 export default function SlashList(props: Props) {
-  const { items = [], onClickItem, onClose, editor } = props;
+  const { items = [], onClickItem, onClose } = props;
   const { t } = useTranslation();
   const isSelectable = (item: SlashItem) => item.type === "command";
 
