@@ -15,6 +15,8 @@ import { OfflineCacheGuard } from "../features/shell/offline/offline-cache-guard
 import { UpdatePrompt } from "../features/shell/offline/update-prompt";
 import { OfflineDocSync } from "../features/shell/offline/offline-doc-sync";
 import { ChatOutboxSync } from "../features/shell/offline/chat-outbox-sync";
+import { DesktopTabs, DesktopTabsSync } from "../features/desktop";
+import { isDesktopApp } from "../lib/desktop";
 
 // Everything a signed-in person needs: the app's providers, the router, the
 // sidebar and the pages. Loaded lazily from App.tsx, only once someone is
@@ -36,6 +38,12 @@ export default function SignedInApp() {
                             <UpdatePrompt />
                             <OfflineDocSync />
                             <ChatOutboxSync />
+                            {isDesktopApp && (
+                              <>
+                                <DesktopTabsSync />
+                                <DesktopTabs />
+                              </>
+                            )}
                             <Sidebar />
                             <Outlet />
                           </ToastProvider>

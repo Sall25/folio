@@ -1,0 +1,226 @@
+// Page tabs in the desktop title bar (desktop-tabs.tsx). The active tab is
+// the page's own background, joined to the app below it; the others sit on
+// the bar, split by thin lines.
+
+.desktop-tabs {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  padding-left: 6px;
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding-right: 6px;
+    flex: none;
+  }
+
+  &__icon-btn {
+    all: unset;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    color: var(--tt-text-secondary);
+    flex: none;
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+      color: var(--tt-text-primary);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent, var(--tt-brand-color-500));
+    }
+  }
+
+  &__list {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: flex-end;
+    gap: 1px;
+    overflow: hidden;
+  }
+
+  &__new {
+    align-self: center;
+    margin-left: 4px;
+  }
+
+  &__fill {
+    flex: 1;
+    align-self: stretch;
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    flex: none;
+    font-size: 12px;
+  }
+}
+
+.desktop-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  // Tabs share the room; each between these widths.
+  flex: 0 1 200px;
+  min-width: 72px;
+  border-radius: 8px 8px 0 0;
+  color: var(--tt-text-secondary);
+  font-size: 12.5px;
+
+  &[data-pinned] {
+    flex: none;
+    min-width: 0;
+  }
+
+  // A thin line between two inactive tabs.
+  & + &:not([data-active])::before {
+    content: "";
+    position: absolute;
+    left: -1px;
+    top: 9px;
+    height: 14px;
+    width: 1px;
+    background: color-mix(in srgb, var(--tt-text-primary) 15%, transparent);
+  }
+  &[data-active] + &::before {
+    display: none;
+  }
+
+  &:hover:not([data-active]) {
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+  }
+
+  &[data-active] {
+    background: var(--tt-bg-color);
+    color: var(--tt-text-primary);
+    font-weight: 500;
+  }
+
+  // Dragging another tab over this one: where it will land.
+  &[data-over] {
+    box-shadow: inset 2px 0 0 var(--accent, var(--tt-brand-color-500));
+  }
+
+  &__main {
+    all: unset;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 6px 0 12px;
+    cursor: default;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent, var(--tt-brand-color-500));
+      outline-offset: -2px;
+      border-radius: 8px 8px 0 0;
+    }
+  }
+
+  &[data-pinned] &__main {
+    padding: 0 12px;
+  }
+
+  &__icon {
+    width: 16px;
+    height: 16px;
+    display: grid;
+    place-items: center;
+    flex: none;
+    overflow: hidden;
+  }
+
+  &__title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__close {
+    all: unset;
+    width: 20px;
+    height: 20px;
+    margin-right: 6px;
+    border-radius: 4px;
+    display: grid;
+    place-items: center;
+    flex: none;
+    color: var(--tt-text-secondary);
+    opacity: 0;
+
+    &:hover {
+      background: color-mix(in srgb, var(--tt-text-primary) 10%, transparent);
+      color: var(--tt-text-primary);
+    }
+
+    &:focus-visible {
+      opacity: 1;
+      outline: 2px solid var(--accent, var(--tt-brand-color-500));
+    }
+  }
+
+  &[data-active] &__close,
+  &:hover &__close {
+    opacity: 1;
+  }
+}
+
+.desktop-tab-menu {
+  z-index: 10000;
+  min-width: 220px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+
+  &__item {
+    all: unset;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--tt-text-primary);
+    cursor: default;
+
+    kbd {
+      margin-left: auto;
+      font: inherit;
+      font-size: 11.5px;
+      color: var(--tt-text-secondary);
+    }
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      background: color-mix(in srgb, var(--tt-text-primary) 7%, transparent);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+    }
+  }
+
+  &__sep {
+    height: 1px;
+    margin: 4px 6px;
+    background: var(--tt-border-color);
+  }
+}

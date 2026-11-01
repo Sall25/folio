@@ -1901,6 +1901,7 @@ html:root[data-theme="retro"] {
   .sidebar.sidebar-mobile,
   .sidebar.sidebar--floating {
     background: rgb(var(--wp-tint)) !important;
+    height: calc(var(--app-vh, 100vh) - 2 * var(--wp-gap)) !important;
   }
 
   .sidebar-section__label {

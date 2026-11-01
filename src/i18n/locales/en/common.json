@@ -1938,5 +1938,21 @@
     "move": "Move",
     "failed": "Couldn't finish moving the page. Check its access in Share.",
     "theTeamspace": "the teamspace"
+  },
+  "desktop": {
+    "tabs": "Tabs",
+    "back": "Back",
+    "forward": "Forward",
+    "newTab": "New tab",
+    "closeTab": "Close tab",
+    "duplicateTab": "Duplicate tab",
+    "pinTab": "Pin tab",
+    "unpinTab": "Unpin tab",
+    "copyLink": "Copy link",
+    "closeOtherTabs": "Close other tabs",
+    "closeTabsRight": "Close tabs to the right",
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "close": "Close"
   }
 }

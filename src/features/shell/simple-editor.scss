@@ -279,7 +279,7 @@ body,
   flex-shrink: 0;
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: var(--app-vh, 100vh);
   overflow-y: auto;
 }
 
@@ -289,7 +289,7 @@ body,
   flex-shrink: 0;
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: var(--app-vh, 100vh);
   overflow-y: auto;
 }
 
@@ -299,7 +299,7 @@ body,
   content-visibility: auto;
   flex: 1;
   min-width: 0;
-  height: calc(100vh - var(--tt-toolbar-height));
+  height: calc(var(--app-vh, 100vh) - var(--tt-toolbar-height));
   margin-right: -65px;
   overflow-y: visible;
   overflow-x: auto;
@@ -548,7 +548,7 @@ TABLE STYLE
   position: fixed;      // or absolute, matching where the sidebar sat
   top: 0;
   right: 0;
-  height: 100vh;
+  height: var(--app-vh, 100vh);
   min-width: 0;
   // width: 320px;         // the pane's width
   z-index: 10;

@@ -95,7 +95,7 @@
   display: flex;
   flex-direction: column;
   font-family: var(--sb-font);
-  height: 100vh;
+  height: var(--app-vh, 100vh);
   overflow: hidden;
   color: var(--sidebar-text-color);
   font-size: 14px;
@@ -171,7 +171,7 @@
 @media (max-width: 768px) {
   .simple-editor-main {
     margin-top: 0;
-    height: calc(100vh - var(--tt-toolbar-height));
+    height: calc(var(--app-vh, 100vh) - var(--tt-toolbar-height));
     padding-bottom: var(--tt-toolbar-height);
   }
 }

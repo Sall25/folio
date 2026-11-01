@@ -1,0 +1,95 @@
+// ── The desktop app's frame ─────────────────────────────────────────────────
+// The window has no system title bar: Folio draws its own (40px) at the top,
+// and the whole app sits below it. #root starts under the bar and is the
+// containing block of everything "fixed" inside it (contain: layout), so
+// the sidebar, toolbar and panes, which sit at top: 0, start under the bar
+// with no change of their own. Heights that filled the window
+// (100vh) use --app-vh instead: the window minus the bar.
+// html.is-desktop is set in main.tsx, only in the desktop app.
+
+html.is-desktop {
+  --titlebar-h: 40px;
+  --app-vh: calc(100vh - var(--titlebar-h));
+}
+
+html.is-desktop body {
+  overflow: hidden;
+}
+
+html.is-desktop #root {
+  position: fixed;
+  top: var(--titlebar-h);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  contain: layout;
+}
+
+// Panes put straight on <body> (outside #root): below the bar too.
+html.is-desktop .discussion-pane,
+html.is-desktop .pins-pane {
+  top: var(--titlebar-h) !important;
+  height: auto !important;
+}
+
+// The sync status lives in the title bar here, not the toolbar.
+html.is-desktop .tiptap-toolbar .sync-status {
+  display: none;
+}
+
+.desktop-title-bar {
+  // Fixed inside #root (its containing block), pulled up over the gap.
+  position: fixed;
+  top: calc(-1 * var(--titlebar-h));
+  left: 0;
+  right: 0;
+  height: var(--titlebar-h);
+  z-index: 2000;
+  display: flex;
+  align-items: stretch;
+  background: color-mix(in srgb, var(--tt-text-primary) 5%, var(--tt-bg-color));
+  color: var(--tt-text-secondary);
+  user-select: none;
+  -webkit-user-select: none;
+
+  &__traffic {
+    // Room for macOS's traffic lights.
+    width: 76px;
+    flex: none;
+  }
+
+  &__slot {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+  }
+
+  &__window {
+    display: flex;
+    flex: none;
+
+    button {
+      all: unset;
+      width: 46px;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      color: var(--tt-text-primary);
+      cursor: default;
+
+      &:hover {
+        background: color-mix(in srgb, var(--tt-text-primary) 9%, transparent);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--accent, var(--tt-brand-color-500));
+        outline-offset: -2px;
+      }
+    }
+
+    .desktop-title-bar__close:hover {
+      background: #c42b1c;
+      color: #fff;
+    }
+  }
+}

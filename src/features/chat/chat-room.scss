@@ -10,7 +10,7 @@ $gutter-mobile: 12px;
   align-self: stretch;
   width: 100%;
   min-width: 0;
-  height: 100dvh;
+  height: var(--app-vh, 100dvh);
   box-sizing: border-box;
 
   &__state {

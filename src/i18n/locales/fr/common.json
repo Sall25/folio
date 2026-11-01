@@ -1938,5 +1938,21 @@
     "move": "Déplacer",
     "failed": "Le déplacement n’a pas pu se terminer. Vérifiez l’accès dans Partager.",
     "theTeamspace": "l’espace d’équipe"
+  },
+  "desktop": {
+    "tabs": "Onglets",
+    "back": "Retour",
+    "forward": "Suivant",
+    "newTab": "Nouvel onglet",
+    "closeTab": "Fermer l'onglet",
+    "duplicateTab": "Dupliquer l'onglet",
+    "pinTab": "Épingler l'onglet",
+    "unpinTab": "Désépingler l'onglet",
+    "copyLink": "Copier le lien",
+    "closeOtherTabs": "Fermer les autres onglets",
+    "closeTabsRight": "Fermer les onglets à droite",
+    "minimize": "Réduire",
+    "maximize": "Agrandir",
+    "close": "Fermer"
   }
 }

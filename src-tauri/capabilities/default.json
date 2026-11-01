@@ -1,16 +1,29 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "What the Folio window may ask of the system: open web links and mail links in the default browser or mail app.",
-  "windows": ["main"],
+  "description": "What the Folio window may ask of the system: its own title bar (drag, minimize, maximize, close) and opening web and mail links in the default browser or mail app.",
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-internal-toggle-maximize",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-close",
     {
       "identifier": "opener:allow-open-url",
       "allow": [
-        { "url": "https://*" },
-        { "url": "http://*" },
-        { "url": "mailto:*" }
+        {
+          "url": "https://*"
+        },
+        {
+          "url": "http://*"
+        },
+        {
+          "url": "mailto:*"
+        }
       ]
     }
   ]
