@@ -1,0 +1,49 @@
+// Dragging a tab: the right half of the window, under the title bar, takes
+// the drop and opens that tab's page beside this one.
+
+.split-drop-zone {
+  position: fixed;
+  top: var(--titlebar-h, 0px);
+  right: 0;
+  bottom: 0;
+  width: 50vw;
+  z-index: 1900;
+  display: grid;
+  place-items: center;
+  border-left: 2px dashed
+    color-mix(
+      in srgb,
+      var(--accent, var(--tt-brand-color-500)) 50%,
+      transparent
+    );
+  background: color-mix(
+    in srgb,
+    var(--accent, var(--tt-brand-color-500)) 5%,
+    transparent
+  );
+  transition: background 0.12s ease;
+
+  &[data-over] {
+    background: color-mix(
+      in srgb,
+      var(--accent, var(--tt-brand-color-500)) 14%,
+      transparent
+    );
+  }
+
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: var(--tt-bg-color);
+    box-shadow:
+      0 0 0 1px var(--tt-border-color),
+      0 6px 18px rgba(15, 15, 15, 0.12);
+    color: var(--tt-text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    pointer-events: none;
+  }
+}

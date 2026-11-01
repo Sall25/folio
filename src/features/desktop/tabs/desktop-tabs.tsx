@@ -5,6 +5,7 @@ import { MaterialIcon } from "src/components/icons";
 import { SyncStatus } from "src/features/shell/offline/sync-status";
 import { TITLE_BAR_SLOT_ID } from "../title-bar/desktop-title-bar";
 import { QuickSwitcher } from "../quick-switcher/quick-switcher";
+import { SplitDropZone } from "../split/split-drop-zone";
 import { TabMenu } from "./tab-menu";
 import { useTabLabel } from "./tab-label";
 import { tabs, useTabs, type Tab } from "./tabs-store";
@@ -37,6 +38,9 @@ function TabStrip() {
     null,
   );
   const dragId = useRef<string | null>(null);
+  // A tab being dragged (not the active one): the right half of the page
+  // offers "Open beside" (B · two pages side by side).
+  const [dragging, setDragging] = useState<Tab | null>(null);
 
   return (
     <div className="desktop-tabs" data-tauri-drag-region>
@@ -76,7 +80,11 @@ function TabStrip() {
             onMenu={(e) => setMenu({ tab, x: e.clientX, y: e.clientY })}
             onDragStart={() => {
               dragId.current = tab.id;
+              // After the drag has started: changing the page under the
+              // pointer in the same event cancels it in some engines.
+              if (tab.id !== activeId) setTimeout(() => setDragging(tab), 0);
             }}
+            onDragEnd={() => setDragging(null)}
             onDropOn={() => {
               if (dragId.current && dragId.current !== tab.id)
                 tabs.move(dragId.current, index);
@@ -100,6 +108,10 @@ function TabStrip() {
         <SyncStatus />
       </div>
 
+      {dragging && (
+        <SplitDropZone path={dragging.path} onDone={() => setDragging(null)} />
+      )}
+
       {menu && (
         <TabMenu
           tab={menu.tab}
@@ -117,12 +129,14 @@ function TabButton({
   active,
   onMenu,
   onDragStart,
+  onDragEnd,
   onDropOn,
 }: {
   tab: Tab;
   active: boolean;
   onMenu: (e: ReactMouseEvent) => void;
   onDragStart: () => void;
+  onDragEnd: () => void;
   onDropOn: () => void;
 }) {
   const { t } = useTranslation();
@@ -142,6 +156,7 @@ function TabButton({
         e.dataTransfer.setData("text/plain", title);
         onDragStart();
       }}
+      onDragEnd={onDragEnd}
       onDragOver={(e) => {
         e.preventDefault();
         setOver(true);

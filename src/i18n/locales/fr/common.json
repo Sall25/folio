@@ -1962,6 +1962,7 @@
     "switchToTab": "Aller à l'onglet",
     "open": "Ouvrir",
     "openInNewTab": "Ouvrir dans un nouvel onglet",
-    "closeSwitcher": "Fermer"
+    "closeSwitcher": "Fermer",
+    "openBeside": "Ouvrir à côté"
   }
 }

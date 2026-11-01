@@ -1962,6 +1962,7 @@
     "switchToTab": "Switch to tab",
     "open": "Open",
     "openInNewTab": "Open in a new tab",
-    "closeSwitcher": "Close"
+    "closeSwitcher": "Close",
+    "openBeside": "Open beside"
   }
 }

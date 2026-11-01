@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Card } from "src/components/tiptap-ui-primitive/card";
 import { appUrl } from "src/lib/app-url";
 import { tabs, useTabs, type Tab } from "./tabs-store";
+import { canOpenBeside, useOpenBeside } from "../split/use-open-beside";
 
 // Right click on a tab: new, duplicate, pin, copy link, close, close others,
 // close to the right. At the pointer, kept on screen; Escape, a click
@@ -21,7 +22,8 @@ export function TabMenu({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const { tabs: list } = useTabs();
+  const { tabs: list, activeId } = useTabs();
+  const openBeside = useOpenBeside();
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ left: x, top: y });
 
@@ -80,6 +82,11 @@ export function TabMenu({
       <Item
         label={tab.pinned ? t("desktop.unpinTab") : t("desktop.pinTab")}
         onClick={run(() => tabs.togglePin(tab.id))}
+      />
+      <Item
+        label={t("desktop.openBeside")}
+        disabled={tab.id === activeId || !canOpenBeside(tab.path)}
+        onClick={run(() => openBeside(tab.path))}
       />
       <div className="desktop-tab-menu__sep" role="separator" />
       <Item
