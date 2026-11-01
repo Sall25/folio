@@ -1953,6 +1953,15 @@
     "closeTabsRight": "Fermer les onglets à droite",
     "minimize": "Réduire",
     "maximize": "Agrandir",
-    "close": "Fermer"
+    "close": "Fermer",
+    "quickSwitcher": "Aller à une page ou un onglet",
+    "switcherPlaceholder": "Aller à une page ou un onglet…",
+    "openTabs": "Onglets ouverts",
+    "pages": "Pages",
+    "noResults": "Aucun résultat",
+    "switchToTab": "Aller à l'onglet",
+    "open": "Ouvrir",
+    "openInNewTab": "Ouvrir dans un nouvel onglet",
+    "closeSwitcher": "Fermer"
   }
 }

@@ -10,7 +10,7 @@ function HomePageImpl() {
     <div
       style={{
         width: "100%",
-        maxHeight: "100vh",
+        maxHeight: "var(--app-vh, 100vh)",
         minWidth: isMobile ? "auto" : 950,
         padding: isMobile ? "1rem 1rem 30vh" : "1rem 1.5rem 30vh",
         overflowY: "auto",

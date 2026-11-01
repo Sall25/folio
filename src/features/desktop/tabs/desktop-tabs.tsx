@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { MaterialIcon } from "src/components/icons";
 import { SyncStatus } from "src/features/shell/offline/sync-status";
 import { TITLE_BAR_SLOT_ID } from "../title-bar/desktop-title-bar";
+import { QuickSwitcher } from "../quick-switcher/quick-switcher";
 import { TabMenu } from "./tab-menu";
 import { useTabLabel } from "./tab-label";
 import { tabs, useTabs, type Tab } from "./tabs-store";
@@ -20,7 +21,12 @@ export function DesktopTabs() {
   // (a lazy chunk, after sign-in), so its slot is already there.
   const [slot] = useState(() => document.getElementById(TITLE_BAR_SLOT_ID));
   if (!slot) return null;
-  return createPortal(<TabStrip />, slot);
+  return (
+    <>
+      {createPortal(<TabStrip />, slot)}
+      <QuickSwitcher />
+    </>
+  );
 }
 
 function TabStrip() {

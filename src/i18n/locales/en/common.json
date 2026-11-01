@@ -1953,6 +1953,15 @@
     "closeTabsRight": "Close tabs to the right",
     "minimize": "Minimize",
     "maximize": "Maximize",
-    "close": "Close"
+    "close": "Close",
+    "quickSwitcher": "Go to a page or tab",
+    "switcherPlaceholder": "Go to a page or tab…",
+    "openTabs": "Open tabs",
+    "pages": "Pages",
+    "noResults": "Nothing found",
+    "switchToTab": "Switch to tab",
+    "open": "Open",
+    "openInNewTab": "Open in a new tab",
+    "closeSwitcher": "Close"
   }
 }

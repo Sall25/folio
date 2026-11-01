@@ -69,7 +69,9 @@ export const Sidebar = memo(() => {
           : floatingActive
             ? drawerWidth
             : sidebarWidth,
-        height: floatingActive ? "min(600px, calc(100vh - 32px))" : "100vh",
+        height: floatingActive
+          ? "min(600px, calc(var(--app-vh, 100vh) - 32px))"
+          : "var(--app-vh, 100vh)",
         transform:
           isMobile && collapsed
             ? "translateX(-100%)"
@@ -102,7 +104,7 @@ export const Sidebar = memo(() => {
             // diagonal path down from the toolbar hamburger. Full height so the
             // vertically-centered card is always reachable without crossing a gap.
             width: Math.max(28, 8 + 20),
-            height: "100vh",
+            height: "var(--app-vh, 100vh)",
             zIndex: 899,
           }}
         />
