@@ -15,7 +15,12 @@ import { OfflineCacheGuard } from "../features/shell/offline/offline-cache-guard
 import { UpdatePrompt } from "../features/shell/offline/update-prompt";
 import { OfflineDocSync } from "../features/shell/offline/offline-doc-sync";
 import { ChatOutboxSync } from "../features/shell/offline/chat-outbox-sync";
-import { DesktopTabs, DesktopTabsSync } from "../features/desktop";
+import {
+  DesktopTabs,
+  DesktopTabsSync,
+  isPageWindow,
+  PageWindowTitle,
+} from "../features/desktop";
 import { isDesktopApp } from "../lib/desktop";
 
 // Everything a signed-in person needs: the app's providers, the router, the
@@ -38,13 +43,17 @@ export default function SignedInApp() {
                             <UpdatePrompt />
                             <OfflineDocSync />
                             <ChatOutboxSync />
-                            {isDesktopApp && (
+                            {/* Desktop app: tabs in the title bar; a page
+                                window (one page on its own) shows that
+                                page's title there and no sidebar. */}
+                            {isDesktopApp && !isPageWindow && (
                               <>
                                 <DesktopTabsSync />
                                 <DesktopTabs />
                               </>
                             )}
-                            <Sidebar />
+                            {isPageWindow && <PageWindowTitle />}
+                            {!isPageWindow && <Sidebar />}
                             <Outlet />
                           </ToastProvider>
                         </NotificationProvider>

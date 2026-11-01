@@ -5,6 +5,10 @@ import { Card } from "src/components/tiptap-ui-primitive/card";
 import { appUrl } from "src/lib/app-url";
 import { tabs, useTabs, type Tab } from "./tabs-store";
 import { canOpenBeside, useOpenBeside } from "../split/use-open-beside";
+import {
+  canOpenInWindow,
+  moveTabToWindow,
+} from "../page-window/move-tab-to-window";
 
 // Right click on a tab: new, duplicate, pin, copy link, close, close others,
 // close to the right. At the pointer, kept on screen; Escape, a click
@@ -87,6 +91,11 @@ export function TabMenu({
         label={t("desktop.openBeside")}
         disabled={tab.id === activeId || !canOpenBeside(tab.path)}
         onClick={run(() => openBeside(tab.path))}
+      />
+      <Item
+        label={t("desktop.openInNewWindow")}
+        disabled={!canOpenInWindow(tab.path)}
+        onClick={run(() => moveTabToWindow(tab))}
       />
       <div className="desktop-tab-menu__sep" role="separator" />
       <Item

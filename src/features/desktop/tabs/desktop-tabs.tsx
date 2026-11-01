@@ -1,4 +1,9 @@
-import { useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import {
+  useRef,
+  useState,
+  type DragEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { MaterialIcon } from "src/components/icons";
@@ -6,6 +11,10 @@ import { SyncStatus } from "src/features/shell/offline/sync-status";
 import { TITLE_BAR_SLOT_ID } from "../title-bar/desktop-title-bar";
 import { QuickSwitcher } from "../quick-switcher/quick-switcher";
 import { SplitDropZone } from "../split/split-drop-zone";
+import {
+  droppedOutside,
+  moveTabToWindow,
+} from "../page-window/move-tab-to-window";
 import { TabMenu } from "./tab-menu";
 import { useTabLabel } from "./tab-label";
 import { tabs, useTabs, type Tab } from "./tabs-store";
@@ -84,7 +93,13 @@ function TabStrip() {
               // pointer in the same event cancels it in some engines.
               if (tab.id !== activeId) setTimeout(() => setDragging(tab), 0);
             }}
-            onDragEnd={() => setDragging(null)}
+            onDragEnd={(e) => {
+              setDragging(null);
+              // Dropped outside the window: the tab becomes its own window
+              // there (E · a page in its own window).
+              const at = droppedOutside(e);
+              if (at) moveTabToWindow(tab, at);
+            }}
             onDropOn={() => {
               if (dragId.current && dragId.current !== tab.id)
                 tabs.move(dragId.current, index);
@@ -136,7 +151,7 @@ function TabButton({
   active: boolean;
   onMenu: (e: ReactMouseEvent) => void;
   onDragStart: () => void;
-  onDragEnd: () => void;
+  onDragEnd: (e: DragEvent<HTMLDivElement>) => void;
   onDropOn: () => void;
 }) {
   const { t } = useTranslation();

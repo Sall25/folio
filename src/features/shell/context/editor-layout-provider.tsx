@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { clampWidth, loadStoredWidth } from "src/lib/loadStoredWidth";
 import { SIDEBAR_WIDTH_KEY } from "src/lib/utils";
 import { useLayoutMode } from "../hooks/use-layout-mode";
+import { isPageWindow } from "src/features/desktop/page-window/page-window";
 
 interface EditorLayoutProviderProps {
   children: ReactNode;
@@ -24,7 +25,10 @@ export type PeekPhase = "hidden" | "entering" | "open" | "leaving";
 
 export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
   const { mode } = useLayoutMode();
-  const [collapsed, setCollapsed] = useState(mode === "mobile");
+  // A desktop page window has no sidebar: the page takes the whole width.
+  const [collapsed, setCollapsed] = useState(
+    mode === "mobile" || isPageWindow,
+  );
   const [expandedWidth, setExpandedWidth] = useState<number>(loadStoredWidth);
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   const [discussionOpen, setDiscussionOpen] = useState(false);

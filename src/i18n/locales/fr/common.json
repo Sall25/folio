@@ -1963,6 +1963,7 @@
     "open": "Ouvrir",
     "openInNewTab": "Ouvrir dans un nouvel onglet",
     "closeSwitcher": "Fermer",
-    "openBeside": "Ouvrir à côté"
+    "openBeside": "Ouvrir à côté",
+    "openInNewWindow": "Ouvrir dans une nouvelle fenêtre"
   }
 }
