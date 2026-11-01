@@ -1,0 +1,2 @@
+# Git hooks run through sh, also on Windows: keep them LF.
+.githooks/* text eol=lf

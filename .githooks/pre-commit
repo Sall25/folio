@@ -1,0 +1,13 @@
+#!/bin/sh
+# Runs before every commit: the unit tests, including the drag handle's
+# guards (src/components/tiptap-ui/drag-handle/drag-handle-rules.test.ts).
+# A failing test means the change undoes an earlier fix: the commit stops.
+#
+# Turned on by `npm install` (the "prepare" script sets core.hooksPath to
+# .githooks). Skip once, knowingly: git commit --no-verify
+echo "pre-commit: running tests…"
+npx vitest run --reporter=dot || {
+  echo ""
+  echo "pre-commit: tests failed — commit stopped. Fix the change, don't edit the test to match."
+  exit 1
+}

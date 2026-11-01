@@ -14,20 +14,21 @@ import {
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
 import { MenuRow } from "src/features/database/components/menu-row";
 import { createIcon } from "src/components/icons";
-import { useMyWorkspaces } from "src/hooks/use-workspaces";
+import { useMyWorkspaces, useOwnedWorkspaces } from "src/hooks/use-workspaces";
 import { useTeamspaces } from "src/hooks/use-teamspaces";
 import { useCurrentPerson } from "src/hooks/use-session";
 import {
-  useMoveTeamspace,
   useSetTeamspacePlacement,
   useTeamspacePlacements,
 } from "src/hooks/use-teamspace-placements";
+import { useMoveTeamspaceToWorkspace } from "src/hooks/use-delete-teamspace";
 import type { ID, Teamspace } from "src/types";
 import "./teamspace-placement-menu.scss";
 
 // A teamspace's "Show in" row (its sidebar ••• menu): which workspaces'
 // sidebars show it, for you — its home workspace always does — and, for
-// owners, "Move to…", which changes its home for everyone (migration 050).
+// owners, "Move to…", which changes its home for everyone: the same move as
+// in teamspace settings (move_teamspace), to a workspace you own.
 
 const ShowInIcon = createIcon("TeamspaceShowIn", "view_sidebar");
 
@@ -36,13 +37,16 @@ export function TeamspacePlacementMenu({ teamspaceId }: { teamspaceId: ID }) {
   const [open, setOpen] = useState(false);
   const [confirmMove, setConfirmMove] = useState<ID | null>(null);
   const { workspaces } = useMyWorkspaces();
-  const { data: teamspaces = [] } = useTeamspaces();
+  const { data: teamspaces } = useTeamspaces();
   const { data: placements } = useTeamspacePlacements();
   const { person } = useCurrentPerson();
   const setPlacement = useSetTeamspacePlacement();
-  const move = useMoveTeamspace();
+  const move = useMoveTeamspaceToWorkspace();
+  const { workspaces: owned } = useOwnedWorkspaces();
 
-  const ts = (teamspaces as Teamspace[])?.find((x) => x.id === teamspaceId);
+  const ts = (teamspaces as Teamspace[] | undefined)?.find(
+    (x) => x.id === teamspaceId,
+  );
   if (!ts || workspaces.length < 2) return null;
 
   const home = ts.workspaceId;
@@ -55,8 +59,9 @@ export function TeamspacePlacementMenu({ teamspaceId }: { teamspaceId: ID }) {
     (w) => w.id === home || placed.has(w.id),
   ).length;
   const isOwner = !!person && ts.ownerIds.includes(person.id);
-  const others = workspaces.filter((w) => w.id !== home);
-  const target = workspaces.find((w) => w.id === confirmMove);
+  // move_teamspace only moves to a workspace you own.
+  const others = owned.filter((w) => w.id !== home);
+  const target = owned.find((w) => w.id === confirmMove);
 
   return (
     <Popover
@@ -132,8 +137,21 @@ export function TeamspacePlacementMenu({ teamspaceId }: { teamspaceId: ID }) {
                       disabled={move.isPending}
                       onClick={() =>
                         move.mutate(
-                          { teamspaceId, workspaceId: target.id },
-                          { onSuccess: () => setConfirmMove(null) },
+                          { id: teamspaceId, workspaceId: target.id },
+                          {
+                            onSuccess: () => {
+                              setConfirmMove(null);
+                              // Its new home shows it anyway: drop your
+                              // "also show here" for that workspace.
+                              if (placed.has(target.id)) {
+                                setPlacement.mutate({
+                                  teamspaceId,
+                                  workspaceId: target.id,
+                                  on: false,
+                                });
+                              }
+                            },
+                          },
                         )
                       }
                     >

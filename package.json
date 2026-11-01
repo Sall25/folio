@@ -9,6 +9,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "test": "vitest run",
+    "prepare": "git config core.hooksPath .githooks || true",
     "preview": "vite preview"
   },
   "dependencies": {
