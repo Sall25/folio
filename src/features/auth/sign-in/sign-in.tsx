@@ -9,6 +9,14 @@ import { PROVIDERS } from "./utils";
 import { readUnsentOwner } from "src/lib/query-persistence";
 import { listDirtyPageIds } from "src/lib/offline-doc-cache";
 import "./sign-in.scss";
+import { isDesktopApp } from "src/lib/desktop";
+import { appUrl } from "src/lib/app-url";
+
+// Where the link in a sign-up or sign-in email leads. On the web: back to
+// this site (localhost in dev, a preview on Vercel). In the desktop app its
+// own address can't be opened from an email, so the web app's.
+const emailRedirect = () =>
+  isDesktopApp ? appUrl("/") : window.location.origin;
 
 type Status = "idle" | "sending" | "sent" | "error";
 type Mode = "signin" | "signup" | "magic-link";
@@ -71,7 +79,7 @@ export function SignIn() {
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: emailRedirect(),
           data: { name: name.trim() },
         },
       });
@@ -113,7 +121,7 @@ export function SignIn() {
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: emailRedirect(),
         data: { name: name.trim() },
       },
     });
@@ -212,7 +220,10 @@ export function SignIn() {
           </p>
         )}
 
-        {mode !== "magic-link" && (
+        {/* Desktop app: Google and magic links would finish signing in
+            in the browser, not in the app, until they can return into it
+            (folio:// links). Email and password work there. */}
+        {mode !== "magic-link" && !isDesktopApp && (
           <>
             <div className="sign-in__providers">
               {PROVIDERS.map((p) => (
@@ -328,16 +339,18 @@ export function SignIn() {
               >
                 Don't have an account? Sign up
               </button>
-              <button
-                type="button"
-                className="sign-in__link-button"
-                onClick={() => {
-                  resetFeedback();
-                  setMode("magic-link");
-                }}
-              >
-                Use a magic link instead
-              </button>
+              {!isDesktopApp && (
+                <button
+                  type="button"
+                  className="sign-in__link-button"
+                  onClick={() => {
+                    resetFeedback();
+                    setMode("magic-link");
+                  }}
+                >
+                  Use a magic link instead
+                </button>
+              )}
             </>
           )}
 

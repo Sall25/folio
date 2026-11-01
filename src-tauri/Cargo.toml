@@ -1,0 +1,23 @@
+[package]
+name = "folio"
+version = "0.1.0"
+description = "Folio desktop app"
+authors = ["Jule"]
+license = "AGPL-3.0-only"
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+# The _lib suffix keeps the library name apart from the binary's (a Cargo
+# quirk on Windows).
+name = "folio_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

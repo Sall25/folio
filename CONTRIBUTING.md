@@ -18,6 +18,17 @@ npm run dev
 
 You don't need an account to work on the editor: the landing page (`/` when signed out) runs the real editor with nearly every block, the slash menu, the drag handle and a live two-window collaboration demo. Anything that needs pages, people or a database (page links, mentions, the sidebar, databases, chat) needs a signed-in session.
 
+### Desktop app
+
+The desktop app (Windows, macOS, Linux) is the same web app in a [Tauri 2](https://v2.tauri.app) window; the native side lives in `src-tauri/`. To work on it, install Rust and your system's Tauri prerequisites once ([Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)), then:
+
+```bash
+npm run desktop:dev     # the app in a window, reloading as you edit (runs npm run dev)
+npm run desktop:build   # installers in src-tauri/target/release/bundle/
+```
+
+It reads the same `.env.local`; set `VITE_PUBLIC_APP_URL` so copied links point at the web app. In the app, links to other sites open in the default browser (`src/lib/desktop.ts`), there's no service worker, and sign-in is by email and password for now (Google and magic links come once they can return into the app).
+
 ## Branches and commits
 
 - Branch from an up-to-date `main`, one branch per change. To catch up with `main` later, rebase (`git fetch upstream` then `git rebase upstream/main`) rather than merging `main` into your branch: merges are how duplicate code sneaks in.

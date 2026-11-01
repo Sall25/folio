@@ -7,6 +7,12 @@ import { VitePWA } from "vite-plugin-pwa";
 
 const DAY = 60 * 60 * 24;
 
+// Set by the Tauri CLI while it runs the dev server or the build for the
+// desktop app (src-tauri). The app has no service worker (the app itself is
+// installed, and pages load from the bundled files), and the bundle report
+// shouldn't pop a browser tab on every desktop build.
+const isDesktop = !!process.env.TAURI_ENV_PLATFORM;
+
 // lucide-react/dynamic.mjs ends with a sourceMappingURL comment for a .map
 // file the package doesn't ship. It's served unbundled in dev (see
 // optimizeDeps.exclude), so Vite tries to read that map and logs
@@ -47,6 +53,9 @@ export default defineConfig({
     // "prompt": a new deploy waits until the person reloads (UpdatePrompt),
     // so nobody is reloaded mid-sentence. Off in dev.
     VitePWA({
+      // Off in the desktop app: no service worker is registered, and the
+      // update prompt's hook (virtual:pwa-register) does nothing there.
+      disable: isDesktop,
       registerType: "prompt",
       injectRegister: false,
       manifest: false,
@@ -110,7 +119,7 @@ export default defineConfig({
         ],
       },
     }),
-    visualizer({ open: true, gzipSize: true }),
+    !isDesktop && visualizer({ open: true, gzipSize: true }),
   ],
   build: {
     rollupOptions: {
@@ -147,7 +156,12 @@ export default defineConfig({
       src: resolve(__dirname, "./src"),
     },
   },
+  // The desktop app's dev window loads http://localhost:5173
+  // (src-tauri/tauri.conf.json): keep Tauri's logs on screen and fail
+  // instead of moving to another port.
+  clearScreen: !isDesktop,
   server: {
+    strictPort: isDesktop,
     // Dev only. The database (and its ~350 files and stylesheets) loads
     // lazily, so the first database you open used to wait while Vite compiled
     // every one of them. Warmup compiles them in the background as soon as the

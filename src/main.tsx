@@ -11,6 +11,7 @@ import "material-symbols/outlined.css";
 import App from "./app/App.tsx";
 import { installStaleChunkRecovery } from "./lib/stale-chunk-recovery";
 import { applyStoredIconStyle } from "./components/icons/icon-style.ts";
+import { installDesktopLinks } from "./lib/desktop";
 
 // A deploy removes the old code chunks; a tab still on the old version
 // reloads onto the new one instead of breaking (see the module).
@@ -18,6 +19,9 @@ installStaleChunkRecovery();
 
 // The icon style chosen in My settings, before the first render.
 applyStoredIconStyle();
+
+// Desktop app: links to other sites open in the default browser.
+installDesktopLinks();
 
 // const originalError = console.error;
 // console.error = (...args) => {
