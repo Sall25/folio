@@ -174,21 +174,23 @@ export function ColumnDropdown({ tablePos }: { tablePos: number }) {
             {showSortGroup && <Separator orientation="horizontal" />}
             {/* Table Color Dropdown */}
             <ButtonGroup className="dropdown-menu-group">
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem style={{ width: "100%" }} asChild>
                 <ColorDropdownMenu
+                  flyout
                   className="dropdown-menu-button"
                   editor={editor}
                   onAction={onAction}
                 />
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem style={{ width: "100%" }} asChild>
                 <AlignmentDropdownMenu
+                  flyout
                   className="dropdown-menu-button"
                   editor={editor}
                   onAction={onAction}
                 />
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem style={{ width: "100%" }} asChild>
                 <TableClearRowColButton
                   target="col"
                   hideWhenUnavailable={true}
@@ -379,6 +381,7 @@ export function RowDropdown({ tablePos }: { tablePos: number }) {
             <ButtonGroup className="dropdown-menu-group">
               <DropdownMenuItem asChild>
                 <ColorDropdownMenu
+                  flyout
                   className="dropdown-menu-button"
                   editor={editor}
                   onAction={onAction}
@@ -386,6 +389,7 @@ export function RowDropdown({ tablePos }: { tablePos: number }) {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <AlignmentDropdownMenu
+                  flyout
                   className="dropdown-menu-button"
                   editor={editor}
                   onAction={onAction}

@@ -1,5 +1,5 @@
 import { useTableOverlays } from "../table-overlays";
-import { useIsRowColEmpty } from "../../hooks";
+import { useIsRowColEmpty, useTableHasMergedCells } from "../../hooks";
 
 interface UseTableSortRowColProps {
   target: "row" | "col";
@@ -54,8 +54,9 @@ export function useTableSortRowCol({
   // });
 
   const isEmpty = useIsRowColEmpty(editor!, target, rowIndex!, colIndex!);
+  const merged = useTableHasMergedCells(editor);
 
   return {
-    isVisible: hideWhenUnavailable ? !isEmpty : true,
+    isVisible: !merged && (hideWhenUnavailable ? !isEmpty : true),
   };
 }

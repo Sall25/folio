@@ -93,7 +93,11 @@ export default function AlignmentDropdownMenu({
     >
       <CardItemGroup>
         <CardItemGroup>
-          <DropdownMenuItem className="menu-item" asChild>
+          <DropdownMenuItem
+            className="menu-item"
+            style={{ width: "100%" }}
+            asChild
+          >
             <Button
               role="menuitem"
               variant="ghost"
@@ -210,7 +214,12 @@ export default function AlignmentDropdownMenu({
     >
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
-          <Button className={className} role="menuitem" variant="ghost">
+          <Button
+            className={className}
+            role="menuitem"
+            variant="ghost"
+            style={{ width: "100%" }}
+          >
             <AlignmentIcon className="tiptap-button-icon" />
             <span>{t("alignment.label")}</span>
             <Spacer orientation="horizontal" />

@@ -1,27 +1,37 @@
-
-.dropdown-menu-content{
+.dropdown-menu-content {
   min-width: 15rem;
   justify-content: flex-start;
   align-items: flex-start;
-  
-   /* Animation states */
+
+  /* Animation states */
   &[data-state="open"] {
     animation:
-      fadeIn 250ms var(--tt-transition-easing-cubic) /*cubic-bezier(0.16, 1, 0.3, 1)*/,
-      zoomIn 250ms var(--tt-transition-easing-cubic) /*cubic-bezier(0.16, 1, 0.3, 1)*/;
+      fadeIn 250ms var(--tt-transition-easing-cubic)
+        /*cubic-bezier(0.16, 1, 0.3, 1)*/,
+      zoomIn 250ms var(--tt-transition-easing-cubic)
+        /*cubic-bezier(0.16, 1, 0.3, 1)*/;
   }
 
   &[data-state="closed"] {
     animation:
-      fadeOut 250ms var(--tt-transition-easing-cubic) /*150ms cubic-bezier(0.16, 1, 0.3, 1)*/,
-      zoomOut 250ms var(--tt-transition-easing-cubic) /*150ms cubic-bezier(0.16, 1, 0.3, 1)*/;
+      fadeOut 250ms var(--tt-transition-easing-cubic)
+        /*150ms cubic-bezier(0.16, 1, 0.3, 1)*/,
+      zoomOut 250ms var(--tt-transition-easing-cubic)
+        /*150ms cubic-bezier(0.16, 1, 0.3, 1)*/;
   }
 
-  .dropdown-menu-group{
+  .dropdown-menu-group {
     width: 100%;
+
+    // Every row spans the menu, the Color and Alignment flyouts too: their
+    // row sits in a wrapper div that the group (align-items: flex-start)
+    // would otherwise shrink to its text.
+    > * {
+      width: 100%;
+    }
   }
 
-  .dropdown-menu-button{
+  .dropdown-menu-button {
     width: 100%;
     align-items: flex-start;
     justify-content: flex-start;
@@ -30,14 +40,14 @@
   }
 }
 
-.dropdown-menu-container{
+.dropdown-menu-container {
   padding: 5px;
   overflow-y: scroll;
   align-items: flex-start;
 }
 
-button{
-  &[data-state-active="on"]{
+button {
+  &[data-state-active="on"] {
     background-color: var(--tt-button-active-icon-color);
   }
 }

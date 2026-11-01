@@ -1,5 +1,5 @@
 import { useTableOverlays } from "../table-overlays";
-import { useIsRowColEmpty } from "../../hooks";
+import { useIsRowColEmpty, useTableHasMergedCells } from "../../hooks";
 
 interface UseTableDuplicateRowColProps {
   target: "row" | "col";
@@ -18,8 +18,9 @@ export function useTableDuplicateRowCol({
   const { editor, colIndex, rowIndex } = useTableOverlays();
 
   const isEmpty = useIsRowColEmpty(editor!, target, rowIndex!, colIndex!);
+  const merged = useTableHasMergedCells(editor);
 
-  const isVisible = hideWhenUnavailable ? !isEmpty : true;
+  const isVisible = !merged && (hideWhenUnavailable ? !isEmpty : true);
 
   const duplicate = () => {
     if (target === "row") {

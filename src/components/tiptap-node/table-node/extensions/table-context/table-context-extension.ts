@@ -2,6 +2,7 @@ import { Table } from "@tiptap/extension-table";
 import {
   moveColumn,
   moveRow,
+  hasMergedCells,
   selectColumn as selectColumnTr,
   selectRow as selectRowTr,
   sortColumn as sortColumnFn,
@@ -88,6 +89,7 @@ export const TableContextExtension = Table.extend({
       moveRowUp(rowIndex) {
         return ({ state, dispatch }) => {
           const tr = moveRow(state.tr, rowIndex, rowIndex - 1);
+          if (!tr.docChanged) return false;
           if (dispatch) dispatch(tr);
           return true;
         };
@@ -95,6 +97,7 @@ export const TableContextExtension = Table.extend({
       moveRowDown(rowIndex) {
         return ({ state, dispatch }) => {
           const tr = moveRow(state.tr, rowIndex, rowIndex + 1);
+          if (!tr.docChanged) return false;
           if (dispatch) dispatch(tr);
           return true;
         };
@@ -103,6 +106,7 @@ export const TableContextExtension = Table.extend({
         (colIndex) =>
         ({ state, dispatch }) => {
           const tr = moveColumn(state.tr, colIndex, colIndex - 1);
+          if (!tr.docChanged) return false;
           if (dispatch) dispatch(tr);
           return true;
         },
@@ -110,23 +114,24 @@ export const TableContextExtension = Table.extend({
         (colIndex) =>
         ({ state, dispatch }) => {
           const tr = moveColumn(state.tr, colIndex, colIndex + 1);
+          if (!tr.docChanged) return false;
           if (dispatch) dispatch(tr);
           return true;
         },
       sortColumn:
         (colIndex, tablePos, ord, hasHeader = true) =>
         ({ tr, dispatch }) => {
-          if (dispatch) {
-            dispatch(sortColumnFn(tr, tablePos, colIndex, ord, hasHeader));
-          }
+          const next = sortColumnFn(tr, tablePos, colIndex, ord, hasHeader);
+          if (!next.docChanged) return false;
+          if (dispatch) dispatch(next);
           return true;
         },
       sortRow:
         (rowIndex, tablePos, ord) =>
         ({ tr, dispatch }) => {
-          if (dispatch) {
-            dispatch(sortRowFn(tr, rowIndex, tablePos, ord));
-          }
+          const next = sortRowFn(tr, rowIndex, tablePos, ord);
+          if (!next.docChanged) return false;
+          if (dispatch) dispatch(next);
           return true;
         },
       addColumnAtEnd:
@@ -191,7 +196,8 @@ export const TableContextExtension = Table.extend({
 
           const { tablePos, rowIndex, rowEnd } = pluginState;
           const tableNode = state.doc.nodeAt(tablePos);
-          if (!tableNode) return false;
+          // A merged cell would be copied once per row/column it spans.
+          if (!tableNode || hasMergedCells(tableNode)) return false;
 
           const map = TableMap.get(tableNode);
           const rowNode = tableNode.child(rowIndex);
@@ -226,7 +232,8 @@ export const TableContextExtension = Table.extend({
 
           const { tablePos, columnIndex } = pluginState;
           const tableNode = state.doc.nodeAt(tablePos);
-          if (!tableNode) return false;
+          // A merged cell would be copied once per row/column it spans.
+          if (!tableNode || hasMergedCells(tableNode)) return false;
 
           const map = TableMap.get(tableNode);
 

@@ -1,6 +1,7 @@
 import type { Transaction } from "@tiptap/pm/state";
 import { TableMap } from "prosemirror-tables";
 import { Node as PMNode } from "@tiptap/pm/model";
+import { hasMergedCells } from "./has-merged-cells";
 
 export type SortOrder = "asc" | "desc";
 
@@ -23,7 +24,7 @@ export function sortColumn(
 ) {
   const tableNode = tr.doc.nodeAt(tablePos);
 
-  if (!tableNode) return tr;
+  if (!tableNode || hasMergedCells(tableNode)) return tr;
 
   const map = TableMap.get(tableNode);
 

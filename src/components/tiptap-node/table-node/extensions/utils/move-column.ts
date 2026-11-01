@@ -2,6 +2,7 @@ import { Transaction } from "@tiptap/pm/state";
 import { Node } from "@tiptap/pm/model";
 import { CellSelection } from "@tiptap/pm/tables";
 import { TableMap } from "@tiptap/pm/tables";
+import { hasMergedCells } from "./has-merged-cells";
 
 export function moveColumn(
   tr: Transaction,
@@ -17,6 +18,7 @@ export function moveColumn(
   const map = TableMap.get(table);
 
   if (from < 0 || to < 0 || from >= map.width || to >= map.width) return tr;
+  if (hasMergedCells(table)) return tr;
 
   const newRows: Node[] = [];
 

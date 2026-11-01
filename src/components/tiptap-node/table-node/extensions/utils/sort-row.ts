@@ -1,6 +1,7 @@
 import type { Transaction } from "@tiptap/pm/state";
 import { TableMap } from "prosemirror-tables";
 import { Node as PMNode } from "@tiptap/pm/model";
+import { hasMergedCells } from "./has-merged-cells";
 
 function getCellSortValue(cell: PMNode): string | number {
   const text = cell.textContent.trim()
@@ -15,7 +16,7 @@ function getCellSortValue(cell: PMNode): string | number {
 export function sortRow(tr: Transaction, rowIndex: number, tablePos: number, ord: 'asc' | 'desc') {
 
   const tableNode = tr.doc.nodeAt(tablePos)
-  if (!tableNode) return tr
+  if (!tableNode || hasMergedCells(tableNode)) return tr
 
   const map = TableMap.get(tableNode)
 

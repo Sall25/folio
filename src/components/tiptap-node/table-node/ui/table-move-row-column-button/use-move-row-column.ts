@@ -1,6 +1,7 @@
 import type { Editor } from "@tiptap/core";
 import { useTableOverlays } from "../table-overlays";
 import type { MoveRowColButtonProps } from "./table-move-row-column-button";
+import { useTableHasMergedCells } from "../../hooks";
 
 interface UseMoveRowColReturnProps {
   isVisible: boolean;
@@ -18,6 +19,7 @@ export function useMoveRowCol({
 >): UseMoveRowColReturnProps {
   const { isLastCol, isLastRow, colIndex, rowIndex, editor } =
     useTableOverlays();
+  const merged = useTableHasMergedCells(editor);
 
   let shouldBeVisible = false;
 
@@ -35,7 +37,7 @@ export function useMoveRowCol({
     }
   }
 
-  const isVisible = hideWhenUnavailable ? shouldBeVisible : true;
+  const isVisible = !merged && (hideWhenUnavailable ? shouldBeVisible : true);
 
   return { isVisible, rowIndex, colIndex, editor };
 }

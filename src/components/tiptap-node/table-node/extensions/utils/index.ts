@@ -9,7 +9,7 @@ import { getRowRect } from "./get-row-rect";
 import { getRowStart } from "./get-row-start";
 
 /* Table command utils */
-import { alignSelection } from "./align-selection";
+import { hasMergedCells } from "./has-merged-cells";
 import { clearSelectionContent } from "./clear-selection-content";
 import { clearTableContent } from "./clear-table-content";
 import { fitWidth } from "./fit-width";
@@ -34,7 +34,7 @@ export {
   getRowRange,
   getRowRect,
   getRowStart,
-  alignSelection,
+  hasMergedCells,
   clearSelectionContent,
   clearTableContent,
   fitWidth,
