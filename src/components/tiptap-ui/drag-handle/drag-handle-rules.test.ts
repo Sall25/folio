@@ -297,4 +297,23 @@ describe("drag handle: component pieces still in place", () => {
   it("e257701c: top-level atoms (Pomodoro, page links) get the handle", () => {
     expect(src).toContain("topLevelAtom");
   });
+
+  // The handle library measures the editor's first and last blocks before
+  // it looks for a block (clampToContent): a block with no box there
+  // (display: none) means no handle at all on the page. ef85f541 hid the
+  // old trailing line under a database page that way.
+  it("database page: the hidden trailing line keeps a box", () => {
+    const scss = readFileSync(
+      resolve(
+        __dirname,
+        "../../../features/database/nodes/database-node/database-node.scss",
+      ),
+      "utf8",
+    );
+    const start = scss.indexOf(".tiptap.ProseMirror.is-database-page");
+    expect(start).toBeGreaterThan(-1);
+    const rule = scss.slice(start, scss.indexOf("}", start));
+    expect(rule).toContain("ProseMirror-trailingBreak");
+    expect(rule).not.toMatch(/display:\s*none/);
+  });
 });
