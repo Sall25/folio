@@ -48,9 +48,14 @@ const schema = new Schema({
 const t = (s = "x") => schema.text(s);
 const p = (s?: string) => schema.node("paragraph", null, [t(s)]);
 const h = (s?: string) => schema.node("heading", null, [t(s)]);
-const n = (name: string, ...content: Node[]) => schema.node(name, null, content);
+const n = (name: string, ...content: Node[]) =>
+  schema.node(name, null, content);
 const toggle = (...body: Node[]) =>
-  n("appendix", n("appendixSummary", t("title")), n("appendixContent", ...body));
+  n(
+    "appendix",
+    n("appendixSummary", t("title")),
+    n("appendixContent", ...body),
+  );
 // No view data in these tests (no editor): rows count as table rows.
 const db = (cell: string) =>
   schema.node("database", { databaseId: "db1" }, [
@@ -108,7 +113,11 @@ function targetAt(
     if (!best || score > best.score) best = { node, depth, score };
   }
   return best
-    ? { name: best.node.type.name, depth: best.depth, text: best.node.textContent }
+    ? {
+        name: best.node.type.name,
+        depth: best.depth,
+        text: best.node.textContent,
+      }
     : null;
 }
 
@@ -189,13 +198,24 @@ describe("drag handle: which block gets the handle", () => {
     });
   });
 
-  it("callout: a toggle at the top — its title is the toggle, not the callout", () => {
+  it("callout: a toggle at the top — its title is the callout (any first block is)", () => {
     const doc = n("doc", n("callout", toggle(p("inside")), p("after")));
-    expect(targetAt(doc, posOf(doc, "title"))?.name).toBe("appendix");
+    expect(targetAt(doc, posOf(doc, "title"))?.name).toBe("callout");
+  });
+
+  it("callout: a toggle at the top keeps its blocks' handles when the pointer moves left", () => {
+    const doc = n("doc", n("callout", toggle(p("inside")), p("after")));
+    expect(targetAt(doc, posOf(doc, "inside"), () => true)).toMatchObject({
+      name: "paragraph",
+      text: "inside",
+    });
   });
 
   it("callout: a list at the top keeps its items' handles", () => {
-    const doc = n("doc", n("callout", n("bulletList", n("listItem", p("item")))));
+    const doc = n(
+      "doc",
+      n("callout", n("bulletList", n("listItem", p("item")))),
+    );
     expect(targetAt(doc, posOf(doc, "item"))?.name).toBe("listItem");
   });
 
@@ -210,18 +230,37 @@ describe("drag handle: which block gets the handle", () => {
   });
 
   it("callout inside a column: first line is the callout, not the column", () => {
-    const doc = n("doc", n("columnBlock", n("column", n("callout", h("Title"))), n("column", p("right"))));
+    const doc = n(
+      "doc",
+      n(
+        "columnBlock",
+        n("column", n("callout", h("Title"))),
+        n("column", p("right")),
+      ),
+    );
     expect(targetAt(doc, posOf(doc, "Title"))?.name).toBe("callout");
   });
 
   it("list: an item's first line is the item, never the whole list", () => {
-    const doc = n("doc", n("bulletList", n("listItem", p("one")), n("listItem", p("two"))));
-    expect(targetAt(doc, posOf(doc, "two"))).toMatchObject({ name: "listItem", text: "two" });
+    const doc = n(
+      "doc",
+      n("bulletList", n("listItem", p("one")), n("listItem", p("two"))),
+    );
+    expect(targetAt(doc, posOf(doc, "two"))).toMatchObject({
+      name: "listItem",
+      text: "two",
+    });
   });
 
   it("columns: a block in a column, never the column or the column block", () => {
-    const doc = n("doc", n("columnBlock", n("column", p("left")), n("column", p("right"))));
-    expect(targetAt(doc, posOf(doc, "right"))).toMatchObject({ name: "paragraph", text: "right" });
+    const doc = n(
+      "doc",
+      n("columnBlock", n("column", p("left")), n("column", p("right"))),
+    );
+    expect(targetAt(doc, posOf(doc, "right"))).toMatchObject({
+      name: "paragraph",
+      text: "right",
+    });
   });
 
   it("quote: moves as one block", () => {

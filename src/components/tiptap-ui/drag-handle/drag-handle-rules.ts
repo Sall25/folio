@@ -49,15 +49,16 @@ export function basePenalty(
     return 1000;
   }
 
-  // A list item's first line is the item; a callout's first line of text
-  // (a paragraph, a heading, code) is the callout, so a callout starting
-  // with a heading can still be grabbed. Blocks with their own handle (a
-  // toggle, a database, a list, columns…) keep it.
+  // A list item's first line is the item, and a callout's first block, of
+  // any kind (text, a toggle, a database, an image…), is the callout, so a
+  // callout can always be grabbed by its first block. What's inside that
+  // block (a toggle's content, a database's rows, a list's items) keeps
+  // its own handles.
   if (
     isFirst &&
     (parentName === "listItem" ||
       parentName === "taskItem" ||
-      (parentName === "callout" && node.isTextblock))
+      parentName === "callout")
   ) {
     return 1000;
   }
