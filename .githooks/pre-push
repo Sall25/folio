@@ -1,0 +1,21 @@
+#!/bin/sh
+# Before every push: the slow checks CI runs, so a red build is caught
+# here instead of on GitHub.
+#   1. Typecheck (~20 s)
+#   2. Build
+# Skip once, knowingly: git push --no-verify (CI still runs them).
+
+fail() {
+  echo ""
+  echo "pre-push: $1 — push stopped."
+  exit 1
+}
+
+echo "pre-push: typecheck…"
+npx tsc --noEmit -p tsconfig.app.json || fail "typecheck failed"
+
+echo "pre-push: build…"
+# Placeholders, as in CI: the build only needs the variables to exist.
+VITE_SUPABASE_URL="${VITE_SUPABASE_URL:-https://placeholder.supabase.co}" \
+VITE_SUPABASE_PUBLISHABLE_KEY="${VITE_SUPABASE_PUBLISHABLE_KEY:-placeholder}" \
+  npm run build --silent >/dev/null || fail "build failed (run npm run build to see why)"

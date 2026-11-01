@@ -1,13 +1,31 @@
 #!/bin/sh
-# Runs before every commit: the unit tests, including the drag handle's
-# guards (src/components/tiptap-ui/drag-handle/drag-handle-rules.test.ts).
-# A failing test means the change undoes an earlier fix: the commit stops.
-#
-# Turned on by `npm install` (the "prepare" script sets core.hooksPath to
-# .githooks). Skip once, knowingly: git commit --no-verify
-echo "pre-commit: running tests…"
-npx vitest run --reporter=dot || {
+# Before every commit (a few seconds): the same checks as CI, minus the
+# slow ones (those run before a push, .githooks/pre-push).
+#   1. Lint the staged .ts/.tsx files (like CI: only what changed)
+#   2. Translations: no duplicate or missing keys
+#   3. Slash menu items
+#   4. Unit tests (drag handle and table guards included)
+# Any failure stops the commit. Skip once, knowingly: git commit --no-verify
+# (CI still runs everything on the pull request).
+
+fail() {
   echo ""
-  echo "pre-commit: tests failed — commit stopped. Fix the change, don't edit the test to match."
+  echo "pre-commit: $1 — commit stopped."
   exit 1
 }
+
+files=$(git diff --cached --name-only --diff-filter=ACMR -- '*.ts' '*.tsx' | grep -v '^src/_unused/')
+if [ -n "$files" ]; then
+  echo "pre-commit: lint (staged files)…"
+  # shellcheck disable=SC2086
+  npx eslint --no-warn-ignored $files || fail "lint failed"
+fi
+
+echo "pre-commit: translations…"
+node scripts/check-i18n.mjs || fail "translations check failed"
+
+echo "pre-commit: slash menu items…"
+node scripts/check-slash-items.mjs || fail "slash items check failed"
+
+echo "pre-commit: tests…"
+npx vitest run --reporter=dot || fail "tests failed (a fix was undone? fix the change, don't edit the test to match)"
