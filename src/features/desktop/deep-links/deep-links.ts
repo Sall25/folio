@@ -86,9 +86,8 @@ export async function installDesktopDeepLinks(): Promise<void> {
   if (!isDesktopApp || isPageWindow || installed) return;
   installed = true;
   try {
-    const { getCurrent, onOpenUrl } = await import(
-      "@tauri-apps/plugin-deep-link"
-    );
+    const { getCurrent, onOpenUrl } =
+      await import("@tauri-apps/plugin-deep-link");
     await onOpenUrl((urls) => urls.forEach((u) => void handle(u)));
     // The link the app was started with, if any.
     const start = await getCurrent();
