@@ -15,6 +15,17 @@ import { OfflineCacheGuard } from "../features/shell/offline/offline-cache-guard
 import { UpdatePrompt } from "../features/shell/offline/update-prompt";
 import { OfflineDocSync } from "../features/shell/offline/offline-doc-sync";
 import { ChatOutboxSync } from "../features/shell/offline/chat-outbox-sync";
+import {
+  DesktopAttention,
+  DesktopDeepLinkNavigator,
+  DesktopRail,
+  DesktopSidebarJoin,
+  DesktopTabs,
+  DesktopTabsSync,
+  isPageWindow,
+  PageWindowTitle,
+} from "../features/desktop";
+import { isDesktopApp } from "../lib/desktop";
 
 // Everything a signed-in person needs: the app's providers, the router, the
 // sidebar and the pages. Loaded lazily from App.tsx, only once someone is
@@ -36,7 +47,24 @@ export default function SignedInApp() {
                             <UpdatePrompt />
                             <OfflineDocSync />
                             <ChatOutboxSync />
-                            <Sidebar />
+                            {/* Desktop app: tabs in the title bar, the rail
+                                (workspaces, Home, Inbox, Chats) beside the
+                                sidebar, the unread count on the app's icon
+                                and system notifications, folio:// links; a page
+                                window (one page on its own) shows that
+                                page's title there and no sidebar. */}
+                            {isDesktopApp && !isPageWindow && (
+                              <>
+                                <DesktopTabsSync />
+                                <DesktopTabs />
+                                <DesktopSidebarJoin />
+                                <DesktopRail />
+                                <DesktopAttention />
+                                <DesktopDeepLinkNavigator />
+                              </>
+                            )}
+                            {isPageWindow && <PageWindowTitle />}
+                            {!isPageWindow && <Sidebar />}
                             <Outlet />
                           </ToastProvider>
                         </NotificationProvider>

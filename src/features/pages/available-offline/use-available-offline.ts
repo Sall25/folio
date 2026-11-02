@@ -10,7 +10,8 @@ import type { Page } from "src/types";
 // "Available offline" for one page, for the page menu and the sidebar.
 // On a teamspace's root page the switch keeps the whole teamspace. A page
 // kept through its teamspace or as a favorite shows as kept but can't be
-// switched off on its own (`locked`).
+// switched off on its own (`locked`), nor one kept with its whole
+// workspace (desktop app).
 export function useAvailableOffline(page: Page | null | undefined) {
   const { session } = useSession();
   const personId = session?.user?.id ?? null;
@@ -22,9 +23,13 @@ export function useAvailableOffline(page: Page | null | undefined) {
   return {
     isTeamspaceRoot,
     kept: by !== null,
-    /** How it's kept: "page", "teamspace" or "favorites" (null: not kept). */
+    /** How it's kept: "page", "teamspace", "favorites" or "workspace"
+     *  (null: not kept). */
     by,
-    locked: by === "favorites" || (by === "teamspace" && !isTeamspaceRoot),
+    locked:
+      by === "favorites" ||
+      by === "workspace" ||
+      (by === "teamspace" && !isTeamspaceRoot),
     set: (on: boolean) =>
       isTeamspaceRoot
         ? setTeamspaceKept(personId, page.id, on)

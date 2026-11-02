@@ -33,6 +33,7 @@ import {
   openerRecordOrder,
 } from "src/features/database/utils/record-opener";
 import "./peek-toolbar.scss";
+import { appUrl } from "src/lib/app-url";
 
 // The bar on top of a page opened beside the page (side view) or over it
 // (center view): close (side view only) · open as a full page │ how to open
@@ -93,7 +94,7 @@ export function PeekToolbar({
 
   const copyLink = async () => {
     if (!pageId) return;
-    const url = `${window.location.origin}/page/${pageId}`;
+    const url = appUrl(`/page/${pageId}`);
     try {
       await navigator.clipboard.writeText(url);
       show(t("share.linkCopied"), "success");

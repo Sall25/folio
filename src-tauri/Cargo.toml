@@ -1,0 +1,33 @@
+[package]
+name = "folio"
+version = "0.1.0"
+description = "Folio desktop app"
+authors = ["Jule"]
+license = "AGPL-3.0-only"
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+# The _lib suffix keeps the library name apart from the binary's (a Cargo
+# quirk on Windows).
+name = "folio_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# image-png: the unread count over the taskbar button on Windows is a PNG
+# drawn by the web app (setOverlayIcon).
+tauri = { version = "2", features = ["image-png"] }
+tauri-plugin-opener = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-deep-link = "2"
+tauri-plugin-notification = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# One Folio at a time: a folio:// link clicked while it runs reaches the
+# open app (deep-link feature) instead of starting a second one.
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }

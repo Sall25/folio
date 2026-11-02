@@ -11,6 +11,9 @@ import type { Page } from "src/types";
 //   • its teamspace — "Available offline" on a teamspace's root page keeps
 //     every page in it, database rows included
 //   • favorites — the "Keep favorites available offline" setting
+//   • the whole workspace — in the desktop app, "Keep this workspace
+//     available offline" in My settings keeps every page of the workspace
+//     (copies are files on disk there, with room for them)
 //
 // Stored in localStorage, per person (a choice on this device, not an
 // account setting). Only page ids — nothing another account could read.
@@ -19,9 +22,15 @@ export interface KeepChoices {
   pages: string[];
   teamspaces: string[];
   favorites: boolean;
+  workspaces: string[];
 }
 
-const EMPTY: KeepChoices = { pages: [], teamspaces: [], favorites: false };
+const EMPTY: KeepChoices = {
+  pages: [],
+  teamspaces: [],
+  favorites: false,
+  workspaces: [],
+};
 const storageKey = (personId: string) => `folio-offline-keep:${personId}`;
 
 // Parsed once per stored string, so useSyncExternalStore gets the same object
@@ -45,6 +54,7 @@ export function readKeepChoices(personId: string): KeepChoices {
         pages: Array.isArray(parsed.pages) ? parsed.pages : [],
         teamspaces: Array.isArray(parsed.teamspaces) ? parsed.teamspaces : [],
         favorites: parsed.favorites === true,
+        workspaces: Array.isArray(parsed.workspaces) ? parsed.workspaces : [],
       };
     }
   } catch {
@@ -98,6 +108,18 @@ export function setTeamspaceKept(
   });
 }
 
+export function setWorkspaceKept(
+  personId: string,
+  workspaceId: string,
+  on: boolean,
+) {
+  const c = readKeepChoices(personId);
+  writeKeepChoices(personId, {
+    ...c,
+    workspaces: toggle(c.workspaces, workspaceId, on),
+  });
+}
+
 export function setKeepFavorites(personId: string, on: boolean) {
   writeKeepChoices(personId, { ...readKeepChoices(personId), favorites: on });
 }
@@ -118,15 +140,19 @@ const isTeamspaceRoot = (page: Page) => page.teamspaceId === page.id;
 export function keptBy(
   page: Page,
   choices: KeepChoices,
-): "page" | "teamspace" | "favorites" | null {
+): "page" | "teamspace" | "favorites" | "workspace" | null {
+  const inKeptWorkspace =
+    !!page.workspaceId && choices.workspaces.includes(page.workspaceId);
   if (isTeamspaceRoot(page)) {
-    return choices.teamspaces.includes(page.id) ? "teamspace" : null;
+    if (choices.teamspaces.includes(page.id)) return "teamspace";
+    return inKeptWorkspace ? "workspace" : null;
   }
   if (choices.pages.includes(page.id)) return "page";
   if (page.teamspaceId && choices.teamspaces.includes(page.teamspaceId)) {
     return "teamspace";
   }
   if (choices.favorites && page.category === "Favorites") return "favorites";
+  if (inKeptWorkspace) return "workspace";
   return null;
 }
 
@@ -137,7 +163,8 @@ export function keptPageIds(pages: Page[], choices: KeepChoices): string[] {
   if (
     choices.pages.length === 0 &&
     choices.teamspaces.length === 0 &&
-    !choices.favorites
+    !choices.favorites &&
+    choices.workspaces.length === 0
   ) {
     return [];
   }

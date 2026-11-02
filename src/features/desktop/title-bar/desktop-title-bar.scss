@@ -1,0 +1,201 @@
+// ── The desktop app's frame ─────────────────────────────────────────────────
+// The window has no system title bar: Folio draws its own (40px) at the top,
+// and the whole app sits below it. #root starts under the bar and is the
+// containing block of everything "fixed" inside it (contain: layout), so
+// the sidebar, toolbar and panes, which sit at top: 0, start under the bar
+// with no change of their own. Heights that filled the window
+// (100vh) use --app-vh instead: the window minus the bar.
+// html.is-desktop is set in main.tsx, only in the desktop app.
+
+html.is-desktop {
+  --titlebar-h: 40px;
+  --app-vh: calc(100vh - var(--titlebar-h));
+}
+
+html.is-desktop body {
+  overflow: hidden;
+}
+
+html.is-desktop #root {
+  position: fixed;
+  top: var(--titlebar-h);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  // simple-editor.scss gives #root height: 100% (the window's), which
+  // would win over top + bottom and run it 40px past the window's bottom
+  // edge: everything placed from its bottom (the rail's account) ended up
+  // out of sight. Its height comes from top and bottom here.
+  height: auto;
+  contain: layout;
+}
+
+// Panes put straight on <body> (outside #root): below the bar too.
+html.is-desktop .discussion-pane,
+html.is-desktop .pins-pane {
+  top: var(--titlebar-h) !important;
+  height: auto !important;
+}
+
+// The sync status lives in the title bar here, not the toolbar.
+html.is-desktop .tiptap-toolbar .sync-status {
+  display: none;
+}
+
+.desktop-title-bar {
+  // Fixed inside #root (its containing block), pulled up over the gap.
+  // It starts at the docked sidebar's right edge (design B, below).
+  position: fixed;
+  top: calc(-1 * var(--titlebar-h));
+  left: var(--desktop-sidebar-w, 0px);
+  transition: left 0.2s ease;
+  right: 0;
+  height: var(--titlebar-h);
+  z-index: 2000;
+  display: flex;
+  align-items: stretch;
+  background: color-mix(in srgb, var(--tt-text-primary) 5%, var(--tt-bg-color));
+  color: var(--tt-text-secondary);
+  user-select: none;
+  -webkit-user-select: none;
+
+  &__traffic {
+    // Room for macOS's traffic lights.
+    width: 76px;
+    flex: none;
+  }
+
+  &__slot {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+  }
+
+  &__window {
+    display: flex;
+    flex: none;
+
+    button {
+      all: unset;
+      width: 46px;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      color: var(--tt-text-primary);
+      cursor: default;
+
+      &:hover {
+        background: color-mix(in srgb, var(--tt-text-primary) 9%, transparent);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--accent, var(--tt-brand-color-500));
+        outline-offset: -2px;
+      }
+    }
+
+    .desktop-title-bar__close:hover {
+      background: #c42b1c;
+      color: #fff;
+    }
+  }
+}
+
+// ── The sidebar and the title bar as one (design B) ─────────────────────────
+// The docked sidebar runs up to the top of the window, through the title
+// bar's height: a full-height column beside the page, its workspace
+// switcher level with the tabs. desktop-sidebar-join.tsx keeps its width in
+// --desktop-sidebar-w and sets .has-docked-sidebar. The Wallpaper theme's
+// floating glass sidebar keeps its own inset.
+html.is-desktop.has-docked-sidebar:not([data-theme="wallpaper"])
+  .sidebar:not(.sidebar-mobile):not(.sidebar--floating):not(
+    .sidebar--collapsed
+  ) {
+  top: calc(-1 * var(--titlebar-h)) !important;
+  height: 100vh !important;
+
+  // Its first row (workspace switcher, collapse, new page) is the title
+  // bar's height, so the switcher lines up with the tabs.
+  .sb-top {
+    height: var(--titlebar-h);
+    padding-top: 0 !important;
+  }
+
+  // The switcher takes its name's width instead of the whole row, and
+  // Collapse and New page stay at the right: the space between is the
+  // row itself, which drags the window (data-tauri-drag-region on .sb-top
+  // only drags from the row, never from its buttons).
+  .sb-ws-row,
+  .sb-ws {
+    flex: 0 1 auto;
+  }
+
+  .sb-top__collapse {
+    margin-left: auto;
+  }
+}
+
+// macOS: the traffic lights sit over the sidebar's top-left corner now.
+html.is-desktop.is-mac.has-docked-sidebar .sidebar .sb-top {
+  padding-left: 72px;
+}
+
+// With the sidebar beside it, the title bar has no traffic lights to make
+// room for.
+html.is-desktop.is-mac.has-docked-sidebar .desktop-title-bar__traffic {
+  display: none;
+}
+
+// Wallpaper: the sidebar floats inset (its own design), so the title bar
+// stays full width above it.
+html.is-desktop[data-theme="wallpaper"] .desktop-title-bar {
+  left: 0;
+}
+
+// ── The title bar in the space's accent colour (design A, tinted) ──────────
+// In a space with an accent (html.space-accent, --space-accent set by
+// SpaceAccentRoot), the bar takes a light wash of it, and the inactive
+// tabs, arrows and sync status a deeper shade. The active tab keeps the
+// page's colour, joined to the page. No accent chosen: the bar stays
+// neutral (above). Switching space recolours the window.
+html.is-desktop.space-accent .desktop-title-bar {
+  --title-accent-ink: color-mix(
+    in srgb,
+    var(--space-accent) 70%,
+    var(--tt-text-primary)
+  );
+  background: color-mix(in srgb, var(--space-accent) 14%, var(--tt-bg-color));
+  color: var(--title-accent-ink);
+
+  .desktop-tabs__icon-btn,
+  .desktop-tab:not([data-active]),
+  .desktop-tab:not([data-active]) .desktop-tab__close,
+  .desktop-tabs__status {
+    color: var(--title-accent-ink);
+  }
+
+  .desktop-tabs__icon-btn:hover:not(:disabled),
+  .desktop-tab:hover:not([data-active]),
+  .desktop-tab__close:hover {
+    background: color-mix(in srgb, var(--space-accent) 14%, transparent);
+  }
+
+  .desktop-tab + .desktop-tab:not([data-active])::before {
+    background: color-mix(in srgb, var(--space-accent) 30%, transparent);
+  }
+
+  .desktop-title-bar__window button:not(.desktop-title-bar__close):hover {
+    background: color-mix(in srgb, var(--space-accent) 16%, transparent);
+  }
+}
+
+// Dark: a stronger wash (a 14% mix barely shows on a dark page) and a
+// lighter ink.
+html.is-desktop.space-accent.dark .desktop-title-bar {
+  --title-accent-ink: color-mix(
+    in srgb,
+    var(--space-accent) 55%,
+    var(--tt-text-primary)
+  );
+  background: color-mix(in srgb, var(--space-accent) 22%, var(--tt-bg-color));
+}

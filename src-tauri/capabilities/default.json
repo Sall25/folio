@@ -1,0 +1,40 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "What Folio's windows (the main one and page windows) may ask of the system: their own title bar (drag, minimize, maximize, close), opening a page in its own window, opening web and mail links in the default browser or mail app, files in the app's own data folder for offline copies, folio:// links, the unread count on the app's icon, coming to the front, and system notifications.",
+  "windows": [
+    "main",
+    "page-*"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-internal-toggle-maximize",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-close",
+    "core:webview:allow-create-webview-window",
+    "fs:allow-applocaldata-write-recursive",
+    "fs:allow-applocaldata-read-recursive",
+    "core:window:allow-set-badge-count",
+    "core:window:allow-set-overlay-icon",
+    "core:window:allow-set-focus",
+    "core:window:allow-unminimize",
+    "deep-link:default",
+    "notification:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://*"
+        },
+        {
+          "url": "http://*"
+        },
+        {
+          "url": "mailto:*"
+        }
+      ]
+    }
+  ]
+}

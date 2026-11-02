@@ -11,6 +11,7 @@ import {
 import { createPageMutationKey } from "src/hooks/use-create-page";
 import { createPage, patchPage } from "src/api/pages";
 import { patchPageMutationKey } from "src/hooks/use-patch-page";
+import { DesktopTitleBar } from "src/features/desktop";
 
 // The signed-in app (providers, router, sidebar, pages) is its own chunk,
 // downloaded only after sign-in; see signed-in-app.tsx.
@@ -55,6 +56,8 @@ function App() {
       // Anything queued while restoring goes out once the cache is back.
       onSuccess={() => client.resumePausedMutations()}
     >
+      {/* Desktop app only: its own title bar (tabs once signed in). */}
+      <DesktopTitleBar />
       {isPublishedPath ? (
         <Suspense fallback={<GateLoading />}>
           <PublishedPage />

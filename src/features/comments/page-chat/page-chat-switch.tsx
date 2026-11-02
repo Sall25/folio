@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { MaterialIcon } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -10,7 +11,10 @@ import "./page-chat.scss";
 // (page-chat-view.tsx). A small floating switch at the bottom right of the
 // page (off the top bar, which has little room); names in the app's
 // tooltip, the open tab in the accent colour, the number of open threads on
-// the chat tab. Mounted with the page (page-editor-layout.tsx).
+// the chat tab. Mounted with the page (page-editor-layout.tsx), drawn on
+// <body> so "bottom right" is the window's corner whatever the page area's
+// own box is (in the desktop app the page area sits under the title bar,
+// and from inside it the switch ended up cut off at the bottom).
 export function PageChatSwitch() {
   const { t } = useTranslation();
   const { activePageId } = useOptionalActivePage();
@@ -20,7 +24,7 @@ export function PageChatSwitch() {
   ).length;
   if (!activePageId) return null;
 
-  return (
+  return createPortal(
     <div
       className="page-chat-switch"
       role="tablist"
@@ -51,6 +55,7 @@ export function PageChatSwitch() {
           <span className="page-chat-switch__count">{openCount}</span>
         )}
       </Button>
-    </div>
+    </div>,
+    document.body,
   );
 }

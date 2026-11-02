@@ -4,12 +4,13 @@ import type { ID } from "src/types";
 import { queryKeys } from "src/lib/queryKeys";
 import { fetchPublishedPage, setPagePublished } from "src/api/pages";
 import { useToast } from "src/features/shell/toast";
+import { appUrl } from "src/lib/app-url";
 
 export const publishedPageKey = (id: ID) => ["published-page", id] as const;
 
 /** The public address of a published page. */
 export function publishedPageUrl(id: ID): string {
-  return `${window.location.origin}/p/${id}`;
+  return appUrl(`/p/${id}`);
 }
 
 /** A published page as visitors see it (works signed out). */

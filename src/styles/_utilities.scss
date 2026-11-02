@@ -371,7 +371,7 @@
 }
 
 .h-screen {
-  height: 100vh;
+  height: var(--app-vh, 100vh);
 }
 
 // Fractional Heights

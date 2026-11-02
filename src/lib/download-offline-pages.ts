@@ -1,6 +1,7 @@
 import * as Y from "yjs";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import { collabToken } from "src/lib/collab-token";
+import { isDesktopApp } from "src/lib/desktop";
 import {
   getDocSavedAt,
   isDocOpen,
@@ -25,7 +26,8 @@ import {
 //     — tried again after RETRY_FAILED_MS
 //
 // One page at a time, at most MAX_PER_RUN per run, so a large teamspace is
-// downloaded over a few runs instead of opening hundreds of connections.
+// downloaded over a few runs instead of opening hundreds of connections
+// (no limit in the desktop app).
 
 const HOCUSPOCUS_URL = import.meta.env.VITE_HOCUSPOCUS_URL as
   | string
@@ -33,7 +35,9 @@ const HOCUSPOCUS_URL = import.meta.env.VITE_HOCUSPOCUS_URL as
 const PAGE_TIMEOUT_MS = 20_000;
 const REFRESH_MS = 30 * 60 * 1000;
 const RETRY_FAILED_MS = 30 * 60 * 1000;
-const MAX_PER_RUN = 40;
+// The desktop app downloads a whole workspace in one go: copies are files on
+// disk there, and the app stays open long enough.
+const MAX_PER_RUN = isDesktopApp ? Number.POSITIVE_INFINITY : 40;
 
 const failedAt = new Map<string, number>();
 
@@ -66,7 +70,9 @@ function downloadPage(
 
     const onSynced = (data?: { state?: boolean }) => {
       if (data?.state === false) return;
-      saveDocCache(personId, pageId, Y.encodeStateAsUpdate(ydoc));
+      saveDocCache(personId, pageId, Y.encodeStateAsUpdate(ydoc), {
+        fromServer: true,
+      });
       finish(true);
     };
     const onAuthenticationFailed = () => finish(false);

@@ -2,9 +2,10 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import type { Query } from "@tanstack/react-query";
 import { clearOfflineDocCache } from "src/lib/offline-doc-cache";
 import { findJsonUnsafeCached } from "src/lib/json-safe";
+import { offlineKv } from "src/lib/offline-kv";
 
-// Saves React Query's cache (pages list, threads, people, roles…) to
-// IndexedDB so the app starts with data after a reload — instantly online,
+// Saves React Query's cache (pages list, threads, people, roles…) on the
+// device so the app starts with data after a reload — instantly online,
 // and at all offline.
 //
 // Stored in its own tiny IndexedDB key/value store (localStorage caps at
@@ -33,50 +34,16 @@ export const QUERY_CACHE_BUSTER = "v2";
 //                   staleTime: Infinity would keep serving it
 const NOT_PERSISTED = new Set<string>(["notifications", "session"]);
 
-let dbPromise: Promise<IDBDatabase> | null = null;
-
-function openDb(): Promise<IDBDatabase> {
-  if (dbPromise) return dbPromise;
-  dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
-    if (typeof indexedDB === "undefined") {
-      reject(new Error("IndexedDB unavailable"));
-      return;
-    }
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = () => {
-      if (!req.result.objectStoreNames.contains(STORE)) {
-        req.result.createObjectStore(STORE);
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-  dbPromise.catch(() => {
-    dbPromise = null;
-  });
-  return dbPromise;
-}
-
-function run<T>(
-  mode: IDBTransactionMode,
-  op: (store: IDBObjectStore) => IDBRequest<T>,
-): Promise<T> {
-  return openDb().then(
-    (db) =>
-      new Promise<T>((resolve, reject) => {
-        const req = op(db.transaction(STORE, mode).objectStore(STORE));
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-      }),
-  );
-}
+// Stored through offline-kv.ts: its own IndexedDB store on the web, files in
+// the app's data folder in the desktop app.
+const kv = offlineKv("query-cache", DB_NAME, STORE);
 
 // The async storage interface the persister expects. Failures (private mode,
 // quota) degrade to "no saved cache" instead of breaking the app.
-const idbStorage = {
+const kvStorage = {
   getItem: async (key: string): Promise<string | null> => {
     try {
-      const value = await run<unknown>("readonly", (s) => s.get(key));
+      const value = await kv.get(key);
       return typeof value === "string" ? value : null;
     } catch {
       return null;
@@ -84,14 +51,14 @@ const idbStorage = {
   },
   setItem: async (key: string, value: string): Promise<void> => {
     try {
-      await run("readwrite", (s) => s.put(value, key));
+      await kv.put(key, value);
     } catch {
       /* ignore */
     }
   },
   removeItem: async (key: string): Promise<void> => {
     try {
-      await run("readwrite", (s) => s.delete(key));
+      await kv.del(key);
     } catch {
       /* ignore */
     }
@@ -99,7 +66,7 @@ const idbStorage = {
 };
 
 export const queryPersister = createAsyncStoragePersister({
-  storage: idbStorage,
+  storage: kvStorage,
   key: PERSIST_KEY,
   throttleTime: 1000,
 });

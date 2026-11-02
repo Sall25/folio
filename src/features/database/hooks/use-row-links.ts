@@ -6,6 +6,7 @@ import { queryKeys } from "src/lib/queryKeys";
 import { spacePagePath } from "src/hooks/use-current-space";
 import { usePageViewActions } from "src/features/pages/context/page-view-context";
 import { useOptionalActivePage } from "src/features/pages/context/active-page-context";
+import { appUrl } from "src/lib/app-url";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Links to a ROW, not just to its page.
@@ -111,7 +112,7 @@ export function useRowLinks() {
   /** The full address to share; a page's own address when not a row. */
   const rowUrl = useCallback(
     (recordId: ID): string =>
-      `${window.location.origin}${rowPath(recordId) ?? spacePagePath(null, recordId)}`,
+      appUrl(rowPath(recordId) ?? spacePagePath(null, recordId)),
     [rowPath],
   );
 

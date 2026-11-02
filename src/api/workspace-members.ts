@@ -1,5 +1,6 @@
 import type { ID, MemberRole } from "src/types";
 import { supabase } from "./supabase-client";
+import { appUrl } from "src/lib/app-url";
 
 // Workspace membership, invites and invite links — all through the
 // server functions in migration 041 (they check who may do what).
@@ -198,7 +199,7 @@ export async function joinWorkspaceWithLink(token: string): Promise<ID> {
 }
 
 export const inviteLinkUrl = (token: string) =>
-  `${window.location.origin}/invite/${token}`;
+  appUrl(`/invite/${token}`);
 
 // ── Members ──────────────────────────────────────────────────────────────
 

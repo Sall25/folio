@@ -40,10 +40,14 @@ import { useSearch } from "./search/search-context";
 import { requestFindFocus } from "src/lib/find-store";
 import { HomeToolbar } from "../home/home-toolbar";
 import { requestTeamspaceMove } from "../pages/teamspace-move";
+import { isPageWindow } from "../desktop/page-window/page-window";
 
 function Expand() {
   const { collapsed } = useEditorLayoutState();
   const { openPeek, closePeek, onCollapsedChange } = useEditorLayoutActions();
+
+  // A page window (desktop app) has no sidebar to open.
+  if (isPageWindow) return null;
 
   return (
     <Button

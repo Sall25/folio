@@ -77,7 +77,9 @@ async function syncPage(
     // every update that produced (none at all if it already had them).
     const finishIfDelivered = () => {
       if (!applied || provider.hasUnsyncedChanges) return;
-      saveDocCache(personId, pageId, Y.encodeStateAsUpdate(ydoc));
+      saveDocCache(personId, pageId, Y.encodeStateAsUpdate(ydoc), {
+        fromServer: true,
+      });
       markDocClean(personId, pageId);
       finish("synced");
     };

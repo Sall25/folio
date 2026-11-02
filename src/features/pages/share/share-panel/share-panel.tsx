@@ -40,6 +40,7 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { Card } from "src/components/tiptap-ui-primitive/card";
+import { appUrl } from "src/lib/app-url";
 
 // Layers: the panel sits with the other popovers (1100, above the peek and
 // center views); its own menus open above it.
@@ -57,7 +58,7 @@ const GENERAL_ICON: Record<GeneralAccess, ReactNode> = {
 /** The address to share: the plain page link, which opens for anyone who has
  *  access (it isn't tied to a teamspace view). */
 function pageShareUrl(pageId: ID): string {
-  return `${window.location.origin}/page/${pageId}`;
+  return appUrl(`/page/${pageId}`);
 }
 
 // A small role dropdown reused for grant rows and general access.

@@ -9,6 +9,16 @@ import { PROVIDERS } from "./utils";
 import { readUnsentOwner } from "src/lib/query-persistence";
 import { listDirtyPageIds } from "src/lib/offline-doc-cache";
 import "./sign-in.scss";
+import { isDesktopApp } from "src/lib/desktop";
+import { DESKTOP_AUTH_CALLBACK } from "src/features/desktop/deep-links/parse-deep-link";
+import { onDesktopAuthError } from "src/features/desktop/deep-links/deep-links";
+
+// Where the link in a sign-up or sign-in email leads, and where Google
+// sends you back to. On the web: back to this site (localhost in dev, a
+// preview on Vercel). In the desktop app: back into the app, with a
+// folio:// link (features/desktop/deep-links), on this computer.
+const authRedirect = () =>
+  isDesktopApp ? DESKTOP_AUTH_CALLBACK : window.location.origin;
 
 type Status = "idle" | "sending" | "sent" | "error";
 type Mode = "signin" | "signup" | "magic-link";
@@ -27,6 +37,21 @@ export function SignIn() {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [oauthPending, setOauthPending] = useState<Provider | null>(null);
+  // Desktop app: Google's sign-in is open in the browser; it comes back
+  // into the app when it's done.
+  const [inBrowser, setInBrowser] = useState(false);
+
+  // Desktop app: a sign-in in the browser that failed (cancelled, expired
+  // link…) says why here.
+  useEffect(
+    () =>
+      onDesktopAuthError((message) => {
+        setInBrowser(false);
+        setStatus("error");
+        setErrorMessage(message);
+      }),
+    [],
+  );
 
   // Only mention it while those edits really are still here (another tab's
   // Log out may have discarded them since).
@@ -71,7 +96,7 @@ export function SignIn() {
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: authRedirect(),
           data: { name: name.trim() },
         },
       });
@@ -113,7 +138,7 @@ export function SignIn() {
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: authRedirect(),
         data: { name: name.trim() },
       },
     });
@@ -131,9 +156,34 @@ export function SignIn() {
     setOauthPending(provider);
     setErrorMessage(null);
 
+    // Desktop app: the provider's page opens in the browser (where the
+    // person is already signed in to Google), not in place of the app.
+    if (isDesktopApp) {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: authRedirect(), skipBrowserRedirect: true },
+      });
+      setOauthPending(null);
+      if (error || !data.url) {
+        setStatus("error");
+        setErrorMessage(error?.message ?? "Couldn't start signing in.");
+        return;
+      }
+      try {
+        const { openUrl } = await import("@tauri-apps/plugin-opener");
+        await openUrl(data.url);
+        setStatus("idle");
+        setInBrowser(true);
+      } catch {
+        setStatus("error");
+        setErrorMessage("Couldn't open the browser.");
+      }
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: authRedirect() },
     });
 
     // On success this navigates away to the provider — no further UI state
@@ -158,6 +208,14 @@ export function SignIn() {
             <strong>{email}</strong>. Click it to continue — you can close this
             tab.
           </p>
+          {isDesktopApp && (
+            <p className="sign-in__subtitle">
+              {t(
+                "desktop.openEmailLinkHere",
+                "Open it on this computer: it brings you back into the app, signed in.",
+              )}
+            </p>
+          )}
           <button
             type="button"
             className="sign-in__link-button"
@@ -209,6 +267,15 @@ export function SignIn() {
                   "offline.unsentSignInNoEmail",
                   "You have edits on this device that haven't been sent yet. Sign in again to send them.",
                 )}
+          </p>
+        )}
+
+        {inBrowser && (
+          <p className="sign-in__notice" role="status">
+            {t(
+              "desktop.signInInBrowser",
+              "Finish signing in in your browser. Folio opens again when you're done.",
+            )}
           </p>
         )}
 

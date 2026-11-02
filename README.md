@@ -131,6 +131,8 @@ VITE_SUPABASE_PUBLISHABLE_KEY=<your publishable (anon) key>
 VITE_HOCUSPOCUS_URL=ws://localhost:1234
 ```
 
+Optional: `VITE_PUBLIC_APP_URL` is the public address of the web app (e.g. `https://folio.app`). Links meant for other people (share, publish, invite, copy link) use it; without it they use the current site, which is fine in local dev but wrong in the desktop app and on preview deployments.
+
 ### 4. Database
 
 In a new Supabase project, open the **SQL Editor** and run, in order:

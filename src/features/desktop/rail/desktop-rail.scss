@@ -1,0 +1,274 @@
+// ── The rail ────────────────────────────────────────────────────────────────
+// A 68px column at the window's left edge, full height (through the title
+// bar's height, like the docked sidebar: desktop-title-bar.scss). It's part
+// of the sidebar: the same colour, a hairline between them. Only the
+// workspace you're in carries the accent, as a filled tile. The docked
+// sidebar keeps its width and gives the rail its first 68px (below), so
+// nothing else in the layout moves. Not in the Wallpaper theme: its sidebar
+// is a floating glass panel with its own dock.
+
+html.is-desktop {
+  --rail-w: 68px;
+  --rail-line: rgba(55, 53, 47, 0.09);
+  --rail-tile: rgba(55, 53, 47, 0.07);
+  --rail-hover: rgba(55, 53, 47, 0.06);
+  --rail-active: rgba(55, 53, 47, 0.08);
+  // The current workspace's tile: the space's colour, or Folio's brand
+  // colour where the space has none.
+  --rail-current: var(--space-accent, var(--tt-brand-color-500));
+
+  &.dark {
+    --rail-line: rgba(255, 255, 255, 0.07);
+    --rail-tile: rgba(255, 255, 255, 0.08);
+    --rail-hover: rgba(255, 255, 255, 0.06);
+    --rail-active: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.desktop-rail {
+  position: fixed;
+  // #root starts under the title bar; the rail runs up through it.
+  top: calc(-1 * var(--titlebar-h, 0px));
+  bottom: 0;
+  left: 0;
+  width: var(--rail-w);
+  z-index: 130; // above the sidebar card (120)
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0 14px;
+  background: var(--sidebar-surface, var(--sidebar-bg-color));
+  box-shadow: inset -1px 0 0 var(--rail-line);
+  color: var(--sb-row-color);
+  font-family: var(--sb-font);
+
+  // ── Workspaces ──
+  &__workspaces {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    flex: none;
+    max-height: 45%;
+    // Room for the current tile's ring, which the scroll box would clip.
+    padding: 4px 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  &__ws,
+  &__add {
+    all: unset;
+    box-sizing: border-box;
+    flex: none;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    cursor: pointer;
+    transition:
+      background 0.12s ease,
+      box-shadow 0.12s ease;
+
+    &:focus-visible {
+      outline: 2px solid var(--rail-current);
+      outline-offset: 3px;
+    }
+  }
+
+  &__ws {
+    background: var(--rail-tile);
+    color: var(--sb-active-color);
+    font-size: 15px;
+    font-weight: 700;
+
+    &:hover {
+      background: var(--rail-active);
+    }
+
+    // The workspace you're in: filled with the accent, a thin ring around.
+    &.is-current {
+      background: var(--rail-current);
+      color: #ffffff;
+      box-shadow:
+        0 0 0 2px var(--sidebar-surface, var(--sidebar-bg-color)),
+        0 0 0 3.5px
+          color-mix(
+            in srgb,
+            var(--rail-current) 55%,
+            var(--sidebar-surface, var(--sidebar-bg-color))
+          );
+    }
+  }
+
+  &__add {
+    color: var(--sb-label-color);
+
+    &:hover {
+      background: var(--rail-hover);
+      color: var(--sb-active-color);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+
+  &__divider {
+    flex: none;
+    width: 28px;
+    height: 1px;
+    margin: 12px 0 14px;
+    background: var(--rail-line);
+  }
+
+  // ── Home · Inbox · Chats (the dock's tabs), names under the icons ──
+  .sb-dock--rail {
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+
+    .sb-dock__tab {
+      flex: none;
+      width: 56px;
+      height: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      color: var(--sb-label-color);
+
+      &:hover {
+        background: transparent;
+        color: var(--sb-active-color);
+
+        .sb-dock__icon {
+          background: var(--rail-hover);
+        }
+      }
+
+      &.is-active {
+        background: transparent;
+        box-shadow: none;
+        color: var(--sb-active-color);
+
+        .sb-dock__icon {
+          background: var(--rail-active);
+        }
+
+        .sb-dock__label {
+          font-weight: 600;
+        }
+      }
+    }
+
+    .sb-dock__icon {
+      position: relative;
+      width: 38px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      transition: background 0.12s ease;
+    }
+
+    .sb-dock__label {
+      font-size: 10.5px;
+      font-weight: 500;
+      line-height: 1.2;
+    }
+
+    .sb-dock__badge {
+      top: -3px;
+      left: 22px;
+      box-shadow: 0 0 0 2px var(--sidebar-surface, var(--sidebar-bg-color));
+    }
+
+    // Your account at the foot: just the avatar.
+    .sb-account--compact {
+      flex: none;
+      width: 40px;
+      height: 40px;
+      margin-top: auto;
+      border-radius: 50%;
+
+      &:hover {
+        background: var(--rail-hover);
+      }
+    }
+  }
+}
+
+// macOS: the traffic lights sit at the window's top-left, over the rail.
+html.is-mac .desktop-rail {
+  padding-top: 40px;
+}
+
+html[data-theme="wallpaper"] .desktop-rail {
+  display: none;
+}
+
+// ── The sidebar beside it ──
+// The docked sidebar gives the rail its first 68px, and leaves its own dock
+// to the rail. The top row shows the space's name only (the rail shows the
+// workspace). The open page: a soft filled row, no outline. The search
+// field: filled, in grey (it was outlined in the accent).
+html.is-desktop.has-docked-sidebar:not([data-theme="wallpaper"]) {
+  .sidebar:not(.sidebar-mobile):not(.sidebar--floating):not(
+      .sidebar--collapsed
+    ) {
+    box-sizing: border-box;
+    padding-left: var(--rail-w) !important;
+
+    // The rail's colour and the sidebar's match: no accent wash at its foot.
+    &::before {
+      display: none;
+    }
+
+    .sb-footer {
+      display: none;
+    }
+
+    .sb-ws__tile {
+      display: none;
+    }
+
+    .page-item.active {
+      background: var(--sb-active-bg);
+      box-shadow: none;
+    }
+
+    .sb-find .sb-search {
+      border-color: transparent;
+      background: var(--rail-tile);
+    }
+
+    .sb-find input.sb-search__input::placeholder {
+      color: var(--sb-label-color);
+    }
+
+    .sb-find .sb-search__palette {
+      background: transparent;
+      color: var(--sb-label-color);
+    }
+  }
+
+  // The traffic lights are over the rail now, not the sidebar's top row.
+  &.is-mac .sidebar .sb-top {
+    padding-left: 0;
+  }
+}

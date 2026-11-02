@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
@@ -12,7 +12,15 @@ import type { Theme } from "src/types";
 import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { useSession } from "src/hooks/use-session";
 import { Toggle } from "src/components/tiptap-ui-primitive/toggle";
-import { setKeepFavorites, useKeepChoices } from "src/lib/offline-keep";
+import {
+  setKeepFavorites,
+  setWorkspaceKept,
+  useKeepChoices,
+} from "src/lib/offline-keep";
+import { countDocCopies } from "src/lib/offline-doc-cache";
+import { isDesktopApp } from "src/lib/desktop";
+import { usePagesBase } from "src/hooks/use-pages";
+import type { Page } from "src/types";
 import "./workspace-settings-content.scss";
 import { AppearancePicker } from "./appearance-picker";
 import { IconStyleSettings } from "./icon-style-settings";
@@ -147,6 +155,7 @@ export function MySettingsContent() {
       <AppearancePicker />
       <IconStyleSettings />
       <OfflineFavoritesRow />
+      {isDesktopApp && <OfflineWorkspaceRow />}
       <OfflineStorageRow />
     </div>
   );
@@ -169,6 +178,72 @@ function OfflineFavoritesRow() {
       <Toggle
         checked={favorites}
         onChangeAsync={async (on) => setKeepFavorites(personId, on)}
+      />
+    </SettingRow>
+  );
+}
+
+// Desktop app: the whole workspace on this computer (offline-keep.ts). Every
+// page and database row is downloaded and kept up to date in the
+// background (OfflineDocSync); copies are files on disk here, so there's
+// room. Shows how many are saved so far.
+const allPages = (pages: Page[]) => pages;
+const PROGRESS_MS = 3000;
+
+function OfflineWorkspaceRow() {
+  const { t } = useTranslation();
+  const { session } = useSession();
+  const personId = session?.user?.id ?? null;
+  const { workspace, workspaceId } = useCurrentWorkspace();
+  const { workspaces } = useKeepChoices(personId);
+  const kept = !!workspaceId && workspaces.includes(workspaceId);
+
+  const { data: pages } = usePagesBase(allPages);
+  const pageIds = useMemo(
+    () =>
+      (pages ?? [])
+        .filter((p) => p.deletedAt == null && p.workspaceId === workspaceId)
+        .map((p) => p.id),
+    [pages, workspaceId],
+  );
+
+  // How many are on this computer, checked every few seconds while it
+  // downloads.
+  const [saved, setSaved] = useState<number | null>(null);
+  useEffect(() => {
+    if (!kept || !personId) return;
+    let cancelled = false;
+    const check = () =>
+      void countDocCopies(personId, pageIds).then((n) => {
+        if (!cancelled) setSaved(n);
+      });
+    check();
+    const id = window.setInterval(check, PROGRESS_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [kept, personId, pageIds]);
+
+  if (!personId || !workspaceId) return null;
+
+  return (
+    <SettingRow
+      label={t("settings.mySettings.offlineWorkspace")}
+      description={
+        kept && saved !== null
+          ? t("settings.mySettings.offlineWorkspaceProgress", {
+              saved,
+              total: pageIds.length,
+            })
+          : t("settings.mySettings.offlineWorkspaceDesc", {
+              workspace: workspace?.name ?? "",
+            })
+      }
+    >
+      <Toggle
+        checked={kept}
+        onChangeAsync={async (on) => setWorkspaceKept(personId, workspaceId, on)}
       />
     </SettingRow>
   );

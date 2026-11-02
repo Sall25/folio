@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { clampWidth, loadStoredWidth } from "src/lib/loadStoredWidth";
 import { SIDEBAR_WIDTH_KEY } from "src/lib/utils";
 import { useLayoutMode } from "../hooks/use-layout-mode";
+import { isPageWindow } from "src/features/desktop/page-window/page-window";
 
 interface EditorLayoutProviderProps {
   children: ReactNode;
@@ -24,7 +25,10 @@ export type PeekPhase = "hidden" | "entering" | "open" | "leaving";
 
 export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
   const { mode } = useLayoutMode();
-  const [collapsed, setCollapsed] = useState(mode === "mobile");
+  // A desktop page window has no sidebar: the page takes the whole width.
+  const [collapsed, setCollapsed] = useState(
+    mode === "mobile" || isPageWindow,
+  );
   const [expandedWidth, setExpandedWidth] = useState<number>(loadStoredWidth);
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   const [discussionOpen, setDiscussionOpen] = useState(false);
@@ -66,8 +70,10 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
         // Entering mobile: drawer closed.
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCollapsed(true);
-      } else if (prev === "mobile") {
-        // Leaving mobile for a size that fits a panel: open it.
+      } else if (prev === "mobile" && !isPageWindow) {
+        // Leaving mobile for a size that fits a panel: open it. Not in a
+        // page window (desktop app): it opens narrow (mobile size) and has
+        // no sidebar, so widening it must not make room for one.
         setCollapsed(false);
       }
       prevModeRef.current = mode;
@@ -76,7 +82,11 @@ export function EditorLayoutProvider({ children }: EditorLayoutProviderProps) {
 
   const editorWrapperRef = useRef<HTMLDivElement>(null);
 
-  const onCollapsedChange = useCallback((v: boolean) => setCollapsed(v), []);
+  // A page window stays collapsed whatever asks (Quick Open, a shortcut…).
+  const onCollapsedChange = useCallback(
+    (v: boolean) => setCollapsed(v || isPageWindow),
+    [],
+  );
 
   const setSidebarWidth = useCallback((w: number) => {
     setExpandedWidth(clampWidth(w));

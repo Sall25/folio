@@ -88,6 +88,10 @@
   // The top bar sits on the page surface.
   --tt-toolbar-bg-color: transparent;
 
+  .simple-editor-wrapper{
+    height: calc(var(--app-vh, 100vh) - 4vh);
+  }
+
   // Covers start where the page starts, so they never show under the
   // see-through sidebar. --cover-sheet-offset (cover-header.tsx) is that
   // edge, measured inside the cover; it follows the sidebar's width and
@@ -1798,6 +1802,9 @@ html:root[data-theme="retro"] {
   --tt-theme-text: #1d1a2b;
   --tt-text-color: #2a2540;
   --tt-text-secondary: #57506b;
+   .simple-editor-wrapper{
+    height: calc(var(--app-vh, 100vh) - 4vh);
+  }
 }
 
 :root[data-theme="retro"] .tiptap.ProseMirror {
@@ -1901,6 +1908,7 @@ html:root[data-theme="retro"] {
   .sidebar.sidebar-mobile,
   .sidebar.sidebar--floating {
     background: rgb(var(--wp-tint)) !important;
+    height: calc(var(--app-vh, 100vh) - 2 * var(--wp-gap)) !important;
   }
 
   .sidebar-section__label {
@@ -2090,6 +2098,9 @@ html:root[data-theme="retro"] {
   .simple-editor-content,
   .tiptap.ProseMirror {
     background: transparent !important;
+  }
+  .simple-editor-wrapper{
+    height: calc(var(--app-vh, 100vh) - 4vh);
   }
 
   // Sidebar: light glass.
