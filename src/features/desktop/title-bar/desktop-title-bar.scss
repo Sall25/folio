@@ -39,9 +39,11 @@ html.is-desktop .tiptap-toolbar .sync-status {
 
 .desktop-title-bar {
   // Fixed inside #root (its containing block), pulled up over the gap.
+  // It starts at the docked sidebar's right edge (design B, below).
   position: fixed;
   top: calc(-1 * var(--titlebar-h));
-  left: 0;
+  left: var(--desktop-sidebar-w, 0px);
+  transition: left 0.2s ease;
   right: 0;
   height: var(--titlebar-h);
   z-index: 2000;
@@ -92,4 +94,42 @@ html.is-desktop .tiptap-toolbar .sync-status {
       color: #fff;
     }
   }
+}
+
+// ── The sidebar and the title bar as one (design B) ─────────────────────────
+// The docked sidebar runs up to the top of the window, through the title
+// bar's height: a full-height column beside the page, its workspace
+// switcher level with the tabs. desktop-sidebar-join.tsx keeps its width in
+// --desktop-sidebar-w and sets .has-docked-sidebar. The Wallpaper theme's
+// floating glass sidebar keeps its own inset.
+html.is-desktop.has-docked-sidebar:not([data-theme="wallpaper"])
+  .sidebar:not(.sidebar-mobile):not(.sidebar--floating):not(
+    .sidebar--collapsed
+  ) {
+  top: calc(-1 * var(--titlebar-h)) !important;
+  height: 100vh !important;
+
+  // Its first row (workspace switcher, collapse, new page) is the title
+  // bar's height, so the switcher lines up with the tabs.
+  .sb-top {
+    height: var(--titlebar-h);
+    padding-top: 0 !important;
+  }
+}
+
+// macOS: the traffic lights sit over the sidebar's top-left corner now.
+html.is-desktop.is-mac.has-docked-sidebar .sidebar .sb-top {
+  padding-left: 72px;
+}
+
+// With the sidebar beside it, the title bar has no traffic lights to make
+// room for.
+html.is-desktop.is-mac.has-docked-sidebar .desktop-title-bar__traffic {
+  display: none;
+}
+
+// Wallpaper: the sidebar floats inset (its own design), so the title bar
+// stays full width above it.
+html.is-desktop[data-theme="wallpaper"] .desktop-title-bar {
+  left: 0;
 }

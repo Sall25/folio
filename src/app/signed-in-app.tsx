@@ -16,6 +16,7 @@ import { UpdatePrompt } from "../features/shell/offline/update-prompt";
 import { OfflineDocSync } from "../features/shell/offline/offline-doc-sync";
 import { ChatOutboxSync } from "../features/shell/offline/chat-outbox-sync";
 import {
+  DesktopSidebarJoin,
   DesktopTabs,
   DesktopTabsSync,
   isPageWindow,
@@ -50,6 +51,7 @@ export default function SignedInApp() {
                               <>
                                 <DesktopTabsSync />
                                 <DesktopTabs />
+                                <DesktopSidebarJoin />
                               </>
                             )}
                             {isPageWindow && <PageWindowTitle />}
