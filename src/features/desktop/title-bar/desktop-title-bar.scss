@@ -115,6 +115,19 @@ html.is-desktop.has-docked-sidebar:not([data-theme="wallpaper"])
     height: var(--titlebar-h);
     padding-top: 0 !important;
   }
+
+  // The switcher takes its name's width instead of the whole row, and
+  // Collapse and New page stay at the right: the space between is the
+  // row itself, which drags the window (data-tauri-drag-region on .sb-top
+  // only drags from the row, never from its buttons).
+  .sb-ws-row,
+  .sb-ws {
+    flex: 0 1 auto;
+  }
+
+  .sb-top__collapse {
+    margin-left: auto;
+  }
 }
 
 // macOS: the traffic lights sit over the sidebar's top-left corner now.

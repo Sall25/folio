@@ -17,6 +17,7 @@ import {
 import { User } from "./sidebar-user";
 import { SidebarFind } from "./sidebar-dock";
 import { NewPageButton } from "./new-page-button";
+import { isDesktopApp } from "src/lib/desktop";
 import "./sidebar-tabs.scss";
 
 // Top row: the space switcher, collapse, and New page. The find row opens
@@ -40,7 +41,13 @@ export const SidebarHeader = memo(() => {
           minWidth: 0,
         }}
       >
-        <div className="sb-top" style={{ paddingTop: 4 }}>
+        {/* Desktop app: the row's empty space drags the window, like the
+            title bar it sits level with (desktop-title-bar.scss). */}
+        <div
+          className="sb-top"
+          style={{ paddingTop: 4 }}
+          data-tauri-drag-region={isDesktopApp ? "" : undefined}
+        >
           <User />
           {/* Revealed on hover/focus of the top row (always on touch). */}
           <span className="sb-top__collapse">
