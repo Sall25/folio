@@ -4,3 +4,6 @@ export { DesktopTabsSync } from "./tabs/desktop-tabs-sync";
 export { PageWindowTitle } from "./page-window/page-window-title";
 export { isPageWindow, openPageWindow } from "./page-window/page-window";
 export { DesktopSidebarJoin } from "./title-bar/desktop-sidebar-join";
+export { DesktopAttention } from "./attention/desktop-attention";
+export { DesktopDeepLinkNavigator } from "./deep-links/desktop-deep-link-navigator";
+export { installDesktopDeepLinks } from "./deep-links/deep-links";

@@ -27,7 +27,7 @@ npm run desktop:dev     # the app in a window, reloading as you edit (runs npm r
 npm run desktop:build   # installers in src-tauri/target/release/bundle/
 ```
 
-It reads the same `.env.local`; set `VITE_PUBLIC_APP_URL` so copied links point at the web app. In the app, links to other sites open in the default browser (`src/lib/desktop.ts`), there's no service worker, and sign-in is by email and password for now (Google and magic links come once they can return into the app).
+It reads the same `.env.local`; set `VITE_PUBLIC_APP_URL` so copied links point at the web app. In the app, links to other sites open in the default browser (`src/lib/desktop.ts`), there's no service worker, and Google and email-link sign-ins finish in the browser, then come back into the app through a `folio://auth/callback` link (`src/features/desktop/deep-links`). For that, add `folio://auth/callback` to Supabase → Authentication → URL Configuration → Redirect URLs, once per project. Other `folio://` links open the web app's paths in the app: `folio://page/<id>` is `/page/<id>`.
 
 ## Branches and commits
 

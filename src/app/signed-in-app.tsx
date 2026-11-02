@@ -16,6 +16,8 @@ import { UpdatePrompt } from "../features/shell/offline/update-prompt";
 import { OfflineDocSync } from "../features/shell/offline/offline-doc-sync";
 import { ChatOutboxSync } from "../features/shell/offline/chat-outbox-sync";
 import {
+  DesktopAttention,
+  DesktopDeepLinkNavigator,
   DesktopSidebarJoin,
   DesktopTabs,
   DesktopTabsSync,
@@ -44,7 +46,9 @@ export default function SignedInApp() {
                             <UpdatePrompt />
                             <OfflineDocSync />
                             <ChatOutboxSync />
-                            {/* Desktop app: tabs in the title bar; a page
+                            {/* Desktop app: tabs in the title bar, the
+                                unread count on the app's icon and system
+                                notifications, folio:// links; a page
                                 window (one page on its own) shows that
                                 page's title there and no sidebar. */}
                             {isDesktopApp && !isPageWindow && (
@@ -52,6 +56,8 @@ export default function SignedInApp() {
                                 <DesktopTabsSync />
                                 <DesktopTabs />
                                 <DesktopSidebarJoin />
+                                <DesktopAttention />
+                                <DesktopDeepLinkNavigator />
                               </>
                             )}
                             {isPageWindow && <PageWindowTitle />}

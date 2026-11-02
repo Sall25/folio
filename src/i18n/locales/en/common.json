@@ -1968,6 +1968,8 @@
     "openInNewTab": "Open in a new tab",
     "closeSwitcher": "Close",
     "openBeside": "Open beside",
-    "openInNewWindow": "Open in a new window"
+    "openInNewWindow": "Open in a new window",
+    "signInInBrowser": "Finish signing in in your browser. Folio opens again when you're done.",
+    "openEmailLinkHere": "Open it on this computer: it brings you back into the app, signed in."
   }
 }

@@ -12,6 +12,7 @@ import App from "./app/App.tsx";
 import { installStaleChunkRecovery } from "./lib/stale-chunk-recovery";
 import { applyStoredIconStyle } from "./components/icons/icon-style.ts";
 import { installDesktopLinks, isDesktopApp } from "./lib/desktop";
+import { installDesktopDeepLinks } from "./features/desktop/deep-links/deep-links";
 
 // A deploy removes the old code chunks; a tab still on the old version
 // reloads onto the new one instead of breaking (see the module).
@@ -23,6 +24,9 @@ applyStoredIconStyle();
 // Desktop app: links to other sites open in the default browser, and the
 // app draws its own title bar (features/desktop).
 installDesktopLinks();
+// Desktop app: folio:// links (the end of a sign-in in the browser, links
+// to pages) open in the app.
+void installDesktopDeepLinks();
 if (isDesktopApp) {
   document.documentElement.classList.add("is-desktop");
   if (/Mac/i.test(navigator.platform || navigator.userAgent)) {
