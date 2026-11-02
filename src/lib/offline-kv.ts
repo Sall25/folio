@@ -199,10 +199,17 @@ export function fileKv(dir: string, migrateFrom?: OfflineKv): OfflineKv {
   return {
     async get(key) {
       await ensure();
-      const { readFile, exists, BaseDirectory } = await fs();
-      const baseDir = BaseDirectory.AppLocalData;
-      if (!(await exists(path(key), { baseDir }))) return undefined;
-      return decodeValue(await readFile(path(key), { baseDir }));
+      const { readFile, BaseDirectory } = await fs();
+      // One call to the app, not two (exists, then read): a missing file
+      // fails the read, and reads as nothing. Opening a page reads three
+      // keys, so this is on the path of every page open.
+      try {
+        return decodeValue(
+          await readFile(path(key), { baseDir: BaseDirectory.AppLocalData }),
+        );
+      } catch {
+        return undefined;
+      }
     },
     async put(key, value) {
       await ensure();

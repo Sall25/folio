@@ -8,6 +8,7 @@ import {
   markDocClean,
   markDocDirty,
   noteDocOpened,
+  opensFromCopyAtOnce,
   saveDocCache,
 } from "src/lib/offline-doc-cache";
 import { trackProvider } from "src/lib/sync-status";
@@ -72,8 +73,17 @@ interface UseCollabDocResult {
 //     once online (sync-offline-edits.ts), and the next open merges the copy
 //     back in too (even online), so those edits reach the server.
 //
-// The local copy is only applied when needed (offline, or dirty) — never on a
-// normal online open. See the note on server restarts in the PR description.
+// On the web the local copy is only applied when needed (offline, or dirty)
+// — never on a normal online open. See the note on server restarts in the
+// PR description.
+//
+// In the desktop app a copy of the server's version (fromServer, see
+// offline-doc-cache.ts) opens the page at once, online too: it's on disk,
+// and it shares the server's history (the server keeps the page's Yjs state
+// in page_ydocs, same ids across restarts), so the server's sync merges
+// into it when it arrives. Until then it may lack someone else's latest
+// edits; they appear as the sync lands. Copies without that mark wait for
+// the server, as on the web.
 export function useCollabDoc(page: Page | null): UseCollabDocResult {
   const { session } = useSession();
   const pageId = page?.id ?? null;
@@ -141,6 +151,9 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
     // local copy (which came from the server). Before that nothing is saved
     // or marked — the doc may be empty.
     let hasLineage = false;
+    // The doc holds the server's version: synced in this session, or opened
+    // from a copy marked fromServer. Saved copies keep that mark.
+    let serverLineage = false;
     let cachedUpdate: Uint8Array | null = null;
     let cacheApplied = false;
     let dirtyMarked = false;
@@ -187,22 +200,32 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
     const save = () => {
       saveTimer = null;
       if (disposed || !hasLineage) return;
-      saveDocCache(personId, pageId, Y.encodeStateAsUpdate(ydoc));
+      saveDocCache(personId, pageId, Y.encodeStateAsUpdate(ydoc), {
+        fromServer: serverLineage,
+      });
     };
     const scheduleSave = () => {
       if (saveTimer !== null) window.clearTimeout(saveTimer);
       saveTimer = window.setTimeout(save, SAVE_DELAY_MS);
     };
 
-    void loadDocCache(personId, pageId).then(({ update, dirty }) => {
+    void loadDocCache(personId, pageId).then((copy) => {
       if (disposed) return;
+      const { update, dirty } = copy;
       cachedUpdate = update;
       cacheLoaded = true;
+      if (copy.fromServer) serverLineage = true;
       // Unsent edits from an earlier offline session: merge them now so the
       // provider delivers them on sync.
       if (dirty && update) {
         applyCache();
         dirtyMarked = true;
+      }
+      // Desktop app: open from the copy on disk now; the server's sync
+      // merges in when it arrives (unless it already has).
+      if (!liveSynced && opensFromCopyAtOnce(copy)) {
+        fallBackToCache();
+        return;
       }
       if (fallbackWanted || !navigator.onLine) fallBackToCache();
     });
@@ -225,6 +248,7 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
       }
       liveSynced = true;
       hasLineage = true;
+      serverLineage = true;
       authFailures = 0;
       setReady({ provider, source: "server" });
       setUnavailableFor((prev) => (prev === provider ? null : prev));
@@ -301,7 +325,9 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
       if (saveTimer !== null) {
         window.clearTimeout(saveTimer);
         if (hasLineage) {
-          saveDocCache(personId, pageId, Y.encodeStateAsUpdate(ydoc));
+          saveDocCache(personId, pageId, Y.encodeStateAsUpdate(ydoc), {
+            fromServer: serverLineage,
+          });
         }
       }
       untrack();

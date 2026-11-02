@@ -4,13 +4,22 @@ import { isDesktopApp } from "src/lib/desktop";
 // Local copies of collaborative page docs, so pages you've opened on this
 // device still open (and stay editable) while offline.
 //
-// Per person + page, up to three keys:
+// Per person + page, up to four keys:
 //   doc:<personId>:<pageId>    the full Yjs state (Y.encodeStateAsUpdate)
 //   dirty:<personId>:<pageId>  true when it holds edits the server hasn't
 //                              received yet (made while offline, or while the
 //                              connection was down)
 //   seen:<personId>:<pageId>   when the copy was last saved (ms), so the
 //                              oldest copies can be dropped (pruneDocCache)
+//   synced:<personId>:<pageId> true once the copy holds the server's version
+//                              of the page (saved after a sync with it, or
+//                              built on such a copy). Only those can open a
+//                              page before the server answers
+//                              (opensFromCopyAtOnce): they share the
+//                              server's history, so its sync merges into
+//                              them. Copies saved before this key existed,
+//                              and pages created on this device that haven't
+//                              reached the server, don't have it.
 //
 // Keyed by person so a shared device never serves one account's pages to
 // another. Every call swallows storage errors (private mode, quota): offline
@@ -27,33 +36,64 @@ const dirtyKey = (personId: string, pageId: string) =>
   `dirty:${personId}:${pageId}`;
 const seenKey = (personId: string, pageId: string) =>
   `seen:${personId}:${pageId}`;
+const syncedKey = (personId: string, pageId: string) =>
+  `synced:${personId}:${pageId}`;
+
+export interface DocCopy {
+  update: Uint8Array | null;
+  dirty: boolean;
+  /** The copy holds the server's version of the page (see synced: above). */
+  fromServer: boolean;
+}
 
 export async function loadDocCache(
   personId: string,
   pageId: string,
-): Promise<{ update: Uint8Array | null; dirty: boolean }> {
+): Promise<DocCopy> {
   try {
-    const [update, dirty] = await Promise.all([
+    const [update, dirty, synced] = await Promise.all([
       kv.get(docKey(personId, pageId)),
       kv.get(dirtyKey(personId, pageId)),
+      kv.get(syncedKey(personId, pageId)),
     ]);
+    const copy = update instanceof Uint8Array ? update : null;
     return {
-      update: update instanceof Uint8Array ? update : null,
+      update: copy,
       dirty: dirty === true,
+      fromServer: copy !== null && synced === true,
     };
   } catch (e) {
     console.warn("[offline] cache read failed", e);
-    return { update: null, dirty: false };
+    return { update: null, dirty: false, fromServer: false };
   }
 }
 
+/** Saves the page's copy. `fromServer`: it holds the server's version
+ *  (synced with it, or built on a copy that was) — marked once, never
+ *  unmarked by a later save. */
 export function saveDocCache(
   personId: string,
   pageId: string,
   update: Uint8Array,
+  options: { fromServer?: boolean } = {},
 ): void {
   kv.put(docKey(personId, pageId), update).catch(() => {});
   kv.put(seenKey(personId, pageId), Date.now()).catch(() => {});
+  if (options.fromServer) {
+    kv.put(syncedKey(personId, pageId), true).catch(() => {});
+  }
+}
+
+/** Desktop app: open the page from its copy on disk right away, and let the
+ *  server's sync merge in when it arrives, instead of waiting for it. Only
+ *  a copy of the server's version (fromServer) can: merging a copy with
+ *  another history would double the page's content. The web keeps waiting
+ *  for the server on a normal online open. */
+export function opensFromCopyAtOnce(
+  copy: DocCopy,
+  desktop: boolean = isDesktopApp,
+): boolean {
+  return desktop && copy.update !== null && copy.fromServer;
 }
 
 // Told whenever a page gains or loses unsent edits (the sync status pill
@@ -105,6 +145,7 @@ export async function clearOfflineDocCache(
       kept.add(k);
       kept.add(`doc:${rest}`);
       kept.add(`seen:${rest}`);
+      kept.add(`synced:${rest}`);
     }
     await Promise.all(keys.filter((k) => !kept.has(k)).map((k) => kv.del(k)));
   } catch {
@@ -225,6 +266,7 @@ export async function pruneDocCache(
       droppable.flatMap(({ pageId }) => [
         kv.del(docKey(personId, pageId)),
         kv.del(seenKey(personId, pageId)),
+        kv.del(syncedKey(personId, pageId)),
       ]),
     );
     return droppable.length;

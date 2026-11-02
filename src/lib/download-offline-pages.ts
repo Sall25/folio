@@ -70,7 +70,9 @@ function downloadPage(
 
     const onSynced = (data?: { state?: boolean }) => {
       if (data?.state === false) return;
-      saveDocCache(personId, pageId, Y.encodeStateAsUpdate(ydoc));
+      saveDocCache(personId, pageId, Y.encodeStateAsUpdate(ydoc), {
+        fromServer: true,
+      });
       finish(true);
     };
     const onAuthenticationFailed = () => finish(false);
