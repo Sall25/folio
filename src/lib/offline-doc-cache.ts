@@ -1,7 +1,10 @@
+import { offlineKv } from "src/lib/offline-kv";
+import { isDesktopApp } from "src/lib/desktop";
+
 // Local copies of collaborative page docs, so pages you've opened on this
 // device still open (and stay editable) while offline.
 //
-// Per person + page, up to three IndexedDB keys:
+// Per person + page, up to three keys:
 //   doc:<personId>:<pageId>    the full Yjs state (Y.encodeStateAsUpdate)
 //   dirty:<personId>:<pageId>  true when it holds edits the server hasn't
 //                              received yet (made while offline, or while the
@@ -13,47 +16,10 @@
 // another. Every call swallows storage errors (private mode, quota): offline
 // copies are a convenience, never load-bearing.
 
-const DB_NAME = "folio-offline";
-const STORE = "docs";
-
-let dbPromise: Promise<IDBDatabase> | null = null;
-
-function openDb(): Promise<IDBDatabase> {
-  if (dbPromise) return dbPromise;
-  dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
-    if (typeof indexedDB === "undefined") {
-      reject(new Error("IndexedDB unavailable"));
-      return;
-    }
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = () => {
-      if (!req.result.objectStoreNames.contains(STORE)) {
-        req.result.createObjectStore(STORE);
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-  // A failed open can be retried later (e.g. storage freed up).
-  dbPromise.catch(() => {
-    dbPromise = null;
-  });
-  return dbPromise;
-}
-
-function request<T>(
-  mode: IDBTransactionMode,
-  run: (store: IDBObjectStore) => IDBRequest<T>,
-): Promise<T> {
-  return openDb().then(
-    (db) =>
-      new Promise<T>((resolve, reject) => {
-        const req = run(db.transaction(STORE, mode).objectStore(STORE));
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-      }),
-  );
-}
+// Stored through offline-kv.ts: the "folio-offline" IndexedDB store on the
+// web, files in the app's data folder in the desktop app (no browser
+// clean-up, no quota).
+const kv = offlineKv("offline-docs", "folio-offline", "docs");
 
 const docKey = (personId: string, pageId: string) =>
   `doc:${personId}:${pageId}`;
@@ -68,8 +34,8 @@ export async function loadDocCache(
 ): Promise<{ update: Uint8Array | null; dirty: boolean }> {
   try {
     const [update, dirty] = await Promise.all([
-      request<unknown>("readonly", (s) => s.get(docKey(personId, pageId))),
-      request<unknown>("readonly", (s) => s.get(dirtyKey(personId, pageId))),
+      kv.get(docKey(personId, pageId)),
+      kv.get(dirtyKey(personId, pageId)),
     ]);
     return {
       update: update instanceof Uint8Array ? update : null,
@@ -86,12 +52,8 @@ export function saveDocCache(
   pageId: string,
   update: Uint8Array,
 ): void {
-  request("readwrite", (s) => s.put(update, docKey(personId, pageId))).catch(
-    () => {},
-  );
-  request("readwrite", (s) =>
-    s.put(Date.now(), seenKey(personId, pageId)),
-  ).catch(() => {});
+  kv.put(docKey(personId, pageId), update).catch(() => {});
+  kv.put(seenKey(personId, pageId), Date.now()).catch(() => {});
 }
 
 // Told whenever a page gains or loses unsent edits (the sync status pill
@@ -110,17 +72,11 @@ function notifyDirty() {
 }
 
 export function markDocDirty(personId: string, pageId: string): void {
-  request("readwrite", (s) => s.put(true, dirtyKey(personId, pageId))).then(
-    notifyDirty,
-    () => {},
-  );
+  kv.put(dirtyKey(personId, pageId), true).then(notifyDirty, () => {});
 }
 
 export function markDocClean(personId: string, pageId: string): void {
-  request("readwrite", (s) => s.delete(dirtyKey(personId, pageId))).then(
-    notifyDirty,
-    () => {},
-  );
+  kv.del(dirtyKey(personId, pageId)).then(notifyDirty, () => {});
 }
 
 /** Drop the offline copies on this device — call on sign-out. Resolves
@@ -135,16 +91,14 @@ export async function clearOfflineDocCache(
 ): Promise<void> {
   try {
     if (!keepUnsentOf) {
-      await request("readwrite", (s) => s.clear());
+      await kv.clear();
       return;
     }
-    const keys = await request<IDBValidKey[]>("readonly", (s) =>
-      s.getAllKeys(),
-    );
+    const keys = await kv.keys();
     // dirty:<person>:<page> → keep it and doc:<person>:<page>.
     const kept = new Set<string>();
     for (const k of keys) {
-      if (typeof k !== "string" || !k.startsWith("dirty:")) continue;
+      if (!k.startsWith("dirty:")) continue;
       const rest = k.slice("dirty:".length);
       const personId = rest.slice(0, rest.indexOf(":"));
       if (!keepUnsentOf(personId)) continue;
@@ -152,11 +106,7 @@ export async function clearOfflineDocCache(
       kept.add(`doc:${rest}`);
       kept.add(`seen:${rest}`);
     }
-    await Promise.all(
-      keys
-        .filter((k) => typeof k !== "string" || !kept.has(k))
-        .map((k) => request("readwrite", (s) => s.delete(k))),
-    );
+    await Promise.all(keys.filter((k) => !kept.has(k)).map((k) => kv.del(k)));
   } catch {
     /* storage blocked: nothing to clear */
   }
@@ -166,10 +116,8 @@ export async function clearOfflineDocCache(
  *  received yet (checked before signing out, which would discard them). */
 export async function hasDirtyDocs(): Promise<boolean> {
   try {
-    const keys = await request<IDBValidKey[]>("readonly", (s) =>
-      s.getAllKeys(),
-    );
-    return keys.some((k) => typeof k === "string" && k.startsWith("dirty:"));
+    const keys = await kv.keys();
+    return keys.some((k) => k.startsWith("dirty:"));
   } catch {
     return false;
   }
@@ -180,11 +128,9 @@ export async function hasDirtyDocs(): Promise<boolean> {
 export async function listDirtyPageIds(personId: string): Promise<string[]> {
   const prefix = `dirty:${personId}:`;
   try {
-    const keys = await request<IDBValidKey[]>("readonly", (s) =>
-      s.getAllKeys(),
-    );
+    const keys = await kv.keys();
     return keys
-      .filter((k): k is string => typeof k === "string" && k.startsWith(prefix))
+      .filter((k) => k.startsWith(prefix))
       .map((k) => k.slice(prefix.length));
   } catch {
     return [];
@@ -217,8 +163,9 @@ export function isDocOpen(pageId: string): boolean {
 
 // ── Keeping the store small ─────────────────────────────────────────────
 
-/** How many page copies each person keeps on this device. */
-export const MAX_DOC_COPIES = 200;
+/** How many page copies each person keeps on this device. The desktop app
+ *  keeps them on disk, with room for many more. */
+export const MAX_DOC_COPIES = isDesktopApp ? 5000 : 200;
 
 /** When this page's local copy was last saved (ms), or null without one. */
 export async function getDocSavedAt(
@@ -227,8 +174,8 @@ export async function getDocSavedAt(
 ): Promise<number | null> {
   try {
     const [update, seen] = await Promise.all([
-      request<unknown>("readonly", (s) => s.get(docKey(personId, pageId))),
-      request<unknown>("readonly", (s) => s.get(seenKey(personId, pageId))),
+      kv.get(docKey(personId, pageId)),
+      kv.get(seenKey(personId, pageId)),
     ]);
     if (!(update instanceof Uint8Array)) return null;
     return typeof seen === "number" ? seen : 0;
@@ -247,18 +194,14 @@ export async function pruneDocCache(
   kept: (pageId: string) => boolean = () => false,
 ): Promise<number> {
   try {
-    const keys = await request<IDBValidKey[]>("readonly", (s) =>
-      s.getAllKeys(),
-    );
+    const keys = await kv.keys();
     const docPrefix = `doc:${personId}:`;
     const dirty = new Set(
       keys
-        .filter((k): k is string => typeof k === "string")
         .filter((k) => k.startsWith(`dirty:${personId}:`))
         .map((k) => k.slice(`dirty:${personId}:`.length)),
     );
     const pageIds = keys
-      .filter((k): k is string => typeof k === "string")
       .filter((k) => k.startsWith(docPrefix))
       .map((k) => k.slice(docPrefix.length))
       .filter((pageId) => !kept(pageId));
@@ -267,9 +210,9 @@ export async function pruneDocCache(
     // Copies saved before "seen" existed count as the oldest.
     const seen = await Promise.all(
       pageIds.map((pageId) =>
-        request<unknown>("readonly", (s) =>
-          s.get(seenKey(personId, pageId)),
-        ).then((v) => (typeof v === "number" ? v : 0)),
+        kv
+          .get(seenKey(personId, pageId))
+          .then((v) => (typeof v === "number" ? v : 0)),
       ),
     );
     const droppable = pageIds
@@ -280,12 +223,37 @@ export async function pruneDocCache(
 
     await Promise.all(
       droppable.flatMap(({ pageId }) => [
-        request("readwrite", (s) => s.delete(docKey(personId, pageId))),
-        request("readwrite", (s) => s.delete(seenKey(personId, pageId))),
+        kv.del(docKey(personId, pageId)),
+        kv.del(seenKey(personId, pageId)),
       ]),
     );
     return droppable.length;
   } catch {
     return 0;
   }
+}
+
+/** How many of `pageIds` have a copy on this device (the "Available
+ *  offline" progress in My settings). */
+export async function countDocCopies(
+  personId: string,
+  pageIds: string[],
+): Promise<number> {
+  try {
+    const prefix = `doc:${personId}:`;
+    const saved = new Set(
+      (await kv.keys())
+        .filter((k) => k.startsWith(prefix))
+        .map((k) => k.slice(prefix.length)),
+    );
+    return pageIds.filter((id) => saved.has(id)).length;
+  } catch {
+    return 0;
+  }
+}
+
+/** Bytes the page copies take on disk (desktop app), or null where unknown
+ *  (the web: the browser's own estimate covers it). */
+export function offlineDocsSize(): Promise<number | null> {
+  return kv.size().catch(() => null);
 }

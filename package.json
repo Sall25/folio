@@ -43,6 +43,7 @@
     "@tanstack/react-query-persist-client": "^5.104.0",
     "@tanstack/react-virtual": "^3.13.24",
     "@tauri-apps/api": "^2.12.4",
+    "@tauri-apps/plugin-fs": "^2.7.1",
     "@tauri-apps/plugin-opener": "^2.7.2",
     "@tiptap/core": "^3.20.0",
     "@tiptap/extension-blockquote": "^3.19.0",

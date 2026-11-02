@@ -66,7 +66,9 @@ export function MorePopover({
     : offline.locked
       ? offline.by === "favorites"
         ? t("offline.keep.viaFavorites")
-        : t("offline.keep.viaTeamspace")
+        : offline.by === "workspace"
+          ? t("offline.keep.viaWorkspace")
+          : t("offline.keep.viaTeamspace")
       : offline.isTeamspaceRoot
         ? t("offline.keep.teamspace")
         : t("offline.keep.page");

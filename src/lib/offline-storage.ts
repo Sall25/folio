@@ -1,4 +1,8 @@
-import { clearOfflineDocCache } from "src/lib/offline-doc-cache";
+import {
+  clearOfflineDocCache,
+  offlineDocsSize,
+} from "src/lib/offline-doc-cache";
+import { isDesktopApp } from "src/lib/desktop";
 
 // How much this device keeps for Folio offline, and asking the browser to
 // keep it.
@@ -17,6 +21,8 @@ const PERSIST_ASKED_KEY = "folio-persist-asked";
 /** Asks once per device for persistent storage. Resolves with whether
  *  Folio's storage is now persistent. */
 export async function requestPersistentStorage(): Promise<boolean> {
+  // The desktop app keeps its copies in files nothing else clears.
+  if (isDesktopApp) return true;
   const storage = navigator.storage;
   if (!storage?.persist || !storage.persisted) return false;
   try {
@@ -33,6 +39,9 @@ export async function requestPersistentStorage(): Promise<boolean> {
 /** Bytes this site uses on the device (IndexedDB, caches, service worker),
  *  or null where the browser doesn't say. */
 export async function getOfflineStorageUsage(): Promise<number | null> {
+  // Desktop app: the page copies' files (the browser's estimate doesn't
+  // count them).
+  if (isDesktopApp) return offlineDocsSize();
   try {
     const estimate = await navigator.storage?.estimate?.();
     return typeof estimate?.usage === "number" ? estimate.usage : null;
