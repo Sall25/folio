@@ -18,6 +18,7 @@ import { ChatOutboxSync } from "../features/shell/offline/chat-outbox-sync";
 import {
   DesktopAttention,
   DesktopDeepLinkNavigator,
+  DesktopRail,
   DesktopSidebarJoin,
   DesktopTabs,
   DesktopTabsSync,
@@ -46,9 +47,10 @@ export default function SignedInApp() {
                             <UpdatePrompt />
                             <OfflineDocSync />
                             <ChatOutboxSync />
-                            {/* Desktop app: tabs in the title bar, the
-                                unread count on the app's icon and system
-                                notifications, folio:// links; a page
+                            {/* Desktop app: tabs in the title bar, the rail
+                                (workspaces, Home, Inbox, Chats) beside the
+                                sidebar, the unread count on the app's icon
+                                and system notifications, folio:// links; a page
                                 window (one page on its own) shows that
                                 page's title there and no sidebar. */}
                             {isDesktopApp && !isPageWindow && (
@@ -56,6 +58,7 @@ export default function SignedInApp() {
                                 <DesktopTabsSync />
                                 <DesktopTabs />
                                 <DesktopSidebarJoin />
+                                <DesktopRail />
                                 <DesktopAttention />
                                 <DesktopDeepLinkNavigator />
                               </>

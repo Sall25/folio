@@ -22,6 +22,11 @@ html.is-desktop #root {
   left: 0;
   right: 0;
   bottom: 0;
+  // simple-editor.scss gives #root height: 100% (the window's), which
+  // would win over top + bottom and run it 40px past the window's bottom
+  // edge: everything placed from its bottom (the rail's account) ended up
+  // out of sight. Its height comes from top and bottom here.
+  height: auto;
   contain: layout;
 }
 
