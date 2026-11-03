@@ -17,3 +17,23 @@ if (!supabaseUrl || !supabasePublishableKey) {
 export const supabase = createClient(supabaseUrl, supabasePublishableKey, {
   auth: { flowType: isDesktopApp ? "pkce" : "implicit" },
 });
+
+// Where the Supabase client keeps the session in localStorage: its default
+// key, sb-<project ref>-auth-token (and -code-verifier, -user beside it).
+const AUTH_STORAGE_KEY = `sb-${new URL(supabaseUrl).hostname.split(".")[0]}-auth-token`;
+
+/**
+ * Forgets the session on this device without asking the server. Supabase's
+ * signOut() only removes the stored session once its logout request
+ * succeeds (even with scope "local"), so when the server can't be reached
+ * the session stayed, and the app reloaded straight back into it.
+ */
+export function forgetStoredSession(): void {
+  for (const suffix of ["", "-code-verifier", "-user"]) {
+    try {
+      localStorage.removeItem(AUTH_STORAGE_KEY + suffix);
+    } catch {
+      /* storage blocked */
+    }
+  }
+}

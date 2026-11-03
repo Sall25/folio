@@ -1,4 +1,4 @@
-import { offlineKv } from "src/lib/offline-kv";
+import { offlineKv, type KvValue } from "src/lib/offline-kv";
 import { isDesktopApp } from "src/lib/desktop";
 
 // Local copies of collaborative page docs, so pages you've opened on this
@@ -147,7 +147,18 @@ export async function clearOfflineDocCache(
       kept.add(`seen:${rest}`);
       kept.add(`synced:${rest}`);
     }
-    await Promise.all(keys.filter((k) => !kept.has(k)).map((k) => kv.del(k)));
+    // The few kept entries are read first, everything is cleared at once,
+    // and they're written back: deleting the rest one by one took thousands
+    // of calls in the desktop app (a workspace kept offline) and held up
+    // signing out.
+    const keep: [string, KvValue][] = [];
+    for (const k of keys) {
+      if (!kept.has(k)) continue;
+      const value = await kv.get(k);
+      if (value !== undefined) keep.push([k, value]);
+    }
+    await kv.clear();
+    for (const [k, value] of keep) await kv.put(k, value);
   } catch {
     /* storage blocked: nothing to clear */
   }
