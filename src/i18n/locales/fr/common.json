@@ -327,6 +327,9 @@
   "offline.syncedPages_other": "Les modifications faites hors ligne sur {{count}} pages sont synchronisées.",
   "offline.unsentSignIn": "Tu as des modifications sur cet appareil qui n'ont pas encore été envoyées. Reconnecte-toi avec {{email}} pour les envoyer.",
   "offline.unsentSignInNoEmail": "Tu as des modifications sur cet appareil qui n'ont pas encore été envoyées. Reconnecte-toi pour les envoyer.",
+  "desktop.rail": "Espaces de travail et navigation",
+  "desktop.signInInBrowser": "Termine la connexion dans ton navigateur. Folio s'ouvre à nouveau une fois que c'est fait.",
+  "desktop.openEmailLinkHere": "Ouvre-le sur cet ordinateur : il te ramène dans l'application, connecté.",
   "offline.status.offline": "Hors ligne",
   "offline.status.unreachable": "Folio injoignable",
   "offline.status.saving": "Enregistrement…",
@@ -1217,7 +1220,7 @@
       },
       "video": {
         "title": "Vidéo",
-        "description": "Importer une vidéo, ou intégrer YouTube, Vimeo ou Loom."
+        "description": "Importer une vidéo, ou intégrer YouTube, Vimeo, Loom ou Google Drive."
       },
       "toggleHeading1": {
         "title": "Titre repliable 1"
@@ -1968,8 +1971,6 @@
     "openInNewTab": "Ouvrir dans un nouvel onglet",
     "closeSwitcher": "Fermer",
     "openBeside": "Ouvrir à côté",
-    "openInNewWindow": "Ouvrir dans une nouvelle fenêtre",
-    "signInInBrowser": "Termine la connexion dans ton navigateur. Folio s'ouvre à nouveau une fois que c'est fait.",
-    "openEmailLinkHere": "Ouvre-le sur cet ordinateur : il te ramène dans l'application, connecté."
+    "openInNewWindow": "Ouvrir dans une nouvelle fenêtre"
   }
 }

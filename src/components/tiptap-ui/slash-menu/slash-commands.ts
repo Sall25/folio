@@ -327,7 +327,7 @@ export function getSlashCommands(t: TFunction): SlashCommand[] {
       run: (e) => e.chain().focus().insertContent({ type: "file" }).run(),
     },
     {
-      // Upload a video or embed YouTube, Vimeo or Loom. Old YouTube blocks
+      // Upload a video or embed YouTube, Vimeo, Loom or Google Drive. Old YouTube blocks
       // keep working; new ones use the video block.
       id: "video",
       type: "command",

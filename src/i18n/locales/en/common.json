@@ -420,6 +420,9 @@
   "offline.syncedPages_other": "Edits made offline on {{count}} pages are now synced.",
   "offline.unsentSignIn": "You have edits on this device that haven't been sent yet. Sign in again as {{email}} to send them.",
   "offline.unsentSignInNoEmail": "You have edits on this device that haven't been sent yet. Sign in again to send them.",
+  "desktop.rail": "Workspaces and navigation",
+  "desktop.signInInBrowser": "Finish signing in in your browser. Folio opens again when you're done.",
+  "desktop.openEmailLinkHere": "Open it on this computer: it brings you back into the app, signed in.",
   "offline.status.offline": "Offline",
   "offline.status.unreachable": "Can't reach Folio",
   "offline.status.saving": "Saving…",
@@ -1217,7 +1220,7 @@
       },
       "video": {
         "title": "Video",
-        "description": "Upload a video, or embed YouTube, Vimeo or Loom."
+        "description": "Upload a video, or embed YouTube, Vimeo, Loom or Google Drive."
       },
       "toggleHeading1": {
         "title": "Toggle heading 1"
@@ -1968,8 +1971,6 @@
     "openInNewTab": "Open in a new tab",
     "closeSwitcher": "Close",
     "openBeside": "Open beside",
-    "openInNewWindow": "Open in a new window",
-    "signInInBrowser": "Finish signing in in your browser. Folio opens again when you're done.",
-    "openEmailLinkHere": "Open it on this computer: it brings you back into the app, signed in."
+    "openInNewWindow": "Open in a new window"
   }
 }

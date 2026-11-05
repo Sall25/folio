@@ -1,7 +1,7 @@
 // Turns a pasted link into something the video block can play: an embed for
-// YouTube, Vimeo and Loom, or a direct video file. Anything else → null.
+// YouTube, Vimeo, Loom and Google Drive, or a direct video file. Anything else → null.
 
-export type VideoProvider = "youtube" | "vimeo" | "loom" | "file";
+export type VideoProvider = "youtube" | "vimeo" | "loom" | "drive" | "file";
 
 export interface VideoSource {
   provider: VideoProvider;
@@ -79,6 +79,21 @@ function loom(url: URL): VideoSource | null {
   return { provider: "loom", src: `https://www.loom.com/embed/${m[1]}` };
 }
 
+// drive.google.com/file/d/<id>/view (or /preview, /edit), and the older
+// drive.google.com/open?id=<id>. Drive plays it in its own player; the file
+// must be shared with "Anyone with the link".
+function drive(url: URL): VideoSource | null {
+  if (url.hostname !== "drive.google.com") return null;
+  const id =
+    url.pathname.match(/^\/file\/d\/([\w-]{10,})/)?.[1] ??
+    (url.pathname === "/open" ? url.searchParams.get("id") : null);
+  if (!id || !/^[\w-]{10,}$/.test(id)) return null;
+  return {
+    provider: "drive",
+    src: `https://drive.google.com/file/d/${id}/preview`,
+  };
+}
+
 export function parseVideoUrl(raw: string): VideoSource | null {
   const url = parseUrl(raw);
   if (!url) return null;
@@ -87,6 +102,7 @@ export function parseVideoUrl(raw: string): VideoSource | null {
     youtube(url) ??
     vimeo(url) ??
     loom(url) ??
+    drive(url) ??
     (FILE_EXT.test(url.pathname) || FILE_EXT.test(url.href)
       ? { provider: "file", src: url.href }
       : null)

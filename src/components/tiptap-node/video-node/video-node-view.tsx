@@ -9,11 +9,12 @@ import { MediaUploadCard } from "src/components/tiptap-node/media-upload-card";
 import "./video-node-view.scss";
 
 const FORMATS = "MP4, WEBM or MOV";
-const PROVIDERS = "YouTube, Vimeo or Loom";
+const PROVIDERS = "YouTube, Vimeo, Loom or Google Drive";
 const PROVIDER_LABEL = {
   youtube: "YouTube video",
   vimeo: "Vimeo video",
   loom: "Loom video",
+  drive: "Google Drive video",
   file: "Video file",
 } as const;
 
