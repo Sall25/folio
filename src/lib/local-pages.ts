@@ -25,9 +25,20 @@ function write(pages: Record<string, Page>) {
   }
 }
 
+// Pages created on this device in this session, kept after the server
+// confirms them. Until someone opens one, the collab server holds nothing
+// for it but its blank first version, so it can open empty here while the
+// server is still waking up instead of waiting for it.
+const createdHere = new Set<string>();
+
 export function addLocalPage(page: Page) {
+  createdHere.add(page.id);
   write({ ...read(), [page.id]: page });
 }
+
+/** Created on this device: still waiting to be sent, or sent this session. */
+export const isCreatedHere = (id: string) =>
+  createdHere.has(id) || isLocalPage(id);
 
 export function removeLocalPage(id: string) {
   const pages = read();

@@ -12,7 +12,7 @@ import {
   saveDocCache,
 } from "src/lib/offline-doc-cache";
 import { trackProvider } from "src/lib/sync-status";
-import { isLocalPage } from "src/lib/local-pages";
+import { isCreatedHere } from "src/lib/local-pages";
 import { collabToken } from "src/lib/collab-token";
 
 const HOCUSPOCUS_URL = import.meta.env.VITE_HOCUSPOCUS_URL;
@@ -180,9 +180,10 @@ export function useCollabDoc(page: Page | null): UseCollabDocResult {
         return;
       }
       applyCache();
-      if (!cacheApplied && isLocalPage(pageId)) {
-        // Created on this device and not on the server yet: this doc IS the
-        // page's first version, nothing to overwrite. Open it empty.
+      if (!cacheApplied && isCreatedHere(pageId)) {
+        // Created on this device (sent or not): this doc IS the page's first
+        // version, nothing to overwrite. Open it empty; the server's copy
+        // merges in when it answers.
         hasLineage = true;
       }
       if (cacheApplied || hasLineage) {
