@@ -26,11 +26,7 @@ export type SectionId =
 
 /** Pages in the top nav (the overview is the logo / "#/"). */
 export type NavId =
-  | "editor"
-  | "organize"
-  | "teamspaces"
-  | "together"
-  | "offline";
+  "editor" | "organize" | "teamspaces" | "together" | "offline";
 
 /** Screenshot slots, filled in landing-shots.ts once the images exist. */
 export type ShotId = "B" | "C" | "E" | "F" | "G" | "H";
@@ -123,6 +119,8 @@ export interface LandingCopy {
     badge: string;
     hint: string;
     reset: string;
+    /** Opens the current example on its own page, nothing around it. */
+    fullScreen: string;
     examples: string;
     addIcon: string;
     addCover: string;
@@ -398,6 +396,7 @@ export const LANDING_COPY: Record<LandingLang, LandingCopy> = {
       badge: "Live editor",
       hint: "Type /, select text, drag a block, add a cover. Nothing is saved.",
       reset: "Reset",
+      fullScreen: "Full screen",
       examples: "Examples",
       addIcon: "Add icon",
       addCover: "Add cover",
@@ -771,6 +770,7 @@ export const LANDING_COPY: Record<LandingLang, LandingCopy> = {
       badge: "Éditeur en direct",
       hint: "Tapez /, sélectionnez du texte, déplacez un bloc, ajoutez une couverture. Rien n’est enregistré.",
       reset: "Réinitialiser",
+      fullScreen: "Plein écran",
       examples: "Exemples",
       addIcon: "Ajouter une icône",
       addCover: "Ajouter une couverture",
