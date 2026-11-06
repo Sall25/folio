@@ -180,6 +180,9 @@ interface CoverHeaderProps {
   hasThreads?: boolean;
   providedPage?: Page;
   marginLeft: number;
+  /** Where the page's column starts (a CSS length), so the icon lines up
+   *  with the text. The main editor passes it. */
+  contentOffset?: string;
 }
 
 export function CoverHeader({
@@ -188,6 +191,7 @@ export function CoverHeader({
   hasThreads,
   providedPage,
   marginLeft,
+  contentOffset,
 }: CoverHeaderProps) {
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [target, setTarget] = useState<Target>("Emoji");
@@ -275,9 +279,8 @@ export function CoverHeader({
           width: `calc(100vw)`,
           marginLeft: isPanel
             ? 0
-            : page.settings.width === "medium"
-              ? 280
-              : marginLeft,
+            : (contentOffset ??
+              (page.settings.width === "medium" ? 280 : marginLeft)),
           transition: "margin-left 0.15s ease, width 0.15s ease",
         }}
       >
@@ -287,7 +290,7 @@ export function CoverHeader({
             onOpenChange={setIconPickerOpen}
             target={target}
             onTargetChange={setTarget}
-            paddingLeft={isPanel ? 0 : paddingLeft}
+            paddingLeft={isPanel || contentOffset ? 0 : paddingLeft}
             translateX={isPanel ? 0 : translateX}
             hasThreads={hasThreads}
             page={page}

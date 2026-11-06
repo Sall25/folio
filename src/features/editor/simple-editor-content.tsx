@@ -33,6 +33,10 @@ import { calculatePaddingLeft, calculateSidebarWidth } from "src/lib/utils";
 import { UnavailableOffline } from "./unavailable-offline";
 import { NewPageStarter } from "./new-page-starter";
 
+// The least space kept on each side of the page's column (the left one holds
+// the block handles).
+const COLUMN_EDGE = 64;
+
 // ============================================================
 // Memoized leaves
 // ============================================================
@@ -167,6 +171,15 @@ const StableShell = React.memo(function StableShell() {
   // Inline comments open in a popover now — nothing reserves a right gutter.
   const hasThreads = false;
 
+  // The page's column, centered in the room beside the sidebar, with at
+  // least COLUMN_EDGE on each side (the left one holds the block handles).
+  // Fixed offsets used to push it right on narrower laptop screens, and past
+  // the edge when the screen was too narrow for offset + column.
+  const columnWidth =
+    activePage?.settings.width === "full" ? (collapsed ? 1320 : 1080) : 800;
+  const editorRoom = `calc(100vw - ${sidebarWidth}px - ${COLUMN_EDGE * 2}px)`;
+  const contentOffset = `max(${COLUMN_EDGE}px, calc((100vw - ${sidebarWidth}px - ${columnWidth}px) / 2))`;
+
   const { editor } = useCurrentEditor();
 
   // Highlights for the page's open inline comments (+ the local draft).
@@ -197,6 +210,7 @@ const StableShell = React.memo(function StableShell() {
             translateX={translateX}
             hasThreads={hasThreads}
             marginLeft={isMobile ? 0 : sidebarWidth / 2}
+            contentOffset={isMobile ? undefined : contentOffset}
           />
         </div>
         <div
@@ -206,12 +220,11 @@ const StableShell = React.memo(function StableShell() {
               width: isMobile ? "100%" : `calc(100vw)`,
               // Drive block indentation via vars — the wrapper no longer
               // shifts as a whole (so the database can stay full-width).
-              "--block-margin-left": isMobile
-                ? "0px"
-                : activePage?.settings.width === "medium"
-                  ? "280px"
-                  : `${sidebarWidth / 2}px`,
-              "--block-padding-left": isMobile ? "0px" : `${paddingLeft}px`,
+              "--block-margin-left": isMobile ? "0px" : contentOffset,
+              "--block-padding-left": "0px",
+              // How wide the column may get here (simple-editor.scss caps
+              // the page width with it).
+              "--editor-room": isMobile ? "100%" : editorRoom,
               "--sidebar-width": `${sidebarWidth}px`,
               "--x": `${translateX}px`,
             } as React.CSSProperties

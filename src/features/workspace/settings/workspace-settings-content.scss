@@ -130,6 +130,22 @@
   gap: 12px;
 }
 
+.ws-avatar-upload__remove {
+  padding: 6px 8px;
+  border: none;
+  border-radius: var(--tt-radius-md);
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--tt-text-primary);
+    background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
+  }
+}
+
 .ws-avatar-upload__btn {
   font-size: 13px;
   font-weight: 500;

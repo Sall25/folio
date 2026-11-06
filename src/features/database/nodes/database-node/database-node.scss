@@ -499,7 +499,7 @@ body.db-row-dragselect {
 }
 .simple-editor-content{
   &[data-collapsed="true"][data-size="full"] {
-    --db-editor-width: min(1320px, 100%);
+    --db-editor-width: min(1320px, 100%, var(--editor-room, 1320px));
     max-width: 100%;
   }
 }

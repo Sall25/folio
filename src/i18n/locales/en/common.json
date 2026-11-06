@@ -941,6 +941,15 @@
       "workspace": "Workspace"
     },
     "account": {
+      "changePhoto": "Change photo",
+      "uploading": "Uploading…",
+      "removePhoto": "Remove",
+      "cropTitle": "Adjust your photo",
+      "cropStage": "Photo position. Arrow keys move it, + and − zoom.",
+      "cropZoom": "Zoom",
+      "cropChooseAnother": "Choose another",
+      "cropSave": "Save",
+      "cropFailed": "This file can't be opened as a picture. Choose another one.",
       "loading": "Loading account…",
       "avatar": "Photo",
       "avatarDesc": "Shown next to your name across the workspace.",

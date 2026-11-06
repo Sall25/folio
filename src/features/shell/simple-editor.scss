@@ -412,16 +412,14 @@ body,
     transform: translateX(var(--x));
   }
 
+  // The page width, never wider than the room beside the sidebar
+  // (--editor-room, set by the editor).
   &[data-size="medium"] {
-    // width: 800px;
-    // max-width: 800px;
-    --db-editor-width: 800px;
+    --db-editor-width: min(800px, var(--editor-room, 800px));
   }
 
   &[data-size="full"] {
-    //  width: 1080px;
-    // max-width: 1080px;
-    --db-editor-width: 1080px;
+    --db-editor-width: min(1080px, var(--editor-room, 1080px));
   }
 
   &[data-text="small"] {
@@ -437,13 +435,10 @@ body,
 
   &[data-collapsed="true"] {
     &[data-size="medium"] {
-     // max-width: 800px;
-    // width: 800px;
-      --db-editor-width: 800px;
+      --db-editor-width: min(800px, var(--editor-room, 800px));
     }
     &[data-size="full"] {
-      --db-editor-width: min(1320px, 100%);
-      //max-width: min(1320px, 100%);
+      --db-editor-width: min(1320px, 100%, var(--editor-room, 1320px));
     }
   }
 

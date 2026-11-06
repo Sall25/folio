@@ -848,6 +848,15 @@
       "workspace": "Espace de travail"
     },
     "account": {
+      "changePhoto": "Changer de photo",
+      "uploading": "Envoi…",
+      "removePhoto": "Retirer",
+      "cropTitle": "Ajuster ta photo",
+      "cropStage": "Position de la photo. Les flèches la déplacent, + et − zooment.",
+      "cropZoom": "Zoom",
+      "cropChooseAnother": "Choisir une autre",
+      "cropSave": "Enregistrer",
+      "cropFailed": "Ce fichier ne peut pas être ouvert comme une image. Choisis-en un autre.",
       "loading": "Chargement du compte…",
       "avatar": "Photo",
       "avatarDesc": "Affichée à côté de ton nom dans tout l'espace de travail.",

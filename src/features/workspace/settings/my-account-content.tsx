@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "src/components/tiptap-ui-primitive/input";
 import { Separator } from "src/components/tiptap-ui-primitive/separator";
@@ -17,6 +17,7 @@ import { signOut } from "src/features/auth/sign-out";
 import { uploadFile } from "src/api/uploads";
 import { useFileUpload } from "src/components/tiptap-node/image-upload-node/use-file-upload";
 import { ConfirmDialog } from "../../shell/confirm-dialog";
+import { AvatarCropDialog } from "./avatar-crop-dialog";
 import "./workspace-settings-content.scss";
 
 function SettingRow({
@@ -49,17 +50,24 @@ async function uploadFn(
   return uploadFile(file, "avatar", { onProgress, signal });
 }
 
+// "Change photo" opens the cropper first; what's uploaded is the cropped
+// square, not the original file.
 function AvatarUploadButton({
   name,
   avatarUrl,
   disabled,
   onUploaded,
+  onRemove,
 }: {
   name: string;
   avatarUrl: string | null;
   disabled?: boolean;
   onUploaded: (url: string) => void;
+  onRemove: () => void;
 }) {
+  const { t } = useTranslation();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [picked, setPicked] = useState<File | null>(null);
   const { fileItems, uploadFiles } = useFileUpload({
     maxSize: 5 * 1024 * 1024,
     limit: 1,
@@ -71,9 +79,10 @@ function AvatarUploadButton({
   const uploading = fileItems.some((f) => f.status === "uploading");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    uploadFiles(Array.from(files));
+    const file = e.target.files?.[0];
+    // The same file can be picked again after Cancel.
+    e.target.value = "";
+    if (file) setPicked(file);
   };
 
   return (
@@ -83,6 +92,7 @@ function AvatarUploadButton({
         className={`ws-avatar-upload__btn${disabled ? " is-disabled" : ""}`}
       >
         <input
+          ref={inputRef}
           type="file"
           accept="image/*"
           disabled={disabled || uploading}
@@ -90,8 +100,29 @@ function AvatarUploadButton({
           onClick={(e) => e.stopPropagation()}
           style={{ display: "none" }}
         />
-        {uploading ? "Uploading…" : "Change photo"}
+        {uploading
+          ? t("settings.account.uploading", "Uploading…")
+          : t("settings.account.changePhoto", "Change photo")}
       </label>
+      {avatarUrl && !uploading && (
+        <button
+          type="button"
+          className="ws-avatar-upload__remove"
+          disabled={disabled}
+          onClick={onRemove}
+        >
+          {t("settings.account.removePhoto", "Remove")}
+        </button>
+      )}
+      <AvatarCropDialog
+        file={picked}
+        onCancel={() => setPicked(null)}
+        onChooseAnother={() => inputRef.current?.click()}
+        onSave={(cropped) => {
+          setPicked(null);
+          uploadFiles([cropped]);
+        }}
+      />
     </div>
   );
 }
@@ -229,6 +260,9 @@ export function MyAccountContent() {
           name={person.name}
           avatarUrl={person.avatarUrl}
           onUploaded={handleAvatarUploaded}
+          onRemove={() =>
+            patchPerson(person.id, { avatarUrl: null }).then(invalidatePerson)
+          }
         />
       </SettingRow>
 
