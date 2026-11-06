@@ -1306,6 +1306,7 @@
     "closeAria": "Close (Esc)"
   },
   "mention": {
+    "allHint": "Notify everyone who can open this page",
     "dates": {
       "today": "Today",
       "tomorrow": "Tomorrow",

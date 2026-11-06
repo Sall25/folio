@@ -11,7 +11,15 @@ export type MentionItem = {
   role?: string;
   title?: "Date" | "People" | "Pages" | "Rows" | "NewPage";
   date?: string;
-  type?: "user" | "page" | "date" | "row" | "divider" | "action" | "more";
+  type?:
+    | "user"
+    | "all"
+    | "page"
+    | "date"
+    | "row"
+    | "divider"
+    | "action"
+    | "more";
   /** Action items: what choosing it does. "createIn" is the page picked
    *  after "Add new page in…" (parentId says where). */
   action?: "invite" | "subpage" | "pageIn" | "createIn";

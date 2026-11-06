@@ -72,6 +72,9 @@ function pagePath(page: Page, byId: Map<string, Page>, depth = 2): string {
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// What brings up @all in the menu ("@a…", "@tout…", "@every…").
+const ALL_WORDS = ["all", "tout", "tous", "everyone"];
+
 const MentionWithView = Mention.extend({
   addAttributes() {
     return {
@@ -223,8 +226,12 @@ export const MentionExtension = MentionWithView.configure({
         result.push(...matchedDates);
       }
 
-      // People, then "Invite…" (with the address when one was typed).
+      // People (with @all first: everyone who can open the page), then
+      // "Invite…" (with the address when one was typed).
       section("People");
+      if (ALL_WORDS.some((w) => w.startsWith(q))) {
+        result.push({ id: "all", label: "all", type: "all" });
+      }
       result.push(...matchedUsers);
       const typed = query.trim();
       result.push({

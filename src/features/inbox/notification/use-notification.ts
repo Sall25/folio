@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNotificationActions } from "./notification-context";
 import { useCurrentPerson } from "src/hooks/use-session";
+import { notifyPageMentionAll } from "src/api/mention-all";
 
 // A mention notification waits this long before it's sent, so the sentence
 // around it is written by then and goes along as its message. Sent at once
@@ -207,4 +208,59 @@ export function useMentionNotification({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isUserMention, mentionId, targetNodeId]);
+}
+
+/**
+ * An @all chip in a page: once, a little after it's written (with the
+ * sentence it ended up in), the server notifies everyone who can open the
+ * page. Each person gets one notification per chip, so opening the page
+ * again sends nothing new.
+ */
+export function useMentionAllNotification({
+  enabled,
+  pageId,
+  targetNodeId,
+  getContext,
+}: {
+  enabled: boolean;
+  pageId?: string | number;
+  targetNodeId?: string;
+  getContext?: () => string;
+}) {
+  const { hasNotified, registerNotified } = useNotificationActions();
+
+  const getContextRef = useRef(getContext);
+  useEffect(() => {
+    getContextRef.current = getContext;
+  });
+
+  useEffect(() => {
+    if (!enabled || pageId == null || !targetNodeId) return;
+    const key = `all-mention:${targetNodeId}`;
+    if (hasNotified(key)) return;
+    registerNotified(key);
+
+    let sent = false;
+    const send = () => {
+      if (sent) return;
+      sent = true;
+      let message = "";
+      try {
+        message = getContextRef.current?.() ?? "";
+      } catch {
+        message = "";
+      }
+      notifyPageMentionAll({
+        pageId: String(pageId),
+        nodeId: targetNodeId,
+        message,
+      }).catch((err) => console.warn("[mention] @all not sent", err));
+    };
+    const timer = window.setTimeout(send, MENTION_DELAY_MS);
+    return () => {
+      window.clearTimeout(timer);
+      send();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, pageId, targetNodeId]);
 }

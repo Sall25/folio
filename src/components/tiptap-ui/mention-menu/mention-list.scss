@@ -162,6 +162,12 @@
       background: var(--tt-border-color);
       color: var(--tt-text-secondary);
     }
+
+    // @all: the group icon on the accent.
+    &.is-all {
+      background: color-mix(in srgb, var(--sidebar-accent) 18%, transparent);
+      color: var(--sidebar-accent, var(--tt-brand-color-500));
+    }
   }
 
   &__text {

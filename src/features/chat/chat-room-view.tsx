@@ -1860,7 +1860,7 @@ function MessageRow({
         {compact ? (
           <span className="chat-msg__hover-time">{time}</span>
         ) : (
-          <Avatar size="lg" src={author?.avatarUrl ?? undefined} name={name} />
+          <Avatar src={author?.avatarUrl ?? undefined} name={name} />
         )}
       </div>
       <div className="chat-msg__main">

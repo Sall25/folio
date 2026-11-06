@@ -18,6 +18,7 @@ import {
   MoreHorizontal,
   Plus,
   UserPlus,
+  Users,
 } from "src/components/icons";
 import { PageItemIcon } from "src/features/pages/page-item/page-item-icon";
 import { useMentionData } from "./use-mention-data";
@@ -237,6 +238,19 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
             {item.hint && (
               <span className="mention-row__hint">— {item.hint}</span>
             )}
+          </div>
+        );
+      }
+      if (item.type === "all") {
+        return (
+          <div key={item.id} {...rowProps(index)}>
+            <span className="mention-row__avatar is-initial is-all">
+              <Users size={12} />
+            </span>
+            <span className="mention-row__label">@all</span>
+            <span className="mention-row__hint">
+              — {t("mention.allHint", "Notify everyone who can open this page")}
+            </span>
           </div>
         );
       }

@@ -18,7 +18,10 @@ import { Card, CardGroupLabel } from "src/components/tiptap-ui-primitive/card";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { Badge } from "src/components/tiptap-ui-primitive/badge";
 import CalendarView from "./calendar-view/calendar-view";
-import { useMentionNotification } from "../../../features/inbox/notification";
+import {
+  useMentionAllNotification,
+  useMentionNotification,
+} from "../../../features/inbox/notification";
 import { useActivePageState } from "src/features/pages/context/active-page-context";
 import { usePeople } from "src/hooks/use-people";
 import type { Person } from "src/types";
@@ -128,6 +131,17 @@ function PersonOrDateMention({
     targetNodeId: node.attrs.nodeId,
     remind,
     // The sentence this mention sits in, quoted in the notification.
+    getContext: () => {
+      const pos = typeof getPos === "function" ? getPos() : undefined;
+      return typeof pos === "number" ? textAroundNode(editor, pos) : "";
+    },
+  });
+  // @all: everyone who can open the page.
+  const isAllMention = node.attrs.id === "all";
+  useMentionAllNotification({
+    enabled: isAllMention,
+    pageId: activePage?.id,
+    targetNodeId: node.attrs.nodeId,
     getContext: () => {
       const pos = typeof getPos === "function" ? getPos() : undefined;
       return typeof pos === "number" ? textAroundNode(editor, pos) : "";
