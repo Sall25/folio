@@ -1,10 +1,11 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import type { JSONContent } from "@tiptap/core";
-import type { ID, Page } from "src/types";
+import type { ID, Page, Person } from "src/types";
 import { PageItemIcon } from "../pages/page-item/page-item-icon";
 import { useActivePageActions } from "../pages/context/active-page-context";
 import { useTeamspaceMemberList } from "src/hooks/use-teamspace-members";
+import { usePeople } from "src/hooks/use-people";
 import { TeamspaceMembersModal } from "../workspace/teamspaces/teamspace-members/teamspace-members-modal";
 import { colorForPersonId } from "src/lib/person-color";
 import { ChevronRight, FileText, UserPlus } from "src/components/icons";
@@ -14,6 +15,13 @@ import { Card } from "src/components/tiptap-ui-primitive/card";
 import { useAppearance } from "../shell/appearance/appearance";
 
 const MAX_FACES = 5;
+
+/** Someone shown in the members row. */
+interface Face {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+}
 const MAX_PINS = 4;
 const DESCRIPTION_MAX = 180;
 
@@ -63,6 +71,23 @@ export function TeamspaceHero({
   const { t } = useTranslation();
   const { setActivePageId } = useActivePageActions();
   const { members } = useTeamspaceMemberList(teamspaceId);
+  // The workspace's banner (no teamspace): the workspace's people.
+  const { data: workspacePeople } = usePeople();
+  const faces = useMemo<Face[]>(
+    () =>
+      teamspaceId
+        ? members.map(({ person: p }) => ({
+            id: p.id,
+            name: p.name,
+            avatarUrl: p.avatarUrl ?? null,
+          }))
+        : ((workspacePeople ?? []) as Person[]).map((p) => ({
+            id: p.id,
+            name: p.name,
+            avatarUrl: p.avatarUrl ?? null,
+          })),
+    [teamspaceId, members, workspacePeople],
+  );
   const [membersOpen, setMembersOpen] = useState(false);
 
   const description = useMemo(
@@ -104,10 +129,10 @@ export function TeamspaceHero({
         <h1 className="ts-hero__name">{name}</h1>
         {description && <p className="ts-hero__desc">{description}</p>}
 
-        {members.length > 0 && (
+        {faces.length > 0 && (
           <span className="ts-hero__members">
             <span className="ts-hero__faces" aria-hidden>
-              {members.slice(0, MAX_FACES).map(({ person }) =>
+              {faces.slice(0, MAX_FACES).map((person) =>
                 person.avatarUrl ? (
                   <img
                     key={person.id}
@@ -130,7 +155,7 @@ export function TeamspaceHero({
                 ),
               )}
             </span>
-            {t("home.teamspaceHero.members", { count: members.length })}
+            {t("home.teamspaceHero.members", { count: faces.length })}
           </span>
         )}
 

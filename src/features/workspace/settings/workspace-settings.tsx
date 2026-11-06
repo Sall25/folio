@@ -3,7 +3,6 @@ import { ArrowLeftRight, Settings, Users } from "src/components/icons";
 import { WorkspaceSettingsModal } from "./workspace-settings-modal";
 import {
   ACCOUNT_NAV_SECTION,
-  DEFAULT_SETTINGS_NAV,
   WORKSPACE_NAV_SECTION,
   type SettingsNavSection,
 } from "./workspace-settings-nav";
@@ -32,6 +31,17 @@ const OPEN_WORKSPACE = "open-workspace-settings";
 const OPEN_TEAMSPACE = "open-teamspace-settings";
 const TEAMSPACE_IDS = new Set([TS_GENERAL, TS_MEMBERS]);
 const WORKSPACE_IDS = new Set(WORKSPACE_NAV_SECTION.items.map((i) => i.id));
+// Workspace panes only its owner can change. Hidden for everyone else, who
+// keep Teamspaces and People.
+const OWNER_ONLY_IDS = new Set([
+  "settings",
+  "sites",
+  "security",
+  "identity",
+  "connections",
+  "import",
+  "billing",
+]);
 
 // activeId → content pane. Plug the rest in as they land on this branch.
 function SettingsPane({
@@ -96,6 +106,15 @@ export function WorkspaceSettings() {
   const { open, onOpenChange, activeId, setActiveId } =
     useWorkspaceSettingsModal();
   const { person } = useCurrentPerson();
+  const isOwner = person?.role === "owner";
+  const workspaceSection: SettingsNavSection = isOwner
+    ? WORKSPACE_NAV_SECTION
+    : {
+        ...WORKSPACE_NAV_SECTION,
+        items: WORKSPACE_NAV_SECTION.items.filter(
+          (i) => !OWNER_ONLY_IDS.has(i.id),
+        ),
+      };
   const provider = useCollabProvider();
   const presenceUsers = usePresence(provider);
   const isOnline = presenceUsers.some((u) => u.id === person?.id);
@@ -116,13 +135,16 @@ export function WorkspaceSettings() {
   const workspaceOnly = WORKSPACE_IDS.has(activeId) && activeId !== "settings";
   const teamspaceMode = !!teamspaceId && !showWorkspace && !workspaceOnly;
 
-  const shownId = teamspaceMode
+  const pickedId = teamspaceMode
     ? activeId === "settings" || WORKSPACE_IDS.has(activeId)
       ? TS_GENERAL
       : activeId
     : TEAMSPACE_IDS.has(activeId)
       ? "settings"
       : activeId;
+  // A pane only the owner sees opens People instead for everyone else.
+  const shownId =
+    !isOwner && OWNER_ONLY_IDS.has(pickedId) ? "people" : pickedId;
 
   const teamspaceSection: SettingsNavSection = {
     label: teamspaceName,
@@ -141,7 +163,7 @@ export function WorkspaceSettings() {
   };
 
   const nav: SettingsNavSection[] = !teamspaceId
-    ? DEFAULT_SETTINGS_NAV
+    ? [ACCOUNT_NAV_SECTION, workspaceSection]
     : teamspaceMode
       ? [
           ACCOUNT_NAV_SECTION,
@@ -169,13 +191,13 @@ export function WorkspaceSettings() {
               },
             ],
           },
-          WORKSPACE_NAV_SECTION,
+          workspaceSection,
         ];
 
   const select = (id: string) => {
     if (id === OPEN_WORKSPACE) {
       setShowWorkspace(true);
-      setActiveId("settings");
+      setActiveId(isOwner ? "settings" : "people");
       return;
     }
     if (id === OPEN_TEAMSPACE) {
