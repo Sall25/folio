@@ -69,9 +69,14 @@ export const Sidebar = memo(() => {
           : floatingActive
             ? drawerWidth
             : sidebarWidth,
+        // On a phone, 100vh is the screen with the browser's bars hidden,
+        // taller than what shows while they're out: the dock at the bottom
+        // ended up under them. 100dvh is what's visible.
         height: floatingActive
           ? "min(600px, calc(var(--app-vh, 100vh) - 32px))"
-          : "var(--app-vh, 100vh)",
+          : isMobile
+            ? "var(--app-vh, 100dvh)"
+            : "var(--app-vh, 100vh)",
         transform:
           isMobile && collapsed
             ? "translateX(-100%)"

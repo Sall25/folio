@@ -185,6 +185,10 @@ interface CoverHeaderProps {
   contentOffset?: string;
 }
 
+// On a phone the page's text sits 15px in from the edge (simple-editor.scss);
+// the icon lines up with it.
+const MOBILE_TEXT_INSET = 15;
+
 export function CoverHeader({
   paddingLeft,
   translateX,
@@ -254,7 +258,12 @@ export function CoverHeader({
         style={
           {
             width: `calc(100vw)`,
-            marginLeft: isMobile ? "0px !important" : marginLeft,
+            // A plain 0 on phones. It was "0px !important", which isn't a
+            // value a style can take: the browser ignored it and kept the
+            // margin from before (the desktop one, from the first render
+            // before the phone layout kicked in), so the cover sat to the
+            // right.
+            marginLeft: isMobile ? 0 : marginLeft,
             transition: "margin-left 0.2s ease, width 0.2s ease",
             // Where the page's sheet starts, measured from this box's left
             // edge: the box sits half a sidebar to the left of the sheet.
@@ -290,7 +299,13 @@ export function CoverHeader({
             onOpenChange={setIconPickerOpen}
             target={target}
             onTargetChange={setTarget}
-            paddingLeft={isPanel || contentOffset ? 0 : paddingLeft}
+            paddingLeft={
+              isPanel || contentOffset
+                ? isMobile && !providedPage
+                  ? MOBILE_TEXT_INSET
+                  : 0
+                : paddingLeft
+            }
             translateX={isPanel ? 0 : translateX}
             hasThreads={hasThreads}
             page={page}

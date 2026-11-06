@@ -92,14 +92,6 @@
     height: calc(var(--app-vh, 100vh) - 4vh);
   }
 
-  // A chat room is as tall as the window by default (chat-room.scss); in
-  // the shorter wrapper above, its composer was cut off at the bottom. It
-  // takes the wrapper's height instead. The wrapper itself stays as it is
-  // (it keeps editor content from spilling past the page surface).
-  .chat-view {
-    height: calc(var(--app-vh, 100vh) - 4vh);
-  }
-
   // Covers start where the page starts, so they never show under the
   // see-through sidebar. --cover-sheet-offset (cover-header.tsx) is that
   // edge, measured inside the cover; it follows the sidebar's width and
@@ -1913,10 +1905,16 @@ html:root[data-theme="retro"] {
   }
 
   // Over the page (phone drawer, collapsed peek): the solid glass colour.
-  .sidebar.sidebar-mobile,
   .sidebar.sidebar--floating {
     background: rgb(var(--wp-tint)) !important;
     height: calc(var(--app-vh, 100vh) - 2 * var(--wp-gap)) !important;
+  }
+
+  // A phone's visible height (100dvh): 100vh runs under the browser's bars
+  // and hid the dock.
+  .sidebar.sidebar-mobile {
+    background: rgb(var(--wp-tint)) !important;
+    height: calc(var(--app-vh, 100dvh) - 2 * var(--wp-gap)) !important;
   }
 
   .sidebar-section__label {
