@@ -1,7 +1,7 @@
 // simple-editor-content.tsx
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { EditorContent, useCurrentEditor } from "@tiptap/react";
 
 import { BubbleMenu } from "src/components/tiptap-ui/bubble-menu/bubble-menu";
@@ -36,6 +36,74 @@ import { NewPageStarter } from "./new-page-starter";
 // The least space kept on each side of the page's column (the left one holds
 // the block handles).
 const COLUMN_EDGE = 64;
+
+/**
+ * Where the page's column goes: its offset from the editor wrapper's left
+ * edge (what blocks are shifted by) and the most width it may take.
+ *
+ * The usual offset (`preferred`, the page's own spacing from the sidebar)
+ * is kept whenever the column fits on screen with it. On a narrower screen
+ * the column moves left just enough to fit, keeping COLUMN_EDGE from the
+ * sidebar and from the right edge; narrower still, it gets narrower.
+ *
+ * The visible area is .simple-editor-main; the wrapper runs wider than it,
+ * so both are measured, again whenever either changes size.
+ */
+function useColumnPlacement(
+  wrapperRef: React.RefObject<HTMLDivElement | null>,
+  columnWidth: number,
+  preferred: number,
+  enabled: boolean,
+): { offset: number; room: number } | null {
+  const [placement, setPlacement] = useState<{
+    offset: number;
+    room: number;
+  } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!enabled) return;
+    const wrapper = wrapperRef.current;
+    const main = wrapper?.closest<HTMLElement>(".simple-editor-main");
+    if (!wrapper || !main) return;
+
+    let raf = 0;
+    const measure = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        // The visible area, in the wrapper's coordinates.
+        const left =
+          main.getBoundingClientRect().left -
+          wrapper.getBoundingClientRect().left;
+        const width = main.clientWidth; // without its scrollbar
+        const room = Math.max(0, Math.round(width - COLUMN_EDGE * 2));
+        const column = Math.min(columnWidth, room);
+        const minOffset = left + COLUMN_EDGE;
+        const maxOffset = left + width - COLUMN_EDGE - column;
+        const offset = Math.round(
+          Math.max(minOffset, Math.min(preferred, maxOffset)),
+        );
+        setPlacement((prev) =>
+          prev && prev.offset === offset && prev.room === room
+            ? prev
+            : { offset, room },
+        );
+      });
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(main);
+    observer.observe(wrapper);
+    window.addEventListener("resize", measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [wrapperRef, columnWidth, preferred, enabled]);
+
+  return placement;
+}
 
 // ============================================================
 // Memoized leaves
@@ -171,14 +239,23 @@ const StableShell = React.memo(function StableShell() {
   // Inline comments open in a popover now — nothing reserves a right gutter.
   const hasThreads = false;
 
-  // The page's column, centered in the room beside the sidebar, with at
-  // least COLUMN_EDGE on each side (the left one holds the block handles).
-  // Fixed offsets used to push it right on narrower laptop screens, and past
-  // the edge when the screen was too narrow for offset + column.
+  // The page's column: the usual spacing from the sidebar (as before) when
+  // it fits on screen, moved left just enough when it doesn't (narrower
+  // laptops pushed it past the right edge).
   const columnWidth =
     activePage?.settings.width === "full" ? (collapsed ? 1320 : 1080) : 800;
-  const editorRoom = `calc(100vw - ${sidebarWidth}px - ${COLUMN_EDGE * 2}px)`;
-  const contentOffset = `max(${COLUMN_EDGE}px, calc((100vw - ${sidebarWidth}px - ${columnWidth}px) / 2))`;
+  const preferredOffset =
+    activePage?.settings.width === "medium"
+      ? 280 + paddingLeft
+      : sidebarWidth / 2 + paddingLeft;
+  const placement = useColumnPlacement(
+    editorWrapperRef,
+    columnWidth,
+    preferredOffset,
+    !isMobile,
+  );
+  const contentOffset = `${placement?.offset ?? preferredOffset}px`;
+  const editorRoom = placement ? `${placement.room}px` : `${columnWidth}px`;
 
   const { editor } = useCurrentEditor();
 
