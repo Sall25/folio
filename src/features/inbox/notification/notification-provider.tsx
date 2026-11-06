@@ -116,8 +116,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         for (const r of rows) {
           if (r.dedupKey) notifiedKeys.current.add(r.dedupKey);
         }
+        // The fetch also returns notifications I sent to other people (the
+        // select rule lets the actor read them, for the dedup keys above).
+        // They're not mine to show or mark read: marking one read changed
+        // nothing on the server (only the recipient can), so it came back.
         setNotifications(
-          (rows as RecordWithRoom[]).map(recordToNotification).sort(byNewest),
+          (rows as RecordWithRoom[])
+            .filter((r) => r.recipientId === personId)
+            .map(recordToNotification)
+            .sort(byNewest),
         );
       })
       .catch(() => {})
