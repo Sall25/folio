@@ -8,7 +8,7 @@ import {
   patchPageAccess,
   deletePageAccess,
 } from "../api/page-access";
-import { patchPage } from "../api/pages";
+import { setPageGeneralAccessTree } from "../api/page-access-tree";
 import { useToast } from "src/features/shell/toast";
 
 // The grants on a page (who's explicitly shared, and at what role).
@@ -57,12 +57,18 @@ export function useManagePageAccess(pageId: ID) {
     onSettled: invalidate,
   });
 
-  // General access lives on the Page row, not page_access — patch the page.
+  // General access lives on the Page row, not page_access. Set for the page
+  // and every page inside it (sub-pages, database rows), so they follow it.
   const setGeneralAccess = useMutation({
-    mutationFn: (patch: {
-      generalAccess?: GeneralAccess;
-      generalAccessRole?: PageRole;
-    }) => patchPage(pageId, patch),
+    mutationFn: (next: {
+      generalAccess: GeneralAccess;
+      generalAccessRole: PageRole;
+    }) =>
+      setPageGeneralAccessTree(
+        pageId,
+        next.generalAccess,
+        next.generalAccessRole,
+      ),
     onError,
     onSettled: () => {
       invalidate();

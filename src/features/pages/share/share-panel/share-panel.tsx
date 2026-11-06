@@ -461,7 +461,10 @@ function SharePanelInner({ page }: { page: Page }) {
                   options={generalOptions}
                   disabled={!canManage}
                   onChange={(ga) =>
-                    setGeneralAccess.mutate({ generalAccess: ga })
+                    setGeneralAccess.mutate({
+                      generalAccess: ga,
+                      generalAccessRole: page.generalAccessRole,
+                    })
                   }
                 />
                 <span className="share-row__sub">
@@ -473,7 +476,10 @@ function SharePanelInner({ page }: { page: Page }) {
                   value={page.generalAccessRole}
                   disabled={!canManage}
                   onChange={(r) =>
-                    setGeneralAccess.mutate({ generalAccessRole: r })
+                    setGeneralAccess.mutate({
+                      generalAccess: generalValue,
+                      generalAccessRole: r,
+                    })
                   }
                 />
               )}

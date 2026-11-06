@@ -72,16 +72,21 @@ export function makePage(opts: {
   };
 }
 
-// A child inherits the parent's category, owner, workspace AND teamspace.
+// A child inherits the parent's category, owner, workspace, teamspace AND
+// sharing (the server does the same on insert: 055).
 export function makeChildPage(parent: Page, title = "New Page"): Page {
-  return makePage({
-    ownerId: parent.ownerId,
-    workspaceId: parent.workspaceId,
-    teamspaceId: parent.teamspaceId,
-    title,
-    parentId: parent.id,
-    category: parent.category,
-  });
+  return {
+    ...makePage({
+      ownerId: parent.ownerId,
+      workspaceId: parent.workspaceId,
+      teamspaceId: parent.teamspaceId,
+      title,
+      parentId: parent.id,
+      category: parent.category,
+    }),
+    generalAccess: parent.generalAccess,
+    generalAccessRole: parent.generalAccessRole,
+  };
 }
 
 export function makePageFromTemplate(
