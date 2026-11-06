@@ -152,6 +152,8 @@
     "mentionPeople": "People",
     "mentionPages": "Pages",
     "mentionNone": "No matches",
+    "mentionAllHint": "Notify everyone in this room",
+    "roomActions": "Room actions",
     "mentionedYou": "You were mentioned",
     "privatePage": "Private page",
     "someone": "someone"

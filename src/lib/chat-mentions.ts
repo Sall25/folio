@@ -1,16 +1,18 @@
 // Mention tokens inside chat message bodies:
-//   @[person:<id>]   @[page:<id>]
+//   @[person:<id>]   @[page:<id>]   @[all] (everyone in the room)
 // Stored by id so renamed people/pages always display their current name.
 
 export type BodySegment =
   | { kind: "text"; text: string }
   | { kind: "person"; id: string }
-  | { kind: "page"; id: string };
+  | { kind: "page"; id: string }
+  | { kind: "all" };
 
-const TOKEN_RE = /@\[(person|page):([^\]\s]+)\]/g;
+const TOKEN_RE = /@\[(?:(person|page):([^\]\s]+)|(all))\]/g;
 
 export const personToken = (id: string) => `@[person:${id}]`;
 export const pageToken = (id: string) => `@[page:${id}]`;
+export const ALL_TOKEN = "@[all]";
 
 export function parseBody(body: string): BodySegment[] {
   const out: BodySegment[] = [];
@@ -19,9 +21,11 @@ export function parseBody(body: string): BodySegment[] {
     const start = m.index ?? 0;
     if (start > last) out.push({ kind: "text", text: body.slice(last, start) });
     out.push(
-      m[1] === "person"
-        ? { kind: "person", id: m[2] }
-        : { kind: "page", id: m[2] },
+      m[3]
+        ? { kind: "all" }
+        : m[1] === "person"
+          ? { kind: "person", id: m[2] }
+          : { kind: "page", id: m[2] },
     );
     last = start + m[0].length;
   }
@@ -37,8 +41,9 @@ export function mentionedPersonIds(body: string): string[] {
   return ids;
 }
 
+/** Names this person, or everyone (@all). */
 export function mentionsPerson(body: string, personId: string): boolean {
-  return body.includes(personToken(personId));
+  return body.includes(personToken(personId)) || body.includes(ALL_TOKEN);
 }
 
 // While composing, a picked mention shows as readable text ("@Awa Diop").

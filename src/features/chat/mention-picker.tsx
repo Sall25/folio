@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Users } from "src/components/icons";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import { PageItemIcon } from "../pages/page-item/page-item-icon";
 import type { ChatPerson } from "src/types";
@@ -6,6 +7,7 @@ import type { Page } from "src/types";
 import "./mention-picker.scss";
 
 export type MentionItem =
+  | { kind: "all" }
   | { kind: "person"; person: ChatPerson }
   | { kind: "page"; page: Page };
 
@@ -23,6 +25,7 @@ export function MentionPicker({
   onHover: (index: number) => void;
 }) {
   const { t } = useTranslation();
+  const everyone = items.filter((i) => i.kind === "all");
   const people = items.filter((i) => i.kind === "person");
   const pages = items.filter((i) => i.kind === "page");
 
@@ -31,7 +34,11 @@ export function MentionPicker({
     return (
       <button
         key={
-          item.kind === "person" ? `p:${item.person.id}` : `g:${item.page.id}`
+          item.kind === "all"
+            ? "all"
+            : item.kind === "person"
+              ? `p:${item.person.id}`
+              : `g:${item.page.id}`
         }
         type="button"
         className={`mp-row${active ? " is-active" : ""}`}
@@ -40,7 +47,17 @@ export function MentionPicker({
         onMouseEnter={() => onHover(index)}
         onClick={() => onPick(item)}
       >
-        {item.kind === "person" ? (
+        {item.kind === "all" ? (
+          <>
+            <span className="mp-row__icon mp-row__icon--all">
+              <Users size={14} />
+            </span>
+            <span className="mp-row__label">@all</span>
+            <span className="mp-row__hint">
+              {t("chat.mentionAllHint", "Notify everyone in this room")}
+            </span>
+          </>
+        ) : item.kind === "person" ? (
           <>
             <Avatar
               size="sm"
@@ -76,6 +93,7 @@ export function MentionPicker({
 
   return (
     <div className="mp" role="listbox">
+      {everyone.map((item) => row(item, items.indexOf(item)))}
       {people.length > 0 && (
         <>
           <div className="mp__label">{t("chat.mentionPeople", "People")}</div>

@@ -24,6 +24,7 @@ import {
   ChevronDown,
   Database,
   Download,
+  Ellipsis,
   FileText,
   Hash,
   Lock,
@@ -40,6 +41,13 @@ import {
 } from "src/components/icons";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "src/components/tiptap-ui-primitive/dropdown-menu";
 import {
   useChatMessages,
   useChatPeople,
@@ -105,6 +113,7 @@ import type {
   SelectOption,
 } from "src/types";
 import {
+  ALL_TOKEN,
   mentionedPersonIds,
   mentionsPerson,
   pageToken,
@@ -199,6 +208,7 @@ function plainExcerpt(
   const text = parseBody(body)
     .map((seg) => {
       if (seg.kind === "text") return seg.text;
+      if (seg.kind === "all") return "@all";
       if (seg.kind === "person")
         return `@${peopleById.get(seg.id)?.name ?? t("chat.someone", "someone")}`;
       return (
@@ -834,23 +844,94 @@ export function RoomContent({
             <div className="chat-room__actions">
               {isMember && !sessionOpen && <StudyStartMenu study={study} />}
               {room.kind === "page" && discussedPage && (
-                <Button variant="ghost" onClick={openDiscussedPage}>
+                <Button
+                  variant="ghost"
+                  tooltip={t("chat.openPage", "Open page")}
+                  onClick={openDiscussedPage}
+                >
                   <FileText className="tiptap-button-icon" />
-                  <span className="tiptap-button-text">
+                  <span className="tiptap-button-text chat-room__wide-only">
                     {t("chat.openPage", "Open page")}
                   </span>
                 </Button>
               )}
               {isShowcase && (
-                <Button variant="ghost" onClick={openShowcase}>
+                <Button
+                  variant="ghost"
+                  tooltip={t("chat.showcase.open", "Open showcase")}
+                  onClick={openShowcase}
+                >
                   <Database className="tiptap-button-icon" />
-                  <span className="tiptap-button-text">
+                  <span className="tiptap-button-text chat-room__wide-only">
                     {t("chat.showcase.open", "Open showcase")}
                   </span>
                 </Button>
               )}
               {room.kind === "room" && isMember && (
-                <>
+                // On a phone, Invite, Leave and Delete live in this menu.
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="chat-room__narrow-only"
+                      aria-label={t("chat.roomActions", "Room actions")}
+                    >
+                      <Ellipsis className="tiptap-button-icon" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <Card style={{ padding: 5, minWidth: 200 }}>
+                      <CardItemGroup style={{ width: "100%" }}>
+                        <DropdownMenuItem asChild>
+                          <Button
+                            variant="ghost"
+                            style={{ justifyContent: "flex-start", width: "100%" }}
+                            onClick={() => setInviteOpen(true)}
+                          >
+                            <UserPlus className="tiptap-button-icon" />
+                            <span className="tiptap-button-text">
+                              {t("chat.invite", "Invite")}
+                            </span>
+                          </Button>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Button
+                            variant="ghost"
+                            style={{ justifyContent: "flex-start", width: "100%" }}
+                            onClick={onLeave}
+                          >
+                            <LogOut className="tiptap-button-icon" />
+                            <span className="tiptap-button-text">
+                              {t("chat.leave", "Leave room")}
+                            </span>
+                          </Button>
+                        </DropdownMenuItem>
+                        {canDeleteRoom && (
+                          <DropdownMenuItem asChild>
+                            <Button
+                              variant="ghost"
+                              className="chat-room__danger"
+                              style={{
+                                justifyContent: "flex-start",
+                                width: "100%",
+                              }}
+                              disabled={deleteRoom.isPending}
+                              onClick={() => setConfirmDelete(true)}
+                            >
+                              <Trash2 className="tiptap-button-icon" />
+                              <span className="tiptap-button-text">
+                                {t("chat.deleteRoom", "Delete room")}
+                              </span>
+                            </Button>
+                          </DropdownMenuItem>
+                        )}
+                      </CardItemGroup>
+                    </Card>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              {room.kind === "room" && isMember && (
+                <span className="chat-room__wide-only chat-room__inline-actions">
                   <Button
                     variant="ghost"
                     tooltip={t("chat.invite", "Invite")}
@@ -875,7 +956,7 @@ export function RoomContent({
                       <Trash2 className="tiptap-button-icon" />
                     </Button>
                   )}
-                </>
+                </span>
               )}
             </div>
           </header>
@@ -1033,6 +1114,7 @@ export function RoomContent({
               pendingKeys={pendingKeys}
               placeholder={composerPlaceholder}
               people={mentionablePeople}
+              allowAll={room.kind !== "dm"}
               pages={[...pagesById.values()]}
               replyTo={replyTo}
               sending={sendWithFiles.isPending || sendBlock.isPending}
@@ -1101,6 +1183,7 @@ export function RoomContent({
                   "Reply to this entry…",
                 )}
                 people={mentionablePeople}
+              allowAll={room.kind !== "dm"}
                 pages={[...pagesById.values()]}
                 replyTo={null}
                 sending={sendWithFiles.isPending}
@@ -1146,6 +1229,7 @@ export function RoomContent({
                 pendingKeys={NO_PENDING_KEYS}
                 placeholder={t("chat.replyInThread", "Reply to this block…")}
                 people={mentionablePeople}
+              allowAll={room.kind !== "dm"}
                 pages={[...pagesById.values()]}
                 replyTo={null}
                 sending={sendWithFiles.isPending}
@@ -1511,6 +1595,14 @@ function MessageBody({
             </span>
           );
         }
+        if (seg.kind === "all") {
+          // Everyone in the room, so it names the reader too.
+          return (
+            <span key={i} className="chat-mention chat-mention--me">
+              @all
+            </span>
+          );
+        }
         if (seg.kind === "person") {
           const name =
             peopleById.get(seg.id)?.name ?? t("chat.someone", "someone");
@@ -1768,10 +1860,17 @@ function MessageRow({
         {compact ? (
           <span className="chat-msg__hover-time">{time}</span>
         ) : (
-          <Avatar src={author?.avatarUrl ?? undefined} name={name} />
+          <Avatar size="lg" src={author?.avatarUrl ?? undefined} name={name} />
         )}
       </div>
       <div className="chat-msg__main">
+        {!compact && (
+          <div className="chat-msg__head">
+            <span className="chat-msg__author">{name}</span>
+            <span className="chat-msg__time">{time}</span>
+          </div>
+        )}
+        {/* The message this one answers, under the name, as part of it. */}
         {quote &&
           (quote.state === "ok" ? (
             <button
@@ -1803,12 +1902,6 @@ function MessageRow({
             </span>
           ))}
 
-        {!compact && (
-          <div className="chat-msg__head">
-            <span className="chat-msg__author">{name}</span>
-            <span className="chat-msg__time">{time}</span>
-          </div>
-        )}
         {deleted ? (
           <p className="chat-msg__body chat-msg__body--deleted">
             {t("chat.deleted", "Message deleted")}
@@ -2465,6 +2558,9 @@ function ShowcaseShareBar({
 
 const TRIGGER_RE = /(?:^|\s)@([^\s@]{0,30})$/;
 
+// What brings up @all in the @ menu ("@a…", "@tout…", "@every…").
+const ALL_WORDS = ["all", "tout", "tous", "everyone"];
+
 function Composer({
   roomId,
   pendingKeys,
@@ -2477,6 +2573,7 @@ function Composer({
   onSend,
   onTyping,
   allowBlocks = true,
+  allowAll = false,
 }: {
   roomId: string;
   pendingKeys: string[];
@@ -2496,6 +2593,8 @@ function Composer({
   onTyping: (typing: boolean) => void;
   /** The side view's composer doesn't take shared blocks. */
   allowBlocks?: boolean;
+  /** Offer @all (everyone in the room): rooms and page discussions. */
+  allowAll?: boolean;
 }) {
   const { t } = useTranslation();
   const [value, setValue] = useState("");
@@ -2588,8 +2687,12 @@ function Composer({
       )
       .slice(0, PICKER_LIMIT)
       .map((page) => ({ kind: "page" as const, page }));
-    return [...matchedPeople, ...matchedPages];
-  }, [trigger, people, pages]);
+    const everyone =
+      allowAll && ALL_WORDS.some((w) => w.startsWith(q))
+        ? [{ kind: "all" as const }]
+        : [];
+    return [...everyone, ...matchedPeople, ...matchedPages];
+  }, [trigger, people, pages, allowAll]);
 
   const updateTrigger = (text: string, caret: number) => {
     const m = text.slice(0, caret).match(TRIGGER_RE);
@@ -2612,14 +2715,18 @@ function Composer({
     if (!el || !trigger) return;
     const caret = el.selectionStart ?? value.length;
     const label =
-      item.kind === "person"
-        ? item.person.name
-        : item.page.title || t("page.untitled");
+      item.kind === "all"
+        ? "all"
+        : item.kind === "person"
+          ? item.person.name
+          : item.page.title || t("page.untitled");
     const display = `@${label}`;
     const token =
-      item.kind === "person"
-        ? personToken(item.person.id)
-        : pageToken(item.page.id);
+      item.kind === "all"
+        ? ALL_TOKEN
+        : item.kind === "person"
+          ? personToken(item.person.id)
+          : pageToken(item.page.id);
 
     const next =
       value.slice(0, trigger.start) + display + " " + value.slice(caret);
