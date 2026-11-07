@@ -76,6 +76,8 @@
     "notFound": "Cette discussion n'existe pas ou tu n'y as pas accès.",
     "memberCount_one": "{{count}} membre",
     "memberCount_other": "{{count}} membres",
+    "onlineCount_one": "{{count}} en ligne",
+    "onlineCount_other": "{{count}} en ligne",
     "dmStart": "C'est le début de ta conversation avec {{name}}.",
     "roomStart": "C'est le début de #{{name}}.",
     "typingOne": "{{name}} écrit…",

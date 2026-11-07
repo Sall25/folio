@@ -76,6 +76,8 @@
     "notFound": "This conversation doesn't exist or you don't have access to it.",
     "memberCount_one": "{{count}} member",
     "memberCount_other": "{{count}} members",
+    "onlineCount_one": "{{count}} online",
+    "onlineCount_other": "{{count}} online",
     "dmStart": "This is the start of your conversation with {{name}}.",
     "roomStart": "This is the start of #{{name}}.",
     "typingOne": "{{name}} is typing…",

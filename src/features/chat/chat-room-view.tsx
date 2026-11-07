@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
 } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -40,6 +41,7 @@ import {
   X,
 } from "src/components/icons";
 import { Avatar } from "src/components/tiptap-ui-primitive/avatar";
+import { nameToHue } from "src/components/tiptap-ui-primitive/avatar/utils";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 import {
@@ -815,6 +817,15 @@ export function RoomContent({
                         count: room.members.length,
                         defaultValue: "{{count}} members",
                       })}
+                {present.length > 0 && (
+                  <span className="chat-room__online">
+                    {" · "}
+                    {t("chat.onlineCount", {
+                      count: present.length,
+                      defaultValue: "{{count}} online",
+                    })}
+                  </span>
+                )}
               </span>
             </div>
 
@@ -1092,6 +1103,13 @@ export function RoomContent({
 
         <div className="chat-room__bottom">
           <div className="chat-room__typing" aria-live="polite">
+            {typingNames.length > 0 && (
+              <span className="chat-typing-dots" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+            )}
             {typingNames.length === 1 &&
               t("chat.typingOne", {
                 name: typingNames[0],
@@ -1760,6 +1778,12 @@ type Quote =
   | { state: "missing"; id: string }
   | null;
 
+// One colour per person (from their name, like their avatar): their name
+// in a bubble and the line of a reply to them.
+function personColor(name: string): string {
+  return `hsl(${nameToHue(name)}, 60%, 62%)`;
+}
+
 function MessageRow({
   msg,
   compact,
@@ -1847,6 +1871,7 @@ function MessageRow({
       className={[
         "chat-msg",
         compact && "chat-msg--compact",
+        isMine && "chat-msg--mine",
         mentionsMe && "chat-msg--mentions-me",
         pending && !failed && "is-pending",
         failed && "is-failed",
@@ -1857,56 +1882,82 @@ function MessageRow({
       onMouseLeave={pickerOpen ? onClosePicker : undefined}
     >
       <div className="chat-msg__gutter">
-        {compact ? (
-          <span className="chat-msg__hover-time">{time}</span>
-        ) : (
+        {!compact && !isMine && (
           <Avatar src={author?.avatarUrl ?? undefined} name={name} />
         )}
       </div>
       <div className="chat-msg__main">
-        {!compact && (
-          <div className="chat-msg__head">
-            <span className="chat-msg__author">{name}</span>
-            <span className="chat-msg__time">{time}</span>
+        {/* The bubble: who (others, first of a run), the message it answers,
+            the text, and the time in its corner. */}
+        {(deleted || msg.body.trim() || quote) && (
+          <div className="chat-msg__bubble">
+            {!compact && !isMine && (
+              <span
+                className="chat-msg__author"
+                style={{ color: personColor(name) }}
+              >
+                {name}
+              </span>
+            )}
+            {quote &&
+              (quote.state === "ok" ? (
+                <button
+                  type="button"
+                  className="chat-quote"
+                  style={
+                    {
+                      "--quote-color": personColor(quote.authorName),
+                    } as CSSProperties
+                  }
+                  onClick={() => onJumpTo(quote.id)}
+                >
+                  <span className="chat-quote__line" aria-hidden="true" />
+                  <span className="chat-quote__author">{quote.authorName}</span>
+                  <span className="chat-quote__text">{quote.excerpt}</span>
+                </button>
+              ) : quote.state === "missing" ? (
+                <button
+                  type="button"
+                  className="chat-quote"
+                  onClick={() => onJumpTo(quote.id)}
+                >
+                  <span className="chat-quote__line" aria-hidden="true" />
+                  <span className="chat-quote__text">
+                    {t("chat.originalEarlier", "Reply to an earlier message")}
+                  </span>
+                </button>
+              ) : (
+                <span className="chat-quote chat-quote--muted">
+                  <span className="chat-quote__line" aria-hidden="true" />
+                  <span className="chat-quote__text">
+                    {t("chat.originalDeleted", "Original message deleted")}
+                  </span>
+                </span>
+              ))}
+            {deleted ? (
+              <p className="chat-msg__body chat-msg__body--deleted">
+                {t("chat.deleted", "Message deleted")}
+                <span className="chat-msg__stamp">{time}</span>
+              </p>
+            ) : msg.body.trim() ? (
+              <p className="chat-msg__body">
+                <MessageBody
+                  body={msg.body}
+                  meId={meId}
+                  peopleById={peopleById}
+                  pagesById={pagesById}
+                />
+                <span className="chat-msg__stamp">{time}</span>
+              </p>
+            ) : (
+              <span className="chat-msg__stamp chat-msg__stamp--alone">
+                {time}
+              </span>
+            )}
           </div>
         )}
-        {/* The message this one answers, under the name, as part of it. */}
-        {quote &&
-          (quote.state === "ok" ? (
-            <button
-              type="button"
-              className="chat-quote"
-              onClick={() => onJumpTo(quote.id)}
-            >
-              <span className="chat-quote__line" aria-hidden="true" />
-              <span className="chat-quote__author">{quote.authorName}</span>
-              <span className="chat-quote__text">{quote.excerpt}</span>
-            </button>
-          ) : quote.state === "missing" ? (
-            <button
-              type="button"
-              className="chat-quote"
-              onClick={() => onJumpTo(quote.id)}
-            >
-              <span className="chat-quote__line" aria-hidden="true" />
-              <span className="chat-quote__text">
-                {t("chat.originalEarlier", "Reply to an earlier message")}
-              </span>
-            </button>
-          ) : (
-            <span className="chat-quote chat-quote--muted">
-              <span className="chat-quote__line" aria-hidden="true" />
-              <span className="chat-quote__text">
-                {t("chat.originalDeleted", "Original message deleted")}
-              </span>
-            </span>
-          ))}
 
-        {deleted ? (
-          <p className="chat-msg__body chat-msg__body--deleted">
-            {t("chat.deleted", "Message deleted")}
-          </p>
-        ) : (
+        {!deleted && (
           <>
             {rowRef && (
               <RowCard
@@ -1927,21 +1978,17 @@ function MessageRow({
                 onOpen={onOpenThread}
               />
             )}
-            {msg.body.trim() && (
-              <p className="chat-msg__body">
-                <MessageBody
-                  body={msg.body}
-                  meId={meId}
-                  peopleById={peopleById}
-                  pagesById={pagesById}
-                />
-              </p>
-            )}
             {attachments.length > 0 && (
               <MessageAttachments
                 attachments={attachments}
                 signedUrls={signedUrls}
               />
+            )}
+            {/* No bubble (a card or files only): the time goes under them. */}
+            {!msg.body.trim() && !quote && (
+              <span className="chat-msg__stamp chat-msg__stamp--alone">
+                {time}
+              </span>
             )}
             {outbox && <OutboxNote entry={outbox} />}
           </>

@@ -40,6 +40,23 @@
   display: flex;
 }
 
+// With bubbles, the bar and the reaction picker sit by the bubble: after
+// the avatar for others, on the right edge for yours.
+.chat-msg:not(.chat-msg--mine) {
+  .chat-msg__bar,
+  .chat-emoji-pop {
+    right: auto;
+    left: 38px;
+  }
+}
+
+.chat-msg--mine {
+  .chat-msg__bar,
+  .chat-emoji-pop {
+    right: 0;
+  }
+}
+
 .chat-emoji-pop {
   position: absolute;
   top: 18px;
@@ -71,11 +88,15 @@
   }
 }
 
+// Reactions hang off the bubble's bottom corner.
 .chat-reactions {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 8px;
+  margin-top: -10px;
+  padding: 0 8px;
 }
 
 .chat-reaction {
@@ -86,7 +107,7 @@
   padding: 0 8px;
   border: 0.5px solid var(--tt-border-color);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
+  background: var(--tt-card-bg-color);
   font: inherit;
   font-size: 12px;
   color: var(--tt-text-secondary);
@@ -112,20 +133,22 @@
   }
 }
 
-// The message a reply answers: a small card under the replier's name.
+// The message a reply answers: inside the bubble, above the text, with a
+// line in the colour of whoever wrote it.
 .chat-quote {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 1px;
-  max-width: min(100%, 60ch);
-  margin: 6px 0 4px;
-  padding: 6px 10px;
+  width: 100%;
+  max-width: 60ch;
+  margin: 2px 0 5px;
+  padding: 4px 9px;
   border: none;
-  border-left: 2px solid
-    color-mix(in srgb, var(--sidebar-accent) 60%, transparent);
-  border-radius: 0 8px 8px 0;
-  background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
+  border-left: 3px solid
+    var(--quote-color, color-mix(in srgb, var(--sidebar-accent) 60%, transparent));
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.18);
   font: inherit;
   font-size: 13px;
   color: var(--tt-text-secondary);
@@ -138,9 +161,9 @@
   }
 
   &__author {
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 600;
-    color: var(--tt-text-primary);
+    color: var(--quote-color, var(--tt-text-primary));
   }
 
   &__text {

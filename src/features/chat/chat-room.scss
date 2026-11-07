@@ -1,4 +1,4 @@
-$col: 820px; // the readable column
+$col: 860px; // the room's column, centred
 $gutter: 24px;
 $gutter-mobile: 12px;
 
@@ -35,7 +35,9 @@ $gutter-mobile: 12px;
   &__header{
     z-index: 901;
   }
-  // ── The centered column ──────────────────────────────────────────────
+  // ── The centred column ───────────────────────────────────────────────
+  // Header, messages and composer share one column in the middle; your
+  // bubbles run along its right edge, others' along its left.
   &__header,
   &__bottom,
   &__list > div,
@@ -181,10 +183,17 @@ $gutter-mobile: 12px;
   }
 
   &__typing {
-    height: 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 22px;
     padding: 0 4px;
-    font-size: 11.5px;
+    font-size: 12px;
     color: var(--tt-text-secondary);
+  }
+
+  &__online {
+    white-space: nowrap;
   }
 }
 
@@ -232,48 +241,39 @@ $gutter-mobile: 12px;
     }
   }
 
-  .chat-msg {
-    gap: 10px;
-    padding-left: 6px;
-    padding-right: 6px;
+  .chat-msg__main {
+    max-width: 85%;
   }
 }
 
+// The day, as a small pill in the middle.
 .chat-day {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 14px 0 6px;
+  width: fit-content;
+  margin: 16px auto 8px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tt-text-primary) 7%, transparent);
   font-size: 11.5px;
   font-weight: 500;
   color: var(--tt-text-secondary);
-
-  &::before,
-  &::after {
-    content: "";
-    flex: 1;
-    height: 0.5px;
-    background: var(--tt-border-color);
-  }
 }
 
-// A new speaker starts 10px below the last message; follow-ups from the
-// same person stay close (2px).
+// ── Messages as bubbles ─────────────────────────────────────────────────
+// Others on the left (avatar on the first of a run, name in their colour),
+// yours on the right in the accent. The time sits in the bubble's corner.
+// A new speaker starts 10px down; a run from the same person stays close.
+$bubble-radius: 18px;
+
 .chat-msg {
   position: relative;
   display: flex;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 8px;
   margin-top: 10px;
-  padding: 8px 10px 6px;
-  border-radius: 10px;
+  padding: 1px 0;
 
   &--compact {
-    margin-top: 0;
-    padding-top: 2px;
-  }
-
-  &:hover {
-    background: color-mix(in srgb, var(--tt-text-primary) 3%, transparent);
+    margin-top: 2px;
   }
 
   &.is-pending {
@@ -283,50 +283,49 @@ $gutter-mobile: 12px;
   &__gutter {
     display: flex;
     justify-content: center;
-    width: 32px;
+    width: 30px;
     flex-shrink: 0;
   }
 
   &__hover-time {
-    visibility: hidden;
-    padding-top: 5px;
-    font-size: 11px;
-    color: var(--tt-text-secondary);
-  }
-
-  &:hover &__hover-time {
-    visibility: visible;
+    display: none;
   }
 
   &__main {
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__head {
     display: flex;
-    align-items: baseline;
-    gap: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+    max-width: 75%;
   }
 
-  &__author {
-    font-size: 14.5px;
-    font-weight: 600;
+  &__bubble {
+    position: relative;
+    max-width: 100%;
+    padding: 7px 12px 6px;
+    border-radius: $bubble-radius;
+    border-top-left-radius: 6px;
+    background: color-mix(in srgb, var(--tt-text-primary) 8%, var(--tt-bg-color, #111));
     color: var(--tt-text-primary);
   }
 
-  &__time {
-    font-size: 12px;
-    color: var(--tt-text-secondary);
+  // Later bubbles in a run: rounded all round.
+  &--compact &__bubble {
+    border-top-left-radius: $bubble-radius;
   }
 
-  // 15px on 1.6 lines, and lines that stop near 68 characters.
+  &__author {
+    display: block;
+    margin-bottom: 1px;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
   &__body {
-    max-width: 68ch;
-    margin: 3px 0 0;
-    font-size: 15px;
-    line-height: 1.6;
-    color: color-mix(in srgb, var(--tt-text-primary) 88%, transparent);
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.45;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 
@@ -335,15 +334,112 @@ $gutter-mobile: 12px;
       color: var(--tt-text-secondary);
     }
   }
+
+  // The time, floated into the last line's corner.
+  &__stamp {
+    float: right;
+    margin: 6px 0 -2px 10px;
+    font-size: 10.5px;
+    line-height: 1;
+    white-space: nowrap;
+    color: color-mix(in srgb, var(--tt-text-primary) 50%, transparent);
+
+    &--alone {
+      float: none;
+      display: block;
+      margin: 0;
+    }
+  }
+
+  // ── Yours: on the right, in the accent ──
+  &--mine {
+    flex-direction: row-reverse;
+
+    .chat-msg__gutter {
+      display: none;
+    }
+
+    .chat-msg__main {
+      align-items: flex-end;
+    }
+
+    .chat-msg__bubble {
+      border-top-left-radius: $bubble-radius;
+      border-top-right-radius: 6px;
+      background: color-mix(
+        in srgb,
+        var(--sidebar-accent, var(--tt-brand-color-500)) 30%,
+        var(--tt-bg-color, #111)
+      );
+    }
+  }
+
+  &--mine.chat-msg--compact .chat-msg__bubble {
+    border-top-right-radius: $bubble-radius;
+  }
+
+  // Mentions you: a ring on the bubble instead of a band across the room.
+  &.chat-msg--mentions-me {
+    background: none;
+    box-shadow: none;
+
+    .chat-msg__bubble {
+      box-shadow: 0 0 0 1.5px color-mix(in srgb, #f5a623 70%, transparent);
+    }
+  }
+}
+
+// "… écrit" with three bouncing dots.
+.chat-typing-dots {
+  display: inline-flex;
+  gap: 3px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+
+  span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: chat-typing 1.2s infinite;
+  }
+
+  span:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+
+  span:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+}
+
+@keyframes chat-typing {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: none;
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-typing-dots span {
+    animation: none;
+  }
 }
 
 .chat-composer {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  padding: 8px 8px 8px 12px;
+  padding: 6px 6px 6px 14px;
   border: 0.5px solid var(--tt-border-color);
-  border-radius: 14px;
+  border-radius: 22px;
   background: var(--tt-card-bg-color);
 
   &:focus-within {
@@ -373,8 +469,8 @@ $gutter-mobile: 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
     flex-shrink: 0;
     border: none;
     border-radius: 50%;
