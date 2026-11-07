@@ -896,7 +896,10 @@ export function RoomContent({
                         <DropdownMenuItem asChild>
                           <Button
                             variant="ghost"
-                            style={{ justifyContent: "flex-start", width: "100%" }}
+                            style={{
+                              justifyContent: "flex-start",
+                              width: "100%",
+                            }}
                             onClick={() => setInviteOpen(true)}
                           >
                             <UserPlus className="tiptap-button-icon" />
@@ -908,7 +911,10 @@ export function RoomContent({
                         <DropdownMenuItem asChild>
                           <Button
                             variant="ghost"
-                            style={{ justifyContent: "flex-start", width: "100%" }}
+                            style={{
+                              justifyContent: "flex-start",
+                              width: "100%",
+                            }}
                             onClick={onLeave}
                           >
                             <LogOut className="tiptap-button-icon" />
@@ -1201,7 +1207,7 @@ export function RoomContent({
                   "Reply to this entry…",
                 )}
                 people={mentionablePeople}
-              allowAll={room.kind !== "dm"}
+                allowAll={room.kind !== "dm"}
                 pages={[...pagesById.values()]}
                 replyTo={null}
                 sending={sendWithFiles.isPending}
@@ -1247,7 +1253,7 @@ export function RoomContent({
                 pendingKeys={NO_PENDING_KEYS}
                 placeholder={t("chat.replyInThread", "Reply to this block…")}
                 people={mentionablePeople}
-              allowAll={room.kind !== "dm"}
+                allowAll={room.kind !== "dm"}
                 pages={[...pagesById.values()]}
                 replyTo={null}
                 sending={sendWithFiles.isPending}
