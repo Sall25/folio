@@ -213,6 +213,9 @@ export function clearOfflineData(
 
 let leaving = false;
 
+/** The longest signing out waits for the wipe before reloading. */
+const WIPE_WAIT_MS = 3000;
+
 /**
  * After signing out (here or in another tab): wipe this device's offline
  * data — saved queries and page copies — then reload: at "/", the landing
@@ -232,9 +235,16 @@ export async function wipeAndReloadHome(
   if (leaving) return;
   leaving = true;
   clearQueries();
-  await Promise.allSettled([
-    queryPersister.removeClient(),
-    clearOfflineDocCache(keepFor(wipe)),
+  // The screens are empty from here on (skeletons), so the reload never
+  // waits long on the wipe: at most WIPE_WAIT_MS. Whatever is left is
+  // wiped by claimOfflineCache when someone else signs in here, and it's
+  // keyed by person, so nobody else is ever shown it.
+  await Promise.race([
+    Promise.allSettled([
+      queryPersister.removeClient(),
+      clearOfflineDocCache(keepFor(wipe)),
+    ]),
+    new Promise((resolve) => setTimeout(resolve, WIPE_WAIT_MS)),
   ]);
   const keptOwn = Boolean(wipe?.keepOwnUnsent && wipe.personId);
   if (keptOwn && wipe?.personId) {

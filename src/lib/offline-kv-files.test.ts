@@ -24,8 +24,14 @@ vi.mock("@tauri-apps/plugin-fs", () => ({
     if (!f) throw new Error("no file");
     return f;
   },
-  remove: async (p: string) => {
+  remove: async (p: string, opts?: { recursive?: boolean }) => {
     files.delete(p);
+    if (opts?.recursive) {
+      for (const k of [...files.keys()]) {
+        if (k.startsWith(`${p}/`)) files.delete(k);
+      }
+      dirs.delete(p);
+    }
   },
   readDir: async (p: string) =>
     [...files.keys()]
@@ -94,6 +100,17 @@ describe("offline copies as files (desktop app)", () => {
     browser.data.set("doc:p1:late", new Uint8Array([1]));
     const again = fileKv("offline-docs", browser);
     expect(await again.get("doc:p1:late")).toBeUndefined();
+  });
+
+  it("clear removes the whole folder in one go, and keeps working", async () => {
+    const { fileKv } = await import("./offline-kv");
+    const kv = fileKv("offline-docs", memoryKv({}));
+    for (let i = 0; i < 50; i++)
+      await kv.put(`doc:p:${i}`, new Uint8Array([i]));
+    await kv.clear();
+    expect(await kv.keys()).toEqual([]);
+    await kv.put("doc:p:new", new Uint8Array([1]));
+    expect(await kv.keys()).toEqual(["doc:p:new"]);
   });
 
   it("clear removes the copies but not the move marker", async () => {

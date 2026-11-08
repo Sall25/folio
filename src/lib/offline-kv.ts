@@ -220,10 +220,13 @@ export function fileKv(dir: string, migrateFrom?: OfflineKv): OfflineKv {
     },
     async del(key) {
       await ensure();
-      const { remove, exists, BaseDirectory } = await fs();
-      const baseDir = BaseDirectory.AppLocalData;
-      if (await exists(path(key), { baseDir }))
-        await remove(path(key), { baseDir });
+      const { remove, BaseDirectory } = await fs();
+      // One call, not two: a missing file is already deleted.
+      try {
+        await remove(path(key), { baseDir: BaseDirectory.AppLocalData });
+      } catch {
+        /* not there */
+      }
     },
     async keys() {
       await ensure();
@@ -238,11 +241,17 @@ export function fileKv(dir: string, migrateFrom?: OfflineKv): OfflineKv {
     },
     async clear() {
       await ensure();
-      const { readDir, remove, BaseDirectory } = await fs();
+      const { remove, mkdir, writeFile, BaseDirectory } = await fs();
       const baseDir = BaseDirectory.AppLocalData;
-      for (const e of await readDir(dir, { baseDir })) {
-        if (e.isFile && e.name.endsWith(FILE_EXT))
-          await remove(`${dir}/${e.name}`, { baseDir });
+      // The whole folder in one call (a workspace kept offline is thousands
+      // of files: one call each made signing out hang), then the folder
+      // again, with its marker so nothing is moved over a second time.
+      await remove(dir, { baseDir, recursive: true });
+      await mkdir(dir, { baseDir, recursive: true });
+      if (migrateFrom) {
+        await writeFile(`${dir}/.moved-from-browser`, new Uint8Array(), {
+          baseDir,
+        });
       }
     },
     async size() {

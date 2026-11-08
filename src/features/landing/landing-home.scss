@@ -1,0 +1,854 @@
+// The landing page (landing-home.tsx). Uses the landing's tokens
+// (--l-*, landing.scss), so light and dark follow its theme switch.
+
+.landing {
+  --lh-w: 1180px;
+  --lh-gutter: 32px;
+  --lh-radius: 16px;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────
+.lh-header {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  height: 64px;
+  padding: 0 var(--lh-gutter);
+  border-bottom: 1px solid var(--l-border);
+  background: var(--l-bg);
+}
+
+.lh-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex: none;
+  font-weight: 650;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  color: var(--l-text);
+}
+
+.lh-nav {
+  display: flex;
+  gap: 4px;
+  margin-left: 28px;
+}
+
+.lh-nav__item,
+.lh-signin {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 14.5px;
+  color: var(--l-text-2);
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--l-hover);
+    color: var(--l-text);
+  }
+}
+
+.lh-header__spacer {
+  flex: 1;
+}
+
+.lh-header__wide {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lh-github {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 9px;
+  box-shadow: inset 0 0 0 1px var(--l-border-2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--l-text);
+
+  &:hover {
+    background: var(--l-hover);
+  }
+}
+
+.lh-lang {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--l-subtle);
+
+  &__item {
+    height: 28px;
+    padding: 0 9px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--l-muted);
+
+    &[aria-pressed="true"] {
+      background: var(--l-surface);
+      color: var(--l-text);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
+.lh-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  color: var(--l-text-2);
+
+  &:hover {
+    background: var(--l-hover);
+    color: var(--l-text);
+  }
+}
+
+.lh-header__cta {
+  flex: none;
+  margin-left: 4px;
+}
+
+.lh-menu-btn {
+  display: none;
+}
+
+// The phone menu: a card under the header.
+.lh-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 12px;
+  right: 12px;
+}
+
+.lh-menu__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+}
+
+.lh-menu__item {
+  display: flex;
+  align-items: center;
+  height: 44px; // a comfortable tap target
+  padding: 0 12px;
+  border-radius: 9px;
+  font-size: 16px;
+  color: var(--l-text);
+  text-align: left;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--l-hover);
+  }
+}
+
+.lh-menu__divider {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--l-border);
+}
+
+.lh-menu__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px 4px 12px;
+}
+
+// Below 980px the section links go into the menu; below 720px everything
+// but the logo, Get started and the menu button does.
+@media (max-width: 980px) {
+  .lh-nav {
+    display: none;
+  }
+
+  .lh-menu-btn {
+    display: inline-grid;
+  }
+}
+
+@media (max-width: 720px) {
+  .landing {
+    --lh-gutter: 16px;
+  }
+
+  .lh-header {
+    height: 58px;
+    gap: 6px;
+  }
+
+  .lh-header__wide {
+    display: none;
+  }
+}
+
+// ── Shared ────────────────────────────────────────────────────────────────
+.lh {
+  overflow-x: clip;
+}
+
+.lh-eyebrow {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--l-accent-text);
+
+  &--on-dark {
+    color: #b8adff;
+  }
+}
+
+.lh-display {
+  max-width: 920px;
+  margin: 26px auto 0;
+  font-size: clamp(38px, 6.4vw, 66px);
+  font-weight: 750;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  color: var(--l-text);
+}
+
+.lh-h2 {
+  max-width: 780px;
+  margin: 0 auto;
+  font-size: clamp(30px, 4.2vw, 46px);
+  font-weight: 720;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--l-text);
+
+  &--left {
+    margin: 0;
+    font-size: clamp(28px, 3.4vw, 38px);
+  }
+}
+
+.lh-lead {
+  max-width: 640px;
+  margin: 16px auto 0;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--l-muted);
+
+  &--hero {
+    max-width: 700px;
+  }
+
+  &--left {
+    margin: 14px 0 0;
+  }
+}
+
+.lh-fine {
+  margin-top: 14px;
+  font-size: 13.5px;
+  color: var(--l-muted);
+}
+
+.lh-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+
+  &--left {
+    justify-content: flex-start;
+    margin-top: 28px;
+  }
+}
+
+// Big buttons: the primary is the Button primitive; the others are links
+// styled to match.
+.lh-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 22px;
+  border-radius: 11px;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.tiptap-button {
+    height: 48px;
+    padding: 0 22px;
+    border-radius: 11px;
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--l-accent) 32%, transparent);
+  }
+
+  &--outline {
+    background: var(--l-surface);
+    color: var(--l-text);
+    box-shadow: inset 0 0 0 1px var(--l-border-2);
+
+    &:hover {
+      background: var(--l-subtle);
+    }
+  }
+
+  &--light {
+    background: #ffffff;
+    color: #191918;
+
+    &:hover {
+      background: #f1f0ec;
+    }
+  }
+
+  &--ghost-dark {
+    color: #ffffff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
+}
+
+.lh-section {
+  max-width: calc(var(--lh-w) + 2 * var(--lh-gutter));
+  margin: 0 auto;
+  padding: 120px var(--lh-gutter) 0;
+
+  &__head {
+    text-align: center;
+    margin-bottom: 52px;
+  }
+}
+
+// A screenshot, or its slot.
+.lh-shot {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--l-subtle);
+  box-shadow:
+    0 0 0 1px var(--l-border),
+    var(--l-shadow);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top left;
+  }
+
+  &__label {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    font-size: 13px;
+    color: var(--l-muted);
+    text-align: center;
+  }
+}
+
+// ── Hero ──────────────────────────────────────────────────────────────────
+.lh-hero {
+  padding: 84px var(--lh-gutter) 0;
+  text-align: center;
+  background: radial-gradient(
+    60% 420px at 50% 0%,
+    color-mix(in srgb, var(--l-accent) 9%, transparent),
+    transparent 70%
+  );
+}
+
+.lh-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 5px 12px 5px 5px;
+  border-radius: 999px;
+  background: var(--l-surface);
+  box-shadow: inset 0 0 0 1px var(--l-border-2);
+  font-size: 13.5px;
+  color: var(--l-text-2);
+
+  &:hover {
+    color: var(--l-text);
+  }
+
+  &__tag {
+    flex: none;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: var(--l-accent);
+    color: var(--l-on-accent);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  &__text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.lh-tabs {
+  display: inline-flex;
+  gap: 4px;
+  max-width: 100%;
+  margin-top: 48px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--l-subtle);
+  box-shadow: inset 0 0 0 1px var(--l-border);
+  overflow-x: auto;
+
+  &__tab {
+    flex: none;
+    height: 38px;
+    padding: 0 18px;
+    border-radius: 9px;
+    font-size: 14.5px;
+    color: var(--l-muted);
+
+    &[aria-selected="true"] {
+      background: var(--l-surface);
+      color: var(--l-text);
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
+.lh-hero__window {
+  max-width: var(--lh-w);
+  margin: 22px auto 0;
+  text-align: left;
+
+  .lh-shot--hero {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+// ── Who it's for ──────────────────────────────────────────────────────────
+.lh-audience {
+  padding: 72px var(--lh-gutter) 0;
+  text-align: center;
+
+  &__title {
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: var(--l-muted);
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+}
+
+.lh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--l-border-2);
+  font-size: 14.5px;
+  color: var(--l-text-2);
+}
+
+// ── Features ──────────────────────────────────────────────────────────────
+.lh-features {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.lh-feature {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 24px 24px 0;
+  border-radius: var(--lh-radius);
+  background: var(--l-subtle);
+  box-shadow: inset 0 0 0 1px var(--l-border);
+
+  &__title {
+    font-size: 16px;
+    font-weight: 650;
+    color: var(--l-text);
+  }
+
+  &__body {
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--l-muted);
+  }
+
+  // The screenshot rises from the card's bottom edge.
+  &__shot {
+    aspect-ratio: 4 / 3;
+    margin-top: 22px;
+    margin-bottom: -1px;
+    border-radius: 10px 10px 0 0;
+    background: var(--l-surface);
+    box-shadow:
+      0 0 0 1px var(--l-border),
+      0 10px 30px rgba(0, 0, 0, 0.06);
+  }
+}
+
+// ── Desktop and offline: text beside a picture ────────────────────────────
+.lh-split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: 72px;
+  max-width: calc(var(--lh-w) + 2 * var(--lh-gutter));
+  margin: 0 auto;
+  padding: 120px var(--lh-gutter) 0;
+
+  &--flip .lh-split__text {
+    order: 2;
+  }
+
+  &__shot {
+    aspect-ratio: 16 / 10;
+  }
+}
+
+.lh-points {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 22px;
+
+  li {
+    display: flex;
+    gap: 10px;
+    font-size: 15.5px;
+    color: var(--l-text-2);
+  }
+
+  &__check {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    border-radius: 50%;
+    background: var(--l-accent-soft);
+    color: var(--l-accent-text);
+  }
+}
+
+// ── The small things ──────────────────────────────────────────────────────
+.lh-small {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+
+  &__item {
+    padding: 20px;
+    border-radius: 14px;
+    background: var(--l-surface);
+    box-shadow: inset 0 0 0 1px var(--l-border);
+  }
+
+  &__glyph {
+    display: grid;
+    place-items: center;
+    height: 100px;
+    border-radius: 10px;
+    background: var(--l-subtle);
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 28px;
+    color: var(--l-accent-text);
+  }
+
+  &__title {
+    margin-top: 14px;
+    font-size: 15.5px;
+    font-weight: 650;
+    color: var(--l-text);
+  }
+
+  &__body {
+    margin-top: 4px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--l-muted);
+  }
+}
+
+// ── Open source: a dark band ──────────────────────────────────────────────
+.lh-oss {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  align-items: center;
+  gap: 56px;
+  max-width: var(--lh-w);
+  margin: 120px auto 0;
+  padding: 64px;
+  border-radius: 24px;
+  background: #191918;
+  color: #ffffff;
+
+  // Not flush against the window edges on narrow screens.
+  @media (max-width: 1260px) {
+    margin-left: var(--lh-gutter);
+    margin-right: var(--lh-gutter);
+  }
+
+  &__title {
+    font-size: clamp(30px, 3.6vw, 42px);
+    font-weight: 720;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  &__lead {
+    max-width: 480px;
+    margin-top: 14px;
+    font-size: 17px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  &__facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  &__fact {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 18px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    font-size: 20px;
+  }
+
+  &__fact-title {
+    margin-top: 6px;
+    font-size: 14.5px;
+    font-weight: 600;
+  }
+
+  &__fact-body {
+    font-size: 13px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.62);
+  }
+}
+
+// ── Call to action ────────────────────────────────────────────────────────
+.lh-final {
+  padding: 130px var(--lh-gutter) 110px;
+  text-align: center;
+  background: radial-gradient(
+    50% 300px at 50% 100%,
+    color-mix(in srgb, var(--l-accent) 9%, transparent),
+    transparent 70%
+  );
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────
+.lh-footer {
+  border-top: 1px solid var(--l-border);
+  padding: 56px var(--lh-gutter) 36px;
+  font-size: 14px;
+
+  &__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) repeat(4, minmax(0, 1fr));
+    gap: 40px;
+    max-width: var(--lh-w);
+    margin: 0 auto;
+  }
+
+  &__brand p {
+    max-width: 260px;
+    margin-top: 10px;
+    line-height: 1.55;
+    color: var(--l-muted);
+  }
+
+  &__col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+
+    a,
+    button {
+      color: var(--l-muted);
+      text-align: left;
+
+      &:hover {
+        color: var(--l-text);
+      }
+    }
+  }
+
+  &__head {
+    margin-bottom: 2px;
+    font-weight: 600;
+    color: var(--l-text);
+  }
+
+  &__bottom {
+    max-width: var(--lh-w);
+    margin: 40px auto 0;
+    font-size: 13px;
+    color: var(--l-muted);
+  }
+}
+
+// ── Narrower screens ──────────────────────────────────────────────────────
+@media (max-width: 1080px) {
+  .lh-features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lh-small {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lh-oss {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 48px;
+  }
+
+  .lh-footer__top {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lh-footer__brand {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 860px) {
+  .lh-split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 36px;
+  }
+
+  .lh-split--flip .lh-split__text {
+    order: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .lh-hero {
+    padding-top: 48px;
+  }
+
+  .lh-lead {
+    font-size: 16.5px;
+  }
+
+  .lh-section,
+  .lh-split {
+    padding-top: 80px;
+  }
+
+  .lh-section__head {
+    margin-bottom: 36px;
+  }
+
+  .lh-features,
+  .lh-small {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  // Full-width buttons are easier to hit with a thumb.
+  .lh-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lh-oss {
+    margin-top: 80px;
+    padding: 32px 22px;
+    border-radius: 18px;
+  }
+
+  .lh-oss__facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lh-final {
+    padding: 90px var(--lh-gutter) 80px;
+  }
+}
+
+// ── The live editor's "Full screen" link, and full screen itself ──────────
+.landing-editor__full {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--l-text);
+  background: var(--l-surface);
+  box-shadow: inset 0 0 0 1px var(--l-border-2);
+
+  &:hover {
+    background: var(--l-subtle);
+  }
+}
+
+// An example in full screen (#/editor/<example>): no header or footer, the
+// page alone with a slim bar to go back.
+.landing--focus .landing-example {
+  max-width: 1000px;
+  padding-bottom: 64px;
+}
+
+.landing-example__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px 0 6px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--l-text);
+
+  &:hover {
+    background: var(--l-hover);
+  }
+}

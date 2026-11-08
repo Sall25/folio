@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { Session } from "@supabase/supabase-js";
-import { supabase } from "src/api/supabase-client";
+import { forgetStoredSession, supabase } from "src/api/supabase-client";
 import { hasDirtyDocs, listDirtyPageIds } from "src/lib/offline-doc-cache";
 import {
   markSignOutIntended,
@@ -13,9 +13,9 @@ import { clearOutboxFor, countOutboxMessages } from "src/lib/chat-outbox";
 // switcher) and by deleting your workspace.
 //
 //   1. A normal sign-out also revokes the session on the server. If that
-//      fails — offline, or a network error — a local sign-out still ends
-//      the session on this device (no network needed) instead of silently
-//      leaving you signed in.
+//      fails — offline, or a network error — the session is still ended on
+//      this device (forgetStoredSession: Supabase's own "local" sign-out
+//      asks the server too) instead of silently leaving you signed in.
 //   2. Then this device's offline data is wiped and the app reloads at "/",
 //      the landing page — so the next person who signs in here starts fresh,
 //      not on the previous person's page. Your unsent edits go too (the
@@ -25,20 +25,34 @@ import { clearOutboxFor, countOutboxMessages } from "src/lib/chat-outbox";
 export async function signOut(qc: QueryClient): Promise<void> {
   const personId = signedInPersonId(qc);
   markSignOutIntended();
-  // Chat messages written offline go too (the Log out button already
-  // asked, like for page edits).
-  if (personId) await clearOutboxFor(personId);
-  const { error } = await supabase.auth.signOut();
-  if (error) {
-    const { error: localError } = await supabase.auth.signOut({
-      scope: "local",
+  try {
+    // Chat messages written offline go too (the Log out button already
+    // asked, like for page edits).
+    if (personId) await clearOutboxFor(personId).catch(() => {});
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.warn(
+        "[sign-out] the server didn't answer; signing out here",
+        error,
+      );
+      const { error: localError } = await supabase.auth.signOut({
+        scope: "local",
+      });
+      // That one asks the server too: if it fails, forget the session here.
+      if (localError) forgetStoredSession();
+    }
+  } catch (e) {
+    console.warn("[sign-out]", e);
+    forgetStoredSession();
+  } finally {
+    // Whatever happened above, leave for the landing page: staying put
+    // with an emptied cache is the loading-skeleton screen. (Runs once:
+    // the auth listener may already be on its way.)
+    await wipeAndReloadHome(() => qc.clear(), {
+      personId,
+      keepOwnUnsent: false,
     });
-    if (localError) throw localError;
   }
-  await wipeAndReloadHome(() => qc.clear(), {
-    personId,
-    keepOwnUnsent: false,
-  });
 }
 
 function signedInPersonId(qc: QueryClient): string | null {

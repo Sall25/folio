@@ -134,7 +134,10 @@ export function useAuthListener() {
               personId !== null &&
               (await listDirtyPageIds(personId)).length > 0;
             const wipe = { personId, email, keepOwnUnsent };
-            if (wasSignedIn) {
+            // This tab's Log out always reloads, even if the session entry
+            // was already gone from the cache: emptying the cache without a
+            // reload left the app on its loading skeletons.
+            if (wasSignedIn || isSignOutIntended()) {
               void wipeAndReloadHome(() => queryClient.clear(), wipe);
             } else {
               clearOfflineData(() => queryClient.clear(), wipe);

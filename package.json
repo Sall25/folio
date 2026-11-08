@@ -13,7 +13,9 @@
     "preview": "vite preview",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "seed:demo": "node --env-file=.env.seed.local scripts/seed-demo.mjs",
+    "demo:scene": "node --env-file=.env.seed.local scripts/demo-scenes.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.2",
