@@ -79,7 +79,7 @@ export interface HomeCopy {
   shot: Record<HomeShotId, string>;
 }
 
-export const GITHUB_URL = "https://github.com/Jule-25/folio";
+export const GITHUB_URL = "https://github.com/Sall25/folio";
 export const RELEASES_URL = `${GITHUB_URL}/releases/latest`;
 /** The Discord invite (VITE_DISCORD_URL); without it the Discord links are
  *  left out. */

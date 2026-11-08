@@ -1,0 +1,85 @@
+# Builds the desktop app for Windows, macOS and Linux and puts the installers
+# on a draft GitHub release. Runs when a version tag is pushed:
+#
+#   git tag v0.1.0
+#   git push origin v0.1.0
+#
+# Then open GitHub → Releases, check the draft, write the notes, Publish.
+# The landing page's "Download desktop" opens /releases/latest, the newest
+# published release.
+#
+# The app is built with the same settings as the website, from repository
+# secrets (Settings → Secrets and variables → Actions → New repository
+# secret): VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY,
+# VITE_HOCUSPOCUS_URL, VITE_API_URL, VITE_PUBLIC_APP_URL. Never the service
+# role key: the app ships to everyone.
+name: Release desktop
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            args: ""
+          - name: macOS (Apple silicon)
+            os: macos-latest
+            args: "--target aarch64-apple-darwin"
+          - name: macOS (Intel)
+            os: macos-latest
+            args: "--target x86_64-apple-darwin"
+          - name: Linux
+            os: ubuntu-22.04
+            args: ""
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Linux build tools
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - run: npm ci
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_HOCUSPOCUS_URL: ${{ secrets.VITE_HOCUSPOCUS_URL }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_PUBLIC_APP_URL: ${{ secrets.VITE_PUBLIC_APP_URL }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "Folio ${{ github.ref_name }}"
+          releaseBody: "Download the installer for your computer below."
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}

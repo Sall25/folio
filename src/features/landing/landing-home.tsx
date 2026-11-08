@@ -5,6 +5,7 @@ import {
   Download,
   Menu,
   Moon,
+  MessagesSquare,
   Star,
   Sun,
   X,
@@ -139,6 +140,17 @@ export function HomeHeader({
           <Star size={15} />
           {c.nav.github}
         </a>
+        {DISCORD_URL && (
+          <a
+            className="lh-github"
+            href={DISCORD_URL}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <MessagesSquare size={15} />
+            Discord
+          </a>
+        )}
         {langSwitch}
         {themeButton}
         <button type="button" className="lh-signin" onClick={onSignIn}>
@@ -188,6 +200,16 @@ export function HomeHeader({
             >
               {c.nav.github}
             </a>
+            {DISCORD_URL && (
+              <a
+                className="lh-menu__item"
+                href={DISCORD_URL}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Discord
+              </a>
+            )}
             <span className="lh-menu__divider" />
             <div className="lh-menu__row">
               {langSwitch}
