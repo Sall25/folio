@@ -1,4 +1,9 @@
 {
+  "mediaSave": {
+    "save": "Enregistrer sur cet ordinateur",
+    "saving": "Enregistrement sur cet ordinateur…",
+    "saved": "Enregistré sur cet ordinateur ({{size}}). Cliquez pour supprimer la copie."
+  },
   "desktopUpdate": {
     "available": "Folio {{version}} est disponible.",
     "install": "Installer et redémarrer",
@@ -790,6 +795,15 @@
       "offlineStorage": "Stockage hors ligne",
       "offlineStorageDesc": "Pages et images enregistrées sur cet appareil pour s'ouvrir sans connexion. Vider garde les modifications pas encore envoyées.",
       "offlineStorageClear": "Vider",
+      "mediaImages": "Images",
+      "mediaImagesDesc": "Les images des pages gardées hors ligne, enregistrées sur cet ordinateur pour s'afficher sans connexion.",
+      "mediaOther": "Vidéos, audio et fichiers",
+      "mediaOtherDesc": "Plus lourds, donc enregistrés seulement quand vous choisissez « Enregistrer sur cet ordinateur » sur le bloc, sauf en mode automatique.",
+      "mediaAuto": "Automatiquement",
+      "mediaAsk": "Quand je le demande",
+      "mediaSpace": "Médias sur cet ordinateur",
+      "mediaSpaceDesc": "Images, vidéos, audio et fichiers enregistrés pour le hors ligne. Vider supprime les copies, pas les fichiers de vos pages.",
+      "mediaOpenFolder": "Ouvrir le dossier",
       "appearance": "Apparence",
       "appearanceDesc": "Change le style de toute l'app. Toi seul le vois, sur cet appareil.",
       "iconStyle": "Style des icônes",

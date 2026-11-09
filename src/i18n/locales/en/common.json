@@ -1,4 +1,9 @@
 {
+  "mediaSave": {
+    "save": "Save to this computer",
+    "saving": "Saving to this computer…",
+    "saved": "Saved on this computer ({{size}}). Click to remove the copy."
+  },
   "desktopUpdate": {
     "available": "Folio {{version}} is available.",
     "install": "Install and restart",
@@ -935,6 +940,15 @@
       "offlineStorage": "Offline storage",
       "offlineStorageDesc": "Pages and images saved on this device so they open without a connection. Clearing keeps edits that haven't been sent yet.",
       "offlineStorageClear": "Clear",
+      "mediaImages": "Images",
+      "mediaImagesDesc": "Images in pages kept offline, saved on this computer so they show without a connection.",
+      "mediaOther": "Videos, audio and files",
+      "mediaOtherDesc": "Larger, so saved only when you choose \"Save to this computer\" on the block, unless set to automatic.",
+      "mediaAuto": "Automatically",
+      "mediaAsk": "When I ask",
+      "mediaSpace": "Media on this computer",
+      "mediaSpaceDesc": "Images, videos, audio and files saved for offline use. Clearing removes the copies, not the files in your pages.",
+      "mediaOpenFolder": "Open folder",
       "appearance": "Appearance",
       "appearanceDesc": "Restyle the whole app. Only you see it, on this device.",
       "iconStyle": "Icon style",

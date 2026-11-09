@@ -28,6 +28,8 @@ import { CornerDownLeftIcon } from "src/components/tiptap-icons/corner-down-left
 
 import { Maximize2 } from "src/components/icons";
 
+import { MediaSaveButton } from "src/components/tiptap-ui/media-save-button";
+
 import { OPEN_LIGHTBOX_EVENT } from "src/components/tiptap-node/image-node/image-lightbox";
 
 // Opens the selected image's lightbox by firing an event on its wrapper;
@@ -115,6 +117,7 @@ export function ImageBubble({ editor }: { editor: Editor | null }) {
       if (!editor) {
         return {
           hasAlt: false,
+          src: null,
           selectionKey: "",
         };
       }
@@ -123,12 +126,14 @@ export function ImageBubble({ editor }: { editor: Editor | null }) {
 
       return {
         hasAlt: !!editor.getAttributes("image").alt,
+        src: (editor.getAttributes("image").src as string | undefined) ?? null,
         selectionKey: `${selection.from}:${selection.to}:${selection.constructor.name}`,
       };
     },
   });
 
   const hasAlt = editorState?.hasAlt ?? false;
+  const imageSrc = editorState?.src ?? null;
   const selectionKey = editorState?.selectionKey ?? "";
 
   // Selecting another node brings the regular tools back.
@@ -216,6 +221,8 @@ export function ImageBubble({ editor }: { editor: Editor | null }) {
             >
               <Maximize2 className="tiptap-button-icon" />
             </Button>
+
+            <MediaSaveButton url={imageSrc} />
 
             <ImageDownloadButton
               hideWhenUnavailable={true}

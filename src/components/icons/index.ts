@@ -216,3 +216,8 @@ export const Apple = icon("Apple", "nutrition");
 export const AlarmClock = icon("AlarmClock", "alarm");
 export const AArrowDown = icon("AArrowDown", "text_decrease");
 export const UploadCloud = icon("UploadCloud", "cloud_upload");
+export const DownloadForOffline = icon(
+  "DownloadForOffline",
+  "download_for_offline",
+);
+export const OfflinePin = icon("OfflinePin", "offline_pin");

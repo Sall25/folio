@@ -19,6 +19,13 @@ import {
   useKeepChoices,
 } from "src/lib/offline-keep";
 import { countDocCopies } from "src/lib/offline-doc-cache";
+import {
+  clearMedia,
+  openMediaFolder,
+  setMediaAuto,
+  useMediaAutoPrefs,
+  useMediaBytes,
+} from "src/lib/media-cache";
 import { isDesktopApp } from "src/lib/desktop";
 import { usePagesBase } from "src/hooks/use-pages";
 import type { Page } from "src/types";
@@ -157,6 +164,7 @@ export function MySettingsContent() {
       <IconStyleSettings />
       <OfflineFavoritesRow />
       {isDesktopApp && <OfflineWorkspaceRow />}
+      {isDesktopApp && <OfflineMediaRows />}
       <OfflineStorageRow />
     </div>
   );
@@ -248,5 +256,82 @@ function OfflineWorkspaceRow() {
         onChangeAsync={async (on) => setWorkspaceKept(personId, workspaceId, on)}
       />
     </SettingRow>
+  );
+}
+
+// Desktop app: media saved on this computer (media-cache.ts). Images are
+// saved automatically by default; videos, audio and files only with "Save
+// to this computer" on the block, unless set to automatic here. Shows the
+// space they take, opens their folder, or removes them all.
+type MediaMode = "auto" | "ask";
+
+function OfflineMediaRows() {
+  const { t, i18n } = useTranslation();
+  const prefs = useMediaAutoPrefs();
+  const bytes = useMediaBytes();
+  const [clearing, setClearing] = useState(false);
+
+  const modes: { value: MediaMode; label: string }[] = [
+    { value: "auto", label: t("settings.mySettings.mediaAuto") },
+    { value: "ask", label: t("settings.mySettings.mediaAsk") },
+  ];
+
+  const clear = async () => {
+    setClearing(true);
+    try {
+      await clearMedia();
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  return (
+    <>
+      <SettingRow
+        label={t("settings.mySettings.mediaImages")}
+        description={t("settings.mySettings.mediaImagesDesc")}
+      >
+        <Select<MediaMode>
+          value={prefs.images ? "auto" : "ask"}
+          options={modes}
+          onChange={(v) => setMediaAuto("image", v === "auto")}
+        />
+      </SettingRow>
+      <SettingRow
+        label={t("settings.mySettings.mediaOther")}
+        description={t("settings.mySettings.mediaOtherDesc")}
+      >
+        <Select<MediaMode>
+          value={prefs.other ? "auto" : "ask"}
+          options={modes}
+          onChange={(v) => setMediaAuto("other", v === "auto")}
+        />
+      </SettingRow>
+      <SettingRow
+        label={t("settings.mySettings.mediaSpace")}
+        description={t("settings.mySettings.mediaSpaceDesc")}
+      >
+        <span className="ws-setting-row__static">
+          {formatBytes(bytes, i18n.language)}
+        </span>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => void openMediaFolder()}
+          style={{ border: "1px solid var(--tt-border-color)" }}
+        >
+          {t("settings.mySettings.mediaOpenFolder")}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          disabled={clearing || bytes === 0}
+          onClick={() => void clear()}
+          style={{ border: "1px solid var(--tt-border-color)" }}
+        >
+          {t("settings.mySettings.offlineStorageClear", "Clear")}
+        </Button>
+      </SettingRow>
+    </>
   );
 }

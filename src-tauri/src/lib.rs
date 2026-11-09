@@ -7,7 +7,11 @@
 // notifications (tauri-plugin-notification,
 // src/features/desktop/attention), and new versions from GitHub releases
 // (tauri-plugin-updater, then tauri-plugin-process to relaunch,
-// src/features/desktop/updater).
+// src/features/desktop/updater). media.rs saves images, videos, audio and
+// files from pages on this computer, so they show offline
+// (src/lib/media-cache.ts).
+
+mod media;
 
 use tauri::Manager;
 
@@ -35,6 +39,14 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        .invoke_handler(tauri::generate_handler![
+            media::media_save,
+            media::media_list,
+            media::media_remove,
+            media::media_clear,
+            media::media_open,
+            media::media_open_folder,
+        ])
         .setup(|_app| {
             // The installer registers folio:// on Windows and Linux; this
             // also does it for `npm run desktop:dev` and the AppImage.

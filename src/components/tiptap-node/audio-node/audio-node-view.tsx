@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import {
   Play,
@@ -14,6 +14,8 @@ import type { AudioAttrs } from "./types";
 import type { AudioOptions } from "./audio-node";
 import { useAudioPlayer } from "./use-audio-player";
 import { MediaUploadCard } from "src/components/tiptap-node/media-upload-card";
+import { MediaSaveButton } from "src/components/tiptap-ui/media-save-button";
+import { autoSaveMedia, usePlaybackSrc } from "src/lib/media-cache";
 import "./audio-node-view.scss";
 
 const FORMATS = "MP3, WAV, M4A or OGG";
@@ -145,12 +147,21 @@ interface AudioPlayerProps {
 
 function AudioPlayer({ src, fileName, onReplace }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const player = useAudioPlayer(src, audioRef);
+  // Saved on this computer (desktop app): plays from the file.
+  const [started, setStarted] = useState(false);
+  const playSrc = usePlaybackSrc(src, started);
+  useEffect(() => autoSaveMedia(src, "other"), [src]);
+  const player = useAudioPlayer(playSrc, audioRef);
 
   return (
     <div className="audio-player">
       {/* Hidden audio element */}
-      <audio ref={audioRef} src={src} preload="metadata" />
+      <audio
+        ref={audioRef}
+        src={playSrc}
+        preload="metadata"
+        onPlay={() => setStarted(true)}
+      />
 
       {/* Left — play/pause */}
       <button
@@ -203,6 +214,7 @@ function AudioPlayer({ src, fileName, onReplace }: AudioPlayerProps) {
         onVolumeChange={player.setVolume}
         onToggleMute={player.toggleMute}
       />
+      <MediaSaveButton url={src} />
       {onReplace && (
         <button className="audio-replace-btn" onClick={onReplace}>
           Replace
