@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "What Folio's windows (the main one and page windows) may ask of the system: their own title bar (drag, minimize, maximize, close), opening a page in its own window, opening web and mail links in the default browser or mail app, files in the app's own data folder for offline copies, folio:// links, the unread count on the app's icon, coming to the front, and system notifications.",
+  "description": "What Folio's windows (the main one and page windows) may ask of the system: their own title bar (drag, minimize, maximize, close), opening a page in its own window, opening web and mail links in the default browser or mail app, files in the app's own data folder for offline copies, folio:// links, the unread count on the app's icon, coming to the front, and system notifications, and checking for, installing and restarting into a new version.",
   "windows": [
     "main",
     "page-*"
@@ -22,6 +22,8 @@
     "core:window:allow-unminimize",
     "deep-link:default",
     "notification:default",
+    "updater:default",
+    "process:allow-restart",
     {
       "identifier": "opener:allow-open-url",
       "allow": [

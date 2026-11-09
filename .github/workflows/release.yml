@@ -11,8 +11,13 @@
 # The app is built with the same settings as the website, from repository
 # secrets (Settings → Secrets and variables → Actions → New repository
 # secret): VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY,
-# VITE_HOCUSPOCUS_URL, VITE_API_URL, VITE_PUBLIC_APP_URL. Never the service
-# role key: the app ships to everyone.
+# VITE_HOCUSPOCUS_URL, VITE_PUBLIC_APP_URL. Never the service role key: the
+# app ships to everyone.
+#
+# Updates: the installers are signed with the updater key (secrets
+# TAURI_SIGNING_PRIVATE_KEY and TAURI_SIGNING_PRIVATE_KEY_PASSWORD), and the
+# release gets a latest.json that installed apps read to find the new
+# version (src-tauri/tauri.conf.json → plugins.updater).
 name: Release desktop
 
 on:
@@ -74,12 +79,14 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_HOCUSPOCUS_URL: ${{ secrets.VITE_HOCUSPOCUS_URL }}
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_PUBLIC_APP_URL: ${{ secrets.VITE_PUBLIC_APP_URL }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Folio ${{ github.ref_name }}"
           releaseBody: "Download the installer for your computer below."
           releaseDraft: true
           prerelease: false
+          includeUpdaterJson: true
           args: ${{ matrix.args }}

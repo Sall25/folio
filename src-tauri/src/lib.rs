@@ -5,7 +5,9 @@
 // offline (tauri-plugin-fs, src/lib/offline-kv.ts), folio:// links
 // (tauri-plugin-deep-link, src/features/desktop/deep-links) and system
 // notifications (tauri-plugin-notification,
-// src/features/desktop/attention).
+// src/features/desktop/attention), and new versions from GitHub releases
+// (tauri-plugin-updater, then tauri-plugin-process to relaunch,
+// src/features/desktop/updater).
 
 use tauri::Manager;
 
@@ -31,6 +33,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .setup(|_app| {
             // The installer registers folio:// on Windows and Linux; this
             // also does it for `npm run desktop:dev` and the AppImage.

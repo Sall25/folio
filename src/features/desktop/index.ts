@@ -8,3 +8,4 @@ export { DesktopAttention } from "./attention/desktop-attention";
 export { DesktopRail } from "./rail/desktop-rail";
 export { DesktopDeepLinkNavigator } from "./deep-links/desktop-deep-link-navigator";
 export { installDesktopDeepLinks } from "./deep-links/deep-links";
+export { DesktopUpdater } from "./updater/desktop-updater";

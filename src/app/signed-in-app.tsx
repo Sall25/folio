@@ -22,6 +22,7 @@ import {
   DesktopSidebarJoin,
   DesktopTabs,
   DesktopTabsSync,
+  DesktopUpdater,
   isPageWindow,
   PageWindowTitle,
 } from "../features/desktop";
@@ -50,7 +51,8 @@ export default function SignedInApp() {
                             {/* Desktop app: tabs in the title bar, the rail
                                 (workspaces, Home, Inbox, Chats) beside the
                                 sidebar, the unread count on the app's icon
-                                and system notifications, folio:// links; a page
+                                and system notifications, folio:// links, new
+                                versions offered in a toast; a page
                                 window (one page on its own) shows that
                                 page's title there and no sidebar. */}
                             {isDesktopApp && !isPageWindow && (
@@ -61,6 +63,7 @@ export default function SignedInApp() {
                                 <DesktopRail />
                                 <DesktopAttention />
                                 <DesktopDeepLinkNavigator />
+                                <DesktopUpdater />
                               </>
                             )}
                             {isPageWindow && <PageWindowTitle />}

@@ -1,4 +1,10 @@
 {
+  "desktopUpdate": {
+    "available": "Folio {{version}} is available.",
+    "install": "Install and restart",
+    "downloading": "Downloading the update…",
+    "failed": "The update couldn't be installed. Check your connection and try again."
+  },
   "actions": {
     "new": "New",
     "newPage": "New Page",
