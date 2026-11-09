@@ -13,6 +13,7 @@ import { useCurrentWorkspace } from "src/hooks/use-workspaces";
 import { useSession } from "src/hooks/use-session";
 import { Toggle } from "src/components/tiptap-ui-primitive/toggle";
 import {
+  isWorkspaceKept,
   setKeepFavorites,
   setWorkspaceKept,
   useKeepChoices,
@@ -183,7 +184,8 @@ function OfflineFavoritesRow() {
   );
 }
 
-// Desktop app: the whole workspace on this computer (offline-keep.ts). Every
+// Desktop app: the whole workspace on this computer (offline-keep.ts), on
+// unless turned off. Every
 // page and database row is downloaded and kept up to date in the
 // background (OfflineDocSync); copies are files on disk here, so there's
 // room. Shows how many are saved so far.
@@ -195,8 +197,8 @@ function OfflineWorkspaceRow() {
   const { session } = useSession();
   const personId = session?.user?.id ?? null;
   const { workspace, workspaceId } = useCurrentWorkspace();
-  const { workspaces } = useKeepChoices(personId);
-  const kept = !!workspaceId && workspaces.includes(workspaceId);
+  const choices = useKeepChoices(personId);
+  const kept = isWorkspaceKept(choices, workspaceId);
 
   const { data: pages } = usePagesBase(allPages);
   const pageIds = useMemo(
