@@ -8,6 +8,7 @@ import {
 } from "./landing-copy";
 import { HOME_COPY } from "./landing-home-copy";
 import { HomeFooter, HomeHeader, HomeView } from "./landing-home";
+import { DownloadView } from "./landing-download";
 import {
   Button,
   ButtonGroup,
@@ -51,6 +52,11 @@ function initialTheme(): LandingTheme {
 function parseExample(hash: string): ShowcaseId | null {
   const e = hash.replace(/^#\/?/, "").split("/")[1];
   return e && e in SHOWCASES ? (e as ShowcaseId) : null;
+}
+
+// #/download: the download page.
+function isDownloadPage(hash: string): boolean {
+  return hash.replace(/^#\/?/, "").split("/")[0] === "download";
 }
 
 // ── Emojis and icons ──────────────────────────────────────────────────────
@@ -117,19 +123,25 @@ export function Landing({
   const [example, setExample] = useState<ShowcaseId | null>(() =>
     parseExample(typeof window !== "undefined" ? window.location.hash : ""),
   );
+  const [downloadPage, setDownloadPage] = useState(() =>
+    isDownloadPage(typeof window !== "undefined" ? window.location.hash : ""),
+  );
   const mainRef = useRef<HTMLElement | null>(null);
 
   // Follow the address bar (links, back / forward).
   useEffect(() => {
-    const onHash = () => setExample(parseExample(window.location.hash));
+    const onHash = () => {
+      setExample(parseExample(window.location.hash));
+      setDownloadPage(isDownloadPage(window.location.hash));
+    };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  // An example opened or closed: back to the top.
+  // An example or the download page opened or closed: back to the top.
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 });
-  }, [example]);
+  }, [example, downloadPage]);
 
   // The app's primitives (Button, the editor's nodes) read dark mode from
   // `html.dark`, like the app itself. Once signed in, the app re-applies
@@ -183,6 +195,8 @@ export function Landing({
             example={example}
             onGetStarted={onGetStarted}
           />
+        ) : downloadPage ? (
+          <DownloadView lang={lang} onOpenWeb={onGetStarted} />
         ) : (
           <HomeView
             c={home}

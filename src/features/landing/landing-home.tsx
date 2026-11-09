@@ -17,7 +17,6 @@ import type { LandingLang } from "./landing-copy";
 import {
   DISCORD_URL,
   GITHUB_URL,
-  RELEASES_URL,
   type HomeCopy,
   type HomeSectionId,
   type HomeShotId,
@@ -35,8 +34,22 @@ import "./landing-home.scss";
 /** Scrolls the page to a section (the page scrolls inside .landing-main,
  *  so plain #anchors would also change the tour's hash routes). */
 function scrollToSection(id: HomeSectionId) {
-  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  const section = document.getElementById(id);
+  if (section) {
+    section.scrollIntoView({ behavior: "smooth" });
+    return;
+  }
+  // On the download page: back to the home view first, then to the section.
+  window.location.hash = "#/";
+  window.setTimeout(
+    () =>
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }),
+    80,
+  );
 }
+
+/** The download page (landing-download.tsx). */
+const DOWNLOAD_PAGE = "#/download";
 
 // ── Header ────────────────────────────────────────────────────────────────
 
@@ -263,7 +276,7 @@ export function HomeView({
     </Button>
   );
   const download = (label: string) => (
-    <a className="lh-cta lh-cta--outline" href={RELEASES_URL}>
+    <a className="lh-cta lh-cta--outline" href={DOWNLOAD_PAGE}>
       <Download size={17} />
       {label}
     </a>
