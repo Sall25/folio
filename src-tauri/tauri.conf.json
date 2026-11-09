@@ -48,7 +48,7 @@
       }
     },
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ0NjJGMzQyNzQwQ0JDODAKUldTQXZBeDBRdk5pUkVQK1ZWc0NiS2dURHo0NEdaNklRaHhKVjloZHZCS3NXYUtCR3pKZVlCM1MK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEYwRDZDRTU2QjdGNkY1NzAKUldSdzlmYTNWczdXOEtLMXczbWlqUkEvRWYzK29DR0s2dDhRUU9wZHlPN0kvVDQ0N0VJTFdsRFgK",
       "endpoints": [
         "https://github.com/Sall25/folio/releases/latest/download/latest.json"
       ],
