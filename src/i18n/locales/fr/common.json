@@ -1,4 +1,12 @@
 {
+  "fileDrop": {
+    "files_one": "{{count}} fichier",
+    "files_other": "{{count}} fichiers",
+    "uploading": "Envoi de {{name}}…",
+    "uploadingPct": "Envoi de {{name}}… {{pct}} %",
+    "tooBig": "{{name}} fait {{size}}. Les fichiers peuvent faire jusqu'à {{max}}.",
+    "failed": "{{name}} n'a pas pu être envoyé : {{reason}}"
+  },
   "mediaSave": {
     "save": "Enregistrer sur cet ordinateur",
     "saving": "Enregistrement sur cet ordinateur…",

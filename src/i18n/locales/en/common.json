@@ -1,4 +1,12 @@
 {
+  "fileDrop": {
+    "files_one": "{{count}} file",
+    "files_other": "{{count}} files",
+    "uploading": "Uploading {{name}}…",
+    "uploadingPct": "Uploading {{name}}… {{pct}}%",
+    "tooBig": "{{name}} is {{size}}. Files can be up to {{max}}.",
+    "failed": "{{name}} couldn't be uploaded: {{reason}}"
+  },
   "mediaSave": {
     "save": "Save to this computer",
     "saving": "Saving to this computer…",
