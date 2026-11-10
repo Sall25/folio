@@ -15,6 +15,7 @@ import { useCurrentSpace } from "src/hooks/use-current-space";
 import { PageItemIcon } from "../pages/page-item/page-item-icon";
 import { useHomeActions } from "./use-home-actions";
 import { useSpaceAccent } from "../shell/space-accent/space-accent";
+import { isDesktopApp } from "src/lib/desktop";
 import "./home-toolbar.scss";
 
 // The app toolbar on the home view: Home / teamspace / today's date on the
@@ -22,6 +23,8 @@ import "./home-toolbar.scss";
 // sidebar's search bar.
 //   • `leading`: what the shell puts first (the sidebar toggle when collapsed).
 //   • tablet / mobile: no date, icon-only buttons.
+//   • the desktop app: just "Home" (and the teamspace): its Home shows the
+//     date and the actions itself (desktop-home.tsx).
 export function HomeToolbar({
   leading,
   size = "desktop",
@@ -30,21 +33,25 @@ export function HomeToolbar({
   size?: "desktop" | "tablet" | "mobile";
 }) {
   const compact = size !== "desktop";
+  // The desktop app's own Home (not on a phone-sized window).
+  const desktopHome = isDesktopApp && size !== "mobile";
   // Inside a teamspace, New page wears its colour.
   const accent = useSpaceAccent();
   return (
     <>
       <ToolbarGroup className="home-toolbar__side">
         {leading}
-        <HomeCrumbs showDate={!compact} />
+        <HomeCrumbs showDate={!compact && !desktopHome} />
       </ToolbarGroup>
       <Spacer />
-      <ToolbarGroup
-        className={`home-toolbar__side home-toolbar__actions${accent ? ` ${accent.className}` : ""}`}
-        style={accent?.style}
-      >
-        <HomeActions compact={compact} />
-      </ToolbarGroup>
+      {!desktopHome && (
+        <ToolbarGroup
+          className={`home-toolbar__side home-toolbar__actions${accent ? ` ${accent.className}` : ""}`}
+          style={accent?.style}
+        >
+          <HomeActions compact={compact} />
+        </ToolbarGroup>
+      )}
     </>
   );
 }

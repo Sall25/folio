@@ -1,4 +1,26 @@
 {
+  "desktopHome": {
+    "fromAnyApp": "Depuis n'importe quelle app",
+    "roomHint": "Discuter avec l'équipe",
+    "templatesHint": "Partir d'un modèle",
+    "matches": "Pages",
+    "keysHint": "↑ ↓ pour choisir · Entrée pour ouvrir",
+    "cardsHint": "Flèches pour choisir · Entrée pour ouvrir",
+    "people": "Membres",
+    "invite": "Inviter",
+    "members_one": "{{count}} membre",
+    "members_other": "{{count}} membres",
+    "onlineNow_one": "{{count}} en ligne",
+    "onlineNow_other": "{{count}} en ligne",
+    "online": "en ligne",
+    "away": "absent",
+    "inPlace": "dans {{place}}",
+    "inAPage": "dans une page",
+    "inAChat": "dans une discussion",
+    "latestInRooms": "Derniers messages",
+    "noMessages": "Pas encore de messages",
+    "sentAttachment": "A envoyé un fichier"
+  },
   "quickCapture": {
     "title": "Note rapide",
     "newNoteIn": "Nouvelle note dans",

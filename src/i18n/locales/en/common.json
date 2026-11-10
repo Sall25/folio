@@ -1,4 +1,26 @@
 {
+  "desktopHome": {
+    "fromAnyApp": "From any app",
+    "roomHint": "Chat with your team",
+    "templatesHint": "Start from one",
+    "matches": "Pages",
+    "keysHint": "↑ ↓ to move · Enter to open",
+    "cardsHint": "Arrow keys to move · Enter to open",
+    "people": "People",
+    "invite": "Invite",
+    "members_one": "{{count}} member",
+    "members_other": "{{count}} members",
+    "onlineNow_one": "{{count}} online now",
+    "onlineNow_other": "{{count}} online now",
+    "online": "online",
+    "away": "away",
+    "inPlace": "in {{place}}",
+    "inAPage": "in a page",
+    "inAChat": "in a chat",
+    "latestInRooms": "Latest in rooms",
+    "noMessages": "No messages yet",
+    "sentAttachment": "Sent a file"
+  },
   "quickCapture": {
     "title": "Quick note",
     "newNoteIn": "New note in",

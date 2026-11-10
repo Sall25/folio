@@ -1070,6 +1070,11 @@ html:root[data-theme="midnight"] {
     padding-left: 84px !important;
     box-shadow: inset 0 -1px 0 rgba(36, 50, 79, 0.1);
   }
+  // The desktop Home (desktop-home.scss) is written past the margin line
+  // too: the line is 64px into the sheet, which starts where Home does.
+  .dhome {
+    padding-left: 84px;
+  }
 
   // Covers start past the margin line too, so the binder holes and the red
   // line stay visible. --cover-sheet-offset (cover-header.tsx) is where the

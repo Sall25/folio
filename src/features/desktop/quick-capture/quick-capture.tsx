@@ -12,7 +12,10 @@ import { useEnterableTeamspaces } from "src/hooks/use-enterable-teamspaces";
 import { useActivePageActions } from "src/features/pages/context/active-page-context";
 import { makePage } from "src/utils/make-page";
 import type { Page } from "src/types";
-import { applyCaptureShortcut } from "./capture-shortcut";
+import {
+  applyCaptureShortcut,
+  OPEN_QUICK_CAPTURE_EVENT,
+} from "./capture-shortcut";
 import "./quick-capture.scss";
 
 // Desktop app: quick capture. The shortcut from My settings (any app, Folio
@@ -74,9 +77,16 @@ export function QuickCapture() {
         else unlisten = stop;
       }),
     );
+    // From inside the app (Home's Quick note): Folio is already in front.
+    const openHere = () => {
+      backgroundRef.current = false;
+      setOpen(true);
+    };
+    window.addEventListener(OPEN_QUICK_CAPTURE_EVENT, openHere);
     return () => {
       cancelled = true;
       unlisten?.();
+      window.removeEventListener(OPEN_QUICK_CAPTURE_EVENT, openHere);
     };
   }, []);
 

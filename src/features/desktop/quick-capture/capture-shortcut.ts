@@ -70,7 +70,10 @@ function subscribe(listener: () => void) {
   };
 }
 
-let snapshot = { shortcut: readCaptureShortcut(), error };
+let snapshot: { shortcut: string; error: string | null } = {
+  shortcut: readCaptureShortcut(),
+  error,
+};
 function getSnapshot() {
   const shortcut = readCaptureShortcut();
   if (snapshot.shortcut !== shortcut || snapshot.error !== error) {
@@ -82,4 +85,10 @@ function getSnapshot() {
 /** The chosen shortcut and why the system refused it (or null), live. */
 export function useCaptureShortcut() {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+/** Opens the quick capture box from inside the app (Home's Quick note). */
+export const OPEN_QUICK_CAPTURE_EVENT = "folio:quick-capture";
+export function openQuickCapture() {
+  window.dispatchEvent(new Event(OPEN_QUICK_CAPTURE_EVENT));
 }
