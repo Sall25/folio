@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ID, Page } from "../types";
 import { queryKeys } from "../lib/queryKeys";
+import { sendLocalPage, updateLocalPage } from "src/lib/local-pages";
 
 export type PagePatch = Partial<Omit<Page, "id">>;
 
@@ -48,8 +49,15 @@ export function usePatchPage(
     // offline survives a reload: it's persisted and resumed.
     mutationKey: patchPageMutationKey,
     scope: pageWritesScope,
-    mutationFn,
+    // A page made offline and not sent yet is sent first: the server can't
+    // change a page it doesn't have.
+    mutationFn: async (args: { id: ID; patch: PagePatch }) => {
+      await sendLocalPage(args.id);
+      return mutationFn(args);
+    },
     onMutate: async ({ id, patch }: { id: ID; patch: PagePatch }) => {
+      // Still waiting to be sent: it'll be created as it is now.
+      updateLocalPage(id, patch);
       await qc.cancelQueries({ queryKey: queryKeys.pages.all });
 
       const before = snapshotFields(qc, id, patch);

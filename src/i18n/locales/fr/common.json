@@ -346,6 +346,7 @@
   "trash.confirmNote": "Cette action est irréversible.",
   "trash.ownOnlyNote": "Les pages créées par d’autres membres restent dans la corbeille ; eux seuls peuvent les supprimer.",
   "trash.movedToast": "Page déplacée vers la corbeille",
+  "trash.needsConnection": "La suppression définitive nécessite une connexion",
   "trash.undo": "Annuler",
   "account.menu": "Compte",
   "account.editProfile": "Modifier le profil",

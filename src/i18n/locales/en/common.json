@@ -439,6 +439,7 @@
   "trash.confirmNote": "This can't be undone.",
   "trash.ownOnlyNote": "Pages other members created stay in the trash; only they can delete them.",
   "trash.movedToast": "Page moved to Trash",
+  "trash.needsConnection": "Deleting for good needs a connection",
   "trash.undo": "Undo",
   "account.menu": "Account",
   "account.editProfile": "Edit profile",

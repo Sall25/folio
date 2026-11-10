@@ -1,4 +1,5 @@
 import type { Page } from "src/types";
+import { createPage } from "src/api/pages";
 
 // Pages created on this device that the server hasn't confirmed yet: an
 // outbox. They're merged into the page list (usePagesBase) so they show
@@ -48,6 +49,30 @@ export function removeLocalPage(id: string) {
 }
 
 export const isLocalPage = (id: string) => id in read();
+
+/** A change to a page still waiting to be sent goes into the waiting copy
+ *  too, so the page is created as it is now (a title typed offline). */
+export function updateLocalPage(id: string, patch: Partial<Page>) {
+  const pages = read();
+  if (!(id in pages)) return;
+  pages[id] = { ...pages[id], ...patch };
+  write(pages);
+}
+
+/** Sends the page now if it's still waiting, so a change to it (a rename,
+ *  the trash) never reaches the server before the page does. Throws when
+ *  the server can't be reached: the change waits too. */
+export async function sendLocalPage(id: string): Promise<void> {
+  const page = read()[id];
+  if (!page) return;
+  try {
+    await createPage(page);
+  } catch (error) {
+    // Already there (sent by PageOutboxSync meanwhile): fine.
+    if (!String(error).includes("duplicate")) throw error;
+  }
+  removeLocalPage(id);
+}
 export const localPages = (): Page[] => Object.values(read());
 
 /** The server's list plus the pages still waiting to be sent. */

@@ -13,9 +13,12 @@ import { Button } from "src/components/tiptap-ui-primitive/button";
 import { useCallback, useState } from "react";
 import { type ID, type Page } from "src/types";
 import { ConfirmDialog } from "../../../shell/confirm-dialog";
+import { useOnlineStatus } from "src/hooks/use-online-status";
 
 // Trash view: lists trashed pages (subtree roots) with restore / delete
 // permanently, and an empty-all action. Rendered in the sidebar like the inbox.
+// Restore works offline (sent when the connection is back); deleting for
+// good needs the connection, so it waits for it, disabled, saying why.
 export function TrashPanel() {
   const { t } = useTranslation();
   const { data: trashed = [] } = useTrashedPages();
@@ -23,6 +26,8 @@ export function TrashPanel() {
   const purge = useDeletePagePermanently();
   const emptyAll = useEmptyTrash();
   const { canPurge } = useTrashScope();
+  const online = useOnlineStatus();
+  const needsConnection = t("trash.needsConnection");
 
   // Show only trashed ROOTS (a trashed child is covered by its trashed parent).
   const trashedIds = new Set((trashed as Page[]).map((p) => p.id));
@@ -66,6 +71,9 @@ export function TrashPanel() {
               type="button"
               size="small"
               className="trash-panel__empty"
+              disabled={!online}
+              tooltip={online ? undefined : needsConnection}
+              showTooltip={!online}
               onClick={() => setConfirm({ kind: "empty" })}
             >
               <Trash2 className="tiptap-button-icon" size={13} />
@@ -110,7 +118,12 @@ export function TrashPanel() {
                       type="button"
                       size="small"
                       className="trash-item__btn trash-item__btn--danger"
-                      tooltip={t("trash.deleteForever", "Delete permanently")}
+                      disabled={!online}
+                      tooltip={
+                        online
+                          ? t("trash.deleteForever", "Delete permanently")
+                          : needsConnection
+                      }
                       onClick={(e) => {
                         e.stopPropagation();
                         const id = page.id;

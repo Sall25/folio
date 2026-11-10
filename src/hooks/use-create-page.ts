@@ -3,7 +3,6 @@ import type { Page } from "../types";
 import { createPage } from "../api/pages";
 import { queryKeys } from "../lib/queryKeys";
 import { addLocalPage, removeLocalPage } from "src/lib/local-pages";
-import { pageWritesScope } from "./use-patch-page";
 
 export const createPageMutationKey = ["pages", "create"] as const;
 
@@ -15,9 +14,14 @@ export function useCreatePage({ quiet = false }: { quiet?: boolean } = {}) {
   return useMutation({
     mutationKey: createPageMutationKey,
     meta: quiet ? { quiet: true } : undefined,
-    // In order with the page's later patches (use-patch-page.ts): a rename
-    // never reaches the server before the page exists.
-    scope: pageWritesScope,
+    // Runs even offline: with no connection the page is made here at once
+    // and stays in the outbox (local-pages.ts) for PageOutboxSync to send.
+    // React Query's default held it until the connection came back, so
+    // "New page" did nothing offline (the page never opened and the editor
+    // stayed covered). Not in the page writes' queue either, which could
+    // hold it behind a rename waiting for the connection: a later change to
+    // the page sends it first instead (sendLocalPage, use-patch-page.ts).
+    networkMode: "always",
     mutationFn: async (page: Page) => {
       try {
         const saved = await createPage(page);
@@ -26,6 +30,11 @@ export function useCreatePage({ quiet = false }: { quiet?: boolean } = {}) {
       } catch (error) {
         // No connection: it stays in the outbox, PageOutboxSync sends it.
         if (!navigator.onLine || error instanceof TypeError) return page;
+        // Already sent by a change to it (sendLocalPage): created.
+        if (String(error).includes("duplicate")) {
+          removeLocalPage(page.id);
+          return page;
+        }
         throw error;
       }
     },
