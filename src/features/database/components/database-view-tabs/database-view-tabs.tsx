@@ -26,6 +26,7 @@ const VIEW_TYPE_KEYS: DatabaseView["type"][] = [
   "gallery",
   "calendar",
   "timeline",
+  "form",
 ];
 
 // Reserved trailing space (px) for the "N more" + "add" controls, so the last

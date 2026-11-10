@@ -21,6 +21,7 @@ const VIEW_TYPES: { type: DatabaseView["type"]; label: string }[] = [
   { type: "gallery", label: "Gallery" },
   { type: "calendar", label: "Calendar" },
   { type: "timeline", label: "Timeline" },
+  { type: "form", label: "Form" },
 ];
 
 interface DatabaseTitleBarProps {

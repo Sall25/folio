@@ -112,7 +112,8 @@ export type ViewType =
   | "list"
   | "gallery"
   | "calendar"
-  | "timeline";
+  | "timeline"
+  | "form";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Property config primitives
@@ -543,13 +544,52 @@ export interface TimelineView extends BaseView {
   timeframe: "day" | "week" | "month" | "quarter" | "year";
   showTable: boolean;
 }
+/** One question of a form: the property its answer fills. */
+export interface FormQuestion {
+  propertyId: ID;
+  /** The question as asked; unset = the property's name. The property keeps
+   *  its own (column) name. */
+  label?: string;
+  required?: boolean;
+  /** Help under the question. */
+  description?: string;
+  /** Shown only when an earlier select, status or checkbox question has one
+   *  of these answers (option ids, status item ids, "true" / "false"). */
+  showIf?: { propertyId: ID; values: string[] } | null;
+}
+
+/** Who can answer a form. */
+export type FormAudience =
+  | { kind: "workspace" }
+  | { kind: "groups"; groupIds: ID[] };
+
+/** A form: a view whose questions are the database's properties. Each answer
+ *  becomes a row, created by the server (submit_form_response), owned by the
+ *  person who answered and visible to them and the database's owner only. */
+export interface FormView extends BaseView {
+  type: "form";
+  /** The heading on the form; unset = the database's title. */
+  formTitle?: string;
+  /** Rich text (a document); older forms kept plain text. */
+  formDescription?: JSONContent | string;
+  questions: FormQuestion[];
+  audience: FormAudience;
+  /** Epoch ms; no answers after it. */
+  closesAt?: number | null;
+  /** One answer per person (the default). */
+  onePerPerson?: boolean;
+  /** Closed by hand, whatever the date. */
+  closed?: boolean;
+}
+
 export type DatabaseView =
   | TableView
   | BoardView
   | ListView
   | GalleryView
   | CalendarView
-  | TimelineView;
+  | TimelineView
+  | FormView;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UI state — ephemeral, never stored in the doc

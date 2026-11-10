@@ -7,6 +7,7 @@ import {
   type CalendarView,
   type DatabaseProperty,
   type TimelineView,
+  type FormView,
   isGroupableProperty,
 } from "src/types";
 
@@ -203,6 +204,17 @@ export function makeDefaultView(
         timeframe: "month",
         showTable: true,
       } satisfies TimelineView;
+    }
+    case "form": {
+      // Starts with the title (and nothing else): a form needs one question.
+      const title = properties.find((p) => p.config.type === "title");
+      return {
+        ...base,
+        type: "form",
+        questions: title ? [{ propertyId: title.id, required: true }] : [],
+        audience: { kind: "workspace" },
+        onePerPerson: true,
+      } satisfies FormView;
     }
   }
 }

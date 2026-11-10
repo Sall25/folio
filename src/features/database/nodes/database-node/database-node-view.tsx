@@ -60,6 +60,7 @@ import {
 } from "../../hooks";
 import { ChipsRow } from "../../components/chips-row";
 import { PersonFilterBar } from "../../components/person-filter-bar";
+import { DatabaseFormNodeView } from "../database-form-node-view";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { usePageViewState } from "src/features/pages/context/page-view-context";
 import { setColumnHint } from "../../utils/skeleton-hints";
@@ -243,6 +244,7 @@ function DatabaseNodeViewBody({
     );
   if (activeView?.type === "calendar") return <DatabaseCalendarNodeView />;
   if (activeView?.type === "timeline") return <DatabaseTimelineNodeView />;
+  if (activeView?.type === "form") return <DatabaseFormNodeView />;
 
   // ── Table view (node-rendered) ────────────────────────────────────────────
   return (

@@ -1,6 +1,7 @@
 import { ReactLocation } from "@tanstack/react-location";
 import { SimpleEditor } from "../../features/shell/simple-editor";
 import { JoinWorkspacePage } from "../../features/workspace/join";
+import { FormPage } from "../../features/database/forms";
 import { RedirectHome } from "./redirect-home";
 
 export const location = new ReactLocation();
@@ -48,6 +49,8 @@ export const routes = [
   },
   // Workspace invite links.
   { path: "invite/:token", element: <JoinWorkspacePage /> },
+  // Database forms, to fill in.
+  { path: "form/:sourceId/:viewId", element: <FormPage /> },
   // Anything else (an old or mistyped address) → Home. Must stay last.
   { element: <RedirectHome /> },
 ];

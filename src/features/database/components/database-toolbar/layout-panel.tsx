@@ -31,6 +31,7 @@ import { NavigableMenuItem } from "../navigable-menu-item";
 import { ViewPalette } from "./view-palette";
 import { CardLayoutPicker } from "./card-layout-picker";
 import { LoadLimitPicker } from "./load-limit-picker";
+import { FormSettings } from "../../nodes/database-form-node-view/form-settings";
 
 interface LayoutPanelProps {
   view: DatabaseView;
@@ -135,7 +136,9 @@ export function LayoutPanel({ view, db, bare = false }: LayoutPanelProps) {
         checked={showDbTitle}
         onToggle={() => updateAttributes({ ...attrs, hideTitle: showDbTitle })}
       />
-      {properties.some((p) => p.config.type === "person") && (
+      {view.type === "form" && <FormSettings view={view} db={db} />}
+      {view.type !== "form" &&
+        properties.some((p) => p.config.type === "person") && (
         <MenuRow
           label={t("database.assign.showPeopleBar")}
           toggle

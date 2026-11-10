@@ -26,7 +26,12 @@ export function PersonFilterBar() {
     return people;
   }, [peopleCounts, meId]);
 
-  if (!peopleCounts || db.activeView?.hidePeopleBar || entries.length === 0) {
+  if (
+    !peopleCounts ||
+    db.activeView?.hidePeopleBar ||
+    db.activeView?.type === "form" ||
+    entries.length === 0
+  ) {
     return null;
   }
 
