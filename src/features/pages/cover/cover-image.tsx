@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, memo } from "react";
-import { localCopy } from "src/api/uploads";
+import { autoSaveMedia, useMediaSrc } from "src/lib/media-cache";
 import type { Page } from "src/types";
 import CoverControlsGroup from "./cover-controls";
 import { usePatchPage } from "src/hooks/use-patch-page";
@@ -27,6 +27,9 @@ export const CoverImage = memo(function CoverImage({
   const [localPositionY, setLocalPositionY] = useState<number | null>(null);
 
   const coverImage = pendingCoverImage ?? page.cover.coverImage;
+  // Just uploaded, or saved on this computer (desktop app): from the file.
+  const shownCover = useMediaSrc(coverImage);
+  useEffect(() => autoSaveMedia(coverImage, "image"), [coverImage]);
   const positionY = localPositionY ?? page.cover?.positionY ?? 50;
 
   const { collapsed } = useEditorLayout();
@@ -110,8 +113,7 @@ export const CoverImage = memo(function CoverImage({
       )}
 
       <img
-        // Just uploaded: from the file itself, no download.
-        src={localCopy(coverImage) ?? coverImage ?? ""}
+        src={shownCover ?? ""}
         alt="cover"
         draggable={false}
         data-collapsed={collapsed ? "true" : undefined}

@@ -1,9 +1,22 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  mutationOptions,
+  useMutation,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import type { Page } from "../types";
 import { createPage } from "../api/pages";
 import { queryKeys } from "../lib/queryKeys";
-import { addLocalPage, removeLocalPage } from "src/lib/local-pages";
-import { pageWritesScope } from "./use-patch-page";
+import {
+  addLocalPage,
+  belongsInList,
+  removeLocalPage,
+} from "src/lib/local-pages";
+import {
+  isNetworkError,
+  isOnline,
+  reportNetworkFailure,
+} from "src/lib/connectivity";
 
 export const createPageMutationKey = ["pages", "create"] as const;
 
@@ -12,12 +25,26 @@ export const createPageMutationKey = ["pages", "create"] as const;
  *  page-editor-layout.tsx. */
 export function useCreatePage({ quiet = false }: { quiet?: boolean } = {}) {
   const qc = useQueryClient();
-  return useMutation({
+  return useMutation(createPageMutationOptions(qc, { quiet }));
+}
+
+/** useCreatePage's options, apart from React, so the offline tests run
+ *  them on a QueryClient (offline-page-writes.test.ts). */
+export function createPageMutationOptions(
+  qc: QueryClient,
+  { quiet = false }: { quiet?: boolean } = {},
+) {
+  return mutationOptions({
     mutationKey: createPageMutationKey,
     meta: quiet ? { quiet: true } : undefined,
-    // In order with the page's later patches (use-patch-page.ts): a rename
-    // never reaches the server before the page exists.
-    scope: pageWritesScope,
+    // Runs even offline: with no connection the page is made here at once
+    // and stays in the outbox (local-pages.ts) for PageOutboxSync to send.
+    // React Query's default held it until the connection came back, so
+    // "New page" did nothing offline (the page never opened and the editor
+    // stayed covered). Not in the page writes' queue either, which could
+    // hold it behind a rename waiting for the connection: a later change to
+    // the page sends it first instead (sendLocalPage, use-patch-page.ts).
+    networkMode: "always",
     mutationFn: async (page: Page) => {
       try {
         const saved = await createPage(page);
@@ -25,7 +52,19 @@ export function useCreatePage({ quiet = false }: { quiet?: boolean } = {}) {
         return saved;
       } catch (error) {
         // No connection: it stays in the outbox, PageOutboxSync sends it.
-        if (!navigator.onLine || error instanceof TypeError) return page;
+        // Judged by the failure itself, not only navigator.onLine, which
+        // often stays true (connectivity.ts): Supabase reports a lost
+        // connection as an error saying "Failed to fetch".
+        if (isNetworkError(error)) {
+          reportNetworkFailure();
+          return page;
+        }
+        if (!isOnline()) return page;
+        // Already sent by a change to it (sendLocalPage): created.
+        if (String(error).includes("duplicate")) {
+          removeLocalPage(page.id);
+          return page;
+        }
         throw error;
       }
     },
@@ -36,9 +75,20 @@ export function useCreatePage({ quiet = false }: { quiet?: boolean } = {}) {
       // The `.all` prefix matches BOTH list entries (Page[]) and detail
       // entries (a single Page). Only push onto arrays — spreading a
       // page-detail object threw "pages is not iterable".
-      qc.setQueriesData<Page[]>({ queryKey: queryKeys.pages.all }, (pages) =>
-        Array.isArray(pages) ? [...pages, page] : pages,
-      );
+      // Only into the lists of the workspace it belongs to (lists are
+      // ["pages", "list", workspaceId]).
+      for (const [key, pages] of qc.getQueriesData<Page[]>({
+        queryKey: queryKeys.pages.all,
+      })) {
+        if (!Array.isArray(pages)) continue;
+        const listWorkspace = key[1] === "list" ? key[2] : undefined;
+        if (
+          typeof listWorkspace === "string" &&
+          !belongsInList(page, listWorkspace, pages)
+        )
+          continue;
+        qc.setQueryData<Page[]>(key, [...pages, page]);
+      }
       qc.setQueryData(queryKeys.pages.detail(page.id), page);
 
       qc.setQueryData(["page-role", page.id], "full");

@@ -54,7 +54,15 @@ type Item =
       count: number;
     };
 
-export function HomeForYou({ onOpenInbox }: { onOpenInbox: () => void }) {
+/** `collapsedCount`: rows shown before "Show more" (the desktop Home shows
+ *  more, desktop-home.tsx). */
+export function HomeForYou({
+  onOpenInbox,
+  collapsedCount = FOR_YOU_COLLAPSED,
+}: {
+  onOpenInbox: () => void;
+  collapsedCount?: number;
+}) {
   const { t, i18n } = useTranslation();
   const { person } = useCurrentPerson();
   const { notifications } = useNotificationState();
@@ -91,8 +99,8 @@ export function HomeForYou({ onOpenInbox }: { onOpenInbox: () => void }) {
     };
   }, [notifications, rooms, dms, unread]);
 
-  const shown = expanded ? items : items.slice(0, FOR_YOU_COLLAPSED);
-  const hidden = items.length - FOR_YOU_COLLAPSED;
+  const shown = expanded ? items : items.slice(0, collapsedCount);
+  const hidden = items.length - collapsedCount;
 
   // Direct messages are titled with the other person's name.
   const partnerIds = useMemo(

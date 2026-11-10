@@ -242,6 +242,24 @@
     cursor: pointer;
     min-width: 0;
 
+    // "In page text": the title, then the matching line below it.
+    &--text {
+      flex-wrap: wrap;
+      row-gap: 0;
+      padding-block: 6px;
+    }
+
+    &__snippet {
+      flex-basis: 100%;
+      min-width: 0;
+      padding-left: 32px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      color: var(--sp-text-muted);
+    }
+
     &--sel {
       background: var(--sp-hover);
     }

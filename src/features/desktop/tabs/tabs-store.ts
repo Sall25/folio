@@ -25,6 +25,13 @@ const CLOSED_LIMIT = 20;
 const HOME = "/";
 
 let state: State | null = null;
+/** The tabs came from the last session (load), not made fresh. */
+let restored = false;
+/** init has run. Separate from `state`: the title bar reads the tabs
+ *  (useTabs → current) before the sync starts them, which used to create
+ *  fresh tabs first — init then saw tabs already there, kept them, and
+ *  saved them over the last session's, so the tabs never came back. */
+let started = false;
 const closed: Tab[] = [];
 const listeners = new Set<() => void>();
 
@@ -86,7 +93,12 @@ function set(next: State) {
 }
 
 function current(): State {
-  if (!state) state = { tabs: [makeTab(HOME, true)], activeId: "" };
+  if (!state) {
+    // The last session's tabs, whoever asks first.
+    const saved = load();
+    restored = !!saved;
+    state = saved ?? { tabs: [makeTab(HOME, true)], activeId: "" };
+  }
   if (!state.activeId) state.activeId = state.tabs[0].id;
   return state;
 }
@@ -114,19 +126,20 @@ export const tabs = {
   /** At start: the saved tabs (going to the active one), or a pinned Home
    *  tab plus the address the app opened on. */
   init(startPath: string) {
-    if (state) return;
-    const saved = load();
-    if (saved) {
-      state = saved;
-      listeners.forEach((l) => l());
-      const path = activeTab(saved).path;
+    if (started) return;
+    started = true;
+    const s = current();
+    if (restored) {
+      const path = activeTab(s).path;
       if (path !== startPath) go(path);
       return;
     }
-    const home = makeTab(HOME, true);
-    const tabsList = [home];
-    if (startPath !== HOME) tabsList.push(makeTab(startPath));
-    set({ tabs: tabsList, activeId: tabsList[tabsList.length - 1].id });
+    if (startPath !== HOME) {
+      const tab = makeTab(startPath);
+      set({ tabs: [...s.tabs, tab], activeId: tab.id });
+    } else {
+      set(s);
+    }
   },
 
   /** The router moved inside the active tab (a link, the sidebar…): a push

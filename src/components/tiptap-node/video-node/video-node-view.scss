@@ -76,6 +76,8 @@
   position: absolute;
   top: 8px;
   right: 8px;
+  display: flex;
+  gap: 4px;
   opacity: 0;
   transition: opacity 0.15s;
 

@@ -7,6 +7,7 @@ import { downloadOfflinePages } from "src/lib/download-offline-pages";
 import { pruneDocCache } from "src/lib/offline-doc-cache";
 import { keptPageIds, useKeepChoices } from "src/lib/offline-keep";
 import { requestPersistentStorage } from "src/lib/offline-storage";
+import { autoSaveMedia } from "src/lib/media-cache";
 import {
   onSyncNowRequested,
   requestSyncNow,
@@ -24,7 +25,10 @@ import type { Page } from "src/types";
 //   2. downloads or refreshes the pages marked "Available offline"
 //      (download-offline-pages.ts, offline-keep.ts);
 //   3. drops the oldest page copies beyond the limit, never the kept ones
-//      (pruneDocCache).
+//      (pruneDocCache);
+//   4. desktop app: saves the kept pages' cover images on this computer, if
+//      images are saved automatically (media-cache.ts; the media inside
+//      pages is found as they're downloaded).
 //
 // Runs when the app starts, when the browser comes back online, every few
 // minutes — which catches "online but the server was down" — when "Try now"
@@ -54,6 +58,17 @@ export function OfflineDocSync() {
   useEffect(() => {
     keptRef.current = keptIds;
   }, [keptIds]);
+  const keptCovers = useMemo(() => {
+    const kept = new Set(keptIds);
+    return (pages ?? [])
+      .filter((p) => kept.has(p.id))
+      .map((p) => p.cover?.coverImage)
+      .filter((url): url is string => !!url);
+  }, [pages, keptIds]);
+  const coversRef = useRef<string[]>(keptCovers);
+  useEffect(() => {
+    coversRef.current = keptCovers;
+  }, [keptCovers]);
 
   useEffect(() => {
     if (!personId || !token) return;
@@ -79,6 +94,7 @@ export function OfflineDocSync() {
       await downloadOfflinePages(personId, token, kept);
       const keptSet = new Set(kept);
       await pruneDocCache(personId, undefined, (id) => keptSet.has(id));
+      coversRef.current.forEach((url) => autoSaveMedia(url, "image"));
     };
     const runSoon = () => void run();
 

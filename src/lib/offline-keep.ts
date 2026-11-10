@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import type { Page } from "src/types";
+import { isDesktopApp } from "src/lib/desktop";
 
 // Which pages each person wants kept on this device, ready to open offline
 // ("Available offline" in the page menu). OfflineDocSync downloads them in the
@@ -11,9 +12,10 @@ import type { Page } from "src/types";
 //   • its teamspace — "Available offline" on a teamspace's root page keeps
 //     every page in it, database rows included
 //   • favorites — the "Keep favorites available offline" setting
-//   • the whole workspace — in the desktop app, "Keep this workspace
-//     available offline" in My settings keeps every page of the workspace
-//     (copies are files on disk there, with room for them)
+//   • the whole workspace — "Keep this workspace available offline" in My
+//     settings keeps every page of the workspace. On by default in the
+//     desktop app (copies are files on disk there, with room for them):
+//     turning it off there is remembered in workspacesOff.
 //
 // Stored in localStorage, per person (a choice on this device, not an
 // account setting). Only page ids — nothing another account could read.
@@ -23,6 +25,9 @@ export interface KeepChoices {
   teamspaces: string[];
   favorites: boolean;
   workspaces: string[];
+  /** Desktop app: workspaces this person turned "keep offline" off for.
+   *  Every other workspace is kept there. Ignored on the web. */
+  workspacesOff?: string[];
 }
 
 const EMPTY: KeepChoices = {
@@ -55,6 +60,9 @@ export function readKeepChoices(personId: string): KeepChoices {
         teamspaces: Array.isArray(parsed.teamspaces) ? parsed.teamspaces : [],
         favorites: parsed.favorites === true,
         workspaces: Array.isArray(parsed.workspaces) ? parsed.workspaces : [],
+        workspacesOff: Array.isArray(parsed.workspacesOff)
+          ? parsed.workspacesOff
+          : [],
       };
     }
   } catch {
@@ -117,7 +125,20 @@ export function setWorkspaceKept(
   writeKeepChoices(personId, {
     ...c,
     workspaces: toggle(c.workspaces, workspaceId, on),
+    workspacesOff: toggle(c.workspacesOff ?? [], workspaceId, !on),
   });
+}
+
+/** Whether every page of this workspace is kept: turned on, or — in the
+ *  desktop app — not turned off. */
+export function isWorkspaceKept(
+  choices: KeepChoices,
+  workspaceId: string | null | undefined,
+  desktop: boolean = isDesktopApp,
+): boolean {
+  if (!workspaceId) return false;
+  if (choices.workspaces.includes(workspaceId)) return true;
+  return desktop && !(choices.workspacesOff ?? []).includes(workspaceId);
 }
 
 export function setKeepFavorites(personId: string, on: boolean) {
@@ -141,8 +162,7 @@ export function keptBy(
   page: Page,
   choices: KeepChoices,
 ): "page" | "teamspace" | "favorites" | "workspace" | null {
-  const inKeptWorkspace =
-    !!page.workspaceId && choices.workspaces.includes(page.workspaceId);
+  const inKeptWorkspace = isWorkspaceKept(choices, page.workspaceId);
   if (isTeamspaceRoot(page)) {
     if (choices.teamspaces.includes(page.id)) return "teamspace";
     return inKeptWorkspace ? "workspace" : null;
@@ -161,6 +181,7 @@ export function keptBy(
  *  out. */
 export function keptPageIds(pages: Page[], choices: KeepChoices): string[] {
   if (
+    !isDesktopApp &&
     choices.pages.length === 0 &&
     choices.teamspaces.length === 0 &&
     !choices.favorites &&

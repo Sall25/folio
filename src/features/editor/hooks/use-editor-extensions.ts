@@ -34,6 +34,7 @@ import {
   TopLevelClassExtension,
   Containment,
   MarkdownPaste,
+  FileDrop,
   BlockSelection,
 } from "src/components/tiptap-extension";
 
@@ -202,6 +203,13 @@ export function useEditorExtensions(
 
       // --- Node attributes ---
       MarkdownPaste,
+      // Files dropped from the computer or pasted become blocks.
+      FileDrop.configure({
+        upload: handleImageUpload,
+        maxSize: MAX_FILE_SIZE,
+        fileMaxSize: 10 * 1024 * 1024,
+        fileLimit: 10,
+      }),
       BlockSelection,
       NodeBackground.configure({ useStyle: false }),
       NodeAlignment.configure({ useStyle: false }),

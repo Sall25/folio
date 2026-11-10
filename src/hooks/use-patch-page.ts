@@ -1,6 +1,13 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  mutationOptions,
+  useMutation,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import type { ID, Page } from "../types";
 import { queryKeys } from "../lib/queryKeys";
+import { sendLocalPage, updateLocalPage } from "src/lib/local-pages";
+import { RETRY_DELAY_MS, retryWhenOffline } from "src/lib/connectivity";
 
 export type PagePatch = Partial<Omit<Page, "id">>;
 
@@ -15,7 +22,7 @@ type Snapshot = { key: readonly unknown[]; before: Partial<Page> | undefined };
 
 /** The values a patch is about to replace, for each cached copy of the page. */
 function snapshotFields(
-  qc: ReturnType<typeof useQueryClient>,
+  qc: QueryClient,
   id: ID,
   patch: PagePatch,
 ): Snapshot[] {
@@ -43,13 +50,33 @@ export function usePatchPage(
   mutationFn: (args: { id: ID; patch: PagePatch }) => Promise<Page>,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useMutation(patchPageMutationOptions(qc, mutationFn));
+}
+
+/** usePatchPage's options, apart from React, so the offline tests run them
+ *  on a QueryClient (offline-page-writes.test.ts). */
+export function patchPageMutationOptions(
+  qc: QueryClient,
+  mutationFn: (args: { id: ID; patch: PagePatch }) => Promise<Page>,
+) {
+  return mutationOptions({
     // Keyed (and with a default mutationFn in App.tsx) so a save made
     // offline survives a reload: it's persisted and resumed.
     mutationKey: patchPageMutationKey,
     scope: pageWritesScope,
-    mutationFn,
+    // A lost connection holds the save until it's back instead of undoing
+    // it (connectivity.ts).
+    retry: retryWhenOffline,
+    retryDelay: RETRY_DELAY_MS,
+    // A page made offline and not sent yet is sent first: the server can't
+    // change a page it doesn't have.
+    mutationFn: async (args: { id: ID; patch: PagePatch }) => {
+      await sendLocalPage(args.id);
+      return mutationFn(args);
+    },
     onMutate: async ({ id, patch }: { id: ID; patch: PagePatch }) => {
+      // Still waiting to be sent: it'll be created as it is now.
+      updateLocalPage(id, patch);
       await qc.cancelQueries({ queryKey: queryKeys.pages.all });
 
       const before = snapshotFields(qc, id, patch);

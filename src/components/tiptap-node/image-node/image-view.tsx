@@ -1,5 +1,5 @@
 import type { NodeViewProps } from "@tiptap/core";
-import { localCopy } from "src/api/uploads";
+import { autoSaveMedia, useMediaSrc } from "src/lib/media-cache";
 import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
 import type { ImageOptions } from "./image";
 import {
@@ -34,6 +34,10 @@ function ImageViewInner(props: NodeViewProps) {
   }, []);
 
   const src: string | null = props.node.attrs.src ?? null;
+  // Just uploaded here, or saved on this computer (desktop app): from the
+  // file itself, no download.
+  const shownSrc = useMediaSrc(src);
+  useEffect(() => autoSaveMedia(src, "image"), [src]);
 
   // Bytes not in yet → show the skeleton instead of a zero-height <img>.
   // Reset during render (not in an effect) when the src changes, so swapping
@@ -246,8 +250,7 @@ function ImageViewInner(props: NodeViewProps) {
 
         <img
           ref={imgRef}
-          // Just uploaded here: from the file itself, no download.
-          src={localCopy(props.node.attrs.src) ?? props.node.attrs.src}
+          src={shownSrc ?? undefined}
           alt={props.node.attrs.alt ?? ""}
           title={props.node.attrs.title ?? undefined}
           onLoad={handleLoad}
@@ -310,7 +313,7 @@ function ImageViewInner(props: NodeViewProps) {
 
       {lightboxOpen && src && (
         <ImageLightbox
-          src={src}
+          src={shownSrc ?? src}
           alt={props.node.attrs.alt}
           caption={showCaption ? props.node.attrs.caption : null}
           onClose={closeLightbox}

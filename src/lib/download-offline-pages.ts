@@ -8,6 +8,7 @@ import {
   loadDocCache,
   saveDocCache,
 } from "src/lib/offline-doc-cache";
+import { saveMediaInDoc } from "src/lib/media-cache";
 
 // Downloads the pages someone marked "Available offline" (offline-keep.ts),
 // so they open with no connection even if they were never opened on this
@@ -73,6 +74,9 @@ function downloadPage(
       saveDocCache(personId, pageId, Y.encodeStateAsUpdate(ydoc), {
         fromServer: true,
       });
+      // Desktop app: its images (and videos, audio and files, if set to)
+      // saved on this computer too.
+      saveMediaInDoc(ydoc);
       finish(true);
     };
     const onAuthenticationFailed = () => finish(false);

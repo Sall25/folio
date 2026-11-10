@@ -1,4 +1,10 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useDeferredValue,
+} from "react";
 import { useTranslation } from "react-i18next";
 import "./search-palette.scss";
 import { useSearch } from "./search-context";
@@ -11,9 +17,20 @@ import { useIsMobile } from "src/hooks/use-breakpoint";
 import { useRowIdIndex } from "src/features/database/hooks/use-row-id-index";
 import { useRowLinks } from "src/features/database/hooks/use-row-links";
 import { idMatches } from "src/features/database/utils/row-summary";
+import { findInPages, type FindMatch } from "src/lib/find-in-pages";
+import { setPendingScrollTarget } from "src/features/inbox/inbox-panel/pending-scroll-target";
 
-// Results are grouped by when the page was last edited, newest first.
-type Group = "ids" | "today" | "yesterday" | "week" | "month" | "older";
+// Results are grouped by when the page was last edited, newest first. Then
+// "In page text": pages whose text contains what's typed (the same search
+// as the sidebar's), with the matching line.
+type Group =
+  | "ids"
+  | "today"
+  | "yesterday"
+  | "week"
+  | "month"
+  | "older"
+  | "text";
 const DATE_GROUPS = ["today", "yesterday", "week", "month", "older"] as const;
 const GROUP_LABEL: Record<Group, string> = {
   ids: "search.byId",
@@ -22,7 +39,13 @@ const GROUP_LABEL: Record<Group, string> = {
   week: "search.pastWeek",
   month: "search.past30Days",
   older: "search.older",
+  text: "search.inText",
 };
+
+/** Plain, case-insensitive text search, as typed. */
+const TEXT_FIND = { matchCase: false, wholeWord: false, regex: false };
+/** Pages shown under "In page text". */
+const MAX_TEXT_PAGES = 8;
 
 interface SearchEntry {
   page: Page;
@@ -31,6 +54,8 @@ interface SearchEntry {
   title: string;
   location: string | null; // the pages it sits in: "Parent / Child"
   group: Group;
+  /** "In page text": the first match in the page, to open at. */
+  find?: FindMatch;
 }
 
 type IconName =
@@ -105,6 +130,13 @@ function pathOf(
     cur = cur.parentId != null ? byId.get(cur.parentId) : undefined;
   }
   return chain.length ? chain.reverse().join(" / ") : null;
+}
+
+/** [start, end) ranges → each index inside them, for Highlight. */
+function rangesToIndices(ranges: [number, number][]): number[] {
+  const out: number[] = [];
+  for (const [s, e] of ranges) for (let i = s; i < e; i++) out.push(i);
+  return out;
 }
 
 function fuzzyMatch(query: string, text: string): number[] | null {
@@ -370,6 +402,8 @@ export default function SearchPalette() {
   const { openRow } = useRowLinks();
   const isMobile = useIsMobile();
   const [query, setQuery] = useState("");
+  // The text search reads every page: deferred so typing stays smooth.
+  const textQuery = useDeferredValue(query);
   const [titlesOnly, setTitlesOnly] = useState(false);
   // The preview beside the results (Notion's panel toggle, top right).
   const [showPreview, setShowPreview] = useState(true);
@@ -434,15 +468,40 @@ export default function SearchPalette() {
     return out;
   }, [query, titlesOnly, entries, rowsWithIds, t]);
 
+  // Pages whose text has the words, newest first (entries' order), with
+  // the first matching line. Not with "Only search titles".
+  const textResults = useMemo<Match[]>(() => {
+    if (titlesOnly || textQuery.trim().length < 2) return [];
+    const found = findInPages(
+      entries.map((e) => e.page).filter((p) => p.deletedAt == null),
+      textQuery,
+      TEXT_FIND,
+    );
+    const byPage = new Map(found.pages.map((r) => [r.page.id, r]));
+    const out: Match[] = [];
+    for (const entry of entries) {
+      if (out.length >= MAX_TEXT_PAGES) break;
+      const hit = byPage.get(entry.page.id)?.matches[0];
+      if (!hit) continue;
+      out.push({
+        entry: { ...entry, group: "text", find: hit },
+        titleHl: null,
+        locHl: null,
+      });
+    }
+    return out;
+  }, [titlesOnly, textQuery, entries]);
+
   const groups = useMemo(() => {
-    const sections = (["ids", ...DATE_GROUPS] as Group[])
+    const all = [...results, ...textResults];
+    const sections = (["ids", ...DATE_GROUPS, "text"] as Group[])
       .map((group) => ({
         group,
-        rows: results.filter((r) => r.entry.group === group),
+        rows: all.filter((r) => r.entry.group === group),
       }))
       .filter((sec) => sec.rows.length > 0);
     return { sections, order: sections.flatMap((sec) => sec.rows) };
-  }, [results]);
+  }, [results, textResults]);
 
   // Clamp selection at point of use — no effect, no cascading render.
   const maxIndex = Math.max(0, groups.order.length - 1);
@@ -466,8 +525,20 @@ export default function SearchPalette() {
     inputRef.current?.focus();
   }, []);
 
-  const open = (page: Page) => {
+  const open = (page: Page, find?: FindMatch) => {
     onOpenChange?.(false);
+    // A text match: the page opens scrolled to it, highlighted.
+    if (find && !page.sourceId) {
+      setPendingScrollTarget({
+        pageId: page.id,
+        type: "find",
+        find: {
+          query: textQuery,
+          options: TEXT_FIND,
+          blockIndex: find.blockIndex,
+        },
+      });
+    }
     // A row opens in its database (the peek); a page as itself.
     if (page.sourceId) openRow(page.id);
     else setActivePageId(page.id);
@@ -482,7 +553,7 @@ export default function SearchPalette() {
       setSelected((s) => Math.max(s - 1, 0));
     } else if (e.key === "Enter") {
       const m = groups.order[safeSelected];
-      if (m) open(m.entry.page);
+      if (m) open(m.entry.page, m.entry.find);
     }
   };
   useEffect(() => {
@@ -501,13 +572,13 @@ export default function SearchPalette() {
     const isSel = idx === safeSelected;
     return (
       <div
-        key={m.entry.page.id}
+        key={`${m.entry.group}:${m.entry.page.id}`}
         data-idx={idx}
         role="option"
         aria-selected={isSel}
-        className={`sp-row${isSel ? " sp-row--sel" : ""}`}
+        className={`sp-row${isSel ? " sp-row--sel" : ""}${m.entry.find ? " sp-row--text" : ""}`}
         onMouseEnter={() => setSelected(idx)}
-        onClick={() => open(m.entry.page)}
+        onClick={() => open(m.entry.page, m.entry.find)}
       >
         <span className="sp-row__icon">
           <PageItemIcon
@@ -521,7 +592,15 @@ export default function SearchPalette() {
           )}
           <Highlight text={m.entry.title} indices={m.titleHl} />
         </span>
-        {m.entry.location && (
+        {m.entry.find && (
+          <span className="sp-row__snippet">
+            <Highlight
+              text={m.entry.find.snippet}
+              indices={rangesToIndices(m.entry.find.ranges)}
+            />
+          </span>
+        )}
+        {!m.entry.find && m.entry.location && (
           <span className="sp-row__loc">
             {" — "}
             <Highlight text={m.entry.location} indices={m.locHl} />

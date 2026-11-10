@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   Download,
@@ -19,6 +19,13 @@ import {
   PREVIEW_SIZE_LIMIT,
 } from "./utils";
 import { FilePreview } from "./file-preview";
+import { MediaSaveButton } from "src/components/tiptap-ui/media-save-button";
+import {
+  autoSaveMedia,
+  openSavedMedia,
+  useMediaSaveState,
+  useMediaSrc,
+} from "src/lib/media-cache";
 
 export function FileIcon({
   mimeType,
@@ -49,6 +56,11 @@ export function FileItem({
   editable?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  // Saved on this computer (desktop app): previewed and downloaded from the
+  // file, and its name opens it in the computer's own app.
+  const fileUrl = useMediaSrc(attachment.url);
+  const isSaved = useMediaSaveState(attachment.url).kind === "saved";
+  useEffect(() => autoSaveMedia(attachment.url, "other"), [attachment.url]);
   const previewable = canPreview(attachment);
   const type = getPreviewType(attachment.mimeType, attachment.name);
 
@@ -100,6 +112,11 @@ export function FileItem({
         <div className="file-node__info">
           <a
             href={attachment.url}
+            onClick={(e) => {
+              if (!isSaved) return;
+              e.preventDefault();
+              void openSavedMedia(attachment.url);
+            }}
             download={attachment.name}
             className="file-node__name"
             target="_blank"
@@ -138,11 +155,15 @@ export function FileItem({
             aria-label={`Download ${attachment.name}`}
             onClick={(e) => {
               e.stopPropagation();
-              downloadFile(attachment.url, attachment.name);
+              void downloadFile(fileUrl, attachment.name);
             }}
           >
             <Download size={13} />
           </Button>
+          <MediaSaveButton
+            url={attachment.url}
+            className="file-node__action-btn"
+          />
           {editable && (
             <Button
               variant="ghost"
@@ -169,7 +190,7 @@ export function FileItem({
             padding: "10px 0 4px 28px",
           }}
         >
-          <FilePreview attachment={attachment} />
+          <FilePreview attachment={{ ...attachment, url: fileUrl }} />
         </div>
       )}
     </div>

@@ -8,9 +8,7 @@ import {
   queryPersister,
   shouldPersistQuery,
 } from "../lib/query-persistence";
-import { createPageMutationKey } from "src/hooks/use-create-page";
-import { createPage, patchPage } from "src/api/pages";
-import { patchPageMutationKey } from "src/hooks/use-patch-page";
+import { setPageWriteDefaults } from "src/lib/page-writes";
 import { DesktopTitleBar } from "src/features/desktop";
 
 // The signed-in app (providers, router, sidebar, pages) is its own chunk,
@@ -31,12 +29,9 @@ const client = new QueryClient({
     },
   },
 });
-client.setMutationDefaults(createPageMutationKey, { mutationFn: createPage });
-// A page save restored after a reload (queued offline) needs its function.
-client.setMutationDefaults(patchPageMutationKey, {
-  mutationFn: ({ id, patch }: { id: string; patch: Parameters<typeof patchPage>[1] }) =>
-    patchPage(id, patch),
-});
+// Page writes queued offline and restored after a reload get their
+// functions back (page-writes.ts).
+setPageWriteDefaults(client);
 
 function App() {
   return (

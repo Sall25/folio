@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { AlertCircle, Loader2, Video } from "src/components/icons";
 import { Button } from "src/components/tiptap-ui-primitive/button";
@@ -6,6 +6,8 @@ import type { VideoAttrs } from "./types";
 import type { VideoOptions } from "./video-node";
 import { parseVideoUrl, videoSourceOf } from "./video-embed";
 import { MediaUploadCard } from "src/components/tiptap-node/media-upload-card";
+import { MediaSaveButton } from "src/components/tiptap-ui/media-save-button";
+import { autoSaveMedia, usePlaybackSrc } from "src/lib/media-cache";
 import "./video-node-view.scss";
 
 const FORMATS = "MP4, WEBM or MOV";
@@ -23,6 +25,10 @@ const PROVIDER_LABEL = {
 function VideoFile({ src, poster }: { src: string; poster: string | null }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  // Saved on this computer (desktop app): plays from the file.
+  const [started, setStarted] = useState(false);
+  const playSrc = usePlaybackSrc(src, started);
+  useEffect(() => autoSaveMedia(src, "other"), [src]);
 
   return (
     <div className="video-player">
@@ -38,13 +44,14 @@ function VideoFile({ src, poster }: { src: string; poster: string | null }) {
         </div>
       )}
       <video
-        src={src}
+        src={playSrc}
         poster={poster ?? undefined}
         controls
         preload="metadata"
         playsInline
         style={{ display: error ? "none" : "block" }}
         onLoadedMetadata={() => setLoading(false)}
+        onPlay={() => setStarted(true)}
         onError={() => {
           setLoading(false);
           setError(true);
@@ -101,7 +108,7 @@ export function VideoNodeView({
     <NodeViewWrapper className="video-node" contentEditable={false}>
       <div className="video-frame">
         {source.provider === "file" ? (
-          <VideoFile src={source.src} poster={attrs.poster} />
+          <VideoFile src={attrs.src} poster={attrs.poster} />
         ) : (
           <div className="video-embed">
             <iframe
@@ -115,19 +122,27 @@ export function VideoNodeView({
           </div>
         )}
 
-        {editable && (
+        {(editable || source.provider === "file") && (
           <div className="video-actions">
-            <Button
-              type="button"
-              variant="ghost"
-              size="small"
-              className="video-actions__btn"
-              onClick={() =>
-                updateAttributes({ src: null, fileName: null, poster: null })
-              }
-            >
-              <span className="tiptap-button-text">Replace</span>
-            </Button>
+            {source.provider === "file" && (
+              <MediaSaveButton
+                url={attrs.src}
+                className="video-actions__btn"
+              />
+            )}
+            {editable && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="small"
+                className="video-actions__btn"
+                onClick={() =>
+                  updateAttributes({ src: null, fileName: null, poster: null })
+                }
+              >
+                <span className="tiptap-button-text">Replace</span>
+              </Button>
+            )}
           </div>
         )}
       </div>
