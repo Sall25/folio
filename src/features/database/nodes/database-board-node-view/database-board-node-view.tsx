@@ -13,6 +13,27 @@ import type { BoardView, DatabaseProperty, ID } from "src/types";
 import type { DragStorage } from "../../extensions";
 import { normalizeColor } from "../../utils/pill-colors";
 import { BoardStarter } from "./board-starter";
+import { useDbSize } from "../../utils/db-size";
+
+const COLUMN_GAP = 8;
+
+/** The columns' track. Wide: the card size. Narrow: shrink (down to 200px)
+ *  so two or three fit before it scrolls. Phone: one column almost the full
+ *  width at a time, the next one peeking. */
+function boardColumns(
+  count: number,
+  colWidth: number,
+  size: "phone" | "narrow" | "wide",
+): string {
+  const room = "var(--db-visible-width, 100%)";
+  if (size === "phone") return `repeat(${count}, calc(${room} - 40px))`;
+  if (size === "narrow") {
+    const fit = Math.min(count, 3);
+    const share = `calc((${room} - ${(fit - 1) * COLUMN_GAP + 20}px) / ${fit})`;
+    return `repeat(${count}, min(${colWidth}px, max(200px, ${share})))`;
+  }
+  return `repeat(${count}, ${colWidth}px)`;
+}
 
 // A coloured column's accent (see pill-colors.scss), or null for a column
 // without a colour.
@@ -48,6 +69,10 @@ export function DatabaseBoardNodeViewImpl() {
 
   const { boardLayout } = useBoardLayout(sortedRecords, source ?? null, db);
   const { columns } = boardLayout;
+  const size = useDbSize(attrs.id);
+  const phone = size === "phone";
+  // Phone: which column is in view, for the dots.
+  const [shownCol, setShownCol] = useState(0);
 
   // Set a board column's color = update the underlying group option's color in
   // the grouped property's config, then persist the property.
@@ -175,155 +200,193 @@ export function DatabaseBoardNodeViewImpl() {
     return <BoardStarter />;
   }
 
+  const columnStep = () => {
+    const grid = gridRef.current;
+    if (!grid || columns.length === 0) return 0;
+    return (grid.scrollWidth + COLUMN_GAP) / columns.length;
+  };
+  const showColumn = (index: number) => {
+    gridRef.current?.scrollTo({
+      left: index * columnStep(),
+      behavior: "smooth",
+    });
+  };
+
   return (
-    <div
-      ref={gridRef}
-      className="db-board-grid"
-      data-card-size={cardSize}
-      data-database-id={attrs.id}
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${columns.length}, ${colWidth}px)`,
-        gridAutoRows: "min-content",
-        alignItems: "start",
-        gap: "0 8px",
-        // Room for the column footers, which hang below their row (below).
-        paddingBottom: 72,
-      }}
-      onDragOver={(event) => {
-        if (!editor) return;
-        const storage = editor.storage.boardDrag as DragStorage;
-        if (!storage.draggingId) return;
-        event.preventDefault();
-        autoScroll(event.clientX, event.clientY);
-      }}
-      onDrop={stopAutoScroll}
-      onDragEnd={stopAutoScroll}
-    >
-      {/* Column lane backgrounds — span the full column height, behind cards. */}
-      {columns.map((c) =>
-        accentOf(c.color) ? (
-          <div
-            key={`lane-${c.key}`}
-            className="db-board-lane"
-            style={{
-              gridColumn: c.col + 1,
-              // header (row 1) + its cards → span 1 + rows (+1 if you want to cover the New button)
-              gridRow: `1 / span ${c.newRow - 1}`,
-              // gridRow: `1 / ${c.newRow + 1}`,
-              // gridRow: `1 / span ${c.newRow}`, // header + cards + New page row
-              background: laneOf(accentOf(c.color)!),
-              borderBottomLeftRadius: 0,
-              borderBottomRightRadius: 0,
-            }}
-            contentEditable={false}
-            aria-hidden
-          />
-        ) : null,
-      )}
-
-      {/* Column headers */}
-      {columns.map((c) => (
-        <div
-          key={c.key}
-          data-col-key={c.key}
-          className="db-board-col-header"
-          style={
-            {
-              gridColumn: c.col + 1,
-              gridRow: 1,
-              "--col-ink": accentOf(c.color) ?? undefined,
-            } as React.CSSProperties
-          }
-          onMouseOver={() => {
-            if (menuVisible.value === true) return;
-            setMenuVisible({ id: c.key, value: true });
-          }}
-          onMouseLeave={() => {
-            if (menuOpen) return;
-            setMenuVisible({ id: c.key, value: false });
-          }}
-        >
-          {c.value != null && boardLayout.groupProp ? (
-            <Cell
-              property={boardLayout.groupProp}
-              value={c.value}
-              record={syntheticRecord /* a synthetic record (jus for show)*/}
-              readonly
-              properties={[]}
-              onChange={() => {}}
-              view={db.activeView}
+    <>
+      {phone && columns.length > 1 && (
+        <div className="db-board-dots" contentEditable={false}>
+          {columns.map((c, i) => (
+            <button
+              key={c.key}
+              type="button"
+              className="db-board-dots__dot"
+              data-active={i === shownCol || undefined}
+              aria-label={c.label}
+              onClick={() => showColumn(i)}
             />
-          ) : (
-            <span className="db-board-col-header__empty">{c.label}</span>
-          )}
-          <span className="db-board-col-header__count">{c.rows}</span>
-
-          <Spacer orientation="horizontal" />
-          {menuVisible.id === c.key && menuVisible.value === true && (
-            <BoardColumnMenu
-              open={menuOpen}
-              setOpen={setMenuOpen}
-              columnId={c.key}
-              columnColor={c.color}
-              onSetColor={setColumnColor}
-              onHideGroup={hideGroup}
-            />
-          )}
+          ))}
         </div>
-      ))}
+      )}
+      <div
+        ref={gridRef}
+        className="db-board-grid"
+        data-card-size={cardSize}
+        data-database-id={attrs.id}
+        data-size={size}
+        style={{
+          display: "grid",
+          gridTemplateColumns: boardColumns(columns.length, colWidth, size),
+          gridAutoRows: "min-content",
+          alignItems: "start",
+          gap: `0 ${COLUMN_GAP}px`,
+          // Room for the column footers, which hang below their row (below).
+          paddingBottom: 72,
+        }}
+        onScroll={
+          phone
+            ? (e) => {
+                const step = columnStep();
+                if (step > 0)
+                  setShownCol(Math.round(e.currentTarget.scrollLeft / step));
+              }
+            : undefined
+        }
+        onDragOver={(event) => {
+          if (!editor) return;
+          const storage = editor.storage.boardDrag as DragStorage;
+          if (!storage.draggingId) return;
+          event.preventDefault();
+          autoScroll(event.clientX, event.clientY);
+        }}
+        onDrop={stopAutoScroll}
+        onDragEnd={stopAutoScroll}
+      >
+        {/* Column lane backgrounds — span the full column height, behind cards. */}
+        {columns.map((c) =>
+          accentOf(c.color) ? (
+            <div
+              key={`lane-${c.key}`}
+              className="db-board-lane"
+              style={{
+                gridColumn: c.col + 1,
+                // header (row 1) + its cards → span 1 + rows (+1 if you want to cover the New button)
+                gridRow: `1 / span ${c.newRow - 1}`,
+                // gridRow: `1 / ${c.newRow + 1}`,
+                // gridRow: `1 / span ${c.newRow}`, // header + cards + New page row
+                background: laneOf(accentOf(c.color)!),
+                borderBottomLeftRadius: 0,
+                borderBottomRightRadius: 0,
+              }}
+              contentEditable={false}
+              aria-hidden
+            />
+          ) : null,
+        )}
 
-      {/* Cards — PM record nodes, each self-places via grid-column + grid-row */}
-      <NodeViewContent as="div" className="db-board-grid__body" />
-
-      {/* "New" per column — at the bottom of each column. Placed at a high row
-          so it sits after the cards (grid-auto-rows stacks it below). */}
-      {/* The footer's row is shared with the other columns' cards, so it takes
-          no height there (height 0) and hangs below it instead; otherwise its
-          button made that row taller and opened gaps in the other columns. */}
-      {columns.map((c) => (
-        <div
-          key={`new-${c.key}`}
-          style={{
-            gridColumn: c.col + 1,
-            gridRow: c.newRow,
-            position: "relative",
-            height: 0,
-            alignSelf: "start",
-          }}
-        >
+        {/* Column headers */}
+        {columns.map((c) => (
           <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              background: accentOf(c.color)
-                ? laneOf(accentOf(c.color)!)
-                : undefined,
-              ...(accentOf(c.color)
-                ? ({ "--col-ink": accentOf(c.color) } as React.CSSProperties)
-                : {}),
-              borderBottomLeftRadius: "var(--tt-radius-lg)",
-              borderBottomRightRadius: "var(--tt-radius-lg)",
+            key={c.key}
+            data-col-key={c.key}
+            className="db-board-col-header"
+            style={
+              {
+                gridColumn: c.col + 1,
+                gridRow: 1,
+                "--col-ink": accentOf(c.color) ?? undefined,
+              } as React.CSSProperties
+            }
+            onMouseOver={() => {
+              if (menuVisible.value === true) return;
+              setMenuVisible({ id: c.key, value: true });
+            }}
+            onMouseLeave={() => {
+              if (menuOpen) return;
+              setMenuVisible({ id: c.key, value: false });
             }}
           >
-            <Button
-              type="button"
-              className="db-board-col-footer__add"
-              contentEditable={false}
-              style={{
-                margin: "8px 10px",
-              }}
-              onClick={() => onNewRecordInGroup(c.key)}
-            >
-              <Plus className="tiptap-button-icon" />
-              <span className="tiptap-button-text">New Page</span>
-            </Button>
+            {c.value != null && boardLayout.groupProp ? (
+              <Cell
+                property={boardLayout.groupProp}
+                value={c.value}
+                record={syntheticRecord /* a synthetic record (jus for show)*/}
+                readonly
+                properties={[]}
+                onChange={() => {}}
+                view={db.activeView}
+              />
+            ) : (
+              <span className="db-board-col-header__empty">{c.label}</span>
+            )}
+            <span className="db-board-col-header__count">{c.rows}</span>
+
+            <Spacer orientation="horizontal" />
+            {menuVisible.id === c.key && menuVisible.value === true && (
+              <BoardColumnMenu
+                open={menuOpen}
+                setOpen={setMenuOpen}
+                columnId={c.key}
+                columnColor={c.color}
+                onSetColor={setColumnColor}
+                onHideGroup={hideGroup}
+              />
+            )}
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+
+        {/* Cards — PM record nodes, each self-places via grid-column + grid-row */}
+        <NodeViewContent as="div" className="db-board-grid__body" />
+
+        {/* "New" per column — at the bottom of each column. Placed at a high row
+          so it sits after the cards (grid-auto-rows stacks it below). */}
+        {/* The footer's row is shared with the other columns' cards, so it takes
+          no height there (height 0) and hangs below it instead; otherwise its
+          button made that row taller and opened gaps in the other columns. */}
+        {columns.map((c) => (
+          <div
+            key={`new-${c.key}`}
+            style={{
+              gridColumn: c.col + 1,
+              gridRow: c.newRow,
+              position: "relative",
+              height: 0,
+              alignSelf: "start",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                background: accentOf(c.color)
+                  ? laneOf(accentOf(c.color)!)
+                  : undefined,
+                ...(accentOf(c.color)
+                  ? ({ "--col-ink": accentOf(c.color) } as React.CSSProperties)
+                  : {}),
+                borderBottomLeftRadius: "var(--tt-radius-lg)",
+                borderBottomRightRadius: "var(--tt-radius-lg)",
+              }}
+            >
+              <Button
+                type="button"
+                className="db-board-col-footer__add"
+                contentEditable={false}
+                style={{
+                  margin: "8px 10px",
+                }}
+                onClick={() => onNewRecordInGroup(c.key)}
+              >
+                <Plus className="tiptap-button-icon" />
+                <span className="tiptap-button-text">New Page</span>
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 

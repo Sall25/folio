@@ -32,6 +32,7 @@ const FORMULA_RETURN_TYPE: Record<PropertyType, string> = {
   edited_time: "Date",
   edited_by: "Person",
   unique_id: "Number",
+  files: "Text (list)",
 };
 
 // ─── snippets per type ────────────────────────────────────────────────────────
@@ -94,6 +95,9 @@ function getSnippets(prop: DatabaseProperty): string[] {
 
     case "unique_id":
       return [p, `format(${p})`];
+
+    case "files":
+      return [p, `length(${p})`, `empty(${p})`];
 
     case "created_by":
     case "edited_by":

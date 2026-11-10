@@ -1575,6 +1575,7 @@
       "title": "Dispositions",
       "showDatabaseTitle": "Afficher le titre de la base de données",
       "showVerticalLines": "Afficher les lignes verticales",
+      "phoneTable": "Garder le tableau sur téléphone",
       "wrapAllColumns": "Renvoyer à la ligne toutes les colonnes",
       "cardPreview": "Aperçu de la carte",
       "cardPreviewNone": "Aucun",
@@ -1641,6 +1642,34 @@
       "noResults": "Aucune action trouvée",
       "moveUp": "Monter",
       "moveDown": "Descendre"
+    },
+    "assign": {
+      "assignToMe": "M'assigner",
+      "notifTitle": "{{who}} vous a assigné à une ligne",
+      "notifyHint": "Les personnes ajoutées reçoivent une notification",
+      "groups": "Groupes",
+      "group_one": "{{name}} · {{count}} personne",
+      "group_other": "{{name}} · {{count}} personnes",
+      "barLabel": "Filtrer par personne",
+      "everyone": "Tout le monde",
+      "me": "Moi",
+      "unassigned": "Non assigné",
+      "showPeopleBar": "Afficher la barre des personnes"
+    },
+    "files": {
+      "upload": "Importer",
+      "link": "Lien",
+      "choose": "Choisir des fichiers",
+      "orDrop": "ou les déposer ici",
+      "limit": "Jusqu'à {{max}} chacun · collez aussi une capture",
+      "tooBig": "Plus de {{max}}",
+      "linkPlaceholder": "Collez un lien…",
+      "addLink": "Ajouter",
+      "rename": "Renommer",
+      "download": "Télécharger",
+      "open": "Ouvrir",
+      "remove": "Retirer",
+      "uploading": "Envoi…"
     },
     "person": {
       "me": "Moi",

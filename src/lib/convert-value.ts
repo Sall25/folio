@@ -8,6 +8,7 @@ import {
   type StatusGroup,
 } from "../types";
 import { formatUniqueId } from "./unique-id";
+import { filesFromText } from "src/features/database/utils/files-from-text";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Value migration matrix
@@ -74,6 +75,12 @@ function toText(
       return typeof value === "number" ? String(value) : "";
     case "unique_id":
       return formatUniqueId(value, fromConfig);
+    case "files":
+      // Their addresses: text keeps something useful (a URL property).
+      return asArray<{ url?: string }>(value)
+        .map((f) => f.url ?? "")
+        .filter(Boolean)
+        .join(", ");
     case "checkbox":
       return value ? "Yes" : "No";
     case "date":
@@ -167,6 +174,8 @@ function fromText(
     case "person":
     case "relation":
       return to === "person" ? [] : [];
+    case "files":
+      return filesFromText(t);
     default:
       return null;
   }

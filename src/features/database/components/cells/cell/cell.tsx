@@ -30,6 +30,7 @@ import { RelationCell } from "../relation-cell";
 import { RollupCell } from "../rollup-cell";
 import { PhoneCell } from "../phone-cell";
 import { UniqueIdCell } from "../unique-id-cell";
+import { FilesCell } from "../files-cell";
 import { memo } from "react";
 import { useWorkspacePeople } from "../../../hooks/use-workspace-people";
 import { useFormulaEngineReady } from "../../formula-editor/formula-engine";
@@ -201,6 +202,7 @@ function CellImpl({
           config={config}
           onChange={change}
           readonly={readonly}
+          record={record}
           className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
         />
       );
@@ -261,6 +263,18 @@ function CellImpl({
           readonly
         />
       );
+    case "files":
+      return (
+        <FilesCell
+          value={v}
+          config={config}
+          onChange={change}
+          readonly={readonly}
+          unwrapped={unwrapped}
+          className={`db-cell ${view?.type === "gallery" || view?.type === "board" ? "db-cell-board-view" : ""}`}
+        />
+      );
+
     case "phone":
       return (
         <PhoneCell

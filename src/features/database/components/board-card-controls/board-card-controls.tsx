@@ -5,6 +5,9 @@ import type { Page } from "src/types";
 import "./board-card-controls.scss";
 import { EditToggleButton } from "./edit-toggle-button";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { UserPlus } from "src/components/icons";
+import { Button } from "src/components/tiptap-ui-primitive/button";
 
 export function BoardCardControls({
   record,
@@ -18,6 +21,7 @@ export function BoardCardControls({
   editing,
   onEnableEdit,
   onOpenRecord,
+  onAssignToMe,
   // color,
 }: {
   record: Page;
@@ -31,8 +35,11 @@ export function BoardCardControls({
   editing: boolean;
   onEnableEdit: () => void;
   onOpenRecord: () => void;
+  /** Adds you to the assignee property; absent when you're already on it. */
+  onAssignToMe?: () => void;
   color?: string;
 }) {
+  const { t } = useTranslation();
   const [preventClose, setPreventClose] = useState(false);
   return (
     <div
@@ -52,6 +59,23 @@ export function BoardCardControls({
         />
       )}
       {onAspect && <AspectButton onAspect={onAspect} />}
+
+      {onAssignToMe && (
+        <Button
+          variant="ghost"
+          className="db-card-controls__btn"
+          size="small"
+          tooltip={t("database.assign.assignToMe")}
+          aria-label={t("database.assign.assignToMe")}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onAssignToMe();
+          }}
+        >
+          <UserPlus className="tiptap-button-icon" size={14} />
+        </Button>
+      )}
 
       <EditToggleButton
         editing={editing}

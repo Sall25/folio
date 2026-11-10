@@ -17,9 +17,10 @@ import { useState, useSyncExternalStore, type RefObject } from "react";
 import { recordSelection, subscribe } from "../../utils/record-selection-store";
 import { useCardActions } from "../../context";
 import { SelectionActionsMenu } from "../selection-actions-menu";
+import { useAssignToMe } from "../../hooks/use-assign-to-me";
 import { IconPickerPopover } from "src/features/pages/cover";
 import { PropertyEditorPopover } from "../property-editor-popover";
-import type { ID } from "src/types";
+import type { DatabaseProperty, ID } from "src/types";
 import type { Target } from "src/features/pages/cover/types";
 import { MoveToPopover } from "../move-to-popover";
 import {
@@ -28,6 +29,9 @@ import {
   PopoverContent,
   PopoverPortal,
 } from "src/components/tiptap-ui-primitive/popover";
+
+const NO_PROPERTIES: DatabaseProperty[] = [];
+const noop = () => {};
 
 function useHoveredRecordId(): string | null {
   return useSyncExternalStore(
@@ -64,6 +68,10 @@ export function RecordDragMenu({
   const [iconEditOpen, setIconEditOpen] = useState(false);
   const [editingPropertyId, setEditingPropertyId] = useState<ID | null>(null);
   const [moveToOpen, setMoveToOpen] = useState(false);
+  const assignToMe = useAssignToMe(
+    actions?.properties ?? NO_PROPERTIES,
+    actions?.setValue ?? noop,
+  );
 
   if (!recordId || !actions) return null;
 
@@ -177,6 +185,15 @@ export function RecordDragMenu({
                 askToLook(recordId, personId);
                 finish();
               }}
+              onAssignToMe={(() => {
+                const assign = assignToMe(record);
+                return assign
+                  ? () => {
+                      assign();
+                      finish();
+                    }
+                  : undefined;
+              })()}
               // These open a sub-popover: close ONLY the actions menu (keep this
               // component mounted), then open the sub-popover.
               onEditIcon={() => {

@@ -31,6 +31,7 @@ export const PROPERTY_TYPE_ICONS: Record<PropertyType, string> = {
   edited_time: "schedule",
   edited_by: "edit",
   unique_id: "fingerprint",
+  files: "attach_file",
 };
 
 // ─── default configs ──────────────────────────────────────────────────────────
@@ -104,6 +105,7 @@ const DEFAULT_CONFIGS: Record<PropertyType, PropertyConfig> = {
   edited_time: { type: "edited_time" },
   edited_by: { type: "edited_by" },
   unique_id: { type: "unique_id" },
+  files: { type: "files" },
 };
 
 // ─── meta list ────────────────────────────────────────────────────────────────
@@ -204,6 +206,14 @@ export const PROPERTY_TYPE_META: PropertyTypeMeta[] = [
     defaultConfig: DEFAULT_CONFIGS.phone,
     readOnly: false,
     filterOperators: OPERATORS_FOR_TYPE.phone,
+  },
+  {
+    type: "files",
+    label: "Files & media",
+    icon: "attach_file",
+    defaultConfig: DEFAULT_CONFIGS.files,
+    readOnly: false,
+    filterOperators: OPERATORS_FOR_TYPE.files,
   },
   {
     type: "formula",

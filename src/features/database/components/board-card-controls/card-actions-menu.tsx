@@ -7,13 +7,17 @@ import {
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
 import { SelectionActionsMenu } from "../selection-actions-menu";
-import type { ID, Page } from "src/types";
+import { useAssignToMe } from "../../hooks/use-assign-to-me";
+import type { DatabaseProperty, ID, Page } from "src/types";
 import { useCardActions } from "../../context";
 import { useRef, useState } from "react";
 import { IconPickerPopover } from "src/features/pages/cover";
 import type { Target } from "src/features/pages/cover/types";
 import { PropertyEditorPopover } from "../property-editor-popover";
 import { MoveToPopover } from "../move-to-popover";
+
+const NO_PROPERTIES: DatabaseProperty[] = [];
+const noop = () => {};
 
 export function CardActionsMenu({
   record,
@@ -36,6 +40,10 @@ export function CardActionsMenu({
   const [moveToOpen, setMoveToOpen] = useState(false);
 
   const cardActions = useCardActions();
+  const assignToMe = useAssignToMe(
+    cardActions?.properties ?? NO_PROPERTIES,
+    cardActions?.setValue ?? noop,
+  );
   if (!cardActions) return null;
 
   const {
@@ -181,6 +189,7 @@ export function CardActionsMenu({
             onOpenIn={(mode) => openInRecord(record.id, mode)}
             onCopyLink={() => copyRecordLink(record.id)}
             onAskToLook={(personId) => askToLook(record.id, personId)}
+            onAssignToMe={assignToMe(record)}
           />
         </PopoverContent>
       </PopoverPortal>

@@ -1,0 +1,80 @@
+// The people bar: a row of pills under the toolbar. It scrolls sideways
+// instead of wrapping when the database is narrow.
+.db-people-bar {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &__pill {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 9px 0 4px;
+    border: 1px solid var(--tt-border-color);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--tt-gray-light-a-600, inherit);
+    font: inherit;
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:first-child {
+      padding-left: 10px;
+    }
+
+    &:hover {
+      background: rgba(55, 53, 47, 0.06);
+      .dark & {
+        background: rgba(255, 255, 255, 0.055);
+      }
+    }
+
+    &[data-active] {
+      border-color: var(--tt-brand-color-500, currentColor);
+      background: color-mix(
+        in srgb,
+        var(--tt-brand-color-500, currentColor) 10%,
+        transparent
+      );
+      color: inherit;
+    }
+  }
+
+  &__avatar {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 50%;
+    background: var(--tt-gray-light-a-200, rgba(55, 53, 47, 0.1));
+    font-size: 10px;
+    font-weight: 600;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    &--none {
+      background: transparent;
+      border: 1px dashed var(--tt-border-color);
+    }
+  }
+
+  &__count {
+    font-size: 12px;
+    opacity: 0.6;
+    font-variant-numeric: tabular-nums;
+  }
+}

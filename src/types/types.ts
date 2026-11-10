@@ -103,7 +103,8 @@ export type PropertyType =
   | "email"
   | "phone"
   | "edited_by"
-  | "unique_id";
+  | "unique_id"
+  | "files";
 
 export type ViewType =
   | "table"
@@ -242,7 +243,8 @@ export type PropertyConfig =
       type: "unique_id";
       /** Shown before the number: "TASK" → TASK-12. */
       prefix?: string;
-    };
+    }
+  | { type: "files" };
 
 // Extract helper — used throughout cell nodes and views
 export type ConfigOf<T extends PropertyType> = Extract<
@@ -275,6 +277,18 @@ export interface PersonValue {
   id: ID;
   name: string;
   avatarUrl?: string;
+}
+
+/** One file in a Files & media cell: uploaded to Folio, or a link. */
+export interface FileValue {
+  id: ID;
+  name: string;
+  url: string;
+  /** "upload": a file in Folio's uploads; "link": an address pasted in. */
+  kind: "upload" | "link";
+  /** Bytes, for uploads. */
+  size?: number;
+  mimeType?: string;
 }
 
 /** One relation link */
@@ -311,6 +325,8 @@ export type CellValueMap = {
   /** The row's number, given once by the database (migration 045) and never
    *  reused; the prefix is the property's, added on display. */
   unique_id: number | null; // read-only
+  /** Files & media: uploads and links, in order. */
+  files: FileValue[];
 };
 
 export type CellValue<T extends PropertyType = PropertyType> = CellValueMap[T];
@@ -426,6 +442,8 @@ interface BaseView {
   /** Conditional color: rows (or, in a table, cells) painted by rules. The
    *  first matching rule wins. */
   colorRules?: ColorRule[];
+  /** Hide the people bar (quick filter by assignee) above this view. */
+  hidePeopleBar?: boolean;
 }
 
 /** One conditional-color rule: when a record matches `rule` (a filter
@@ -455,6 +473,9 @@ export interface TableView extends BaseView {
   showVerticalLines?: boolean;
   /** Layout › Load limit: rows shown before "Load more". 0 = all; absent = 50. */
   loadLimit?: number;
+  /** On a phone, keep the scrolling grid (title column frozen) instead of
+   *  showing the rows as a list. */
+  phoneTable?: boolean;
 }
 
 export interface ListView extends BaseView {
@@ -476,6 +497,9 @@ export interface BoardView extends BaseView {
   cardSize: "small" | "medium" | "large";
   coverFit: "cover" | "contain";
   cardPreview?: "none" | "cover" | "content";
+  /** With cardPreview "cover": a Files & media property whose first image
+   *  is the card's cover, instead of the page's cover. */
+  coverPropertyId?: ID;
   /** Record ids in user-arranged order. Applied after `sorts`; ids not present
    *  fall through in sorted order. Flat across columns — per-column order is
    *  derived by filtering this to the column's records. */
@@ -541,6 +565,8 @@ export interface DatabaseUIState {
   openRecordId: ID | null;
   openPropertyId: ID | null;
   searchQuery: string;
+  /** The people bar's quick filter: person ids (and "__unassigned"). */
+  personFilter: string[];
   panelStack: PanelView[];
   viewOptionsOpen: boolean;
 }
@@ -1021,7 +1047,9 @@ export type NotificationType =
   | "comment-mention"
   | "chat-mention"
   /** Someone asked you to look at a database row (its row menu). */
-  | "row-look";
+  | "row-look"
+  /** Someone added you to a row's person property. */
+  | "row-assign";
 
 export interface Notification {
   id: string;

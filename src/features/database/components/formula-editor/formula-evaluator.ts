@@ -151,6 +151,14 @@ function cellToFormulaValue(
           )
         : null;
 
+    case "files":
+      // The files' names: enough for length(), empty() and contains().
+      return Array.isArray(value)
+        ? (value as { name?: string; url?: string }[]).map(
+            (f) => f?.name ?? f?.url ?? "",
+          )
+        : null;
+
     case "relation":
       // Linked rows' titles when cached on the value, else their ids — enough
       // for length() and empty().

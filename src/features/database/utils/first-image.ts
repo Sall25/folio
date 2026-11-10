@@ -1,7 +1,7 @@
 import type { JSONContent } from "@tiptap/core";
 
 /** The first image in a page's content, for a card with no cover of its own
- *  (gallery and board, as Notion does). Skips images still uploading
+ *  (gallery and board, like other workspace apps do). Skips images still uploading
  *  (blob: addresses only exist on the device that dropped them). Walks
  *  into columns, callouts, toggles… in document order. */
 export function firstImageSrc(

@@ -10,6 +10,7 @@ import type {
 } from "src/types";
 import type { UseDatabaseReturn } from "../hooks/use-database";
 import type { GroupedRowLayout } from "../utils/group-rows";
+import type { AssigneeCounts } from "../utils/assignee";
 
 // ── Context shape ──────────────────────────────────────────────────────────
 
@@ -40,6 +41,8 @@ interface DatabaseContextValue {
   onTitleChange: (v: string) => void;
 
   sortedRecords: Page[];
+  /** Rows per assignee, for the people bar (null: no person property). */
+  peopleCounts: AssigneeCounts | null;
 
   tableLayout: GroupedRowLayout<"table">;
   listLayout: GroupedRowLayout<"list">;

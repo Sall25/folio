@@ -59,6 +59,7 @@ import {
   useSyncViews,
 } from "../../hooks";
 import { ChipsRow } from "../../components/chips-row";
+import { PersonFilterBar } from "../../components/person-filter-bar";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { usePageViewState } from "src/features/pages/context/page-view-context";
 import { setColumnHint } from "../../utils/skeleton-hints";
@@ -484,6 +485,7 @@ export function DatabaseNodeView({
                   {!isOwnPage && <DatabaseTitleBar />}
                   <DatabaseToolbar />
                   <ChipsRow />
+                  <PersonFilterBar />
 
                   {attrs.id && <SelectionToolbar />}
                 </div>

@@ -42,7 +42,7 @@ export function useOpenNotification(onDone?: () => void) {
 
       // "Have a look at this row": open it where it lives — its database,
       // the row in the peek. (Not loaded here → the page route below.)
-      if (n.type === "row-look" && n.mentionId) {
+      if ((n.type === "row-look" || n.type === "row-assign") && n.mentionId) {
         const row = pages?.find((p) => p.id === n.mentionId);
         if (row && row.deletedAt == null) {
           openRow(row.id);

@@ -67,6 +67,7 @@ export const DEFAULT_CONFIGS = {
   phone: { type: "phone" },
   email: { type: "email" },
   unique_id: { type: "unique_id" },
+  files: { type: "files" },
 } satisfies Record<PropertyType, PropertyConfig>;
 
 // ─────────────────────────────────────────────────────────────────────────────

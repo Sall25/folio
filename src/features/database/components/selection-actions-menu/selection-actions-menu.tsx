@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   Eye,
   ListIcon,
+  UserPlus,
 } from "src/components/icons";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -78,6 +79,7 @@ export function SelectionActionsMenu({
   onDuplicate,
   onCopyLink,
   onAskToLook,
+  onAssignToMe,
   onAddToFavorites,
   onEditIcon,
   // onComment,
@@ -103,6 +105,9 @@ export function SelectionActionsMenu({
   onCopyLink?: () => void;
   /** One row: notify a workspace member to look at it. */
   onAskToLook?: (personId: ID) => void;
+  /** Add yourself to the database's person property (undefined: no such
+   *  property, or you're already on it). */
+  onAssignToMe?: () => void;
   onAddToFavorites?: () => void;
   onEditIcon?: () => void;
   onComment?: () => void;
@@ -457,6 +462,15 @@ export function SelectionActionsMenu({
                 />
               </NavigableMenuItem>
             )}
+
+            {onAssignToMe &&
+              matchesAction(t("database.assign.assignToMe")) && (
+                <MenuRow
+                  Icon={UserPlus}
+                  label={t("database.assign.assignToMe")}
+                  onClick={() => run(onAssignToMe)}
+                />
+              )}
 
             {matchesAction(t("actions.duplicate")) && (
               <DuplicateRecordItem

@@ -40,6 +40,7 @@ const allPropertyTypes = [
   "url",
   "email",
   "phone",
+  "files",
   "formula",
   "relation",
   "rollup",

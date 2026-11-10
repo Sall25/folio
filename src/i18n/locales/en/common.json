@@ -1575,6 +1575,7 @@
       "title": "Layouts",
       "showDatabaseTitle": "Show database title",
       "showVerticalLines": "Show vertical lines",
+      "phoneTable": "Show as table on phones",
       "wrapAllColumns": "Wrap all columns",
       "cardPreview": "Card Preview",
       "cardPreviewNone": "None",
@@ -1641,6 +1642,34 @@
       "noResults": "No actions found",
       "moveUp": "Move up",
       "moveDown": "Move down"
+    },
+    "assign": {
+      "assignToMe": "Assign to me",
+      "notifTitle": "{{who}} assigned you to a row",
+      "notifyHint": "People you add get a notification",
+      "groups": "Groups",
+      "group_one": "{{name}} · {{count}} person",
+      "group_other": "{{name}} · {{count}} people",
+      "barLabel": "Filter by person",
+      "everyone": "Everyone",
+      "me": "Me",
+      "unassigned": "Unassigned",
+      "showPeopleBar": "Show people bar"
+    },
+    "files": {
+      "upload": "Upload",
+      "link": "Link",
+      "choose": "Choose files",
+      "orDrop": "or drop them here",
+      "limit": "Up to {{max}} each · paste a screenshot too",
+      "tooBig": "Larger than {{max}}",
+      "linkPlaceholder": "Paste a link…",
+      "addLink": "Add",
+      "rename": "Rename",
+      "download": "Download",
+      "open": "Open",
+      "remove": "Remove",
+      "uploading": "Uploading…"
     },
     "person": {
       "me": "Me",

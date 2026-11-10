@@ -129,6 +129,10 @@ export function DatabaseTableBody({
       className="db-table"
       data-type="database-table"
       data-locked={locked ? "true" : "false"}
+      // On a phone the rows show as a list unless the view keeps the grid.
+      data-phone-grid={
+        (activeView as TableView | undefined)?.phoneTable ? "" : undefined
+      }
       data-vlines={
         (activeView as TableView | undefined)?.showVerticalLines === false
           ? "off"

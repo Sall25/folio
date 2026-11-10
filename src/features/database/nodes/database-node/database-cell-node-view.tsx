@@ -39,6 +39,18 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
   );
   const sticky = propertyId ? data?.stickyByProp?.[propertyId] : undefined;
 
+  // Where the cell goes when a phone shows the table's rows as a list: the
+  // title, then the first three other visible properties under it.
+  const phoneSlot = useMemo(() => {
+    if (!property || data?.view?.type !== "table") return undefined;
+    if (property.config.type === "title") return "title";
+    const hidden = data.view.hiddenProperties ?? [];
+    const meta = properties
+      .filter((p) => p.config.type !== "title" && !hidden.includes(p.id))
+      .slice(0, 3);
+    return meta.some((p) => p.id === property.id) ? "meta" : undefined;
+  }, [property, properties, data?.view]);
+
   const viewStyle = useMemo(() => {
     const style: React.CSSProperties = {};
     if (isHidden) style.display = "none";
@@ -151,6 +163,7 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
       <NodeViewWrapper
         as="div"
         data-type="database-cell"
+        data-slot={phoneSlot}
         className={`db-node-cell${data && property ? " db-node-cell--pending" : ""}`}
         style={viewStyle}
         contentEditable={false}
@@ -169,6 +182,7 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
       data-type="database-cell"
       data-cell-kind="atom"
       data-cc={cellColor}
+      data-slot={phoneSlot}
       className="db-node-cell db-node-cell--atom"
       contentEditable={false}
       style={
