@@ -81,9 +81,11 @@
   color: var(--tt-text-secondary);
   font-size: 12.5px;
 
+  // Pinned: as wide as its title (up to a limit), no close button.
   &[data-pinned] {
-    flex: none;
+    flex: 0 1 auto;
     min-width: 0;
+    max-width: 160px;
   }
 
   // A thin line between two inactive tabs.

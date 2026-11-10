@@ -124,3 +124,52 @@ describe("desktop tabs", () => {
     expect(active().path).toBe("/page/b");
   });
 });
+
+describe("desktop tabs: coming back after a restart", () => {
+  function memoryStorage(): Storage {
+    const data = new Map<string, string>();
+    return {
+      get length() {
+        return data.size;
+      },
+      clear: () => data.clear(),
+      getItem: (k) => data.get(k) ?? null,
+      key: (i) => [...data.keys()][i] ?? null,
+      removeItem: (k) => void data.delete(k),
+      setItem: (k, v) => void data.set(k, String(v)),
+    };
+  }
+
+  async function restart() {
+    vi.resetModules();
+    store = await import("./tabs-store");
+    went = [];
+    store.setTabNavigator((path) => went.push(path));
+  }
+
+  it("brings back the tabs and the active one, even when the title bar reads them first", async () => {
+    vi.stubGlobal("localStorage", memoryStorage());
+    store.tabs.init("/");
+    store.tabs.open("/page/a");
+    store.tabs.open("/page/b");
+    store.tabs.activate(store.tabs.get().tabs[1].id);
+
+    await restart();
+    // The title bar renders (and reads the tabs) before the sync starts.
+    store.tabs.get();
+    store.tabs.init("/");
+    expect(paths()).toEqual(["/", "/page/a", "/page/b"]);
+    expect(active().path).toBe("/page/a");
+    expect(went).toEqual(["/page/a"]);
+    vi.unstubAllGlobals();
+  });
+
+  it("with nothing saved: Home plus the page it opened on", async () => {
+    vi.stubGlobal("localStorage", memoryStorage());
+    await restart();
+    store.tabs.get();
+    store.tabs.init("/page/x");
+    expect(paths()).toEqual(["/", "/page/x"]);
+    vi.unstubAllGlobals();
+  });
+});

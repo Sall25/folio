@@ -21,10 +21,10 @@ import { tabs, useTabs, type Tab } from "./tabs-store";
 import "./desktop-tabs.scss";
 
 // The page tabs in the desktop title bar: back / forward for the active
-// tab, the tabs (pinned ones first, icon only), a + for a new tab, and the
-// sync status. Click switches, middle click closes, right click opens the
-// tab menu, drag reorders. Rendered into the title bar's slot, from inside
-// the router (signed-in-app.tsx).
+// tab, the tabs (pinned ones first, with no close button), a + for a new
+// tab, and the sync status. Click switches, middle click closes, right
+// click opens the tab menu, drag reorders. Rendered into the title bar's
+// slot, from inside the router (signed-in-app.tsx).
 
 export function DesktopTabs() {
   // The title bar is mounted from App.tsx, long before the signed-in app
@@ -203,7 +203,7 @@ function TabButton({
         onClick={() => tabs.activate(tab.id)}
       >
         <span className="desktop-tab__icon">{icon}</span>
-        {!tab.pinned && <span className="desktop-tab__title">{title}</span>}
+        <span className="desktop-tab__title">{title}</span>
       </button>
       {!tab.pinned && (
         <button
