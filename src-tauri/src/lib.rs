@@ -9,8 +9,13 @@
 // (tauri-plugin-updater, then tauri-plugin-process to relaunch,
 // src/features/desktop/updater). media.rs saves images, videos, audio and
 // files from pages on this computer, so they show offline
-// (src/lib/media-cache.ts).
+// (src/lib/media-cache.ts). backup.rs writes the workspace as Markdown into a
+// chosen folder (tauri-plugin-dialog asks which; src/lib/desktop-backup.ts),
+// and capture.rs is the quick capture shortcut that works from any app
+// (tauri-plugin-global-shortcut; src/features/desktop/quick-capture).
 
+mod backup;
+mod capture;
 mod media;
 
 use tauri::Manager;
@@ -32,6 +37,16 @@ pub fn run() {
         }));
     }
 
+    // The quick capture shortcut (set by the web app, capture.rs).
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(capture::on_shortcut)
+                .build(),
+        );
+    }
+
     builder
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
@@ -39,6 +54,7 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             media::media_save,
             media::media_list,
@@ -46,6 +62,10 @@ pub fn run() {
             media::media_clear,
             media::media_open,
             media::media_open_folder,
+            backup::backup_write,
+            backup::backup_pick_folder,
+            backup::backup_open_folder,
+            capture::capture_set_shortcut,
         ])
         .setup(|_app| {
             // The installer registers folio:// on Windows and Linux; this

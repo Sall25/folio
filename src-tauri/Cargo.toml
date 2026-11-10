@@ -37,8 +37,12 @@ rustls = { version = "0.23", default-features = false, features = ["ring"] }
 futures-util = "0.3"
 tokio = { version = "1", features = ["fs", "io-util"] }
 sha2 = "0.10"
+# Backup: asking which folder to write into (backup.rs).
+tauri-plugin-dialog = "2"
 
 # One Folio at a time: a folio:// link clicked while it runs reaches the
 # open app (deep-link feature) instead of starting a second one.
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
+# The quick capture shortcut, working from any app (capture.rs).
+tauri-plugin-global-shortcut = "2"

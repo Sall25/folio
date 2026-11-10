@@ -9,3 +9,11 @@ export { DesktopRail } from "./rail/desktop-rail";
 export { DesktopDeepLinkNavigator } from "./deep-links/desktop-deep-link-navigator";
 export { installDesktopDeepLinks } from "./deep-links/deep-links";
 export { DesktopUpdater } from "./updater/desktop-updater";
+export { QuickCapture } from "./quick-capture/quick-capture";
+export {
+  CAPTURE_SHORTCUTS,
+  setCaptureShortcut,
+  shortcutLabel,
+  useCaptureShortcut,
+} from "./quick-capture/capture-shortcut";
+export { DesktopBackup, useRunBackup } from "./backup/desktop-backup";
