@@ -1,9 +1,13 @@
 import { useMemo, useState } from "react";
-import { useLocation, useNavigate } from "@tanstack/react-location";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { ID } from "src/types";
-import { getForm, submitFormResponse } from "src/api/forms";
+import {
+  getForm,
+  rememberPendingForm,
+  submitFormResponse,
+  type FormPayload,
+} from "src/api/forms";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { FormQuestionInput } from "./form-question-input";
 import { FormDescription } from "./form-description";
@@ -24,9 +28,9 @@ function idsFromPath(pathname: string): { sourceId: ID; viewId: ID } | null {
 // database's owner can see (submit_form_response).
 export function FormPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const ids = idsFromPath(location.current.pathname);
+  // Plain location: this page also opens outside the app's router, for
+  // people who aren't signed in (App.tsx).
+  const ids = idsFromPath(window.location.pathname);
 
   const form = useQuery({
     queryKey: ["form", ids?.sourceId, ids?.viewId],
@@ -39,7 +43,9 @@ export function FormPage() {
   const [missing, setMissing] = useState<ID[]>([]);
   const [rowId, setRowId] = useState<ID | null>(null);
 
-  const data = form.data;
+  const raw = form.data;
+  const needsSignIn = !!raw && "needsSignIn" in raw;
+  const data = raw && !needsSignIn ? (raw as FormPayload) : null;
   const questions = useMemo(() => data?.view.questions ?? [], [data]);
   const properties = useMemo(() => data?.properties ?? [], [data]);
   const byId = useMemo(
@@ -82,15 +88,15 @@ export function FormPage() {
           <h1 className="form-page__title">{title}</h1>
           {text && <p className="form-page__description">{text}</p>}
           <div className="form-page__actions">
-            {rowId && (
+            {rowId && !data?.anonymous && (
               <Button
                 variant="primary"
-                onClick={() => navigate({ to: `/page/${rowId}` })}
+                onClick={() => window.location.assign(`/page/${rowId}`)}
               >
                 {t("database.form.seeAnswer")}
               </Button>
             )}
-            <Button variant="ghost" onClick={() => navigate({ to: "/" })}>
+            <Button variant="ghost" onClick={() => window.location.assign("/")}>
               {t("database.form.backHome")}
             </Button>
           </div>
@@ -103,14 +109,39 @@ export function FormPage() {
   if (form.isLoading) return <div className="form-page" aria-busy="true" />;
   if (form.isError)
     return state(t("database.form.loadFailed"), String(form.error));
+  if (needsSignIn)
+    return (
+      <div className="form-page">
+        <div className="form-page__column">
+          <div className="form-page__card form-page__state">
+            <h1 className="form-page__title">{t("database.form.signInTitle")}</h1>
+            <p className="form-page__description">
+              {t("database.form.signInHint")}
+            </p>
+            <Button
+              variant="primary"
+              onClick={() => {
+                rememberPendingForm(window.location.pathname);
+                window.location.assign("/signin");
+              }}
+            >
+              {t("database.form.signIn")}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   if (!data) return state(t("database.form.notFound"), t("database.form.notFoundHint"));
   if (rowId)
-    return state(t("database.form.thanks"), t("database.form.thanksHint"));
+    return state(
+      t("database.form.thanks"),
+      data.anonymous ? undefined : t("database.form.thanksHint"),
+    );
 
   const preview = !data.canAnswer && data.canEdit;
   if (data.closed && !preview)
     return state(t("database.form.closedTitle"), t("database.form.closedHint"));
-  if (data.answered && data.view.onePerPerson && !preview)
+  if (data.answered && data.view.onePerPerson && !data.anonymous && !preview)
     return state(t("database.form.answeredTitle"), t("database.form.answeredHint"));
 
   const title = data.view.formTitle || data.databaseTitle;
@@ -121,7 +152,11 @@ export function FormPage() {
         <button
           type="button"
           className="form-page__back"
-          onClick={() => window.history.back()}
+          onClick={() =>
+            window.history.length > 1
+              ? window.history.back()
+              : window.location.assign("/")
+          }
         >
           ← {t("database.form.back")}
         </button>
@@ -147,6 +182,11 @@ export function FormPage() {
         {preview && (
           <div className="form-page__notice">
             {t("database.form.previewNotice")}
+          </div>
+        )}
+        {data.anonymous && (
+          <div className="form-page__notice">
+            {t("database.form.anonymousNotice")}
           </div>
         )}
 

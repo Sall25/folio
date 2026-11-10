@@ -28,6 +28,14 @@ export interface FormPayload {
   /** Can edit the database: sees the form even outside its audience. */
   canEdit: boolean;
   answered: boolean;
+  /** Answering without being signed in (a link form). */
+  anonymous?: boolean;
+  byLink?: boolean;
+}
+
+/** A signed-out visitor of a form that isn't open to anyone with the link. */
+export interface FormNeedsSignIn {
+  needsSignIn: true;
 }
 
 function fail(error: { message: string } | null): void {
@@ -38,13 +46,13 @@ function fail(error: { message: string } | null): void {
 export async function getForm(
   sourceId: ID,
   viewId: ID,
-): Promise<FormPayload | null> {
+): Promise<FormPayload | FormNeedsSignIn | null> {
   const { data, error } = await supabase.rpc("get_form", {
     p_source_id: sourceId,
     p_view_id: viewId,
   });
   fail(error);
-  return (data as FormPayload | null) ?? null;
+  return (data as FormPayload | FormNeedsSignIn | null) ?? null;
 }
 
 /** Answers the form; returns the new row's id. */
@@ -68,3 +76,26 @@ export const formPath = (sourceId: ID, viewId: ID) =>
 
 export const formUrl = (sourceId: ID, viewId: ID) =>
   appUrl(formPath(sourceId, viewId));
+
+// A form link opened while signed out: remembered, to open again after
+// signing in (app-overlays.tsx).
+const PENDING_KEY = "folio:pending-form";
+
+export function rememberPendingForm(path: string) {
+  try {
+    localStorage.setItem(PENDING_KEY, path);
+  } catch {
+    /* storage blocked */
+  }
+}
+
+/** The remembered form path (and forget it). */
+export function takePendingForm(): string | null {
+  try {
+    const path = localStorage.getItem(PENDING_KEY);
+    if (path) localStorage.removeItem(PENDING_KEY);
+    return path && path.startsWith("/form/") ? path : null;
+  } catch {
+    return null;
+  }
+}

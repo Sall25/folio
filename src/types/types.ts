@@ -561,7 +561,9 @@ export interface FormQuestion {
 /** Who can answer a form. */
 export type FormAudience =
   | { kind: "workspace" }
-  | { kind: "groups"; groupIds: ID[] };
+  | { kind: "groups"; groupIds: ID[] }
+  /** Anyone with the link, signed in or not (anonymous when not). */
+  | { kind: "link" };
 
 /** A form: a view whose questions are the database's properties. Each answer
  *  becomes a row, created by the server (submit_form_response), owned by the

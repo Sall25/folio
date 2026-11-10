@@ -1382,6 +1382,10 @@
         "title": "Timeline view",
         "description": "Plan pages over time."
       },
+      "question": {
+        "title": "Question",
+        "description": "A question readers answer, with the results"
+      },
       "pomodoro": {
         "title": "Pomodoro timer",
         "description": "Focus and break rounds, with a timer"
@@ -1655,6 +1659,12 @@
       "answeredTitle": "You already answered",
       "answersTitle": "Answers",
       "back": "Back",
+      "anyoneWithLink": "Anyone with the link",
+      "linkNote": "People who aren't signed in can answer too; their answers are anonymous.",
+      "signInTitle": "Sign in to answer",
+      "signInHint": "This form is for people in its workspace.",
+      "signIn": "Sign in",
+      "anonymousNotice": "You're not signed in: your answer is anonymous.",
       "backHome": "Back to Folio",
       "checked": "Checked",
       "unchecked": "Unchecked",
@@ -2159,5 +2169,34 @@
     "closeSwitcher": "Close",
     "openBeside": "Open beside",
     "openInNewWindow": "Open in a new window"
+  },
+  "question": {
+    "edit": "Edit",
+    "tryIt": "Try it",
+    "choice": "Multiple choice",
+    "shortAnswer": "Short answer",
+    "prompt": "Question",
+    "promptPlaceholder": "Ask a question…",
+    "optionPlaceholder": "Choice {{n}}",
+    "markCorrect": "Mark as the right answer",
+    "removeOption": "Remove choice",
+    "addOption": "Add a choice",
+    "hasCorrect": "Readers see whether they got it right.",
+    "noCorrect": "No right answer marked: it's a poll.",
+    "explanation": "Explanation",
+    "explanationPlaceholder": "Explanation, shown after answering (optional)",
+    "untitled": "Untitled question",
+    "correct": "Correct",
+    "rightAnswer": "Right answer",
+    "notQuite": "Not quite",
+    "yourAnswer": "Your answer",
+    "send": "Send",
+    "sent": "Sent",
+    "failed": "Your answer couldn't be saved",
+    "answers_one": "{{count}} answer",
+    "answers_other": "{{count}} answers",
+    "rightCount_one": "{{count}} right",
+    "rightCount_other": "{{count}} right",
+    "noAnswers": "No answers yet"
   }
 }

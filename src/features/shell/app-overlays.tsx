@@ -15,6 +15,7 @@ import { SpaceAccentRoot } from "./space-accent/space-accent-root";
 import { SignOutHost } from "../auth/sign-out";
 import { TeamspaceMoveDialog } from "../pages/teamspace-move";
 import { takePendingInvite } from "../workspace/join/pending-invite";
+import { takePendingForm } from "src/api/forms";
 import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-location";
 import type { Page, Person } from "src/types";
@@ -24,7 +25,13 @@ function PendingInviteRedirect() {
   const navigate = useNavigate();
   useEffect(() => {
     const token = takePendingInvite();
-    if (token) navigate({ to: `/invite/${token}` });
+    if (token) {
+      navigate({ to: `/invite/${token}` });
+      return;
+    }
+    // A form opened while signed out: back to it.
+    const form = takePendingForm();
+    if (form) window.location.assign(form);
   }, [navigate]);
   return null;
 }

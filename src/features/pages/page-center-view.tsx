@@ -1,4 +1,5 @@
 import { usePeekCollab } from "../editor/hooks/use-peek-collab";
+import { EditorPageContext } from "../editor/context/editor-page-context";
 import { useSyncDocTitle } from "../editor/utils/doc-title";
 import { usePeekThreadFocus } from "../comments/page-chat/peek-thread-focus";
 import { usePageCapabilities } from "src/hooks/use-page-role";
@@ -387,7 +388,9 @@ function PageCenterEditor({
   return (
     <>
       <div>
-        <EditorContent editor={editor} className="page-create-content" />
+        <EditorPageContext.Provider value={page?.id ?? null}>
+          <EditorContent editor={editor} className="page-create-content" />
+        </EditorPageContext.Provider>
       </div>
 
       {showTemplatePanel && (

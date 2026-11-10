@@ -1,6 +1,7 @@
 // simple-editor-content.tsx
 "use client";
 
+import { EditorPageContext } from "./context/editor-page-context";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { EditorContent, useCurrentEditor } from "@tiptap/react";
 
@@ -151,15 +152,17 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
   }
 
   return (
-    <EditorContent
-      editor={editor}
-      data-size={activePage?.settings.width}
-      data-text={activePage?.settings.text}
-      data-locked={activePage?.settings.locked}
-      data-collapsed={collapsed ? "true" : "false"}
-      role="presentation"
-      className={`simple-editor-content ${hasThreads ? "has-threads" : ""}`}
-    />
+    <EditorPageContext.Provider value={activePage?.id ?? null}>
+      <EditorContent
+        editor={editor}
+        data-size={activePage?.settings.width}
+        data-text={activePage?.settings.text}
+        data-locked={activePage?.settings.locked}
+        data-collapsed={collapsed ? "true" : "false"}
+        role="presentation"
+        className={`simple-editor-content ${hasThreads ? "has-threads" : ""}`}
+      />
+    </EditorPageContext.Provider>
   );
 });
 

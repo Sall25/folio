@@ -24,6 +24,7 @@ import { HorizontalRule } from "src/components/tiptap-node/horizontal-rule-node/
 import { CodeBlockNode } from "src/components/tiptap-node/code-block-node";
 import { CalloutExtension } from "src/components/tiptap-node/callout-node";
 import { PomodoroExtension } from "src/components/tiptap-node/pomodoro-node";
+import { QuestionExtension } from "src/components/tiptap-node/question-node";
 import { PinnableExtension } from "src/features/editor/pins";
 import { BlockRefExtension } from "src/components/tiptap-node/block-ref-node";
 import { Column, ColumnBlock } from "src/components/tiptap-node/column-node";
@@ -117,6 +118,7 @@ export function usePeekEditorExtensions(onNavigate?: (pageId: ID) => void) {
       Containment,
       CalloutExtension,
       PomodoroExtension,
+      QuestionExtension,
       PinnableExtension,
       BlockRefExtension,
       AudioExtension,

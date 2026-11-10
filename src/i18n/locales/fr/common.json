@@ -1382,6 +1382,10 @@
         "title": "Vue chronologie",
         "description": "Planifiez les pages dans le temps."
       },
+      "question": {
+        "title": "Question",
+        "description": "Une question à laquelle les lecteurs répondent, avec les résultats"
+      },
       "pomodoro": {
         "title": "Minuteur Pomodoro",
         "description": "Des tours de concentration et de pause, avec un minuteur"
@@ -1655,6 +1659,12 @@
       "answeredTitle": "Vous avez déjà répondu",
       "answersTitle": "Réponses",
       "back": "Retour",
+      "anyoneWithLink": "Toute personne ayant le lien",
+      "linkNote": "Les personnes non connectées peuvent aussi répondre ; leurs réponses sont anonymes.",
+      "signInTitle": "Connectez-vous pour répondre",
+      "signInHint": "Ce formulaire est réservé aux membres de son espace de travail.",
+      "signIn": "Se connecter",
+      "anonymousNotice": "Vous n'êtes pas connecté : votre réponse est anonyme.",
       "backHome": "Retour à Folio",
       "checked": "Cochée",
       "unchecked": "Non cochée",
@@ -2159,5 +2169,34 @@
     "closeSwitcher": "Fermer",
     "openBeside": "Ouvrir à côté",
     "openInNewWindow": "Ouvrir dans une nouvelle fenêtre"
+  },
+  "question": {
+    "edit": "Modifier",
+    "tryIt": "Essayer",
+    "choice": "Choix multiple",
+    "shortAnswer": "Réponse courte",
+    "prompt": "Question",
+    "promptPlaceholder": "Posez une question…",
+    "optionPlaceholder": "Choix {{n}}",
+    "markCorrect": "Marquer comme la bonne réponse",
+    "removeOption": "Retirer le choix",
+    "addOption": "Ajouter un choix",
+    "hasCorrect": "Les lecteurs voient s'ils ont bon.",
+    "noCorrect": "Aucune bonne réponse marquée : c'est un sondage.",
+    "explanation": "Explication",
+    "explanationPlaceholder": "Explication, affichée après la réponse (facultatif)",
+    "untitled": "Question sans titre",
+    "correct": "Correct",
+    "rightAnswer": "Bonne réponse",
+    "notQuite": "Pas tout à fait",
+    "yourAnswer": "Votre réponse",
+    "send": "Envoyer",
+    "sent": "Envoyé",
+    "failed": "Votre réponse n'a pas pu être enregistrée",
+    "answers_one": "{{count}} réponse",
+    "answers_other": "{{count}} réponses",
+    "rightCount_one": "{{count}} bonne",
+    "rightCount_other": "{{count}} bonnes",
+    "noAnswers": "Pas encore de réponse"
   }
 }

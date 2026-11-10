@@ -21,6 +21,7 @@ import { CoverHeader } from "src/features/pages/cover";
 import { useRecordPropertyPanel } from "../database/record-property-panel/use-record-property-panel";
 import { type Transaction } from "@tiptap/pm/state";
 import { PeekEditorProvider } from "../editor/context/peek-editor-provider";
+import { EditorPageContext } from "../editor/context/editor-page-context";
 import { useDebouncedCallback } from "use-debounce";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage } from "src/api/pages";
@@ -378,7 +379,9 @@ function PagePeekEditor({
     <>
       <div>
         <PeekEditorProvider value={editor}>
-          <EditorContent editor={editor} className="page-peek-content" />
+          <EditorPageContext.Provider value={page?.id ?? null}>
+            <EditorContent editor={editor} className="page-peek-content" />
+          </EditorPageContext.Provider>
         </PeekEditorProvider>
       </div>
       <FloatingMenuMemo

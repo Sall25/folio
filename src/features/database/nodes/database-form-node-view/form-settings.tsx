@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { DatabaseView, FormAudience, FormView } from "src/types";
+import type { DatabaseView, FormAudience, FormView, Group } from "src/types";
 import { useGroups } from "src/hooks/use-groups";
 import type { UseDatabaseReturn } from "../../hooks";
 import { MenuRow } from "../../components/menu-row";
@@ -23,7 +23,7 @@ export function FormSettings({
   db: UseDatabaseReturn;
 }) {
   const { t } = useTranslation();
-  const { data: groups } = useGroups();
+  const groups = (useGroups().data ?? []) as Group[];
   const patch = (next: Partial<FormView>) =>
     db.updateView(view.id, next as Partial<DatabaseView>);
   const setAudience = (audience: FormAudience) => patch({ audience });
@@ -36,22 +36,32 @@ export function FormSettings({
       </span>
       <MenuRow
         label={t("database.form.everyoneInWorkspace")}
-        selected={view.audience?.kind !== "groups"}
+        selected={!view.audience || view.audience.kind === "workspace"}
         onClick={() => setAudience({ kind: "workspace" })}
+      />
+      <MenuRow
+        label={t("database.form.anyoneWithLink")}
+        selected={view.audience?.kind === "link"}
+        onClick={() => setAudience({ kind: "link" })}
       />
       <MenuRow
         label={t("database.form.someGroups")}
         selected={view.audience?.kind === "groups"}
         onClick={() => setAudience({ kind: "groups", groupIds: picked })}
       />
+      {view.audience?.kind === "link" && (
+        <span className="form-settings__note">
+          {t("database.form.linkNote")}
+        </span>
+      )}
       {view.audience?.kind === "groups" && (
         <div className="form-settings__groups">
-          {(groups ?? []).length === 0 && (
+          {groups.length === 0 && (
             <span className="form-settings__note">
               {t("database.form.noGroups")}
             </span>
           )}
-          {(groups ?? []).map((g) => {
+          {groups.map((g) => {
             const on = picked.includes(g.id);
             return (
               <button

@@ -17,6 +17,7 @@ import {
   Table,
   X,
   type LucideIcon,
+  ListChecks,
 } from "src/components/icons";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -40,6 +41,7 @@ const VIEW_ICON: Record<DatabaseView["type"], LucideIcon> = {
   list: ListIcon,
   calendar: Calendar,
   timeline: GanttChart,
+  form: ListChecks,
 };
 
 /**
