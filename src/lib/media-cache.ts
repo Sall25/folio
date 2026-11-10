@@ -50,7 +50,9 @@ const changed = () => {
   listeners.forEach((l) => l());
 };
 
-const core = () => import("@tauri-apps/api/core");
+let corePromise: Promise<typeof import("@tauri-apps/api/core")> | null = null;
+/** Tauri's API, loaded once (only in the desktop app). */
+const core = () => (corePromise ??= import("@tauri-apps/api/core"));
 
 let loading: Promise<void> | null = null;
 

@@ -1,5 +1,10 @@
 import { useCallback } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  mutationOptions,
+  useMutation,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { deletePagePermanently, emptyTrash } from "src/api/pages-trash";
 import {
   restorePageMutationKey,
@@ -18,6 +23,7 @@ import { useCurrentWorkspace } from "./use-workspaces";
 import { useCurrentPerson } from "./use-session";
 import { usePagesBase } from "./use-pages";
 import { pageWritesScope } from "./use-patch-page";
+import { RETRY_DELAY_MS, retryWhenOffline } from "src/lib/connectivity";
 
 const TRASH_KEY = ["trashed-pages"] as const;
 
@@ -82,9 +88,21 @@ function useInvalidateTrash() {
 export function useRestorePage() {
   const qc = useQueryClient();
   const invalidate = useInvalidateTrash();
-  return useMutation({
+  return useMutation(restorePageMutationOptions(qc, invalidate));
+}
+
+/** useRestorePage's options, apart from React, so the offline tests run
+ *  them on a QueryClient (offline-page-writes.test.ts). */
+export function restorePageMutationOptions(
+  qc: QueryClient,
+  invalidate: () => void,
+) {
+  return mutationOptions({
     mutationKey: restorePageMutationKey,
     scope: pageWritesScope,
+    // A lost connection holds it until it's back (connectivity.ts).
+    retry: retryWhenOffline,
+    retryDelay: RETRY_DELAY_MS,
     mutationFn: restorePageOnServer,
     onMutate: async (pageId: ID) => {
       await qc.cancelQueries({ queryKey: queryKeys.pages.all });

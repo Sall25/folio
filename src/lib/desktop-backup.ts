@@ -138,7 +138,7 @@ async function pageContent(
 
 /** A file or folder name every system accepts: safeFileName, and no
  *  trailing dot or space or reserved name (Windows). */
-function fsName(title: string, fallback: string): string {
+export function fsName(title: string, fallback: string): string {
   const name = safeFileName(title, fallback).replace(/[. ]+$/, "") || fallback;
   return /^(con|prn|aux|nul|com\d|lpt\d)(\..*)?$/i.test(name)
     ? `_${name}`
@@ -165,7 +165,7 @@ function pageMarkdown(
     : `# ${page.title || untitled}\n\n${body}`;
 }
 
-interface BackupFile {
+export interface BackupFile {
   path: string;
   content: string;
 }
@@ -179,7 +179,8 @@ export interface BackupInput {
   untitled: string;
 }
 
-async function buildFiles({
+/** The backup's files (exported for desktop-offline.test.ts). */
+export async function buildBackupFiles({
   personId,
   pages,
   dataSources,
@@ -272,7 +273,7 @@ export async function runBackup(input: BackupInput): Promise<number | null> {
   if (!settings.folder) return null;
   running = true;
   try {
-    const files = await buildFiles(input);
+    const files = await buildBackupFiles(input);
     const { invoke } = await core();
     const count = await invoke<number>("backup_write", {
       folder: settings.folder,

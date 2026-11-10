@@ -1,8 +1,18 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  mutationOptions,
+  useMutation,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import type { Page } from "../types";
 import { createPage } from "../api/pages";
 import { queryKeys } from "../lib/queryKeys";
 import { addLocalPage, removeLocalPage } from "src/lib/local-pages";
+import {
+  isNetworkError,
+  isOnline,
+  reportNetworkFailure,
+} from "src/lib/connectivity";
 
 export const createPageMutationKey = ["pages", "create"] as const;
 
@@ -11,7 +21,16 @@ export const createPageMutationKey = ["pages", "create"] as const;
  *  page-editor-layout.tsx. */
 export function useCreatePage({ quiet = false }: { quiet?: boolean } = {}) {
   const qc = useQueryClient();
-  return useMutation({
+  return useMutation(createPageMutationOptions(qc, { quiet }));
+}
+
+/** useCreatePage's options, apart from React, so the offline tests run
+ *  them on a QueryClient (offline-page-writes.test.ts). */
+export function createPageMutationOptions(
+  qc: QueryClient,
+  { quiet = false }: { quiet?: boolean } = {},
+) {
+  return mutationOptions({
     mutationKey: createPageMutationKey,
     meta: quiet ? { quiet: true } : undefined,
     // Runs even offline: with no connection the page is made here at once
@@ -29,7 +48,14 @@ export function useCreatePage({ quiet = false }: { quiet?: boolean } = {}) {
         return saved;
       } catch (error) {
         // No connection: it stays in the outbox, PageOutboxSync sends it.
-        if (!navigator.onLine || error instanceof TypeError) return page;
+        // Judged by the failure itself, not only navigator.onLine, which
+        // often stays true (connectivity.ts): Supabase reports a lost
+        // connection as an error saying "Failed to fetch".
+        if (isNetworkError(error)) {
+          reportNetworkFailure();
+          return page;
+        }
+        if (!isOnline()) return page;
         // Already sent by a change to it (sendLocalPage): created.
         if (String(error).includes("duplicate")) {
           removeLocalPage(page.id);

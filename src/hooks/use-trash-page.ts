@@ -1,4 +1,9 @@
-import { useQueryClient, useMutation } from "@tanstack/react-query";
+import {
+  mutationOptions,
+  useQueryClient,
+  useMutation,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { useToast } from "src/features/shell/toast";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,6 +18,7 @@ import {
   type DeletedAtSnapshot,
 } from "src/lib/page-trash-cache";
 import { pageWritesScope } from "./use-patch-page";
+import { RETRY_DELAY_MS, retryWhenOffline } from "src/lib/connectivity";
 import { useRestorePage } from "./use-trash";
 import type { ID } from "src/types";
 
@@ -27,9 +33,35 @@ export function useTrashPage() {
   const { t } = useTranslation();
   const restore = useRestorePage();
 
-  const mutation = useMutation({
+  const mutation = useMutation(
+    trashPageMutationOptions(qc, (vars) =>
+      show(t("trash.movedToast"), "success", {
+        label: t("trash.undo"),
+        onClick: () => restore.mutate(vars.pageId),
+      }),
+    ),
+  );
+
+  return {
+    ...mutation,
+    /** Takes the page's subtree from the cache, so it's known offline. */
+    mutate: (vars: { pageId: ID; workspaceId: ID }) =>
+      mutation.mutate({ ...vars, ids: cachedSubtree(qc, vars.pageId) }),
+  };
+}
+
+/** useTrashPage's options, apart from React, so the offline tests run them
+ *  on a QueryClient (offline-page-writes.test.ts). `onTrashed`: the toast. */
+export function trashPageMutationOptions(
+  qc: QueryClient,
+  onTrashed?: (vars: TrashPageVars) => void,
+) {
+  return mutationOptions({
     mutationKey: trashPageMutationKey,
     scope: pageWritesScope,
+    // A lost connection holds it until it's back (connectivity.ts).
+    retry: retryWhenOffline,
+    retryDelay: RETRY_DELAY_MS,
     mutationFn: trashPageOnServer,
     meta: { suppressErrorToast: false }, // network failures still toast via global handler
     onMutate: async (vars: TrashPageVars) => {
@@ -39,10 +71,7 @@ export function useTrashPage() {
         vars.ids ?? [vars.pageId],
         Date.now(),
       );
-      show(t("trash.movedToast"), "success", {
-        label: t("trash.undo"),
-        onClick: () => restore.mutate(vars.pageId),
-      });
+      onTrashed?.(vars);
       return { before };
     },
     onError: (_error, _vars, ctx?: { before: DeletedAtSnapshot }) => {
@@ -54,11 +83,4 @@ export function useTrashPage() {
       void qc.invalidateQueries({ queryKey: ["trashed-pages"] });
     },
   });
-
-  return {
-    ...mutation,
-    /** Takes the page's subtree from the cache, so it's known offline. */
-    mutate: (vars: { pageId: ID; workspaceId: ID }) =>
-      mutation.mutate({ ...vars, ids: cachedSubtree(qc, vars.pageId) }),
-  };
 }
