@@ -191,10 +191,25 @@
     font-weight: 600;
   }
 
+  &__spinner {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--tt-border-color);
+    border-top-color: var(--tt-text-secondary);
+    animation: form-page-spin 0.8s linear infinite;
+  }
+
   &__state {
     align-items: center;
     text-align: center;
     padding: 36px 24px;
     gap: 10px;
+  }
+}
+
+@keyframes form-page-spin {
+  to {
+    transform: rotate(360deg);
   }
 }

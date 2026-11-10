@@ -34,9 +34,22 @@ export function FormPage() {
 
   const form = useQuery({
     queryKey: ["form", ids?.sourceId, ids?.viewId],
-    queryFn: () => getForm(ids!.sourceId, ids!.viewId),
+    // Never left hanging: an answer within 15 s, or an error with Retry.
+    queryFn: () =>
+      Promise.race([
+        getForm(ids!.sourceId, ids!.viewId),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(t("database.form.timeout"))), 15_000),
+        ),
+      ]),
     enabled: !!ids,
     staleTime: 0,
+    retry: 1,
+    // Asks even when the browser thinks it's offline (wrong on some
+    // desktops): a real failure shows as an error, never a paused load.
+    networkMode: "always",
+    // A fresh copy every time: never one restored from the saved cache.
+    gcTime: 0,
   });
 
   const [answers, setAnswers] = useState<Record<ID, unknown>>({});
@@ -106,9 +119,38 @@ export function FormPage() {
   );
 
   if (!ids) return state(t("database.form.notFound"));
-  if (form.isLoading) return <div className="form-page" aria-busy="true" />;
+  if (form.isPending && form.fetchStatus !== "idle")
+    return (
+      <div className="form-page" aria-busy="true">
+        <div className="form-page__column">
+          <div className="form-page__card form-page__state">
+            <div className="form-page__spinner" aria-hidden />
+            <p className="form-page__description">{t("database.form.loading")}</p>
+          </div>
+        </div>
+      </div>
+    );
   if (form.isError)
-    return state(t("database.form.loadFailed"), String(form.error));
+    return (
+      <div className="form-page">
+        <div className="form-page__column">
+          <div className="form-page__card form-page__state">
+            <h1 className="form-page__title">{t("database.form.loadFailed")}</h1>
+            <p className="form-page__description">
+              {form.error instanceof Error ? form.error.message : String(form.error)}
+            </p>
+            <div className="form-page__actions">
+              <Button variant="primary" onClick={() => void form.refetch()}>
+                {t("database.form.retry")}
+              </Button>
+              <Button variant="ghost" onClick={() => window.location.assign("/")}>
+                {t("database.form.backHome")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   if (needsSignIn)
     return (
       <div className="form-page">
