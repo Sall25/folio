@@ -2,6 +2,7 @@
 import { memo, useRef, useState } from "react";
 import type { Page } from "src/types";
 import { GRADIENT_PRESETS } from "src/features/pages/cover/gradient-presets";
+import { firstImageSrc } from "../utils/first-image";
 
 interface BoardCardCoverProps {
   page: Page | null;
@@ -33,8 +34,11 @@ function BoardCardCoverImpl({
   onPositionCommit,
 }: BoardCardCoverProps) {
   const cover = page?.cover;
-  const coverImage = cover?.coverImage;
   const gradient = (cover as any)?.gradient as string | undefined;
+  // No cover of its own: the first image in the page, as Notion does.
+  const coverImage =
+    cover?.coverImage ||
+    (gradient ? undefined : (firstImageSrc(page?.content) ?? undefined));
 
   const persistedY = (cover as { positionY?: number } | null)?.positionY ?? 50;
 
