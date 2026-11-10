@@ -75,10 +75,29 @@ export async function sendLocalPage(id: string): Promise<void> {
 }
 export const localPages = (): Page[] => Object.values(read());
 
-/** The server's list plus the pages still waiting to be sent. */
-export function withLocalPages(server: Page[]): Page[] {
+/** Whether a page belongs in a workspace's page list: made in that
+ *  workspace, or inside a page the list already holds (a teamspace from
+ *  another workspace that you've joined). Without this a page made offline
+ *  showed in every workspace: the outbox and the optimistic insert added it
+ *  to every list. */
+export function belongsInList(
+  page: Page,
+  workspaceId: string,
+  list: Page[],
+): boolean {
+  if (page.workspaceId === workspaceId) return true;
+  return list.some(
+    (p) => p.id === page.teamspaceId || p.id === page.parentId,
+  );
+}
+
+/** The server's list for `workspaceId` plus this workspace's pages still
+ *  waiting to be sent. */
+export function withLocalPages(server: Page[], workspaceId: string): Page[] {
   const known = new Set(server.map((p) => p.id));
-  const waiting = localPages().filter((p) => !known.has(p.id));
+  const waiting = localPages().filter(
+    (p) => !known.has(p.id) && belongsInList(p, workspaceId, server),
+  );
   // Already on the server: no longer waiting.
   localPages()
     .filter((p) => known.has(p.id))

@@ -16,4 +16,5 @@ export {
   shortcutLabel,
   useCaptureShortcut,
 } from "./quick-capture/capture-shortcut";
-export { DesktopBackup, useRunBackup } from "./backup/desktop-backup";
+export { DesktopBackup } from "./backup/desktop-backup";
+export { useRunBackup } from "./backup/use-run-backup";

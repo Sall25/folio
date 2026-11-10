@@ -16,7 +16,8 @@ export function usePagesBase<T>(select?: (pages: Page[]) => T) {
   const { workspaceId } = useCurrentWorkspace();
   return useQuery({
     queryKey: queryKeys.pages.lists(workspaceId ?? ""),
-    queryFn: async () => withLocalPages(await fetchPages()),
+    queryFn: async () =>
+      withLocalPages(await fetchPages(), workspaceId ?? ""),
     enabled: !!workspaceId,
     select,
   });

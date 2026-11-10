@@ -103,6 +103,30 @@ export async function fetchChatMessages(
   return ((data ?? []) as MessageRow[]).map(toMessage).reverse();
 }
 
+/** The last message of each of these rooms (not deleted), for previews
+ *  (the desktop Home's "Latest in rooms"). One small query per room. */
+export async function fetchLatestMessages(
+  roomIds: string[],
+): Promise<Record<string, ChatMessage>> {
+  const rows = await Promise.all(
+    roomIds.map(async (roomId) => {
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .eq("room_id", roomId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      fail(error);
+      const row = (data ?? [])[0] as MessageRow | undefined;
+      return row ? ([roomId, toMessage(row)] as const) : null;
+    }),
+  );
+  return Object.fromEntries(
+    rows.filter((r): r is readonly [string, ChatMessage] => r !== null),
+  );
+}
+
 export async function fetchChatPeople(ids: string[]): Promise<ChatPerson[]> {
   if (!ids.length) return [];
   const { data, error } = await supabase

@@ -15,6 +15,7 @@ import { OfflineCacheGuard } from "../features/shell/offline/offline-cache-guard
 import { UpdatePrompt } from "../features/shell/offline/update-prompt";
 import { OfflineDocSync } from "../features/shell/offline/offline-doc-sync";
 import { ChatOutboxSync } from "../features/shell/offline/chat-outbox-sync";
+import { WorkspacePresence } from "../features/shell/presence/workspace-presence";
 import {
   DesktopAttention,
   DesktopDeepLinkNavigator,
@@ -50,6 +51,7 @@ export default function SignedInApp() {
                             <UpdatePrompt />
                             <OfflineDocSync />
                             <ChatOutboxSync />
+                            <WorkspacePresence />
                             {/* Desktop app: tabs in the title bar, the rail
                                 (workspaces, Home, Inbox, Chats) beside the
                                 sidebar, the unread count on the app's icon

@@ -57,7 +57,12 @@ beforeEach(() => {
 // ── Every page offline by default ───────────────────────────────────────────
 
 describe("keeping pages offline (desktop)", () => {
-  const choices = { favorites: false, pages: [], workspaces: [] };
+  const choices = {
+    favorites: false,
+    pages: [],
+    teamspaces: [],
+    workspaces: [],
+  };
 
   it("a workspace is kept by default", async () => {
     const { isWorkspaceKept } = await import("./offline-keep");

@@ -450,3 +450,30 @@ describe("no connection while the browser still says online (common on Windows, 
   });
 });
 
+// ── Workspaces ──────────────────────────────────────────────────────────────
+
+describe("a page made offline in one workspace", () => {
+  it("shows in that workspace's list only", async () => {
+    const other = ["pages", "list", "ws2"];
+    qc.setQueryData(other, [page("x", { workspaceId: "ws2" })]);
+    goOffline();
+    await createPage(page("p1"));
+    expect(listed().map((p) => p.id)).toEqual(["p1"]);
+    expect(qc.getQueryData<Page[]>(other)?.map((p) => p.id)).toEqual(["x"]);
+  });
+
+  it("is added from the outbox to its own workspace's list only", async () => {
+    m.local.addLocalPage(page("p1"));
+    expect(m.local.withLocalPages([], "ws1").map((p) => p.id)).toEqual(["p1"]);
+    expect(m.local.withLocalPages([], "ws2")).toEqual([]);
+  });
+
+  it("…or to a list holding its teamspace (joined from another workspace)", async () => {
+    m.local.addLocalPage(page("p1", { teamspaceId: "ts", parentId: "ts" }));
+    const list = [page("ts", { workspaceId: "ws1", teamspaceId: "ts" })];
+    expect(
+      m.local.withLocalPages(list, "ws2").map((p) => p.id),
+    ).toEqual(["ts", "p1"]);
+  });
+});
+

@@ -7,7 +7,11 @@ import {
 import type { Page } from "../types";
 import { createPage } from "../api/pages";
 import { queryKeys } from "../lib/queryKeys";
-import { addLocalPage, removeLocalPage } from "src/lib/local-pages";
+import {
+  addLocalPage,
+  belongsInList,
+  removeLocalPage,
+} from "src/lib/local-pages";
 import {
   isNetworkError,
   isOnline,
@@ -71,9 +75,20 @@ export function createPageMutationOptions(
       // The `.all` prefix matches BOTH list entries (Page[]) and detail
       // entries (a single Page). Only push onto arrays — spreading a
       // page-detail object threw "pages is not iterable".
-      qc.setQueriesData<Page[]>({ queryKey: queryKeys.pages.all }, (pages) =>
-        Array.isArray(pages) ? [...pages, page] : pages,
-      );
+      // Only into the lists of the workspace it belongs to (lists are
+      // ["pages", "list", workspaceId]).
+      for (const [key, pages] of qc.getQueriesData<Page[]>({
+        queryKey: queryKeys.pages.all,
+      })) {
+        if (!Array.isArray(pages)) continue;
+        const listWorkspace = key[1] === "list" ? key[2] : undefined;
+        if (
+          typeof listWorkspace === "string" &&
+          !belongsInList(page, listWorkspace, pages)
+        )
+          continue;
+        qc.setQueryData<Page[]>(key, [...pages, page]);
+      }
       qc.setQueryData(queryKeys.pages.detail(page.id), page);
 
       qc.setQueryData(["page-role", page.id], "full");
