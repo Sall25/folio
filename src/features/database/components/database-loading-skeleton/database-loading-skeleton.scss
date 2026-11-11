@@ -37,6 +37,43 @@
 
   &__spacer { flex: 1 1 auto; }
 
+  // The real view tabs, before the database code and data arrive.
+  &__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: var(--tt-radius-sm);
+    font-size: 14px;
+    color: var(--tt-text-secondary);
+    white-space: nowrap;
+
+    &[data-active] {
+      color: var(--tt-text-primary);
+      font-weight: 500;
+    }
+  }
+
+  &__tab-icon {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+  }
+
+  &__toolbar {
+    overflow: hidden;
+  }
+
+  // A table's real column name, muted while it loads.
+  &__th {
+    font-size: 14px;
+    color: var(--tt-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   // ── board ────────────────────────────────────────────────────────────
   &__board {
     display: flex;
@@ -65,6 +102,13 @@
     gap: 10px;
     padding: 14px;
     min-height: 76px;
+    box-sizing: border-box;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
     border: 1px solid var(--tt-border-color);
     border-radius: var(--tt-radius-sm);
   }
@@ -78,6 +122,7 @@
   }
 
   &__gallery-card {
+    box-sizing: border-box;
     border: 1px solid var(--tt-border-color);
     border-radius: var(--tt-radius-md);
     overflow: hidden;

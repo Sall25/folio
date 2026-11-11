@@ -39,6 +39,8 @@ export function DatabaseNodeViewLazy(props: NodeViewProps) {
         <DatabaseLoadingSkeletonWithDims
           databaseId={props.node.attrs.id as string | null}
           type={activeType}
+          views={views}
+          activeViewId={props.node.attrs.activeViewId as string | null}
         />
       }
     >

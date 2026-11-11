@@ -1,63 +1,96 @@
+import type { CSSProperties } from "react";
 import { NodeViewWrapper } from "@tiptap/react";
 import { Bone } from "src/components/tiptap-ui-primitive/bone/bone";
+import {
+  Calendar,
+  ChartGantt,
+  Columns3,
+  LayoutGrid,
+  List,
+  ListChecks,
+  Table,
+} from "src/components/icons";
 import type { DatabaseView } from "src/types";
+import type { ViewDims } from "../../hooks/use-view-skeleton-dims";
 import "./database-loading-skeleton.scss";
+
+const VIEW_ICONS = {
+  table: Table,
+  list: List,
+  board: Columns3,
+  gallery: LayoutGrid,
+  calendar: Calendar,
+  timeline: ChartGantt,
+  form: ListChecks,
+} as const;
+
+// More than this never fits on screen: the box is clipped to the height the
+// view had anyway.
+const MAX_ROWS = 60;
 
 type DatabaseLoadingSkeletonProps = {
   /** Which view's shape to mimic. Defaults to table. */
   type?: DatabaseView["type"];
-  rows?: number;
-  columns?: number;
+  /** What this view looked like last time on this device. */
+  dims: ViewDims;
+  /** The node's views: their tabs are real before anything loads. */
+  views?: DatabaseView[];
+  activeViewId?: string | null;
   switching?: boolean;
 };
 
 export function DatabaseLoadingSkeleton({
   type = "table",
-  rows = 6,
-  columns = 6,
+  dims,
+  views,
+  activeViewId,
   switching = false,
 }: DatabaseLoadingSkeletonProps) {
-  // Use a neutral fixed default width matching the real fallback (160px),
-  // so the column geometry is close to what loads in.
-  const gridTemplateColumns = `220px ${"160px ".repeat(Math.max(0, columns - 1)).trim()} 1fr`;
+  const rows = Math.min(Math.max(dims.rows, 0), MAX_ROWS);
+  const columns = Math.max(dims.columns, 1);
 
   const body = (() => {
     switch (type) {
-      // ── Board: 3 columns of stacked cards ─────────────────────────────
-      case "board":
+      // ── Board: its columns, with as many cards as each had ────────────
+      case "board": {
+        const per =
+          dims.perColumn ?? Array.from({ length: columns }, () => rows);
         return (
           <div className="db-skeleton__board">
-            {Array.from({ length: Math.min(Math.max(columns, 1), 5) }).map((_, c) => (
-              <div key={c} className="db-skeleton__board-col">
+            {per.map((count, c) => (
+              <div
+                key={c}
+                className="db-skeleton__board-col"
+                style={dims.cardWidth ? { flexBasis: dims.cardWidth } : undefined}
+              >
                 <div className="db-skeleton__board-head">
                   <Bone width={14} height={14} rounded />
                   <Bone width={`${40 + (c % 3) * 12}%`} height={12} />
                 </div>
-                {Array.from({ length: Math.min(Math.max(rows, 1), 6) }).map((_, i) => (
-                  <div key={i} className="db-skeleton__card">
-                    <Bone width={`${60 + ((c + i) % 3) * 12}%`} height={14} />
-                    <Bone width={`${30 + ((c + i) % 4) * 10}%`} height={12} />
-                  </div>
+                {Array.from({ length: Math.min(count, MAX_ROWS) }).map((_, i) => (
+                  <SkeletonCard key={i} dims={dims} seed={c + i} />
                 ))}
               </div>
             ))}
           </div>
         );
+      }
 
-      // ── Gallery: card grid with cover ─────────────────────────────────
+      // ── Gallery: its cards, at their size ─────────────────────────────
       case "gallery":
         return (
-          <div className="db-skeleton__gallery">
-            {Array.from({ length: Math.min(Math.max(rows, 1), 12) }).map((_, i) => (
-              <div key={i} className="db-skeleton__gallery-card">
-                <div className="db-skeleton__cover">
-                  <Bone width="100%" height={110} />
-                </div>
-                <div className="db-skeleton__card-body">
-                  <Bone width={`${55 + (i % 3) * 14}%`} height={14} />
-                  <Bone width={`${30 + (i % 4) * 10}%`} height={12} />
-                </div>
-              </div>
+          <div
+            className="db-skeleton__gallery"
+            style={
+              dims.cardWidth
+                ? ({
+                    gridTemplateColumns: `repeat(auto-fill, minmax(min(${dims.cardWidth}px, 100%), 1fr))`,
+                  } as CSSProperties)
+                : undefined
+            }
+          >
+            {Array.from({ length: rows }).map((_, i) => (
+              <SkeletonCard key={i} dims={dims} seed={i} gallery />
             ))}
           </div>
         );
@@ -67,7 +100,11 @@ export function DatabaseLoadingSkeleton({
         return (
           <div className="db-skeleton__list">
             {Array.from({ length: rows }).map((_, r) => (
-              <div key={r} className="db-skeleton__list-row">
+              <div
+                key={r}
+                className="db-skeleton__list-row"
+                style={dims.rowHeight ? { height: dims.rowHeight } : undefined}
+              >
                 <Bone width={16} height={16} rounded />
                 <Bone width={`${30 + (r % 4) * 12}%`} height={13} />
                 <span className="db-skeleton__spacer" />
@@ -113,45 +150,62 @@ export function DatabaseLoadingSkeleton({
           </div>
         );
 
-      // ── Table (unchanged) ─────────────────────────────────────────────
+      // ── Table: the real column names and widths ───────────────────────
       case "table":
-      default:
+      default: {
+        const header = dims.header?.length
+          ? dims.header
+          : Array.from({ length: columns }, (_, c) => ({
+              name: "",
+              width: c === 0 ? 220 : 160,
+            }));
+        const gridTemplateColumns = `${header.map((h) => `${h.width}px`).join(" ")} 1fr`;
+        const rowStyle = { gridTemplateColumns } as CSSProperties;
+        const cellStyle = dims.rowHeight ? { height: dims.rowHeight } : undefined;
         return (
           <>
-            {/* Header row */}
             <div
               className="db-skeleton__row db-skeleton__row--header"
-              style={{ gridTemplateColumns }}
+              style={rowStyle}
             >
-              {Array.from({ length: columns }).map((_, c) => (
+              {header.map((h, c) => (
                 <div key={c} className="db-skeleton__cell">
-                  <Bone width={16} height={16} rounded />
-                  <Bone width={`${48 + (c % 3) * 14}%`} height={14} />
+                  {h.name ? (
+                    <span className="db-skeleton__th">{h.name}</span>
+                  ) : (
+                    <>
+                      <Bone width={16} height={16} rounded />
+                      <Bone width={`${48 + (c % 3) * 14}%`} height={14} />
+                    </>
+                  )}
                 </div>
               ))}
               <div className="db-skeleton__cell" />
             </div>
 
-            {/* Body rows */}
             {Array.from({ length: rows }).map((_, r) => (
-              <div
-                key={r}
-                className="db-skeleton__row"
-                style={{ gridTemplateColumns }}
-              >
-                {Array.from({ length: columns }).map((_, c) => (
-                  <div key={c} className="db-skeleton__cell">
+              <div key={r} className="db-skeleton__row" style={rowStyle}>
+                {header.map((_, c) => (
+                  <div key={c} className="db-skeleton__cell" style={cellStyle}>
                     {c === 0 && <Bone width={18} height={18} rounded />}
                     <Bone width={`${36 + ((r + c) % 4) * 14}%`} height={14} />
                   </div>
                 ))}
-                <div className="db-skeleton__cell" />
+                <div className="db-skeleton__cell" style={cellStyle} />
               </div>
             ))}
           </>
         );
+      }
     }
   })();
+
+  // As tall as the view was, never taller: a one-card gallery in a column
+  // doesn't stretch it while it loads.
+  const height = switching ? dims.bodyHeight : dims.height;
+  const boxStyle: CSSProperties | undefined = height
+    ? { height, overflow: "hidden" }
+    : undefined;
 
   // First load: the real view's alignment (.db-node padded by
   // useDatabaseAlign) isn't there yet, so sit in the text column like any
@@ -167,31 +221,70 @@ export function DatabaseLoadingSkeleton({
         className={
           switching ? "db-skeleton" : "db-skeleton db-skeleton--column top-level-block"
         }
+        style={boxStyle}
         aria-label="Loading database"
         aria-busy="true"
         aria-live="polite"
       >
         {!switching && (
           <>
-            {/* Toolbar (view tabs + add-view) — shared by every view type */}
+            {/* The view tabs, from the node: real names right away. */}
             <div className="db-skeleton__toolbar">
-              <Bone width={64} height={26} rounded />
-              <Bone width={48} height={26} rounded />
-              <Bone width={26} height={26} rounded />
+              {views?.length ? (
+                views.map((v) => {
+                  const Icon = VIEW_ICONS[v.type] ?? ChartGantt;
+                  return (
+                    <span
+                      key={v.id}
+                      className="db-skeleton__tab"
+                      data-active={v.id === activeViewId || undefined}
+                    >
+                      <Icon className="db-skeleton__tab-icon" />
+                      {v.name}
+                    </span>
+                  );
+                })
+              ) : (
+                <>
+                  <Bone width={64} height={26} rounded />
+                  <Bone width={48} height={26} rounded />
+                </>
+              )}
             </div>
-
-            {/* Title bar */}
-            <Bone
-              width="32%"
-              height={28}
-              rounded
-              style={{ margin: "12px 0 4px" }}
-            />
           </>
         )}
 
         <div>{body}</div>
       </div>
     </NodeViewWrapper>
+  );
+}
+
+function SkeletonCard({
+  dims,
+  seed,
+  gallery = false,
+}: {
+  dims: ViewDims;
+  seed: number;
+  gallery?: boolean;
+}) {
+  // A gallery card has a cover unless it was measured without one.
+  const cover = dims.coverHeight ?? (gallery ? 110 : 0);
+  return (
+    <div
+      className={gallery ? "db-skeleton__gallery-card" : "db-skeleton__card"}
+      style={dims.cardHeight ? { height: dims.cardHeight } : undefined}
+    >
+      {cover > 0 && (
+        <div className="db-skeleton__cover">
+          <Bone width="100%" height={cover} />
+        </div>
+      )}
+      <div className={gallery ? "db-skeleton__card-body" : undefined}>
+        <Bone width={`${55 + (seed % 3) * 14}%`} height={14} />
+        <Bone width={`${30 + (seed % 4) * 10}%`} height={12} />
+      </div>
+    </div>
   );
 }

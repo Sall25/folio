@@ -255,6 +255,8 @@ function DatabaseNodeViewBody({
     attrs.id,
     activeView?.type ?? "table",
     !isLoading && !!source,
+    activeView?.id,
+    sortedRecords.length,
   );
 
   // ── View branches ─────────────────────────────────────────────────────────
@@ -458,6 +460,8 @@ export function DatabaseNodeView({
       <DatabaseLoadingSkeletonWithDims
         databaseId={attrs.id}
         type={skeletonType}
+        views={attrs.views}
+        activeViewId={skeletonView?.id ?? attrs.activeViewId}
       />
     );
   }
@@ -537,6 +541,8 @@ export function DatabaseNodeView({
       <DatabaseLoadingSkeletonWithDims
         databaseId={attrs.id}
         type={target?.type ?? "table"}
+        views={attrs.views}
+        activeViewId={switchingTo}
         switching={true}
       />,
     );

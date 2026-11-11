@@ -6,21 +6,29 @@ import { DatabaseLoadingSkeleton } from "../database-loading-skeleton";
 // database code has loaded, and must not pull it into the editor bundle.
 import { useViewSkeletonDims } from "../../hooks/use-view-skeleton-dims";
 
-// While a database loads: its active view's skeleton, sized from what this
-// device measured last time (rows, columns, cards). Never measured (first
-// time here, a calendar or timeline, or no id yet): a spinner, rather than
+// While a database loads: its active view's skeleton, in the shape and size
+// this device saw last time (rows, columns, cards, height), with the real
+// view tabs from the node. Never seen on this device: a spinner, rather than
 // a made-up shape that jumps when the real view arrives.
 
 export function DatabaseLoadingSkeletonWithDims({
   databaseId,
   type = "table",
+  views,
+  activeViewId,
   switching = false,
 }: {
   databaseId: string | null | undefined;
   type: DatabaseView["type"];
+  views?: DatabaseView[];
+  activeViewId?: string | null;
   switching?: boolean;
 }) {
-  const { dims, known } = useViewSkeletonDims(databaseId ?? "", type);
+  const viewId =
+    activeViewId ??
+    views?.find((v) => v.type === type)?.id ??
+    null;
+  const { dims, known } = useViewSkeletonDims(databaseId ?? "", type, viewId);
   if (!databaseId || !known) {
     return (
       <NodeViewWrapper
@@ -43,8 +51,9 @@ export function DatabaseLoadingSkeletonWithDims({
   return (
     <DatabaseLoadingSkeleton
       type={type}
-      rows={dims.rows}
-      columns={dims.columns}
+      dims={dims}
+      views={views}
+      activeViewId={viewId}
       switching={switching}
     />
   );
