@@ -1656,6 +1656,31 @@
       "moveUp": "Move up",
       "moveDown": "Move down"
     },
+    "subItems": {
+      "title": "Sub-items",
+      "on": "On",
+      "off": "Off",
+      "onNote": "Rows can have rows under them, at any depth. These two properties hold it; rename them as you like.",
+      "offNote": "Lets rows have rows under them, through two properties of this database linked both ways.",
+      "parent": "Parent",
+      "children": "Sub-items",
+      "parentLabel": "Parent",
+      "childrenLabel": "Children",
+      "show": "Show in this view",
+      "display": {
+        "nested": "Nested",
+        "flat": "Every row on its own",
+        "top": "Top level only"
+      },
+      "filters": "Filters and search",
+      "filtersAll": "Apply at every level",
+      "filtersTop": "Top level only",
+      "filtersAllNote": "A row that matches keeps its parents visible, so you still see where it belongs.",
+      "filtersTopNote": "Everything under a row that's kept shows too.",
+      "expanded": "Open expanded",
+      "count_one": "{{count}} sub-item",
+      "count_other": "{{count}} sub-items"
+    },
     "form": {
       "accepting": "Accepting answers",
       "addHelp": "Add a description",

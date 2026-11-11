@@ -6,6 +6,8 @@ import { Cell } from "../../components/cells/cell";
 import type { CellValue, DatabaseProperty, ID } from "src/types";
 import { CellOverlay } from "../../components/cell-overlay";
 import { CellComments } from "../../components/cell-comments";
+import { ChevronRight } from "src/components/icons";
+import "./sub-items.scss";
 import { isCopiableType } from "../database-board-node-view/utils";
 import { useOpenRecord } from "../../hooks/use-open-record";
 import { useRecordNearScreen } from "../../utils/record-visibility";
@@ -177,6 +179,17 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
 
   const record = data.recordsById.get(recordId) ?? null;
   const value = record?.values?.[propertyId] ?? null;
+
+  // Sub-items: the title cell of a nested view indents by depth and shows
+  // the row's open / close toggle (utils/sub-items.ts).
+  const nested =
+    isTitle &&
+    !!data.subItems &&
+    (data.view?.subItems?.display ?? "nested") === "nested";
+  const sub = nested ? data.subItems?.[recordId] : undefined;
+  const subStyle = sub
+    ? ({ "--db-sub-indent": `${22 + sub.depth * 18}px` } as React.CSSProperties)
+    : undefined;
   // Conditional color on this cell alone (a table's "cell only" rule).
   const cellColor = data.recordColors?.[recordId]?.cells?.[propertyId];
 
@@ -189,15 +202,41 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
       data-slot={phoneSlot}
       className="db-node-cell db-node-cell--atom"
       contentEditable={false}
-      style={
-        cellColor
-          ? {
-              ...viewStyle,
-              "--cc-accent": `var(--tt-color-accent-${cellColor})`,
-            }
-          : viewStyle
-      }
+      data-sub={sub ? "" : undefined}
+      style={{
+        ...viewStyle,
+        ...(cellColor
+          ? { "--cc-accent": `var(--tt-color-accent-${cellColor})` }
+          : {}),
+        ...subStyle,
+      }}
     >
+      {sub && (
+        <span
+          className="db-sub-toggle"
+          style={{ left: 4 + sub.depth * 18 }}
+          contentEditable={false}
+        >
+          {sub.childCount > 0 ? (
+            <button
+              type="button"
+              className="db-sub-toggle__btn"
+              aria-expanded={sub.open}
+              aria-label={sub.open ? "Hide sub-items" : "Show sub-items"}
+              title={`${sub.childCount}`}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={(e) => {
+                e.stopPropagation();
+                data.setRowOpen?.(recordId, !sub.open);
+              }}
+            >
+              <ChevronRight size={14} aria-hidden />
+            </button>
+          ) : (
+            <span className="db-sub-toggle__leaf" aria-hidden />
+          )}
+        </span>
+      )}
       {record && (
         <Cell
           property={property}
@@ -233,6 +272,11 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
                 : String(value)
           }
           onOpen={isTitle ? handleOpen : undefined}
+          onAddSubItem={
+            isTitle && data.subItems && data.addSubItem && data.view?.type === "table"
+              ? () => data.addSubItem?.(recordId)
+              : undefined
+          }
           onComment={() => setCommentsOpen(true)}
           editing={isListTitle ? editing : undefined}
           onEdit={

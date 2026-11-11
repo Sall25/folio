@@ -158,3 +158,14 @@
   pointer-events: none;
 }
 
+
+// Sub-items under the card's row (databases with sub-items).
+.db-board-card__subitems {
+  align-self: flex-start;
+  margin: 2px 10px 8px;
+  padding: 1px 8px;
+  border: 1px solid var(--tt-border-color);
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--tt-text-secondary);
+}

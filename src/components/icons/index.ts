@@ -164,6 +164,7 @@ export const LockIcon = icon("LockIcon", "lock");
 export const LoaderCircle = icon("LoaderCircle", "progress_activity");
 export const ListIcon = icon("ListIcon", "list");
 export const ListChecks = icon("ListChecks", "checklist");
+export const ListTree = icon("ListTree", "account_tree");
 export const Lightbulb = icon("Lightbulb", "lightbulb");
 export const LibraryBig = icon("LibraryBig", "local_library");
 export const Leaf = icon("Leaf", "eco");

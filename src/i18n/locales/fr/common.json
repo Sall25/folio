@@ -1656,6 +1656,31 @@
       "moveUp": "Monter",
       "moveDown": "Descendre"
     },
+    "subItems": {
+      "title": "Sous-éléments",
+      "on": "Activés",
+      "off": "Désactivés",
+      "onNote": "Des lignes peuvent en contenir d'autres, à toute profondeur. Ces deux propriétés s'en chargent ; renommez-les comme vous voulez.",
+      "offNote": "Permet à une ligne d'en contenir d'autres, grâce à deux propriétés de cette base liées dans les deux sens.",
+      "parent": "Parent",
+      "children": "Sous-éléments",
+      "parentLabel": "Parent",
+      "childrenLabel": "Enfants",
+      "show": "Affichage dans cette vue",
+      "display": {
+        "nested": "Imbriqués",
+        "flat": "Chaque ligne à part",
+        "top": "Premier niveau seulement"
+      },
+      "filters": "Filtres et recherche",
+      "filtersAll": "À tous les niveaux",
+      "filtersTop": "Premier niveau seulement",
+      "filtersAllNote": "Une ligne qui correspond garde ses parents visibles, pour voir où elle se trouve.",
+      "filtersTopNote": "Tout ce qui est sous une ligne gardée s'affiche aussi.",
+      "expanded": "Ouvrir déplié",
+      "count_one": "{{count}} sous-élément",
+      "count_other": "{{count}} sous-éléments"
+    },
     "form": {
       "accepting": "Accepte les réponses",
       "addHelp": "Ajouter une description",

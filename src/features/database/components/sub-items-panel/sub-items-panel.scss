@@ -1,0 +1,45 @@
+// View options › Sub-items.
+.sub-items-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+
+  &__title {
+    padding: 10px 8px 2px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--tt-text-secondary);
+  }
+
+  &__note {
+    padding: 2px 8px 6px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--tt-text-secondary);
+  }
+
+  &__name {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 8px;
+    font-size: 14px;
+
+    span {
+      color: var(--tt-text-secondary);
+    }
+
+    input {
+      width: 140px;
+      padding: 3px 8px;
+      border: 1px solid var(--tt-border-color);
+      border-radius: 6px;
+      background: var(--tt-bg-color);
+      color: var(--tt-text-primary);
+      font: inherit;
+      font-size: 13px;
+    }
+  }
+}

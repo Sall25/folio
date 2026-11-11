@@ -10,6 +10,7 @@ import type {
   DatabaseAttrs,
   DatabaseProperty,
   DatabaseView,
+  ID,
   Page,
   PageCover,
 } from "src/types";
@@ -23,6 +24,7 @@ import type { TimelineLayout, TimelinePlacement } from "./use-timeline-layout";
 import { useSession } from "src/hooks/use-session";
 import { usePageTitles } from "./use-page-titles";
 import { frozenPropertyIdFor, useDbSize } from "../utils/db-size";
+import type { SubItemInfo } from "../utils/sub-items";
 import {
   computeRecordColors,
   type RecordColors,
@@ -49,6 +51,9 @@ interface Params {
   galleryLayout: GalleryLayout;
   calendarLayout: CalendarLayout;
   timelineLayout: TimelineLayout;
+  subItems: Record<ID, SubItemInfo> | null;
+  setRowOpen: (recordId: ID, open: boolean) => void;
+  addSubItem: (parentId: ID) => void;
 }
 
 const EMPTY_GALLERY_PLACEMENT: Record<string, GalleryPlacement> = {};
@@ -74,6 +79,9 @@ export function useDatabaseBridgePublish({
   galleryLayout,
   calendarLayout,
   timelineLayout,
+  subItems,
+  setRowOpen,
+  addSubItem,
 }: Params) {
   const bridgeSetCellValue = useCallback(
     (recordId: string, propertyId: string, value: unknown) => {
@@ -180,6 +188,9 @@ export function useDatabaseBridgePublish({
         activeView?.type === "timeline"
           ? timelineLayout.placement
           : EMPTY_TIMELINE_PLACEMENT,
+      subItems,
+      setRowOpen,
+      addSubItem,
     }),
     [
       attrs.sourceId,
@@ -199,6 +210,9 @@ export function useDatabaseBridgePublish({
       galleryLayout,
       calendarLayout,
       timelineLayout,
+      subItems,
+      setRowOpen,
+      addSubItem,
     ],
   );
 

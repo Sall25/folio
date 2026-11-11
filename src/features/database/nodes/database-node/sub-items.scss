@@ -1,0 +1,56 @@
+// Sub-items in a table or list: the title cell indents by depth
+// (--db-sub-indent, set on the cell) and shows the row's toggle.
+.db-node-cell[data-sub] {
+  position: relative;
+
+  .db-cell-title {
+    padding-left: var(--db-sub-indent, 22px);
+  }
+}
+
+.db-sub-toggle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  width: 18px;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.db-sub-toggle__btn {
+  pointer-events: auto;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+
+  svg {
+    transition: transform 0.12s ease;
+  }
+
+  &[aria-expanded="true"] svg {
+    transform: rotate(90deg);
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--tt-text-primary) 8%, transparent);
+    color: var(--tt-text-primary);
+  }
+}
+
+// A row with nothing under it: a small dot, so the column lines up.
+.db-sub-toggle__leaf {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--tt-border-color);
+}

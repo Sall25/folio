@@ -138,7 +138,12 @@ export function DatabaseProvider({
 
   const { editingRecordId } = useNewRowEditState();
 
-  const { records: sortedRecords, peopleCounts } = useResolvedRecords(
+  const {
+    records: sortedRecords,
+    peopleCounts,
+    subItems,
+    parentPropertyId,
+  } = useResolvedRecords(
     resolvedRecords,
     source,
     db,
@@ -429,6 +434,8 @@ export function DatabaseProvider({
       onTitleChange,
       sortedRecords,
       peopleCounts,
+      subItems,
+      parentPropertyId,
       tableLayout,
       listLayout,
       onNewRecord,
@@ -457,6 +464,8 @@ export function DatabaseProvider({
       onTitleChange,
       sortedRecords,
       peopleCounts,
+      subItems,
+      parentPropertyId,
       tableLayout,
       listLayout,
       onNewRecord,

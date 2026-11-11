@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { rowMatchesSearch } from "../utils/row-summary";
-import type { DataSource, Page } from "src/types";
+import type { DataSource, ID, Page } from "src/types";
 import type { UseDatabaseReturn } from "./use-database";
 import { recordMatchesFilters } from "../utils/apply-filters";
 import { useSession } from "src/hooks/use-session";
@@ -13,6 +13,13 @@ import {
   matchesPeopleFilter,
   type AssigneeCounts,
 } from "../utils/assignee";
+import {
+  countsSubItems,
+  layoutSubItems,
+  nestsRows,
+  subItemPair,
+  type SubItemInfo,
+} from "../utils/sub-items";
 
 // filter → search → people bar → sort (or a table / list's own row order)
 // → pin-editing
@@ -23,6 +30,11 @@ export interface ResolvedRecords {
    *  people bar's own filter (so its counts don't collapse when you pick
    *  someone). Null when the database has no person property. */
   peopleCounts: AssigneeCounts | null;
+  /** Sub-items: each shown row's depth, rows under it, open or not. Null
+   *  when the database has none or the view doesn't show them. */
+  subItems: Record<ID, SubItemInfo> | null;
+  /** The stored "Parent" property, when the database has sub-items. */
+  parentPropertyId: ID | null;
 }
 
 export function useResolvedRecords(
@@ -65,11 +77,14 @@ export function useResolvedRecords(
     const sorts = activeView?.sorts ?? [];
     // A table or list without a sort keeps the order its rows were dragged
     // into (manual-order.ts). A sort always wins.
-    const sorted =
+    const manual =
       sorts.length === 0 &&
-      (activeView?.type === "table" || activeView?.type === "list")
-        ? applyManualOrder(peopled, activeView.manualOrder)
-        : sortRecords(peopled, sorts, props, { titleOf });
+      (activeView?.type === "table" || activeView?.type === "list");
+    const order = (rows: Page[]) =>
+      manual
+        ? applyManualOrder(rows, activeView.manualOrder)
+        : sortRecords(rows, sorts, props, { titleOf });
+    const sorted = order(peopled);
 
     // Pin the row being created to the end so it doesn't jump under the active
     // sort while its title is still changing.
@@ -79,7 +94,21 @@ export function useResolvedRecords(
       if (idx === -1) return sorted;
       return [...sorted.slice(0, idx), ...sorted.slice(idx + 1), sorted[idx]];
     })();
-    return { records: pinned, peopleCounts };
+
+    // Sub-items: nested, flat or the top level (utils/sub-items.ts).
+    const pair = subItemPair(props, source?.id);
+    if (!pair || !countsSubItems(activeView)) {
+      return { records: pinned, peopleCounts, subItems: null, parentPropertyId: pair?.parent.id ?? null };
+    }
+    const { rows, info } = layoutSubItems(
+      order(resolvedRecords),
+      pinned,
+      pair.parent.id,
+      activeView?.subItems,
+      db.openRows,
+      nestsRows(activeView),
+    );
+    return { records: rows, peopleCounts, subItems: info, parentPropertyId: pair.parent.id };
   }, [
     editingRecordId,
     meId,
@@ -89,5 +118,7 @@ export function useResolvedRecords(
     source?.properties,
     db.searchQuery,
     db.personFilter,
+    db.openRows,
+    source?.id,
   ]);
 }

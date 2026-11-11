@@ -149,3 +149,10 @@
     pointer-events: auto;
   }
 }
+// Beside Open: add a row under this one (databases with sub-items).
+.db-cell-overlay-open.db-cell-overlay-open--sub.tiptap-button {
+  right: 74px;
+  width: 24px !important;
+  padding: 0;
+  justify-content: center;
+}

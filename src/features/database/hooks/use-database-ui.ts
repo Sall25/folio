@@ -24,6 +24,7 @@ export function useDatabaseUI(
     openPropertyId: null,
     searchQuery: "",
     personFilter: [],
+    openRows: {},
     panelStack: [{ type: "main" }],
     viewOptionsOpen: false,
   });
@@ -84,6 +85,13 @@ export function useDatabaseUI(
   const setPersonFilter = useCallback(
     (ids: string[]) => patchUI({ personFilter: ids }),
     [patchUI],
+  );
+
+  // Sub-items: a row opened or closed by hand.
+  const setRowOpen = useCallback(
+    (id: string, open: boolean) =>
+      setUIState((s) => ({ ...s, openRows: { ...s.openRows, [id]: open } })),
+    [],
   );
 
   // ── Panel stack ────────────────────────────────────────────────────────
@@ -215,6 +223,8 @@ export function useDatabaseUI(
       searchQuery: uiState.searchQuery,
       personFilter: uiState.personFilter,
       setPersonFilter,
+      openRows: uiState.openRows,
+      setRowOpen,
       setEditingCell,
       isCellEditing,
       setOpenRecordId,
@@ -244,6 +254,8 @@ export function useDatabaseUI(
       uiState.searchQuery,
       uiState.personFilter,
       setPersonFilter,
+      uiState.openRows,
+      setRowOpen,
       setEditingCell,
       isCellEditing,
       setOpenRecordId,

@@ -7,6 +7,7 @@ import {
   Layout,
   Link as LinkIcon,
   ListFilter,
+  ListTree,
   Lock,
   Palette,
   SlidersHorizontal,
@@ -58,6 +59,8 @@ import { ConfirmDialog } from "src/features/shell/confirm-dialog";
 import { useDatabaseContext } from "../../context/database-context";
 import { downloadCsv, toCsv } from "../../utils/csv-export";
 import { csvImportStore } from "../../utils/csv-import-store";
+import { SubItemsPanel } from "../sub-items-panel";
+import { subItemPair } from "../../utils/sub-items";
 
 // The delete confirmation is portaled to <body>, outside the options panel:
 // pressing inside it must not count as a click outside the panel.
@@ -164,8 +167,9 @@ function ViewOptionsContent({
 
   // Export as CSV: this view's rows (its filters, search and sort; all of
   // them, past the load limit) and its visible columns, in order.
-  const { title, sortedRecords, visibleProperties, attrs, editor } =
+  const { title, sortedRecords, visibleProperties, attrs, editor, source } =
     useDatabaseContext();
+  const hasSubItems = !!subItemPair(source?.properties ?? [], source?.id);
   const handleExportCsv = () => {
     downloadCsv(
       title || t("database.picker.newDatabase"),
@@ -295,6 +299,9 @@ function ViewOptionsContent({
               )}
               {panel.type === "open-pages-in" && (
                 <OpenPagesInPanel bare db={db} />
+              )}
+              {panel.type === "sub-items" && (
+                <SubItemsPanel view={view} db={db} />
               )}
             </PanelSlide>
             {/* group / sub-items land here once their panels exist */}
@@ -443,7 +450,18 @@ function ViewOptionsContent({
             onClick={() => db.pushPanel({ type: "conditional-color" })}
             disabled={locked}
           />
-          {/* Sub-items (#166) and notifications come back with their features. */}
+          <MenuRow
+            Icon={ListTree}
+            label={t("database.viewOptions.subItems")}
+            sub={
+              hasSubItems
+                ? t("database.subItems.on")
+                : t("database.subItems.off")
+            }
+            navigable
+            onClick={() => db.pushPanel({ type: "sub-items" })}
+            disabled={locked}
+          />
 
           <Separator orientation="horizontal" />
 

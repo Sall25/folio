@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useOpenRecord } from "../hooks/use-open-record";
 import type {
   CellValue,
@@ -32,6 +33,7 @@ export function BoardCardBody({
   recordId,
   setCellValue,
   color,
+  subItemCount = 0,
 }: {
   record: Page;
   properties: DatabaseProperty[];
@@ -46,7 +48,10 @@ export function BoardCardBody({
     value: CellValue | null,
   ) => void;
   color?: string;
+  /** Sub-items under this row (databases with sub-items). */
+  subItemCount?: number;
 }) {
+  const { t } = useTranslation();
   const onOpenRecord = useOpenRecord(view);
   const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -222,6 +227,11 @@ export function BoardCardBody({
             />
           ))}
         </div>
+      )}
+      {subItemCount > 0 && view.type !== "calendar" && (
+        <span className="db-board-card__subitems">
+          {t("database.subItems.count", { count: subItemCount })}
+        </span>
       )}
     </div>
   );

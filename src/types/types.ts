@@ -230,6 +230,9 @@ export type PropertyConfig =
       showOnTarget: boolean;
       targetSourceId: ID;
       mirrorPropertyId: ID | null;
+      /** The "Parent" side of the database's sub-items (a relation to
+       *  itself; its mirror is the "Sub-items" side). utils/sub-items.ts */
+      subItems?: boolean;
     }
   | {
       type: "rollup";
@@ -445,6 +448,19 @@ interface BaseView {
   colorRules?: ColorRule[];
   /** Hide the people bar (quick filter by assignee) above this view. */
   hidePeopleBar?: boolean;
+  /** How this view shows sub-items (when the database has them). */
+  subItems?: SubItemsSettings;
+}
+
+/** A view's sub-items settings (View options › Sub-items). */
+export interface SubItemsSettings {
+  /** Nested under their parent, every row on its own, or the top level. */
+  display?: "nested" | "flat" | "top";
+  /** Filters and search apply at every level (a match keeps its parents)
+   *  or to the top level only (everything under a kept row shows). */
+  filters?: "all" | "top";
+  /** Rows start opened. */
+  expanded?: boolean;
 }
 
 /** One conditional-color rule: when a record matches `rule` (a filter
@@ -609,6 +625,8 @@ export interface DatabaseUIState {
   searchQuery: string;
   /** The people bar's quick filter: person ids (and "__unassigned"). */
   personFilter: string[];
+  /** Rows opened or closed by hand (sub-items); others follow the view. */
+  openRows: Record<string, boolean>;
   panelStack: PanelView[];
   viewOptionsOpen: boolean;
 }

@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Copy, Check, MessageSquareText, PenLine } from "src/components/icons";
+import {
+  Copy,
+  Check,
+  MessageSquareText,
+  PenLine,
+  Plus,
+} from "src/components/icons";
 import "./cell-overlay.scss";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import type { DatabaseView } from "src/types";
@@ -37,6 +43,7 @@ export function CellOverlay({
   // List title toggle: pencil (focus to edit) ↔ panel (open page).
   editing,
   onEdit,
+  onAddSubItem,
 }: {
   copiable: boolean;
   getCopyText: () => string;
@@ -47,6 +54,8 @@ export function CellOverlay({
   editing?: boolean;
   /** List title only: focus the title inline to start editing. */
   onEdit?: () => void;
+  /** Table title, in a database with sub-items: add a row under this one. */
+  onAddSubItem?: () => void;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -81,9 +90,26 @@ export function CellOverlay({
     );
   }
 
-  // ── Table view: Open button on the title cell.
+  // ── Table view: Open button on the title cell (and, with sub-items, a
+  //    button to add one, beside it).
   if (onOpen) {
     return (
+      <>
+      {onAddSubItem && (
+        <Button
+          type="button"
+          className="db-cell-overlay-open db-cell-overlay-open--sub"
+          aria-label="Add a sub-item"
+          tooltip="Add a sub-item"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onAddSubItem();
+          }}
+        >
+          <Plus className="tiptap-button-icon" size={14} />
+        </Button>
+      )}
       <Button
         type="button"
         className="db-cell-overlay-open"
@@ -97,6 +123,7 @@ export function CellOverlay({
         <PeekIcon />
         <span className="tiptap-button-text">Open</span>
       </Button>
+      </>
     );
   }
 

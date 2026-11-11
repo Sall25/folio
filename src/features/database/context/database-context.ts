@@ -11,6 +11,7 @@ import type {
 import type { UseDatabaseReturn } from "../hooks/use-database";
 import type { GroupedRowLayout } from "../utils/group-rows";
 import type { AssigneeCounts } from "../utils/assignee";
+import type { SubItemInfo } from "../utils/sub-items";
 
 // ── Context shape ──────────────────────────────────────────────────────────
 
@@ -43,6 +44,11 @@ interface DatabaseContextValue {
   sortedRecords: Page[];
   /** Rows per assignee, for the people bar (null: no person property). */
   peopleCounts: AssigneeCounts | null;
+  /** Sub-items: each shown row's depth, rows under it, open or not (null:
+   *  the database has none, or the view doesn't show them). */
+  subItems: Record<ID, SubItemInfo> | null;
+  /** The database's stored "Parent" property (sub-items), if any. */
+  parentPropertyId: ID | null;
 
   tableLayout: GroupedRowLayout<"table">;
   listLayout: GroupedRowLayout<"list">;

@@ -417,6 +417,9 @@ export default function DatabaseRecordNodeView({
           recordId={recordId}
           setCellValue={data.setCellValue}
           color={boardPlace?.color}
+          subItemCount={
+            recordId ? (data.subItems?.[recordId]?.childCount ?? 0) : 0
+          }
         />
       </NodeViewWrapper>
     );

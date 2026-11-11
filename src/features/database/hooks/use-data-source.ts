@@ -66,6 +66,8 @@ export interface UseDataSourceReturn {
     value: CellValue<PropertyType>,
   ) => void;
   addRecordAsync: (opts?: {
+    /** Values to start with (over the template's / defaults). */
+    values?: Page["values"];
     title?: string;
     templateId?: string;
   }) => Promise<Page>;
@@ -167,7 +169,11 @@ export function useDataSource(
 
   // CREATE row from optional template (templateId falls back to node default elsewhere)
   const addRecordAsync = useCallback(
-    async (opts?: { title?: string; templateId?: ID }): Promise<Page> => {
+    async (opts?: {
+      title?: string;
+      templateId?: ID;
+      values?: Page["values"];
+    }): Promise<Page> => {
       if (!sourceRef.current || !person || !workspaceId)
         throw new Error("No source or no person or no workspaceId");
 
@@ -204,6 +210,8 @@ export function useDataSource(
           ...(person.avatarUrl ? { avatarUrl: person.avatarUrl } : {}),
         },
       });
+
+      if (opts?.values) row.values = { ...(row.values ?? {}), ...opts.values };
 
       await addRowAsync(row);
       return row;

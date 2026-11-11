@@ -19,6 +19,7 @@ import type { GalleryPlacement } from "../hooks/use-gallery-layout";
 import type { CalendarPlacement } from "../hooks/use-calendar-layout";
 import type { TimelinePlacement } from "../hooks/use-timeline-layout";
 import type { RecordColors } from "./conditional-color";
+import type { SubItemInfo } from "./sub-items";
 
 export interface DatabaseBridgeData {
   sourceId: ID | null;
@@ -54,6 +55,12 @@ export interface DatabaseBridgeData {
   galleryPlacement?: Record<string, GalleryPlacement>;
   calendarPlacement?: Record<string, CalendarPlacement>;
   timelinePlacement?: Record<string, TimelinePlacement>;
+  /** Sub-items: each shown row's depth, rows under it, open or not. */
+  subItems?: Record<ID, SubItemInfo> | null;
+  /** Opens or closes a row's sub-items. */
+  setRowOpen?: (recordId: ID, open: boolean) => void;
+  /** Adds a row under this one. */
+  addSubItem?: (parentId: ID) => void;
 }
 
 interface DatabaseEntry {

@@ -40,6 +40,7 @@ import {
   type DatabaseProperty,
   type ListView,
   type TableView,
+  type Page,
 } from "src/types";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_LOAD_LIMIT } from "../../utils/load-limit";
@@ -88,11 +89,32 @@ function DatabaseNodeViewBody({
   attrs: DatabaseAttrs;
 }) {
   const { t } = useTranslation();
-  const { db, source, sortedRecords } = useDatabaseContext();
+  const { db, source, sortedRecords, subItems, parentPropertyId } =
+    useDatabaseContext();
   const activeView = db.activeView;
   const tableRef = useRef<HTMLDivElement>(null);
-  const { updatePropertiesAsync, resolvedRecords, isLoading, setCellValue } =
-    useDataSource(source?.id);
+  const {
+    updatePropertiesAsync,
+    resolvedRecords,
+    isLoading,
+    setCellValue,
+    addRecordAsync,
+  } = useDataSource(source?.id);
+
+  // Sub-items: a new row under `parentId`, which opens to show it.
+  const setRowOpen = db.setRowOpen;
+  const addSubItem = useCallback(
+    (parentId: string) => {
+      if (!parentPropertyId) return;
+      setRowOpen(parentId, true);
+      void addRecordAsync({
+        title: "",
+        // Relations are stored as bare row ids.
+        values: { [parentPropertyId]: [parentId] } as unknown as Page["values"],
+      });
+    },
+    [parentPropertyId, setRowOpen, addRecordAsync],
+  );
 
   const { data: templatePage } = usePage(attrs.templateId ?? null);
 
@@ -207,6 +229,9 @@ function DatabaseNodeViewBody({
     galleryLayout,
     calendarLayout,
     timelineLayout,
+    subItems,
+    setRowOpen,
+    addSubItem,
   });
 
   // Seed record/cell nodes once at creation; keep cells matching properties.
