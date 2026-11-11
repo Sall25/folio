@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CellValue, DataSource, ID, Page } from "../types";
 import { queryKeys } from "../lib/queryKeys";
 import { fetchDataSources, fetchDataSource } from "../api/data-sources";
@@ -60,11 +60,23 @@ export function useDataSourceByPage(pageId: ID | null) {
   return useDataSourcesBase(select);
 }
 
+// Seeded from the list of databases (which the editor already holds, and
+// which is saved on the device), like usePage is from the pages list: a
+// database shows its toolbar, tabs and columns right away instead of waiting
+// on its own fetch. The list's fetch time is passed along, so a stale seed
+// still refetches as soon as the network allows.
 export function useDataSource(id: ID | null) {
+  const qc = useQueryClient();
+  const listKey = queryKeys.dataSources.lists();
   return useQuery({
     queryKey: queryKeys.dataSources.detail(id ?? ""),
     queryFn: () => fetchDataSource(id!),
     enabled: !!id,
+    initialData: () =>
+      id
+        ? qc.getQueryData<DataSource[]>(listKey)?.find((s) => s.id === id)
+        : undefined,
+    initialDataUpdatedAt: () => qc.getQueryState(listKey)?.dataUpdatedAt,
   });
 }
 
