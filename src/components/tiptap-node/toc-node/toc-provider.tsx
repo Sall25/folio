@@ -12,6 +12,12 @@ import {
   TocUIStateContext,
 } from "./toc-context";
 import { useActivePageState } from "src/features/pages/context/active-page-context";
+import {
+  linksToBlock,
+  restoreScroll,
+  saveScrollPosition,
+  savedScrollPosition,
+} from "./scroll-restore";
 
 function normalizeDepths(items: TocItem[]): number[] {
   if (!items.length) return [];
@@ -26,7 +32,6 @@ function normalizeDepths(items: TocItem[]): number[] {
 }
 
 const ACTIVE_HEADING_KEY = "editor-active-heading";
-const SCROLL_POSITION_KEY = "editor-scroll-position";
 
 const getScrollContainer = () =>
   document.querySelector(".simple-editor-main") as HTMLElement | null;
@@ -45,19 +50,6 @@ const saveActiveHeading = (pageId: string, headingId: string) => {
   localStorage.setItem(ACTIVE_HEADING_KEY, JSON.stringify(cache));
 };
 
-const getScrollCache = (): Record<string, number> => {
-  try {
-    return JSON.parse(localStorage.getItem(SCROLL_POSITION_KEY) ?? "{}");
-  } catch {
-    return {};
-  }
-};
-
-const saveScrollPosition = (pageId: string, scroll: number) => {
-  const cache = getScrollCache();
-  cache[pageId] = scroll;
-  localStorage.setItem(SCROLL_POSITION_KEY, JSON.stringify(cache));
-};
 
 export function TocProvider({ children }: { children: React.ReactNode }) {
   const [tocContent, setTocContent] = useState<TocItem[]>([]);
@@ -121,13 +113,15 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
     setActiveId(current);
   }, [tocContent]);
 
-  // save heading and scroll on scroll
+  // save heading and scroll on scroll — only once this page is back where
+  // it was left: until then the scroll events are the old page's content
+  // going away and the new one's coming in, not the person.
   useEffect(() => {
     const container = getScrollContainer();
     if (!container) return;
     const handler = () => {
       computeActiveHeading();
-      if (activePageId)
+      if (activePageId && hasRestoredRef.current === activePageId.toString())
         saveScrollPosition(activePageId.toString(), container.scrollTop);
     };
     container.addEventListener("scroll", handler);
@@ -149,43 +143,71 @@ export function TocProvider({ children }: { children: React.ReactNode }) {
     saveActiveHeading(activePageId.toString(), activeId);
   }, [activeId, activePageId]);
 
-  // restore scroll on page switch
+  // restore scroll on page switch: where it was left on this device (or,
+  // saved before that was kept, the heading it was at; else the top), once
+  // the page's own content is on screen, holding it there while the page
+  // fills in. scroll-restore.ts has the why.
   useEffect(() => {
     if (activePageId === null) return;
-    if (hasRestoredRef.current === activePageId) return;
+    const pageId = activePageId.toString();
+    if (hasRestoredRef.current === pageId) return;
+    hasRestoredRef.current = null;
 
-    const savedHeadingId = getActiveHeadingCache()[activePageId];
-    const savedScroll = getScrollCache()[activePageId];
+    const container = getScrollContainer();
+    if (!container) return;
+    const done = () => {
+      hasRestoredRef.current = pageId;
+    };
+    if (linksToBlock(window.location.hash)) {
+      done();
+      return;
+    }
+
+    const savedScroll = savedScrollPosition(pageId);
+    const savedHeadingId = getActiveHeadingCache()[pageId];
     const topOffset = 60;
 
-    requestAnimationFrame(() => {
-      const container = getScrollContainer();
-      if (!container) return;
-
-      if (!savedHeadingId) {
-        container.scrollTo({ top: 0, behavior: "smooth" });
-        hasRestoredRef.current = activePageId;
-        return;
-      }
-
-      const el = document.getElementById(savedHeadingId);
-      if (el) {
-        const y =
+    const restore = restoreScroll(container, {
+      target: () => {
+        // The new page's editor, not the old one or the loading skeleton.
+        const content = container.querySelector(
+          `.simple-editor-content[data-page-id="${CSS.escape(pageId)}"]`,
+        );
+        if (!content) return null;
+        if (savedScroll !== undefined) return savedScroll;
+        if (!savedHeadingId) return 0;
+        const el = document.getElementById(savedHeadingId);
+        if (!el) return 0;
+        return (
           el.getBoundingClientRect().top -
           container.getBoundingClientRect().top +
           container.scrollTop -
-          topOffset;
-        container.scrollTo({ top: y, behavior: "smooth" });
-        hasRestoredRef.current = activePageId.toString();
-        return;
-      }
-
-      if (savedScroll !== undefined) {
-        container.scrollTo({ top: savedScroll, behavior: "smooth" });
-      }
-      hasRestoredRef.current = activePageId.toString();
+          topOffset
+        );
+      },
+      onEnd: done,
     });
-  }, [activePageId, tocContent]);
+
+    // The person scrolling, clicking or typing takes over.
+    const takeOver = () => restore.cancel();
+    const opts = { passive: true, capture: true } as const;
+    container.addEventListener("wheel", takeOver, opts);
+    container.addEventListener("touchstart", takeOver, opts);
+    container.addEventListener("pointerdown", takeOver, opts);
+    window.addEventListener("keydown", takeOver, opts);
+    return () => {
+      container.removeEventListener("wheel", takeOver, opts);
+      container.removeEventListener("touchstart", takeOver, opts);
+      container.removeEventListener("pointerdown", takeOver, opts);
+      window.removeEventListener("keydown", takeOver, opts);
+      // Left before it finished: nothing was restored here, so nothing of
+      // this page gets saved from the next page's scrolling either.
+      if (!restore.done) {
+        restore.cancel();
+        if (hasRestoredRef.current === pageId) hasRestoredRef.current = null;
+      }
+    };
+  }, [activePageId]);
 
   // Headings changed (added, removed, renamed): recompute once the DOM has
   // them. tocContent drives computeActiveHeading, so no editor listener.

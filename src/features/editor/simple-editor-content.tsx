@@ -155,6 +155,9 @@ const EditorContentMemo = React.memo(function EditorContentMemo({
     <EditorPageContext.Provider value={activePage?.id ?? null}>
       <EditorContent
         editor={editor}
+        // Lets the scroll restore (toc-provider) tell this page's content
+        // from the previous page's or the loading skeleton.
+        data-page-id={activePage?.id}
         data-size={activePage?.settings.width}
         data-text={activePage?.settings.text}
         data-locked={activePage?.settings.locked}
