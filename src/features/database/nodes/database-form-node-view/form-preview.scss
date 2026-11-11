@@ -1,0 +1,24 @@
+// The form builder's Preview, in the center modal (page-create-modal.scss).
+.form-preview {
+  &__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px 0 18px;
+  }
+
+  &__label {
+    font-size: 13px;
+    color: var(--tt-text-secondary);
+  }
+
+  // The fill page covers the window on its own; here it's the modal's body.
+  .form-page {
+    position: static;
+    inset: auto;
+    z-index: auto;
+    background: transparent;
+    padding: 8px 16px 40px;
+  }
+}

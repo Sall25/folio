@@ -1,15 +1,7 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { NodeViewContent } from "@tiptap/react";
-import { useNavigate } from "@tanstack/react-location";
 import { useTranslation } from "react-i18next";
-import {
-  ArrowDown,
-  ArrowUp,
-  Link,
-  Plus,
-  Settings2,
-  Trash2,
-} from "src/components/icons";
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "src/components/icons";
 import type { JSONContent } from "@tiptap/react";
 import {
   DEFAULT_CONFIGS,
@@ -29,10 +21,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "src/components/tiptap-ui-primitive/popover";
-import { useToast } from "src/features/shell/toast";
-import { formPath, formUrl } from "src/api/forms";
 import { useDatabaseContext } from "../../context/database-context";
 import { FormOptionsPopover } from "./form-options-popover";
+import { onNewQuestionRequest } from "./new-question-event";
 import { useDataSource } from "../../hooks/use-data-source";
 import { FormQuestionInput } from "../../forms/form-question-input";
 import { FormDescription } from "../../forms/form-description";
@@ -56,16 +47,12 @@ const keepKeys = { onKeyDownCapture: stop, onMouseDown: stop };
 
 // A form view: build the form here (its questions are the database's
 // properties); people fill it in at /form/<source>/<view>, and each answer
-// becomes a row.
+// becomes a row. Preview and Share form are on the toolbar (form-share),
+// its settings in View options.
 function DatabaseFormNodeViewImpl() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { show } = useToast();
-  const { db, source, sortedRecords, title: dbTitle, attrs } =
-    useDatabaseContext();
-  const { updatePropertiesAsync, registerViewsAsync } = useDataSource(
-    source?.id,
-  );
+  const { db, source, title: dbTitle, attrs } = useDatabaseContext();
+  const { updatePropertiesAsync } = useDataSource(source?.id);
   const [addOpen, setAddOpen] = useState(false);
 
   const view = db.activeView as FormView;
@@ -79,21 +66,8 @@ function DatabaseFormNodeViewImpl() {
     () => (view.questions ?? []).filter((q) => byId.has(q.propertyId)),
     [view.questions, byId],
   );
-  const answers = useMemo(
-    () =>
-      sortedRecords.filter(
-        (r) =>
-          (r.settings as { formViewId?: string } | undefined)?.formViewId ===
-          view.id,
-      ).length,
-    [sortedRecords, view.id],
-  );
-  const recordsWho = properties.some(
-    (p) => p.config.type === "person" && p.config.default === "me",
-  );
-
   // The view with edits not rendered yet (a field's blur patches right
-  // before "Open form" is clicked), so the fill page reads the latest.
+  // before Preview or Share form is used), so patches build on the latest.
   const latest = useRef(view);
   useEffect(() => {
     latest.current = view;
@@ -117,6 +91,11 @@ function DatabaseFormNodeViewImpl() {
       if (descTimer.current) clearTimeout(descTimer.current);
     },
     [],
+  );
+  // "New question" in View options opens the question menu.
+  useEffect(
+    () => onNewQuestionRequest(view.id, () => setAddOpen(true)),
+    [view.id],
   );
   const setQuestions = (next: FormQuestion[]) => patch({ questions: next });
   const updateQuestion = (propertyId: ID, next: Partial<FormQuestion>) =>
@@ -168,70 +147,9 @@ function DatabaseFormNodeViewImpl() {
       !questions.some((q) => q.propertyId === p.id),
   );
 
-  const open = !view.closed;
-
-  const copyLink = () => {
-    if (!source) return;
-    const url = formUrl(source.id, view.id);
-    navigator.clipboard
-      .writeText(url)
-      .then(() => show(t("database.form.linkCopied"), "success"))
-      .catch(() => show(url, "info"));
-  };
-
   return (
     <div className="db-form" contentEditable={false}>
       <div className="db-form__main">
-        <div className="db-form__bar">
-          <span className="db-form__answers">
-            <strong>{answers}</strong>{" "}
-            {t("database.form.answerCount", { count: answers })}
-            {!open && <> · {t("database.form.closedShort")}</>}
-          </span>
-          <span className="db-form__bar-actions">
-            {!locked && (
-              <Button
-                variant="ghost"
-                size="small"
-                onClick={() => db.openViewOptionsAt({ type: "layout" })}
-              >
-                <Settings2 className="tiptap-button-icon" size={14} />
-                <span className="tiptap-button-text">
-                  {t("database.form.settings")}
-                </span>
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="small"
-              disabled={!source}
-              onClick={async () => {
-                if (!source) return;
-                // The fill page reads the saved copy of the view: save it first.
-                await registerViewsAsync([latest.current]).catch(() => {});
-                navigate({ to: formPath(source.id, view.id) });
-              }}
-            >
-              <span className="tiptap-button-text">
-                {t("database.form.openForm")}
-              </span>
-            </Button>
-            <Button
-              variant="primary"
-              size="small"
-              onClick={copyLink}
-              disabled={!source}
-            >
-              <Link className="tiptap-button-icon" size={14} />
-              <span className="tiptap-button-text">
-                {t("database.form.copyLink")}
-              </span>
-            </Button>
-          </span>
-        </div>
-        {!recordsWho && !locked && (
-          <div className="db-form__note">{t("database.form.whoNote")}</div>
-        )}
         <div className="db-form__card db-form__head">
           <input
             key={`title-${view.id}`}

@@ -429,7 +429,7 @@ export function DatabaseNodeView({
         <div className="top-level-block">
           <DataSourcePicker
             viewType={attrs.views[0]?.type ?? "table"}
-            onSelect={(sourceId, pageId, isLinked, savedView) =>
+            onSelect={(sourceId, pageId, isLinked, savedView, moreViews) =>
               updateAttributes({
                 ...attrs,
                 sourceId,
@@ -437,7 +437,10 @@ export function DatabaseNodeView({
                 isLinked: !!isLinked,
                 title: "",
                 ...(savedView
-                  ? { views: [savedView], activeViewId: savedView.id }
+                  ? {
+                      views: [savedView, ...(moreViews ?? [])],
+                      activeViewId: savedView.id,
+                    }
                   : {}),
               })
             }

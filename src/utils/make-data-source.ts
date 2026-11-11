@@ -23,6 +23,23 @@ function defaultProperties(
       config: structuredClone(DEFAULT_CONFIGS.status),
       width: 160,
     });
+  } else if (viewType === "form") {
+    // A form's answers: who sent each one (set to the person answering) and
+    // when. "Anonymous responses" (Share form) takes the first away.
+    properties.push(
+      {
+        id: crypto.randomUUID(),
+        name: "Respondent",
+        config: { ...structuredClone(DEFAULT_CONFIGS.person), default: "me" },
+        width: 180,
+      },
+      {
+        id: crypto.randomUUID(),
+        name: "Submission time",
+        config: { type: "created_time" },
+        width: 180,
+      },
+    );
   } else if (viewType === "calendar" || viewType === "timeline") {
     properties.push({
       id: crypto.randomUUID(),

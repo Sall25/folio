@@ -1,0 +1,41 @@
+// Share form: who can fill it in, anonymous answers, the link.
+.form-share {
+  width: min(380px, 92vw);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &__note {
+    padding: 0 8px 6px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--tt-text-secondary);
+  }
+
+  &__link {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 4px;
+    border: 1px solid var(--tt-border-color);
+    border-radius: 8px;
+  }
+
+  &__url {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--tt-text-secondary);
+    font: inherit;
+    font-size: 13px;
+    padding: 4px 6px;
+    text-overflow: ellipsis;
+  }
+}
+
+.form-toolbar__preview {
+  border: 1px solid var(--tt-border-color);
+}

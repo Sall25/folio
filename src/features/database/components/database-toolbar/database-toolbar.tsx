@@ -15,6 +15,7 @@ import type {
 } from "src/types";
 import { type FilterGroup } from "src/types";
 import { ViewOptionsPopover } from "./view-options-popover";
+import { FormToolbarActions } from "../../nodes/database-form-node-view/form-share";
 import { DatabaseViewTabs } from "../database-view-tabs/database-view-tabs";
 import { FilterControl } from "./filter-control";
 import { SortControl } from "./sort-control";
@@ -72,6 +73,9 @@ function DatabaseToolbarImpl() {
 
   const locked = !!attrs.locked;
   const activeView = getActiveView(attrs);
+  // A form builder: no rows to search, filter, sort or add here; Preview and
+  // Share form instead.
+  const isForm = activeView?.type === "form";
   const filters = activeView?.filters ?? EMPTY_FILTERS;
   const sorts = activeView?.sorts ?? EMPTY_SORTS;
   const activeFilterCount = totalFilterRules(filters);
@@ -214,7 +218,7 @@ function DatabaseToolbarImpl() {
                 aria-hidden={collapsed}
               >
                 {/* View-config controls — hidden when locked. */}
-                {!locked && (
+                {!locked && !isForm && (
                   <>
                     <NoDatePanel />
                     <SearchButton db={db} />
@@ -265,20 +269,25 @@ function DatabaseToolbarImpl() {
 
               {/* New record + template dropdown — available even when locked. */}
 
-              <NewRecordButton
-                collapsed={collapsed}
-                locked={locked}
-                templates={templates}
-                defaultTemplateId={defaultTemplateId}
-                open={templateOpen}
-                onOpenChange={onTemplateOpenChange}
-                onNewPage={handleNewPage}
-                onPickTemplate={onPickTemplate}
-                onOpenTemplate={onOpenTemplate}
-                onDeleteTemplate={onDeleteTemplate}
-                onCreateTemplate={onCreateTemplate}
-                onSetDefault={onSetDefault}
-              />
+              {isForm && activeView?.type === "form" && (
+                <FormToolbarActions view={activeView} />
+              )}
+              {!isForm && (
+                <NewRecordButton
+                  collapsed={collapsed}
+                  locked={locked}
+                  templates={templates}
+                  defaultTemplateId={defaultTemplateId}
+                  open={templateOpen}
+                  onOpenChange={onTemplateOpenChange}
+                  onNewPage={handleNewPage}
+                  onPickTemplate={onPickTemplate}
+                  onOpenTemplate={onOpenTemplate}
+                  onDeleteTemplate={onDeleteTemplate}
+                  onCreateTemplate={onCreateTemplate}
+                  onSetDefault={onSetDefault}
+                />
+              )}
             </CardItemGroup>
           </CardItemGroup>
         </div>

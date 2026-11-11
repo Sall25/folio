@@ -476,6 +476,7 @@ export function getSlashCommands(t: TFunction): SlashCommand[] {
         ["list", "listView", List],
         ["calendar", "calendarView", Calendar],
         ["timeline", "timelineView", ChartBar],
+        ["form", "formView", ListChecks],
       ] as const
     ).map(([type, key, icon]) => ({
       id: `database-${type}`,

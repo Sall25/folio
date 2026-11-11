@@ -26,11 +26,26 @@ function idsFromPath(pathname: string): { sourceId: ID; viewId: ID } | null {
 // /form/<sourceId>/<viewId>: a form to fill in. The server decides whether
 // you can answer it (get_form); your answer becomes a row only you and the
 // database's owner can see (submit_form_response).
-export function FormPage() {
+//
+// Also shown inside the app, as the form builder's Preview (FormPreview):
+// given the ids, with Close where the page would leave.
+export function FormPage({
+  sourceId,
+  viewId,
+  onClose,
+}: { sourceId?: ID; viewId?: ID; onClose?: () => void } = {}) {
   const { t } = useTranslation();
   // Plain location: this page also opens outside the app's router, for
   // people who aren't signed in (App.tsx).
-  const ids = idsFromPath(window.location.pathname);
+  const ids =
+    sourceId && viewId
+      ? { sourceId, viewId }
+      : idsFromPath(window.location.pathname);
+  const embedded = !!onClose;
+  const leave = () => (onClose ? onClose() : window.location.assign("/"));
+  const leaveLabel = embedded
+    ? t("database.form.close")
+    : t("database.form.backHome");
 
   const form = useQuery({
     queryKey: ["form", ids?.sourceId, ids?.viewId],
@@ -39,7 +54,10 @@ export function FormPage() {
       Promise.race([
         getForm(ids!.sourceId, ids!.viewId),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(t("database.form.timeout"))), 15_000),
+          setTimeout(
+            () => reject(new Error(t("database.form.timeout"))),
+            15_000,
+          ),
         ),
       ]),
     enabled: !!ids,
@@ -109,8 +127,8 @@ export function FormPage() {
                 {t("database.form.seeAnswer")}
               </Button>
             )}
-            <Button variant="ghost" onClick={() => window.location.assign("/")}>
-              {t("database.form.backHome")}
+            <Button variant="ghost" onClick={leave}>
+              {leaveLabel}
             </Button>
           </div>
         </div>
@@ -125,7 +143,9 @@ export function FormPage() {
         <div className="form-page__column">
           <div className="form-page__card form-page__state">
             <div className="form-page__spinner" aria-hidden />
-            <p className="form-page__description">{t("database.form.loading")}</p>
+            <p className="form-page__description">
+              {t("database.form.loading")}
+            </p>
           </div>
         </div>
       </div>
@@ -135,16 +155,20 @@ export function FormPage() {
       <div className="form-page">
         <div className="form-page__column">
           <div className="form-page__card form-page__state">
-            <h1 className="form-page__title">{t("database.form.loadFailed")}</h1>
+            <h1 className="form-page__title">
+              {t("database.form.loadFailed")}
+            </h1>
             <p className="form-page__description">
-              {form.error instanceof Error ? form.error.message : String(form.error)}
+              {form.error instanceof Error
+                ? form.error.message
+                : String(form.error)}
             </p>
             <div className="form-page__actions">
               <Button variant="primary" onClick={() => void form.refetch()}>
                 {t("database.form.retry")}
               </Button>
-              <Button variant="ghost" onClick={() => window.location.assign("/")}>
-                {t("database.form.backHome")}
+              <Button variant="ghost" onClick={leave}>
+                {leaveLabel}
               </Button>
             </div>
           </div>
@@ -156,7 +180,9 @@ export function FormPage() {
       <div className="form-page">
         <div className="form-page__column">
           <div className="form-page__card form-page__state">
-            <h1 className="form-page__title">{t("database.form.signInTitle")}</h1>
+            <h1 className="form-page__title">
+              {t("database.form.signInTitle")}
+            </h1>
             <p className="form-page__description">
               {t("database.form.signInHint")}
             </p>
@@ -173,7 +199,8 @@ export function FormPage() {
         </div>
       </div>
     );
-  if (!data) return state(t("database.form.notFound"), t("database.form.notFoundHint"));
+  if (!data)
+    return state(t("database.form.notFound"), t("database.form.notFoundHint"));
   if (rowId)
     return state(
       t("database.form.thanks"),
@@ -184,24 +211,29 @@ export function FormPage() {
   if (data.closed && !preview)
     return state(t("database.form.closedTitle"), t("database.form.closedHint"));
   if (data.answered && data.view.onePerPerson && !data.anonymous && !preview)
-    return state(t("database.form.answeredTitle"), t("database.form.answeredHint"));
+    return state(
+      t("database.form.answeredTitle"),
+      t("database.form.answeredHint"),
+    );
 
   const title = data.view.formTitle || data.databaseTitle;
 
   return (
     <div className="form-page">
       <form className="form-page__column" onSubmit={onSubmit} noValidate>
-        <button
-          type="button"
-          className="form-page__back"
-          onClick={() =>
-            window.history.length > 1
-              ? window.history.back()
-              : window.location.assign("/")
-          }
-        >
-          ← {t("database.form.back")}
-        </button>
+        {!embedded && (
+          <button
+            type="button"
+            className="form-page__back"
+            onClick={() =>
+              window.history.length > 1
+                ? window.history.back()
+                : window.location.assign("/")
+            }
+          >
+            ← {t("database.form.back")}
+          </button>
+        )}
         <div className="form-page__card form-page__head">
           {data.view.closesAt != null && (
             <span className="form-page__eyebrow">

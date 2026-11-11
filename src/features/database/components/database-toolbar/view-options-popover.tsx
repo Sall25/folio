@@ -10,6 +10,7 @@ import {
   ListTree,
   Lock,
   Palette,
+  Plus,
   SlidersHorizontal,
   Trash2,
   Upload,
@@ -60,6 +61,9 @@ import { useDatabaseContext } from "../../context/database-context";
 import { downloadCsv, toCsv } from "../../utils/csv-export";
 import { csvImportStore } from "../../utils/csv-import-store";
 import { SubItemsPanel } from "../sub-items-panel";
+import { FormSettings } from "../../nodes/database-form-node-view/form-settings";
+import { requestNewQuestion } from "../../nodes/database-form-node-view/new-question-event";
+import type { FormView } from "src/types";
 import { subItemPair } from "../../utils/sub-items";
 
 // The delete confirmation is portaled to <body>, outside the options panel:
@@ -315,7 +319,11 @@ function ViewOptionsContent({
   return (
     <Card className="view-options">
       <CardHeader>
-        <CardGroupLabel>{t("database.viewOptions.title")}</CardGroupLabel>
+        <CardGroupLabel>
+          {view.type === "form"
+            ? t("database.form.settings")
+            : t("database.viewOptions.title")}
+        </CardGroupLabel>
         <Spacer orientation="horizontal" />
         {onClose && (
           <Button
@@ -400,119 +408,161 @@ function ViewOptionsContent({
             />
           </CardItemGroup>
 
-          <MenuRow
-            Icon={Layout}
-            label={t("database.viewOptions.layouts")}
-            sub={t(`database.views.${view.type}`)}
-            navigable
-            onClick={() => db.pushPanel({ type: "layout" })}
-            disabled={locked}
-          />
-          <MenuRow
-            Icon={SlidersHorizontal}
-            label={t("database.viewOptions.properties")}
-            sub={t("database.viewOptions.shown", { count: shownCount })}
-            navigable
-            onClick={() => db.pushPanel({ type: "properties" })}
-            disabled={locked}
-          />
-          <MenuRow
-            Icon={ListFilter}
-            label={t("database.viewOptions.filter")}
-            sub={t("database.viewOptions.filtersCount", { count: filterCount })}
-            navigable
-            onClick={() => db.pushPanel({ type: "filter" })}
-            disabled={locked}
-          />
-          <MenuRow
-            Icon={ArrowUpDown}
-            label={t("database.viewOptions.sort")}
-            sub={t("database.viewOptions.sortsCount", { count: sortCount })}
-            navigable
-            onClick={() => db.pushPanel({ type: "sort" })}
-            disabled={locked}
-          />
-          <MenuRow
-            Icon={Group}
-            label={t("database.viewOptions.group")}
-            sub={groupLabel}
-            navigable
-            onClick={() => db.pushPanel({ type: "group" })}
-            disabled={locked}
-          />
-          <MenuRow
-            Icon={Palette}
-            label={t("database.viewOptions.conditionalColor")}
-            sub={t("database.conditionalColor.rulesCount", {
-              count: view.colorRules?.length ?? 0,
-            })}
-            navigable
-            onClick={() => db.pushPanel({ type: "conditional-color" })}
-            disabled={locked}
-          />
-          <MenuRow
-            Icon={ListTree}
-            label={t("database.viewOptions.subItems")}
-            sub={
-              hasSubItems
-                ? t("database.subItems.on")
-                : t("database.subItems.off")
-            }
-            navigable
-            onClick={() => db.pushPanel({ type: "sub-items" })}
-            disabled={locked}
-          />
+          {view.type === "form" ? (
+            // A form builder: only its own settings (who can answer and the
+            // link are in Share form).
+            <>
+              <MenuRow
+                Icon={Plus}
+                label={t("database.form.newQuestion")}
+                onClick={
+                  locked
+                    ? undefined
+                    : () => {
+                        requestNewQuestion(view.id);
+                        (onDone ?? onClose)?.();
+                      }
+                }
+                disabled={locked}
+              />
+              {!locked && (
+                <FormSettings
+                  view={view as FormView}
+                  db={db}
+                  section="answers"
+                />
+              )}
+              <Separator orientation="horizontal" />
+              <MenuRow
+                Icon={Layout}
+                label={t("database.form.source")}
+                sub={title || t("database.picker.newDatabase")}
+                disabled
+              />
+            </>
+          ) : (
+            <>
+              <MenuRow
+                Icon={Layout}
+                label={t("database.viewOptions.layouts")}
+                sub={t(`database.views.${view.type}`)}
+                navigable
+                onClick={() => db.pushPanel({ type: "layout" })}
+                disabled={locked}
+              />
+              <MenuRow
+                Icon={SlidersHorizontal}
+                label={t("database.viewOptions.properties")}
+                sub={t("database.viewOptions.shown", { count: shownCount })}
+                navigable
+                onClick={() => db.pushPanel({ type: "properties" })}
+                disabled={locked}
+              />
+              <MenuRow
+                Icon={ListFilter}
+                label={t("database.viewOptions.filter")}
+                sub={t("database.viewOptions.filtersCount", {
+                  count: filterCount,
+                })}
+                navigable
+                onClick={() => db.pushPanel({ type: "filter" })}
+                disabled={locked}
+              />
+              <MenuRow
+                Icon={ArrowUpDown}
+                label={t("database.viewOptions.sort")}
+                sub={t("database.viewOptions.sortsCount", { count: sortCount })}
+                navigable
+                onClick={() => db.pushPanel({ type: "sort" })}
+                disabled={locked}
+              />
+              <MenuRow
+                Icon={Group}
+                label={t("database.viewOptions.group")}
+                sub={groupLabel}
+                navigable
+                onClick={() => db.pushPanel({ type: "group" })}
+                disabled={locked}
+              />
+              <MenuRow
+                Icon={Palette}
+                label={t("database.viewOptions.conditionalColor")}
+                sub={t("database.conditionalColor.rulesCount", {
+                  count: view.colorRules?.length ?? 0,
+                })}
+                navigable
+                onClick={() => db.pushPanel({ type: "conditional-color" })}
+                disabled={locked}
+              />
+              <MenuRow
+                Icon={ListTree}
+                label={t("database.viewOptions.subItems")}
+                sub={
+                  hasSubItems
+                    ? t("database.subItems.on")
+                    : t("database.subItems.off")
+                }
+                navigable
+                onClick={() => db.pushPanel({ type: "sub-items" })}
+                disabled={locked}
+              />
 
-          <Separator orientation="horizontal" />
+              <Separator orientation="horizontal" />
 
-          <MenuRow
-            Icon={Lock}
-            label={
-              locked
-                ? t("database.viewOptions.unlock")
-                : t("database.viewOptions.lock")
-            }
-            onClick={() => db.toggleLock()}
-          />
+              <MenuRow
+                Icon={Lock}
+                label={
+                  locked
+                    ? t("database.viewOptions.unlock")
+                    : t("database.viewOptions.lock")
+                }
+                onClick={() => db.toggleLock()}
+              />
 
-          <MenuRow
-            Icon={LinkIcon}
-            label={
-              copied
-                ? t("database.viewOptions.copied")
-                : t("database.viewOptions.copyLink")
-            }
-            onClick={handleCopy}
-          />
-          <MenuRow
-            Icon={Upload}
-            label={t("database.viewOptions.importCsv")}
-            onClick={canImport ? handleImportCsv : undefined}
-            disabled={!canImport}
-          />
-          <MenuRow
-            Icon={Download}
-            label={t("database.viewOptions.exportCsv")}
-            onClick={handleExportCsv}
-          />
-          {/* The copy becomes the active view (duplicateView switches to it). */}
-          <MenuRow
-            Icon={Copy}
-            label={t("database.viewOptions.duplicate")}
-            onClick={
-              locked
-                ? undefined
-                : () => {
-                    db.duplicateView(view.id);
-                    (onDone ?? onClose)?.();
-                  }
-            }
-            disabled={locked}
-          />
+              <MenuRow
+                Icon={LinkIcon}
+                label={
+                  copied
+                    ? t("database.viewOptions.copied")
+                    : t("database.viewOptions.copyLink")
+                }
+                onClick={handleCopy}
+              />
+              <MenuRow
+                Icon={Upload}
+                label={t("database.viewOptions.importCsv")}
+                onClick={canImport ? handleImportCsv : undefined}
+                disabled={!canImport}
+              />
+              <MenuRow
+                Icon={Download}
+                label={t("database.viewOptions.exportCsv")}
+                onClick={handleExportCsv}
+              />
+              {/* The copy becomes the active view (duplicateView switches to it). */}
+              <MenuRow
+                Icon={Copy}
+                label={t("database.viewOptions.duplicate")}
+                onClick={
+                  locked
+                    ? undefined
+                    : () => {
+                        db.duplicateView(view.id);
+                        (onDone ?? onClose)?.();
+                      }
+                }
+                disabled={locked}
+              />
+            </>
+          )}
           {canDelete && (
             <MenuRow
               Icon={Trash2}
-              label={t("database.viewOptions.delete")}
+              label={
+                view.type === "form"
+                  ? t("database.form.deleteForm")
+                  : t("database.viewOptions.delete")
+              }
               onClick={locked ? undefined : () => setConfirmDelete(true)}
               disabled={locked}
               danger

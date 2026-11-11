@@ -64,6 +64,8 @@ export function DataSourcePicker({
     pageId?: ID,
     isLinked?: boolean,
     savedView?: SavedView,
+    /** More views after savedView (a form's Responses table). */
+    moreViews?: SavedView[],
   ) => void;
 }) {
   const { t } = useTranslation();
@@ -103,15 +105,28 @@ export function DataSourcePicker({
 
       // The view the block was inserted as, made with the new properties (a
       // board groups by its Status, a calendar uses its Date).
+      // A form comes as a pair: the builder, and the answers as a table.
+      const isForm = viewType === "form";
       onSelect(
         source.id,
         undefined,
         false,
         makeDefaultView(
           viewType,
-          t(`database.views.${viewType}`),
+          isForm
+            ? t("database.form.builderView")
+            : t(`database.views.${viewType}`),
           source.properties,
         ),
+        isForm
+          ? [
+              makeDefaultView(
+                "table",
+                t("database.form.responsesView"),
+                source.properties,
+              ),
+            ]
+          : undefined,
       );
     } finally {
       setCreating(false);
