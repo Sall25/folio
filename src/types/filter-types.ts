@@ -187,6 +187,7 @@ export interface ViewFilter {
 // ── Operator metadata ──────────────────────────────────────────────────────
 
 export const OPERATORS_FOR_TYPE: Record<PropertyType, FilterOperator[]> = {
+  files: ["is_empty", "is_not_empty"],
   title: [
     "contains",
     "does_not_contain",

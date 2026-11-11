@@ -103,7 +103,8 @@ export type PropertyType =
   | "email"
   | "phone"
   | "edited_by"
-  | "unique_id";
+  | "unique_id"
+  | "files";
 
 export type ViewType =
   | "table"
@@ -111,7 +112,8 @@ export type ViewType =
   | "list"
   | "gallery"
   | "calendar"
-  | "timeline";
+  | "timeline"
+  | "form";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Property config primitives
@@ -242,7 +244,8 @@ export type PropertyConfig =
       type: "unique_id";
       /** Shown before the number: "TASK" → TASK-12. */
       prefix?: string;
-    };
+    }
+  | { type: "files" };
 
 // Extract helper — used throughout cell nodes and views
 export type ConfigOf<T extends PropertyType> = Extract<
@@ -275,6 +278,18 @@ export interface PersonValue {
   id: ID;
   name: string;
   avatarUrl?: string;
+}
+
+/** One file in a Files & media cell: uploaded to Folio, or a link. */
+export interface FileValue {
+  id: ID;
+  name: string;
+  url: string;
+  /** "upload": a file in Folio's uploads; "link": an address pasted in. */
+  kind: "upload" | "link";
+  /** Bytes, for uploads. */
+  size?: number;
+  mimeType?: string;
 }
 
 /** One relation link */
@@ -311,6 +326,8 @@ export type CellValueMap = {
   /** The row's number, given once by the database (migration 045) and never
    *  reused; the prefix is the property's, added on display. */
   unique_id: number | null; // read-only
+  /** Files & media: uploads and links, in order. */
+  files: FileValue[];
 };
 
 export type CellValue<T extends PropertyType = PropertyType> = CellValueMap[T];
@@ -426,6 +443,8 @@ interface BaseView {
   /** Conditional color: rows (or, in a table, cells) painted by rules. The
    *  first matching rule wins. */
   colorRules?: ColorRule[];
+  /** Hide the people bar (quick filter by assignee) above this view. */
+  hidePeopleBar?: boolean;
 }
 
 /** One conditional-color rule: when a record matches `rule` (a filter
@@ -455,6 +474,9 @@ export interface TableView extends BaseView {
   showVerticalLines?: boolean;
   /** Layout › Load limit: rows shown before "Load more". 0 = all; absent = 50. */
   loadLimit?: number;
+  /** On a phone, keep the scrolling grid (title column frozen) instead of
+   *  showing the rows as a list. */
+  phoneTable?: boolean;
 }
 
 export interface ListView extends BaseView {
@@ -476,6 +498,9 @@ export interface BoardView extends BaseView {
   cardSize: "small" | "medium" | "large";
   coverFit: "cover" | "contain";
   cardPreview?: "none" | "cover" | "content";
+  /** With cardPreview "cover": a Files & media property whose first image
+   *  is the card's cover, instead of the page's cover. */
+  coverPropertyId?: ID;
   /** Record ids in user-arranged order. Applied after `sorts`; ids not present
    *  fall through in sorted order. Flat across columns — per-column order is
    *  derived by filtering this to the column's records. */
@@ -519,13 +544,54 @@ export interface TimelineView extends BaseView {
   timeframe: "day" | "week" | "month" | "quarter" | "year";
   showTable: boolean;
 }
+/** One question of a form: the property its answer fills. */
+export interface FormQuestion {
+  propertyId: ID;
+  /** The question as asked; unset = the property's name. The property keeps
+   *  its own (column) name. */
+  label?: string;
+  required?: boolean;
+  /** Help under the question. */
+  description?: string;
+  /** Shown only when an earlier select, status or checkbox question has one
+   *  of these answers (option ids, status item ids, "true" / "false"). */
+  showIf?: { propertyId: ID; values: string[] } | null;
+}
+
+/** Who can answer a form. */
+export type FormAudience =
+  | { kind: "workspace" }
+  | { kind: "groups"; groupIds: ID[] }
+  /** Anyone with the link, signed in or not (anonymous when not). */
+  | { kind: "link" };
+
+/** A form: a view whose questions are the database's properties. Each answer
+ *  becomes a row, created by the server (submit_form_response), owned by the
+ *  person who answered and visible to them and the database's owner only. */
+export interface FormView extends BaseView {
+  type: "form";
+  /** The heading on the form; unset = the database's title. */
+  formTitle?: string;
+  /** Rich text (a document); older forms kept plain text. */
+  formDescription?: JSONContent | string;
+  questions: FormQuestion[];
+  audience: FormAudience;
+  /** Epoch ms; no answers after it. */
+  closesAt?: number | null;
+  /** One answer per person (the default). */
+  onePerPerson?: boolean;
+  /** Closed by hand, whatever the date. */
+  closed?: boolean;
+}
+
 export type DatabaseView =
   | TableView
   | BoardView
   | ListView
   | GalleryView
   | CalendarView
-  | TimelineView;
+  | TimelineView
+  | FormView;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UI state — ephemeral, never stored in the doc
@@ -541,6 +607,8 @@ export interface DatabaseUIState {
   openRecordId: ID | null;
   openPropertyId: ID | null;
   searchQuery: string;
+  /** The people bar's quick filter: person ids (and "__unassigned"). */
+  personFilter: string[];
   panelStack: PanelView[];
   viewOptionsOpen: boolean;
 }
@@ -1001,6 +1069,9 @@ export type Thread = {
   pageId: ID;
   /** Set on suggestion threads; absent / null on plain comment threads. */
   suggestion?: ThreadSuggestion | null;
+  /** A comment on a database cell: the row page's thread (anchor null),
+   *  about this property. */
+  propertyId?: ID | null;
 };
 
 export type MeasuredThread = {
@@ -1021,7 +1092,9 @@ export type NotificationType =
   | "comment-mention"
   | "chat-mention"
   /** Someone asked you to look at a database row (its row menu). */
-  | "row-look";
+  | "row-look"
+  /** Someone added you to a row's person property. */
+  | "row-assign";
 
 export interface Notification {
   id: string;

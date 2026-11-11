@@ -11,6 +11,9 @@
   border-bottom: 1px solid var(--tt-border-color);
   font-size: 14px;
   line-height: 1.5;
+  // The rows stack below a width (end of file): the panel's, not the
+  // screen's, so a narrow peek stacks too.
+  container: record-props / inline-size;
 }
 
 .record-prop-panel__row {
@@ -106,5 +109,18 @@
       background: var(--tt-button-hover-bg-color) !important;
       color: var(--tt-text-primary);
     }
+  }
+}
+// Narrow: each name above its value instead of beside it.
+@container record-props (max-width: 480px) {
+  .record-prop-panel__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding-bottom: 4px;
+  }
+
+  .record-prop-panel__label {
+    height: 24px;
+    font-size: 12px;
   }
 }

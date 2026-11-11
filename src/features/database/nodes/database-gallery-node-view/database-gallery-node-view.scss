@@ -2,13 +2,25 @@
 // card size (--db-gallery-min, set in database-gallery-node-view.tsx).
 .db-gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--db-gallery-min, 260px), 1fr));
+  // The minimum never exceeds the room: a 300px card on a 280px page made a
+  // column wider than the page.
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(var(--db-gallery-min, 260px), 100%), 1fr)
+  );
   gap: 16px;
   align-items: stretch; // every card in a row, and New page, as tall as the tallest
   align-content: start; // rows keep their content height; extra space stays below the grid
   position: relative;
   width: var(--db-editor-width);
+  max-width: var(--db-visible-width, 100%);
   margin-top: 5px;
+}
+
+// On a phone every card size makes two columns.
+.db-node[data-db-size="phone"] .db-gallery {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .db-board-card__props {

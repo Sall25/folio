@@ -21,6 +21,9 @@ import { CheckboxCellDisplay } from "src/features/database/primitives/checkbox-c
 import { MultiSelectCellDisplay } from "src/features/database/primitives/multi-select-cell-display";
 import { DateCellDisplay } from "src/features/database/primitives/date-cell-display";
 import { EmailCellDisplay } from "src/features/database/primitives/email-cell-display";
+import { FilesCellDisplay } from "src/features/database/primitives/files-cell-display";
+import { usePersonGroups } from "src/features/database/hooks/use-person-groups";
+import { useAssignNotifications } from "src/features/database/hooks/use-assign-notifications";
 import { UrlCellDisplay } from "src/features/database/primitives/url-cell-display";
 import { PhoneCellDisplay } from "src/features/database/primitives/phone-cell-display";
 import { RelationCell } from "src/features/database/components/cells/relation-cell";
@@ -134,6 +137,8 @@ function PropertyRow({
   const iconName = PROPERTY_TYPE_ICONS[prop.config.type];
   const { t } = useTranslation();
   const people = useWorkspacePeople();
+  const personGroups = usePersonGroups();
+  const notifyAssigned = useAssignNotifications();
 
   useFormulaEngineReady();
 
@@ -238,6 +243,15 @@ function PropertyRow({
           />
         );
 
+      case "files":
+        return (
+          <FilesCellDisplay
+            value={(value as CellValueMap["files"]) ?? []}
+            onChange={(v) => onChange(v as CellValue)}
+            large
+          />
+        );
+
       case "phone":
         return (
           <PhoneCellDisplay
@@ -251,8 +265,13 @@ function PropertyRow({
           <PersonCellDisplay
             value={(value as CellValueMap["person"]) ?? []}
             people={people}
-            onChange={(v) => onChange(v as CellValue)}
+            onChange={(v) => {
+              notifyAssigned(page, value as CellValueMap["person"], v);
+              onChange(v as CellValue);
+            }}
             single={prop.config.limit === "single"}
+            groups={personGroups}
+            notifyHint={t("database.assign.notifyHint")}
           />
         );
 

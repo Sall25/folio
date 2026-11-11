@@ -198,3 +198,55 @@ body.db-row-dragging {
     display: none !important;
   }
 }
+
+// ── Phone: the rows as a list ────────────────────────────────────────────────
+// A database with a phone's room shows each row as its title with the first
+// three other visible properties under it (data-slot, set by each cell),
+// unless the view keeps the grid (Layout › Show as table on phones, which
+// also freezes the title column). The grid stays a grid (one column) so the
+// rows keep their sorted places (grid-row).
+.db-node[data-db-size="phone"] .db-table:not([data-phone-grid]) {
+  .db-header-row,
+  .db-calculations,
+  .db-freeze-divider {
+    display: none;
+  }
+
+  .db-node-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .react-renderer.node-databaseRecord {
+    display: flex !important; // a hidden row's inline display wins
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 10px;
+    padding: 8px 0;
+    min-width: 0;
+  }
+
+  .db-node-cell {
+    display: none !important;
+  }
+
+  .db-node-cell[data-slot] {
+    display: flex !important;
+    min-height: 0;
+    border: none !important;
+    position: static !important; // no frozen offsets in a list
+  }
+
+  .db-node-cell[data-slot="title"] {
+    flex: 1 0 100%;
+    font-weight: 500;
+  }
+
+  .db-node-cell[data-slot="meta"] {
+    flex: 0 1 auto;
+    max-width: 48%;
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+  }
+}

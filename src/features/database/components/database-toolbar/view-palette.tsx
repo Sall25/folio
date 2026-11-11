@@ -4,6 +4,7 @@ import {
   Columns3,
   LayoutGrid,
   List,
+  ListChecks,
   Table,
 } from "src/components/icons";
 import type { DatabaseView } from "src/types";
@@ -16,6 +17,7 @@ const VIEW_ICONS = {
   gallery: LayoutGrid,
   calendar: Calendar,
   timeline: ChartGantt,
+  form: ListChecks,
 } as const;
 
 import { useTranslation } from "react-i18next";

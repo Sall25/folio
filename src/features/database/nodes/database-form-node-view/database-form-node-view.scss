@@ -1,0 +1,318 @@
+// The form builder: the questions in a centred column, settings beside them.
+// Below a width it stacks (the database's own width: data-db-size).
+.db-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+  width: var(--db-editor-width, 100%);
+  max-width: var(--db-visible-width, 100%);
+  margin-top: 8px;
+  padding: 16px 0 24px;
+  box-sizing: border-box;
+  color: var(--tt-text-primary);
+  // The editor's text styles don't belong in here.
+  font-size: 14px;
+  line-height: 1.45;
+
+  // Compact answer choices in the settings panel and the previews.
+  .form-choice {
+    min-height: 32px;
+    padding: 0 10px;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .form-input {
+    min-height: 34px;
+    font-size: 14px;
+  }
+
+  &__rows {
+    display: none;
+  }
+
+  &__main {
+    flex: 999 1 420px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__side {
+    flex: 1 1 240px;
+    min-width: 0;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 12px;
+    font-size: 13px;
+    border: 1px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-lg, 12px);
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    border: 1px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-lg, 12px);
+    background: var(--tt-bg-color);
+  }
+
+  &__title,
+  &__question-name,
+  &__help {
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    padding: 2px 0;
+    outline: none;
+
+    &::placeholder {
+      color: var(--tt-text-secondary);
+    }
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  &__description {
+    min-height: 28px;
+    font-size: 15px;
+
+    .form-description__doc {
+      padding: 0;
+      outline: none;
+    }
+  }
+
+  &__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__bar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__question-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__question-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  &__type {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+  }
+
+  &__question-actions {
+    flex: none;
+    display: inline-flex;
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+
+  &__question:hover &__question-actions,
+  &__question:focus-within &__question-actions {
+    opacity: 1;
+  }
+
+  &__help {
+    font-size: 13px;
+    color: var(--tt-text-secondary);
+  }
+
+  &__preview {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    pointer-events: none;
+    opacity: 0.75;
+  }
+
+  &__preview-label {
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--tt-text-secondary);
+  }
+
+  &__question-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    padding-top: 6px;
+    border-top: 1px solid var(--tt-border-color);
+    font-size: 13px;
+  }
+
+  &__check,
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  &__chip {
+    padding: 3px 10px;
+    border: 1px solid var(--tt-border-color);
+    border-radius: 999px;
+    font-size: 13px;
+
+    &:has(input:checked) {
+      border-color: var(--tt-brand-color-500, #2383e2);
+      background: color-mix(in srgb, var(--tt-brand-color-500, #2383e2) 8%, transparent);
+    }
+
+    input {
+      margin: 0;
+    }
+  }
+
+  &__rule {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--tt-text-secondary);
+  }
+
+  &__select {
+    border: 1px solid var(--tt-border-color);
+    border-radius: 6px;
+    padding: 3px 6px;
+    background: var(--tt-bg-color);
+    color: var(--tt-text-primary);
+    font: inherit;
+  }
+
+  &__rule-values {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--tt-text-secondary);
+  }
+
+  &__link-button {
+    border: none;
+    background: none;
+    padding: 0;
+    color: var(--tt-brand-color-500, #2383e2);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  &__add {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border: 1px dashed var(--tt-border-color);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--tt-text-secondary);
+    font: inherit;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--tt-text-primary);
+      background: color-mix(in srgb, var(--tt-text-primary) 4%, transparent);
+    }
+  }
+
+  &__menu-label {
+    padding: 6px 8px 2px;
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+  }
+
+  &__menu-item.tiptap-button {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  &__side-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    min-width: 0;
+  }
+
+  &__side-title {
+    padding: 0;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--tt-text-secondary);
+  }
+
+  &__side-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__answers {
+    font-size: 14px;
+  }
+
+  &__groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--tt-text-secondary);
+  }
+
+  & &__note {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--tt-text-secondary);
+  }
+}
+
+.db-node[data-db-size="phone"] .db-form__side {
+  max-width: none;
+}

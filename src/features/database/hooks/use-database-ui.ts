@@ -23,6 +23,7 @@ export function useDatabaseUI(
     openRecordId: null,
     openPropertyId: null,
     searchQuery: "",
+    personFilter: [],
     panelStack: [{ type: "main" }],
     viewOptionsOpen: false,
   });
@@ -77,6 +78,11 @@ export function useDatabaseUI(
 
   const setSearchQuery = useCallback(
     (q: string) => patchUI({ searchQuery: q }),
+    [patchUI],
+  );
+
+  const setPersonFilter = useCallback(
+    (ids: string[]) => patchUI({ personFilter: ids }),
     [patchUI],
   );
 
@@ -207,6 +213,8 @@ export function useDatabaseUI(
       openRecordId: uiState.openRecordId,
       openPropertyId: uiState.openPropertyId,
       searchQuery: uiState.searchQuery,
+      personFilter: uiState.personFilter,
+      setPersonFilter,
       setEditingCell,
       isCellEditing,
       setOpenRecordId,
@@ -234,6 +242,8 @@ export function useDatabaseUI(
       uiState.openRecordId,
       uiState.openPropertyId,
       uiState.searchQuery,
+      uiState.personFilter,
+      setPersonFilter,
       setEditingCell,
       isCellEditing,
       setOpenRecordId,

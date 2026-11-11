@@ -33,6 +33,8 @@ export function initialCellValue(property: DatabaseProperty): CellValue {
     // ── Empty defaults ──────────────────────────────────────────────────────
     case "relation":
       return []; // no linked records yet
+    case "files":
+      return []; // CellValueMap["files"] = FileValue[]
     case "person":
       return []; // CellValueMap["person"] = PersonValue[]
     case "checkbox":

@@ -38,6 +38,7 @@ import {
   Timer,
   TypeOutline,
   Video,
+  ListChecks,
 } from "src/components/icons";
 import { TodoListIcon, CodeBlockIcon } from "src/components/tiptap-icons";
 import type { Page } from "src/types";
@@ -402,6 +403,24 @@ export function getSlashCommands(t: TFunction): SlashCommand[] {
       description: t("slash.items.pomodoro.description"),
       icon: Timer,
       run: (e) => e.chain().focus().insertPomodoro().run(),
+    },
+    // ─── Live code (HTML / CSS / JS with its result) ────────────
+    {
+      id: "liveCode",
+      type: "command",
+      title: t("slash.items.liveCode.title"),
+      description: t("slash.items.liveCode.description"),
+      icon: Code2,
+      run: (e) => e.chain().focus().insertLiveCode().run(),
+    },
+    // ─── Question (answered by readers) ─────────────────────────
+    {
+      id: "question",
+      type: "command",
+      title: t("slash.items.question.title"),
+      description: t("slash.items.question.description"),
+      icon: ListChecks,
+      run: (e) => e.chain().focus().insertQuestion().run(),
     },
     // ─── Appendix ─────────────────────────────────────────────
     {

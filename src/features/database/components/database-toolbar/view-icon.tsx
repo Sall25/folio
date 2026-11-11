@@ -5,6 +5,7 @@ import {
   Columns3,
   LayoutGrid,
   List,
+  ListChecks,
   Table,
 } from "src/components/icons";
 import { DynamicIcon } from "src/features/pages/cover/dynamic-icon";
@@ -27,6 +28,7 @@ export function ViewIcon({ view }: { view: DatabaseView }) {
       {view.type === "gallery" && <LayoutGrid className="tiptap-button-icon" />}
       {view.type === "calendar" && <Calendar className="tiptap-button-icon" />}
       {view.type === "timeline" && <ChartBar className="tiptap-button-icon" />}
+      {view.type === "form" && <ListChecks className="tiptap-button-icon" />}
     </>
   );
 }

@@ -7,6 +7,7 @@ export function makeThread(opts: {
   anchor: { from: number; to: number } | null;
   status?: ThreadStatus;
   suggestion?: ThreadSuggestion | null;
+  propertyId?: ID | null;
 }): Thread {
   return {
     id: opts.id ?? newId(),
@@ -14,5 +15,6 @@ export function makeThread(opts: {
     anchor: opts.anchor,
     status: opts.status ?? "open",
     ...(opts.suggestion ? { suggestion: opts.suggestion } : {}),
+    ...(opts.propertyId ? { propertyId: opts.propertyId } : {}),
   };
 }

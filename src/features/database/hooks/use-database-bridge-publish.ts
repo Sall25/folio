@@ -22,6 +22,7 @@ import type { CalendarLayout, CalendarPlacement } from "./use-calendar-layout";
 import type { TimelineLayout, TimelinePlacement } from "./use-timeline-layout";
 import { useSession } from "src/hooks/use-session";
 import { usePageTitles } from "./use-page-titles";
+import { frozenPropertyIdFor, useDbSize } from "../utils/db-size";
 import {
   computeRecordColors,
   type RecordColors,
@@ -86,6 +87,8 @@ export function useDatabaseBridgePublish({
     [resolvedRecords, hasSource],
   );
 
+  const dbSize = useDbSize(attrs.id);
+
   const columnWidthByProp = useMemo(() => {
     const out: Record<string, number> = {};
     properties.forEach((p) => {
@@ -112,9 +115,7 @@ export function useDatabaseBridgePublish({
     const hidden = new Set(activeView?.hiddenProperties ?? []);
     const visible = properties.filter((p) => !hidden.has(p.id));
 
-    const frozenId =
-      (activeView as { frozenPropertyId?: string } | undefined)
-        ?.frozenPropertyId ?? null;
+    const frozenId = frozenPropertyIdFor(activeView, dbSize, properties);
     const freezeIndex = frozenId
       ? visible.findIndex((p) => p.id === frozenId)
       : -1;
@@ -127,7 +128,7 @@ export function useDatabaseBridgePublish({
       acc += columnWidthByProp[p.id] ?? 160;
     });
     return out;
-  }, [properties, activeView, columnWidthByProp]);
+  }, [properties, activeView, columnWidthByProp, dbSize]);
 
   // Conditional color: worked out once per change, here, so each row and
   // cell only looks its own colour up. Cells only in a table.

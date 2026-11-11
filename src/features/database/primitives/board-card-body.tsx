@@ -3,6 +3,7 @@ import type {
   CellValue,
   DatabaseProperty,
   DatabaseView,
+  FileValue,
   Page,
 } from "src/types";
 import { BoardCardCover } from "./board-card-cover";
@@ -15,6 +16,7 @@ import type { DragStorage } from "../extensions";
 import { normalizeColor } from "../utils/pill-colors";
 import "./board-card-body.scss";
 import { useCardActions } from "../context";
+import { useAssignToMe } from "../hooks/use-assign-to-me";
 
 // Gallery cover height per card size. A fitted image is as tall as the cover,
 // so a taller cover is also a wider image.
@@ -52,6 +54,7 @@ export function BoardCardBody({
   const [repositioning, setRepositioning] = useState(false);
   const positionRef = useRef<number | null>(null);
   const cardActions = useCardActions();
+  const assignToMe = useAssignToMe(properties, setCellValue)(record);
   const { editor } = useCurrentEditor();
   const fit =
     view.type === "gallery" || view.type === "board" ? view.coverFit : "cover";
@@ -59,8 +62,29 @@ export function BoardCardBody({
     view.type === "gallery" || view.type === "board"
       ? (view.cardLayout ?? "list")
       : "list";
+  // The cover from a Files & media property (Card preview → that
+  // property): its first image, and how many files it holds.
+  const coverPropertyId =
+    view.type === "gallery" || view.type === "board"
+      ? view.coverPropertyId
+      : undefined;
+  const coverFiles = coverPropertyId
+    ? ((record.values?.[coverPropertyId] ?? []) as FileValue[])
+    : null;
+  const filesCover = coverFiles
+    ? {
+        src:
+          coverFiles.find(
+            (f) =>
+              f.mimeType?.startsWith("image/") ||
+              /\.(png|jpe?g|gif|webp|avif|svg)(\?|#|$)/i.test(f.url),
+          )?.url ?? null,
+        count: coverFiles.length,
+      }
+    : undefined;
   // Notion offers Reposition only for an image that fills the cover.
-  const canReposition = !!record.cover?.coverImage && fit !== "contain";
+  const canReposition =
+    !filesCover && !!record.cover?.coverImage && fit !== "contain";
 
   if (!recordId) return null;
 
@@ -111,6 +135,7 @@ export function BoardCardBody({
           <BoardCardCover
             page={record}
             recordId={recordId}
+            files={filesCover}
             height={
               view.type === "gallery"
                 ? GALLERY_COVER_HEIGHT[view.cardSize ?? "medium"]
@@ -141,6 +166,7 @@ export function BoardCardBody({
               canReposition ? () => setRepositioning((r) => !r) : undefined
             }
             repositioning={repositioning}
+            onAssignToMe={assignToMe}
             color={color}
           />
         </>
@@ -172,6 +198,7 @@ export function BoardCardBody({
               onEnableEdit={() => setEditing(true)}
               menuOpen={menuOpen}
               onMenuOpenChange={setMenuOpen}
+              onAssignToMe={assignToMe}
               color={color}
             />
           )}

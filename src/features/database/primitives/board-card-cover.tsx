@@ -2,6 +2,7 @@
 import { memo, useRef, useState } from "react";
 import type { Page } from "src/types";
 import { GRADIENT_PRESETS } from "src/features/pages/cover/gradient-presets";
+import { firstImageSrc } from "../utils/first-image";
 
 interface BoardCardCoverProps {
   page: Page | null;
@@ -12,6 +13,9 @@ interface BoardCardCoverProps {
   repositioning?: boolean;
   onPositionChange?: (positionY: number) => void;
   onPositionCommit?: () => void;
+  /** The view's cover is a Files & media property: its first image (or
+   *  none: the placeholder), and how many files there are. */
+  files?: { src: string | null; count: number };
 }
 
 function getPlaceholderGradient(recordId: string): string {
@@ -31,10 +35,16 @@ function BoardCardCoverImpl({
   repositioning = false,
   onPositionChange,
   onPositionCommit,
+  files,
 }: BoardCardCoverProps) {
-  const cover = page?.cover;
-  const coverImage = cover?.coverImage;
+  const cover = files ? null : page?.cover;
   const gradient = (cover as any)?.gradient as string | undefined;
+  // From the Files property; else the page's cover; else (no cover of its
+  // own) the first image in the page, like other workspace apps.
+  const coverImage = files
+    ? (files.src ?? undefined)
+    : cover?.coverImage ||
+      (gradient ? undefined : (firstImageSrc(page?.content) ?? undefined));
 
   const persistedY = (cover as { positionY?: number } | null)?.positionY ?? 50;
 
@@ -134,6 +144,9 @@ function BoardCardCoverImpl({
                 }
           }
         />
+        {files && files.count > 1 && (
+          <span className="db-board-card__cover-count">1 / {files.count}</span>
+        )}
       </div>
     );
   }

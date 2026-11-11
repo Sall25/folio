@@ -31,6 +31,7 @@ import { NavigableMenuItem } from "../navigable-menu-item";
 import { ViewPalette } from "./view-palette";
 import { CardLayoutPicker } from "./card-layout-picker";
 import { LoadLimitPicker } from "./load-limit-picker";
+import { FormSettings } from "../../nodes/database-form-node-view/form-settings";
 
 interface LayoutPanelProps {
   view: DatabaseView;
@@ -49,6 +50,8 @@ export function LayoutPanel({ view, db, bare = false }: LayoutPanelProps) {
   //   wrap        → this table view's per-column wrap list (none listed = all wrap)
   //   page icon   → the title property's showPageIcon (also in its own menu)
   const properties = source?.properties ?? [];
+  // Files & media properties: each can be a card's cover.
+  const filesProps = properties.filter((p) => p.config.type === "files");
   const titleProp = properties.find((p) => p.config.type === "title");
   const isTable = view.type === "table";
   const showDbTitle = !attrs.hideTitle;
@@ -133,6 +136,20 @@ export function LayoutPanel({ view, db, bare = false }: LayoutPanelProps) {
         checked={showDbTitle}
         onToggle={() => updateAttributes({ ...attrs, hideTitle: showDbTitle })}
       />
+      {view.type === "form" && <FormSettings view={view} db={db} />}
+      {view.type !== "form" &&
+        properties.some((p) => p.config.type === "person") && (
+        <MenuRow
+          label={t("database.assign.showPeopleBar")}
+          toggle
+          checked={!view.hidePeopleBar}
+          onToggle={() =>
+            db.updateView(view.id, {
+              hidePeopleBar: !view.hidePeopleBar,
+            } as Partial<DatabaseView>)
+          }
+        />
+      )}
       {isTable && (
         <>
           <MenuRow
@@ -142,6 +159,16 @@ export function LayoutPanel({ view, db, bare = false }: LayoutPanelProps) {
             onToggle={() =>
               db.updateView(view.id, {
                 showVerticalLines: !showVLines,
+              } as Partial<DatabaseView>)
+            }
+          />
+          <MenuRow
+            label={t("database.layout.phoneTable")}
+            toggle
+            checked={!!(view as TableView).phoneTable}
+            onToggle={() =>
+              db.updateView(view.id, {
+                phoneTable: !(view as TableView).phoneTable,
               } as Partial<DatabaseView>)
             }
           />
@@ -165,10 +192,13 @@ export function LayoutPanel({ view, db, bare = false }: LayoutPanelProps) {
           <NavigableMenuItem
             label={t("database.layout.cardPreview")}
             sub={
-              (view as GalleryView).cardPreview === "none"
+              (view as GalleryView).cardPreview === "none" ||
+              (view as GalleryView).cardPreview === undefined
                 ? t("database.layout.cardPreviewNone")
                 : (view as GalleryView).cardPreview === "cover"
-                  ? t("database.layout.cardPreviewCover")
+                  ? (filesProps.find(
+                      (p) => p.id === (view as GalleryView).coverPropertyId,
+                    )?.name ?? t("database.layout.cardPreviewCover"))
                   : t("database.layout.cardPreviewContent")
             }
             side="right"
@@ -201,7 +231,11 @@ export function LayoutPanel({ view, db, bare = false }: LayoutPanelProps) {
                 <MenuRow
                   key={value}
                   selected={
-                    (db.activeView as GalleryView).cardPreview == value ||
+                    ((db.activeView as GalleryView).cardPreview == value &&
+                      !(
+                        value === "cover" &&
+                        (db.activeView as GalleryView).coverPropertyId
+                      )) ||
                     ((db.activeView as GalleryView).cardPreview === undefined &&
                       value === "none")
                   }
@@ -209,6 +243,24 @@ export function LayoutPanel({ view, db, bare = false }: LayoutPanelProps) {
                   onClick={() =>
                     db.updateView(view.id, {
                       cardPreview: value,
+                      coverPropertyId: undefined,
+                    } as Partial<GalleryView | BoardView>)
+                  }
+                />
+              ))}
+              {/* A Files & media property: its first image is the cover. */}
+              {filesProps.map((p) => (
+                <MenuRow
+                  key={p.id}
+                  selected={
+                    (db.activeView as GalleryView).cardPreview === "cover" &&
+                    (db.activeView as GalleryView).coverPropertyId === p.id
+                  }
+                  label={p.name}
+                  onClick={() =>
+                    db.updateView(view.id, {
+                      cardPreview: "cover",
+                      coverPropertyId: p.id,
                     } as Partial<GalleryView | BoardView>)
                   }
                 />

@@ -5,6 +5,7 @@ import type {
   SelectOption,
 } from "src/types";
 import { formatUniqueId } from "src/lib/unique-id";
+import { filesFromText } from "./files-from-text";
 
 /**
  * Copy and paste for table cells (Ctrl/⌘+C, Ctrl/⌘+V on the active cell).
@@ -76,6 +77,8 @@ export function cellText(
       return (value as PersonValue[]).map((p) => p.name).join(", ");
     case "relation":
       return ""; // no single text worth copying
+    case "files":
+      return (value as { url: string }[]).map((f) => f.url).join(", ");
     default:
       return typeof value === "object" ? "" : String(value);
   }
@@ -140,6 +143,10 @@ export function parseCellText(
       return Number.isNaN(time)
         ? null
         : { value: new Date(time).toISOString() };
+    }
+    case "files": {
+      const files = filesFromText(t);
+      return files.length ? { value: files } : null;
     }
     default:
       return null;

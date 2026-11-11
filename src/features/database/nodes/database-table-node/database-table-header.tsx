@@ -24,7 +24,8 @@ import {
   type DatabaseView,
   type PropertyConfig,
 } from "src/types";
-import type { TableView } from "src/types";
+import { useDatabaseContext } from "../../context/database-context";
+import { frozenPropertyIdFor, useDbSize } from "../../utils/db-size";
 import "./database-table-header.scss";
 import { AddPropertyPopover } from "../../components/add-property-popover";
 
@@ -69,8 +70,12 @@ export function DatabaseTableHeader({
   );
 
   // Column freeze (sticky) offsets.
-  const frozenId =
-    (activeView as TableView | null | undefined)?.frozenPropertyId ?? null;
+  const { attrs } = useDatabaseContext();
+  const frozenId = frozenPropertyIdFor(
+    activeView,
+    useDbSize(attrs.id),
+    visibleProperties,
+  );
   const freezeIndex = frozenId
     ? visibleProperties.findIndex((p) => p.id === frozenId)
     : -1;

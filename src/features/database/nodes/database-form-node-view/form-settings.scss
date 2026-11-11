@@ -1,0 +1,64 @@
+// A form's settings in View options › Layout: the panel's own rows, a few
+// chips for groups, and the closing date.
+.form-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+
+  &__title {
+    padding: 8px 8px 2px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--tt-text-secondary);
+  }
+
+  &__groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 2px 8px 6px;
+  }
+
+  &__chip {
+    padding: 2px 10px;
+    border: 1px solid var(--tt-border-color);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--tt-text-primary);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+
+    &[data-on] {
+      border-color: var(--tt-brand-color-500, #2383e2);
+      background: color-mix(in srgb, var(--tt-brand-color-500, #2383e2) 10%, transparent);
+    }
+  }
+
+  &__field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 8px;
+    font-size: 14px;
+  }
+
+  &__date {
+    border: 1px solid var(--tt-border-color);
+    border-radius: 6px;
+    padding: 3px 6px;
+    background: var(--tt-bg-color);
+    color: var(--tt-text-primary);
+    font: inherit;
+    font-size: 13px;
+  }
+
+  &__note {
+    padding: 6px 8px 2px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--tt-text-secondary);
+  }
+}

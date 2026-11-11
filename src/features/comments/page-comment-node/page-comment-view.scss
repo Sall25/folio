@@ -44,6 +44,11 @@
     color: var(--tt-text-primary);
   }
 
+  &__about {
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+  }
+
   &__count {
     padding: 1px 7px;
     border-radius: 10px;

@@ -20,6 +20,16 @@ const SignedInApp = lazy(() => import("./signed-in-app"));
 const PublishedPage = lazy(() => import("../features/publish/published-page"));
 const isPublishedPath = window.location.pathname.startsWith("/p/");
 
+// /form/<source>/<view>: a database form. Opened from outside the app (a
+// link), it skips the sign-in gate too: a form open to anyone with the link
+// works signed out, and the others ask you to sign in (form-page.tsx).
+const FormPage = lazy(() =>
+  import("../features/database/forms/form-page").then((m) => ({
+    default: m.FormPage,
+  })),
+);
+const isFormPath = window.location.pathname.startsWith("/form/");
+
 // gcTime must be at least the persisted maxAge, or restored queries would be
 // garbage-collected (and dropped from disk) before anything uses them.
 const client = new QueryClient({
@@ -56,6 +66,10 @@ function App() {
       {isPublishedPath ? (
         <Suspense fallback={<GateLoading />}>
           <PublishedPage />
+        </Suspense>
+      ) : isFormPath ? (
+        <Suspense fallback={<GateLoading />}>
+          <FormPage />
         </Suspense>
       ) : (
         <AuthGate>

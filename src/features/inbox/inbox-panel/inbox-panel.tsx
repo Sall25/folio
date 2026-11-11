@@ -9,6 +9,7 @@ import {
   ChevronRight,
   MessagesSquare,
   Eye,
+  UserPlus,
 } from "src/components/icons";
 import { useNotifications } from "src/features/inbox/notification/notification-context";
 import type { Notification, NotificationType } from "src/types";
@@ -179,6 +180,8 @@ function NotifIcon({ type }: { type: NotificationType }) {
       return <Link2 size={15} />;
     case "row-look":
       return <Eye size={15} />;
+    case "row-assign":
+      return <UserPlus size={15} />;
     default:
       return <InboxIcon size={15} />;
   }

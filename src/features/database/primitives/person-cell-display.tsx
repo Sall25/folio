@@ -44,6 +44,14 @@ function PersonChip({
   );
 }
 
+/** A group of people that can be assigned at once (the workspace's
+ *  groups). */
+export interface PersonGroupOption {
+  id: string;
+  name: string;
+  members: PersonValue[];
+}
+
 export interface PersonCellDisplayProps {
   value: PersonValue[];
   /** all selectable people — caller supplies (workspace members) */
@@ -52,7 +60,14 @@ export interface PersonCellDisplayProps {
   /** when true, picking caps the selection at one person */
   single?: boolean;
   readonly?: boolean;
+  /** Groups: picking one adds its members (not with `single`). */
+  groups?: PersonGroupOption[];
+  /** Said under the list: who hears of being added. */
+  notifyHint?: string;
 }
+
+/** More faces than this show as a stack with "+N". */
+const STACK_MAX = 3;
 
 // ...imports and PersonChip unchanged...
 
@@ -62,6 +77,8 @@ export function PersonCellDisplay({
   onChange,
   single,
   readonly,
+  groups = [],
+  notifyHint,
 }: PersonCellDisplayProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -88,11 +105,42 @@ export function PersonCellDisplay({
     }
   }
 
+  /** A group's members not already assigned, added together. */
+  function addGroup(group: PersonGroupOption) {
+    const toAdd = group.members.filter((m) => !selectedIds.has(m.id));
+    if (toAdd.length) onChange([...value, ...toAdd]);
+  }
+
+  // One person: face and name. Several: a stack of faces with "+N", the
+  // names on hover.
   const chips =
     value.length === 0 ? (
       <span className="db-person-empty">{t("database.person.empty")}</span>
+    ) : value.length === 1 ? (
+      <PersonChip person={value[0]} />
     ) : (
-      value.map((p) => <PersonChip key={p.id} person={p} />)
+      <span
+        className="db-person-stack"
+        title={value.map((p) => p.name).join(", ")}
+      >
+        {value.slice(0, STACK_MAX).map((p) => (
+          <span key={p.id} className="db-person-chip__avatar" aria-hidden>
+            {p.avatarUrl ? (
+              <img src={p.avatarUrl} alt="" />
+            ) : (
+              (p.name?.[0]?.toUpperCase() ?? "?")
+            )}
+          </span>
+        ))}
+        {value.length > STACK_MAX && (
+          <span className="db-person-stack__more">
+            +{value.length - STACK_MAX}
+          </span>
+        )}
+        <span className="db-person-stack__label">
+          {value.map((p) => p.name).join(", ")}
+        </span>
+      </span>
     );
 
   const triggerButton = (
@@ -199,6 +247,36 @@ export function PersonCellDisplay({
               })
             )}
           </CardItemGroup>
+
+          {!single && groups.length > 0 && !query.trim() && (
+            <CardItemGroup style={{ marginTop: 4 }}>
+              <span className="db-person-hint">
+                {t("database.assign.groups")}
+              </span>
+              {groups.map((g) => (
+                <Button
+                  key={g.id}
+                  variant="ghost"
+                  style={{
+                    justifyContent: "flex-start",
+                    width: "100%",
+                    borderRadius: "var(--tt-radius-sm)",
+                    gap: 8,
+                  }}
+                  onClick={() => addGroup(g)}
+                >
+                  <span className="tiptap-button-text">
+                    {t("database.assign.group", {
+                      name: g.name,
+                      count: g.members.length,
+                    })}
+                  </span>
+                </Button>
+              ))}
+            </CardItemGroup>
+          )}
+
+          {notifyHint && <p className="db-person-hint">{notifyHint}</p>}
         </Card>
       </PopoverContent>
     </Popover>

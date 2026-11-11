@@ -84,3 +84,31 @@
     stroke-width: 2.8;
   }
 }
+// ── Phone ────────────────────────────────────────────────────────────────────
+// Buttons show their icon only, and inactive view tabs too (the active one
+// keeps its name); the tabs that don't fit still go into "N more". The strip
+// scrolls sideways rather than wrapping.
+.db-node[data-db-size="phone"] {
+  .db-toolbar-controls {
+    flex: none;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tiptap-button-text {
+      display: none;
+    }
+  }
+
+  .db-view-tabs .db-view-tab:not([data-active-state="on"]) .tiptap-button-text,
+  .db-view-tabs__measure .tiptap-button-text {
+    display: none;
+  }
+
+  .db-view-tabs button {
+    padding: 5px 8px;
+  }
+}

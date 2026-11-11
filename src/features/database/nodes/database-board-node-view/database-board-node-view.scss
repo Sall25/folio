@@ -184,3 +184,43 @@
     border-color: color-mix(in srgb, var(--col-ink) 24%, var(--tt-bg-color));
   }
 }
+
+// ── Narrow rooms ─────────────────────────────────────────────────────────────
+// Phone: the board scrolls itself, one column at a time, snapping to each
+// column's start; dots under it say which one you're on.
+.db-board-grid[data-size="phone"] {
+  width: var(--db-visible-width, 100%);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .db-board-col-header {
+    scroll-snap-align: start;
+  }
+}
+
+.db-board-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 2px 0 8px;
+  width: var(--db-visible-width, 100%);
+
+  &__dot {
+    width: 6px;
+    height: 6px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--tt-border-color);
+    cursor: pointer;
+
+    &[data-active] {
+      background: var(--tt-text-secondary);
+    }
+  }
+}
