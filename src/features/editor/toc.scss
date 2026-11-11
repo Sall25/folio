@@ -90,6 +90,9 @@
   border: 1px solid var(--tt-toc-sidebar-border-color);
    
   min-width: 230px;
+  /* Capped to the window in toc-content.tsx; the list scrolls past that. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
   //max-width: 280px;
   transition: visibility 0.15s ease-in-out, transform  0.15s ease-in-out, pointer-event 0.15s ease-in-out;
 }
