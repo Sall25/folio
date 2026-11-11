@@ -1386,6 +1386,10 @@
         "title": "Vue chronologie",
         "description": "Planifiez les pages dans le temps."
       },
+      "liveCode": {
+        "title": "Code en direct",
+        "description": "HTML, CSS et JavaScript avec leur résultat, en direct"
+      },
       "question": {
         "title": "Question",
         "description": "Une question à laquelle les lecteurs répondent, avec les résultats"
@@ -2205,5 +2209,25 @@
     "rightCount_one": "{{count}} bonne",
     "rightCount_other": "{{count}} bonnes",
     "noAnswers": "Pas encore de réponse"
+  },
+  "liveCode": {
+    "typing": "En cours d'écriture…",
+    "yourCopy": "Votre copie",
+    "layout": "Disposition",
+    "layouts": {
+      "split": "Côte à côte",
+      "stacked": "Empilé",
+      "result": "Résultat seul"
+    },
+    "present": "Présenter en plein écran",
+    "result": "Résultat",
+    "desktop": "Ordinateur",
+    "noConsole": "Console · aucun message",
+    "backToLesson": "Revenir à la leçon",
+    "reset": "Recommencer",
+    "discard": "Supprimer ma copie",
+    "tryIt": "Essayer moi-même",
+    "copy": "Copier",
+    "copied": "Copié"
   }
 }

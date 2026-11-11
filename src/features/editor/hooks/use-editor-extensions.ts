@@ -61,6 +61,7 @@ import { CodeBlockNode } from "src/components/tiptap-node/code-block-node";
 import { CalloutExtension } from "src/components/tiptap-node/callout-node";
 import { PomodoroExtension } from "src/components/tiptap-node/pomodoro-node";
 import { QuestionExtension } from "src/components/tiptap-node/question-node";
+import { LiveCodeExtension } from "src/components/tiptap-node/live-code-node";
 import { PinDropExtension, PinnableExtension } from "src/features/editor/pins";
 import { BlockRefExtension } from "src/components/tiptap-node/block-ref-node";
 import { PINNABLE_TYPES } from "src/features/editor/pins/pin-targets";
@@ -232,6 +233,7 @@ export function useEditorExtensions(
       CalloutExtension,
       PomodoroExtension,
       QuestionExtension,
+      LiveCodeExtension,
       PinnableExtension,
       BlockRefExtension,
       PinDropExtension,

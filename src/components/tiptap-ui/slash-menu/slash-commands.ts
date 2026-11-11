@@ -404,6 +404,15 @@ export function getSlashCommands(t: TFunction): SlashCommand[] {
       icon: Timer,
       run: (e) => e.chain().focus().insertPomodoro().run(),
     },
+    // ─── Live code (HTML / CSS / JS with its result) ────────────
+    {
+      id: "liveCode",
+      type: "command",
+      title: t("slash.items.liveCode.title"),
+      description: t("slash.items.liveCode.description"),
+      icon: Code2,
+      run: (e) => e.chain().focus().insertLiveCode().run(),
+    },
     // ─── Question (answered by readers) ─────────────────────────
     {
       id: "question",

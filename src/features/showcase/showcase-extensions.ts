@@ -43,6 +43,7 @@ import { Placeholder } from "@tiptap/extensions";
 import { ButtonNode } from "src/components/tiptap-node/button-node";
 import { Container } from "src/components/tiptap-node/container-node";
 import { QuestionExtension } from "src/components/tiptap-node/question-node";
+import { LiveCodeExtension } from "src/components/tiptap-node/live-code-node";
 import { SlashCommand } from "src/components/tiptap-ui/slash-menu";
 import { getSlashCommands } from "src/components/tiptap-ui/slash-menu/slash-commands";
 import i18n from "src/i18n/config";
@@ -108,6 +109,7 @@ export const SHOWCASE_EXTENSIONS = [
   // Question blocks show (read-only, unanswerable without a page) instead of
   // breaking a published page that has one.
   QuestionExtension,
+  LiveCodeExtension,
 ];
 
 // Editable variant, for the landing's live editor and "Try it" examples:
