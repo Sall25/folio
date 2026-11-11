@@ -211,6 +211,10 @@
     "someone": "quelqu'un"
   },
   "comments": {
+    "onProperty": "sur {{name}}",
+    "cellCount_one": "{{count}} commentaire",
+    "cellCount_other": "{{count}} commentaires",
+    "newDiscussion": "Nouvelle discussion",
     "resolve": "Résoudre",
     "reopen": "Rouvrir",
     "more": "Plus",

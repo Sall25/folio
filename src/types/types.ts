@@ -1069,6 +1069,9 @@ export type Thread = {
   pageId: ID;
   /** Set on suggestion threads; absent / null on plain comment threads. */
   suggestion?: ThreadSuggestion | null;
+  /** A comment on a database cell: the row page's thread (anchor null),
+   *  about this property. */
+  propertyId?: ID | null;
 };
 
 export type MeasuredThread = {

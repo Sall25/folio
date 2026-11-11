@@ -25,6 +25,8 @@ import {
 } from "src/features/comments/editor";
 import { useActivePageState } from "src/features/pages/context/active-page-context";
 import type { Thread } from "src/types";
+import { usePage } from "src/hooks/use-pages";
+import { useDataSource } from "src/features/database/hooks/use-data-source";
 import "./page-comment-view.scss";
 import { useToggleCommentReaction } from "src/hooks/use-toggle-comment-reaction";
 
@@ -55,6 +57,15 @@ export function PageCommentView({ node }: NodeViewProps) {
 
   const showAnything = pageThreads.length > 0 || composerOpen;
 
+  // A database row's page: comments made on one of its cells say which.
+  const { data: page } = usePage(pageId);
+  const { source } = useDataSource(page?.sourceId ?? undefined);
+  const aboutLabel = (thread: Thread) => {
+    if (!thread.propertyId) return undefined;
+    const name = source?.properties.find((p) => p.id === thread.propertyId)?.name;
+    return name ? t("comments.onProperty", { name }) : undefined;
+  };
+
   return (
     <NodeViewWrapper
       className={`page-comment${showAnything ? "" : " is-empty"}`}
@@ -64,7 +75,11 @@ export function PageCommentView({ node }: NodeViewProps) {
       {openThreads.length > 0 && (
         <div className="page-comment__threads">
           {openThreads.map((thread) => (
-            <PageThread key={thread.id} thread={thread} />
+            <PageThread
+              key={thread.id}
+              thread={thread}
+              label={aboutLabel(thread)}
+            />
           ))}
         </div>
       )}
@@ -93,7 +108,11 @@ export function PageCommentView({ node }: NodeViewProps) {
           {showResolved && (
             <div className="page-comment__threads is-resolved">
               {resolvedThreads.map((thread) => (
-                <PageThread key={thread.id} thread={thread} />
+                <PageThread
+                  key={thread.id}
+                  thread={thread}
+                  label={aboutLabel(thread)}
+                />
               ))}
             </div>
           )}
@@ -103,7 +122,14 @@ export function PageCommentView({ node }: NodeViewProps) {
   );
 }
 
-function PageThread({ thread }: { thread: Thread }) {
+export function PageThread({
+  thread,
+  label,
+}: {
+  thread: Thread;
+  /** What the thread is about, beside "Discussion" (a cell's property). */
+  label?: string;
+}) {
   const { t } = useTranslation();
   const { data: comments = [] } = useCommentsByThread(thread.id);
   const { person } = useCurrentPerson();
@@ -138,6 +164,7 @@ function PageThread({ thread }: { thread: Thread }) {
         <span className="page-comment__title">
           {t("comments.discussion", "Discussion")}
         </span>
+        {label && <span className="page-comment__about">{label}</span>}
         <span className="page-comment__count">{comments.length}</span>
         <span className="page-comment__spacer" />
         <Button
@@ -236,11 +263,14 @@ function PageCommentReply({ threadId }: { threadId: string }) {
 }
 
 // A new discussion: the same card, with only the field until it's sent.
-function PageCommentComposer({
+export function PageCommentComposer({
   pageId,
+  propertyId,
   onDone,
 }: {
   pageId: string;
+  /** A comment on a database cell: the property it's about. */
+  propertyId?: string;
   onDone: () => void;
 }) {
   const { t } = useTranslation();
@@ -252,7 +282,12 @@ function PageCommentComposer({
 
   const submit = async (json: JSONContent) => {
     if (!person) return;
-    const thread = makeThread({ pageId, anchor: null, status: "open" });
+    const thread = makeThread({
+      pageId,
+      anchor: null,
+      status: "open",
+      propertyId,
+    });
     await createThread.mutateAsync(thread);
     createComment.mutate({
       comment: makeComment({

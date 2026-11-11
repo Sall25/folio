@@ -312,6 +312,10 @@
     "manageMembers": "Members"
   },
   "comments": {
+    "onProperty": "on {{name}}",
+    "cellCount_one": "{{count}} comment",
+    "cellCount_other": "{{count}} comments",
+    "newDiscussion": "New discussion",
     "resolve": "Resolve",
     "reopen": "Re-open",
     "more": "More",

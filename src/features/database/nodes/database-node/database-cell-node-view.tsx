@@ -5,6 +5,7 @@ import { useDatabaseBridgeData } from "../../hooks/use-database-bridge-data";
 import { Cell } from "../../components/cells/cell";
 import type { CellValue, DatabaseProperty, ID } from "src/types";
 import { CellOverlay } from "../../components/cell-overlay";
+import { CellComments } from "../../components/cell-comments";
 import { isCopiableType } from "../database-board-node-view/utils";
 import { useOpenRecord } from "../../hooks/use-open-record";
 import { useRecordNearScreen } from "../../utils/record-visibility";
@@ -117,6 +118,9 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
     (recordId && propertyId
       ? data?.recordsById.get(recordId)?.values?.[propertyId]
       : null) ?? null;
+  // The cell's comments popover (the overlay's Comment button, or its count).
+  const [commentsOpen, setCommentsOpen] = useState(false);
+
   const clipboardRef = useRef({
     property,
     value: clipboardValue,
@@ -229,6 +233,7 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
                 : String(value)
           }
           onOpen={isTitle ? handleOpen : undefined}
+          onComment={() => setCommentsOpen(true)}
           editing={isListTitle ? editing : undefined}
           onEdit={
             isListTitle
@@ -238,6 +243,15 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
                 }
               : undefined
           }
+        />
+      )}
+
+      {record && !isTitle && data.view?.type === "table" && (
+        <CellComments
+          recordId={recordId}
+          propertyId={propertyId}
+          open={commentsOpen}
+          onOpenChange={setCommentsOpen}
         />
       )}
     </NodeViewWrapper>
