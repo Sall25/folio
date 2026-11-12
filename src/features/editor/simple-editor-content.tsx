@@ -33,24 +33,31 @@ import { useLayoutMode } from "../shell/hooks/use-layout-mode";
 import { calculatePaddingLeft, calculateSidebarWidth } from "src/lib/utils";
 import { UnavailableOffline } from "./unavailable-offline";
 import { NewPageStarter } from "./new-page-starter";
-
-// The least space kept on each side of the page's column (the left one holds
-// the block handles).
-const COLUMN_EDGE = 64;
+import { pinScrollLeft, placeColumn } from "./layout/column-placement";
 
 /**
  * Where the page's column goes: its offset from the editor wrapper's left
- * edge (what blocks are shifted by) and the most width it may take.
- *
- * The usual offset (`preferred`, the page's own spacing from the sidebar)
- * is kept whenever the column fits on screen with it. On a narrower screen
- * the column moves left just enough to fit, keeping COLUMN_EDGE from the
- * sidebar and from the right edge; narrower still, it gets narrower.
+ * edge (what blocks are shifted by) and the most width it may take —
+ * placeColumn in layout/column-placement.ts, which has the rules and tests.
  *
  * The visible area is .simple-editor-main; the wrapper runs wider than it,
  * so both are measured, again whenever either changes size. A side view
  * doesn't count: opening one never moves the page.
  */
+/** The docked sidebar's right edge when it lies over the page area's left
+ *  part (the page area starts at the window's left), else 0. Not the
+ *  floating one, shown over the page only while hovered. */
+function dockedSidebarRight(main: HTMLElement): number {
+  const sidebar = document.querySelector<HTMLElement>(
+    ".sidebar:not(.sidebar-mobile):not(.sidebar--floating)",
+  );
+  if (!sidebar) return 0;
+  const s = sidebar.getBoundingClientRect();
+  const m = main.getBoundingClientRect();
+  if (s.width === 0 || s.right <= m.left || s.left > m.left + 1) return 0;
+  return s.right;
+}
+
 function useColumnPlacement(
   wrapperRef: React.RefObject<HTMLDivElement | null>,
   columnWidth: number,
@@ -72,23 +79,18 @@ function useColumnPlacement(
     const measure = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
-        // The visible area, in the wrapper's coordinates.
-        const left =
-          main.getBoundingClientRect().left -
-          wrapper.getBoundingClientRect().left;
-        // Without its scrollbar, and as if a side view weren't open: the
-        // page makes room for one with margin-right (peek-toolbar.scss), but
-        // its column stays where it was instead of moving left, the part
-        // under the panel hidden by it. (Its margin is 0 otherwise.)
-        const peekRoom = parseFloat(getComputedStyle(main).marginRight) || 0;
-        const width = main.clientWidth + Math.max(0, peekRoom);
-        const room = Math.max(0, Math.round(width - COLUMN_EDGE * 2));
-        const column = Math.min(columnWidth, room);
-        const minOffset = left + COLUMN_EDGE;
-        const maxOffset = left + width - COLUMN_EDGE - column;
-        const offset = Math.round(
-          Math.max(minOffset, Math.min(preferred, maxOffset)),
-        );
+        // Without its scrollbar; a side view's margin (peek-toolbar.scss)
+        // is handed over so it doesn't move the page (column-placement.ts).
+        const next = placeColumn({
+          mainLeft: main.getBoundingClientRect().left,
+          wrapperLeft: wrapper.getBoundingClientRect().left,
+          mainWidth: main.clientWidth,
+          peekRoom: parseFloat(getComputedStyle(main).marginRight) || 0,
+          coveredUntil: dockedSidebarRight(main),
+          columnWidth,
+          preferred,
+        });
+        const { offset, room } = next;
         setPlacement((prev) =>
           prev && prev.offset === offset && prev.room === room
             ? prev
@@ -97,15 +99,39 @@ function useColumnPlacement(
       });
     };
 
+    // Once more after the layout's slides (sidebar, side view: 0.2s) have
+    // finished: a measure taken mid-slide, or while the window was being
+    // restored, could stick.
+    let settle = 0;
+    const measureSoon = () => {
+      measure();
+      window.clearTimeout(settle);
+      settle = window.setTimeout(measure, 250);
+    };
+
     measure();
-    const observer = new ResizeObserver(measure);
+    const observer = new ResizeObserver(measureSoon);
     observer.observe(main);
     observer.observe(wrapper);
-    window.addEventListener("resize", measure);
+    // Its width moves the column too (resized, collapsed).
+    const sidebar = document.querySelector<HTMLElement>(".sidebar");
+    if (sidebar) observer.observe(sidebar);
+    window.addEventListener("resize", measureSoon);
+    document.addEventListener("visibilitychange", measureSoon);
+    // Neither one scrolls sideways; the browser still does it to bring a
+    // focused cell or a selection into view, and the page slid off the left
+    // edge (column-placement.ts).
+    const unpinMain = pinScrollLeft(main);
+    const outer = main.closest<HTMLElement>(".simple-editor-wrapper");
+    const unpinOuter = outer ? pinScrollLeft(outer) : () => {};
     return () => {
       cancelAnimationFrame(raf);
+      window.clearTimeout(settle);
       observer.disconnect();
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", measureSoon);
+      document.removeEventListener("visibilitychange", measureSoon);
+      unpinMain();
+      unpinOuter();
     };
   }, [wrapperRef, columnWidth, preferred, enabled]);
 
