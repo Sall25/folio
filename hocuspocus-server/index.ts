@@ -97,6 +97,22 @@ interface PageRecord {
   content?: unknown;
 }
 
+/** The page's row, waiting a little for one being inserted right now. */
+async function loadPageRecord(
+  pageId: string,
+  tries = 6,
+  waitMs = 400,
+): Promise<PageRecord | null> {
+  for (let i = 0; i < tries; i++) {
+    const rows = await sb<PageRecord[]>(
+      `/pages?id=eq.${encodeURIComponent(pageId)}&select=id,content`,
+    );
+    if (rows?.[0]) return rows[0];
+    if (i < tries - 1) await new Promise((r) => setTimeout(r, waitMs));
+  }
+  return null;
+}
+
 // ── Durable Yjs state ────────────────────────────────────────────────────────
 // pages.content (JSON) keeps the TEXT but not the Yjs identity of each piece
 // of it. Re-seeding from JSON after SQLite is wiped creates the same text
@@ -198,12 +214,21 @@ const server = new Server<AuthContext>({
       );
     }
 
-    const rows = await sb<PageRecord[]>(
-      `/pages?id=eq.${encodeURIComponent(pageId)}&select=id,content`,
-    );
-    const page = rows?.[0] ?? null;
+    // A page made on this device is opened the moment it's made, often
+    // before its row reaches the database. Seeding then gave the page an
+    // empty skeleton, which was stored and never seeded again: its blocks
+    // (a database's own block) only turned up later, through the repair
+    // below. So the row is waited for briefly, and when it still isn't
+    // there the document is left empty for the next load to seed.
+    const page = await loadPageRecord(pageId);
+    if (!page) {
+      console.warn(
+        `[onLoadDocument] no page row for ${documentName} yet; leaving it empty to seed later`,
+      );
+      return;
+    }
 
-    let content = (page?.content as any) ?? null;
+    let content = (page.content as any) ?? null;
     content = ensureTitle(content); // ← guarantee a title first-child
 
     try {

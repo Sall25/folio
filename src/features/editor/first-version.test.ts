@@ -1,20 +1,30 @@
 import { describe, expect, it } from "vitest";
 import {
   canWriteSkeleton,
+  holdsOnlySkeleton,
   isBlankDoc,
   skeletonContent,
+  withTitle,
   type DocLike,
+  type NodeLike,
 } from "./first-version";
 
 // A database's own page lost its block, or showed it twice: the skeleton
 // written for a page created on this device raced the server's seeding.
 
-const doc = (...names: { name: string; size?: number }[]): DocLike => ({
-  childCount: names.length,
-  firstChild: names[0]
-    ? { type: { name: names[0].name }, content: { size: names[0].size ?? 0 } }
-    : null,
-});
+const doc = (...names: { name: string; size?: number; text?: string }[]) => {
+  const nodes: NodeLike[] = names.map((n) => ({
+    type: { name: n.name },
+    content: { size: n.size ?? (n.text ? n.text.length : 0) },
+    textContent: n.text ?? "",
+  }));
+  const value: DocLike = {
+    childCount: nodes.length,
+    firstChild: nodes[0] ?? null,
+    forEach: (f) => nodes.forEach((n) => f(n)),
+  };
+  return value;
+};
 
 describe("isBlankDoc", () => {
   it("is blank with nothing in it", () => {
@@ -88,5 +98,55 @@ describe("skeletonContent", () => {
       "Notes",
     );
     expect(skeletonContent("").content?.[0].content).toEqual([]);
+  });
+});
+
+
+describe("holdsOnlySkeleton", () => {
+  it("is the server's skeleton for a page it couldn't read", () => {
+    expect(holdsOnlySkeleton(doc())).toBe(true);
+    expect(holdsOnlySkeleton(doc({ name: "paragraph" }))).toBe(true);
+    expect(
+      holdsOnlySkeleton(doc({ name: "title" }, { name: "paragraph" })),
+    ).toBe(true);
+    // A title typed into it is still a skeleton: the text is kept.
+    expect(
+      holdsOnlySkeleton(
+        doc({ name: "title", text: "New Form" }, { name: "paragraph" }),
+      ),
+    ).toBe(true);
+  });
+
+  it("isn't, once the page has anything of its own", () => {
+    expect(
+      holdsOnlySkeleton(doc({ name: "title" }, { name: "database" })),
+    ).toBe(false);
+    expect(
+      holdsOnlySkeleton(
+        doc({ name: "title" }, { name: "paragraph", text: "hi" }),
+      ),
+    ).toBe(false);
+  });
+});
+
+describe("withTitle", () => {
+  const content = {
+    type: "doc",
+    content: [
+      { type: "title", content: [{ type: "text", text: "New Form" }] },
+      { type: "database", attrs: { sourceId: "s1" } },
+    ],
+  };
+
+  it("keeps a title typed while the content was on its way", () => {
+    const next = withTitle(content, "Renamed");
+    expect(next.content?.[0].content?.[0].text).toBe("Renamed");
+    expect(next.content?.[1]).toEqual(content.content[1]);
+  });
+
+  it("empties the title when there is none, and leaves other content be", () => {
+    expect(withTitle(content, "").content?.[0].content).toEqual([]);
+    const noTitle = { type: "doc", content: [{ type: "paragraph" }] };
+    expect(withTitle(noTitle, "x")).toBe(noTitle);
   });
 });

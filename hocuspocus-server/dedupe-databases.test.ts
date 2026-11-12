@@ -111,8 +111,9 @@ describe("restoreOwnDatabases", () => {
     expect(
       restoreOwnDatabases(doc, new Set(["s1"]), pageContent("s1")),
     ).toBe(1);
-    expect(types(doc)).toEqual(["title", "paragraph", "database"]);
-    const el = doc.getXmlFragment("default").get(2) as Y.XmlElement;
+    // Right after the title: no empty line between them.
+    expect(types(doc)).toEqual(["title", "database", "paragraph"]);
+    const el = doc.getXmlFragment("default").get(1) as Y.XmlElement;
     expect(el.getAttribute("sourceId")).toBe("s1");
     expect(el.getAttribute("views")).toEqual([{ id: "v1", type: "form" }]);
   });
@@ -150,6 +151,6 @@ describe("restoreOwnDatabases", () => {
     Y.applyUpdate(client, Y.encodeStateAsUpdate(server));
     restoreOwnDatabases(server, new Set(["s1"]), pageContent("s1"));
     Y.applyUpdate(client, Y.encodeStateAsUpdate(server));
-    expect(types(client)).toEqual(["title", "paragraph", "database"]);
+    expect(types(client)).toEqual(["title", "database", "paragraph"]);
   });
 });

@@ -39,8 +39,10 @@ import { useMentionData } from "src/components/tiptap-ui/mention-menu/use-mentio
 import { isCreatedHere } from "src/lib/local-pages";
 import {
   canWriteSkeleton,
+  holdsOnlySkeleton,
   isBlankDoc,
   skeletonContent,
+  withTitle,
 } from "../first-version";
 
 // Exactly the array type useEditorExtensions produces — derived so it can't
@@ -230,8 +232,14 @@ function EditorInstance({
     if (!isCreatedHere(page.id)) return;
     if (canWriteSkeleton(page.content)) return; // the skeleton covers it
     const seed = () => {
-      if (!isBlankDoc(editor.state.doc)) return;
-      editor.commands.setContent(page.content);
+      // Empty, or the title-and-empty-line skeleton the server writes for a
+      // page whose row it couldn't read yet: the content replaces it,
+      // keeping whatever title is on screen.
+      const doc = editor.state.doc;
+      if (!holdsOnlySkeleton(doc)) return;
+      const shown =
+        doc.firstChild?.type.name === "title" ? doc.firstChild.textContent : "";
+      editor.commands.setContent(withTitle(page.content, shown || page.title));
     };
     if (provider.synced) {
       seed();
@@ -241,7 +249,7 @@ function EditorInstance({
     return () => {
       provider.off("synced", seed);
     };
-  }, [editor, provider, page.id, page.content]);
+  }, [editor, provider, page.id, page.title, page.content]);
 
   const { canEditContent, isLoading } = usePageCapabilities(page.id);
   useEffect(() => {

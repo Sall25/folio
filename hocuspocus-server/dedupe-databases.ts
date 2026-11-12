@@ -49,7 +49,8 @@ export function dedupeOwnDatabases(
  * good. The client no longer does that (src/features/editor/first-version.ts),
  * and this heals the pages it already happened to: for each of the page's
  * own databases with no block in the document, the block from the page's
- * stored content (pages.content) is added back at the end.
+ * stored content (pages.content) is added back, right after the title so
+ * there's no empty line above it.
  *
  * Returns how many blocks were added.
  */
@@ -87,16 +88,19 @@ export function restoreOwnDatabases(
   }
   if (missing.length === 0) return 0;
 
+  const first = fragment.get(0);
+  const afterTitle =
+    first instanceof Y.XmlElement && first.nodeName === "title" ? 1 : 0;
   doc.transact(() => {
-    for (const attrs of missing) {
+    missing.forEach((attrs, i) => {
       // The node is an atom: its attributes are all it holds.
       const el = new Y.XmlElement("database");
       for (const [key, value] of Object.entries(attrs)) {
         if (value === undefined) continue;
         el.setAttribute(key, value as string);
       }
-      fragment.insert(fragment.length, [el]);
-    }
+      fragment.insert(afterTitle + i, [el]);
+    });
   });
   return missing.length;
 }

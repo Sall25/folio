@@ -15,9 +15,16 @@ import type { JSONContent } from "@tiptap/react";
 // Anything more — a database block on a database's own page — waits for
 // the server's copy.
 
+export interface NodeLike {
+  type: { name: string };
+  content: { size: number };
+  textContent: string;
+}
+
 export interface DocLike {
   childCount: number;
-  firstChild: { type: { name: string }; content: { size: number } } | null;
+  firstChild: NodeLike | null;
+  forEach(f: (node: NodeLike) => void): void;
 }
 
 /** Nothing in it yet: no content from the server, none from this device
@@ -29,6 +36,40 @@ export function isBlankDoc(doc: DocLike): boolean {
   return (
     !!only && only.type.name === "paragraph" && only.content.size === 0
   );
+}
+
+/** Nothing but a title and empty lines: the server's own skeleton for a
+ *  page whose row it couldn't read yet. The page's content can be written
+ *  over it without losing anything. */
+export function holdsOnlySkeleton(doc: DocLike): boolean {
+  if (isBlankDoc(doc)) return true;
+  let only = true;
+  doc.forEach((node) => {
+    if (node.type.name === "title") return;
+    if (node.type.name === "paragraph" && node.content.size === 0) return;
+    only = false;
+  });
+  return only;
+}
+
+/** The page's content with `title` as its title, so a title typed while
+ *  the content was still on its way isn't lost. */
+export function withTitle(
+  content: JSONContent,
+  title: string,
+): JSONContent {
+  const blocks = content.content;
+  if (!blocks?.length || blocks[0].type !== "title") return content;
+  return {
+    ...content,
+    content: [
+      {
+        ...blocks[0],
+        content: title ? [{ type: "text", text: title }] : [],
+      },
+      ...blocks.slice(1),
+    ],
+  };
 }
 
 const isEmptyBlock = (node: JSONContent): boolean => {
