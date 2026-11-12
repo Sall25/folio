@@ -48,7 +48,8 @@ const COLUMN_EDGE = 64;
  * sidebar and from the right edge; narrower still, it gets narrower.
  *
  * The visible area is .simple-editor-main; the wrapper runs wider than it,
- * so both are measured, again whenever either changes size.
+ * so both are measured, again whenever either changes size. A side view
+ * doesn't count: opening one never moves the page.
  */
 function useColumnPlacement(
   wrapperRef: React.RefObject<HTMLDivElement | null>,
@@ -75,7 +76,12 @@ function useColumnPlacement(
         const left =
           main.getBoundingClientRect().left -
           wrapper.getBoundingClientRect().left;
-        const width = main.clientWidth; // without its scrollbar
+        // Without its scrollbar, and as if a side view weren't open: the
+        // page makes room for one with margin-right (peek-toolbar.scss), but
+        // its column stays where it was instead of moving left, the part
+        // under the panel hidden by it. (Its margin is 0 otherwise.)
+        const peekRoom = parseFloat(getComputedStyle(main).marginRight) || 0;
+        const width = main.clientWidth + Math.max(0, peekRoom);
         const room = Math.max(0, Math.round(width - COLUMN_EDGE * 2));
         const column = Math.min(columnWidth, room);
         const minOffset = left + COLUMN_EDGE;
