@@ -64,12 +64,17 @@ export function useDatabaseTitle({
       const host = pagesRef.current?.find(
         (p: Page) => p.id === source.hostPageId,
       );
-      // The page opens in the view the block shows.
+      // The page opens in the view the block shows, with the block's other
+      // views as its other tabs (a form's page keeps its builder and its
+      // Responses). Copies, with their own ids.
       const active =
         attrs.views.find((v) => v.id === attrs.activeViewId) ?? attrs.views[0];
-      const view = active
-        ? { ...structuredClone(active), id: newId() }
-        : undefined;
+      const copy = (v: (typeof attrs.views)[number]) => ({
+        ...structuredClone(v),
+        id: newId(),
+      });
+      const view = active ? copy(active) : undefined;
+      const moreViews = attrs.views.filter((v) => v !== active).map(copy);
       const dbPage = makeDatabasePage({
         sourceId: source.id,
         name: title,
@@ -79,6 +84,7 @@ export function useDatabaseTitle({
         ownerId: person.id,
         workspaceId,
         view,
+        moreViews,
       });
       await createPage.mutateAsync(dbPage);
       await updateSourceMetaAsync({ name: title, pageId: dbPage.id });

@@ -6,6 +6,10 @@ import { TiptapTransformer } from "@hocuspocus/transformer";
 import { jwtVerify, createRemoteJWKSet } from "jose";
 import * as Y from "yjs";
 import { seedExtensions } from "./seed-schema";
+import {
+  dedupeOwnDatabases,
+  restoreOwnDatabases,
+} from "./dedupe-databases";
 
 // Guarantee the doc has a title as its first child. The client used to insert
 // this; now the server owns it, so every page is seeded with a title present.
@@ -211,6 +215,44 @@ const server = new Server<AuthContext>({
       document.merge(seededYdoc);
     } catch (err) {
       console.error(`[onLoadDocument] seed failed for ${documentName}:`, err);
+    }
+  },
+
+  // A database's own page carries its block exactly once: take out copies
+  // left by two first versions merging, and put back one a client's first
+  // version replaced (dedupe-databases.ts). Runs after every load, whichever
+  // way the doc came in; both changes sync to clients as ordinary edits.
+  async afterLoadDocument({ documentName, document }) {
+    const pageId = documentName.startsWith("page:")
+      ? documentName.slice("page:".length)
+      : documentName;
+    try {
+      const sources = await sb<{ id: string }[]>(
+        `/data_sources?page_id=eq.${encodeURIComponent(pageId)}&select=id`,
+      );
+      const own = new Set((sources ?? []).map((s) => s.id));
+      const removed = dedupeOwnDatabases(document, own);
+      if (removed > 0) {
+        console.warn(
+          `[afterLoadDocument] removed ${removed} duplicate database block(s) from ${documentName}`,
+        );
+      }
+
+      // And put back one the page lost before the client stopped writing
+      // its own first version over the page's content.
+      if (own.size > 0) {
+        const rows = await sb<PageRecord[]>(
+          `/pages?id=eq.${encodeURIComponent(pageId)}&select=id,content`,
+        );
+        const added = restoreOwnDatabases(document, own, rows?.[0]?.content);
+        if (added > 0) {
+          console.warn(
+            `[afterLoadDocument] restored ${added} missing database block(s) in ${documentName}`,
+          );
+        }
+      }
+    } catch (err) {
+      console.error(`[afterLoadDocument] dedupe failed for ${documentName}:`, err);
     }
   },
 

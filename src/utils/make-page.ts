@@ -118,6 +118,7 @@ function databasePageContent(
   sourceId: ID,
   name: string,
   firstView?: DatabaseView,
+  moreViews: DatabaseView[] = [],
 ): JSONContent {
   const view = firstView ?? makeDefaultView("table", "Table");
   return {
@@ -131,7 +132,7 @@ function databasePageContent(
           sourceId,
           pageId: null,
           title: name,
-          views: [view],
+          views: [view, ...moreViews],
           activeViewId: view.id,
         },
       },
@@ -142,6 +143,8 @@ function databasePageContent(
 export function makeDatabasePage(opts: {
   /** The view its page opens in (a table when left out). */
   view?: DatabaseView;
+  /** Its other views, after that one in the tabs. */
+  moreViews?: DatabaseView[];
   ownerId: ID;
   workspaceId: ID;
   teamspaceId?: ID | null;
@@ -160,7 +163,7 @@ export function makeDatabasePage(opts: {
       parentId: opts.parentId ?? null,
       category: opts.category ?? "Private",
     }),
-    content: databasePageContent(opts.sourceId, name, opts.view),
+    content: databasePageContent(opts.sourceId, name, opts.view, opts.moreViews),
     settings: { width: "full", text: "normal", locked: false },
     cover: {
       iconName: "table",

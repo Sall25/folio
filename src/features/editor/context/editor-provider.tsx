@@ -37,6 +37,11 @@ import {
 } from "../new-page-starter/new-page-starter-extension";
 import { useMentionData } from "src/components/tiptap-ui/mention-menu/use-mention-data";
 import { isCreatedHere } from "src/lib/local-pages";
+import {
+  canWriteSkeleton,
+  isBlankDoc,
+  skeletonContent,
+} from "../first-version";
 
 // Exactly the array type useEditorExtensions produces — derived so it can't
 // drift from the real return, whatever member types are in it (one of them
@@ -193,20 +198,50 @@ function EditorInstance({
   // server hasn't added its title yet (ensureTitle in hocuspocus-server), so
   // add the same skeleton here. It syncs up like any other edit once the
   // connection is back; the single-title rule drops the server's copy.
+  //
+  // Only into a document still empty, and only for a page whose content is
+  // a title and empty lines: on a database's own page this raced the
+  // server's seeding and the block was lost or ended up twice
+  // (first-version.ts). A page that has real content waits for it.
   useEffect(() => {
     if (!isCreatedHere(page.id)) return;
-    if (editor.state.doc.firstChild?.type.name === "title") return;
-    editor.commands.setContent({
-      type: "doc",
-      content: [
-        {
+    const doc = editor.state.doc;
+    if (!isBlankDoc(doc)) {
+      // Content arrived without a title: add one rather than replace it.
+      if (doc.firstChild?.type.name !== "title") {
+        editor.commands.insertContentAt(0, {
           type: "title",
           content: page.title ? [{ type: "text", text: page.title }] : [],
-        },
-        { type: "paragraph" },
-      ],
-    });
-  }, [editor, page.id, page.title]);
+        });
+      }
+      return;
+    }
+    if (!canWriteSkeleton(page.content)) return;
+    editor.commands.setContent(skeletonContent(page.title));
+  }, [editor, page.id, page.title, page.content]);
+
+  // The rest of a new page's content (a database block) is put into the
+  // shared document by the collab server the first time it loads the page.
+  // When it can't — the page's row hadn't reached the database yet — the
+  // document stays empty and the page looks blank. Once synced, the
+  // server's copy is known to be empty and it won't seed this document
+  // again, so writing the content here can't race it or land twice.
+  useEffect(() => {
+    if (!isCreatedHere(page.id)) return;
+    if (canWriteSkeleton(page.content)) return; // the skeleton covers it
+    const seed = () => {
+      if (!isBlankDoc(editor.state.doc)) return;
+      editor.commands.setContent(page.content);
+    };
+    if (provider.synced) {
+      seed();
+      return;
+    }
+    provider.on("synced", seed);
+    return () => {
+      provider.off("synced", seed);
+    };
+  }, [editor, provider, page.id, page.content]);
 
   const { canEditContent, isLoading } = usePageCapabilities(page.id);
   useEffect(() => {
