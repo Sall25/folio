@@ -56,20 +56,29 @@ export function DatabaseLoadingSkeleton({
         const per =
           dims.perColumn ?? Array.from({ length: columns }, () => rows);
         return (
-          <div className="db-skeleton__board">
+          <div className="db-skeleton__board" style={gaps(dims, { x: true })}>
             {per.map((count, c) => (
               <div
                 key={c}
                 className="db-skeleton__board-col"
-                style={dims.cardWidth ? { flexBasis: dims.cardWidth } : undefined}
+                style={{
+                  ...((dims.laneWidth ?? dims.cardWidth)
+                    ? {
+                        flex: `0 0 ${dims.laneWidth ?? dims.cardWidth}px`,
+                      }
+                    : undefined),
+                  ...(dims.gapY != null ? { gap: dims.gapY } : undefined),
+                }}
               >
                 <div className="db-skeleton__board-head">
                   <Bone width={14} height={14} rounded />
                   <Bone width={`${40 + (c % 3) * 12}%`} height={12} />
                 </div>
-                {Array.from({ length: Math.min(count, MAX_ROWS) }).map((_, i) => (
-                  <SkeletonCard key={i} dims={dims} seed={c + i} />
-                ))}
+                {Array.from({ length: Math.min(count, MAX_ROWS) }).map(
+                  (_, i) => (
+                    <SkeletonCard key={i} dims={dims} seed={c + i} />
+                  ),
+                )}
               </div>
             ))}
           </div>
@@ -81,13 +90,21 @@ export function DatabaseLoadingSkeleton({
         return (
           <div
             className="db-skeleton__gallery"
-            style={
-              dims.cardWidth
-                ? ({
-                    gridTemplateColumns: `repeat(auto-fill, minmax(min(${dims.cardWidth}px, 100%), 1fr))`,
-                  } as CSSProperties)
-                : undefined
-            }
+            style={{
+              // As many across as last time, at the width they had.
+              ...(dims.columns > 0
+                ? {
+                    gridTemplateColumns: `repeat(${dims.columns}, minmax(0, ${
+                      dims.cardWidth ? `${dims.cardWidth}px` : "1fr"
+                    }))`,
+                  }
+                : dims.cardWidth
+                  ? {
+                      gridTemplateColumns: `repeat(auto-fill, minmax(min(${dims.cardWidth}px, 100%), 1fr))`,
+                    }
+                  : undefined),
+              ...gaps(dims, { x: true, y: true }),
+            }}
           >
             {Array.from({ length: rows }).map((_, i) => (
               <SkeletonCard key={i} dims={dims} seed={i} gallery />
@@ -98,7 +115,7 @@ export function DatabaseLoadingSkeleton({
       // ── List: title + trailing inline props ───────────────────────────
       case "list":
         return (
-          <div className="db-skeleton__list">
+          <div className="db-skeleton__list" style={gaps(dims, { y: true })}>
             {Array.from({ length: rows }).map((_, r) => (
               <div
                 key={r}
@@ -161,12 +178,18 @@ export function DatabaseLoadingSkeleton({
             }));
         const gridTemplateColumns = `${header.map((h) => `${h.width}px`).join(" ")} 1fr`;
         const rowStyle = { gridTemplateColumns } as CSSProperties;
-        const cellStyle = dims.rowHeight ? { height: dims.rowHeight } : undefined;
+        const cellStyle = dims.rowHeight
+          ? { height: dims.rowHeight }
+          : undefined;
         return (
           <>
             <div
               className="db-skeleton__row db-skeleton__row--header"
-              style={rowStyle}
+              style={
+                dims.headerHeight
+                  ? { ...rowStyle, height: dims.headerHeight }
+                  : rowStyle
+              }
             >
               {header.map((h, c) => (
                 <div key={c} className="db-skeleton__cell">
@@ -219,7 +242,9 @@ export function DatabaseLoadingSkeleton({
     >
       <div
         className={
-          switching ? "db-skeleton" : "db-skeleton db-skeleton--column top-level-block"
+          switching
+            ? "db-skeleton"
+            : "db-skeleton db-skeleton--column top-level-block"
         }
         style={boxStyle}
         aria-label="Loading database"
@@ -258,6 +283,17 @@ export function DatabaseLoadingSkeleton({
       </div>
     </NodeViewWrapper>
   );
+}
+
+/** The spaces a view had, where they are known. */
+function gaps(
+  dims: ViewDims,
+  which: { x?: boolean; y?: boolean },
+): CSSProperties | undefined {
+  const out: CSSProperties = {};
+  if (which.x && dims.gapX != null) out.columnGap = dims.gapX;
+  if (which.y && dims.gapY != null) out.rowGap = dims.gapY;
+  return Object.keys(out).length > 0 ? out : undefined;
 }
 
 function SkeletonCard({

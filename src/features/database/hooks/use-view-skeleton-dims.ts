@@ -22,6 +22,13 @@ export interface ViewDims {
   cardWidth?: number;
   cardHeight?: number;
   coverHeight?: number;
+  /** The space between cards, columns and rows (px). */
+  gapX?: number;
+  gapY?: number;
+  /** Board: a lane's width. */
+  laneWidth?: number;
+  /** Table: the header row's height. */
+  headerHeight?: number;
 }
 
 const DEFAULTS: Record<string, ViewDims> = {
@@ -110,6 +117,18 @@ export function useMeasureViewDims(
       );
       const rows = recordCount ?? records.length;
 
+      // The space between things is as much of a view's shape as the things
+      // themselves: a skeleton with the wrong gaps is the right number of
+      // cards in the wrong places.
+      const body = scope.querySelector<HTMLElement>(".db-board-grid__body");
+      if (body) {
+        const style = getComputedStyle(body);
+        const x = parseFloat(style.columnGap);
+        const y = parseFloat(style.rowGap);
+        if (Number.isFinite(x)) next.gapX = Math.round(x);
+        if (Number.isFinite(y)) next.gapY = Math.round(y);
+      }
+
       if (viewType === "table") {
         next.rows = rows;
         const h = records[0]?.getBoundingClientRect().height;
@@ -117,6 +136,8 @@ export function useMeasureViewDims(
         const ths = Array.from(scope.querySelectorAll<HTMLElement>(".db-th"));
         if (ths.length > 0) {
           next.columns = ths.length;
+          const headBox = ths[0].getBoundingClientRect();
+          if (headBox.height) next.headerHeight = px(headBox.height);
           next.header = ths.map((th) => ({
             name:
               th.querySelector(".tiptap-button-text")?.textContent?.trim() ??
@@ -134,6 +155,9 @@ export function useMeasureViewDims(
         );
         if (heads.length > 0) {
           next.columns = heads.length;
+          const lane = scope.querySelector<HTMLElement>(".db-board-lane");
+          const laneBox = lane?.getBoundingClientRect();
+          if (laneBox?.width) next.laneWidth = px(laneBox.width);
           // A card belongs to the column whose header it sits under.
           const lefts = heads.map((h) => h.getBoundingClientRect().left);
           const per = lefts.map(() => 0);
@@ -154,6 +178,14 @@ export function useMeasureViewDims(
       } else if (viewType === "gallery") {
         next.rows = rows;
         measureCard(scope, next);
+        // How many cards fit across: the ones sharing the first row's top.
+        const cards = Array.from(
+          scope.querySelectorAll<HTMLElement>(".db-board-card"),
+        ).map((c) => c.getBoundingClientRect());
+        if (cards.length > 0) {
+          const top = Math.min(...cards.map((c) => c.top));
+          next.columns = cards.filter((c) => Math.abs(c.top - top) < 4).length;
+        }
       } else {
         // Calendar and timeline: only the size, which is what keeps a
         // column from stretching.
