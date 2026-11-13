@@ -2275,5 +2275,18 @@
     "tryIt": "Try it myself",
     "copy": "Copy",
     "copied": "Copied"
+  },
+  "canvas": {
+    "add": "Add block",
+    "lock": "Lock the layout",
+    "move": "Move this block",
+    "widen": "Change this block's width",
+    "height": "Drag to change the canvas height",
+    "label": "Label",
+    "unlink": "Remove this link",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "fit": "Fit to the blocks",
+    "empty": "Drag a block in, or add one — then drag a dot to link two together."
   }
 }

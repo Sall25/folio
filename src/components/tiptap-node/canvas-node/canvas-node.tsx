@@ -21,9 +21,15 @@ import { useEditorEditable } from "../button-node/use-editor-editable";
 import {
   DEFAULT_BLOCK_WIDTH,
   DEFAULT_CANVAS_HEIGHT,
+  MAX_CANVAS_HEIGHT,
+  MIN_BLOCK_WIDTH,
+  MIN_CANVAS_HEIGHT,
   POSITIONABLE_TYPES,
   canvasId,
+  labelEdges,
+  linkEdges,
   parseEdges,
+  unlinkEdges,
   type CanvasEdge,
 } from "./canvas-attrs";
 import { canvasLayoutPlugin } from "./canvas-layout-plugin";
@@ -138,6 +144,8 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
   const [view, setView] = useState<Viewport>({ x: 0, y: 0, k: 1 });
   const [locked, setLocked] = useState(false);
   const [pickedEdge, setPickedEdge] = useState<string | null>(null);
+  /** The height while it is being dragged; the attribute gets the last one. */
+  const [liveHeight, setLiveHeight] = useState<number | null>(null);
   const [draft, setDraft] = useState<{
     from: string;
     side: Side;
@@ -236,88 +244,119 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
     editor.view.dispatch(tr);
   }, [children, editable, editor, getPos, sizes]);
 
+  /**
+   * One pointer drag: capture it on the control that started it, follow it,
+   * and let go. Capturing means the drag keeps working past the edge of the
+   * canvas, which is exactly where a drag to the corner of a block ends up.
+   */
+  const onDrag = (
+    e: ReactPointerEvent,
+    move: (ev: PointerEvent) => void,
+    done?: (ev: PointerEvent) => void,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const el = e.currentTarget as HTMLElement;
+    el.setPointerCapture(e.pointerId);
+    const end = (ev: PointerEvent) => {
+      done?.(ev);
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", end);
+      el.removeEventListener("pointercancel", end);
+    };
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", end);
+    el.addEventListener("pointercancel", end);
+  };
+
   // ── Moving a block ───────────────────────────────────────────────────
   const startMove = (e: ReactPointerEvent, child: Child) => {
     if (!editable || locked) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const grip = e.currentTarget as HTMLElement;
-    grip.setPointerCapture(e.pointerId);
     const start = pointIn(e);
     const from = { x: child.x ?? 0, y: child.y ?? 0 };
+    const to = (ev: PointerEvent) => {
+      const now = pointIn(ev);
+      return {
+        canvasX: snap(from.x + (now.x - start.x)),
+        canvasY: snap(from.y + (now.y - start.y)),
+      };
+    };
+    onDrag(
+      e,
+      (ev) => writeChild(child.offset, to(ev), false),
+      (ev) => writeChild(child.offset, to(ev), true),
+    );
+  };
 
-    const move = (ev: PointerEvent) => {
-      const now = pointIn(ev);
-      writeChild(
-        child.offset,
-        {
-          canvasX: snap(from.x + (now.x - start.x)),
-          canvasY: snap(from.y + (now.y - start.y)),
-        },
-        false,
+  // ── Widening a block ─────────────────────────────────────────────────
+  // Width is the block's own attribute, so it is written the same way the
+  // position is: every frame without history, the last one with it.
+  const startWiden = (e: ReactPointerEvent, child: Child) => {
+    if (!editable || locked) return;
+    const start = pointIn(e);
+    const from = child.w;
+    const to = (ev: PointerEvent) => ({
+      canvasW: Math.max(MIN_BLOCK_WIDTH, snap(from + (pointIn(ev).x - start.x))),
+    });
+    onDrag(
+      e,
+      (ev) => writeChild(child.offset, to(ev), false),
+      (ev) => writeChild(child.offset, to(ev), true),
+    );
+  };
+
+  // ── Resizing the canvas itself ───────────────────────────────────────
+  // The height is the one thing about a canvas that belongs to the page
+  // rather than to the canvas's own space, so it is the node's attribute.
+  const startStretch = (e: ReactPointerEvent) => {
+    if (!editable) return;
+    const startY = e.clientY;
+    const from = height;
+    const next = (ev: PointerEvent) =>
+      Math.min(
+        MAX_CANVAS_HEIGHT,
+        Math.max(MIN_CANVAS_HEIGHT, Math.round(from + (ev.clientY - startY))),
       );
-    };
-    const up = (ev: PointerEvent) => {
-      const now = pointIn(ev);
-      writeChild(
-        child.offset,
-        {
-          canvasX: snap(from.x + (now.x - start.x)),
-          canvasY: snap(from.y + (now.y - start.y)),
-        },
-        true,
-      );
-      grip.removeEventListener("pointermove", move);
-      grip.removeEventListener("pointerup", up);
-      grip.removeEventListener("pointercancel", up);
-    };
-    grip.addEventListener("pointermove", move);
-    grip.addEventListener("pointerup", up);
-    grip.addEventListener("pointercancel", up);
+    onDrag(
+      e,
+      (ev) => setLiveHeight(next(ev)),
+      (ev) => {
+        setLiveHeight(null);
+        updateAttributes({ height: next(ev) });
+      },
+    );
   };
 
   // ── Drawing an edge ──────────────────────────────────────────────────
   const startLink = (e: ReactPointerEvent, child: Child, side: Side) => {
     if (!editable || locked || !child.id) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const dot = e.currentTarget as HTMLElement;
-    dot.setPointerCapture(e.pointerId);
     setDraft({ from: child.id, side, to: pointIn(e) });
-
-    const move = (ev: PointerEvent) =>
-      setDraft({ from: child.id, side, to: pointIn(ev) });
-
-    const up = (ev: PointerEvent) => {
-      const under = document
-        .elementFromPoint(ev.clientX, ev.clientY)
-        ?.closest<HTMLElement>("[data-canvas-id]");
-      const target = under?.dataset.canvasId;
-      if (target && target !== child.id && rects[target]) {
-        const next: CanvasEdge[] = [
-          ...edges.filter((x) => !(x.from === child.id && x.to === target)),
-          {
-            id: canvasId(),
-            from: child.id,
-            to: target,
-            fromSide: side,
-            toSide: nearestSide(rects[target], pointIn(ev)),
-          },
-        ];
-        updateAttributes({ edges: next });
-      }
-      setDraft(null);
-      dot.removeEventListener("pointermove", move);
-      dot.removeEventListener("pointerup", up);
-      dot.removeEventListener("pointercancel", up);
-    };
-    dot.addEventListener("pointermove", move);
-    dot.addEventListener("pointerup", up);
-    dot.addEventListener("pointercancel", up);
+    onDrag(
+      e,
+      (ev) => setDraft({ from: child.id, side, to: pointIn(ev) }),
+      (ev) => {
+        const under = document
+          .elementFromPoint(ev.clientX, ev.clientY)
+          ?.closest<HTMLElement>("[data-canvas-id]");
+        const target = under?.dataset.canvasId;
+        if (target && target !== child.id && rects[target]) {
+          updateAttributes({
+            edges: linkEdges(edges, {
+              id: canvasId(),
+              from: child.id,
+              to: target,
+              fromSide: side,
+              toSide: nearestSide(rects[target], pointIn(ev)),
+            }),
+          });
+        }
+        setDraft(null);
+      },
+    );
   };
 
   const removeEdge = (id: string) => {
-    updateAttributes({ edges: edges.filter((e) => e.id !== id) });
+    updateAttributes({ edges: unlinkEdges(edges, id) });
     setPickedEdge(null);
   };
 
@@ -325,19 +364,10 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
   const startPan = (e: ReactPointerEvent) => {
     if (e.button !== 0) return;
     setPickedEdge(null);
-    const ground = e.currentTarget as HTMLElement;
-    ground.setPointerCapture(e.pointerId);
     const from = { x: e.clientX - view.x, y: e.clientY - view.y };
-    const move = (ev: PointerEvent) =>
-      setView((v) => ({ ...v, x: ev.clientX - from.x, y: ev.clientY - from.y }));
-    const up = () => {
-      ground.removeEventListener("pointermove", move);
-      ground.removeEventListener("pointerup", up);
-      ground.removeEventListener("pointercancel", up);
-    };
-    ground.addEventListener("pointermove", move);
-    ground.addEventListener("pointerup", up);
-    ground.addEventListener("pointercancel", up);
+    onDrag(e, (ev) =>
+      setView((v) => ({ ...v, x: ev.clientX - from.x, y: ev.clientY - from.y })),
+    );
   };
 
   // Plain scrolling belongs to the page: a block that swallowed the wheel
@@ -403,7 +433,7 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
         ref={frameRef}
         className="folio-canvas__frame"
         style={{
-          height: `${height}px`,
+          height: `${liveHeight ?? height}px`,
           backgroundSize: `${GRID * 2.75 * view.k}px ${GRID * 2.75 * view.k}px`,
           backgroundPosition: `${view.x}px ${view.y}px`,
         }}
@@ -438,6 +468,9 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
               const b = rects[edge.to];
               if (!a || !b) return null;
               const d = edgePath(a, edge.fromSide, b, edge.toSide);
+              const mid = edge.label
+                ? edgeMidpoint(a, edge.fromSide, b, edge.toSide)
+                : null;
               return (
                 <g
                   key={edge.id}
@@ -449,6 +482,11 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
                     d={d}
                     onClick={() => setPickedEdge(edge.id)}
                   />
+                  {mid && (
+                    <text x={mid.x} y={mid.y - 5} textAnchor="middle">
+                      {edge.label}
+                    </text>
+                  )}
                 </g>
               );
             })}
@@ -467,9 +505,13 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
           <NodeViewContent className="folio-canvas__content" />
         </div>
 
-        {/* Grips and connection points, over the blocks but out of the way
-            of the caret: only the controls take the pointer. */}
-        <div className="folio-canvas__overlay" style={plane} aria-hidden="true">
+        {/* Grips, connection points and the edge tools: over the blocks, but
+            out of the way of the caret — only the controls take the pointer. */}
+        <div
+          className="folio-canvas__overlay"
+          style={plane}
+          contentEditable={false}
+        >
           {showControls &&
             children.map((child) => {
               const r = child.id ? rects[child.id] : null;
@@ -486,6 +528,7 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
                 >
                   <span
                     className="folio-canvas__grip"
+                    aria-hidden="true"
                     onPointerDown={(e) => startMove(e, child)}
                     title={t("canvas.move", "Move this block")}
                   >
@@ -496,9 +539,16 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
                       key={side}
                       className="folio-canvas__dot"
                       data-side={side}
+                      aria-hidden="true"
                       onPointerDown={(e) => startLink(e, child, side)}
                     />
                   ))}
+                  <span
+                    className="folio-canvas__widen"
+                    aria-hidden="true"
+                    title={t("canvas.widen", "Change this block's width")}
+                    onPointerDown={(e) => startWiden(e, child)}
+                  />
                 </div>
               );
             })}
@@ -511,15 +561,42 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
               if (!edge || !a || !b) return null;
               const m = edgeMidpoint(a, edge.fromSide, b, edge.toSide);
               return (
-                <button
-                  type="button"
-                  className="folio-canvas__cut"
+                <div
+                  className="folio-canvas__edge-tools"
                   style={{ transform: `translate(${m.x}px, ${m.y}px)` }}
-                  onClick={() => removeEdge(edge.id)}
-                  title={t("canvas.unlink", "Remove this link")}
                 >
-                  <X className="tiptap-button-icon" />
-                </button>
+                  {/* Uncontrolled, keyed on the edge: a transaction per
+                      keystroke would reach every collaborator and fill the
+                      undo stack with half-typed words. */}
+                  <input
+                    key={edge.id}
+                    type="text"
+                    className="folio-canvas__label"
+                    defaultValue={edge.label ?? ""}
+                    placeholder={t("canvas.label", "Label")}
+                    aria-label={t("canvas.label", "Label")}
+                    onKeyDown={(e) => {
+                      e.stopPropagation();
+                      if (e.key === "Enter" || e.key === "Escape") {
+                        e.preventDefault();
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    onBlur={(e) =>
+                      updateAttributes({
+                        edges: labelEdges(edges, edge.id, e.target.value),
+                      })
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="folio-canvas__cut"
+                    onClick={() => removeEdge(edge.id)}
+                    title={t("canvas.unlink", "Remove this link")}
+                  >
+                    <X className="tiptap-button-icon" />
+                  </button>
+                </div>
               );
             })()}
         </div>
@@ -587,6 +664,16 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
             <Maximize2 className="tiptap-button-icon" />
           </Button>
         </Card>
+
+        {editable && (
+          <span
+            className="folio-canvas__stretch"
+            title={t("canvas.height", "Drag to change the canvas height")}
+            onPointerDown={startStretch}
+          >
+            <span className="folio-canvas__stretch-grip" />
+          </span>
+        )}
       </div>
     </NodeViewWrapper>
   );

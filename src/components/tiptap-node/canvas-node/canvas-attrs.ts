@@ -2,9 +2,13 @@ import type { Side } from "./canvas-geometry";
 
 /** How wide a block sits on the canvas until someone resizes it. */
 export const DEFAULT_BLOCK_WIDTH = 260;
+/** Narrow enough to be a label, wide enough to still hold a word. */
+export const MIN_BLOCK_WIDTH = 96;
 
 /** How tall the canvas block is in the page, until someone resizes it. */
 export const DEFAULT_CANVAS_HEIGHT = 520;
+export const MIN_CANVAS_HEIGHT = 220;
+export const MAX_CANVAS_HEIGHT = 1400;
 
 /**
  * Which block types can carry a canvas position. Every one of them gains four
@@ -99,6 +103,41 @@ export function parseEdges(value: unknown): CanvasEdge[] {
     });
   }
   return out;
+}
+
+/**
+ * Link two blocks. One link per direction: dragging the same pair again moves
+ * the existing link to the sides just used rather than stacking a second edge
+ * on top of the first, where it would be invisible and uncuttable.
+ */
+export function linkEdges(
+  edges: CanvasEdge[],
+  edge: CanvasEdge,
+): CanvasEdge[] {
+  if (!edge.from || !edge.to || edge.from === edge.to) return edges;
+  const kept = edges.filter(
+    (e) => !(e.from === edge.from && e.to === edge.to),
+  );
+  const previous = edges.find(
+    (e) => e.from === edge.from && e.to === edge.to,
+  );
+  // Keep what the old link said, so re-dragging it doesn't lose the label.
+  return [...kept, { ...edge, label: edge.label ?? previous?.label }];
+}
+
+export function labelEdges(
+  edges: CanvasEdge[],
+  id: string,
+  label: string,
+): CanvasEdge[] {
+  const text = label.trim();
+  return edges.map((e) =>
+    e.id === id ? { ...e, label: text || undefined } : e,
+  );
+}
+
+export function unlinkEdges(edges: CanvasEdge[], id: string): CanvasEdge[] {
+  return edges.filter((e) => e.id !== id);
 }
 
 /** A new id for a block or an edge. */

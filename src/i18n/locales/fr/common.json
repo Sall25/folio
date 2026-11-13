@@ -2275,5 +2275,18 @@
     "tryIt": "Essayer moi-même",
     "copy": "Copier",
     "copied": "Copié"
+  },
+  "canvas": {
+    "add": "Ajouter un bloc",
+    "lock": "Verrouiller la disposition",
+    "move": "Déplacer ce bloc",
+    "widen": "Changer la largeur de ce bloc",
+    "height": "Faire glisser pour changer la hauteur du canevas",
+    "label": "Libellé",
+    "unlink": "Supprimer ce lien",
+    "zoomIn": "Zoom avant",
+    "zoomOut": "Zoom arrière",
+    "fit": "Ajuster aux blocs",
+    "empty": "Faites glisser un bloc ici, ou ajoutez-en un — puis tirez un point pour en relier deux."
   }
 }

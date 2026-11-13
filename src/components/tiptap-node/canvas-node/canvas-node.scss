@@ -61,6 +61,23 @@
     stroke-dasharray: 5 4;
   }
 
+  // What an edge says, drawn with a halo so it stays readable where it
+  // crosses the dotted ground or another edge.
+  text {
+    font-size: 10px;
+    font-weight: 500;
+    fill: var(--tt-text-secondary);
+    paint-order: stroke;
+    stroke: var(--tt-bg-color, var(--white));
+    stroke-width: 4px;
+    stroke-linejoin: round;
+    pointer-events: none;
+
+    .dark & {
+      stroke: var(--tt-gray-dark-50, #1c1c1c);
+    }
+  }
+
   // A fat invisible stroke, so an edge can be hit without pixel-hunting.
   path.hit {
     fill: none;
@@ -176,26 +193,100 @@
 .folio-canvas__chrome:hover {
   .folio-canvas__grip { opacity: 1; }
   .folio-canvas__dot { opacity: 1; }
+  .folio-canvas__widen { opacity: 0.5; }
+}
+
+.folio-canvas__widen:hover { opacity: 0.9 !important; }
+
+// The right edge of a block: drag it to change the block's width.
+.folio-canvas__widen {
+  position: absolute;
+  top: 10%;
+  right: -3px;
+  width: 7px;
+  height: 80%;
+  border-radius: 4px;
+  background: var(--accent, var(--tt-brand-color-500));
+  opacity: 0;
+  cursor: ew-resize;
+  pointer-events: auto;
+  transition: opacity 120ms ease;
+}
+
+// An edge's tools, at its middle: what it says, and a way to cut it.
+.folio-canvas__edge-tools {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: -14px 0 0 -70px;
+  padding: 3px;
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-sm, 8px);
+  background: var(--tt-card-bg-color, var(--white));
+  box-shadow: var(--tt-shadow-elevated-md);
+  pointer-events: auto;
+}
+
+.folio-canvas__label {
+  width: 104px;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--tt-text-primary);
+  font: inherit;
+  font-size: 12px;
+
+  &:focus {
+    outline: none;
+    background: color-mix(in srgb, var(--accent, #6229ff) 10%, transparent);
+  }
 }
 
 .folio-canvas__cut {
-  position: absolute;
-  top: -11px;
-  left: -11px;
   display: grid;
   place-items: center;
   width: 22px;
   height: 22px;
+  flex: 0 0 auto;
   padding: 0;
-  border: 1px solid var(--tt-border-color);
+  border: 0;
   border-radius: 50%;
-  background: var(--tt-card-bg-color, var(--white));
+  background: transparent;
   color: var(--tt-text-secondary);
   cursor: pointer;
   pointer-events: auto;
-  box-shadow: var(--tt-shadow-elevated-md);
 
   &:hover { color: var(--tt-color-red-dec-2); }
+}
+
+// The canvas's own bottom edge: drag it to make the block taller.
+.folio-canvas__stretch {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  height: 12px;
+  cursor: ns-resize;
+
+  &:hover .folio-canvas__stretch-grip,
+  &:active .folio-canvas__stretch-grip {
+    opacity: 1;
+  }
+}
+
+.folio-canvas__stretch-grip {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--tt-text-secondary);
+  opacity: 0;
+  transition: opacity 120ms ease;
 }
 
 .folio-canvas__empty {
