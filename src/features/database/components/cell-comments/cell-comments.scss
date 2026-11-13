@@ -35,7 +35,7 @@
     height: fit-content !important;
     line-height: 1.35 !important;
     padding: 0 3px;
-    border-radius: 2px;
+    border-radius: 3px;
     // The app's highlight yellow, which has a value per theme, let through
     // so the row's own colour still shows; the underline is the solid one.
     background-color: color-mix(
@@ -106,23 +106,53 @@
 .db-cell-comments__card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
   max-height: min(520px, 70vh);
   overflow-y: auto;
-  padding: 8px;
+  padding: 4px 0 8px;
 
-  // The row page's discussion cards, inside a popover: no outer frame.
-  .page-comment__thread {
+  // A discussion is a card of its own on a row's page; in here the popover
+  // is already the card, so it drops its frame and the discussions are
+  // told apart by a line instead of by a box inside a box.
+  .page-comment__thread.tiptap-card {
+    max-width: none;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     box-shadow: none;
+    overflow: visible;
+  }
+
+  .page-comment__thread + .page-comment__thread {
+    border-top: 1px solid var(--tt-border-color);
+    margin-top: 4px;
+    padding-top: 4px;
+  }
+
+  // The head sits on the popover's own background: no rule under it.
+  .page-comment__head {
+    padding: 4px 8px 2px 12px;
+    border-bottom: 0;
+  }
+
+  .page-comment__list {
+    gap: 12px;
+    padding: 6px 12px 8px;
+  }
+
+  .page-comment__footer {
+    padding: 0 8px 4px;
   }
 }
 
 .db-cell-comments__new.tiptap-button {
   align-self: flex-start;
+  margin: 2px 8px;
 }
 
 .db-cell-comments__resolved {
   align-self: flex-start;
+  margin: 2px 8px 0;
   border: none;
   background: none;
   padding: 2px 4px;
