@@ -21,7 +21,7 @@ import { useAssignToMe } from "../hooks/use-assign-to-me";
 
 // Gallery cover height per card size. A fitted image is as tall as the cover,
 // so a taller cover is also a wider image.
-const GALLERY_COVER_HEIGHT = { small: 150, medium: 190, large: 230 } as const;
+const GALLERY_COVER_HEIGHT = { small: 120, medium: 155, large: 190 } as const;
 
 export function BoardCardBody({
   record,

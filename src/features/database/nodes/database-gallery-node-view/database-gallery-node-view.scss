@@ -23,15 +23,17 @@
   gap: 10px;
 }
 
-// The card's text block: the same gutter as the title above it, and room
-// under the last property.
+// Room above the title and under the last property. Left and right come
+// from the card's own gutter (board-card-body.scss), so the title and the
+// properties always line up.
 .db-board-card__props {
-  padding: 2px 12px 10px;
+  padding-top: 2px;
+  padding-bottom: 10px;
 }
 
 .db-board-card__title {
-  padding: 8px 12px 2px !important;
-  margin: 0 !important;
+  padding-top: 8px !important;
+  padding-bottom: 2px !important;
  }
 
  

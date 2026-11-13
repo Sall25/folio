@@ -112,6 +112,28 @@
   &__props{
     margin: 0 6px;
   }
+
+  // One gutter for the card, so the title and the properties under it can
+  // never drift apart: they were set in different places, and zeroing the
+  // title's margin left it 6px to the left of every property row.
+  &[data-view-type="gallery"],
+  &[data-view-type="board"] {
+    --db-card-gutter: 12px;
+
+    > .db-board-card__title,
+    > .db-board-card__props {
+      // !important: the board grid's stylesheet zeroes the properties'
+      // padding for every card, and the gallery shares that grid.
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      padding-left: var(--db-card-gutter) !important;
+      padding-right: var(--db-card-gutter) !important;
+    }
+  }
+
+  &[data-view-type="board"] {
+    --db-card-gutter: 10px;
+  }
   &__cover{
     margin-left: 0;
     margin-right: 0;
@@ -161,6 +183,28 @@
 // of text, and left to themselves the rows came out unevenly spaced. Said
 // through the card so it outweighs the rule above, which frees each cell's
 // own height.
+// Every row starts at the card's gutter, where the title's icon starts: a
+// cell carries the table's own insets (the editor display hangs 8px into
+// the cell's padding), which left text rows a few pixels right of the pills.
+.db-board-card .db-board-card__props > * {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.db-board-card .db-cell-editor__display {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.db-board-card[data-view-type="gallery"] .db-board-card__title,
+.db-board-card[data-view-type="board"] .db-board-card__title {
+  .db-cell,
+  .db-cell-title {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+}
+
 .db-board-card .db-board-card__props[data-layout="list"] > * {
   width: 100%;
   min-width: 0;
@@ -184,11 +228,10 @@
     font-size: 12px;
   }
 
-  // The board's stylesheet zeroes this padding for every card in a grid,
-  // and the gallery shares that grid class: said here, on the card itself,
-  // so a gallery card keeps its gutter.
+  // Only the vertical side here: the gutter above sets left and right.
   &[data-view-type="gallery"] > .db-board-card__props {
-    padding: 2px 12px 10px;
+    padding-top: 2px;
+    padding-bottom: 10px;
   }
 
   // Each property is one line of a card, not a table cell: the pills are
