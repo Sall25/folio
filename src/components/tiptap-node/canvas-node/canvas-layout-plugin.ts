@@ -2,7 +2,12 @@ import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import type { EditorState } from "@tiptap/pm/state";
 import type { Node as PMNode } from "@tiptap/pm/model";
-import { DEFAULT_BLOCK_WIDTH } from "./canvas-attrs";
+import {
+  DEFAULT_BLOCK_WIDTH,
+  parseEdges,
+  pruneEdges,
+  type CanvasEdge,
+} from "./canvas-attrs";
 
 // What puts a block where it belongs on the canvas.
 //
@@ -52,13 +57,57 @@ export function canvasDecorations(
   return out.length ? DecorationSet.create(state.doc, out) : DecorationSet.empty;
 }
 
+/**
+ * The links of a block that has just left the canvas, by canvas.
+ *
+ * This is the one safe moment to cut them. A block can be missing from a
+ * render while a collaborator's change is being applied, so pruning on what
+ * is on screen would throw links away that nobody asked to lose. A document
+ * change is different: the block is actually gone, and because the cut rides
+ * along in the same transaction, one undo brings the block and its links
+ * back together.
+ */
+function prunedCanvases(
+  state: EditorState,
+  typeName: string,
+): { pos: number; edges: CanvasEdge[] }[] {
+  const out: { pos: number; edges: CanvasEdge[] }[] = [];
+  state.doc.descendants((node, pos) => {
+    if (node.type.name !== typeName) return true;
+    const edges = parseEdges(node.attrs.edges);
+    if (edges.length) {
+      const present = new Set<string>();
+      node.forEach((child) => {
+        const id = child.attrs.canvasId;
+        if (id) present.add(String(id));
+      });
+      const kept = pruneEdges(edges, present);
+      if (kept.length !== edges.length) out.push({ pos, edges: kept });
+    }
+    return false;
+  });
+  return out;
+}
+
 export function canvasLayoutPlugin(typeName: string): Plugin {
   return new Plugin({
     key: canvasLayoutKey,
+
     props: {
       decorations(state) {
         return canvasDecorations(state, typeName);
       },
+    },
+
+    appendTransaction(trs, _oldState, newState) {
+      if (!trs.some((tr) => tr.docChanged)) return null;
+      const changes = prunedCanvases(newState, typeName);
+      if (changes.length === 0) return null;
+      const tr = newState.tr;
+      for (const change of changes) {
+        tr.setNodeAttribute(change.pos, "edges", change.edges);
+      }
+      return tr;
     },
   });
 }

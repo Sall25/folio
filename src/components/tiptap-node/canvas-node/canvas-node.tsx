@@ -16,7 +16,17 @@ import {
 import { useTranslation } from "react-i18next";
 import { Card } from "src/components/tiptap-ui-primitive/card";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Lock, Maximize2, Minus, Plus, X } from "src/components/icons";
+import {
+  Copy,
+  Expand,
+  Lock,
+  Maximize2,
+  Minimize2,
+  Minus,
+  Plus,
+  Trash2,
+  X,
+} from "src/components/icons";
 import { useEditorEditable } from "../button-node/use-editor-editable";
 import {
   DEFAULT_BLOCK_WIDTH,
@@ -36,6 +46,8 @@ import { canvasLayoutPlugin } from "./canvas-layout-plugin";
 import {
   GRID,
   SIDES,
+  centreOn,
+  miniBox,
   draftPath,
   edgeMidpoint,
   edgePath,
@@ -135,6 +147,34 @@ function useChildSizes(
   return sizes;
 }
 
+/**
+ * The frame's own size, watched rather than measured when something needs it:
+ * the minimap works it out while rendering, and a ref can't be read then.
+ */
+function useFrameSize(root: React.RefObject<HTMLElement | null>): {
+  w: number;
+  h: number;
+} {
+  const [size, setSize] = useState({ w: 0, h: 0 });
+
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      const r = el.getBoundingClientRect();
+      setSize((prev) =>
+        prev.w === r.width && prev.h === r.height
+          ? prev
+          : { w: r.width, h: r.height },
+      );
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [root]);
+
+  return size;
+}
+
 function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
   const { t } = useTranslation();
   const editable = useEditorEditable(editor);
@@ -146,6 +186,20 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
   const [pickedEdge, setPickedEdge] = useState<string | null>(null);
   /** The height while it is being dragged; the attribute gets the last one. */
   const [liveHeight, setLiveHeight] = useState<number | null>(null);
+  // Room to work in. Local, like the pan and the zoom: one reader's decision
+  // to look closely isn't everyone's.
+  //
+  // It goes through the Fullscreen API rather than a fixed-position overlay,
+  // because the editor sets `contain: layout` and gives each top-level block
+  // `content-visibility: auto`. Both make an ancestor the containing block
+  // for a fixed descendant, and paint containment clips it as well, so a
+  // fixed overlay inside the editor is sized to a block and then cut away.
+  // Fullscreen puts the frame in the browser's top layer, above all of it,
+  // and moves nothing in the document.
+  const [full, setFull] = useState(false);
+  /** When the browser won't go fullscreen: as tall as the window instead. */
+  const [tall, setTall] = useState(false);
+  const wide = full || tall;
   const [draft, setDraft] = useState<{
     from: string;
     side: Side;
@@ -172,6 +226,7 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
   }, [node]);
 
   const sizes = useChildSizes(planeRef, children);
+  const frame = useFrameSize(frameRef);
 
   const rects = useMemo(() => {
     const out: Record<string, Rect> = {};
@@ -267,6 +322,44 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
     el.addEventListener("pointermove", move);
     el.addEventListener("pointerup", end);
     el.addEventListener("pointercancel", end);
+  };
+
+  // The browser owns fullscreen: it can be left with Escape, or by the page
+  // losing it some other way, and this follows rather than guesses.
+  useEffect(() => {
+    const onChange = () =>
+      setFull(document.fullscreenElement === frameRef.current);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  // Escape leaves the fallback too, where the browser isn't handling it.
+  useEffect(() => {
+    if (!tall) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setTall(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [tall]);
+
+  const toggleWide = () => {
+    const el = frameRef.current;
+    if (full) {
+      if (document.fullscreenElement) void document.exitFullscreen();
+      return;
+    }
+    if (tall) {
+      setTall(false);
+      return;
+    }
+    if (el && typeof el.requestFullscreen === "function") {
+      // A refusal (an embedded frame, a permissions policy) isn't an error
+      // worth showing: take the room that is available instead.
+      el.requestFullscreen().catch(() => setTall(true));
+      return;
+    }
+    setTall(true);
   };
 
   // ── Moving a block ───────────────────────────────────────────────────
@@ -417,6 +510,68 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
       .run();
   };
 
+  // ── One block ────────────────────────────────────────────────────────
+  const duplicateBlock = (child: Child) => {
+    const base = getPos?.();
+    if (base == null) return;
+    const at = base + 1 + child.offset;
+    const original = editor.view.state.doc.nodeAt(at);
+    if (!original) return;
+    const copy = original.toJSON() as {
+      attrs?: Record<string, unknown>;
+    } & Record<string, unknown>;
+    // A copy is its own block: new id, a step down and to the right, and
+    // none of the original's links — which of them it inherits is a guess,
+    // and the wrong guess is harder to undo than drawing one.
+    copy.attrs = {
+      ...(copy.attrs ?? {}),
+      canvasId: canvasId(),
+      canvasX: (child.x ?? 0) + GRID * 3,
+      canvasY: (child.y ?? 0) + GRID * 3,
+    };
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(at + original.nodeSize, copy)
+      .run();
+  };
+
+  const removeBlock = (child: Child) => {
+    const base = getPos?.();
+    if (base == null) return;
+    const at = base + 1 + child.offset;
+    const target = editor.view.state.doc.nodeAt(at);
+    if (!target) return;
+    // The links go with it, in the same transaction — see the pruning in
+    // canvas-layout-plugin, which also covers a delete from anywhere else.
+    editor
+      .chain()
+      .focus()
+      .deleteRange({ from: at, to: at + target.nodeSize })
+      .run();
+  };
+
+  // ── The minimap ──────────────────────────────────────────────────────
+  const mini =
+    frame.w && frame.h ? miniBox(Object.values(rects), frame, view) : null;
+
+  const panToMini = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (!mini) return;
+    const map = e.currentTarget.getBoundingClientRect();
+    // The map fits its box with xMidYMid meet, so one scale covers both axes
+    // and the leftover space is split evenly.
+    const scale = Math.min(map.width / mini.box.w, map.height / mini.box.h);
+    const at = {
+      x:
+        mini.box.x +
+        (e.clientX - map.left - (map.width - mini.box.w * scale) / 2) / scale,
+      y:
+        mini.box.y +
+        (e.clientY - map.top - (map.height - mini.box.h * scale) / 2) / scale,
+    };
+    setView((v) => centreOn(at, frame, v));
+  };
+
   const plane = {
     transform: `translate(${view.x}px, ${view.y}px) scale(${view.k})`,
   };
@@ -428,12 +583,15 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
       className="folio-canvas"
       data-type="canvas"
       data-locked={locked ? "true" : undefined}
+      data-tall={tall ? "true" : undefined}
     >
       <div
         ref={frameRef}
         className="folio-canvas__frame"
         style={{
-          height: `${liveHeight ?? height}px`,
+          // In either of the roomy views the height is CSS's job; the
+          // attribute only says how tall the block is inside the page.
+          height: wide ? undefined : `${liveHeight ?? height}px`,
           backgroundSize: `${GRID * 2.75 * view.k}px ${GRID * 2.75 * view.k}px`,
           backgroundPosition: `${view.x}px ${view.y}px`,
         }}
@@ -549,6 +707,22 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
                     title={t("canvas.widen", "Change this block's width")}
                     onPointerDown={(e) => startWiden(e, child)}
                   />
+                  <span className="folio-canvas__acts">
+                    <button
+                      type="button"
+                      onClick={() => duplicateBlock(child)}
+                      title={t("canvas.duplicate", "Duplicate this block")}
+                    >
+                      <Copy className="tiptap-button-icon" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeBlock(child)}
+                      title={t("canvas.remove", "Remove this block")}
+                    >
+                      <Trash2 className="tiptap-button-icon" />
+                    </button>
+                  </span>
                 </div>
               );
             })}
@@ -663,9 +837,56 @@ function CanvasView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
           >
             <Maximize2 className="tiptap-button-icon" />
           </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            aria-pressed={wide}
+            onClick={toggleWide}
+            aria-label={
+              wide
+                ? t("canvas.collapse", "Back into the page")
+                : t("canvas.expand", "Fill the window")
+            }
+          >
+            {wide ? (
+              <Minimize2 className="tiptap-button-icon" />
+            ) : (
+              <Expand className="tiptap-button-icon" />
+            )}
+          </Button>
         </Card>
 
-        {editable && (
+        {mini && (
+          <svg
+            className="folio-canvas__mini"
+            viewBox={`${mini.box.x} ${mini.box.y} ${mini.box.w} ${mini.box.h}`}
+            preserveAspectRatio="xMidYMid meet"
+            role="presentation"
+            onPointerDown={panToMini}
+          >
+            {Object.entries(rects).map(([id, r]) => (
+              <rect
+                key={id}
+                className="block"
+                x={r.x}
+                y={r.y}
+                width={r.w}
+                height={r.h}
+                rx="6"
+              />
+            ))}
+            <rect
+              className="seen"
+              x={mini.seen.x}
+              y={mini.seen.y}
+              width={mini.seen.w}
+              height={mini.seen.h}
+              rx="4"
+            />
+          </svg>
+        )}
+
+        {editable && !wide && (
           <span
             className="folio-canvas__stretch"
             title={t("canvas.height", "Drag to change the canvas height")}

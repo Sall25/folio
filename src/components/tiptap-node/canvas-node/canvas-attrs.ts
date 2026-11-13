@@ -140,6 +140,19 @@ export function unlinkEdges(edges: CanvasEdge[], id: string): CanvasEdge[] {
   return edges.filter((e) => e.id !== id);
 }
 
+/**
+ * Drop the links whose blocks are gone. Called when a block actually leaves
+ * the canvas, never on a whim: a block can be missing from one render while
+ * a collaborator's change is being applied, and cutting its links then would
+ * throw away something nobody asked to lose.
+ */
+export function pruneEdges(
+  edges: CanvasEdge[],
+  present: Set<string>,
+): CanvasEdge[] {
+  return edges.filter((e) => present.has(e.from) && present.has(e.to));
+}
+
 /** A new id for a block or an edge. */
 export function canvasId(): string {
   const c = globalThis.crypto;

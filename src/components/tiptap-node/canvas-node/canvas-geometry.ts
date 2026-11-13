@@ -209,6 +209,44 @@ export function fitView(
   };
 }
 
+/** The viewport that puts a canvas point in the middle of the frame. */
+export function centreOn(
+  at: Point,
+  frame: { w: number; h: number },
+  v: Viewport,
+): Viewport {
+  return { k: v.k, x: frame.w / 2 - at.x * v.k, y: frame.h / 2 - at.y * v.k };
+}
+
+/**
+ * The minimap: the box it draws, and the part of it you are looking at.
+ * Both in canvas space — the map scales them to its own size itself, which
+ * is what keeps it right at any zoom.
+ */
+export function miniBox(
+  rects: Rect[],
+  frame: { w: number; h: number },
+  v: Viewport,
+): { box: Rect; seen: Rect } {
+  // What you are looking at is the frame's own corner, read back into canvas
+  // space through the same crossing every pointer takes.
+  const corner = toCanvas({ x: 0, y: 0 }, { left: 0, top: 0 }, v);
+  const seen: Rect = {
+    x: corner.x,
+    y: corner.y,
+    w: frame.w / v.k,
+    h: frame.h / v.k,
+  };
+  // The map covers the blocks and the view together, so panning off into
+  // empty space still shows where you are in relation to the blocks.
+  const pad = 40;
+  const b = boundsOf([...rects, seen]);
+  return {
+    box: { x: b.x - pad, y: b.y - pad, w: b.w + pad * 2, h: b.h + pad * 2 },
+    seen,
+  };
+}
+
 /**
  * Where to drop a block that arrives without a position — pasted, dragged in,
  * or made before the canvas knew about it. Blocks cascade down and right from

@@ -6,6 +6,26 @@
   margin: 12px 0;
 }
 
+// Room to work in.
+//
+// Fullscreen, not a fixed overlay: the editor sets `contain: layout` and
+// gives each top-level block `content-visibility: auto`, so a fixed
+// descendant takes a block as its containing block and is clipped by it. The
+// frame goes to the browser's top layer instead, above all of that, and the
+// node view's DOM never moves — so the editor, the caret and the
+// collaborators carry on as they were.
+.folio-canvas__frame:fullscreen {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+// Where the browser won't go fullscreen: as tall as the window, in place.
+.folio-canvas[data-tall="true"] .folio-canvas__frame {
+  height: min(86vh, 1100px);
+}
+
 .folio-canvas__frame {
   position: relative;
   overflow: hidden;
@@ -194,6 +214,7 @@
   .folio-canvas__grip { opacity: 1; }
   .folio-canvas__dot { opacity: 1; }
   .folio-canvas__widen { opacity: 0.5; }
+  .folio-canvas__acts { opacity: 1; }
 }
 
 .folio-canvas__widen:hover { opacity: 0.9 !important; }
@@ -262,6 +283,70 @@
   pointer-events: auto;
 
   &:hover { color: var(--tt-color-red-dec-2); }
+}
+
+// Duplicate and remove, above the block's top right corner.
+.folio-canvas__acts {
+  position: absolute;
+  top: -11px;
+  right: 0;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-sm, 8px);
+  background: var(--tt-card-bg-color, var(--white));
+  box-shadow: var(--tt-shadow-elevated-md);
+  opacity: 0;
+  pointer-events: auto;
+  transition: opacity 120ms ease;
+
+  button {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+
+    &:hover { background: var(--tt-gray-light-a-100); }
+    .dark &:hover { background: var(--tt-gray-dark-a-100); }
+    &:last-child:hover { color: var(--tt-color-red-dec-2); }
+  }
+}
+
+// Where you are, and where everything is. Click it to go there.
+.folio-canvas__mini {
+  position: absolute;
+  right: 10px;
+  bottom: 58px;
+  z-index: 5;
+  width: 158px;
+  height: 104px;
+  padding: 4px;
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-sm, 8px);
+  background: var(--tt-card-bg-color, var(--white));
+  box-shadow: var(--tt-shadow-elevated-md);
+  cursor: pointer;
+
+  rect.block {
+    fill: color-mix(in srgb, var(--accent, #6229ff) 22%, transparent);
+    stroke: color-mix(in srgb, var(--accent, #6229ff) 70%, transparent);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  rect.seen {
+    fill: color-mix(in srgb, var(--tt-text-color) 7%, transparent);
+    stroke: var(--tt-text-secondary);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
 }
 
 // The canvas's own bottom edge: drag it to make the block taller.

@@ -2287,6 +2287,10 @@
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "fit": "Fit to the blocks",
-    "empty": "Drag a block in, or add one — then drag a dot to link two together."
+    "empty": "Drag a block in, or add one — then drag a dot to link two together.",
+    "duplicate": "Duplicate this block",
+    "remove": "Remove this block",
+    "expand": "Fill the window",
+    "collapse": "Back into the page"
   }
 }

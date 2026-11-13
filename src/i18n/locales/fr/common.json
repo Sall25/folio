@@ -2287,6 +2287,10 @@
     "zoomIn": "Zoom avant",
     "zoomOut": "Zoom arrière",
     "fit": "Ajuster aux blocs",
-    "empty": "Faites glisser un bloc ici, ou ajoutez-en un — puis tirez un point pour en relier deux."
+    "empty": "Faites glisser un bloc ici, ou ajoutez-en un — puis tirez un point pour en relier deux.",
+    "duplicate": "Dupliquer ce bloc",
+    "remove": "Supprimer ce bloc",
+    "expand": "Remplir la fenêtre",
+    "collapse": "Revenir dans la page"
   }
 }

@@ -3,6 +3,7 @@ import {
   labelEdges,
   linkEdges,
   parseEdges,
+  pruneEdges,
   unlinkEdges,
   type CanvasEdge,
 } from "./canvas-attrs";
@@ -116,5 +117,26 @@ describe("unlinkEdges", () => {
 
   it("does nothing for an edge that is already gone", () => {
     expect(unlinkEdges([edge()], "nope")).toEqual([edge()]);
+  });
+});
+
+describe("pruneEdges", () => {
+  it("cuts the links of a block that is gone", () => {
+    const edges = [edge(), edge({ id: "e2", from: "b", to: "c" })];
+    expect(pruneEdges(edges, new Set(["a", "b"]))).toEqual([edge()]);
+  });
+
+  it("keeps every link whose blocks are both there", () => {
+    const edges = [edge(), edge({ id: "e2", from: "b", to: "a" })];
+    expect(pruneEdges(edges, new Set(["a", "b"]))).toEqual(edges);
+  });
+
+  it("cuts a link in both directions", () => {
+    const edges = [edge(), edge({ id: "e2", from: "b", to: "a" })];
+    expect(pruneEdges(edges, new Set(["a"]))).toEqual([]);
+  });
+
+  it("is empty when the canvas is", () => {
+    expect(pruneEdges([edge()], new Set())).toEqual([]);
   });
 });

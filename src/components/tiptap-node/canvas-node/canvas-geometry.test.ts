@@ -4,10 +4,12 @@ import {
   MIN_ZOOM,
   anchor,
   boundsOf,
+  centreOn,
   clampZoom,
   draftPath,
   edgePath,
   fitView,
+  miniBox,
   nearestSide,
   oppositeSide,
   placeNew,
@@ -208,5 +210,68 @@ describe("snap", () => {
     expect(snap(11)).toBe(8);
     expect(snap(13)).toBe(16);
     expect(snap(-3)).toBe(-0);
+  });
+});
+
+describe("centreOn", () => {
+  it("puts the point in the middle of the frame", () => {
+    const frame = { w: 900, h: 520 };
+    const v = centreOn({ x: 300, y: 200 }, frame, { x: 0, y: 0, k: 1 });
+    expect(300 * v.k + v.x).toBe(frame.w / 2);
+    expect(200 * v.k + v.y).toBe(frame.h / 2);
+  });
+
+  it("keeps the zoom it was given", () => {
+    const v = centreOn({ x: 0, y: 0 }, { w: 900, h: 520 }, { x: 5, y: 5, k: 1.5 });
+    expect(v.k).toBe(1.5);
+  });
+
+  it("works when the frame is wider than the map", () => {
+    const frame = { w: 2000, h: 1200 };
+    const v = centreOn({ x: 10, y: 10 }, frame, { x: 0, y: 0, k: 0.5 });
+    expect(10 * v.k + v.x).toBe(frame.w / 2);
+  });
+});
+
+describe("miniBox", () => {
+  const frame = { w: 800, h: 400 };
+  const blocks: Rect[] = [
+    { x: 0, y: 0, w: 200, h: 100 },
+    { x: 400, y: 300, w: 200, h: 100 },
+  ];
+
+  it("reports the part of the canvas on screen", () => {
+    const { seen } = miniBox(blocks, frame, { x: 0, y: 0, k: 1 });
+    expect(seen).toEqual({ x: 0, y: 0, w: 800, h: 400 });
+  });
+
+  it("reads the view back through the zoom", () => {
+    const { seen } = miniBox(blocks, frame, { x: -100, y: -50, k: 2 });
+    expect(seen).toEqual({ x: 50, y: 25, w: 400, h: 200 });
+  });
+
+  it("covers every block", () => {
+    const { box } = miniBox(blocks, frame, { x: 0, y: 0, k: 1 });
+    for (const b of blocks) {
+      expect(b.x).toBeGreaterThanOrEqual(box.x);
+      expect(b.y).toBeGreaterThanOrEqual(box.y);
+      expect(b.x + b.w).toBeLessThanOrEqual(box.x + box.w);
+      expect(b.y + b.h).toBeLessThanOrEqual(box.y + box.h);
+    }
+  });
+
+  it("covers the view as well, so panning into empty space still shows you", () => {
+    // Panned far away from every block.
+    const { box, seen } = miniBox(blocks, frame, { x: -4000, y: -3000, k: 1 });
+    expect(seen.x).toBeGreaterThanOrEqual(box.x);
+    expect(seen.x + seen.w).toBeLessThanOrEqual(box.x + box.w);
+    // And the blocks are still on the map, so there is something to go back to.
+    expect(box.x).toBeLessThanOrEqual(0);
+  });
+
+  it("has a box with no blocks at all", () => {
+    const { box } = miniBox([], frame, { x: 0, y: 0, k: 1 });
+    expect(box.w).toBeGreaterThan(0);
+    expect(box.h).toBeGreaterThan(0);
   });
 });
