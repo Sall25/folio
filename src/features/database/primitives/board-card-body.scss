@@ -119,6 +119,120 @@
   }
 }
 
+// Card layout "List" (the default): one property per line, each on its own
+// row under the title, the way a gallery card reads. Without this the cells
+// flowed into shared lines and the card became a block of chips.
+.db-board-card__props[data-layout="list"] {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+
+  .db-cell-board-view {
+    margin: 0;
+  }
+
+  // Pickers (the date's button) set a min-width inline for the table.
+  // Not the checkbox: it's a button too, and a 16px square — freeing its
+  // width left a bare vertical line.
+  .tiptap-button:not(.db-checkbox) {
+    min-width: 0 !important;
+    width: auto !important;
+    justify-content: flex-start;
+  }
+}
+
+// Inside a card every cell is a line of the card, never a table row. Most
+// cells are told so by their class (db-cell-board-view), but several render
+// their own plain db-cell (multi-select, formula, email, the time ones), and
+// those kept the table's 34px row: one property stood taller than the rest
+// and the card's spacing came out uneven.
+.db-board-card .db-cell {
+  height: fit-content !important;
+  min-height: 0 !important;
+  line-height: 1.4 !important;
+  // A wrapping cell (multi-select, files) pads itself 6px top and bottom
+  // for the table, which left a gap above and below that one property.
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+// Every row the same height, whatever is in it: a pill is taller than a line
+// of text, and left to themselves the rows came out unevenly spaced. Said
+// through the card so it outweighs the rule above, which frees each cell's
+// own height.
+.db-board-card .db-board-card__props[data-layout="list"] > * {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 24px !important;
+  display: flex;
+  align-items: center;
+}
+
+// Gallery and board cards: the title carries the card, the properties sit
+// quietly under it (a card is read at a glance, not studied).
+.db-board-card[data-view-type="gallery"],
+.db-board-card[data-view-type="board"] {
+  .db-cell-title__text {
+    font-size: 14px !important;
+    line-height: 1.4;
+  }
+
+  .db-board-card__props {
+    color: var(--tt-text-secondary);
+    font-size: 12px;
+  }
+
+  // The board's stylesheet zeroes this padding for every card in a grid,
+  // and the gallery shares that grid class: said here, on the card itself,
+  // so a gallery card keeps its gutter.
+  &[data-view-type="gallery"] > .db-board-card__props {
+    padding: 2px 12px 10px;
+  }
+
+  // Each property is one line of a card, not a table cell: the pills are
+  // card-sized, nothing forces a width (a number cell asks for 100px, which
+  // pushed the next property far to the right in the compact layout), and
+  // every row starts at the same left edge.
+  .db-board-card__props {
+    .select-badge,
+    .status-badge {
+      padding: 1px 7px !important;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .db-person-chip {
+      font-size: 12px;
+      padding: 1px 7px 1px 1px;
+      line-height: 1.45;
+
+      &__avatar {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .num-cell,
+    .num-cell__display,
+    .num-cell__num {
+      min-width: 0;
+      width: auto;
+    }
+
+    .db-td--person,
+    .db-checkbox {
+      margin: 0;
+    }
+
+    .tiptap-button:not(.db-checkbox) {
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+}
+
 // Card layout "Compact" (Layout panel): the properties sit side by side and
 // wrap, instead of one per line.
 .db-board-card__props[data-layout="compact"] {
@@ -128,7 +242,7 @@
   column-gap: 8px;
   // Pickers (the date's button) set a min-width inline for the table;
   // side by side they take only their text's width.
-  .tiptap-button {
+  .tiptap-button:not(.db-checkbox) {
     min-width: 0 !important;
     width: auto !important;
   }
@@ -140,7 +254,7 @@
   }
 
   .db-cell-board-view {
-    margin: 4px 0;
+    margin: 2px 0;
   }
 }
 
@@ -162,7 +276,7 @@
 // Sub-items under the card's row (databases with sub-items).
 .db-board-card__subitems {
   align-self: flex-start;
-  margin: 2px 10px 8px;
+  margin: 2px 12px 10px;
   padding: 1px 8px;
   border: 1px solid var(--tt-border-color);
   border-radius: 999px;

@@ -23,19 +23,18 @@
   gap: 10px;
 }
 
+// The card's text block: the same gutter as the title above it, and room
+// under the last property.
 .db-board-card__props {
-  padding: 5px 10px;
+  padding: 2px 12px 10px;
 }
 
 .db-board-card__title {
-  padding: 0 !important;
+  padding: 8px 12px 2px !important;
+  margin: 0 !important;
  }
 
  
-
-.status-badge{
-  padding: 5px 10px;
-}
 
 .db-new-card--gallery {
   display: flex;
