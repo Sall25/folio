@@ -37,32 +37,15 @@
 
   &__spacer { flex: 1 1 auto; }
 
-  // The real view tabs, before the database code and data arrive.
+  // The tabs are the toolbar's own (database-view-tabs.scss), down to the
+  // pill on the view you are on; they just can't be clicked yet.
   &__tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    height: 28px;
-    padding: 0 8px;
-    border-radius: var(--tt-radius-sm);
-    font-size: 14px;
-    color: var(--tt-text-secondary);
-    white-space: nowrap;
-
-    &[data-active] {
-      color: var(--tt-text-primary);
-      font-weight: 500;
-    }
-  }
-
-  &__tab-icon {
-    width: 16px;
-    height: 16px;
-    flex: 0 0 auto;
+    pointer-events: none;
   }
 
   &__toolbar {
     overflow: hidden;
+    margin-top: 0;
   }
 
   // A table's real column name, muted while it loads.

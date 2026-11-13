@@ -1,28 +1,13 @@
 import type { CSSProperties } from "react";
 import { NodeViewWrapper } from "@tiptap/react";
 import { Bone } from "src/components/tiptap-ui-primitive/bone/bone";
-import {
-  Calendar,
-  ChartGantt,
-  Columns3,
-  LayoutGrid,
-  List,
-  ListChecks,
-  Table,
-} from "src/components/icons";
 import type { DatabaseView } from "src/types";
 import type { ViewDims } from "../../hooks/use-view-skeleton-dims";
+import { ViewIcon } from "../database-toolbar/view-icon";
+// The tabs wear the toolbar's own styles, and this shows before the
+// database's code (and its stylesheet) has loaded.
+import "../database-view-tabs/database-view-tabs.scss";
 import "./database-loading-skeleton.scss";
-
-const VIEW_ICONS = {
-  table: Table,
-  list: List,
-  board: Columns3,
-  gallery: LayoutGrid,
-  calendar: Calendar,
-  timeline: ChartGantt,
-  form: ListChecks,
-} as const;
 
 // More than this never fits on screen: the box is clipped to the height the
 // view had anyway.
@@ -253,22 +238,24 @@ export function DatabaseLoadingSkeleton({
       >
         {!switching && (
           <>
-            {/* The view tabs, from the node: real names right away. */}
-            <div className="db-skeleton__toolbar">
+            {/* The view tabs, from the node: the real names, the real
+                icons, and the one you are on wearing its pill — the node
+                knows which view is active before anything is loaded. */}
+            <div className="db-view-tabs db-skeleton__toolbar">
               {views?.length ? (
-                views.map((v) => {
-                  const Icon = VIEW_ICONS[v.type] ?? ChartGantt;
-                  return (
-                    <span
-                      key={v.id}
-                      className="db-skeleton__tab"
-                      data-active={v.id === activeViewId || undefined}
-                    >
-                      <Icon className="db-skeleton__tab-icon" />
-                      {v.name}
-                    </span>
-                  );
-                })
+                views.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    className="db-view-tab db-skeleton__tab"
+                    data-active-state={v.id === activeViewId ? "on" : undefined}
+                    tabIndex={-1}
+                    aria-hidden
+                  >
+                    <ViewIcon view={v} />
+                    <span className="tiptap-button-text">{v.name}</span>
+                  </button>
+                ))
               ) : (
                 <>
                   <Bone width={64} height={26} rounded />
