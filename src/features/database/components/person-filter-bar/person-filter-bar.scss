@@ -20,7 +20,9 @@
     border: 1px solid var(--tt-border-color);
     border-radius: 999px;
     background: transparent;
-    color: var(--tt-gray-light-a-600, inherit);
+    // A theme's own muted text: --tt-gray-light-a-600 is the light theme's
+    // grey whatever the theme, so these names were dark on dark.
+    color: var(--tt-text-secondary, inherit);
     font: inherit;
     font-size: 13px;
     white-space: nowrap;
@@ -44,7 +46,7 @@
         var(--tt-brand-color-500, currentColor) 10%,
         transparent
       );
-      color: inherit;
+      color: var(--tt-text-primary, inherit);
     }
   }
 
