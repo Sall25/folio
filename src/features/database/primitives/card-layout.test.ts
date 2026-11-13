@@ -1,7 +1,7 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import * as sass from "sass";
+import { el, loadStylesheets, resolve, type El } from "src/test/css-cascade";
 
 // What a card looks like is CSS, and CSS went wrong here in ways no unit
 // test would normally catch: a rule in one file zeroed the title's margin
@@ -33,169 +33,7 @@ const SHEETS = [
   "features/database/primitives/board-card-body.scss",
 ];
 
-// ── The page: every rule, in order ────────────────────────────────────────
-
-interface Rule {
-  selector: string;
-  decls: Record<string, { value: string; important: boolean }>;
-  order: number;
-}
-
-function stylesheet(): Rule[] {
-  const css = SHEETS.map(
-    (s) =>
-      sass.compile(join(src, s), {
-        loadPaths: [src],
-        silenceDeprecations: ["import", "global-builtin"],
-        quietDeps: true,
-      }).css,
-  ).join("\n");
-
-  const rules: Rule[] = [];
-  // Compiled CSS is flat: `selectors { declarations }`, no nesting left.
-  const body = css.replace(/\/\*[\s\S]*?\*\//g, "");
-  const re = /([^{}]+)\{([^{}]*)\}/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(body))) {
-    const selectors = m[1].trim();
-    if (selectors.startsWith("@")) continue;
-    const decls: Rule["decls"] = {};
-    for (const part of m[2].split(";")) {
-      const i = part.indexOf(":");
-      if (i < 0) continue;
-      const name = part.slice(0, i).trim();
-      let value = part.slice(i + 1).trim();
-      const important = /!important$/.test(value);
-      if (important) value = value.replace(/!important$/, "").trim();
-      if (!name) continue;
-      decls[name] = { value, important };
-      // A shorthand sets the longhands too, or a `margin: 0` elsewhere
-      // would look like no margin rule at all here.
-      if (name === "margin" || name === "padding") {
-        const v = value.split(/\s+/);
-        const [top, right = top, bottom = top, left = right] = v;
-        decls[`${name}-top`] = { value: top, important };
-        decls[`${name}-right`] = { value: right, important };
-        decls[`${name}-bottom`] = { value: bottom, important };
-        decls[`${name}-left`] = { value: left, important };
-      }
-    }
-    for (const selector of selectors.split(","))
-      rules.push({ selector: selector.trim(), decls, order: rules.length });
-  }
-  return rules;
-}
-
-// ── The element: a chain from the card down ───────────────────────────────
-
-interface El {
-  classes: string[];
-  attrs: Record<string, string>;
-}
-
-const el = (classes: string, attrs: Record<string, string> = {}): El => ({
-  classes: classes.split(/\s+/).filter(Boolean),
-  attrs,
-});
-
-/** One compound (".a.b[c=d]") against one element. */
-function matchesCompound(compound: string, node: El): boolean {
-  if (compound === "*" || compound === "") return true;
-  const parts = compound.match(/\.[\w-]+|\[[^\]]+\]|:not\([^)]*\)|[\w-]+/g);
-  if (!parts) return false;
-  for (const part of parts) {
-    if (part.startsWith(".")) {
-      if (!node.classes.includes(part.slice(1))) return false;
-    } else if (part.startsWith("[")) {
-      const [, name, , value] =
-        /\[([\w-]+)(=(?:"([^"]*)"|([^\]]*)))?\]/.exec(part) ?? [];
-      if (!name || !(name in node.attrs)) return false;
-      if (value !== undefined && node.attrs[name] !== value) return false;
-    } else if (part.startsWith(":not(")) {
-      const inner = part.slice(5, -1);
-      if (matchesCompound(inner, node)) return false;
-    } else if (/^[a-z]/i.test(part)) {
-      // A tag name: every element here is a div or a button, named below.
-      if (!node.classes.includes(`tag:${part}`)) return false;
-    }
-  }
-  return true;
-}
-
-/** A selector against a chain (ancestors first, the element last). */
-function matches(selector: string, chain: El[]): boolean {
-  if (/[:][:]|:hover|:focus|:active|:has\(/.test(selector)) return false;
-  const tokens = selector.trim().split(/\s+(?![^[]*\])/);
-  // Walk right to left: the rightmost compound must match the element.
-  let i = tokens.length - 1;
-  let node = chain.length - 1;
-  let child = false;
-  let matched = false;
-  while (i >= 0) {
-    const token = tokens[i];
-    if (token === ">") {
-      child = true;
-      i -= 1;
-      continue;
-    }
-    if (!matched) {
-      if (!matchesCompound(token, chain[node])) return false;
-      matched = true;
-      node -= 1;
-      i -= 1;
-      continue;
-    }
-    if (child) {
-      if (node < 0 || !matchesCompound(token, chain[node])) return false;
-      node -= 1;
-      child = false;
-    } else {
-      let found = false;
-      while (node >= 0) {
-        if (matchesCompound(token, chain[node])) {
-          node -= 1;
-          found = true;
-          break;
-        }
-        node -= 1;
-      }
-      if (!found) return false;
-    }
-    i -= 1;
-  }
-  return true;
-}
-
-function weight(selector: string): number {
-  const classes = (selector.match(/\.[\w-]+|\[[^\]]+\]|:[\w-]+(?!\()/g) ?? [])
-    .length;
-  const tags = (selector.match(/(^|[\s>+~])[a-z][\w-]*/gi) ?? []).length;
-  return classes * 10 + tags;
-}
-
-/** What the browser would use for `property` on the chain's last element. */
-function resolve(
-  rules: Rule[],
-  chain: El[],
-  property: string,
-): { value: string; selector: string } | null {
-  let best: { rule: Rule; score: number; important: boolean } | null = null;
-  for (const rule of rules) {
-    const decl = rule.decls[property];
-    if (!decl || !matches(rule.selector, chain)) continue;
-    const score = weight(rule.selector);
-    if (
-      !best ||
-      (decl.important && !best.important) ||
-      (decl.important === best.important && score >= best.score)
-    ) {
-      best = { rule, score, important: decl.important };
-    }
-  }
-  return best
-    ? { value: best.rule.decls[property].value, selector: best.rule.selector }
-    : null;
-}
+const rules = loadStylesheets(src, SHEETS);
 
 // ── The card ──────────────────────────────────────────────────────────────
 
@@ -213,14 +51,15 @@ const rowChain = [card, props, row];
 const plainRowChain = [card, props, plainRow];
 
 describe("gallery card layout", () => {
-  const rules = stylesheet();
   const get = (chain: El[], property: string) =>
     resolve(rules, chain, property)?.value ?? null;
 
   it("gives the title and the properties the same left inset", () => {
     // What went wrong: one of them had its margin zeroed and the other
     // kept 6px, so every property sat 6px right of the title.
-    expect(get(titleChain, "padding-left")).toBe(get(propsChain, "padding-left"));
+    expect(get(titleChain, "padding-left")).toBe(
+      get(propsChain, "padding-left"),
+    );
     expect(get(titleChain, "margin-left")).toBe(get(propsChain, "margin-left"));
     expect(get(titleChain, "margin-left")).toBe("0");
     expect(get(titleChain, "padding-left")).toBe("var(--db-card-gutter)");
