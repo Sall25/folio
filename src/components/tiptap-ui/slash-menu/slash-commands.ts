@@ -38,6 +38,7 @@ import {
   Timer,
   TypeOutline,
   Video,
+  Workflow,
   ListChecks,
 } from "src/components/icons";
 import { TodoListIcon, CodeBlockIcon } from "src/components/tiptap-icons";
@@ -457,6 +458,16 @@ export function getSlashCommands(t: TFunction): SlashCommand[] {
       icon: Box,
       run: (editor) => editor.chain().focus().insertContainer().run(),
     },
+    // ─── Canvas ───────────────────────────────────────────────
+    {
+      id: "canvas",
+      node: "canvas",
+      type: "command",
+      title: t("slash.items.canvas.title"),
+      description: t("slash.items.canvas.description"),
+      icon: Workflow,
+      run: (editor) => editor.chain().focus().insertCanvas().run(),
+    },
     //  ─── Database ─────────────────────────────────────────────
     {
       id: "database-view",
@@ -476,6 +487,7 @@ export function getSlashCommands(t: TFunction): SlashCommand[] {
         ["list", "listView", List],
         ["calendar", "calendarView", Calendar],
         ["timeline", "timelineView", ChartBar],
+        ["form", "formView", ListChecks],
       ] as const
     ).map(([type, key, icon]) => ({
       id: `database-${type}`,

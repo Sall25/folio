@@ -1386,6 +1386,10 @@
         "title": "Timeline view",
         "description": "Plan pages over time."
       },
+      "formView": {
+        "title": "Form",
+        "description": "Collect answers into a new database."
+      },
       "liveCode": {
         "title": "Live code",
         "description": "HTML, CSS and JavaScript with their result, live"
@@ -1397,6 +1401,10 @@
       "pomodoro": {
         "title": "Pomodoro timer",
         "description": "Focus and break rounds, with a timer"
+      },
+      "canvas": {
+        "title": "Canvas",
+        "description": "Lay blocks out on a canvas and link them."
       }
     },
     "colors": {
@@ -1656,6 +1664,31 @@
       "moveUp": "Move up",
       "moveDown": "Move down"
     },
+    "subItems": {
+      "title": "Sub-items",
+      "on": "On",
+      "off": "Off",
+      "onNote": "Rows can have rows under them, at any depth. These two properties hold it; rename them as you like.",
+      "offNote": "Lets rows have rows under them, through two properties of this database linked both ways.",
+      "parent": "Parent",
+      "children": "Sub-items",
+      "parentLabel": "Parent",
+      "childrenLabel": "Children",
+      "show": "Show in this view",
+      "display": {
+        "nested": "Nested",
+        "flat": "Every row on its own",
+        "top": "Top level only"
+      },
+      "filters": "Filters and search",
+      "filtersAll": "Apply at every level",
+      "filtersTop": "Top level only",
+      "filtersAllNote": "A row that matches keeps its parents visible, so you still see where it belongs.",
+      "filtersTopNote": "Everything under a row that's kept shows too.",
+      "expanded": "Open expanded",
+      "count_one": "{{count}} sub-item",
+      "count_other": "{{count}} sub-items"
+    },
     "form": {
       "accepting": "Accepting answers",
       "addHelp": "Add a description",
@@ -1723,7 +1756,20 @@
       "whoCanAnswer": "Who can answer",
       "whoNote": "Tip: add a Person property set to “Me” and it records who answered.",
       "yes": "Yes",
-      "yourAnswer": "Your answer"
+      "yourAnswer": "Your answer",
+      "builderView": "Form builder",
+      "responsesView": "Responses",
+      "preview": "Preview",
+      "close": "Close",
+      "shareForm": "Share form",
+      "anonymous": "Anonymous responses",
+      "anonymousOn": "Answers don't record who sent them.",
+      "anonymousOff": "Each answer records who sent it, in its Respondent property.",
+      "formLink": "Form link",
+      "copyFormLink": "Copy form link",
+      "respondent": "Respondent",
+      "source": "Source",
+      "deleteForm": "Delete form"
     },
     "assign": {
       "assignToMe": "Assign to me",

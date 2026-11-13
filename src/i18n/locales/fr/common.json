@@ -1386,6 +1386,10 @@
         "title": "Vue chronologie",
         "description": "Planifiez les pages dans le temps."
       },
+      "formView": {
+        "title": "Formulaire",
+        "description": "Recueillir des réponses dans une nouvelle base."
+      },
       "liveCode": {
         "title": "Code en direct",
         "description": "HTML, CSS et JavaScript avec leur résultat, en direct"
@@ -1397,6 +1401,10 @@
       "pomodoro": {
         "title": "Minuteur Pomodoro",
         "description": "Des tours de concentration et de pause, avec un minuteur"
+      },
+      "canvas": {
+        "title": "Canevas",
+        "description": "Disposer des blocs sur un canevas et les relier."
       }
     },
     "colors": {
@@ -1656,6 +1664,31 @@
       "moveUp": "Monter",
       "moveDown": "Descendre"
     },
+    "subItems": {
+      "title": "Sous-éléments",
+      "on": "Activés",
+      "off": "Désactivés",
+      "onNote": "Des lignes peuvent en contenir d'autres, à toute profondeur. Ces deux propriétés s'en chargent ; renommez-les comme vous voulez.",
+      "offNote": "Permet à une ligne d'en contenir d'autres, grâce à deux propriétés de cette base liées dans les deux sens.",
+      "parent": "Parent",
+      "children": "Sous-éléments",
+      "parentLabel": "Parent",
+      "childrenLabel": "Enfants",
+      "show": "Affichage dans cette vue",
+      "display": {
+        "nested": "Imbriqués",
+        "flat": "Chaque ligne à part",
+        "top": "Premier niveau seulement"
+      },
+      "filters": "Filtres et recherche",
+      "filtersAll": "À tous les niveaux",
+      "filtersTop": "Premier niveau seulement",
+      "filtersAllNote": "Une ligne qui correspond garde ses parents visibles, pour voir où elle se trouve.",
+      "filtersTopNote": "Tout ce qui est sous une ligne gardée s'affiche aussi.",
+      "expanded": "Ouvrir déplié",
+      "count_one": "{{count}} sous-élément",
+      "count_other": "{{count}} sous-éléments"
+    },
     "form": {
       "accepting": "Accepte les réponses",
       "addHelp": "Ajouter une description",
@@ -1723,7 +1756,20 @@
       "whoCanAnswer": "Qui peut répondre",
       "whoNote": "Astuce : ajoutez une propriété Personne réglée sur « Moi » pour savoir qui a répondu.",
       "yes": "Oui",
-      "yourAnswer": "Votre réponse"
+      "yourAnswer": "Votre réponse",
+      "builderView": "Créateur de formulaire",
+      "responsesView": "Réponses",
+      "preview": "Aperçu",
+      "close": "Fermer",
+      "shareForm": "Partager le formulaire",
+      "anonymous": "Réponses anonymes",
+      "anonymousOn": "Les réponses n'indiquent pas qui les a envoyées.",
+      "anonymousOff": "Chaque réponse indique qui l'a envoyée, dans sa propriété Répondant.",
+      "formLink": "Lien du formulaire",
+      "copyFormLink": "Copier le lien",
+      "respondent": "Répondant",
+      "source": "Source",
+      "deleteForm": "Supprimer le formulaire"
     },
     "assign": {
       "assignToMe": "M'assigner",

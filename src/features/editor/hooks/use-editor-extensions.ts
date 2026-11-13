@@ -83,6 +83,7 @@ import {
 } from "src/components/tiptap-node/code-group-node";
 import { ButtonNode } from "src/components/tiptap-node/button-node";
 import { Container } from "src/components/tiptap-node/container-node";
+import { Canvas } from "src/components/tiptap-node/canvas-node";
 import {
   Appendix,
   AppendixContent,
@@ -291,6 +292,7 @@ export function useEditorExtensions(
       CodeGroupItem,
       ButtonNode,
       Container.configure({ onNavigate: handleNavigate }),
+      Canvas,
       Appendix,
       AppendixSummary,
       AppendixContent,

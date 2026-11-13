@@ -1,0 +1,245 @@
+// The canvas block: a framed plane inside the page, holding blocks that are
+// placed rather than stacked. The frame is the only thing the column layout
+// sees; everything else lives in canvas space, moved by one transform.
+
+.folio-canvas {
+  margin: 12px 0;
+}
+
+.folio-canvas__frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-md, 12px);
+  background-color: var(--tt-bg-color, var(--white));
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--tt-text-color) 16%, transparent) 1px,
+    transparent 1px
+  );
+  touch-action: none;
+
+  .dark & {
+    background-color: var(--tt-gray-dark-50, #1c1c1c);
+  }
+}
+
+// Empty space. Below the blocks, so it only catches what misses them.
+.folio-canvas__ground {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.folio-canvas__edges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  z-index: 1;
+  pointer-events: none;
+
+  marker path {
+    fill: var(--accent, var(--tt-brand-color-500));
+  }
+
+  path.wire {
+    fill: none;
+    stroke: color-mix(in srgb, var(--accent, #6229ff) 55%, transparent);
+    stroke-width: 1.75;
+  }
+
+  path.draft {
+    fill: none;
+    stroke: var(--accent, var(--tt-brand-color-500));
+    stroke-width: 2;
+    stroke-dasharray: 5 4;
+  }
+
+  // A fat invisible stroke, so an edge can be hit without pixel-hunting.
+  path.hit {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 16;
+    pointer-events: stroke;
+    cursor: pointer;
+  }
+
+  g.is-picked path.wire {
+    stroke: var(--accent, var(--tt-brand-color-500));
+    stroke-width: 2.5;
+  }
+}
+
+.folio-canvas__plane,
+.folio-canvas__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.folio-canvas__plane {
+  z-index: 2;
+}
+
+.folio-canvas__content {
+  position: relative;
+}
+
+// Every block inside a canvas, placed by canvas-layout-plugin's decoration.
+// The transform and width come from there; everything else is here.
+.canvas-child {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0 !important;
+  padding: 8px 10px;
+  border: 1px solid var(--tt-border-color);
+  border-radius: var(--tt-radius-sm, 8px);
+  background: var(--tt-card-bg-color, var(--white));
+  box-shadow: var(--tt-shadow-elevated-sm, 0 1px 2px rgba(0, 0, 0, 0.06));
+  transition: box-shadow 140ms ease, border-color 140ms ease;
+
+  &:hover {
+    box-shadow: var(--tt-shadow-elevated-md);
+  }
+
+  &.ProseMirror-selectednode {
+    border-color: var(--accent, var(--tt-brand-color-500));
+  }
+}
+
+// Controls sit over the blocks but let the caret through: only they take
+// the pointer.
+.folio-canvas__overlay {
+  z-index: 3;
+  pointer-events: none;
+}
+
+.folio-canvas__chrome {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.folio-canvas__grip {
+  position: absolute;
+  top: 2px;
+  left: -18px;
+  width: 16px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.2;
+  color: var(--tt-text-secondary);
+  cursor: grab;
+  opacity: 0;
+  pointer-events: auto;
+  transition: opacity 120ms ease;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.folio-canvas__dot {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--tt-card-bg-color, var(--white));
+  border: 2px solid var(--accent, var(--tt-brand-color-500));
+  opacity: 0;
+  cursor: crosshair;
+  pointer-events: auto;
+  transition: opacity 120ms ease, transform 120ms ease;
+
+  &[data-side="top"] { top: -6px; left: calc(50% - 5.5px); }
+  &[data-side="bottom"] { bottom: -6px; left: calc(50% - 5.5px); }
+  &[data-side="left"] { left: -6px; top: calc(50% - 5.5px); }
+  &[data-side="right"] { right: -6px; top: calc(50% - 5.5px); }
+
+  &:hover { transform: scale(1.35); }
+}
+
+.folio-canvas__frame:hover {
+  .folio-canvas__grip { opacity: 0.55; }
+  .folio-canvas__dot { opacity: 0.65; }
+}
+
+.folio-canvas__chrome:hover {
+  .folio-canvas__grip { opacity: 1; }
+  .folio-canvas__dot { opacity: 1; }
+}
+
+.folio-canvas__cut {
+  position: absolute;
+  top: -11px;
+  left: -11px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--tt-border-color);
+  border-radius: 50%;
+  background: var(--tt-card-bg-color, var(--white));
+  color: var(--tt-text-secondary);
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: var(--tt-shadow-elevated-md);
+
+  &:hover { color: var(--tt-color-red-dec-2); }
+}
+
+.folio-canvas__empty {
+  position: absolute;
+  inset: auto 0 18px;
+  z-index: 1;
+  margin: 0;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--tt-text-color-subtle, var(--tt-text-secondary));
+  pointer-events: none;
+}
+
+// Floating surfaces over the canvas: the Card primitive, laid out in a row.
+.folio-canvas__bar {
+  position: absolute;
+  z-index: 5;
+  bottom: 10px;
+  flex-direction: row;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  width: auto;
+
+  &--start { left: 10px; }
+  &--end { right: 10px; }
+}
+
+.folio-canvas__zoom {
+  min-width: 44px;
+  text-align: center;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tt-text-secondary);
+}
+
+@media (max-width: 640px) {
+  .folio-canvas__bar--start .tiptap-button-text { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .folio-canvas__grip,
+  .folio-canvas__dot,
+  .canvas-child {
+    transition: none;
+  }
+}
