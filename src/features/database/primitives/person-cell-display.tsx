@@ -86,6 +86,19 @@ export function PersonCellDisplay({
 
   const selectedIds = useMemo(() => new Set(value.map((p) => p.id)), [value]);
 
+  // A cell keeps a copy of the people in it, made when they were assigned:
+  // one assigned before a photo was set, or by a path that didn't carry it,
+  // shows a letter while the same person shows a photo elsewhere. The
+  // workspace's own list is the live one, so it wins where it has them.
+  const shown = useMemo(
+    () =>
+      value.map((p) => {
+        const live = people.find((m) => m.id === p.id);
+        return live ? { ...p, ...live } : p;
+      }),
+    [value, people],
+  );
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return q ? people.filter((p) => p.name.toLowerCase().includes(q)) : people;
@@ -114,16 +127,16 @@ export function PersonCellDisplay({
   // One person: face and name. Several: a stack of faces with "+N", the
   // names on hover.
   const chips =
-    value.length === 0 ? (
+    shown.length === 0 ? (
       <span className="db-person-empty">{t("database.person.empty")}</span>
-    ) : value.length === 1 ? (
-      <PersonChip person={value[0]} />
+    ) : shown.length === 1 ? (
+      <PersonChip person={shown[0]} />
     ) : (
       <span
         className="db-person-stack"
-        title={value.map((p) => p.name).join(", ")}
+        title={shown.map((p) => p.name).join(", ")}
       >
-        {value.slice(0, STACK_MAX).map((p) => (
+        {shown.slice(0, STACK_MAX).map((p) => (
           <span key={p.id} className="db-person-chip__avatar" aria-hidden>
             {p.avatarUrl ? (
               <img src={p.avatarUrl} alt="" />
@@ -132,13 +145,13 @@ export function PersonCellDisplay({
             )}
           </span>
         ))}
-        {value.length > STACK_MAX && (
+        {shown.length > STACK_MAX && (
           <span className="db-person-stack__more">
-            +{value.length - STACK_MAX}
+            +{shown.length - STACK_MAX}
           </span>
         )}
         <span className="db-person-stack__label">
-          {value.map((p) => p.name).join(", ")}
+          {shown.map((p) => p.name).join(", ")}
         </span>
       </span>
     );

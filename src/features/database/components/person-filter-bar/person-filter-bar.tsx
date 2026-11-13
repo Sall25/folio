@@ -1,6 +1,10 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSession } from "src/hooks/use-session";
+import {
+  findPerson,
+  useWorkspacePeople,
+} from "../../hooks/use-workspace-people";
 import { useDatabaseContext } from "../../context/database-context";
 import { UNASSIGNED } from "../../utils/assignee";
 import "./person-filter-bar.scss";
@@ -11,6 +15,9 @@ import "./person-filter-bar.scss";
 export function PersonFilterBar() {
   const { t } = useTranslation();
   const { db, peopleCounts } = useDatabaseContext();
+  // The rows keep a copy of each person from when they were assigned; the
+  // workspace's list is the current one (a photo added since, a new name).
+  const workspacePeople = useWorkspacePeople();
   const meId = useSession().session?.user.id ?? null;
   const picked = db.personFilter;
 
@@ -21,7 +28,10 @@ export function PersonFilterBar() {
       .sort(([a, x], [b, y]) => {
         if (a === meId) return -1; // you first
         if (b === meId) return 1;
-        return y.count - x.count || (x.person?.name ?? "").localeCompare(y.person?.name ?? "");
+        return (
+          y.count - x.count ||
+          (x.person?.name ?? "").localeCompare(y.person?.name ?? "")
+        );
       });
     return people;
   }, [peopleCounts, meId]);
@@ -56,28 +66,31 @@ export function PersonFilterBar() {
       >
         {t("database.assign.everyone")}
       </button>
-      {entries.map(([id, { count, person }]) => (
-        <button
-          key={id}
-          type="button"
-          className="db-people-bar__pill"
-          data-active={picked.includes(id) || undefined}
-          aria-pressed={picked.includes(id)}
-          onClick={() => toggle(id)}
-        >
-          <span className="db-people-bar__avatar" aria-hidden>
-            {person?.avatarUrl ? (
-              <img src={person.avatarUrl} alt="" />
-            ) : (
-              (person?.name?.[0]?.toUpperCase() ?? "?")
-            )}
-          </span>
-          <span className="db-people-bar__name">
-            {id === meId ? t("database.assign.me") : person?.name}
-          </span>
-          <span className="db-people-bar__count">{count}</span>
-        </button>
-      ))}
+      {entries.map(([id, { count, person: stored }]) => {
+        const person = findPerson(workspacePeople, id) ?? stored;
+        return (
+          <button
+            key={id}
+            type="button"
+            className="db-people-bar__pill"
+            data-active={picked.includes(id) || undefined}
+            aria-pressed={picked.includes(id)}
+            onClick={() => toggle(id)}
+          >
+            <span className="db-people-bar__avatar" aria-hidden>
+              {person?.avatarUrl ? (
+                <img src={person.avatarUrl} alt="" />
+              ) : (
+                (person?.name?.[0]?.toUpperCase() ?? "?")
+              )}
+            </span>
+            <span className="db-people-bar__name">
+              {id === meId ? t("database.assign.me") : person?.name}
+            </span>
+            <span className="db-people-bar__count">{count}</span>
+          </button>
+        );
+      })}
       {unassigned > 0 && (
         <button
           type="button"

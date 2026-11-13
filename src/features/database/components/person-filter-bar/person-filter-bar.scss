@@ -58,7 +58,8 @@
     place-items: center;
     overflow: hidden;
     border-radius: 50%;
-    background: var(--tt-gray-light-a-200, rgba(55, 53, 47, 0.1));
+    background: color-mix(in srgb, var(--tt-text-primary) 12%, transparent);
+    color: var(--tt-text-secondary);
     font-size: 10px;
     font-weight: 600;
 
