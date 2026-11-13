@@ -106,10 +106,18 @@
     background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
   }
 
+  // The page's own colour, joined to the page below it, with the space's
+  // colour along its top and in its name: the tab says which page you are
+  // on, so the bar around it doesn't have to (desktop-title-bar.scss).
   &[data-active] {
     background: var(--tt-bg-color);
-    color: var(--tt-text-primary);
+    color: var(--accent, var(--tt-text-primary));
     font-weight: 500;
+    box-shadow: inset 0 2px 0 var(--accent, var(--tt-brand-color-500));
+  }
+
+  &[data-active] .desktop-tab__icon {
+    color: var(--accent, var(--tt-text-primary));
   }
 
   // Dragging another tab over this one: where it will land.

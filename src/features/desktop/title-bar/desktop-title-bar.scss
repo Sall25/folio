@@ -152,50 +152,7 @@ html.is-desktop[data-theme="wallpaper"] .desktop-title-bar {
   left: 0;
 }
 
-// ── The title bar in the space's accent colour (design A, tinted) ──────────
-// In a space with an accent (html.space-accent, --space-accent set by
-// SpaceAccentRoot), the bar takes a light wash of it, and the inactive
-// tabs, arrows and sync status a deeper shade. The active tab keeps the
-// page's colour, joined to the page. No accent chosen: the bar stays
-// neutral (above). Switching space recolours the window.
-html.is-desktop.space-accent .desktop-title-bar {
-  --title-accent-ink: color-mix(
-    in srgb,
-    var(--space-accent) 70%,
-    var(--tt-text-primary)
-  );
-  background: color-mix(in srgb, var(--space-accent) 14%, var(--tt-bg-color));
-  color: var(--title-accent-ink);
-
-  .desktop-tabs__icon-btn,
-  .desktop-tab:not([data-active]),
-  .desktop-tab:not([data-active]) .desktop-tab__close,
-  .desktop-tabs__status {
-    color: var(--title-accent-ink);
-  }
-
-  .desktop-tabs__icon-btn:hover:not(:disabled),
-  .desktop-tab:hover:not([data-active]),
-  .desktop-tab__close:hover {
-    background: color-mix(in srgb, var(--space-accent) 14%, transparent);
-  }
-
-  .desktop-tab + .desktop-tab:not([data-active])::before {
-    background: color-mix(in srgb, var(--space-accent) 30%, transparent);
-  }
-
-  .desktop-title-bar__window button:not(.desktop-title-bar__close):hover {
-    background: color-mix(in srgb, var(--space-accent) 16%, transparent);
-  }
-}
-
-// Dark: a stronger wash (a 14% mix barely shows on a dark page) and a
-// lighter ink.
-html.is-desktop.space-accent.dark .desktop-title-bar {
-  --title-accent-ink: color-mix(
-    in srgb,
-    var(--space-accent) 55%,
-    var(--tt-text-primary)
-  );
-  background: color-mix(in srgb, var(--space-accent) 22%, var(--tt-bg-color));
-}
+// ── The title bar stays neutral ───────────────────────────────────────────
+// It used to take a wash of the space's colour, which left the window
+// looking tinted all day. The colour now lands on the open tab alone
+// (desktop-tabs.scss), where it says something: which page you are on.

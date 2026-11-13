@@ -170,14 +170,14 @@
 // (dot, who and where, the quoted text, status and how long ago), and a Show
 // more footer. Unread rows: red dot, a light red tint, a "New" badge. Read
 // rows step back: muted, no dot, "✓ Read". Accents use the red scale.
+// The Card primitive's own surface: a panel of accent colour made the rest
+// of Home look like it was sitting on a poster, and the unread dot and the
+// "New" badge already say what needs saying.
 .home-foryou.tiptap-card {
   align-items: stretch;
   overflow: hidden;
   padding: 0;
   border-radius: var(--tt-radius-lg, 12px);
-  border: none !important;
-  background: var(--accent-tint);
-  box-shadow: 0 0 0 1px var(--accent-tint);
 }
 
 .home-foryou {

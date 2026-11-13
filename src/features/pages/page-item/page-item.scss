@@ -169,9 +169,12 @@
     }
   }
 
-  &:hover > .page-icon-wrap > .page-icon,
-  &.active > .page-icon-wrap > .page-icon {
+  &:hover > .page-icon-wrap > .page-icon {
     color: var(--sb-active-color);
+  }
+
+  &.active > .page-icon-wrap > .page-icon {
+    color: var(--sb-active-ink, var(--accent));
   }
 
   > .chevron {
@@ -223,10 +226,12 @@
 
   &.active {
     background: var(--sb-active-bg, var(--page-item-active-bg-color));
-    color: var(--sb-active-color, var(--tt-text-primary)) !important;
+    // The name and its icon in the accent too, so the row reads as the
+    // place you are rather than a shaded rectangle.
+    color: var(--sb-active-ink, var(--accent)) !important;
 
     > .page-icon {
-      color: var(--sb-active-color);
+      color: var(--sb-active-ink, var(--accent));
     }
 
     .page-item-title {
