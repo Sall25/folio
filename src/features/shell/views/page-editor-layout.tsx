@@ -50,7 +50,6 @@ function PageEditorLayoutImpl() {
             </div>
           )}
           <SimpleEditorContent />
-          <aside className="simple-editor-sidebar-right" />
           <PageChatView />
         </div>
         {tab === "page" && <TocSidebar topOffset={100} maxShowCount={20} />}

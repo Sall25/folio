@@ -284,15 +284,6 @@ body,
 }
 
 // TOC right sidebar
-.simple-editor-sidebar-right {
-  width: 30px;
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  height: var(--app-vh, 100vh);
-  overflow-y: auto;
-}
-
 .simple-editor-main {
   display: flex;
   flex-direction: column;
@@ -385,10 +376,6 @@ body,
 
 // Tablet — hide TOC only
 @media screen and (max-width: 768px) {
-  .simple-editor-sidebar-right {
-    display: none;
-  }
-
   .simple-editor-sidebar-left {
     width: 60px; // collapsed
   }
@@ -397,6 +384,9 @@ body,
 
 .simple-editor-content {
   font-size: 1rem;
+  // Room under the last block so it isn't flush against the window, and no
+  // more: the page used to scroll a whole screen past its own end.
+  padding-bottom: 96px;
   // Fluid by default: fill the available width, capped by the max-widths
   // below. No min-width floor — that was forcing the content wider than a
   // phone viewport and clipping it.
