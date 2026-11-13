@@ -62,9 +62,15 @@ export function CellComments({
         }
       }}
     >
-      {/* The whole cell is the anchor: the popover opens below it. */}
+      {/* The whole cell is the anchor: the popover opens below it. The
+          count is on it so the stylesheet can mark a commented cell's
+          value, the way commented text is marked. */}
       <PopoverAnchor asChild>
-        <span className="db-cell-comments__anchor" aria-hidden />
+        <span
+          className="db-cell-comments__anchor"
+          data-count={openThreads.length || undefined}
+          aria-hidden
+        />
       </PopoverAnchor>
 
       {openThreads.length > 0 && !open && (
