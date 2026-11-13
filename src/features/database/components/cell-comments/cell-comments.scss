@@ -10,7 +10,9 @@
 // The mark goes on the value, not on the cell: the cell is the box around
 // it, and tinting the whole box reads as a selection. The value's element
 // fills the cell (it is the button's text), so it is made to hug its words.
-.db-node-cell:has(> .db-cell-comments__anchor[data-count]) {
+:is(.db-node-cell, .record-prop-panel__value-wrapper):has(
+    > .db-cell-comments__anchor[data-count]
+  ) {
   :is(
       .db-cell-text__display,
       .db-cell-title__text,
@@ -19,7 +21,8 @@
       .num-cell__num,
       .select-badge,
       .status-badge,
-      .db-person-chip
+      .db-person-chip,
+      .record-prop-panel__value--text
     ) {
     // The value's element is laid out for the whole cell (it is the
     // button's text: grows to the column's width, stretches to the row's
@@ -37,11 +40,10 @@
     // so the row's own colour still shows; the underline is the solid one.
     background-color: color-mix(
       in srgb,
-      var(--tt-color-highlight-yellow) 15%,  
+      var(--tt-color-highlight-yellow) 15%,
       transparent
     );
     border-bottom: 2.5px solid var(--tt-color-highlight-yellow-contrast);
-
   }
 
   // Nothing in the cell to mark: the underline goes under the cell itself.
@@ -55,11 +57,12 @@
               .num-cell__num,
               .select-badge,
               .status-badge,
-              .db-person-chip
+              .db-person-chip,
+              .record-prop-panel__value--text
             )
         )
     ) {
-    box-shadow: inset 0 -2px 0 var(--tt-color-highlight-yellow-contrast);
+    box-shadow: inset 0 -2.5px 0 var(--tt-color-highlight-yellow-contrast);
   }
 }
 

@@ -53,11 +53,13 @@
 
 // The value gets its own hover box, so it reads as the thing you click.
 .record-prop-panel__value-wrapper {
+  // The comment count and the hover bubble sit at the row's right edge.
+  position: relative;
   display: flex;
   align-items: center;
   min-width: 0;
   min-height: 34px;
-  padding: 0 6px;
+  padding: 0 28px 0 6px;
   border-radius: 6px;
   font-size: 14px;
   line-height: 1.5;
@@ -65,6 +67,34 @@
 
   &:hover {
     background: var(--tt-button-hover-bg-color);
+  }
+
+  // Say something about this value: shown while the row is hovered, and
+  // only when there is no count already standing there.
+  .record-prop-panel__comment {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    transform: translateY(-50%);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--tt-text-secondary);
+    cursor: pointer;
+  }
+
+  &:hover .record-prop-panel__comment {
+    display: inline-flex;
+  }
+
+  &:has(.db-cell-comments__badge) .record-prop-panel__comment {
+    display: none;
   }
 
   // Text values wrap here instead of being cut with an ellipsis, as there's

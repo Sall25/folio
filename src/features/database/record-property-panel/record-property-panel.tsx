@@ -4,6 +4,9 @@ import type {
   DatabaseProperty,
   CellValueMap,
 } from "src/types";
+import { useState } from "react";
+import { MessageSquareText } from "src/components/icons";
+import { CellComments } from "src/features/database/components/cell-comments";
 import { useDataSource } from "src/hooks/use-data-sources";
 import { usePatchPage } from "src/hooks/use-patch-page";
 import { patchPage as patchPageApi } from "src/api/pages";
@@ -141,6 +144,10 @@ function PropertyRow({
   const notifyAssigned = useAssignNotifications();
 
   useFormulaEngineReady();
+
+  // Comments on this property's value — the same popover the table's cells
+  // open, so a discussion started here shows there and the other way round.
+  const [commentsOpen, setCommentsOpen] = useState(false);
 
   // Created by / Edited by: one person, resolved from the page itself.
   const personRef = (id: string | null | undefined) => {
@@ -369,7 +376,27 @@ function PropertyRow({
         />
         <span className="record-prop-panel__label-text">{prop.name}</span>
       </div>
-      <div className="record-prop-panel__value-wrapper">{rendered}</div>
+      <div className="record-prop-panel__value-wrapper">
+        {rendered}
+        {/* The count, when there is one; otherwise a bubble on hover. Both
+            open the same popover (the stylesheet hides this one when the
+            count is there). */}
+        <button
+          type="button"
+          className="record-prop-panel__comment"
+          aria-label="Comment"
+          title="Comment"
+          onClick={() => setCommentsOpen(true)}
+        >
+          <MessageSquareText size={14} aria-hidden />
+        </button>
+        <CellComments
+          recordId={page.id}
+          propertyId={prop.id}
+          open={commentsOpen}
+          onOpenChange={setCommentsOpen}
+        />
+      </div>
     </div>
   );
 }
