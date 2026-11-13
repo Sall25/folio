@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Inbox as InboxIcon,
@@ -22,6 +22,7 @@ import { NavigableMenuItem } from "src/features/database/components/navigable-me
 import { formatRelativeTime } from "src/utils/format-relative";
 import { useMyWorkspaceInvites } from "src/hooks/use-workspace-members";
 import { useMyInvites } from "src/hooks/use-teamspace-members";
+import { FLYOUT_GAP, flyoutSideOffset, rowRightEdge } from "./flyout-offset";
 import "./inbox-panel.scss";
 
 export function InboxPanel({ onOpened }: { onOpened?: () => void } = {}) {
@@ -43,6 +44,35 @@ export function InboxPanel({ onOpened }: { onOpened?: () => void } = {}) {
   // (no hover on touch screens) instead of opening it straight away.
   const pointerType = useRef("mouse");
 
+  // The card opens beside the panel, not on top of it. Radix measures the
+  // offset from the row, which stops short of the panel's edge, so the two
+  // edges are measured and the difference added (see ./flyout-offset).
+  const panelRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [cardOffset, setCardOffset] = useState(FLYOUT_GAP);
+
+  useEffect(() => {
+    const panel = panelRef.current;
+    const body = bodyRef.current;
+    if (!panel || !body) return;
+
+    const measure = () =>
+      setCardOffset(
+        flyoutSideOffset(
+          rowRightEdge(body),
+          panel.getBoundingClientRect().right,
+        ),
+      );
+
+    measure();
+    // The sidebar is resizable, and a long list grows a scrollbar: both move
+    // the row's edge.
+    const ro = new ResizeObserver(measure);
+    ro.observe(panel);
+    ro.observe(body);
+    return () => ro.disconnect();
+  }, []);
+
   // A short preview in the list; hovering (or tapping) it opens the whole
   // notification on a side card, with Open / Mark as read / Dismiss.
   const item = (n: Notification) => (
@@ -50,7 +80,7 @@ export function InboxPanel({ onOpened }: { onOpened?: () => void } = {}) {
       key={n.id}
       side="right"
       align="start"
-      sideOffset={10}
+      sideOffset={cardOffset}
       collisionPadding={8}
       anchor={
         <button
@@ -93,7 +123,7 @@ export function InboxPanel({ onOpened }: { onOpened?: () => void } = {}) {
   );
 
   return (
-    <div className="inbox-panel">
+    <div className="inbox-panel" ref={panelRef}>
       <div className="inbox-panel__header">
         <span className="inbox-panel__title">
           {unreadCount > 0 && (
@@ -119,7 +149,7 @@ export function InboxPanel({ onOpened }: { onOpened?: () => void } = {}) {
         </span>
       </div>
 
-      <div className="inbox-panel__body">
+      <div className="inbox-panel__body" ref={bodyRef}>
         <WorkspaceInvites onDone={onOpened} />
         <TeamspaceInvites onDone={onOpened} />
         {notifications.length === 0 &&

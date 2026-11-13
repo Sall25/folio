@@ -3,11 +3,19 @@
   width: 340px;
   max-width: calc(100vw - 32px);
 
+  // The Card primitive centres its children, so the body took the width of
+  // its own content rather than the card's and spilled out of both edges: a
+  // long page title in __source is one unbreakable line, and the max-width
+  // below it doesn't count while the browser works out that intrinsic width
+  // (a percentage max-width is ignored there). Fill the card instead.
+  align-items: stretch;
+
   .tiptap-card-body {
     display: flex;
     flex-direction: column;
     gap: 10px;
     padding: 14px;
+    min-width: 0;
   }
 
   &__head {
@@ -36,6 +44,9 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    // A flex item won't shrink below its text without this, so the ellipsis
+    // above never gets the chance to apply.
+    min-width: 0;
   }
 
   &__time {
@@ -84,6 +95,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      min-width: 0;
     }
   }
 
