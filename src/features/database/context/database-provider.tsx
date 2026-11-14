@@ -17,6 +17,7 @@ import type {
   GalleryView,
   ID,
   ListView,
+  TimelineView,
   Page,
   PropertyType,
   TableView,
@@ -195,7 +196,13 @@ export function DatabaseProvider({
   const reorderRecord = useCallback(
     (recordId: ID, beforeRecordId: ID | null) => {
       const view = db.activeView;
-      if (!view || (view.type !== "table" && view.type !== "list")) return;
+      if (
+        !view ||
+        (view.type !== "table" &&
+          view.type !== "list" &&
+          view.type !== "timeline")
+      )
+        return;
       if (!resolvedRecords.some((r) => r.id === recordId)) return;
 
       const sorts = view.sorts ?? [];
@@ -216,7 +223,7 @@ export function DatabaseProvider({
       }
       db.updateView(view.id, {
         manualOrder: order,
-      } as Partial<TableView | ListView>);
+      } as Partial<TableView | ListView | TimelineView>);
     },
     [db, resolvedRecords, source, titleOf],
   );
@@ -253,8 +260,13 @@ export function DatabaseProvider({
     }: DropInfo) => {
       const view = db.activeView;
 
-      // Rows of a table or list: reorder (and ask first if it's sorted).
-      if (view.type === "table" || view.type === "list") {
+      // Rows of a table, a list, or a timeline's table: reorder (and ask
+      // first if it's sorted).
+      if (
+        view.type === "table" ||
+        view.type === "list" ||
+        view.type === "timeline"
+      ) {
         reorderRecord(recordId, beforeRecordId);
         return;
       }
@@ -514,7 +526,7 @@ export function DatabaseProvider({
             db.updateView(pendingOrder.viewId, {
               sorts: [],
               manualOrder: pendingOrder.order,
-            } as Partial<TableView | ListView>);
+            } as Partial<TableView | ListView | TimelineView>);
           }
           setPendingOrder(null);
         }}

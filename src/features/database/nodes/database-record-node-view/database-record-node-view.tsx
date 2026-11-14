@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { NodeViewWrapper, NodeViewContent } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/core";
 import { createPortal } from "react-dom";
@@ -7,83 +7,19 @@ import { useRecordRowState } from "../../utils/record-selection-store";
 import { recordSelection } from "../../utils/record-selection-store";
 import { beginRowDragSelect } from "../../utils/row-drag-select";
 import { useRowAnchor } from "../../hooks/use-row-anchor";
-import { observeRecord } from "../../utils/record-visibility";
+import {
+  observeRecord,
+  showsRecordsAsRows,
+} from "../../utils/record-visibility";
 import type {
   CalendarView,
-  CellValue,
-  DatabaseProperty,
   TimelineView,
 } from "src/types";
 import { BoardCardBody } from "../../primitives/board-card-body";
-import {
-  DAY_WIDTH,
-  parseDateValue,
-  rowTop,
-} from "../../hooks/use-timeline-layout";
-import { TimelineCardBody } from "../database-timeline-node-view/timeline-card-body";
+import { cardProperties } from "../../utils/card-properties";
+import { TimelineBar } from "../database-timeline-node-view/timeline-bar";
 import { CalendarEventBar } from "../database-calendar-node-view/calendar-event-bar";
-import {
-  ResizableNodeProvider,
-  useResizableNode,
-} from "src/components/tiptap-node/resizable-node";
 
-// Sits inside ResizableNodeProvider so it can consume the ref the provider
-// creates internally — that ref has to be attached to the actual DOM box
-// being resized (the NodeViewWrapper), which can't happen in the same
-// component that renders <ResizableNodeProvider>, since context only flows
-// to descendants.
-function TimelineRecordBox({
-  recordId,
-  setWrapperEl,
-  children,
-  resizingRef,
-}: {
-  recordId: string;
-  setWrapperEl: (el: HTMLElement | null) => void;
-  resizingRef: React.MutableRefObject<boolean>;
-  children: React.ReactNode;
-}) {
-  const wrapperEl = useRef<HTMLDivElement | null>(null);
-  const { nodeRef, isResizing } = useResizableNode();
-
-  useLayoutEffect(() => {
-    const box = wrapperEl.current?.closest<HTMLElement>(
-      ".react-renderer.node-databaseRecord",
-    );
-
-    nodeRef.current = box ?? null;
-  });
-
-  useEffect(() => {
-    resizingRef.current = isResizing;
-  }, [isResizing, resizingRef]);
-
-  return (
-    <NodeViewWrapper
-      as="div"
-      ref={(el: HTMLDivElement) => {
-        setWrapperEl(el);
-        wrapperEl.current = el;
-      }}
-      style={{ zIndex: 20 }}
-      data-type="database-record"
-      data-record-id={recordId}
-    >
-      {children}
-    </NodeViewWrapper>
-  );
-}
-
-function isEmptyCellValue(
-  value: CellValue | null,
-  prop: DatabaseProperty,
-): boolean {
-  if (prop.config.type === "checkbox") return false;
-  if (value == null) return true;
-  if (typeof value === "string") return value.trim() === "";
-  if (Array.isArray(value)) return value.length === 0;
-  return false;
-}
 
 function resetBoxOverrides(box: HTMLElement) {
   box.style.removeProperty("display");
@@ -114,8 +50,6 @@ export default function DatabaseRecordNodeView({
   const data = useDatabaseBridgeData(editor, databaseId);
   const { isSelected, isHovered } = useRecordRowState(databaseId, recordId);
   const [wrapperEl, setWrapperEl] = useState<HTMLElement | null>(null);
-  const resizingRef = useRef(false);
-  const skipTimelineWidthRef = useRef(false);
 
   const isBoard = data?.view?.type === "board";
   const isGallery = data?.view?.type === "gallery";
@@ -149,33 +83,27 @@ export default function DatabaseRecordNodeView({
     resetBoxOverrides(box);
 
     const gp = recordId ? data?.galleryPlacement?.[recordId] : undefined;
-    const tp = recordId ? data?.timelinePlacement?.[recordId] : undefined;
 
     if (isTimeline) {
+      // The row is an ordinary table row now: it flows in the panel beside
+      // the grid, and its bar is portalled onto the same line from
+      // timeline-bar.tsx.
       const index = recordId
         ? (data?.sortedRecordIds?.indexOf(recordId) ?? -1)
         : -1;
-      if (tp && index !== -1) {
-        box.style.setProperty("display", "block", "important");
-        box.style.setProperty("position", "absolute", "important");
-        box.style.setProperty("left", `${tp.left}px`, "important");
-        if (resizingRef.current === false) {
-          box.style.setProperty("width", `${tp.width}px`, "important");
-        }
-        // if (!skipTimelineWidthRef.current) {
-        //   box.style.setProperty("width", `${tp.width}px`, "important");
-        // } else {
-        //   skipTimelineWidthRef.current = false;
-        // }
-        // One row per record, in the order the view sorts them, level with
-        // the name table beside it. The placeholder reads its row from the
-        // same place (use-timeline-layout/rowTop), so the two can't drift.
-        box.style.setProperty("top", `${rowTop(index)}px`, "important");
-        box.style.setProperty("margin", `0px`, "important");
-        box.removeAttribute("draggable");
-      } else {
+      if (index === -1) {
         box.style.setProperty("display", "none", "important");
         box.setAttribute("data-filtered", "true");
+      } else {
+        box.style.removeProperty("display");
+        box.removeAttribute("data-filtered");
+        // Row 1 is the column header, which the panel keeps inside its own
+        // grid as a subgrid (the table view puts its ungrouped header above
+        // the grid instead, which is why its records start at row 1). The
+        // row has to be set, not left to auto-placement: a record with no
+        // inline grid-row is display:none by rule, so a timeline row with
+        // none was a row that never appeared (database-table-body.scss).
+        box.style.gridRow = String(index + 2);
       }
       return;
     }
@@ -273,11 +201,16 @@ export default function DatabaseRecordNodeView({
     (isHovered || isSelected || pointerOnCheckbox);
   const anchor = useRowAnchor(wrapperEl, showCheckbox);
 
-  // Table and list rows: report when the row comes near the screen, so its
-  // cells render their content only then (utils/record-visibility.ts). The
-  // row's box is the renderer element — .db-record itself is display:
-  // contents there and has no box to watch.
-  const isRowView = isTableView || data?.view?.type === "list";
+  // Table, list and timeline rows: report when the row comes near the
+  // screen, so its cells render their content only then
+  // (utils/record-visibility.ts). The row's box is the renderer element —
+  // .db-record itself is display: contents there and has no box to watch.
+  //
+  // The timeline's rows belong here too. A cell that is never told its row
+  // is near renders the empty placeholder for good, which is why the panel
+  // beside the grid showed rows with no name in them: the cells were
+  // mounted and waiting for a signal nothing was sending.
+  const isRowView = showsRecordsAsRows(data?.view?.type);
   useLayoutEffect(() => {
     if (!isRowView || !wrapperEl || !databaseId || !recordId) return;
     const box =
@@ -285,53 +218,43 @@ export default function DatabaseRecordNodeView({
     return observeRecord(box, databaseId, recordId);
   }, [isRowView, wrapperEl, databaseId, recordId]);
 
-  // ── TIMELINE: render as a bar, resizable to adjust endDate ─────────────
+  // ── TIMELINE: an ordinary row here, a bar over in the gantt ────────────
   if (isTimeline && record && data && recordId) {
-    const tp = data.timelinePlacement?.[recordId];
-    if (!tp) return null;
-
     const view = data.view as TimelineView;
-    const recordStart = parseDateValue(
-      view.startDatePropertyId
-        ? record.values?.[view.startDatePropertyId]
-        : null,
-    );
+    const index = data.sortedRecordIds?.indexOf(recordId) ?? -1;
+    if (index === -1) return null;
+    const tp = data.timelinePlacement?.[recordId];
 
     return (
-      <ResizableNodeProvider
-        min={{ width: DAY_WIDTH }}
-        onResizeEnd={(dimensions) => {
-          if (!recordStart.start) return;
-
-          skipTimelineWidthRef.current = true;
-
-          const days = Math.max(1, Math.round(dimensions.width / DAY_WIDTH));
-
-          const newEnd = new Date(recordStart.start);
-          newEnd.setDate(newEnd.getDate() + days - 1);
-
-          data.setCellValue(recordId, view.startDatePropertyId, {
-            start: recordStart.start.toISOString(),
-            end: newEnd.toISOString(),
-          });
-        }}
-      >
-        <TimelineRecordBox
-          resizingRef={resizingRef}
-          recordId={recordId}
-          setWrapperEl={setWrapperEl}
+      <>
+        <NodeViewWrapper
+          as="div"
+          ref={setWrapperEl}
+          data-type="database-record"
+          data-record-id={recordId}
+          data-selected={isSelected || undefined}
+          data-hovered={isHovered || undefined}
+          className="db-record"
+          style={{ position: "relative" }}
         >
-          <TimelineCardBody
+          <NodeViewContent as="div" className="db-record__cells" />
+        </NodeViewWrapper>
+
+        {/* No bar when the record's dates fall outside the months on show:
+            the row stays, so the name is still there to scroll to. */}
+        {tp && (
+          <TimelineBar
             record={record}
             view={view}
-            geo={{ left: tp.left, width: tp.width }}
+            recordId={recordId}
+            index={index}
+            placement={tp}
+            databaseId={databaseId ?? null}
+            properties={data.properties}
             setCellValue={data.setCellValue}
-            clippedLeft={tp.clippedLeft}
-            clippedRight={tp.clippedRight}
-            canResize={true}
           />
-        </TimelineRecordBox>
-      </ResizableNodeProvider>
+        )}
+      </>
     );
   }
 
@@ -373,15 +296,9 @@ export default function DatabaseRecordNodeView({
     const cardPreview =
       (view as { cardPreview?: "none" | "cover" | "content" }).cardPreview ??
       "none";
-    const hidden = new Set(view.hiddenProperties ?? []);
     const titleProp =
       data.properties.find((p) => p.config.type === "title") ?? null;
-    const otherProps = data.properties.filter((p) => {
-      if (p.config.type === "title") return false;
-      if (hidden.has(p.id)) return false;
-      const v = (record.values?.[p.id] ?? null) as CellValue | null;
-      return !isEmptyCellValue(v, p);
-    });
+    const otherProps = cardProperties(data.properties, record, view);
 
     return (
       <NodeViewWrapper

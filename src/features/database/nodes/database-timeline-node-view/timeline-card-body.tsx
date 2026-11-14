@@ -1,7 +1,13 @@
 import { useOpenRecord } from "../../hooks/use-open-record";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { DynamicIcon } from "src/features/pages/cover/dynamic-icon";
-import type { CellValue, DatabaseView, Page } from "src/types";
+import type {
+  CellValue,
+  DatabaseProperty,
+  DatabaseView,
+  Page,
+} from "src/types";
+import { Cell } from "../../components/cells/cell";
 import "./timeline-card-body.scss";
 import { useResizableNode } from "src/components/tiptap-node/resizable-node";
 import { recordSelection } from "../../utils/record-selection-store";
@@ -19,6 +25,10 @@ interface TimelineCardBodyProps {
   clippedLeft?: boolean;
   clippedRight?: boolean;
   canResize?: boolean;
+  /** The properties shown after the name, in the view's column order. */
+  otherProps?: DatabaseProperty[];
+  /** Every property, for the cells that read their neighbours (relations). */
+  properties?: DatabaseProperty[];
 }
 
 export function TimelineCardBody({
@@ -27,6 +37,9 @@ export function TimelineCardBody({
   clippedLeft,
   clippedRight,
   canResize,
+  otherProps,
+  properties,
+  setCellValue,
 }: TimelineCardBodyProps) {
   const onOpenRecord = useOpenRecord(view);
   const { handleResizeStart, isResizing, activeHandle } = useResizableNode();
@@ -63,6 +76,29 @@ export function TimelineCardBody({
           {record.title}
         </span>
       </Button>
+
+      {/* After the name, on the same line, and out past the bar with it: a
+          card is as wide as the days it covers, which says nothing about how
+          much there is to read. Outside the button — these are cells, not
+          part of what opens the record. */}
+      {otherProps && otherProps.length > 0 && (
+        <div
+          className="db-tl-bar__props"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {otherProps.map((p) => (
+            <Cell
+              key={p.id}
+              property={p}
+              value={(record.values?.[p.id] ?? null) as CellValue | null}
+              record={record}
+              onChange={(v) => setCellValue(record.id, p.id, v)}
+              view={view}
+              properties={properties ?? otherProps}
+            />
+          ))}
+        </div>
+      )}
 
       {clippedRight && (
         <span

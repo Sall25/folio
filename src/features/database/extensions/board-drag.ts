@@ -82,9 +82,9 @@ export const BoardDrag = Extension.create<unknown, DragStorage>({
 
               const view = handler.getActiveView();
 
-              // A table or list row (dragged by its handle, drag-handle.tsx):
-              // reorder within its group.
-              if (view === "table" || view === "list") {
+              // A table, list or timeline row (dragged by its handle,
+              // drag-handle.tsx): reorder within its group.
+              if (view === "table" || view === "list" || view === "timeline") {
                 event.preventDefault();
                 hideRowDropIndicator();
                 const databaseId = dbEl.dataset.databaseId!;

@@ -123,6 +123,22 @@ function isNearNow(el: Element, root: Element | null): boolean {
 }
 
 /**
+ * The views whose records are rows of cells: a table, a list, and the table
+ * beside a timeline's grid. Board, gallery and calendar records draw their
+ * own content instead and never mount a cell's DOM.
+ *
+ * Both halves of the arrangement above read this, and they have to agree. A
+ * cell renders its content only once its row reports in; a row that never
+ * reports leaves every one of its cells on the empty placeholder for good.
+ * Written out twice, it came apart exactly there: the timeline was added to
+ * the cells' list and not to the rows', and its panel showed rows with no
+ * name in them.
+ */
+export function showsRecordsAsRows(viewType: string | undefined): boolean {
+  return viewType === "table" || viewType === "list" || viewType === "timeline";
+}
+
+/**
  * Start watching a row box. Call from a layout effect; returns the cleanup.
  * `el` must be the row's real box (the record's renderer element), not a
  * display: contents wrapper, which has no box to intersect.

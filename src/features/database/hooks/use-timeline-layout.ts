@@ -12,6 +12,36 @@ export const DAY_WIDTH = 40;
 export const ROW_HEIGHT = 34;
 export const HEADER_HEIGHT = 28;
 export const GROUP_ROW_HEIGHT = 28;
+/** The gap under the month row (.db-tl-header__groups' margin-bottom). */
+export const GROUP_ROW_GAP = 5;
+/**
+ * Everything above the gantt body: the month row, the gap under it, and the
+ * day row. The table panel's header is pinned to this, and that is the whole
+ * reason a record's row and its bar land on the same line — the panel starts
+ * its rows where the gantt starts its own. Anything that measures from the
+ * top of the grid uses this, not HEADER_HEIGHT + GROUP_ROW_HEIGHT, which
+ * leaves the gap out.
+ */
+export const TOTAL_HEADER_HEIGHT =
+  GROUP_ROW_HEIGHT + GROUP_ROW_GAP + HEADER_HEIGHT;
+/** The table beside the grid, before anyone drags the separator: enough for
+ *  the name column, so the grid gets the rest. */
+export const DEFAULT_TABLE_WIDTH = 220;
+/** Narrow enough to be only a name. */
+export const MIN_TABLE_WIDTH = 120;
+/** What the grid keeps whatever the table does: a few days of it. */
+export const MIN_GRID_WIDTH = 240;
+
+/**
+ * How wide the table may be once the separator is dragged. Neither side is
+ * allowed to take the other's: a table wide enough to swallow the grid turns
+ * a timeline into a worse table, and a grid that squeezes the table out
+ * leaves the bars with nothing to be read against.
+ */
+export function clampTableWidth(width: number, frameWidth: number): number {
+  const most = Math.max(MIN_TABLE_WIDTH, frameWidth - MIN_GRID_WIDTH);
+  return Math.round(Math.min(most, Math.max(MIN_TABLE_WIDTH, width)));
+}
 
 export type Timeframe = TimelineView["timeframe"];
 
@@ -27,10 +57,6 @@ export interface TimelinePlacement {
   width: number;
   clippedLeft: boolean;
   clippedRight: boolean;
-  // Vertical slot from the overlap-packing pass — NOT the record's index in
-  // sortedRecords. Two records only share a row when their date ranges don't
-  // intersect; overlapping records get pushed into separate rows.
-  row: number;
 }
 
 export interface TimelineRange {
@@ -44,9 +70,6 @@ export interface TimelineLayout {
   range: TimelineRange;
   records: TimelineRecord[];
   placement: Record<ID, TimelinePlacement>;
-  // Total rows needed once overlaps are packed — use this (not
-  // sortedRecords.length) to size the gantt body's height.
-  rowCount: number;
   startProp: DatabaseProperty | undefined;
   endProp: DatabaseProperty | undefined;
   titleProp: DatabaseProperty | undefined;
@@ -224,53 +247,10 @@ function getGeo(
   return { left, width, clippedLeft: cl, clippedRight: cr };
 }
 
-// Rough text-width estimate so overlap packing accounts for titles that will
-// visually overflow past their pill (see TimelineCardBody/db-tl-bar__title —
-// long titles are allowed to spill past the actual date-range background).
-// Without this, two records with non-overlapping DATES can still visually
-// collide if one's overflowing title text bleeds into where the next one
-// starts. This only affects row assignment, never the rendered pill width.
-const AVG_CHAR_PX = 7.5; // rough width per character at 13px/600 weight
-const TITLE_OVERHEAD_PX = 40; // icon chip + gaps/padding, see .db-tl-bar__content
-
-function estimateTitleDays(title: string): number {
-  const px = title.length * AVG_CHAR_PX + TITLE_OVERHEAD_PX;
-  return Math.max(1, Math.ceil(px / DAY_WIDTH));
-}
-
-function packRows(records: TimelineRecord[]): Map<ID, number> {
-  const rowOf = new Map<ID, number>();
-  const rowLastEnd: Date[] = [];
-
-  const withStart = records
-    .filter((r): r is TimelineRecord & { start: Date } => r.start != null)
-    .sort((a, b) => a.start.getTime() - b.start.getTime());
-
-  withStart.forEach((rec) => {
-    const dateEnd = rec.end ?? rec.start;
-    const dateDays =
-      Math.round(
-        (dateEnd.getTime() - rec.start.getTime()) / (1000 * 60 * 60 * 24),
-      ) + 1;
-    const neededDays = Math.max(dateDays, estimateTitleDays(rec.title));
-
-    const packEnd = new Date(rec.start);
-    packEnd.setDate(packEnd.getDate() + neededDays - 1);
-
-    let row = rowLastEnd.findIndex((lastEnd) => lastEnd < rec.start);
-
-    if (row === -1) {
-      row = rowLastEnd.length;
-      rowLastEnd.push(packEnd);
-    } else {
-      rowLastEnd[row] = packEnd;
-    }
-
-    rowOf.set(rec.id, row);
-  });
-
-  return rowOf;
-}
+// The overlap-packing pass that used to live here is gone. It put two
+// records on one line when their dates didn't meet, which made the grid
+// disagree with the table beside it — and that table is how the grid is
+// read. One record, one row, in the view's order: rowTop(index).
 
 export function parseDateValue(value: unknown): {
   start: Date | null;
@@ -342,24 +322,16 @@ export function useTimelineLayout(
       };
     });
 
-    const rowOf = packRows(records);
-    let rowCount = 0;
-
     const placement: Record<ID, TimelinePlacement> = {};
     records.forEach((rec) => {
       const geo = getGeo(rec, range, rec.end != null);
-      const row = rowOf.get(rec.id);
-      if (geo && row != null) {
-        placement[rec.id] = { ...geo, row };
-        rowCount = Math.max(rowCount, row + 1);
-      }
+      if (geo) placement[rec.id] = geo;
     });
 
     return {
       range,
       records,
       placement,
-      rowCount,
       startProp,
       endProp,
       titleProp,

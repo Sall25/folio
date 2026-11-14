@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   DAY_WIDTH,
+  MIN_GRID_WIDTH,
+  MIN_TABLE_WIDTH,
   ROW_HEIGHT,
   barCovers,
+  clampTableWidth,
   dayAt,
   daySpan,
   rowAt,
@@ -19,7 +22,6 @@ const placement = (left: number, width: number): TimelinePlacement => ({
   width,
   clippedLeft: false,
   clippedRight: false,
-  row: 0,
 });
 
 describe("rows", () => {
@@ -105,5 +107,39 @@ describe("barCovers", () => {
 
   it("treats a record with no bar as covering nothing", () => {
     expect(barCovers(undefined, 3)).toBe(false);
+  });
+});
+
+describe("the separator between the table and the grid", () => {
+  const FRAME = 900;
+
+  it("keeps the width it is dragged to", () => {
+    expect(clampTableWidth(420, FRAME)).toBe(420);
+  });
+
+  it("rounds to whole pixels", () => {
+    expect(clampTableWidth(419.6, FRAME)).toBe(420);
+  });
+
+  it("won't let the table shrink past a name", () => {
+    expect(clampTableWidth(10, FRAME)).toBe(MIN_TABLE_WIDTH);
+    expect(clampTableWidth(-200, FRAME)).toBe(MIN_TABLE_WIDTH);
+  });
+
+  it("won't let the table swallow the grid", () => {
+    // Dragged to the far right: the grid keeps its minimum.
+    expect(clampTableWidth(FRAME, FRAME)).toBe(FRAME - MIN_GRID_WIDTH);
+    expect(clampTableWidth(FRAME + 500, FRAME)).toBe(FRAME - MIN_GRID_WIDTH);
+  });
+
+  it("gives the table its minimum even in a frame too small for both", () => {
+    // A narrow window: something has to give, and it isn't the names.
+    expect(clampTableWidth(300, 200)).toBe(MIN_TABLE_WIDTH);
+    expect(clampTableWidth(10, 200)).toBe(MIN_TABLE_WIDTH);
+  });
+
+  it("is stable: clamping a clamped width changes nothing", () => {
+    const once = clampTableWidth(5000, FRAME);
+    expect(clampTableWidth(once, FRAME)).toBe(once);
   });
 });

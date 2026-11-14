@@ -79,7 +79,10 @@ export function useResolvedRecords(
     // into (manual-order.ts). A sort always wins.
     const manual =
       sorts.length === 0 &&
-      (activeView?.type === "table" || activeView?.type === "list");
+      (activeView?.type === "table" ||
+        activeView?.type === "list" ||
+        // A timeline's rows are dragged in its table like any other.
+        activeView?.type === "timeline");
     const order = (rows: Page[]) =>
       manual
         ? applyManualOrder(rows, activeView.manualOrder)

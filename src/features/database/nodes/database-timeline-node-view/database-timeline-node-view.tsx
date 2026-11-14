@@ -11,6 +11,7 @@ import {
 import {
   memo,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -18,16 +19,19 @@ import {
 } from "react";
 import { NodeViewContent } from "@tiptap/react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { usePageViewActions } from "src/features/pages/context/page-view-context";
 import { useDataSource } from "../../hooks/use-data-source";
 import type { TimelineView } from "src/types";
 import "./database-timeline-node-view.scss";
 import { useDatabaseContext } from "../../context/database-context";
+import { useDatabaseColumnLayout } from "../../hooks/use-database-column-layout";
+import { DatabaseTableHeader } from "../database-table-node/database-table-header";
 import {
+  clampTableWidth,
   DAY_WIDTH,
+  DEFAULT_TABLE_WIDTH,
   ROW_HEIGHT,
-  HEADER_HEIGHT,
   GROUP_ROW_HEIGHT,
+  TOTAL_HEADER_HEIGHT,
   useTimelineLayout,
 } from "../../hooks/use-timeline-layout";
 import {
@@ -186,10 +190,9 @@ function TimelineNav({
 }
 
 function DatabaseTimelineNodeViewImpl() {
-  const { db, source, sortedRecords, onUpdateView, attrs } =
+  const { db, source, sortedRecords, onUpdateView, attrs, visibleProperties } =
     useDatabaseContext();
-  const { setTarget } = usePageViewActions();
-  const { addRecordAsync } = useDataSource(source?.id);
+  const { addRecordAsync, updatePropertiesAsync } = useDataSource(source?.id);
   const { year, month } = useTimelineViewState();
   const { timelineLayout } = useTimelineLayout(
     sortedRecords,
@@ -204,7 +207,57 @@ function DatabaseTimelineNodeViewImpl() {
   const timeframe = activeView?.timeframe ?? "month";
   const showTable = activeView?.showTable ?? true;
 
-  const { range, startProp, titleProp, placement } = timelineLayout;
+  const { range, startProp, placement } = timelineLayout;
+
+  // The panel's own columns, from the same hook the table view uses, so a
+  // width set here is the width there.
+  const tableRef = useRef<HTMLDivElement>(null);
+  const {
+    widthFor,
+    gridTemplateColumns,
+    bodyGridTemplateColumns,
+    commitColumnWidth,
+  } = useDatabaseColumnLayout({
+      properties: source?.properties ?? [],
+      activeView,
+      locked: !!attrs.locked,
+      tableRef,
+      updatePropertiesAsync,
+    });
+
+  // How much of that table shows. Only the name fits by default; the rest
+  // is there, past the panel's edge, until the separator is dragged.
+  const layoutRef = useRef<HTMLDivElement>(null);
+  /** The width while the separator is being dragged; the view gets the last
+   *  one, so a drag is one change rather than one per frame. */
+  const [liveWidth, setLiveWidth] = useState<number | null>(null);
+  const tableWidth =
+    liveWidth ?? activeView?.tableWidth ?? DEFAULT_TABLE_WIDTH;
+
+  function startTableResize(e: React.PointerEvent) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const frame = layoutRef.current?.getBoundingClientRect();
+    if (!frame) return;
+    const handle = e.currentTarget as HTMLElement;
+    handle.setPointerCapture(e.pointerId);
+
+    const widthAt = (ev: { clientX: number }) =>
+      clampTableWidth(ev.clientX - frame.left, frame.width);
+
+    const move = (ev: PointerEvent) => setLiveWidth(widthAt(ev));
+    const up = (ev: PointerEvent) => {
+      const next = widthAt(ev);
+      setLiveWidth(null);
+      onUpdateView({ tableWidth: next } as Partial<TimelineView>);
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", up);
+      handle.removeEventListener("pointercancel", up);
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", up);
+    handle.addEventListener("pointercancel", up);
+  }
   const gridWidth = range.days.length * DAY_WIDTH;
 
   const today = new Date();
@@ -238,6 +291,37 @@ function DatabaseTimelineNodeViewImpl() {
   // ── Horizontal viewport tracking ──────────────────────────────────────
   const viewportRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Where the gantt's first row begins, measured from the top of the grid:
+  // the month row, the gap under it, the day row, and the line the body
+  // draws above its own content. The panel's header is then made exactly
+  // that tall, which is the whole of why a record's row and its bar sit on
+  // the same line.
+  //
+  // Measured rather than computed. The same number worked out by hand in two
+  // files is a number that goes wrong the first time either file is touched
+  // — it already had, by the 5px gap under the month row. TOTAL_HEADER_HEIGHT
+  // is only what the first paint uses, before the real one is known.
+  const [headerHeight, setHeaderHeight] = useState<number>(
+    TOTAL_HEADER_HEIGHT,
+  );
+  useLayoutEffect(() => {
+    const scroll = scrollRef.current;
+    const header = scroll?.querySelector<HTMLElement>(".db-tl-header");
+    const body = scroll?.querySelector<HTMLElement>(".db-tl-gantt__body");
+    if (!header || !body) return;
+    const measure = () => {
+      const next = header.getBoundingClientRect().height + body.clientTop;
+      // Only a real change: a no-op set here would be a render in a
+      // ResizeObserver callback, every time.
+      setHeaderHeight((prev) => (Math.abs(prev - next) < 0.5 ? prev : next));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(header);
+    ro.observe(body);
+    return () => ro.disconnect();
+  }, []);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [viewportWidth, setViewportWidth] = useState(0);
 
@@ -417,51 +501,86 @@ function DatabaseTimelineNodeViewImpl() {
           />
         </div>
 
-        <div className="db-tl-layout">
-          {showTable && (
-            <div className="db-tl-table" style={{ width: 220, minWidth: 220 }}>
-              <div
-                className="db-tl-table__header"
-                style={{ height: HEADER_HEIGHT + GROUP_ROW_HEIGHT }}
-              >
-                <span className="db-tl-table__header-label">
-                  {titleProp?.name ?? "Name"}
-                </span>
-              </div>
-              <div className="db-tl-table__body">
-                {sortedRecords.map((rec) => (
-                  <div
-                    key={rec.id}
-                    className="db-tl-table__row"
-                    style={{ height: ROW_HEIGHT }}
-                  >
-                    <button
-                      className="db-tl-table__name-btn"
-                      onClick={() =>
-                        setTarget({ pageId: rec.id, view: "Peek" })
-                      }
-                    >
-                      {titleProp
-                        ? String(rec.values?.[titleProp.id] ?? "Untitled")
-                        : "Untitled"}
-                    </button>
-                  </div>
-                ))}
-                <div
-                  className="db-tl-table__row"
-                  style={{ height: ROW_HEIGHT }}
-                >
-                  <Button
-                    variant="ghost"
-                    className="db-tl-table__add-btn"
-                    onClick={() => addRecordAsync({ title: "" })}
-                  >
-                    <Plus className="tiptap-button-icon" />
-                    <span className="tiptap-button-text">New</span>
-                  </Button>
-                </div>
-              </div>
+        <div className="db-tl-layout" ref={layoutRef}>
+          {/* Always mounted, even when it is hidden. The records live in
+              here now, and their bars are portalled out of them: unmounting
+              the panel would take every bar in the grid with it. Hidden, it
+              is a panel of no width. */}
+          <div
+            className="db-tl-table"
+            data-hidden={!showTable || undefined}
+            style={{
+              width: showTable ? tableWidth : 0,
+              minWidth: showTable ? tableWidth : 0,
+            }}
+          >
+            {/* The same grid the table view is: one column per property,
+                  each record a subgrid row of its own cells. That is what
+                  makes these rows ordinary rows — the editor's drag handle
+                  finds them, and reordering goes down the same path as the
+                  table's (board-drag.ts). Only as much of it shows as the
+                  panel is wide; the rest is there, past the edge. */}
+            <div
+              ref={tableRef}
+              className="db-node-grid db-tl-grid"
+              // The same inline style the table view's own grid carries
+              // (database-table-body.tsx): display and width are set there,
+              // not in CSS, and without them this is a column of stacked
+              // headers and rows whose subgrid has no grid to sub.
+              style={{
+                display: "grid",
+                width: "max-content",
+                minWidth: "100%",
+                // As tall as the gantt's own header, measured: row 1 of
+                // this grid ends where the gantt's first row begins.
+                ["--tl-header-height" as string]: `${headerHeight}px`,
+                // The trailing track the table's own grid carries too: the
+                // header ends in the add-property cell, so a grid one column
+                // short wraps that cell onto a second line and pushes every
+                // row below out of step with its bar.
+                gridTemplateColumns: `${bodyGridTemplateColumns} 300px`,
+              }}
+            >
+              <DatabaseTableHeader
+                subgrid
+                gridRow={1}
+                visibleProperties={visibleProperties}
+                allProperties={source?.properties ?? []}
+                activeView={activeView}
+                locked={!!attrs.locked}
+                gridTemplateColumns={gridTemplateColumns}
+                widthFor={widthFor}
+                onReorder={(ids) => db.reorderProperties(ids)}
+                onAddProperty={(type) => db.addProperty(type)}
+                onCommitColumnWidth={commitColumnWidth}
+              />
+              <NodeViewContent as="div" className="db-node-grid__body" />
             </div>
+
+            <div className="db-tl-table__row db-tl-table__row--new">
+              <Button
+                variant="ghost"
+                className="db-tl-table__add-btn"
+                onClick={() => addRecordAsync({ title: "" })}
+              >
+                <Plus className="tiptap-button-icon" />
+                <span className="tiptap-button-text">New</span>
+              </Button>
+            </div>
+          </div>
+
+          {showTable && (
+            // Drag it to give the table more of the room, or less. The
+            // columns past the panel's edge are already rendered; this is
+            // what lets them be seen.
+            <div
+              className="db-tl-splitter"
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize the table"
+              data-dragging={liveWidth !== null || undefined}
+              onPointerDown={startTableResize}
+            />
           )}
 
           <div className="db-tl-viewport" ref={viewportRef}>
@@ -515,14 +634,15 @@ function DatabaseTimelineNodeViewImpl() {
                     />
                   )}
 
-                  <NodeViewContent as="div" className="db-tl-gantt__content" />
+                  {/* The bars are portalled in here by timeline-bar.tsx:
+                      each record's own DOM is its row in the panel. */}
                 </div>
               </div>
             </div>
 
             <div
               className="db-tl-indicators"
-              style={{ top: HEADER_HEIGHT + GROUP_ROW_HEIGHT }}
+              style={{ top: headerHeight }}
             >
               {indicators.map((ind) => (
                 <Button

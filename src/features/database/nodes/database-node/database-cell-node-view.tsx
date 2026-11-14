@@ -10,7 +10,10 @@ import { ChevronRight } from "src/components/icons";
 import "./sub-items.scss";
 import { isCopiableType } from "../database-board-node-view/utils";
 import { useOpenRecord } from "../../hooks/use-open-record";
-import { useRecordNearScreen } from "../../utils/record-visibility";
+import {
+  showsRecordsAsRows,
+  useRecordNearScreen,
+} from "../../utils/record-visibility";
 import { formatUniqueId } from "src/lib/unique-id";
 import {
   cellKey,
@@ -109,11 +112,12 @@ export default function DatabaseCellNodeView({ node, editor }: NodeViewProps) {
     openRecord(recordId);
   };
 
-  // Only a table or a list shows these cells. Board, gallery, calendar and
-  // timeline records draw their own content (BoardCardBody, the bars) and
-  // never mount the cells' DOM, so rendering a Cell there was pure waste.
-  const shownAsCells =
-    data?.view?.type === "table" || data?.view?.type === "list";
+  // A table, a list, or the table beside a timeline's grid. Board, gallery
+  // and calendar records draw their own content (BoardCardBody, the bars)
+  // and never mount the cells' DOM, so rendering a Cell there is pure waste.
+  // A timeline's rows ARE table rows — same cells, same columns — and its
+  // bars are drawn from the row, not instead of it.
+  const shownAsCells = showsRecordsAsRows(data?.view?.type);
 
   const people = useWorkspacePeople();
   const clipboardValue =

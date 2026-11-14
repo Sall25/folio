@@ -559,6 +559,11 @@ export interface TimelineView extends BaseView {
   endDatePropertyId: ID;
   timeframe: "day" | "week" | "month" | "quarter" | "year";
   showTable: boolean;
+  /** How wide the table beside the grid is. Same as TableView.manualOrder:
+   *  the panel is a table view, so it keeps the same things. */
+  tableWidth?: number;
+  /** Same as TableView.manualOrder — the order its rows were dragged into. */
+  manualOrder?: ID[];
 }
 /** One question of a form: the property its answer fills. */
 export interface FormQuestion {

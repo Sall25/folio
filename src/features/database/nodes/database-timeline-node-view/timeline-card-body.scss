@@ -1,7 +1,13 @@
 .db-tl-bar {
   display: flex;
-  align-items: flex-start;
+  // One line, and it is allowed to be longer than the bar: the name and the
+  // properties run on over the grid rather than being squeezed or cut. The
+  // bar's own box is pinned to the days it covers (inset: 0 on the box the
+  // node portals in), so nothing here can widen the fill.
+  flex-wrap: nowrap;
+  align-items: center;
   justify-content: flex-start;
+  gap: 6px;
   border-radius: var(--tt-radius-sm) !important;
   padding: 5px !important;
   background: var(--tt-gray-light-50) !important;
@@ -35,6 +41,7 @@
 
 .db-tl-bar__content {
   position: relative;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -52,16 +59,42 @@
   white-space: nowrap;
   // Deliberately NOT overflow:hidden/ellipsis — when the title is wider than
   // the bar's date-range width, it should spill past the colored background
-  // rather than truncate. Only the portion within tp.width (the Card's own
-  // box, which is what carries the background) gets the pill fill; the
-  // overflow renders on transparent, directly against the day-grid.
+  // rather than truncate. Only the portion within tp.width (the box the node
+  // portals in, which is what carries the background) gets the pill fill;
+  // the overflow renders on transparent, directly against the day-grid.
   overflow: visible;
   flex-shrink: 0;
-  position: absolute;
-  left: 20px;
+  // In the line, not over it: the properties come after the name, and an
+  // absolute title would have them sitting on top of it.
+  position: static;
   color: var(--tt-text-primary) !important;
   font-size: 14px !important;
   cursor: pointer;
+}
+
+// The properties, after the name, spilling with it.
+.db-tl-bar__props {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  overflow: visible;
+  font-size: 12px;
+
+  // A cell on a card is a value, not a column: no borders, no stretching to
+  // a width it doesn't have here.
+  .db-cell,
+  .db-node-cell {
+    min-height: 0;
+    height: auto;
+    width: auto;
+    max-width: none;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
 }
 
 .db-tl-bar__connector {

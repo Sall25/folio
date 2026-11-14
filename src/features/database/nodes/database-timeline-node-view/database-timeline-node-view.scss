@@ -1,3 +1,6 @@
+$tl-row-height: 34;
+$tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
+
 // ── Empty state ────────────────────────────────────────────────────────────
 .db-tl-empty {
   padding: 40px 24px;
@@ -358,16 +361,12 @@
   }
 }
 
-.db-tl-bar__title {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--tt-accent-fg-color, #1d4ed8);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 1;
-  min-width: 0;
-}
+// The title's own rules live in timeline-card-body.scss, which deliberately
+// lets it spill past the bar: a card is as wide as the days it covers, and a
+// name longer than that runs onto the grid rather than being cut. This file
+// used to set overflow: hidden and text-overflow: ellipsis on the same class
+// at the same weight, so which one won came down to which stylesheet loaded
+// last. Nothing here now.
 
 // ── Drag handles ───────────────────────────────────────────────────────────
 .db-tl-bar__handle {
@@ -761,4 +760,109 @@
   margin-left: 6px;
   white-space: nowrap;
   color: var(--tt-text-secondary);
+}
+
+
+// ── The table beside the grid ──────────────────────────────────────────────
+// It is a table view: the same grid, the same cells, the same columns. Only
+// as much of it shows as the panel is wide — the rest is past its edge, for
+// the separator to reveal.
+// The grid inside is as wide as all its columns (width: max-content), which
+// is wider than the panel by design — the separator is what reveals the rest.
+// So the panel is what clips it; without this the hidden columns paint over
+// the separator and the grid beside it.
+.db-tl-table {
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.db-tl-grid {
+  overflow: hidden;
+
+  // Every row on the line its bar is drawn on, which is what lets the two
+  // panels be read across. border-box on purpose: a row's separator line
+  // has to come out of its 34px, not sit under it — content-box makes every
+  // row 35px tall and the panel drifts a pixel further from the grid with
+  // each record.
+  .react-renderer.node-databaseRecord {
+    height: #{$tl-row-height}px;
+    min-height: #{$tl-row-height}px;
+    box-sizing: border-box;
+  }
+
+  // As tall as everything above the gantt's first row, which the node view
+  // measures off the gantt itself and hands down as --tl-header-height: the
+  // month row, the gap under it, the day row, and the line the gantt body
+  // draws above its own content. Row 1 of this grid therefore ends where
+  // the gantt's first row begins.
+  //
+  // border-box, like the rows: that measurement is the distance to the
+  // first bar's top edge, so this header's own line comes out of it rather
+  // than being added underneath.
+  .db-tl-table__header,
+  .db-header-row {
+    box-sizing: border-box;
+    height: var(--tl-header-height, #{$tl-header-height}px);
+    min-height: var(--tl-header-height, #{$tl-header-height}px);
+  }
+}
+
+// The gantt body hosts the bars, which are portalled in (timeline-bar.tsx).
+.db-tl-bar-box {
+  position: absolute;
+  z-index: 3;
+}
+
+// Hidden by the toggle: still here, still holding the records, just not
+// taking any width.
+.db-tl-table[data-hidden] {
+  overflow: hidden;
+  border-right: 0;
+}
+
+// The "+ New" row sits under the grid, on the line the placeholder leaves
+// empty at the bottom of the gantt.
+.db-tl-table__row--new {
+  height: #{$tl-row-height}px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+// ── The separator ──────────────────────────────────────────────────────────
+// Between the table and the grid. Dragging it is how the columns past the
+// panel's edge are brought into view.
+.db-tl-splitter {
+  flex: 0 0 auto;
+  width: 5px;
+  margin: 0 -2px;
+  cursor: col-resize;
+  background: transparent;
+  position: relative;
+  z-index: 6;
+  touch-action: none;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0 1px;
+    border-radius: 999px;
+    background: var(--tt-brand-color-500, #6229ff);
+    opacity: 0;
+    transition: opacity 0.1s ease;
+  }
+
+  &:hover::after,
+  &[data-dragging]::after {
+    opacity: 0.5;
+  }
+
+  &[data-dragging]::after {
+    opacity: 0.9;
+  }
 }

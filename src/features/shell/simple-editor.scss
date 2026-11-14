@@ -338,6 +338,15 @@ body,
 }
 
 // Below tablet, .top-level-block (every node except the database) must fit the
+// A timeline reaches back to where the sidebar ends, and no further: it
+// gives back exactly the indent every other block keeps, and takes that much
+// extra width. The table beside its grid is the first thing to be squeezed
+// out of a narrow column, and it is the half you read the grid against.
+.top-level-block:has(.db-tl-layout-wrap) {
+  transform: translateX(var(--block-padding-left, 0px));
+  width: calc(var(--db-editor-width) + var(--block-margin-left, 0px));
+}
+
 // viewport: its fixed width: var(--db-editor-width) and the left-gutter
 // translateX indent both push content off-screen on a phone. Fill the
 // available width and drop the horizontal shift so blocks sit flush inside
