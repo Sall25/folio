@@ -37,6 +37,18 @@ export function addLocalPage(page: Page) {
   write({ ...read(), [page.id]: page });
 }
 
+/**
+ * A page made on this device that the server has already taken — a copy, a
+ * teamspace's first page — so it needs nothing from the outbox, only to be
+ * known as made here: the collab server still holds nothing for it, and the
+ * editor would otherwise wait out its sync timeout and say it can't reach
+ * the page. Cheap enough to call for every page of a copied database, which
+ * putting each one through the outbox would not be.
+ */
+export function noteCreatedHere(id: string) {
+  createdHere.add(id);
+}
+
 /** Created on this device: still waiting to be sent, or sent this session. */
 export const isCreatedHere = (id: string) =>
   createdHere.has(id) || isLocalPage(id);

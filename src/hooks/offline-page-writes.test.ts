@@ -109,13 +109,14 @@ const settle = () => new Promise((r) => setTimeout(r, 0));
 
 async function load() {
   const create = await import("./use-create-page");
+  const row = await import("./use-add-row");
   const patch = await import("./use-patch-page");
   const trash = await import("./use-trash-page");
   const restore = await import("./use-trash");
   const local = await import("src/lib/local-pages");
   const writes = await import("src/lib/page-writes");
   const { patchPage } = await import("src/api/pages");
-  return { create, patch, trash, restore, local, writes, patchPage };
+  return { create, row, patch, trash, restore, local, writes, patchPage };
 }
 
 let qc: QueryClient;
@@ -145,6 +146,12 @@ function createPage(p: Page) {
   ).mutate(p);
 }
 
+/** A row added to a database, through the very options useAddRow runs —
+ *  not a copy of them, so the two can't drift apart. */
+function addRow(p: Page) {
+  return new MutationObserver(qc, m.row.addRowMutationOptions(qc)).mutate(p);
+}
+
 function patchPage(id: string, patch: Partial<Page>) {
   return new MutationObserver(
     qc,
@@ -155,10 +162,11 @@ function patchPage(id: string, patch: Partial<Page>) {
 }
 
 function trashPage(pageId: string, ids?: string[]) {
-  return new MutationObserver(
-    qc,
-    m.trash.trashPageMutationOptions(qc),
-  ).mutate({ pageId, workspaceId: "ws1", ids });
+  return new MutationObserver(qc, m.trash.trashPageMutationOptions(qc)).mutate({
+    pageId,
+    workspaceId: "ws1",
+    ids,
+  });
 }
 
 function restorePage(pageId: string) {
@@ -444,9 +452,15 @@ describe("no connection while the browser still says online (common on Windows, 
     expect(isNetworkError(offlineError())).toBe(true);
     expect(isNetworkError(new TypeError("Failed to fetch"))).toBe(true);
     expect(isNetworkError(new Error("Load failed"))).toBe(true);
-    expect(isNetworkError({ message: "TypeError: NetworkError when attempting to fetch resource." })).toBe(true);
+    expect(
+      isNetworkError({
+        message: "TypeError: NetworkError when attempting to fetch resource.",
+      }),
+    ).toBe(true);
     expect(isNetworkError(new Error("duplicate key value"))).toBe(false);
-    expect(isNetworkError(new Error("new row violates row-level security policy"))).toBe(false);
+    expect(
+      isNetworkError(new Error("new row violates row-level security policy")),
+    ).toBe(false);
   });
 });
 
@@ -471,9 +485,66 @@ describe("a page made offline in one workspace", () => {
   it("…or to a list holding its teamspace (joined from another workspace)", async () => {
     m.local.addLocalPage(page("p1", { teamspaceId: "ts", parentId: "ts" }));
     const list = [page("ts", { workspaceId: "ws1", teamspaceId: "ts" })];
-    expect(
-      m.local.withLocalPages(list, "ws2").map((p) => p.id),
-    ).toEqual(["ts", "p1"]);
+    expect(m.local.withLocalPages(list, "ws2").map((p) => p.id)).toEqual([
+      "ts",
+      "p1",
+    ]);
   });
 });
 
+// ── Rows ────────────────────────────────────────────────────────────────────
+
+// A row is a page. It used to be created by a mutation of its own, and
+// everything this file guards stopped at the database's edge: a row opened
+// to a "can't reach this page" screen instead of opening empty, was lost if
+// it was made offline, and took other new pages down with it when it failed.
+
+describe("a row added to a database", () => {
+  it("is registered as created on this device, so it opens at once", async () => {
+    // This is what use-collab-doc asks before it shows "can't reach this
+    // page right now": a page made here has nothing on the server to wait
+    // for, so it opens empty instead of waiting out the sync timeout.
+    await addRow(page("row1"));
+    expect(m.local.isCreatedHere("row1")).toBe(true);
+  });
+
+  it("shows in the list, and waits in the outbox when made offline", async () => {
+    goOffline();
+    await addRow(page("row1"));
+    expect(listed().map((p) => p.id)).toEqual(["row1"]);
+    expect(m.local.isLocalPage("row1")).toBe(true);
+    expect(m.local.isCreatedHere("row1")).toBe(true);
+  });
+
+  it("is sent before a change made to it offline", async () => {
+    goOffline();
+    await addRow(page("row1"));
+    const done = patchPage("row1", { title: "Typed offline" });
+    goOnline();
+    await done;
+    expect(server.calls).toEqual([
+      'create row1 ""',
+      'create row1 "Typed offline"',
+      'patch row1 {"title":"Typed offline"}',
+    ]);
+    expect(m.local.isLocalPage("row1")).toBe(false);
+  });
+
+  it("doesn't take other new pages with it when it fails", async () => {
+    // The old row mutation put back a copy of the whole list on failure,
+    // which removed every page created while its request was out.
+    await createPage(page("p1"));
+    const { createPage: api } = await import("src/api/pages");
+    vi.mocked(api).mockImplementationOnce(async () => {
+      throw new Error("new row violates row-level security policy");
+    });
+    await addRow(page("row1")).catch(() => {});
+    expect(listed().map((p) => p.id)).toEqual(["p1"]);
+  });
+
+  it("doesn't cover the editor while it saves", async () => {
+    // Adding a row doesn't take you off the page you are on, so the
+    // creation skeleton stays away (page-editor-layout.tsx).
+    expect(m.row.addRowMutationOptions(qc).meta).toEqual({ quiet: true });
+  });
+});

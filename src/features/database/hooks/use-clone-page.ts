@@ -5,6 +5,7 @@ import { newId } from "src/lib/id";
 import { queryKeys } from "src/lib/queryKeys";
 import type { ID, Page, DataSource, PageCategory } from "src/types";
 import { createPage, fetchPages } from "src/api/pages";
+import { noteCreatedHere } from "src/lib/local-pages";
 import { createDataSource, fetchDataSource } from "src/api/data-sources";
 import { useCurrentPerson } from "src/hooks/use-session";
 import { useActivePageActions } from "src/features/pages/context/active-page-context";
@@ -127,8 +128,14 @@ export function useClonePage() {
           await createPage(cloned);
           await createDataSource(newSource);
           for (const r of newRows) await createPage(r);
+          // Made here, so the copy opens against an empty document while
+          // the collab server wakes, instead of "can't reach this page" —
+          // and so does any row opened straight after it.
+          noteCreatedHere(newPageId);
+          newRows.forEach((r) => noteCreatedHere(r.id));
         } else {
           await createPage(cloned);
+          noteCreatedHere(newPageId);
         }
 
         await qc.invalidateQueries({ queryKey: queryKeys.pages.all });

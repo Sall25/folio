@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPage as createPageApi } from "../api/pages";
+import { noteCreatedHere } from "src/lib/local-pages";
 import {
   createTeamspace as createTeamspaceApi,
   deleteTeamspace as deleteTeamspaceApi,
@@ -62,6 +63,11 @@ export function useCreateTeamspaceWithPage() {
       qc.setQueriesData<Page[]>({ queryKey: queryKeys.pages.all }, (pages) =>
         Array.isArray(pages) ? [...pages, built.page] : pages,
       );
+      // The modal opens this page as soon as it is made, and the collab
+      // server holds nothing for it yet: without this it opens to "can't
+      // reach this page" until the server answers.
+      noteCreatedHere(built.page.id);
+
       qc.setQueriesData<Teamspace[]>(
         { queryKey: queryKeys.teamspaces.all },
         (teamspaces) =>
