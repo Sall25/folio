@@ -18,7 +18,7 @@ import { BoardCardBody } from "../../primitives/board-card-body";
 import {
   DAY_WIDTH,
   parseDateValue,
-  ROW_HEIGHT as TL_ROW_HEIGHT,
+  rowTop,
 } from "../../hooks/use-timeline-layout";
 import { TimelineCardBody } from "../database-timeline-node-view/timeline-card-body";
 import { CalendarEventBar } from "../database-calendar-node-view/calendar-event-bar";
@@ -158,13 +158,6 @@ export default function DatabaseRecordNodeView({
       if (tp && index !== -1) {
         box.style.setProperty("display", "block", "important");
         box.style.setProperty("position", "absolute", "important");
-        // Row comes from the overlap-packing pass (tp.row), not list order —
-        // two records only share a row when their dates don't overlap.
-        box.style.setProperty(
-          "top",
-          `${tp.row * TL_ROW_HEIGHT}px`,
-          "important",
-        );
         box.style.setProperty("left", `${tp.left}px`, "important");
         if (resizingRef.current === false) {
           box.style.setProperty("width", `${tp.width}px`, "important");
@@ -174,11 +167,10 @@ export default function DatabaseRecordNodeView({
         // } else {
         //   skipTimelineWidthRef.current = false;
         // }
-        box.style.setProperty(
-          "top",
-          `${index === 0 ? TL_ROW_HEIGHT : index * TL_ROW_HEIGHT}px`,
-          "important",
-        );
+        // One row per record, in the order the view sorts them, level with
+        // the name table beside it. The placeholder reads its row from the
+        // same place (use-timeline-layout/rowTop), so the two can't drift.
+        box.style.setProperty("top", `${rowTop(index)}px`, "important");
         box.style.setProperty("margin", `0px`, "important");
         box.removeAttribute("draggable");
       } else {

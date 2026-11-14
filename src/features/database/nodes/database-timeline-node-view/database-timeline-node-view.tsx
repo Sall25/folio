@@ -36,6 +36,7 @@ import {
 } from "../../context/timeline-view-context";
 import { TimelineHeader, type HighlightRange } from "./timeline-header";
 import { TimelineDayGrid } from "./timeline-day-grid";
+import { TimelinePlaceholder } from "./timeline-placeholder";
 import {
   Popover,
   PopoverContent,
@@ -385,7 +386,23 @@ function DatabaseTimelineNodeViewImpl() {
     );
   }
 
-  const ganttHeight = sortedRecords.length * ROW_HEIGHT;
+  // One row per record, plus the empty one underneath — level with the name
+  // table's "+ New" row, and the only place a page with no dates yet could
+  // be drawn.
+  const rowCount = sortedRecords.length + 1;
+  const ganttHeight = rowCount * ROW_HEIGHT;
+
+  async function createFromPlaceholder(start: Date, end: Date, title: string) {
+    if (!startProp) return;
+    // Both dates live in the start property, as the resize handler writes
+    // them (database-record-node-view).
+    await addRecordAsync({
+      title,
+      values: {
+        [startProp.id]: { start: start.toISOString(), end: end.toISOString() },
+      },
+    });
+  }
 
   return (
     <div className="db-tl-layout-wrap">
@@ -480,6 +497,15 @@ function DatabaseTimelineNodeViewImpl() {
                   }}
                 >
                   <TimelineDayGrid range={range} />
+
+                  {/* Before the bars on purpose: they are drawn after it,
+                      so a bar takes its own pointer events and the
+                      placeholder never appears on top of a record. */}
+                  <TimelinePlaceholder
+                    range={range}
+                    rowCount={rowCount}
+                    onCreate={createFromPlaceholder}
+                  />
 
                   {todayLeft !== null && (
                     <div

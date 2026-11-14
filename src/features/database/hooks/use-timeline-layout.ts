@@ -58,6 +58,50 @@ export interface UseTimelineLayoutReturn {
   timelineLayout: TimelineLayout;
 }
 
+// ── Grid geometry ──────────────────────────────────────────────────────────
+// One row per record, in the order the view sorts them, level with the name
+// table beside it. Everything that draws in the gantt body — the bars, the
+// placeholder — reads its row from here, so the two can't drift apart.
+
+/** The top of row `index`, in pixels from the top of the gantt body. */
+export function rowTop(index: number): number {
+  return index * ROW_HEIGHT;
+}
+
+/** The row under a point, clamped to the rows that exist. */
+export function rowAt(y: number, rowCount: number): number {
+  return Math.min(rowCount - 1, Math.max(0, Math.floor(y / ROW_HEIGHT)));
+}
+
+/** The day column under a point, clamped to the range on show. */
+export function dayAt(x: number, dayCount: number): number {
+  return Math.min(dayCount - 1, Math.max(0, Math.floor(x / DAY_WIDTH)));
+}
+
+/** The box of a run of days, given two day indexes in either order. */
+export function daySpan(
+  a: number,
+  b: number,
+): { left: number; width: number; days: number } {
+  const from = Math.min(a, b);
+  const to = Math.max(a, b);
+  return {
+    left: from * DAY_WIDTH,
+    width: (to - from + 1) * DAY_WIDTH,
+    days: to - from + 1,
+  };
+}
+
+/** Whether a record's bar already stands on this day. */
+export function barCovers(
+  placement: TimelinePlacement | undefined,
+  dayIndex: number,
+): boolean {
+  if (!placement) return false;
+  const x = dayIndex * DAY_WIDTH;
+  return x >= placement.left && x < placement.left + placement.width;
+}
+
 export function sameDay(a: Date, b: Date) {
   return (
     a.getFullYear() === b.getFullYear() &&

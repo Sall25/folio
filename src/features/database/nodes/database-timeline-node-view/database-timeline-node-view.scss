@@ -683,3 +683,82 @@
     background: color-mix(in srgb, var(--tt-selection-color) 20%, transparent);
   }
 }
+// ── The new-page placeholder ───────────────────────────────────────────────
+// Covers the whole gantt body, but is drawn before the bars, so a bar sits
+// over it and takes its own pointer events: the placeholder only ever
+// appears on empty grid.
+.db-tl-placeholder-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  // No z-index on purpose. It is drawn after the day grid and before the
+  // bars, and that order is what keeps it under them: a stacked layer here
+  // would paint over every bar and swallow the clicks that open a record.
+}
+
+.db-tl-placeholder {
+  position: absolute;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  pointer-events: none;
+
+  &[data-state="hover"] {
+    background: var(--tt-hover-bg-color, rgba(55, 53, 47, 0.05));
+    border: 1.5px dashed var(--tt-border-color, #e5e7eb);
+    color: var(--tt-text-secondary);
+    // The words don't fit in a 40px day, so they are allowed out of it.
+    overflow: visible;
+    justify-content: center;
+  }
+
+  // Drawing a span, and naming what was drawn: both show the page as it
+  // will be, in the accent the bars use.
+  &[data-state="drawing"],
+  &[data-state="naming"] {
+    background: var(--tt-accent-subtle-bg, rgba(37, 99, 235, 0.15));
+    border: 1.5px solid var(--tt-accent-color, #2563eb);
+    color: var(--tt-accent-fg-color, #1d4ed8);
+  }
+
+  &[data-state="naming"] {
+    pointer-events: auto;
+  }
+}
+
+.db-tl-placeholder__title {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  outline: none;
+
+  &::placeholder {
+    color: currentColor;
+    opacity: 0.55;
+  }
+}
+
+.db-tl-placeholder__days {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.db-tl-placeholder__label {
+  position: absolute;
+  left: 100%;
+  margin-left: 6px;
+  white-space: nowrap;
+  color: var(--tt-text-secondary);
+}
