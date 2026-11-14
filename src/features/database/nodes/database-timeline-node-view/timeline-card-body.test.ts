@@ -34,6 +34,25 @@ const bar = el("db-tl-bar tag:div");
 const content = el("db-tl-bar__content tag:div");
 const title = el("db-tl-bar__title tiptap-button-text tag:span");
 
+// Where the card sits is the box's business, not the card's. timeline-bar.tsx
+// places .db-tl-bar-box on the record's line and the card fills it with an
+// inline inset: 0. A stylesheet that also offsets the card moves it off that
+// line — and an inline inset can override a top but never a transform, which
+// is how every card came to sit half a row high, up under the day numbers.
+describe.each(Object.entries(orders))("where a card sits (%s)", (_n, rules) => {
+  const chain = [el("db-tl-bar-box tag:div"), bar];
+
+  it("takes its line from the box it is placed in", () => {
+    expect(resolve(rules, chain, "top")).toBeNull();
+    expect(resolve(rules, chain, "bottom")).toBeNull();
+  });
+
+  it("is not moved off it by a transform", () => {
+    const moved = resolve(rules, chain, "transform");
+    expect(moved?.value ?? "none").toBe("none");
+  });
+});
+
 describe.each(Object.entries(orders))("a card's name (%s)", (_name, rules) => {
   const chain = [bar, content, title];
 

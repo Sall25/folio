@@ -333,11 +333,18 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
 }
 
 // ── Bars ───────────────────────────────────────────────────────────────────
+// A bar fills the box its row puts it in (.db-tl-bar-box, placed on the
+// record's line by timeline-bar.tsx), which it does with an inline
+// inset: 0 — so it sets no offsets or height of its own here.
+//
+// It used to centre itself in a gantt row with top: 50% and a matching
+// translateY(-50%), from when it was placed in that row directly. The
+// inline inset overrode the top but could not override the transform, and
+// a transform that nothing cancels moves the bar up half its height: every
+// card sat half a row above the row it belonged to, up under the day
+// numbers.
 .db-tl-bar {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 24px;
   border-radius: 4px;
   background: var(--tt-accent-subtle-bg, rgba(37, 99, 235, 0.15));
   border: 1.5px solid var(--tt-accent-color, #2563eb);
