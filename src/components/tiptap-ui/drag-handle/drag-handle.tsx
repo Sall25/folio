@@ -175,6 +175,8 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
   // The handle's block sits in a table cell: it's drawn as a solid chip a
   // little further out, clear of the row's grip on the table's border.
   const [inCell, setInCell] = useState(false);
+  /** A row of a timeline's table, whose handle sits inside the row. */
+  const [inTimeline, setInTimeline] = useState(false);
   const inCellRef = useRef(false);
   const nestedOptions = useMemo(() => makeNestedOptions(editor), [editor]);
   const isDraggingRef = useRef(false);
@@ -197,10 +199,34 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
     const centerOnFirstLine: Middleware = {
       name: "centerOnFirstLine",
       fn({ x, y, rects, elements }) {
-        if (!editor || targetRef.current === "Record") return {};
+        if (!editor) return {};
         const block = editor.view.nodeDOM(posRef.current);
         if (!(block instanceof HTMLElement)) return {};
         const ref = elements.reference.getBoundingClientRect();
+
+        // Rows keep their own tuned spot — except a timeline's, whose table
+        // starts at the sidebar's edge so that the grid can have the rest
+        // of the width. "Left of the row" is under the sidebar there, the
+        // same place the handle used to land for a database (below), so it
+        // sits just inside the row instead, in the gutter the first column
+        // leaves for it.
+        //
+        // rects.reference, not getBoundingClientRect: what we return is
+        // written to `left`, which is measured from the handle's
+        // offsetParent, and rects.reference is the row's box already
+        // converted into that same space. `ref` below is in viewport
+        // pixels, so it cannot be returned from here.
+        //
+        // The stylesheet's nudge on a record's handle is turned off for a
+        // timeline row (.is-record.in-timeline) rather than cancelled out
+        // here: it lands after layout, so compensating for it would mean
+        // reading it back, and it is not applied until the render that
+        // sets the class — the same render that sets in-timeline. Leaving
+        // it to CSS keeps the two in step whatever the order.
+        if (targetRef.current === "Record") {
+          if (!block.closest(".db-tl-grid")) return {};
+          return { x: rects.reference.x + 2, y };
+        }
         const middle = firstLineMiddle(block);
         const next = {
           x,
@@ -461,8 +487,8 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
       className={`drag-handle ${isColumnResizing ? "hide" : "show"} ${
         target === "Record" ? "is-record" : ""
       } ${hideHandle ? "hide" : ""} ${inCell ? "in-cell" : ""} ${
-        fadeFlip ? "fade-a" : "fade-b"
-      }`}
+        inTimeline ? "in-timeline" : ""
+      } ${fadeFlip ? "fade-a" : "fade-b"}`}
       editor={editor}
       computePositionConfig={computePositionConfig}
       onNodeChange={({ node, pos: newPos }) => {
@@ -485,6 +511,15 @@ export function DragHandle({ editor }: { editor: Editor | null }) {
         }
         inCellRef.current = nowInCell;
         setInCell(nowInCell);
+
+        // Set in the same render as is-record, so the handle is never
+        // nudged by one and placed by the other.
+        const nodeDom = editor.view.nodeDOM(newPos);
+        setInTimeline(
+          newTarget === "Record" &&
+            nodeDom instanceof HTMLElement &&
+            !!nodeDom.closest(".db-tl-grid"),
+        );
 
         if (newTarget === "Record") {
           const hideHandle = node.attrs.hideHandle as boolean;

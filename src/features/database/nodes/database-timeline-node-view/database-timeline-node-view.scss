@@ -888,6 +888,15 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
     border-bottom: 1px solid var(--tt-border-color);
   }
 
+  // Room for the drag handle at the start of a row. The panel begins at the
+  // sidebar's edge, so the handle cannot sit to the left of a row the way it
+  // does in a table — it sits just inside one (drag-handle.tsx), and this is
+  // the gutter it sits in. Without it the grip covers the page's icon.
+  .react-renderer.node-databaseCell:first-child .db-node-cell,
+  .db-header-row .db-header-cell:first-child {
+    padding-left: 28px;
+  }
+
   // A cell fills the row it is in and asks for no height of its own. It
   // asks for 34px elsewhere, where a row is as tall as its contents plus
   // its separator — here the row is 34px with the separator inside it, so

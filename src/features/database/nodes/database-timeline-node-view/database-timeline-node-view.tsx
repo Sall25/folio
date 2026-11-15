@@ -221,12 +221,12 @@ function DatabaseTimelineNodeViewImpl() {
     bodyGridTemplateColumns,
     commitColumnWidth,
   } = useDatabaseColumnLayout({
-      properties: source?.properties ?? [],
-      activeView,
-      locked: !!attrs.locked,
-      tableRef,
-      updatePropertiesAsync,
-    });
+    properties: source?.properties ?? [],
+    activeView,
+    locked: !!attrs.locked,
+    tableRef,
+    updatePropertiesAsync,
+  });
 
   // How much of that table shows. Only the name fits by default; the rest
   // is there, past the panel's edge, until the separator is dragged.
@@ -234,8 +234,7 @@ function DatabaseTimelineNodeViewImpl() {
   /** The width while the separator is being dragged; the view gets the last
    *  one, so a drag is one change rather than one per frame. */
   const [liveWidth, setLiveWidth] = useState<number | null>(null);
-  const tableWidth =
-    liveWidth ?? activeView?.tableWidth ?? DEFAULT_TABLE_WIDTH;
+  const tableWidth = liveWidth ?? activeView?.tableWidth ?? DEFAULT_TABLE_WIDTH;
 
   function startTableResize(e: React.PointerEvent) {
     if (e.button !== 0) return;
@@ -279,7 +278,6 @@ function DatabaseTimelineNodeViewImpl() {
     goTo(stepRange(new Date(year, month, day), timeframe, dir));
   }
 
-
   // ── Horizontal viewport tracking ──────────────────────────────────────
   const viewportRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -294,9 +292,7 @@ function DatabaseTimelineNodeViewImpl() {
   // files is a number that goes wrong the first time either file is touched
   // — it already had, by the 5px gap under the month row. TOTAL_HEADER_HEIGHT
   // is only what the first paint uses, before the real one is known.
-  const [headerHeight, setHeaderHeight] = useState<number>(
-    TOTAL_HEADER_HEIGHT,
-  );
+  const [headerHeight, setHeaderHeight] = useState<number>(TOTAL_HEADER_HEIGHT);
   useLayoutEffect(() => {
     const scroll = scrollRef.current;
     const header = scroll?.querySelector<HTMLElement>(".db-tl-header");
@@ -371,6 +367,24 @@ function DatabaseTimelineNodeViewImpl() {
     return () => ro.disconnect();
   }, []);
 
+  // ── Where a range opens ───────────────────────────────────────────────
+  // Day's columns start before the date on show (buildRange centres it), so
+  // column 0 is the previous afternoon. Open on the date itself instead,
+  // and again whenever the arrows move to another one — but never over a
+  // scroll that was asked for, which Today and the row arrows set below.
+  const openLeft = useMemo(() => {
+    if (range.unit !== "hour") return 0;
+    const i = range.days.findIndex(
+      (d) =>
+        d.getFullYear() === year &&
+        d.getMonth() === month &&
+        d.getDate() === day,
+    );
+    return i > 0 ? i * range.cellWidth : 0;
+  }, [range, year, month, day]);
+
+  const openedAtRef = useRef<number | null>(null);
+
   // ── Center-on-target, deferred until the target's range has committed ──
   const pendingScrollRef = useRef<
     { type: "today" } | { type: "record"; recordId: string } | null
@@ -402,6 +416,16 @@ function DatabaseTimelineNodeViewImpl() {
       pendingScrollRef.current = null;
     }
   }, [todayLeft, placement]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (openedAtRef.current === openLeft) return;
+    openedAtRef.current = openLeft;
+    // A scroll that was asked for knows better than the range's own start.
+    if (pendingScrollRef.current) return;
+    el.scrollTo({ left: openLeft, behavior: "auto" });
+  }, [openLeft]);
 
   function handleToday() {
     pendingScrollRef.current = { type: "today" };

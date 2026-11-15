@@ -9,9 +9,13 @@ import { readDatabaseData } from "src/features/database/utils/database-bridge";
 // breaks an earlier fix fails the commit.
 
 // Records of these views are rows: they get the handle (and its record
-// menu). Cards and bars (board, gallery, calendar, timeline) have their own
-// controls; the handle goes to the database itself there.
-const ROW_VIEWS = new Set(["table", "list"]);
+// menu). Cards (board, gallery, calendar) have their own controls; the
+// handle goes to the database itself there.
+//
+// A timeline is a row view too. Its records are rows in the table beside
+// the grid — the same .db-record elements the drop target measures — and
+// its bar is drawn from the row rather than instead of it.
+const ROW_VIEWS = new Set(["table", "list", "timeline"]);
 
 export function basePenalty(
   editor: Editor | null,
@@ -75,8 +79,13 @@ export function basePenalty(
         ? readDatabaseData(editor, databaseId)?.view?.type
         : undefined;
     if (viewType && !ROW_VIEWS.has(viewType)) return 1000;
-    // A row beats its database (below), so the handle stays on rows.
-    return -300;
+    // A row beats its database (below), so the handle stays on rows — by
+    // more than the edge rule's strength (500 in makeNestedOptions), which
+    // pulls the handle out to the containing block as the pointer nears a
+    // left edge. A timeline's rows sit at the window's left edge whenever
+    // the sidebar is collapsed, so a margin of 50 over the database lost
+    // the row the handle there, seemingly at random.
+    return -800;
   }
 
   // A database over whatever it sits in.

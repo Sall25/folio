@@ -75,12 +75,32 @@ const rules: DragHandleRule[] = [
   ...options.rules,
 ];
 
+// An editor that knows one database, showing one kind of view. Enough for
+// the rules: they ask what view a record belongs to and nothing else.
+function editorShowing(viewType: string) {
+  return {
+    storage: {
+      database: {
+        entries: new Map([["db1", { data: { view: { type: viewType } } }]]),
+      },
+    },
+  } as unknown as Parameters<typeof makeNestedOptions>[0];
+}
+
+function rulesFor(viewType: string): DragHandleRule[] {
+  const opts = normalizeNestedOptions(
+    makeNestedOptions(editorShowing(viewType)),
+  );
+  return [...(opts.defaultRules ? defaultRules : []), ...opts.rules];
+}
+
 type Pick = { name: string; depth: number; text: string } | null;
 
 function targetAt(
   doc: Node,
   pos: number,
   nearEdge: (depth: number) => boolean = () => false,
+  ruleSet: DragHandleRule[] = rules,
 ): Pick {
   const $pos = doc.resolve(pos);
   let best: { node: Node; depth: number; score: number } | null = null;
@@ -90,7 +110,7 @@ function targetAt(
     const index = $pos.index(depth - 1);
     let score = 1000;
     let out = false;
-    for (const rule of rules) {
+    for (const rule of ruleSet) {
       score -= rule.evaluate({
         node,
         pos: $pos.before(depth),
@@ -315,5 +335,58 @@ describe("drag handle: component pieces still in place", () => {
     const rule = scss.slice(start, scss.indexOf("}", start));
     expect(rule).toContain("ProseMirror-trailingBreak");
     expect(rule).not.toMatch(/display:\s*none/);
+  });
+});
+
+// ── Which views hand their rows to the drag handle ─────────────────────
+// A record is a row in a table, a list and a timeline — in the last, the
+// row in the table beside the grid, which is where the bar is drawn from.
+// In a board, a gallery or a calendar a record is a card with its own
+// controls, and the handle belongs to the database instead.
+
+describe("records that are rows", () => {
+  const doc = n("doc", db("row"));
+  const pick = (viewType: string) =>
+    targetAt(doc, posOf(doc, "row"), () => false, rulesFor(viewType))?.name;
+
+  it("gives the handle to a table's rows", () => {
+    expect(pick("table")).toBe("databaseRecord");
+  });
+
+  it("gives the handle to a list's rows", () => {
+    expect(pick("list")).toBe("databaseRecord");
+  });
+
+  it("gives the handle to a timeline's rows", () => {
+    // Its panel is a table view: the same rows, the same drop target.
+    expect(pick("timeline")).toBe("databaseRecord");
+  });
+
+  it("keeps the handle on the database in a board or a gallery", () => {
+    expect(pick("board")).toBe("database");
+    expect(pick("gallery")).toBe("database");
+    expect(pick("calendar")).toBe("database");
+  });
+});
+
+describe("a row at the window's left edge", () => {
+  // The edge rule takes strength x depth off a candidate as the pointer
+  // nears a left edge, and a row is deeper than its database, so it loses
+  // more. A timeline's table starts at the sidebar's edge, which is the
+  // window's left edge once the sidebar is collapsed, so this fires on an
+  // ordinary hover there and the handle used to jump out to the database.
+  const doc = n("doc", db("row"));
+  const atEdge = (viewType: string) =>
+    targetAt(doc, posOf(doc, "row"), () => true, rulesFor(viewType))?.name;
+
+  it.each(["table", "list", "timeline"])(
+    "keeps the handle on a %s's row",
+    (viewType) => {
+      expect(atEdge(viewType)).toBe("databaseRecord");
+    },
+  );
+
+  it("still keeps it on the database for a board", () => {
+    expect(atEdge("board")).toBe("database");
   });
 });

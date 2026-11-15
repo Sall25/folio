@@ -30,6 +30,16 @@
     // Nudge left to clear the row's selection checkbox.
     transform: translateX(-28px);
     margin-top: 4px;
+
+    // A timeline's table starts at the sidebar's edge so the grid can have
+    // the rest of the width, which leaves nothing to the left of a row to
+    // nudge into — the handle would go under the sidebar, or off the
+    // window once the sidebar is collapsed. Its handle is placed inside
+    // the row instead (centerOnFirstLine), in the gutter the first column
+    // leaves for it, so there is nothing to nudge.
+    &.in-timeline {
+      transform: translateX(-28px); //none;
+    }
   }
 
   &.hide {
