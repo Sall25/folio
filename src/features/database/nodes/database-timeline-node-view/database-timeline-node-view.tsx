@@ -338,6 +338,45 @@ function DatabaseTimelineNodeViewImpl() {
     };
   }, [gridWidth]);
 
+  // ── Room to scroll past the last column ───────────────────────────────
+  // The timeframe controls float over the right of the grid, and the grid's
+  // own right edge can fall outside what is on screen. Either way the last
+  // column cannot be read: there is nothing left to scroll. So the grid is
+  // given a gutter after its last column — as wide as the controls — and
+  // the end becomes somewhere the scroller can actually go.
+  const navRef = useRef<HTMLDivElement>(null);
+  const [endGutter, setEndGutter] = useState(0);
+  useEffect(() => {
+    const nav = navRef.current;
+    const view = viewportRef.current;
+    if (!nav || !view) return;
+    const measure = () => {
+      // What the controls cover, and whatever the grid runs past the edge
+      // of the window — the editor's column is sized in vw, which counts a
+      // vertical scrollbar the page does not actually have the room for.
+      // The second is 0 whenever nothing spills, which is most of the time.
+      const covered = Math.ceil(nav.getBoundingClientRect().width) + 16;
+      const spill = Math.max(
+        0,
+        Math.ceil(
+          view.getBoundingClientRect().right -
+            document.documentElement.clientWidth,
+        ),
+      );
+      // Nothing to add when the grid already ends clear of the controls
+      // and inside the window: a gutter there would only invent scrolling.
+      const fits = spill === 0 && gridWidth + covered <= view.clientWidth;
+      const next = fits ? 0 : covered + spill;
+      setEndGutter((prev) => (prev === next ? prev : next));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(nav);
+    ro.observe(view);
+    ro.observe(document.documentElement);
+    return () => ro.disconnect();
+  }, [gridWidth]);
+
   // ── Center-on-target, deferred until the target's range has committed ──
   const pendingScrollRef = useRef<
     { type: "today" } | { type: "record"; recordId: string } | null
@@ -584,6 +623,7 @@ function DatabaseTimelineNodeViewImpl() {
                 just floats the always-visible controls on top of it, on the
                 right edge, so both read as one row. */}
             <div
+              ref={navRef}
               className="db-tl-nav-overlay"
               style={{ height: GROUP_ROW_HEIGHT }}
             >
@@ -598,7 +638,16 @@ function DatabaseTimelineNodeViewImpl() {
             </div>
 
             <div className="db-tl-scroll" ref={scrollRef}>
-              <div style={{ width: gridWidth, minWidth: gridWidth }}>
+              <div
+                style={{
+                  width: gridWidth,
+                  minWidth: gridWidth,
+                  // Outside the width, not inside it: the columns keep the
+                  // room they are drawn in and the scroller gains the rest.
+                  boxSizing: "content-box",
+                  paddingRight: endGutter,
+                }}
+              >
                 <TimelineHeader highlights={highlights} range={range} />
                 <div
                   className="db-tl-gantt__body"
