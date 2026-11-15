@@ -874,10 +874,27 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   // has to come out of its 34px, not sit under it — content-box makes every
   // row 35px tall and the panel drifts a pixel further from the grid with
   // each record.
-  .react-renderer.node-databaseRecord {
+  // &.db-node-grid is the same element — the panel's grid carries both
+  // classes. It is here to outrank the rules the table view's stylesheets
+  // set on the same elements, which is what decides a row's height and
+  // whether its separator is drawn at all.
+  &.db-node-grid .react-renderer.node-databaseRecord {
     height: #{$tl-row-height}px;
     min-height: #{$tl-row-height}px;
     box-sizing: border-box;
+    // The line that makes this a table. Drawn here rather than relied on
+    // from elsewhere: it is the whole point of the panel looking the way
+    // it does, and it is not this stylesheet's to lose.
+    border-bottom: 1px solid var(--tt-border-color);
+  }
+
+  // A cell fills the row it is in and asks for no height of its own. It
+  // asks for 34px elsewhere, where a row is as tall as its contents plus
+  // its separator — here the row is 34px with the separator inside it, so
+  // a cell that still wanted 34 paints its background over the line and
+  // the panel stops looking like a table.
+  &.db-node-grid .db-node-cell {
+    min-height: 0;
   }
 
   // As tall as everything above the gantt's first row, which the node view

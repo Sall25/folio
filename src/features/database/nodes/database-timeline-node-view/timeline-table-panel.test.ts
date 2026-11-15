@@ -191,3 +191,28 @@ describe("how the panel's rows step", () => {
     expect(rowTop(1) - rowTop(0)).toBe(ROW_HEIGHT);
   });
 });
+
+describe("what makes the panel read as a table", () => {
+  const cell = el("db-node-cell tag:div");
+
+  it("lets a row's separator show", () => {
+    // The row is 34px with its line inside (border-box). A cell that still
+    // asks for 34px of its own paints its background over that line, and
+    // the panel loses the rules between its rows.
+    expect(resolve(rules, [grid, cell], "min-height")?.value).toBe("0");
+  });
+
+  it("draws one itself", () => {
+    // Not borrowed from another stylesheet: the line is what makes this
+    // read as a table, and a sheet that does not draw it cannot lose it.
+    const own = rules.filter((r) =>
+      r.selector.includes(".db-tl-grid.db-node-grid"),
+    );
+    expect(
+      own.some((r) => r.decls["border-bottom"]?.value.includes("--tt-border-color")),
+    ).toBe(true);
+    expect(resolve(rules, [grid, record], "border-bottom")?.value).toContain(
+      "--tt-border-color",
+    );
+  });
+});
