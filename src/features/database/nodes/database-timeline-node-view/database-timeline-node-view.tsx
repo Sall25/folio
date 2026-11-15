@@ -277,11 +277,11 @@ function DatabaseTimelineNodeViewImpl() {
       setYear(cur.getFullYear() + dir);
       return;
     }
-    // A day at a time, since a day is all that is on show. Done through a
-    // Date so the ends of months and of years carry themselves.
-    if (timeframe === "day") {
+    // A day or a week at a time, since that is all that is on show. Done
+    // through a Date so the ends of months and of years carry themselves.
+    if (timeframe === "day" || timeframe === "week") {
       const next = new Date(cur);
-      next.setDate(cur.getDate() + dir);
+      next.setDate(cur.getDate() + dir * (timeframe === "week" ? 7 : 1));
       setYear(next.getFullYear());
       setMonth(next.getMonth());
       setDay(next.getDate());

@@ -67,9 +67,13 @@ function TimelineHeaderImpl({
       </div>
 
       <div
-        className="db-tl-header__days"
-        // What the numbers below are. The marker on the current column is
-        // sized for a date and has to give to fit a time (the stylesheet).
+        className={
+          "db-tl-header__days" +
+          // Hours and weekdays are named, not numbered, so their labels are
+          // wider than a date — the marker on the current column is sized
+          // for a date and has to give (the stylesheet).
+          (range.unit === "day" ? "" : " db-tl-header__days--wide")
+        }
         data-unit={range.unit}
         style={{ height: HEADER_HEIGHT }}
       >

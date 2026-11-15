@@ -78,7 +78,7 @@ describe.each(Object.entries(orders))("a card's name (%s)", (_name, rules) => {
 // wider than a date, so in the Day timeframe it has to give.
 describe.each(Object.entries(orders))("the current column (%s)", (_n, rules) => {
   const days = el("db-tl-header__days tag:div");
-  const hourly = el("db-tl-header__days tag:div", { "data-unit": "hour" });
+  const wide = el("db-tl-header__days db-tl-header__days--wide tag:div");
   const marker = el("db-tl-header__day-num db-tl-header__day-num--today tag:span");
 
   it("is a circle when the columns are dates", () => {
@@ -86,10 +86,9 @@ describe.each(Object.entries(orders))("the current column (%s)", (_n, rules) => 
     expect(resolve(rules, [days, marker], "border-radius")?.value).toBe("50%");
   });
 
-  it("gives way to a time when they are hours", () => {
-    expect(resolve(rules, [hourly, marker], "width")?.value).toBe("auto");
-    expect(resolve(rules, [hourly, marker], "border-radius")?.value).toBe(
-      "11px",
-    );
+  it("gives way to a label that is named rather than numbered", () => {
+    // An hour ("09:00") or a weekday and its date ("Mon 9").
+    expect(resolve(rules, [wide, marker], "width")?.value).toBe("auto");
+    expect(resolve(rules, [wide, marker], "border-radius")?.value).toBe("11px");
   });
 });

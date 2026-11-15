@@ -17,6 +17,14 @@ export const DAY_WIDTH = 40;
 export const HOUR_WIDTH = 56;
 /** What the Day timeframe shows: one date, an hour to a column. */
 export const HOURS_IN_DAY = 24;
+/**
+ * A column in the Week timeframe. Still a day, but one of seven rather than
+ * one of thirty, so it can carry the weekday's name and a bar can say its
+ * dates inside it.
+ */
+export const WEEKDAY_WIDTH = 140;
+/** What the Week timeframe shows: one week, Monday first. */
+export const DAYS_IN_WEEK = 7;
 export const ROW_HEIGHT = 34;
 export const HEADER_HEIGHT = 28;
 export const GROUP_ROW_HEIGHT = 28;
@@ -53,12 +61,28 @@ export function clampTableWidth(width: number, frameWidth: number): number {
 
 export type Timeframe = TimelineView["timeframe"];
 
-/** What one column stands for. Day is the only timeframe not made of days. */
-export type CellUnit = "day" | "hour";
+/**
+ * What one column stands for. A "weekday" is a day like any other — it is
+ * drawn wider and named rather than numbered, because seven of them have a
+ * screen to share.
+ */
+export type CellUnit = "day" | "hour" | "weekday";
 
 /** How wide one column is, which depends on what a column is. */
 export function cellWidthFor(timeframe: Timeframe): number {
-  return timeframe === "day" ? HOUR_WIDTH : DAY_WIDTH;
+  if (timeframe === "day") return HOUR_WIDTH;
+  if (timeframe === "week") return WEEKDAY_WIDTH;
+  return DAY_WIDTH;
+}
+
+/** The Monday of the week a date falls in. */
+export function startOfWeek(d: Date): Date {
+  const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  // getDay() counts from Sunday; a week here starts on Monday, so Sunday is
+  // the last day of the week before, not the first of this one.
+  const back = (start.getDay() + 6) % 7;
+  start.setDate(start.getDate() - back);
+  return start;
 }
 
 export interface TimelineRecord {
@@ -168,9 +192,14 @@ export function barCovers(
  * dates, which is exactly what it is not.
  */
 export function columnLabel(d: Date, unit: CellUnit): string {
-  return unit === "hour"
-    ? `${String(d.getHours()).padStart(2, "0")}:00`
-    : String(d.getDate());
+  if (unit === "hour") return `${String(d.getHours()).padStart(2, "0")}:00`;
+  if (unit === "weekday") {
+    // Seven columns have room for the name, and a week is read by its days
+    // of the week more than by its dates.
+    const name = d.toLocaleDateString(undefined, { weekday: "short" });
+    return `${name} ${d.getDate()}`;
+  }
+  return String(d.getDate());
 }
 
 /** The same hour of the same day: how a Day timeframe matches its columns. */
@@ -247,16 +276,49 @@ export function buildRange(
     };
   }
 
+  // One week, Monday to Sunday, around the date on show — the same shape as
+  // Day: one span, a column per part of it. It used to be eight weeks of
+  // narrow columns counted from the Sunday before the 1st, which is neither
+  // a week nor a month.
+  if (timeframe === "week") {
+    const startDate = startOfWeek(new Date(year, month, day));
+    const days = Array.from({ length: DAYS_IN_WEEK }, (_, i) => {
+      const d = new Date(startDate);
+      d.setDate(startDate.getDate() + i);
+      return d;
+    });
+    const last = days[DAYS_IN_WEEK - 1];
+    const endDate = new Date(
+      last.getFullYear(),
+      last.getMonth(),
+      last.getDate(),
+      23,
+      59,
+      59,
+      999,
+    );
+    const monthName = (d: Date) =>
+      d.toLocaleString("default", { month: "long" });
+    // The header puts the year after this, so it is left out — and the
+    // month is named once unless the week runs across two of them.
+    const label =
+      startDate.getMonth() === last.getMonth()
+        ? `${startDate.getDate()} – ${last.getDate()} ${monthName(last)}`
+        : `${startDate.getDate()} ${monthName(startDate)} – ` +
+          `${last.getDate()} ${monthName(last)}`;
+
+    return {
+      startDate,
+      endDate,
+      days,
+      headerGroups: [{ label, days: DAYS_IN_WEEK }],
+      unit: "weekday",
+      cellWidth: WEEKDAY_WIDTH,
+    };
+  }
+
   let startDate: Date, endDate: Date;
   switch (timeframe) {
-    case "week": {
-      const first = new Date(year, month, 1);
-      startDate = new Date(first);
-      startDate.setDate(first.getDate() - first.getDay());
-      endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 7 * 8 - 1);
-      break;
-    }
     case "quarter": {
       const q = Math.floor(month / 3);
       startDate = new Date(year, q * 3, 1);
@@ -288,7 +350,7 @@ export function buildRange(
       label: startDate.toLocaleString("default", { month: "long" }),
       days: days.length,
     });
-  } else if (timeframe === "week" || timeframe === "quarter") {
+  } else if (timeframe === "quarter") {
     const cur = new Date(startDate);
     while (cur <= endDate) {
       const m = cur.getMonth(),
@@ -299,10 +361,8 @@ export function buildRange(
         cur.setDate(cur.getDate() + 1);
       }
       headerGroups.push({
-        label: new Date(y, m).toLocaleString("default", {
-          month: timeframe === "week" ? "short" : "long",
-          ...(timeframe === "week" ? { year: "numeric" } : {}),
-        }),
+        // No year: the header adds it after the label.
+        label: new Date(y, m).toLocaleString("default", { month: "long" }),
         days: count,
       });
     }

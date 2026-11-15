@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   DAY_WIDTH,
   HOURS_IN_DAY,
+  DAYS_IN_WEEK,
+  WEEKDAY_WIDTH,
+  startOfWeek,
   HOUR_WIDTH,
   buildRange,
   cellWidthFor,
@@ -328,5 +331,87 @@ describe("what a column is called", () => {
   it("names a day with its date, as it always did", () => {
     expect(columnLabel(new Date(2026, 10, 15), "day")).toBe("15");
     expect(columnLabel(new Date(2026, 10, 1), "day")).toBe("1");
+  });
+});
+
+// ── The Week timeframe ─────────────────────────────────────────────────────
+// Week used to be eight weeks of narrow columns, counted from the Sunday
+// before the 1st of the month — neither a week nor a month. It is one week
+// now, the same shape as Day: one span on screen, a column per part of it.
+
+describe("a week, Monday first", () => {
+  // 15 November 2026 is a Sunday: the last day of its week, not the first.
+  const range = buildRange(2026, 10, 15, "week");
+
+  it("is seven days", () => {
+    expect(range.unit).toBe("weekday");
+    expect(range.days).toHaveLength(DAYS_IN_WEEK);
+    expect(range.cellWidth).toBe(WEEKDAY_WIDTH);
+  });
+
+  it("starts on the Monday and ends on the Sunday", () => {
+    expect(range.days[0].getDay()).toBe(1);
+    expect(range.days[0].getDate()).toBe(9);
+    expect(range.days[6].getDay()).toBe(0);
+    expect(range.days[6].getDate()).toBe(15);
+  });
+
+  it("holds a Sunday in its own week, not the next one", () => {
+    // The old reckoning counted back to Sunday, which put a Sunday at the
+    // head of the week after the one it belongs to.
+    expect(startOfWeek(new Date(2026, 10, 15)).getDate()).toBe(9);
+    expect(startOfWeek(new Date(2026, 10, 9)).getDate()).toBe(9);
+    expect(startOfWeek(new Date(2026, 10, 10)).getDate()).toBe(9);
+  });
+
+  it("runs to the end of the last day", () => {
+    expect(range.endDate.getDate()).toBe(15);
+    expect(range.endDate.getHours()).toBe(23);
+  });
+
+  it("names the week once, without the year", () => {
+    expect(range.headerGroups).toHaveLength(1);
+    expect(range.headerGroups[0].days).toBe(DAYS_IN_WEEK);
+    expect(range.headerGroups[0].label).toMatch(/9 – 15/);
+    expect(range.headerGroups[0].label).not.toMatch(/2026/);
+  });
+
+  it("names both months when the week runs across two", () => {
+    // 30 November 2026 is a Monday; that week ends in December.
+    const across = buildRange(2026, 10, 30, "week");
+    expect(across.headerGroups[0].label).toMatch(/30/);
+    expect(across.headerGroups[0].label).toMatch(/6/);
+    expect(across.headerGroups[0].label.split("–")).toHaveLength(2);
+  });
+
+  it("carries itself over the end of a year", () => {
+    // 1 January 2027 is a Friday: its week starts the previous December.
+    const newYear = buildRange(2027, 0, 1, "week");
+    expect(newYear.days[0].getDate()).toBe(28);
+    expect(newYear.days[0].getMonth()).toBe(11);
+    expect(newYear.days[0].getFullYear()).toBe(2026);
+    expect(newYear.days[6].getDate()).toBe(3);
+  });
+
+  it("names its columns by the day of the week", () => {
+    // Seven columns have room for it, and a week is read that way.
+    expect(columnLabel(range.days[0], "weekday")).toMatch(/9$/);
+    expect(columnLabel(range.days[0], "weekday").length).toBeGreaterThan(2);
+  });
+
+  it("places a bar on the days it covers", () => {
+    const geo = getGeo(
+      {
+        id: "r",
+        title: "r",
+        start: new Date(2026, 10, 10),
+        end: new Date(2026, 10, 12),
+        allDay: true,
+      },
+      range,
+      true,
+    );
+    expect(geo?.left).toBe(1 * WEEKDAY_WIDTH);
+    expect(geo?.width).toBe(3 * WEEKDAY_WIDTH);
   });
 });
