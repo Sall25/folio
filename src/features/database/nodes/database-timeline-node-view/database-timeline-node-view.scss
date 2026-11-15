@@ -710,6 +710,15 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
     color: var(--tt-gray-dark-a-500);
   }
 
+  // A time is wider than a date, so the marker gives: a pill of the same
+  // height rather than a circle a "09:00" cannot fit inside.
+  .db-tl-header__days[data-unit="hour"] &--today {
+    width: auto;
+    min-width: 22px;
+    padding: 0 7px;
+    border-radius: 11px;
+  }
+
   &--today {
     display: flex;
     align-items: center;

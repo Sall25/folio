@@ -1,6 +1,7 @@
 import { memo } from "react";
 import type { TimelineRange } from "../../hooks/use-timeline-layout";
 import {
+  columnLabel,
   HEADER_HEIGHT,
   GROUP_ROW_HEIGHT,
   sameDay,
@@ -65,7 +66,13 @@ function TimelineHeaderImpl({
         ))}
       </div>
 
-      <div className="db-tl-header__days" style={{ height: HEADER_HEIGHT }}>
+      <div
+        className="db-tl-header__days"
+        // What the numbers below are. The marker on the current column is
+        // sized for a date and has to give to fit a time (the stylesheet).
+        data-unit={range.unit}
+        style={{ height: HEADER_HEIGHT }}
+      >
         {highlights.map((h, i) => (
           <div
             key={i}
@@ -87,9 +94,7 @@ function TimelineHeaderImpl({
                 (i === todayIdx ? " db-tl-header__day-num--today" : "")
               }
             >
-              {hourly
-                ? String(day.getHours()).padStart(2, "0")
-                : day.getDate()}
+              {columnLabel(day, range.unit)}
             </span>
           </div>
         ))}

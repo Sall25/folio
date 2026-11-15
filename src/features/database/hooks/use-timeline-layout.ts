@@ -162,6 +162,17 @@ export function barCovers(
   return x >= placement.left && x < placement.left + placement.width;
 }
 
+/**
+ * What a column is called in the header: the date, or the time with its
+ * unit on it. A column of bare 1…23 in a view of a single date reads as
+ * dates, which is exactly what it is not.
+ */
+export function columnLabel(d: Date, unit: CellUnit): string {
+  return unit === "hour"
+    ? `${String(d.getHours()).padStart(2, "0")}:00`
+    : String(d.getDate());
+}
+
 /** The same hour of the same day: how a Day timeframe matches its columns. */
 export function sameHour(a: Date, b: Date) {
   return sameDay(a, b) && a.getHours() === b.getHours();

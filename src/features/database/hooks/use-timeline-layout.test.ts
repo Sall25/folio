@@ -7,6 +7,7 @@ import {
   cellWidthFor,
   isAllDayValue,
   getGeo,
+  columnLabel,
   MIN_GRID_WIDTH,
   MIN_TABLE_WIDTH,
   ROW_HEIGHT,
@@ -313,5 +314,19 @@ describe("where a bar sits in a day", () => {
     const geo = getGeo(rec("2026-11-03", "2026-11-05", true), month, true);
     expect(geo?.left).toBe(2 * DAY_WIDTH);
     expect(geo?.width).toBe(3 * DAY_WIDTH);
+  });
+});
+
+describe("what a column is called", () => {
+  it("names an hour with its unit", () => {
+    // "09", in a view where every column is the same date, reads as a date.
+    expect(columnLabel(new Date(2026, 10, 15, 9), "hour")).toBe("09:00");
+    expect(columnLabel(new Date(2026, 10, 15, 0), "hour")).toBe("00:00");
+    expect(columnLabel(new Date(2026, 10, 15, 23), "hour")).toBe("23:00");
+  });
+
+  it("names a day with its date, as it always did", () => {
+    expect(columnLabel(new Date(2026, 10, 15), "day")).toBe("15");
+    expect(columnLabel(new Date(2026, 10, 1), "day")).toBe("1");
   });
 });
