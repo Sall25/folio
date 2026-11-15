@@ -346,6 +346,10 @@ function DatabaseTimelineNodeViewImpl() {
   // the end becomes somewhere the scroller can actually go.
   const navRef = useRef<HTMLDivElement>(null);
   const [endGutter, setEndGutter] = useState(0);
+  // How much of the grid lies beyond the right of the screen. Anything
+  // pinned to the viewport's right edge — the row arrows — has to come back
+  // by this much, or it is pinned somewhere nobody can see.
+  const [endSpill, setEndSpill] = useState(0);
   useEffect(() => {
     const nav = navRef.current;
     const view = viewportRef.current;
@@ -368,6 +372,7 @@ function DatabaseTimelineNodeViewImpl() {
       const fits = spill === 0 && gridWidth + covered <= view.clientWidth;
       const next = fits ? 0 : covered + spill;
       setEndGutter((prev) => (prev === next ? prev : next));
+      setEndSpill((prev) => (prev === spill ? prev : spill));
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -685,7 +690,10 @@ function DatabaseTimelineNodeViewImpl() {
 
             <div
               className="db-tl-indicators"
-              style={{ top: headerHeight }}
+              // Held inside what is on screen: the arrow that says a record
+              // is off to the right is no use if it is off to the right
+              // itself.
+              style={{ top: headerHeight, right: endSpill }}
             >
               {indicators.map((ind) => (
                 <Button
