@@ -1,4 +1,6 @@
 $tl-row-height: 34;
+// How tall the two panels may get before each one scrolls.
+$tl-max-height: 460;
 $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
 
 // ── Empty state ────────────────────────────────────────────────────────────
@@ -77,7 +79,12 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   // border-radius: var(--tt-radius-sm, 4px);
   // overflow: hidden;
   overflow-x: auto;
-  height: 460px; // fixed height so both panels can scroll independently
+  // A ceiling, not a height. Both panels are exactly as tall as their rows
+  // — the table's header plus a line per record plus the empty one, the
+  // gantt's header plus the same — so a timeline of one record was leaving
+  // most of 460px of nothing under itself. Past the ceiling each panel
+  // scrolls, which is what the fixed height was for.
+  max-height: #{$tl-max-height}px;
   margin-top: 4px;
 }
 
@@ -543,7 +550,7 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   position: relative;
   flex: 1;
   min-width: 0;
-  max-height: 480px;
+  max-height: #{$tl-max-height}px;
   overflow: hidden;
   width: var(--db-editor-width);
   max-width: var(--db-editor-width);

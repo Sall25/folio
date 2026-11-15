@@ -68,6 +68,20 @@ describe("where the panel's rows start", () => {
   });
 });
 
+describe("how tall the two panels are", () => {
+  const layout = el("db-tl-layout tag:div");
+
+  it("is as tall as its rows, not a number of its own", () => {
+    // A fixed height left a timeline of one record sitting above most of
+    // 460px of nothing.
+    expect(resolve(rules, [layout], "height")).toBeNull();
+  });
+
+  it("stops growing somewhere", () => {
+    expect(resolve(rules, [layout], "max-height")?.value).toBe("460px");
+  });
+});
+
 describe("how the panel's rows step", () => {
   it("takes a row's separator line out of its height", () => {
     // border-box: 34px including the line. content-box makes the row 35px
