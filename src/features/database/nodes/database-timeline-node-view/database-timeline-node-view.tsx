@@ -33,6 +33,7 @@ import {
   TOTAL_HEADER_HEIGHT,
   sameDay,
   sameHour,
+  stepRange,
   useTimelineLayout,
 } from "../../hooks/use-timeline-layout";
 import {
@@ -203,7 +204,7 @@ function DatabaseTimelineNodeViewImpl() {
     month,
     day,
   );
-  const { setYear, setMonth, setDay, goToToday } = useTimelineViewActions();
+  const { goTo, goToToday } = useTimelineViewActions();
 
   const activeView = db.activeView as TimelineView | undefined;
   const timeframe = activeView?.timeframe ?? "month";
@@ -272,33 +273,12 @@ function DatabaseTimelineNodeViewImpl() {
     todayIdx >= 0 ? todayIdx * range.cellWidth + range.cellWidth / 2 : null;
 
   function navigate(dir: -1 | 1) {
-    const cur = range.startDate;
-    if (timeframe === "year") {
-      setYear(cur.getFullYear() + dir);
-      return;
-    }
-    // A day or a week at a time, since that is all that is on show. Done
-    // through a Date so the ends of months and of years carry themselves.
-    if (timeframe === "day" || timeframe === "week") {
-      const next = new Date(cur);
-      next.setDate(cur.getDate() + dir * (timeframe === "week" ? 7 : 1));
-      setYear(next.getFullYear());
-      setMonth(next.getMonth());
-      setDay(next.getDate());
-      return;
-    }
-    let m = cur.getMonth() + (timeframe === "quarter" ? dir * 3 : dir);
-    let y = cur.getFullYear();
-    if (m < 0) {
-      m += 12;
-      y -= 1;
-    } else if (m > 11) {
-      m -= 12;
-      y += 1;
-    }
-    setYear(y);
-    setMonth(m);
+    // From the date the view is anchored to, not from where its grid
+    // begins: a quarter's grid starts on the Monday before the quarter
+    // does, so stepping from there went nowhere (stepRange says more).
+    goTo(stepRange(new Date(year, month, day), timeframe, dir));
   }
+
 
   // ── Horizontal viewport tracking ──────────────────────────────────────
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -437,9 +417,11 @@ function DatabaseTimelineNodeViewImpl() {
 
   function scrollToRecord(ind: RowIndicator) {
     if (!ind.geo) {
+      // The record's own date, all of it: its day is what Day and Week are
+      // built around, and without it the view never reaches the record the
+      // arrow is pointing at.
       pendingScrollRef.current = { type: "record", recordId: ind.recordId };
-      setYear(ind.start.getFullYear());
-      setMonth(ind.start.getMonth());
+      goTo(ind.start);
       return;
     }
     const el = scrollRef.current;

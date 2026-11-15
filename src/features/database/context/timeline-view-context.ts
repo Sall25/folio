@@ -9,9 +9,9 @@ interface TimelineViewStateValue {
 }
 
 interface TimelineViewActionsValue {
-  setYear: (year: number) => void;
-  setMonth: (month: number) => void;
-  setDay: (day: number) => void;
+  /** Show the span this date falls in. The whole date, in one call: set in
+   *  parts, a caller that forgets one leaves the view where it was. */
+  goTo: (date: Date) => void;
   goToToday: () => void;
 }
 
