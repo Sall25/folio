@@ -78,7 +78,12 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   // border: 1px solid var(--tt-border-color, #e5e7eb);
   // border-radius: var(--tt-radius-sm, 4px);
   // overflow: hidden;
-  overflow-x: auto;
+  // What the row leaves after the collapse button. Nothing here is ever
+  // wider than what is on screen, so the only horizontal scrollbar in a
+  // timeline is the grid's own.
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: hidden;
   // A ceiling, not a height. Both panels are exactly as tall as their rows
   // — the table's header plus a line per record plus the empty one, the
   // gantt's header plus the same — so a timeline of one record was leaving
@@ -546,14 +551,20 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   }
 }
 
+// The grid takes what the table leaves, rather than a width of its own.
+//
+// It used to be --db-editor-width wide, which made the two panels together
+// the page's width PLUS the table's: the database spilled past the window,
+// the page grew a horizontal scrollbar of its own, and everything sat
+// shifted right of the sidebar because the page was scrolled along it.
 .db-tl-viewport {
   position: relative;
-  flex: 1;
+  flex: 1 1 auto;
+  width: auto;
+  max-width: none;
   min-width: 0;
   max-height: #{$tl-max-height}px;
   overflow: hidden;
-  width: var(--db-editor-width);
-  max-width: var(--db-editor-width);
 }
 
 .db-tl-scroll {
@@ -601,9 +612,49 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   }
 }
 
+// The database node is the horizontal scroller for a table wide enough to
+// need one: it keeps 250px of padding and lets its container run 100px past
+// its right edge, so there is always something to scroll to. A timeline
+// never is — it is built to the width it is given — so while one is the view
+// on show, the node has nothing to scroll and gives the room back.
+//
+// Scoped by :has to the timeline, so every other view keeps its scroller.
+.db-node:has(.db-tl-layout-wrap) {
+  overflow-x: hidden;
+  padding-right: 0;
+
+  // Back to where the sidebar ends.
+  //
+  // The node's own box already starts at the window's left edge, under the
+  // sidebar — it is this padding that holds its content over in the page's
+  // column, and the sidebar occupies exactly the first --sidebar-width of
+  // that padding. So a timeline keeps the part of it the sidebar is sitting
+  // on and gives back the rest, which is the room between the sidebar and
+  // the column.
+  padding-left: var(--sidebar-width, 0px);
+
+  // Only the body goes. A title, a toolbar and a cover read as part of the
+  // page, so they stay in its column — put back by exactly the distance the
+  // body gave up, which the align hook publishes as --db-column-inset.
+  > .tiptap-card-item-group > .top-level-block,
+  .db-sticky-left {
+    margin-left: var(--db-column-inset, 0px);
+  }
+
+  .db-container {
+    margin-right: 0;
+  }
+}
+
+// The collapse button and the two panels, together as wide as the database
+// is on screen — from the sidebar's edge out, not the page's text column.
+// That width is what the timeline has to spend, and the grid is handed
+// whatever the table does not take.
 .db-tl-toprow {
   display: flex;
   align-items: flex-start;
+  width: var(--db-visible-width, var(--db-editor-width, 100%));
+  max-width: var(--db-visible-width, 100%);
 }
 
 .db-tl-nav-overlay {

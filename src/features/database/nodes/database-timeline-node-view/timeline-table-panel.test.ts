@@ -82,6 +82,90 @@ describe("how tall the two panels are", () => {
   });
 });
 
+describe("how wide the two panels are", () => {
+  const toprow = el("db-tl-toprow tag:div");
+  const viewport = el("db-tl-viewport tag:div");
+
+  it("spends the width the database has on screen", () => {
+    // --db-visible-width is the database's own width, from the sidebar's
+    // edge out; --db-editor-width is the page's text column, which is
+    // narrower.
+    expect(resolve(rules, [toprow], "width")?.value).toContain(
+      "--db-visible-width",
+    );
+  });
+
+  it("gives the grid what the table leaves, not a width of its own", () => {
+    // --db-editor-width here made the two panels together the page's width
+    // PLUS the table's, which is what pushed the database past the window
+    // and put a scrollbar under the whole page.
+    expect(resolve(rules, [viewport], "width")?.value).toBe("auto");
+  });
+
+  it("leaves the database nothing to scroll sideways", () => {
+    // The node keeps a scroller for a table wide enough to need one. A
+    // timeline is built to the width it is given, so while one is on show
+    // the node gives that room back. :has, so no other view is touched.
+    const scoped = rules.filter((r) =>
+      r.selector.includes(":has(.db-tl-layout-wrap)"),
+    );
+    expect(scoped.length).toBeGreaterThan(0);
+    expect(scoped.some((r) => r.decls["overflow-x"]?.value === "hidden")).toBe(
+      true,
+    );
+    expect(scoped.some((r) => r.decls["padding-right"]?.value === "0")).toBe(
+      true,
+    );
+  });
+
+  it("reaches back to where the sidebar ends", () => {
+    // The node starts at the window's edge and holds its content over in
+    // the page's column with padding. The sidebar covers the first
+    // --sidebar-width of that, so keeping exactly that much puts the view
+    // against the sidebar and gives the rest back.
+    const scoped = rules.filter((r) =>
+      r.selector.includes(":has(.db-tl-layout-wrap)"),
+    );
+    expect(
+      scoped.some((r) =>
+        r.decls["padding-left"]?.value.includes("--sidebar-width"),
+      ),
+    ).toBe(true);
+  });
+
+  it("leaves the title and toolbar in the page's column", () => {
+    // Only the body reaches back. The head reads as part of the page, so
+    // it is put back by the distance the body gave up.
+    const scoped = rules.filter((r) =>
+      r.selector.includes(":has(.db-tl-layout-wrap)"),
+    );
+    const head = scoped.filter((r) => r.selector.includes(".db-sticky-left"));
+    expect(head.length).toBeGreaterThan(0);
+    expect(
+      head.some((r) =>
+        r.decls["margin-left"]?.value.includes("--db-column-inset"),
+      ),
+    ).toBe(true);
+  });
+
+  it("does not move the node itself", () => {
+    // The node is already where it should be: full width, from the
+    // window's left edge. Several attempts at this moved its margin
+    // instead and nothing happened, because its margin was never what
+    // indented it — its padding is (use-database-align.ts).
+    //
+    // Only rules that end at the node: the ones for what is inside it set
+    // margins of their own, which is a different matter.
+    const itself = rules.filter((r) =>
+      r.selector
+        .split(",")
+        .some((s) => s.trim().endsWith(":has(.db-tl-layout-wrap)")),
+    );
+    expect(itself.length).toBeGreaterThan(0);
+    expect(itself.some((r) => r.decls["margin-left"])).toBe(false);
+  });
+});
+
 describe("how the panel's rows step", () => {
   it("takes a row's separator line out of its height", () => {
     // border-box: 34px including the line. content-box makes the row 35px
