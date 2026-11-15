@@ -59,8 +59,10 @@ function TimelineHeaderImpl({
             style={{ width: group.days * cell }}
           >
             <span className="db-tl-header__group-label">
-              {group.label}
-              {group.year != null ? ` ${group.year}` : ""}
+              {/* A year has nothing to say above its months but the year
+                  itself, so the label is empty there and this must not
+                  leave a space in front of it. */}
+              {[group.label, group.year].filter(Boolean).join(" ")}
             </span>
           </div>
         ))}
@@ -69,9 +71,9 @@ function TimelineHeaderImpl({
       <div
         className={
           "db-tl-header__days" +
-          // Hours and weekdays are named, not numbered, so their labels are
-          // wider than a date — the marker on the current column is sized
-          // for a date and has to give (the stylesheet).
+          // Every unit but a plain day carries more than a number — a
+          // time, a weekday, a date — so its label is wider than the
+          // marker on the current column is sized for (the stylesheet).
           (range.unit === "day" ? "" : " db-tl-header__days--wide")
         }
         data-unit={range.unit}

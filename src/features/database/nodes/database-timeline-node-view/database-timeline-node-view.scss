@@ -704,6 +704,9 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
 
 .db-tl-header__day-num {
   font-size: 12px;
+  // One label, one line: "9 Nov" in a marker sized by its content broke
+  // over two lines and pushed the row's height out.
+  white-space: nowrap;
   color: var(--tt-gray-light-a-500);
 
   .dark & {

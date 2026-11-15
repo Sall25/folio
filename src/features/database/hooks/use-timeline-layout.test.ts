@@ -4,11 +4,18 @@ import {
   HOURS_IN_DAY,
   DAYS_IN_WEEK,
   WEEKDAY_WIDTH,
+  WEEK_WIDTH,
+  MONTH_WIDTH,
+  MONTHS_IN_YEAR,
+  sameMonth,
+  sameWeek,
   startOfWeek,
+  stepRange,
   HOUR_WIDTH,
   buildRange,
   cellWidthFor,
   isAllDayValue,
+  parseIsoDate,
   getGeo,
   columnLabel,
   MIN_GRID_WIDTH,
@@ -250,6 +257,8 @@ describe("columns, at either width", () => {
 
 describe("where a bar sits in a day", () => {
   const range = buildRange(2026, 10, 15, "day");
+  // Built through parseIsoDate, the way the hook builds them, so these say
+  // what a stored value comes to rather than what new Date() makes of it.
   const rec = (
     start: string | null,
     end: string | null,
@@ -257,8 +266,8 @@ describe("where a bar sits in a day", () => {
   ): TimelineRecord => ({
     id: "r",
     title: "r",
-    start: start ? new Date(start) : null,
-    end: end ? new Date(end) : null,
+    start: start ? parseIsoDate(start) : null,
+    end: end ? parseIsoDate(end) : null,
     allDay,
   });
 
@@ -413,5 +422,296 @@ describe("a week, Monday first", () => {
     );
     expect(geo?.left).toBe(1 * WEEKDAY_WIDTH);
     expect(geo?.width).toBe(3 * WEEKDAY_WIDTH);
+  });
+});
+
+// ── The Quarter timeframe ──────────────────────────────────────────────────
+// A quarter was ninety day-columns: 3,600px, four screens of scrolling to
+// read three months. A column is a week now, which puts a quarter on one.
+
+describe("a quarter, by the week", () => {
+  const range = buildRange(2026, 10, 15, "quarter"); // November → Q4
+
+  it("is the weeks that cover the quarter", () => {
+    expect(range.unit).toBe("week");
+    expect(range.cellWidth).toBe(WEEK_WIDTH);
+    // Q4 2026 runs 1 Oct – 31 Dec; its weeks, Monday-aligned, are 14.
+    expect(range.days).toHaveLength(14);
+    expect(range.days.every((d) => d.getDay() === 1)).toBe(true);
+  });
+
+  it("starts on the Monday on or before the quarter's first day", () => {
+    // 1 October 2026 is a Thursday, so the first column is 28 September.
+    expect(range.days[0].getDate()).toBe(28);
+    expect(range.days[0].getMonth()).toBe(8);
+  });
+
+  it("ends with the week holding the quarter's last day", () => {
+    // 31 December 2026 is a Thursday; its week begins on the 28th.
+    const last = range.days[range.days.length - 1];
+    expect(last.getDate()).toBe(28);
+    expect(last.getMonth()).toBe(11);
+    // And the range runs to the end of that week, not to the 31st: the
+    // column is the whole week, so what is drawn and what is in range agree.
+    expect(range.endDate.getDate()).toBe(3);
+    expect(range.endDate.getMonth()).toBe(0);
+  });
+
+  it("names the quarter by its months, without the year", () => {
+    expect(range.headerGroups).toHaveLength(1);
+    expect(range.headerGroups[0].days).toBe(range.days.length);
+    expect(range.headerGroups[0].label).not.toMatch(/2026/);
+  });
+
+  it("is the same quarter from any date inside it", () => {
+    for (const m of [9, 10, 11]) {
+      const r = buildRange(2026, m, 5, "quarter");
+      expect(r.days[0].getTime()).toBe(range.days[0].getTime());
+    }
+  });
+
+  it("labels a column with the Monday it starts on", () => {
+    expect(columnLabel(new Date(2026, 9, 12), "week")).toMatch(/^12 /);
+  });
+
+  it("puts a bar on the weeks it touches, whole", () => {
+    // 12 Oct to 16 Oct is one week: one column, not a sliver of one.
+    const geo = getGeo(
+      {
+        id: "r",
+        title: "r",
+        start: new Date(2026, 9, 12),
+        end: new Date(2026, 9, 16),
+        allDay: true,
+      },
+      range,
+      true,
+    );
+    expect(geo?.width).toBe(WEEK_WIDTH);
+    expect(geo?.left).toBe(2 * WEEK_WIDTH); // 28 Sep, 5 Oct, 12 Oct
+  });
+
+  it("spans every week a longer record runs through", () => {
+    const geo = getGeo(
+      {
+        id: "r",
+        title: "r",
+        start: new Date(2026, 9, 12),
+        end: new Date(2026, 10, 8),
+        allDay: true,
+      },
+      range,
+      true,
+    );
+    expect(geo?.left).toBe(2 * WEEK_WIDTH);
+    expect(geo?.width).toBe(4 * WEEK_WIDTH);
+  });
+
+  it("matches a date to its week", () => {
+    expect(sameWeek(new Date(2026, 10, 9), new Date(2026, 10, 15))).toBe(true);
+    expect(sameWeek(new Date(2026, 10, 15), new Date(2026, 10, 16))).toBe(
+      false,
+    );
+  });
+});
+
+// ── The Year timeframe ─────────────────────────────────────────────────────
+// A year was 365 day-columns: 14,600px, which is not a year anyone reads.
+// A column is a month now, so a year is one screen.
+
+describe("a year, by the month", () => {
+  const range = buildRange(2026, 10, 15, "year");
+
+  it("is twelve months", () => {
+    expect(range.unit).toBe("month");
+    expect(range.cellWidth).toBe(MONTH_WIDTH);
+    expect(range.days).toHaveLength(MONTHS_IN_YEAR);
+    expect(range.days.map((d) => d.getMonth())).toEqual([
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+    ]);
+    expect(range.days.every((d) => d.getDate() === 1)).toBe(true);
+  });
+
+  it("is the same year from any date inside it", () => {
+    expect(buildRange(2026, 0, 1, "year").days[0].getTime()).toBe(
+      range.days[0].getTime(),
+    );
+  });
+
+  it("runs to the end of the last day of December", () => {
+    expect(range.endDate.getMonth()).toBe(11);
+    expect(range.endDate.getDate()).toBe(31);
+    expect(range.endDate.getHours()).toBe(23);
+  });
+
+  it("says nothing above the months but the year", () => {
+    // The header puts the year after the label, so an empty label is the
+    // whole of it — and the header must not leave a space in front.
+    expect(range.headerGroups).toHaveLength(1);
+    expect(range.headerGroups[0].label).toBe("");
+    expect(range.headerGroups[0].days).toBe(MONTHS_IN_YEAR);
+  });
+
+  it("names a column by its month", () => {
+    // Said without a language: this machine's is not the reader's, and
+    // January is "janv." on the one this is actually used on. What has to
+    // hold is that a column is named rather than numbered, that it is the
+    // name of its own month, and that two months do not share one.
+    const jan = columnLabel(new Date(2026, 0, 1), "month");
+    const dec = columnLabel(new Date(2026, 11, 1), "month");
+    expect(jan).toBe(
+      new Date(2026, 0, 1).toLocaleDateString(undefined, { month: "short" }),
+    );
+    expect(jan).not.toMatch(/^\d+$/);
+    expect(jan).not.toBe(dec);
+  });
+
+  it("puts a bar on the months it runs through", () => {
+    const geo = getGeo(
+      {
+        id: "r",
+        title: "r",
+        start: new Date(2026, 2, 10),
+        end: new Date(2026, 5, 20),
+        allDay: true,
+      },
+      range,
+      true,
+    );
+    expect(geo?.left).toBe(2 * MONTH_WIDTH);
+    expect(geo?.width).toBe(4 * MONTH_WIDTH);
+  });
+
+  it("gives a record inside one month that month's column, whole", () => {
+    const geo = getGeo(
+      {
+        id: "r",
+        title: "r",
+        start: new Date(2026, 10, 3),
+        end: new Date(2026, 10, 4),
+        allDay: true,
+      },
+      range,
+      true,
+    );
+    expect(geo?.left).toBe(10 * MONTH_WIDTH);
+    expect(geo?.width).toBe(MONTH_WIDTH);
+  });
+
+  it("leaves out a record from another year", () => {
+    expect(
+      getGeo(
+        {
+          id: "r",
+          title: "r",
+          start: new Date(2027, 1, 1),
+          end: new Date(2027, 1, 2),
+          allDay: true,
+        },
+        range,
+        true,
+      ),
+    ).toBeNull();
+  });
+
+  it("matches a date to its month", () => {
+    expect(sameMonth(new Date(2026, 10, 1), new Date(2026, 10, 30))).toBe(true);
+    expect(sameMonth(new Date(2026, 10, 1), new Date(2027, 10, 1))).toBe(false);
+  });
+});
+
+// ── The arrows ─────────────────────────────────────────────────────────────
+// Every step is taken from the date the view is anchored to. Taking it from
+// the grid's first column instead is what broke the quarter: its grid starts
+// on the Monday before the quarter, which belongs to the quarter before it.
+
+describe("stepping a span at a time", () => {
+  const at = (y: number, m: number, d: number) => new Date(y, m, d);
+  const parts = (d: Date) => [d.getFullYear(), d.getMonth(), d.getDate()];
+
+  it("moves a day", () => {
+    expect(parts(stepRange(at(2026, 10, 15), "day", 1))).toEqual([2026, 10, 16]);
+    expect(parts(stepRange(at(2026, 10, 1), "day", -1))).toEqual([2026, 9, 31]);
+  });
+
+  it("moves a week", () => {
+    expect(parts(stepRange(at(2026, 10, 9), "week", 1))).toEqual([2026, 10, 16]);
+    expect(parts(stepRange(at(2026, 10, 2), "week", -1))).toEqual([2026, 9, 26]);
+  });
+
+  it("moves a month, landing on the 1st", () => {
+    expect(parts(stepRange(at(2026, 0, 31), "month", 1))).toEqual([2026, 1, 1]);
+    expect(parts(stepRange(at(2026, 0, 15), "month", -1))).toEqual([
+      2025, 11, 1,
+    ]);
+  });
+
+  it("moves a whole quarter, forwards", () => {
+    // The bug: from Q4's grid start (28 September) three months landed in
+    // December, which is Q4 again — the arrow did nothing.
+    const next = stepRange(at(2026, 10, 15), "quarter", 1);
+    expect(Math.floor(next.getMonth() / 3)).toBe(0);
+    expect(next.getFullYear()).toBe(2027);
+  });
+
+  it("moves exactly one quarter, backwards", () => {
+    // And backwards it skipped one: Q4 to Q2.
+    const prev = stepRange(at(2026, 10, 15), "quarter", -1);
+    expect(Math.floor(prev.getMonth() / 3)).toBe(2);
+    expect(prev.getFullYear()).toBe(2026);
+  });
+
+  it("lands in the same quarter from any date in it", () => {
+    for (const m of [9, 10, 11]) {
+      const next = stepRange(at(2026, m, 15), "quarter", 1);
+      expect([next.getFullYear(), Math.floor(next.getMonth() / 3)]).toEqual([
+        2027, 0,
+      ]);
+    }
+  });
+
+  it("moves a year", () => {
+    expect(stepRange(at(2026, 10, 15), "year", 1).getFullYear()).toBe(2027);
+    expect(stepRange(at(2026, 10, 15), "year", -1).getFullYear()).toBe(2025);
+  });
+
+  it("goes and comes back to the same span", () => {
+    // Round-tripping has to land on the span it left, whatever the day.
+    for (const tf of ["day", "week", "month", "quarter", "year"] as const) {
+      const start = at(2026, 10, 15);
+      const there = stepRange(start, tf, 1);
+      const back = stepRange(there, tf, -1);
+      const a = buildRange(
+        back.getFullYear(),
+        back.getMonth(),
+        back.getDate(),
+        tf,
+      );
+      const b = buildRange(2026, 10, 15, tf);
+      expect(a.days[0].getTime()).toBe(b.days[0].getTime());
+    }
+  });
+});
+
+describe("reading a stored date", () => {
+  it("takes a date with no time on it as that date, anywhere", () => {
+    // new Date("2026-11-01") is midnight UTC, which is the 31st of October
+    // for every reader west of Greenwich. A date is not an instant.
+    const d = parseIsoDate("2026-11-01");
+    expect(d?.getFullYear()).toBe(2026);
+    expect(d?.getMonth()).toBe(10);
+    expect(d?.getDate()).toBe(1);
+    expect(d?.getHours()).toBe(0);
+  });
+
+  it("takes an instant as the instant it is", () => {
+    const d = parseIsoDate("2026-11-01T09:30:00.000Z");
+    expect(d?.getTime()).toBe(Date.parse("2026-11-01T09:30:00.000Z"));
+  });
+
+  it("says nothing for what is not a date", () => {
+    expect(parseIsoDate("not a date")).toBeNull();
+    expect(parseIsoDate(42)).toBeNull();
+    expect(parseIsoDate(null)).toBeNull();
   });
 });

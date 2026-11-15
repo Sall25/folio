@@ -25,6 +25,15 @@ export const HOURS_IN_DAY = 24;
 export const WEEKDAY_WIDTH = 140;
 /** What the Week timeframe shows: one week, Monday first. */
 export const DAYS_IN_WEEK = 7;
+/**
+ * A column in the Quarter timeframe: a whole week. Wide enough for the date
+ * of the Monday that starts it.
+ */
+export const WEEK_WIDTH = 100;
+/** A column in the Year timeframe: a whole month, named. */
+export const MONTH_WIDTH = 110;
+/** What the Year timeframe shows. */
+export const MONTHS_IN_YEAR = 12;
 export const ROW_HEIGHT = 34;
 export const HEADER_HEIGHT = 28;
 export const GROUP_ROW_HEIGHT = 28;
@@ -66,13 +75,51 @@ export type Timeframe = TimelineView["timeframe"];
  * drawn wider and named rather than numbered, because seven of them have a
  * screen to share.
  */
-export type CellUnit = "day" | "hour" | "weekday";
+export type CellUnit = "day" | "hour" | "weekday" | "week" | "month";
 
 /** How wide one column is, which depends on what a column is. */
 export function cellWidthFor(timeframe: Timeframe): number {
   if (timeframe === "day") return HOUR_WIDTH;
   if (timeframe === "week") return WEEKDAY_WIDTH;
+  if (timeframe === "quarter") return WEEK_WIDTH;
+  if (timeframe === "year") return MONTH_WIDTH;
   return DAY_WIDTH;
+}
+
+/**
+ * Where the view lands when an arrow is pressed: the date one span before
+ * or after the one on show.
+ *
+ * Measured from the date the view is anchored to, never from where its grid
+ * begins. Those used to be the same thing and are not any more — a quarter's
+ * grid starts on the Monday before the quarter does, which can be in the
+ * quarter before it, and stepping three months from there arrives back where
+ * it started. Going forward a quarter did nothing at all; going back skipped
+ * one.
+ *
+ * Month, quarter and year land on the 1st, so a 31st cannot roll a short
+ * month over into the next one.
+ */
+export function stepRange(anchor: Date, timeframe: Timeframe, dir: -1 | 1): Date {
+  const next = new Date(anchor);
+  switch (timeframe) {
+    case "day":
+      next.setDate(anchor.getDate() + dir);
+      break;
+    case "week":
+      next.setDate(anchor.getDate() + dir * DAYS_IN_WEEK);
+      break;
+    case "quarter":
+      next.setMonth(anchor.getMonth() + dir * 3, 1);
+      break;
+    case "year":
+      next.setFullYear(anchor.getFullYear() + dir, anchor.getMonth(), 1);
+      break;
+    case "month":
+    default:
+      next.setMonth(anchor.getMonth() + dir, 1);
+  }
+  return next;
 }
 
 /** The Monday of the week a date falls in. */
@@ -193,6 +240,15 @@ export function barCovers(
  */
 export function columnLabel(d: Date, unit: CellUnit): string {
   if (unit === "hour") return `${String(d.getHours()).padStart(2, "0")}:00`;
+  if (unit === "month") {
+    return d.toLocaleDateString(undefined, { month: "short" });
+  }
+  if (unit === "week") {
+    // The Monday it starts on. A quarter is read by where in it a thing
+    // falls, and a date says that better than a week number does.
+    const m = d.toLocaleDateString(undefined, { month: "short" });
+    return `${d.getDate()} ${m}`;
+  }
   if (unit === "weekday") {
     // Seven columns have room for the name, and a week is read by its days
     // of the week more than by its dates.
@@ -200,6 +256,16 @@ export function columnLabel(d: Date, unit: CellUnit): string {
     return `${name} ${d.getDate()}`;
   }
   return String(d.getDate());
+}
+
+/** The same month: how a Year matches a date to one of its columns. */
+export function sameMonth(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+}
+
+/** The same week: how a Quarter matches a date to one of its columns. */
+export function sameWeek(a: Date, b: Date) {
+  return sameDay(startOfWeek(a), startOfWeek(b));
 }
 
 /** The same hour of the same day: how a Day timeframe matches its columns. */
@@ -235,6 +301,21 @@ export function sameDay(a: Date, b: Date) {
 
 export function parseIsoDate(iso: unknown): Date | null {
   if (typeof iso !== "string") return null;
+
+  // A date with no time on it is a date, not an instant: "2026-11-01" is
+  // the 1st wherever it is read. Date() takes that spelling as midnight
+  // UTC, which is the 31st of October for every reader west of Greenwich —
+  // their bars sat a day early, and in the Day timeframe a record dated
+  // plainly landed on the evening before.
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (dateOnly) {
+    return new Date(
+      Number(dateOnly[1]),
+      Number(dateOnly[2]) - 1,
+      Number(dateOnly[3]),
+    );
+  }
+
   const d = new Date(iso);
   return isNaN(d.getTime()) ? null : d;
 }
@@ -317,23 +398,66 @@ export function buildRange(
     };
   }
 
-  let startDate: Date, endDate: Date;
-  switch (timeframe) {
-    case "quarter": {
-      const q = Math.floor(month / 3);
-      startDate = new Date(year, q * 3, 1);
-      endDate = new Date(year, q * 3 + 3, 0);
-      break;
+  // A quarter, a week to a column: the weeks that cover it, from the Monday
+  // on or before the 1st to the one that holds the last day. Ninety columns
+  // of days was four screens of scrolling to read three months.
+  if (timeframe === "quarter") {
+    const q = Math.floor(month / 3);
+    const first = new Date(year, q * 3, 1);
+    const lastDay = new Date(year, q * 3 + 3, 0);
+    const startDate = startOfWeek(first);
+    const lastWeek = startOfWeek(lastDay);
+    const days: Date[] = [];
+    const cursor = new Date(startDate);
+    while (cursor <= lastWeek) {
+      days.push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 7);
     }
-    case "year":
-      startDate = new Date(year, 0, 1);
-      endDate = new Date(year, 11, 31);
-      break;
-    case "month":
-    default:
-      startDate = new Date(year, month, 1);
-      endDate = new Date(year, month + 1, 0);
+    // The range runs to the end of the last week on show, not the last day
+    // of the quarter: the column is the week, so a record in the days after
+    // the quarter's end still belongs to the column that is drawn for it.
+    const endDate = new Date(lastWeek);
+    endDate.setDate(lastWeek.getDate() + 6);
+    endDate.setHours(23, 59, 59, 999);
+
+    const monthName = (d: Date) =>
+      d.toLocaleString("default", { month: "long" });
+    return {
+      startDate,
+      endDate,
+      days,
+      // No year: the header adds it.
+      headerGroups: [
+        { label: `${monthName(first)} – ${monthName(lastDay)}`, days: days.length },
+      ],
+      unit: "week",
+      cellWidth: WEEK_WIDTH,
+    };
   }
+
+  // A year, a month to a column. Three hundred and sixty-five day-columns
+  // came to 14,600px, which is not a year anyone could read.
+  if (timeframe === "year") {
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+    return {
+      startDate,
+      endDate,
+      days: Array.from(
+        { length: MONTHS_IN_YEAR },
+        (_, m) => new Date(year, m, 1),
+      ),
+      // Nothing to say but the year, which the header puts after this.
+      headerGroups: [{ label: "", days: MONTHS_IN_YEAR }],
+      unit: "month",
+      cellWidth: MONTH_WIDTH,
+    };
+  }
+
+  // A month, a day to a column — the one span still read that way, and the
+  // only timeframe left here now that each of the others builds its own.
+  const startDate = new Date(year, month, 1);
+  const endDate = new Date(year, month + 1, 0);
 
   const days: Date[] = [];
   const cursor = new Date(startDate);
@@ -342,37 +466,14 @@ export function buildRange(
     cursor.setDate(cursor.getDate() + 1);
   }
 
-  const headerGroups: { label: string; days: number }[] = [];
-  if (timeframe === "month") {
-    headerGroups.push({
+  const headerGroups = [
+    {
       // No year here: the header adds it after the label, and asking for it
       // twice is what made every month read "Novembre 2026 2026".
       label: startDate.toLocaleString("default", { month: "long" }),
       days: days.length,
-    });
-  } else if (timeframe === "quarter") {
-    const cur = new Date(startDate);
-    while (cur <= endDate) {
-      const m = cur.getMonth(),
-        y = cur.getFullYear();
-      let count = 0;
-      while (cur <= endDate && cur.getMonth() === m) {
-        count++;
-        cur.setDate(cur.getDate() + 1);
-      }
-      headerGroups.push({
-        // No year: the header adds it after the label.
-        label: new Date(y, m).toLocaleString("default", { month: "long" }),
-        days: count,
-      });
-    }
-  } else if (timeframe === "year") {
-    for (let m = 0; m < 12; m++)
-      headerGroups.push({
-        label: new Date(year, m).toLocaleString("default", { month: "short" }),
-        days: new Date(year, m + 1, 0).getDate(),
-      });
-  }
+    },
+  ];
 
   return {
     startDate,
@@ -421,7 +522,14 @@ export function getGeo(
   const s = cl ? range.startDate : rec.start;
   const e = cr ? range.endDate : effEnd;
 
-  const inCell = range.unit === "hour" ? sameHour : sameDay;
+  const inCell =
+    range.unit === "hour"
+      ? sameHour
+      : range.unit === "week"
+        ? sameWeek
+        : range.unit === "month"
+          ? sameMonth
+          : sameDay;
   const si = range.days.findIndex((d) => inCell(d, s));
   const ei = range.days.findIndex((d) => inCell(d, e));
 
