@@ -12,12 +12,20 @@ import {
 } from "src/components/tiptap-node/resizable-node";
 import {
   cellWidthFor,
+  dropBeforeId,
+  shiftDate,
+  unitFor,
   ROW_HEIGHT,
+  type CellUnit,
   parseDateValue,
   rowTop,
   type TimelinePlacement,
 } from "../../hooks/use-timeline-layout";
 import { TimelineCardBody } from "./timeline-card-body";
+import {
+  useTimelineBarDrag,
+  type BarDragState,
+} from "./use-timeline-bar-drag";
 
 // A record's bar, put into the gantt from outside it.
 //
@@ -45,6 +53,10 @@ interface TimelineBarProps {
     propertyId: string,
     value: CellValue,
   ) => void;
+  /** The view's order, to move this record within it. */
+  sortedRecordIds: string[];
+  /** Puts this record in front of another, or last with null. */
+  reorderRecord?: (recordId: string, beforeRecordId: string | null) => void;
 }
 
 function TimelineBarInner({
@@ -54,6 +66,10 @@ function TimelineBarInner({
   placement,
   properties,
   setCellValue,
+  unit,
+  cellWidth,
+  rowCount,
+  onDrop,
 }: {
   record: Page;
   view: TimelineView;
@@ -65,11 +81,24 @@ function TimelineBarInner({
     propertyId: string,
     value: CellValue,
   ) => void;
+  unit: CellUnit;
+  cellWidth: number;
+  rowCount: number;
+  onDrop: (state: BarDragState) => void;
 }) {
   const { nodeRef, isResizing } = useResizableNode();
+  const { drag, isDragging, handlers } = useTimelineBarDrag({
+    index,
+    rowCount,
+    cellWidth,
+    unit,
+    disabled: isResizing,
+    onDrop,
+  });
 
   return (
     <div
+      {...handlers}
       // A ref callback runs after the commit, so assigning here doesn't trip
       // "Cannot access refs during render" (calendar-event-bar.tsx says the
       // same of its own).
@@ -78,9 +107,16 @@ function TimelineBarInner({
       }}
       className="db-tl-bar-box"
       data-record-id={record.id}
+      data-dragging={isDragging || undefined}
       style={{
         top: rowTop(index),
         left: placement.left,
+        // Where the card would land, while the pointer is still down.
+        // A transform, so the drag costs no layout and the card it is
+        // standing in for stays where it is until the drop commits.
+        transform: drag
+          ? `translate(${drag.columns * cellWidth}px, ${drag.rows * ROW_HEIGHT}px)`
+          : undefined,
         // While the handle is being dragged the provider sets the width on
         // this element directly; passing one here would snap it back to the
         // dates on every render until the drag ends.
@@ -112,6 +148,8 @@ export function TimelineBar({
   databaseId,
   properties,
   setCellValue,
+  sortedRecordIds,
+  reorderRecord,
 }: TimelineBarProps) {
   // This database's gantt, not another one's: a page can hold several, and
   // a bar belongs in the grid of its own.
@@ -126,6 +164,7 @@ export function TimelineBar({
   // A column is an hour in the Day timeframe and a day everywhere else, so
   // dragging the handle out by one is an hour there and a day here.
   const cell = cellWidthFor(view.timeframe);
+  const unit = unitFor(view.timeframe);
 
   return createPortal(
     <ResizableNodeProvider
@@ -152,6 +191,33 @@ export function TimelineBar({
         placement={placement}
         properties={properties}
         setCellValue={setCellValue}
+        unit={unit}
+        cellWidth={cell}
+        rowCount={sortedRecordIds.length}
+        onDrop={({ columns, rows }) => {
+          // Sideways: the dates move together, so the card keeps its
+          // length and only its place in time changes.
+          if (columns !== 0) {
+            const { start, end } = parseDateValue(
+              record.values?.[view.startDatePropertyId],
+            );
+            if (start) {
+              const moved = shiftDate(start, unit, columns);
+              setCellValue(recordId, view.startDatePropertyId, {
+                start: moved.toISOString(),
+                end: (end ? shiftDate(end, unit, columns) : moved).toISOString(),
+              });
+            }
+          }
+          // Up or down: the row moves, through the same path the drag
+          // handle on the table beside the grid uses.
+          if (rows !== 0) {
+            reorderRecord?.(
+              recordId,
+              dropBeforeId(sortedRecordIds, index, index + rows),
+            );
+          }
+        }}
       />
     </ResizableNodeProvider>,
     gantt,

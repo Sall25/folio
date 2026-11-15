@@ -77,6 +77,19 @@ export type Timeframe = TimelineView["timeframe"];
  */
 export type CellUnit = "day" | "hour" | "weekday" | "week" | "month";
 
+/**
+ * What a column stands for in a timeframe. The range says this too, but a
+ * card knows only which view it is in — and both have to agree, or a card
+ * dragged one column lands somewhere its own grid did not draw.
+ */
+export function unitFor(timeframe: Timeframe): CellUnit {
+  if (timeframe === "day") return "hour";
+  if (timeframe === "week") return "weekday";
+  if (timeframe === "quarter") return "week";
+  if (timeframe === "year") return "month";
+  return "day";
+}
+
 /** How wide one column is, which depends on what a column is. */
 export function cellWidthFor(timeframe: Timeframe): number {
   if (timeframe === "day") return HOUR_WIDTH;
@@ -120,6 +133,56 @@ export function stepRange(anchor: Date, timeframe: Timeframe, dir: -1 | 1): Date
       next.setMonth(anchor.getMonth() + dir, 1);
   }
   return next;
+}
+
+/**
+ * A date moved by whole columns — what dragging a card sideways comes to.
+ * A column is an hour, a day, a week or a month depending on the timeframe,
+ * and the date moves by that, so a card dropped one column over is one of
+ * whatever is drawn under it later.
+ *
+ * Through Date's own setters, so month ends and year ends carry themselves,
+ * and so a month-long drag lands on the same day of the next month rather
+ * than 30 days later.
+ */
+export function shiftDate(date: Date, unit: CellUnit, columns: number): Date {
+  const next = new Date(date);
+  if (columns === 0) return next;
+  switch (unit) {
+    case "hour":
+      next.setHours(date.getHours() + columns);
+      break;
+    case "week":
+      next.setDate(date.getDate() + columns * DAYS_IN_WEEK);
+      break;
+    case "month":
+      next.setMonth(date.getMonth() + columns);
+      break;
+    case "day":
+    case "weekday":
+    default:
+      next.setDate(date.getDate() + columns);
+  }
+  return next;
+}
+
+/**
+ * The record a dragged row lands in front of, as reorderRecord wants it:
+ * the id at the new position, or null for the end of the list.
+ *
+ * Moving down, the row itself is still in the list above the gap it is
+ * going into, so the target is one further on — without that, a row dragged
+ * down by one lands back where it started.
+ */
+export function dropBeforeId(
+  ids: string[],
+  from: number,
+  to: number,
+): string | null {
+  const clamped = Math.max(0, Math.min(ids.length - 1, to));
+  if (clamped === from) return null;
+  const index = clamped > from ? clamped + 1 : clamped;
+  return ids[index] ?? null;
 }
 
 /** The Monday of the week a date falls in. */

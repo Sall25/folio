@@ -54,6 +54,7 @@ interface Params {
   subItems: Record<ID, SubItemInfo> | null;
   setRowOpen: (recordId: ID, open: boolean) => void;
   addSubItem: (parentId: ID) => void;
+  reorderRecord: (recordId: ID, beforeRecordId: ID | null) => void;
 }
 
 const EMPTY_GALLERY_PLACEMENT: Record<string, GalleryPlacement> = {};
@@ -82,6 +83,7 @@ export function useDatabaseBridgePublish({
   subItems,
   setRowOpen,
   addSubItem,
+  reorderRecord,
 }: Params) {
   const bridgeSetCellValue = useCallback(
     (recordId: string, propertyId: string, value: unknown) => {
@@ -191,6 +193,7 @@ export function useDatabaseBridgePublish({
       subItems,
       setRowOpen,
       addSubItem,
+      reorderRecord,
     }),
     [
       attrs.sourceId,
@@ -213,6 +216,7 @@ export function useDatabaseBridgePublish({
       subItems,
       setRowOpen,
       addSubItem,
+      reorderRecord,
     ],
   );
 

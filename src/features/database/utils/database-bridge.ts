@@ -61,6 +61,10 @@ export interface DatabaseBridgeData {
   setRowOpen?: (recordId: ID, open: boolean) => void;
   /** Adds a row under this one. */
   addSubItem?: (parentId: ID) => void;
+  /** Moves a record in front of another, or to the end with null. The
+   *  table's drag handle and a timeline card dragged up or down both end
+   *  here; a sorted view asks before it gives up its sort. */
+  reorderRecord?: (recordId: ID, beforeRecordId: ID | null) => void;
 }
 
 interface DatabaseEntry {

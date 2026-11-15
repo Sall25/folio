@@ -249,6 +249,8 @@ export default function DatabaseRecordNodeView({
             recordId={recordId}
             index={index}
             placement={tp}
+            sortedRecordIds={data.sortedRecordIds ?? []}
+            reorderRecord={data.reorderRecord}
             databaseId={databaseId ?? null}
             properties={data.properties}
             setCellValue={data.setCellValue}

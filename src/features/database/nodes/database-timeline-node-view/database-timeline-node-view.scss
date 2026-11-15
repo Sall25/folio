@@ -915,6 +915,20 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
 }
 
 // The gantt body hosts the bars, which are portalled in (timeline-bar.tsx).
+// While a card is being dragged it is lifted above the others and follows
+// the pointer in whole columns and rows, so what you see is where it will
+// land. The card it is standing in for stays put until the drop commits.
+.db-tl-bar-box[data-dragging] {
+  z-index: 6;
+  cursor: grabbing;
+  transition: none;
+
+  .db-tl-bar {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+    opacity: 0.92;
+  }
+}
+
 .db-tl-bar-box {
   position: absolute;
   z-index: 3;

@@ -11,6 +11,9 @@ import {
   sameWeek,
   startOfWeek,
   stepRange,
+  shiftDate,
+  dropBeforeId,
+  unitFor,
   HOUR_WIDTH,
   buildRange,
   cellWidthFor,
@@ -713,5 +716,96 @@ describe("reading a stored date", () => {
     expect(parseIsoDate("not a date")).toBeNull();
     expect(parseIsoDate(42)).toBeNull();
     expect(parseIsoDate(null)).toBeNull();
+  });
+});
+
+// ── Dragging a card ────────────────────────────────────────────────────────
+// Sideways it moves the record's dates by whole columns; up and down it
+// moves the record's row. Both are the same arithmetic the grid is drawn
+// with, so a card lands where it was dropped.
+
+describe("moving a card by columns", () => {
+  const at = (y: number, m: number, d: number, h = 0) => new Date(y, m, d, h);
+
+  it("moves an hour in a day", () => {
+    const moved = shiftDate(at(2026, 10, 15, 9), "hour", 3);
+    expect(moved.getHours()).toBe(12);
+    expect(moved.getDate()).toBe(15);
+  });
+
+  it("carries an hourly move over midnight", () => {
+    const moved = shiftDate(at(2026, 10, 15, 23), "hour", 2);
+    expect(moved.getDate()).toBe(16);
+    expect(moved.getHours()).toBe(1);
+  });
+
+  it("moves a day in a month or a week", () => {
+    expect(shiftDate(at(2026, 10, 15), "day", 4).getDate()).toBe(19);
+    expect(shiftDate(at(2026, 10, 15), "weekday", -2).getDate()).toBe(13);
+  });
+
+  it("moves a whole week in a quarter", () => {
+    const moved = shiftDate(at(2026, 10, 9), "week", 2);
+    expect(moved.getDate()).toBe(23);
+    expect(moved.getDay()).toBe(1);
+  });
+
+  it("moves a month in a year, keeping the day of the month", () => {
+    // Not 30 days: a card dragged one column lands in the next month.
+    const moved = shiftDate(at(2026, 0, 15), "month", 2);
+    expect(moved.getMonth()).toBe(2);
+    expect(moved.getDate()).toBe(15);
+  });
+
+  it("carries a move over the end of a year", () => {
+    expect(shiftDate(at(2026, 11, 15), "month", 1).getFullYear()).toBe(2027);
+    expect(shiftDate(at(2026, 0, 1), "day", -1).getFullYear()).toBe(2025);
+  });
+
+  it("leaves a date alone when nothing moved", () => {
+    const d = at(2026, 10, 15, 9);
+    expect(shiftDate(d, "hour", 0).getTime()).toBe(d.getTime());
+  });
+
+  it("agrees with the grid about what a column is", () => {
+    // The card knows its view, the grid knows its range: if these two ever
+    // disagreed, a card would land where nothing was drawn.
+    for (const tf of ["day", "week", "month", "quarter", "year"] as const) {
+      expect(unitFor(tf)).toBe(buildRange(2026, 10, 15, tf).unit);
+      expect(cellWidthFor(tf)).toBe(buildRange(2026, 10, 15, tf).cellWidth);
+    }
+  });
+});
+
+describe("dropping a card on another row", () => {
+  const ids = ["a", "b", "c", "d"];
+
+  it("puts a row in front of the one it lands on, moving up", () => {
+    expect(dropBeforeId(ids, 2, 0)).toBe("a");
+    expect(dropBeforeId(ids, 3, 1)).toBe("b");
+  });
+
+  it("counts past itself, moving down", () => {
+    // The row is still in the list above the gap it is moving into, so the
+    // target is the one after. Without this a row dragged down by one lands
+    // back where it started.
+    expect(dropBeforeId(ids, 0, 1)).toBe("c");
+    expect(dropBeforeId(ids, 1, 2)).toBe("d");
+  });
+
+  it("goes to the end when it lands last", () => {
+    expect(dropBeforeId(ids, 0, 3)).toBeNull();
+  });
+
+  it("stays inside the list", () => {
+    expect(dropBeforeId(ids, 2, -5)).toBe("a");
+    expect(dropBeforeId(ids, 3, 99)).toBeNull();
+    // Already first and dragged higher: it lands on itself, which is no
+    // move at all rather than a move to the front.
+    expect(dropBeforeId(ids, 0, -5)).toBeNull();
+  });
+
+  it("does nothing when a row lands on itself", () => {
+    expect(dropBeforeId(ids, 2, 2)).toBeNull();
   });
 });

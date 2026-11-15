@@ -89,7 +89,7 @@ function DatabaseNodeViewBody({
   attrs: DatabaseAttrs;
 }) {
   const { t } = useTranslation();
-  const { db, source, sortedRecords, subItems, parentPropertyId } =
+  const { db, source, sortedRecords, subItems, parentPropertyId, reorderRecord } =
     useDatabaseContext();
   const activeView = db.activeView;
   const tableRef = useRef<HTMLDivElement>(null);
@@ -237,6 +237,7 @@ function DatabaseNodeViewBody({
     subItems,
     setRowOpen,
     addSubItem,
+    reorderRecord,
   });
 
   // Seed record/cell nodes once at creation; keep cells matching properties.
