@@ -52,11 +52,13 @@ export function TimelinePlaceholder({
   const [naming, setNaming] = useState<Pending | null>(null);
 
   const dayCount = range.days.length;
+  // A column: a day, or an hour of one date in the Day timeframe.
+  const cell = range.cellWidth;
 
   function cellAt(e: { clientX: number; clientY: number }): Pending | null {
     const box = layerRef.current?.getBoundingClientRect();
     if (!box) return null;
-    const day = dayAt(e.clientX - box.left, dayCount);
+    const day = dayAt(e.clientX - box.left, dayCount, cell);
     return { row: rowAt(e.clientY - box.top, rowCount), from: day, to: day };
   }
 
@@ -107,7 +109,7 @@ export function TimelinePlaceholder({
   }
 
   const showing = naming ?? drawing ?? hover;
-  const geo = showing ? daySpan(showing.from, showing.to) : null;
+  const geo = showing ? daySpan(showing.from, showing.to, cell) : null;
 
   return (
     <div
@@ -155,7 +157,14 @@ export function TimelinePlaceholder({
             />
           ) : drawing ? (
             <span className="db-tl-placeholder__days">
-              {geo.days} {geo.days === 1 ? "day" : "days"}
+              {geo.days}{" "}
+              {range.unit === "hour"
+                ? geo.days === 1
+                  ? "hour"
+                  : "hours"
+                : geo.days === 1
+                  ? "day"
+                  : "days"}
             </span>
           ) : (
             <>

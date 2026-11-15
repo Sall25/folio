@@ -1,9 +1,10 @@
 import { memo } from "react";
 import type { TimelineRange } from "../../hooks/use-timeline-layout";
 import {
-  DAY_WIDTH,
   HEADER_HEIGHT,
   GROUP_ROW_HEIGHT,
+  sameDay,
+  sameHour,
 } from "../../hooks/use-timeline-layout";
 
 interface HighlightRange {
@@ -19,14 +20,14 @@ function TimelineHeaderImpl({
   range: TimelineRange;
   highlights: HighlightRange[];
 }) {
-  const gridWidth = range.days.length * DAY_WIDTH;
+  const cell = range.cellWidth;
+  const gridWidth = range.days.length * cell;
+  const hourly = range.unit === "hour";
 
   const today = new Date();
-  const todayIdx = range.days.findIndex(
-    (d) =>
-      d.getFullYear() === today.getFullYear() &&
-      d.getMonth() === today.getMonth() &&
-      d.getDate() === today.getDate(),
+  // In Day every column is the same date, so what is marked is the hour.
+  const todayIdx = range.days.findIndex((d) =>
+    hourly ? sameHour(d, today) : sameDay(d, today),
   );
 
   let dayCursor = 0;
@@ -54,7 +55,7 @@ function TimelineHeaderImpl({
           <div
             key={`${group.label}-${i}`}
             className="db-tl-header__group"
-            style={{ width: group.days * DAY_WIDTH }}
+            style={{ width: group.days * cell }}
           >
             <span className="db-tl-header__group-label">
               {group.label}
@@ -78,7 +79,7 @@ function TimelineHeaderImpl({
           <div
             key={i}
             className="db-tl-header__day"
-            style={{ left: i * DAY_WIDTH, width: DAY_WIDTH }}
+            style={{ left: i * cell, width: cell }}
           >
             <span
               className={
@@ -86,7 +87,9 @@ function TimelineHeaderImpl({
                 (i === todayIdx ? " db-tl-header__day-num--today" : "")
               }
             >
-              {day.getDate()}
+              {hourly
+                ? String(day.getHours()).padStart(2, "0")
+                : day.getDate()}
             </span>
           </div>
         ))}

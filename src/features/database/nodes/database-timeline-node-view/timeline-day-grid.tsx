@@ -1,12 +1,17 @@
 import { memo } from "react";
 import type { TimelineRange } from "../../hooks/use-timeline-layout";
-import { DAY_WIDTH } from "../../hooks/use-timeline-layout";
 
 function TimelineDayGridImpl({ range }: { range: TimelineRange }) {
   return (
     <div className="db-tl-day-grid" aria-hidden>
       {range.days.map((day, i) => {
-        const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+        // Shaded the same way for the same reason: the part of the span
+        // nobody works in. Weekends across days, nights and evenings across
+        // the hours of one.
+        const isWeekend =
+          range.unit === "hour"
+            ? day.getHours() < 8 || day.getHours() >= 18
+            : day.getDay() === 0 || day.getDay() === 6;
         return (
           <div
             key={i}
@@ -14,7 +19,7 @@ function TimelineDayGridImpl({ range }: { range: TimelineRange }) {
               "db-tl-day-grid__col" +
               (isWeekend ? " db-tl-day-grid__col--weekend" : "")
             }
-            style={{ left: i * DAY_WIDTH, width: DAY_WIDTH }}
+            style={{ left: i * range.cellWidth, width: range.cellWidth }}
           />
         );
       })}

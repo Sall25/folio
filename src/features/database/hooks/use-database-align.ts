@@ -75,8 +75,21 @@ export function useDatabaseAlign(containerSelector = ".simple-editor-center") {
           "--db-column-inset",
           `${Math.max(0, blockLeft - edge)}px`,
         );
+        // And how far it runs past that column on the right. A timeline's
+        // own controls sit inside this, so they stay with the page's
+        // content instead of riding the window's edge where they end up
+        // under a scrollbar, or off the screen entirely.
+        node.style.setProperty(
+          "--db-column-inset-right",
+          `${Math.max(
+            0,
+            node.getBoundingClientRect().right -
+              block.getBoundingClientRect().right,
+          )}px`,
+        );
       } else {
         node.style.removeProperty("--db-column-inset");
+        node.style.removeProperty("--db-column-inset-right");
       }
 
       // Where the database would start with no padding and no sideways

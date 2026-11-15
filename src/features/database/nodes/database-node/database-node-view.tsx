@@ -157,13 +157,18 @@ function DatabaseNodeViewBody({
     month,
   );
 
-  const { year: tlYear, month: tlMonth } = useTimelineViewState();
+  const {
+    year: tlYear,
+    month: tlMonth,
+    day: tlDay,
+  } = useTimelineViewState();
   const { timelineLayout } = useTimelineLayout(
     sortedRecords,
     source ?? null,
     db,
     tlYear,
     tlMonth,
+    tlDay,
   );
 
   const allRowSlots =

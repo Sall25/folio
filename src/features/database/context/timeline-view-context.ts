@@ -3,11 +3,15 @@ import { createContext, useContext } from "react";
 interface TimelineViewStateValue {
   year: number;
   month: number;
+  /** Day of the month. Only the Day timeframe reads it; the rest show a
+   *  whole month or more and have no use for it. */
+  day: number;
 }
 
 interface TimelineViewActionsValue {
   setYear: (year: number) => void;
   setMonth: (month: number) => void;
+  setDay: (day: number) => void;
   goToToday: () => void;
 }
 

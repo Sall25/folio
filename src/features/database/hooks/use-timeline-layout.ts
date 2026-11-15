@@ -9,6 +9,14 @@ import type {
 import type { UseDatabaseReturn } from "./use-database";
 
 export const DAY_WIDTH = 40;
+/**
+ * A column in the Day timeframe, which is an hour rather than a day. Wider
+ * than a day column so a whole day — all 24 of them — fits on screen without
+ * scrolling, and so there is room for a time under a bar's title.
+ */
+export const HOUR_WIDTH = 56;
+/** What the Day timeframe shows: one date, an hour to a column. */
+export const HOURS_IN_DAY = 24;
 export const ROW_HEIGHT = 34;
 export const HEADER_HEIGHT = 28;
 export const GROUP_ROW_HEIGHT = 28;
@@ -45,11 +53,26 @@ export function clampTableWidth(width: number, frameWidth: number): number {
 
 export type Timeframe = TimelineView["timeframe"];
 
+/** What one column stands for. Day is the only timeframe not made of days. */
+export type CellUnit = "day" | "hour";
+
+/** How wide one column is, which depends on what a column is. */
+export function cellWidthFor(timeframe: Timeframe): number {
+  return timeframe === "day" ? HOUR_WIDTH : DAY_WIDTH;
+}
+
 export interface TimelineRecord {
   id: ID;
   title: string;
   start: Date | null;
   end: Date | null;
+  /**
+   * The date carries no time of day — "2026-11-01" rather than an instant.
+   * It means nothing in the timeframes made of days, where a column is a
+   * whole day anyway, but in Day it is the difference between a record that
+   * happens at midnight and one that simply happens that day.
+   */
+  allDay: boolean;
 }
 
 export interface TimelinePlacement {
@@ -62,8 +85,16 @@ export interface TimelinePlacement {
 export interface TimelineRange {
   startDate: Date;
   endDate: Date;
+  /**
+   * One Date per column, in order: the days of the range — or, in the Day
+   * timeframe, the hours of one date.
+   */
   days: Date[];
   headerGroups: { label: string; days: number }[];
+  /** What those Dates are. */
+  unit: CellUnit;
+  /** How wide one of them is drawn. */
+  cellWidth: number;
 }
 
 export interface TimelineLayout {
@@ -96,21 +127,26 @@ export function rowAt(y: number, rowCount: number): number {
   return Math.min(rowCount - 1, Math.max(0, Math.floor(y / ROW_HEIGHT)));
 }
 
-/** The day column under a point, clamped to the range on show. */
-export function dayAt(x: number, dayCount: number): number {
-  return Math.min(dayCount - 1, Math.max(0, Math.floor(x / DAY_WIDTH)));
+/** The column under a point, clamped to the range on show. */
+export function dayAt(
+  x: number,
+  dayCount: number,
+  width: number = DAY_WIDTH,
+): number {
+  return Math.min(dayCount - 1, Math.max(0, Math.floor(x / width)));
 }
 
-/** The box of a run of days, given two day indexes in either order. */
+/** The box of a run of columns, given two indexes in either order. */
 export function daySpan(
   a: number,
   b: number,
+  width: number = DAY_WIDTH,
 ): { left: number; width: number; days: number } {
   const from = Math.min(a, b);
   const to = Math.max(a, b);
   return {
-    left: from * DAY_WIDTH,
-    width: (to - from + 1) * DAY_WIDTH,
+    left: from * width,
+    width: (to - from + 1) * width,
     days: to - from + 1,
   };
 }
@@ -119,10 +155,34 @@ export function daySpan(
 export function barCovers(
   placement: TimelinePlacement | undefined,
   dayIndex: number,
+  width: number = DAY_WIDTH,
 ): boolean {
   if (!placement) return false;
-  const x = dayIndex * DAY_WIDTH;
+  const x = dayIndex * width;
   return x >= placement.left && x < placement.left + placement.width;
+}
+
+/** The same hour of the same day: how a Day timeframe matches its columns. */
+export function sameHour(a: Date, b: Date) {
+  return sameDay(a, b) && a.getHours() === b.getHours();
+}
+
+/**
+ * A date written with no time on it — "2026-11-01" rather than an instant.
+ * Only the Day timeframe cares: a record like that happens that day, not at
+ * midnight, so its bar is the whole day rather than the first hour of it.
+ */
+export function isAllDayValue(value: unknown): boolean {
+  const iso =
+    typeof value === "string"
+      ? value
+      : typeof value === "object" &&
+          value !== null &&
+          "start" in value &&
+          typeof (value as { start?: unknown }).start === "string"
+        ? (value as { start: string }).start
+        : null;
+  return iso !== null && !iso.includes("T");
 }
 
 export function sameDay(a: Date, b: Date) {
@@ -139,11 +199,43 @@ export function parseIsoDate(iso: unknown): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-function buildRange(
+export function buildRange(
   year: number,
   month: number,
+  day: number,
   timeframe: Timeframe,
 ): TimelineRange {
+  // Day is the one timeframe whose columns are not days: it shows a single
+  // date, an hour to a column. Everything downstream reads range.unit and
+  // range.cellWidth rather than assuming a day of 40px, so the rest of the
+  // grid — the header, the placeholder, a bar's geometry — is the same code.
+  if (timeframe === "day") {
+    const startDate = new Date(year, month, day, 0, 0, 0, 0);
+    const endDate = new Date(year, month, day, 23, 59, 59, 999);
+    const hours = Array.from(
+      { length: HOURS_IN_DAY },
+      (_, h) => new Date(year, month, day, h),
+    );
+    return {
+      startDate,
+      endDate,
+      days: hours,
+      // The header puts the year after the label, so it is left out here.
+      headerGroups: [
+        {
+          label: startDate.toLocaleDateString(undefined, {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+          }),
+          days: HOURS_IN_DAY,
+        },
+      ],
+      unit: "hour",
+      cellWidth: HOUR_WIDTH,
+    };
+  }
+
   let startDate: Date, endDate: Date;
   switch (timeframe) {
     case "week": {
@@ -164,7 +256,6 @@ function buildRange(
       startDate = new Date(year, 0, 1);
       endDate = new Date(year, 11, 31);
       break;
-    case "day":
     case "month":
     default:
       startDate = new Date(year, month, 1);
@@ -179,12 +270,11 @@ function buildRange(
   }
 
   const headerGroups: { label: string; days: number }[] = [];
-  if (timeframe === "month" || timeframe === "day") {
+  if (timeframe === "month") {
     headerGroups.push({
-      label: startDate.toLocaleString("default", {
-        month: "long",
-        year: "numeric",
-      }),
+      // No year here: the header adds it after the label, and asking for it
+      // twice is what made every month read "Novembre 2026 2026".
+      label: startDate.toLocaleString("default", { month: "long" }),
       days: days.length,
     });
   } else if (timeframe === "week" || timeframe === "quarter") {
@@ -213,10 +303,22 @@ function buildRange(
       });
   }
 
-  return { startDate, endDate, days, headerGroups };
+  return {
+    startDate,
+    endDate,
+    days,
+    headerGroups,
+    unit: "day",
+    cellWidth: DAY_WIDTH,
+  };
 }
 
-function getGeo(
+/**
+ * Where a record's bar sits in the range on show, or null if it falls
+ * outside it. Exported for its own tests: it is the one piece of arithmetic
+ * that has to agree with what a column means.
+ */
+export function getGeo(
   rec: TimelineRecord,
   range: TimelineRange,
   hasEnd: boolean,
@@ -230,18 +332,32 @@ function getGeo(
   const effEnd = hasEnd ? (rec.end ?? rec.start) : rec.start;
   if (effEnd < range.startDate || rec.start > range.endDate) return null;
 
+  const w = range.cellWidth;
+
+  // A date with no time on it happens that day, not at midnight, so in the
+  // Day timeframe it is the whole day rather than its first hour.
+  if (range.unit === "hour" && rec.allDay) {
+    return {
+      left: 0,
+      width: range.days.length * w,
+      clippedLeft: false,
+      clippedRight: false,
+    };
+  }
+
   const cl = rec.start < range.startDate;
   const cr = effEnd > range.endDate;
   const s = cl ? range.startDate : rec.start;
   const e = cr ? range.endDate : effEnd;
 
-  const si = range.days.findIndex((d) => sameDay(d, s));
-  const ei = range.days.findIndex((d) => sameDay(d, e));
+  const inCell = range.unit === "hour" ? sameHour : sameDay;
+  const si = range.days.findIndex((d) => inCell(d, s));
+  const ei = range.days.findIndex((d) => inCell(d, e));
 
-  const left = (si < 0 ? 0 : si) * DAY_WIDTH;
+  const left = (si < 0 ? 0 : si) * w;
   const width = Math.max(
-    DAY_WIDTH,
-    ((ei < 0 ? range.days.length - 1 : ei) - (si < 0 ? 0 : si) + 1) * DAY_WIDTH,
+    w,
+    ((ei < 0 ? range.days.length - 1 : ei) - (si < 0 ? 0 : si) + 1) * w,
   );
 
   return { left, width, clippedLeft: cl, clippedRight: cr };
@@ -292,6 +408,7 @@ export function useTimelineLayout(
   db: UseDatabaseReturn,
   year: number,
   month: number,
+  day: number,
 ): UseTimelineLayoutReturn {
   const activeView = db.activeView as TimelineView | undefined;
   const timeframe: Timeframe = activeView?.timeframe ?? "month";
@@ -306,12 +423,11 @@ export function useTimelineLayout(
   const hasEnd = !!endProp;
 
   const timelineLayout = useMemo<TimelineLayout>(() => {
-    const range = buildRange(year, month, timeframe);
+    const range = buildRange(year, month, day, timeframe);
 
     const records: TimelineRecord[] = sortedRecords.map((r) => {
-      const dateValue = parseDateValue(
-        startProp ? r.values?.[startProp.id] : null,
-      );
+      const raw = startProp ? r.values?.[startProp.id] : null;
+      const dateValue = parseDateValue(raw);
 
       return {
         id: r.id,
@@ -319,6 +435,7 @@ export function useTimelineLayout(
           (titleProp && (r.values?.[titleProp.id] as string)) || "Untitled",
         start: dateValue.start,
         end: dateValue.end,
+        allDay: isAllDayValue(raw),
       };
     });
 
@@ -342,6 +459,7 @@ export function useTimelineLayout(
     sortedRecords,
     year,
     month,
+    day,
     timeframe,
     startProp,
     endProp,

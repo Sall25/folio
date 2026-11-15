@@ -148,6 +148,15 @@ describe("how wide the two panels are", () => {
     ).toBe(true);
   });
 
+  it("keeps the timeframe controls on the page, not on the window", () => {
+    // The grid runs to the edge of the screen; controls pinned to the end
+    // of it end up under a scrollbar or off the screen. They stop where
+    // the page's content does, level with the toolbar above them.
+    expect(
+      resolve(rules, [el("db-tl-nav-overlay tag:div")], "right")?.value,
+    ).toContain("--db-column-inset-right");
+  });
+
   it("does not move the node itself", () => {
     // The node is already where it should be: full width, from the
     // window's left edge. Several attempts at this moved its margin

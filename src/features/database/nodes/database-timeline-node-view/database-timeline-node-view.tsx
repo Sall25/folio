@@ -27,11 +27,12 @@ import { useDatabaseColumnLayout } from "../../hooks/use-database-column-layout"
 import { DatabaseTableHeader } from "../database-table-node/database-table-header";
 import {
   clampTableWidth,
-  DAY_WIDTH,
   DEFAULT_TABLE_WIDTH,
   ROW_HEIGHT,
   GROUP_ROW_HEIGHT,
   TOTAL_HEADER_HEIGHT,
+  sameDay,
+  sameHour,
   useTimelineLayout,
 } from "../../hooks/use-timeline-layout";
 import {
@@ -193,15 +194,16 @@ function DatabaseTimelineNodeViewImpl() {
   const { db, source, sortedRecords, onUpdateView, attrs, visibleProperties } =
     useDatabaseContext();
   const { addRecordAsync, updatePropertiesAsync } = useDataSource(source?.id);
-  const { year, month } = useTimelineViewState();
+  const { year, month, day } = useTimelineViewState();
   const { timelineLayout } = useTimelineLayout(
     sortedRecords,
     source,
     db,
     year,
     month,
+    day,
   );
-  const { setYear, setMonth, goToToday } = useTimelineViewActions();
+  const { setYear, setMonth, setDay, goToToday } = useTimelineViewActions();
 
   const activeView = db.activeView as TimelineView | undefined;
   const timeframe = activeView?.timeframe ?? "month";
@@ -258,21 +260,31 @@ function DatabaseTimelineNodeViewImpl() {
     handle.addEventListener("pointerup", up);
     handle.addEventListener("pointercancel", up);
   }
-  const gridWidth = range.days.length * DAY_WIDTH;
+  const gridWidth = range.days.length * range.cellWidth;
 
   const today = new Date();
-  const todayIdx = range.days.findIndex(
-    (d) =>
-      d.getFullYear() === today.getFullYear() &&
-      d.getMonth() === today.getMonth() &&
-      d.getDate() === today.getDate(),
+  // The column today stands in: a day of the range, or — in Day, where every
+  // column is the same date — the hour it is now.
+  const todayIdx = range.days.findIndex((d) =>
+    range.unit === "hour" ? sameHour(d, today) : sameDay(d, today),
   );
-  const todayLeft = todayIdx >= 0 ? todayIdx * DAY_WIDTH + DAY_WIDTH / 2 : null;
+  const todayLeft =
+    todayIdx >= 0 ? todayIdx * range.cellWidth + range.cellWidth / 2 : null;
 
   function navigate(dir: -1 | 1) {
     const cur = range.startDate;
     if (timeframe === "year") {
       setYear(cur.getFullYear() + dir);
+      return;
+    }
+    // A day at a time, since a day is all that is on show. Done through a
+    // Date so the ends of months and of years carry themselves.
+    if (timeframe === "day") {
+      const next = new Date(cur);
+      next.setDate(cur.getDate() + dir);
+      setYear(next.getFullYear());
+      setMonth(next.getMonth());
+      setDay(next.getDate());
       return;
     }
     let m = cur.getMonth() + (timeframe === "quarter" ? dir * 3 : dir);

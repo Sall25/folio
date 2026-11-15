@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   DAY_WIDTH,
+  HOURS_IN_DAY,
+  HOUR_WIDTH,
+  buildRange,
+  cellWidthFor,
+  isAllDayValue,
+  getGeo,
   MIN_GRID_WIDTH,
   MIN_TABLE_WIDTH,
   ROW_HEIGHT,
@@ -11,6 +17,7 @@ import {
   rowAt,
   rowTop,
   type TimelinePlacement,
+  type TimelineRecord,
 } from "./use-timeline-layout";
 
 // The gantt body's geometry. The bars and the new-page placeholder both read
@@ -141,5 +148,170 @@ describe("the separator between the table and the grid", () => {
   it("is stable: clamping a clamped width changes nothing", () => {
     const once = clampTableWidth(5000, FRAME);
     expect(clampTableWidth(once, FRAME)).toBe(once);
+  });
+});
+
+// ── The Day timeframe ──────────────────────────────────────────────────────
+// Day used to be an alias for month: same whole-month range, same columns,
+// so picking it changed nothing on screen. A day is now its own thing —
+// one date, an hour to a column — and the rest of the grid reads what a
+// column is off the range rather than assuming a day.
+
+describe("a day, by the hour", () => {
+  const range = buildRange(2026, 10, 15, "day"); // 15 November 2026
+
+  it("is one date, an hour at a time", () => {
+    expect(range.unit).toBe("hour");
+    expect(range.days).toHaveLength(HOURS_IN_DAY);
+    expect(range.days[0].getHours()).toBe(0);
+    expect(range.days[23].getHours()).toBe(23);
+    expect(range.days.every((d) => d.getDate() === 15)).toBe(true);
+  });
+
+  it("gives an hour more room than a day gets", () => {
+    // 24 of them have to fit on screen, and a time goes under the title.
+    expect(range.cellWidth).toBe(HOUR_WIDTH);
+    expect(cellWidthFor("day")).toBe(HOUR_WIDTH);
+    expect(cellWidthFor("month")).toBe(DAY_WIDTH);
+  });
+
+  it("runs to the end of the last hour", () => {
+    // Not to 23:00: a record at 23:30 is still that day.
+    expect(range.endDate.getHours()).toBe(23);
+    expect(range.endDate.getMinutes()).toBe(59);
+  });
+
+  it("names the date once, without the year", () => {
+    // The header puts the year after the label. Asking for it here too is
+    // what made a month read "Novembre 2026 2026".
+    expect(range.headerGroups).toHaveLength(1);
+    expect(range.headerGroups[0].days).toBe(HOURS_IN_DAY);
+    expect(range.headerGroups[0].label).not.toMatch(/2026/);
+  });
+});
+
+describe("a month, by the day", () => {
+  const range = buildRange(2026, 10, 15, "month");
+
+  it("is unchanged by any of this", () => {
+    expect(range.unit).toBe("day");
+    expect(range.cellWidth).toBe(DAY_WIDTH);
+    expect(range.days).toHaveLength(30);
+  });
+
+  it("names the month without the year", () => {
+    expect(range.headerGroups[0].label).not.toMatch(/2026/);
+  });
+});
+
+describe("telling a date from an instant", () => {
+  it("knows a date with no time on it", () => {
+    expect(isAllDayValue("2026-11-01")).toBe(true);
+    expect(isAllDayValue({ start: "2026-11-01" })).toBe(true);
+  });
+
+  it("knows one that has", () => {
+    expect(isAllDayValue("2026-11-01T09:30:00.000Z")).toBe(false);
+    expect(isAllDayValue({ start: "2026-11-01T09:30:00.000Z" })).toBe(false);
+  });
+
+  it("says no to anything else", () => {
+    expect(isAllDayValue(null)).toBe(false);
+    expect(isAllDayValue(undefined)).toBe(false);
+    expect(isAllDayValue(42)).toBe(false);
+  });
+});
+
+describe("columns, at either width", () => {
+  it("finds the hour under a point", () => {
+    expect(dayAt(0, 24, HOUR_WIDTH)).toBe(0);
+    expect(dayAt(HOUR_WIDTH * 9 + 5, 24, HOUR_WIDTH)).toBe(9);
+    expect(dayAt(HOUR_WIDTH * 99, 24, HOUR_WIDTH)).toBe(23);
+  });
+
+  it("spans a run of hours", () => {
+    expect(daySpan(9, 11, HOUR_WIDTH)).toEqual({
+      left: 9 * HOUR_WIDTH,
+      width: 3 * HOUR_WIDTH,
+      days: 3,
+    });
+  });
+
+  it("still means days when nothing says otherwise", () => {
+    // Every caller that has not been told about hours keeps its old answer.
+    expect(dayAt(DAY_WIDTH * 3, 31)).toBe(3);
+    expect(daySpan(2, 5).width).toBe(4 * DAY_WIDTH);
+  });
+});
+
+describe("where a bar sits in a day", () => {
+  const range = buildRange(2026, 10, 15, "day");
+  const rec = (
+    start: string | null,
+    end: string | null,
+    allDay = false,
+  ): TimelineRecord => ({
+    id: "r",
+    title: "r",
+    start: start ? new Date(start) : null,
+    end: end ? new Date(end) : null,
+    allDay,
+  });
+
+  it("stands on the hours it covers", () => {
+    // 09:00 to 12:00 is four columns, the way 1 to 4 November is four days.
+    const geo = getGeo(
+      rec("2026-11-15T09:00:00", "2026-11-15T12:00:00"),
+      range,
+      true,
+    );
+    expect(geo).toEqual({
+      left: 9 * HOUR_WIDTH,
+      width: 4 * HOUR_WIDTH,
+      clippedLeft: false,
+      clippedRight: false,
+    });
+  });
+
+  it("is an hour wide when it has no end", () => {
+    const geo = getGeo(rec("2026-11-15T14:00:00", null), range, false);
+    expect(geo?.left).toBe(14 * HOUR_WIDTH);
+    expect(geo?.width).toBe(HOUR_WIDTH);
+  });
+
+  it("spans the day when the date carries no time", () => {
+    // Otherwise everything dated plainly would pile up on midnight.
+    const geo = getGeo(rec("2026-11-15", "2026-11-15", true), range, true);
+    expect(geo).toEqual({
+      left: 0,
+      width: HOURS_IN_DAY * HOUR_WIDTH,
+      clippedLeft: false,
+      clippedRight: false,
+    });
+  });
+
+  it("leaves out a record from another date", () => {
+    expect(
+      getGeo(rec("2026-11-16T09:00:00", "2026-11-16T10:00:00"), range, true),
+    ).toBeNull();
+  });
+
+  it("marks a bar that runs past either end of the day", () => {
+    const geo = getGeo(
+      rec("2026-11-14T22:00:00", "2026-11-16T02:00:00"),
+      range,
+      true,
+    );
+    expect(geo?.clippedLeft).toBe(true);
+    expect(geo?.clippedRight).toBe(true);
+    expect(geo?.left).toBe(0);
+    expect(geo?.width).toBe(HOURS_IN_DAY * HOUR_WIDTH);
+  });
+
+  it("places a bar by the day when the range is days", () => {
+    const month = buildRange(2026, 10, 15, "month");
+    const geo = getGeo(rec("2026-11-03", "2026-11-05", true), month, true);
+    expect(geo?.left).toBe(2 * DAY_WIDTH);
+    expect(geo?.width).toBe(3 * DAY_WIDTH);
   });
 });

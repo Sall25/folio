@@ -11,7 +11,7 @@ import {
   useResizableNode,
 } from "src/components/tiptap-node/resizable-node";
 import {
-  DAY_WIDTH,
+  cellWidthFor,
   ROW_HEIGHT,
   parseDateValue,
   rowTop,
@@ -123,17 +123,22 @@ export function TimelineBar({
   );
   if (!gantt) return null;
 
+  // A column is an hour in the Day timeframe and a day everywhere else, so
+  // dragging the handle out by one is an hour there and a day here.
+  const cell = cellWidthFor(view.timeframe);
+
   return createPortal(
     <ResizableNodeProvider
-      min={{ width: DAY_WIDTH }}
+      min={{ width: cell }}
       onResizeEnd={(dimensions) => {
         const start = parseDateValue(
           record.values?.[view.startDatePropertyId],
         ).start;
         if (!start) return;
-        const days = Math.max(1, Math.round(dimensions.width / DAY_WIDTH));
+        const cells = Math.max(1, Math.round(dimensions.width / cell));
         const end = new Date(start);
-        end.setDate(end.getDate() + days - 1);
+        if (view.timeframe === "day") end.setHours(start.getHours() + cells - 1);
+        else end.setDate(start.getDate() + cells - 1);
         setCellValue(recordId, view.startDatePropertyId, {
           start: start.toISOString(),
           end: end.toISOString(),

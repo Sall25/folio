@@ -660,7 +660,14 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
 .db-tl-nav-overlay {
   position: absolute;
   top: 0;
-  right: 0;
+  // The page's right edge, not the window's. The grid runs the full width
+  // of the screen now, and controls pinned to the end of that sit under a
+  // scrollbar or off the screen; this keeps them level with where the
+  // page's own content stops, which is where the toolbar above them ends
+  // too. --db-column-inset-right is how far the grid runs past it
+  // (use-database-align.ts), and is 0 for a database that has not been
+  // widened.
+  right: var(--db-column-inset-right, 0px);
   z-index: 7;
   display: flex;
   align-items: center;
