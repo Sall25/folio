@@ -36,7 +36,10 @@ function TimelineHeaderImpl({
     const groupStart = range.days[dayCursor];
     // eslint-disable-next-line react-hooks/immutability
     dayCursor += group.days;
-    return { ...group, year: groupStart?.getFullYear() };
+    // Day's groups are dates and write their own year where they want one,
+    // so the locale places it — and its comma. Everything else has a label
+    // the year is appended to.
+    return { ...group, year: hourly ? undefined : groupStart?.getFullYear() };
   });
 
   return (

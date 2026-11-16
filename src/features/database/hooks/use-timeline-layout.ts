@@ -14,9 +14,13 @@ export const DAY_WIDTH = 40;
  * than a day column so a whole day — all 24 of them — fits on screen without
  * scrolling, and so there is room for a time under a bar's title.
  */
-export const HOUR_WIDTH = 56;
+export const HOUR_WIDTH = 64;
 /** What the Day timeframe shows: one date, an hour to a column. */
 export const HOURS_IN_DAY = 24;
+/** Columns in the Day timeframe: the date, and the hours either side. */
+export const HOURS_SPAN = 48;
+/** How many of those come before the date on show, so it sits centred. */
+export const DAY_LEAD_HOURS = (HOURS_SPAN - HOURS_IN_DAY) / 2;
 /**
  * A column in the Week timeframe. Still a day, but one of seven rather than
  * one of thirty, so it can carry the weekday's name and a bar can say its
@@ -113,7 +117,11 @@ export function cellWidthFor(timeframe: Timeframe): number {
  * Month, quarter and year land on the 1st, so a 31st cannot roll a short
  * month over into the next one.
  */
-export function stepRange(anchor: Date, timeframe: Timeframe, dir: -1 | 1): Date {
+export function stepRange(
+  anchor: Date,
+  timeframe: Timeframe,
+  dir: -1 | 1,
+): Date {
   const next = new Date(anchor);
   switch (timeframe) {
     case "day":
@@ -302,7 +310,11 @@ export function barCovers(
  * dates, which is exactly what it is not.
  */
 export function columnLabel(d: Date, unit: CellUnit): string {
-  if (unit === "hour") return `${String(d.getHours()).padStart(2, "0")}:00`;
+  // The locale's own clock: "9 PM" where one is read that way, "21" where
+  // it isn't. A hardcoded 24-hour label was wrong in half the world.
+  if (unit === "hour") {
+    return d.toLocaleTimeString(undefined, { hour: "numeric" });
+  }
   if (unit === "month") {
     return d.toLocaleDateString(undefined, { month: "short" });
   }
@@ -394,27 +406,48 @@ export function buildRange(
   // range.cellWidth rather than assuming a day of 40px, so the rest of the
   // grid — the header, the placeholder, a bar's geometry — is the same code.
   if (timeframe === "day") {
-    const startDate = new Date(year, month, day, 0, 0, 0, 0);
-    const endDate = new Date(year, month, day, 23, 59, 59, 999);
-    const hours = Array.from(
-      { length: HOURS_IN_DAY },
-      (_, h) => new Date(year, month, day, h),
-    );
+    // The date on show sits in the middle, with the hours either side of it
+    // to scroll into: a day's work rarely stops at midnight, and a bar that
+    // runs into the small hours of the next morning used to be cut off at
+    // the right edge with nowhere to scroll to.
+    const startDate = new Date(year, month, day, -DAY_LEAD_HOURS, 0, 0, 0);
+    const hours = Array.from({ length: HOURS_SPAN }, (_, h) => {
+      // setHours, not new Date(y, m, d, h): only this carries an hour past
+      // midnight into the next date.
+      const d = new Date(startDate);
+      d.setHours(startDate.getHours() + h);
+      return d;
+    });
+    const endDate = new Date(hours[HOURS_SPAN - 1]);
+    endDate.setMinutes(59, 59, 999);
+
+    // One group per date the span touches. The first says its year, the
+    // rest don't — the locale writes it ("November 9, 2023" then
+    // "November 10"), so the comma is its own and not ours to add.
+    const headerGroups: { label: string; days: number }[] = [];
+    for (let i = 0; i < hours.length; i++) {
+      const d = hours[i];
+      const prev = i > 0 ? hours[i - 1] : null;
+      if (prev && sameDay(d, prev)) {
+        headerGroups[headerGroups.length - 1].days += 1;
+        continue;
+      }
+      headerGroups.push({
+        label: d.toLocaleDateString(undefined, {
+          day: "numeric",
+          month: "long",
+          // Only the first: the year is said once over the span.
+          ...(headerGroups.length === 0 ? { year: "numeric" as const } : {}),
+        }),
+        days: 1,
+      });
+    }
+
     return {
       startDate,
       endDate,
       days: hours,
-      // The header puts the year after the label, so it is left out here.
-      headerGroups: [
-        {
-          label: startDate.toLocaleDateString(undefined, {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          }),
-          days: HOURS_IN_DAY,
-        },
-      ],
+      headerGroups,
       unit: "hour",
       cellWidth: HOUR_WIDTH,
     };
@@ -491,7 +524,10 @@ export function buildRange(
       days,
       // No year: the header adds it.
       headerGroups: [
-        { label: `${monthName(first)} – ${monthName(lastDay)}`, days: days.length },
+        {
+          label: `${monthName(first)} – ${monthName(lastDay)}`,
+          days: days.length,
+        },
       ],
       unit: "week",
       cellWidth: WEEK_WIDTH,
@@ -572,11 +608,32 @@ export function getGeo(
   // A date with no time on it happens that day, not at midnight, so in the
   // Day timeframe it is the whole day rather than its first hour.
   if (range.unit === "hour" && rec.allDay) {
+    // Its own dates, not the whole span: Day shows the hours either side of
+    // the date on show, and a record dated plainly belongs to its day, not
+    // to everything on screen.
+    const si = range.days.findIndex((d) => sameDay(d, rec.start!));
+    // Backwards: the LAST column of the end date, not the first, or a day
+    // comes out one hour wide.
+    let ei = -1;
+    for (let i = range.days.length - 1; i >= 0; i--) {
+      if (sameDay(range.days[i], effEnd)) {
+        ei = i;
+        break;
+      }
+    }
+    const from = si < 0 ? 0 : si;
+    const to = ei < 0 ? range.days.length - 1 : ei;
+    // Clipped by the day's own bounds: a date whose midnight falls before
+    // the span still shows, cut off, and the span starts mid-afternoon.
+    const dayStart = new Date(rec.start);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(effEnd);
+    dayEnd.setHours(23, 59, 59, 999);
     return {
-      left: 0,
-      width: range.days.length * w,
-      clippedLeft: false,
-      clippedRight: false,
+      left: from * w,
+      width: Math.max(w, (to - from + 1) * w),
+      clippedLeft: dayStart < range.startDate,
+      clippedRight: dayEnd > range.endDate,
     };
   }
 

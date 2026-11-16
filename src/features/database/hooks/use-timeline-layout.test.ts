@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   DAY_WIDTH,
   HOURS_IN_DAY,
+  HOURS_SPAN,
+  DAY_LEAD_HOURS,
   DAYS_IN_WEEK,
   WEEKDAY_WIDTH,
   WEEK_WIDTH,
@@ -174,12 +176,28 @@ describe("the separator between the table and the grid", () => {
 describe("a day, by the hour", () => {
   const range = buildRange(2026, 10, 15, "day"); // 15 November 2026
 
-  it("is one date, an hour at a time", () => {
+  it("is the date and the hours either side, an hour at a time", () => {
     expect(range.unit).toBe("hour");
-    expect(range.days).toHaveLength(HOURS_IN_DAY);
-    expect(range.days[0].getHours()).toBe(0);
-    expect(range.days[23].getHours()).toBe(23);
-    expect(range.days.every((d) => d.getDate() === 15)).toBe(true);
+    expect(range.days).toHaveLength(HOURS_SPAN);
+    // It opens before the date and ends after it, with the date centred.
+    expect(range.days[0].getDate()).toBe(14);
+    expect(range.days[0].getHours()).toBe(DAY_LEAD_HOURS);
+    expect(range.days[DAY_LEAD_HOURS].getDate()).toBe(15);
+    expect(range.days[DAY_LEAD_HOURS].getHours()).toBe(0);
+    expect(range.days[HOURS_SPAN - 1].getDate()).toBe(16);
+  });
+
+  it("gives the date on show a full 24 of those columns", () => {
+    const onTheDay = range.days.filter((d) => d.getDate() === 15);
+    expect(onTheDay).toHaveLength(HOURS_IN_DAY);
+  });
+
+  it("walks the clock without repeating or skipping an hour", () => {
+    // setHours carries past midnight; new Date(y, m, d, h) would not.
+    const hours = range.days.map((d) => d.getHours());
+    expect(hours).toEqual(
+      Array.from({ length: HOURS_SPAN }, (_, i) => (DAY_LEAD_HOURS + i) % 24),
+    );
   });
 
   it("gives an hour more room than a day gets", () => {
@@ -190,17 +208,28 @@ describe("a day, by the hour", () => {
   });
 
   it("runs to the end of the last hour", () => {
-    // Not to 23:00: a record at 23:30 is still that day.
-    expect(range.endDate.getHours()).toBe(23);
+    // Not to the hour's start: a record at 11:30 is still inside it.
+    expect(range.endDate.getDate()).toBe(16);
+    expect(range.endDate.getHours()).toBe(DAY_LEAD_HOURS - 1);
     expect(range.endDate.getMinutes()).toBe(59);
   });
 
-  it("names the date once, without the year", () => {
-    // The header puts the year after the label. Asking for it here too is
-    // what made a month read "Novembre 2026 2026".
-    expect(range.headerGroups).toHaveLength(1);
-    expect(range.headerGroups[0].days).toBe(HOURS_IN_DAY);
-    expect(range.headerGroups[0].label).not.toMatch(/2026/);
+  it("names every date the span touches", () => {
+    expect(range.headerGroups).toHaveLength(3);
+    expect(range.headerGroups.map((g) => g.days)).toEqual([
+      DAY_LEAD_HOURS,
+      HOURS_IN_DAY,
+      DAY_LEAD_HOURS,
+    ]);
+    expect(range.headerGroups.reduce((n, g) => n + g.days, 0)).toBe(HOURS_SPAN);
+  });
+
+  it("says the year over the first date and no other", () => {
+    // The header appends no year of its own for hours, so a second "2026"
+    // here would be the one that made a month read "Novembre 2026 2026".
+    expect(range.headerGroups[0].label).toMatch(/2026/);
+    expect(range.headerGroups[1].label).not.toMatch(/2026/);
+    expect(range.headerGroups[2].label).not.toMatch(/2026/);
   });
 });
 
@@ -282,7 +311,7 @@ describe("where a bar sits in a day", () => {
       true,
     );
     expect(geo).toEqual({
-      left: 9 * HOUR_WIDTH,
+      left: (DAY_LEAD_HOURS + 9) * HOUR_WIDTH,
       width: 4 * HOUR_WIDTH,
       clippedLeft: false,
       clippedRight: false,
@@ -291,37 +320,62 @@ describe("where a bar sits in a day", () => {
 
   it("is an hour wide when it has no end", () => {
     const geo = getGeo(rec("2026-11-15T14:00:00", null), range, false);
-    expect(geo?.left).toBe(14 * HOUR_WIDTH);
+    expect(geo?.left).toBe((DAY_LEAD_HOURS + 14) * HOUR_WIDTH);
     expect(geo?.width).toBe(HOUR_WIDTH);
   });
 
-  it("spans the day when the date carries no time", () => {
-    // Otherwise everything dated plainly would pile up on midnight.
+  it("spans its own day when the date carries no time", () => {
+    // Otherwise everything dated plainly would pile up on midnight — and
+    // it is ITS day, not the whole span, which now reaches either side.
     const geo = getGeo(rec("2026-11-15", "2026-11-15", true), range, true);
     expect(geo).toEqual({
-      left: 0,
+      left: DAY_LEAD_HOURS * HOUR_WIDTH,
       width: HOURS_IN_DAY * HOUR_WIDTH,
       clippedLeft: false,
       clippedRight: false,
     });
   });
 
-  it("leaves out a record from another date", () => {
+  it("ends an all-day record on its last hour, not its first", () => {
+    // findIndex gives the FIRST column of the end date, which made a whole
+    // day come out one hour wide.
+    const geo = getGeo(rec("2026-11-14", "2026-11-16", true), range, true);
+    expect(geo?.width).toBe(HOURS_SPAN * HOUR_WIDTH);
+    // Both dates reach past the span, so both ends are marked.
+    expect(geo?.clippedLeft).toBe(true);
+    expect(geo?.clippedRight).toBe(true);
+  });
+
+  it("shows a record from the hours either side of the date", () => {
+    // The point of the wider span: work that runs into the next morning is
+    // there to scroll to rather than cut off at midnight.
+    const geo = getGeo(
+      rec("2026-11-16T09:00:00", "2026-11-16T10:00:00"),
+      range,
+      true,
+    );
+    expect(geo?.left).toBe((DAY_LEAD_HOURS + HOURS_IN_DAY + 9) * HOUR_WIDTH);
+  });
+
+  it("leaves out a record past either end of the span", () => {
     expect(
-      getGeo(rec("2026-11-16T09:00:00", "2026-11-16T10:00:00"), range, true),
+      getGeo(rec("2026-11-18T09:00:00", "2026-11-18T10:00:00"), range, true),
+    ).toBeNull();
+    expect(
+      getGeo(rec("2026-11-12T09:00:00", "2026-11-12T10:00:00"), range, true),
     ).toBeNull();
   });
 
   it("marks a bar that runs past either end of the day", () => {
     const geo = getGeo(
-      rec("2026-11-14T22:00:00", "2026-11-16T02:00:00"),
+      rec("2026-11-13T22:00:00", "2026-11-17T02:00:00"),
       range,
       true,
     );
     expect(geo?.clippedLeft).toBe(true);
     expect(geo?.clippedRight).toBe(true);
     expect(geo?.left).toBe(0);
-    expect(geo?.width).toBe(HOURS_IN_DAY * HOUR_WIDTH);
+    expect(geo?.width).toBe(HOURS_SPAN * HOUR_WIDTH);
   });
 
   it("places a bar by the day when the range is days", () => {
@@ -333,11 +387,16 @@ describe("where a bar sits in a day", () => {
 });
 
 describe("what a column is called", () => {
-  it("names an hour with its unit", () => {
-    // "09", in a view where every column is the same date, reads as a date.
-    expect(columnLabel(new Date(2026, 10, 15, 9), "hour")).toBe("09:00");
-    expect(columnLabel(new Date(2026, 10, 15, 0), "hour")).toBe("00:00");
-    expect(columnLabel(new Date(2026, 10, 15, 23), "hour")).toBe("23:00");
+  it("names an hour the way the locale tells it", () => {
+    // Not a hardcoded "09:00": en reads an hour as 9 AM, fr as 09 h. What
+    // matters is that it is the hour, and that the three differ.
+    const at = (h: number) => columnLabel(new Date(2026, 10, 15, h), "hour");
+    const nine = at(9);
+    expect(nine).toMatch(/9/);
+    expect(at(0)).not.toBe(nine);
+    expect(at(23)).not.toBe(nine);
+    // A time, never a date: 15 November must not read as "15".
+    expect(at(15)).not.toBe("15");
   });
 
   it("names a day with its date, as it always did", () => {
@@ -633,13 +692,19 @@ describe("stepping a span at a time", () => {
   const parts = (d: Date) => [d.getFullYear(), d.getMonth(), d.getDate()];
 
   it("moves a day", () => {
-    expect(parts(stepRange(at(2026, 10, 15), "day", 1))).toEqual([2026, 10, 16]);
+    expect(parts(stepRange(at(2026, 10, 15), "day", 1))).toEqual([
+      2026, 10, 16,
+    ]);
     expect(parts(stepRange(at(2026, 10, 1), "day", -1))).toEqual([2026, 9, 31]);
   });
 
   it("moves a week", () => {
-    expect(parts(stepRange(at(2026, 10, 9), "week", 1))).toEqual([2026, 10, 16]);
-    expect(parts(stepRange(at(2026, 10, 2), "week", -1))).toEqual([2026, 9, 26]);
+    expect(parts(stepRange(at(2026, 10, 9), "week", 1))).toEqual([
+      2026, 10, 16,
+    ]);
+    expect(parts(stepRange(at(2026, 10, 2), "week", -1))).toEqual([
+      2026, 9, 26,
+    ]);
   });
 
   it("moves a month, landing on the 1st", () => {

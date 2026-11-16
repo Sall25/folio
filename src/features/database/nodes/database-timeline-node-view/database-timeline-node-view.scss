@@ -12,7 +12,7 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
 }
 
 // ── Secondary nav bar ──────────────────────────────────────────────────────
-.db-tl-nav{
+.db-tl-nav {
   justify-content: flex-start;
   max-width: var(--db-editor-width);
 }
@@ -20,7 +20,6 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   width: fit-content !important;
   min-width: fit-content !important;
 }
-
 
 .db-tl-nav__label {
   background: transparent !important;
@@ -59,7 +58,9 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   font-weight: 500;
   color: var(--tt-muted-fg-color, #888);
   cursor: pointer;
-  transition: background 0.1s, color 0.1s;
+  transition:
+    background 0.1s,
+    color 0.1s;
 
   &:hover {
     color: var(--tt-text-color, #111);
@@ -206,7 +207,9 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   scrollbar-width: none;
   pointer-events: none; // header is display-only, body scroll drives both
 
-  &::-webkit-scrollbar { display: none; }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .db-tl-gantt__header {
@@ -340,8 +343,12 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   cursor: pointer;
   z-index: 4;
 
-  &--left { left: 2px; }
-  &--right { right: 2px; }
+  &--left {
+    left: 2px;
+  }
+  &--right {
+    right: 2px;
+  }
 }
 
 // ── Bars ───────────────────────────────────────────────────────────────────
@@ -410,8 +417,12 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
     background: var(--tt-accent-color, #2563eb);
   }
 
-  &--left { left: 3px; }
-  &--right { right: 3px; }
+  &--left {
+    left: 3px;
+  }
+  &--right {
+    right: 3px;
+  }
 }
 
 // ── Property badges ────────────────────────────────────────────────────────
@@ -478,11 +489,19 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
     position: absolute;
     top: 0;
     bottom: 0;
-//    border-right: 1px solid var(--tt-border-color);
+    border-right: 1px solid var(--tt-border-color, #e5e7eb);
     box-sizing: border-box;
 
     &--weekend {
       background: var(--calendar-column-highlight);
+    }
+
+    // Midnight. Day now draws the hours either side of the date, so the
+    // date changes inside the grid and the ruler above is not the only
+    // place that says where — the column the next date starts on carries
+    // the line, the way the header's groups divide over it.
+    &--day-start {
+      border-left: 1px solid var(--tt-border-color, #e5e7eb);
     }
   }
 }
@@ -531,14 +550,14 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   pointer-events: auto;
   color: var(--tt-gray-light-a-700);
 
-  &:hover{
+  &:hover {
     background-color: rgba(225, 220, 220, 0.549) !important;
   }
- 
-  .tiptap-button-icon{
+
+  .tiptap-button-icon {
     color: var(--tt-gray-dark-200) !important;
     .dark & {
-       color: var(--black) !important;
+      color: var(--black) !important;
     }
   }
 
@@ -593,7 +612,7 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   flex-shrink: 0;
   position: relative;
   box-sizing: border-box;
- // border-right: 1px solid var(--tt-border-color);
+  // border-right: 1px solid var(--tt-border-color);
 }
 
 .db-tl-header__group-label {
@@ -672,11 +691,7 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   display: flex;
   align-items: center;
   padding: 0 8px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    var(--tt-bg-color) 24px
-  );
+  background: linear-gradient(to right, transparent, var(--tt-bg-color) 24px);
 }
 
 .db-tl-nav-controls {
@@ -730,7 +745,7 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background:  var(--tt-color-red-inc-1); //#dc2626;
+    background: var(--tt-color-red-inc-1); //#dc2626;
     color: #ffffff !important;
     font-weight: 700;
     position: relative;
@@ -846,7 +861,6 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   white-space: nowrap;
   color: var(--tt-text-secondary);
 }
-
 
 // ── The table beside the grid ──────────────────────────────────────────────
 // It is a table view: the same grid, the same cells, the same columns. Only
