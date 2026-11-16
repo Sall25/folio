@@ -278,6 +278,10 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   border-top: 1px solid var(--tt-border-color);
   border-bottom: 1px solid var(--tt-border-color);
 }
+.db-tl-gantt__body.day,
+.db-tl-gantt__body.year{
+  overflow-x: hidden;
+}
 
 // ── Grid lines ─────────────────────────────────────────────────────────────
 .db-tl-gantt__grid-lines {

@@ -718,7 +718,7 @@ function DatabaseTimelineNodeViewImpl() {
               >
                 <TimelineHeader highlights={highlights} range={range} />
                 <div
-                  className="db-tl-gantt__body"
+                  className={`db-tl-gantt__body ${timeframe}`}
                   style={{
                     width: gridWidth,
                     minWidth: gridWidth,
