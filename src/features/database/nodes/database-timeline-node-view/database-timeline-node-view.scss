@@ -278,8 +278,10 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   border-top: 1px solid var(--tt-border-color);
   border-bottom: 1px solid var(--tt-border-color);
 }
+
 .db-tl-gantt__body.day,
-.db-tl-gantt__body.year{
+.db-tl-gantt__body.year,
+.db-tl-gantt__body.week{
   overflow-x: hidden;
 }
 
@@ -489,6 +491,24 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   inset: 0;
   pointer-events: none;
 
+  // Where the ruler above starts naming something else — a new date in
+  // Day, a new month in Year. Its own element, placed at the day itself:
+  // a month opens partway through a week, so this cannot be a border on
+  // the column that happens to contain it.
+  &__divide {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    border-left: 1px solid var(--tt-border-color, #e5e7eb);
+    pointer-events: none;
+  }
+
+  // Columns left unruled: see monthsOnly in timeline-day-grid.
+  &--bare &__col {
+    border-right: none;
+  }
+
   &__col {
     position: absolute;
     top: 0;
@@ -498,14 +518,6 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
 
     &--weekend {
       background: var(--calendar-column-highlight);
-    }
-
-    // Midnight. Day now draws the hours either side of the date, so the
-    // date changes inside the grid and the ruler above is not the only
-    // place that says where — the column the next date starts on carries
-    // the line, the way the header's groups divide over it.
-    &--day-start {
-      border-left: 1px solid var(--tt-border-color, #e5e7eb);
     }
   }
 }
@@ -566,11 +578,11 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   }
 
   &--left {
-    left: 0; 
+    left: 8px;
   }
 
   &--right {
-    right: 0; //8px;
+    right: 8px;
   }
 }
 

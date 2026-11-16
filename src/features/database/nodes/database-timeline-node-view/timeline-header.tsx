@@ -36,10 +36,12 @@ function TimelineHeaderImpl({
     const groupStart = range.days[dayCursor];
     // eslint-disable-next-line react-hooks/immutability
     dayCursor += group.days;
-    // Day's groups are dates and write their own year where they want one,
-    // so the locale places it — and its comma. Everything else has a label
-    // the year is appended to.
-    return { ...group, year: hourly ? undefined : groupStart?.getFullYear() };
+    // Some ranges write their own year into the label, so the locale
+    // places it — and its punctuation. The rest have it appended here.
+    return {
+      ...group,
+      year: range.labelsCarryYear ? undefined : groupStart?.getFullYear(),
+    };
   });
 
   return (
@@ -103,7 +105,9 @@ function TimelineHeaderImpl({
                 (i === todayIdx ? " db-tl-header__day-num--today" : "")
               }
             >
-              {columnLabel(day, range.unit)}
+              {/* A month above a run of columns says it for all of
+                  them, so the column itself need only count its day. */}
+              {columnLabel(day, range.unit, range.headerGroups.length <= 1)}
             </span>
           </div>
         ))}

@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
+  type Timeframe,
   DAY_WIDTH,
   HOURS_IN_DAY,
   HOURS_SPAN,
+  timeAtOffset,
+  offsetOfTime,
   DAY_LEAD_HOURS,
   DAYS_IN_WEEK,
   WEEKDAY_WIDTH,
   WEEK_WIDTH,
-  MONTH_WIDTH,
-  MONTHS_IN_YEAR,
+  YEAR_WEEK_WIDTH,
   sameMonth,
   sameWeek,
   startOfWeek,
@@ -579,85 +581,117 @@ describe("a quarter, by the week", () => {
 
 // ── The Year timeframe ─────────────────────────────────────────────────────
 // A year was 365 day-columns: 14,600px, which is not a year anyone reads.
-// A column is a month now, so a year is one screen.
+// Twelve month-columns read as a year but said only which month a thing
+// fell in: a bar of a few days had no width, and everything short in a
+// month stacked on its 1st. A column is a week now — fifty-two of them,
+// grouped by the month they start in.
 
-describe("a year, by the month", () => {
+describe("a year, by the week", () => {
   const range = buildRange(2026, 10, 15, "year");
 
-  it("is twelve months", () => {
-    expect(range.unit).toBe("month");
-    expect(range.cellWidth).toBe(MONTH_WIDTH);
-    expect(range.days).toHaveLength(MONTHS_IN_YEAR);
-    expect(range.days.map((d) => d.getMonth())).toEqual([
-      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-    ]);
-    expect(range.days.every((d) => d.getDate() === 1)).toBe(true);
+  it("is the year's weeks", () => {
+    expect(range.unit).toBe("week");
+    expect(range.cellWidth).toBe(YEAR_WEEK_WIDTH);
+    // 52 or 53, depending on where the year's days fall across its weeks.
+    expect(range.days.length).toBeGreaterThanOrEqual(52);
+    expect(range.days.length).toBeLessThanOrEqual(53);
+  });
+
+  it("starts every column on a Monday", () => {
+    expect(range.days.every((d) => d.getDay() === 1)).toBe(true);
+  });
+
+  it("owns the weeks whose midweek falls in it", () => {
+    // How a week that straddles new year is settled: by where most of it
+    // lies. Every column's Thursday is inside the year, so no column is
+    // drawn under a month of the year before or after.
+    for (const d of range.days) {
+      const thursday = new Date(d);
+      thursday.setDate(d.getDate() + 3);
+      expect(thursday.getFullYear()).toBe(2026);
+    }
+  });
+
+  it.each([2021, 2024, 2025, 2026, 2027])(
+    "has twelve months and no stray thirteenth in %i",
+    (y) => {
+      // A year taken by its Mondays gave 2024 a second "January" at the
+      // end, from the week of the 30th of December whose Thursday is in
+      // the next year — under a heading that reads as this one's.
+      const r = buildRange(y, 5, 15, "year");
+      expect(r.headerGroups).toHaveLength(12);
+      expect(r.headerGroups.reduce((n, g) => n + g.days, 0)).toBe(
+        r.days.length,
+      );
+      expect(r.days.length).toBeGreaterThanOrEqual(52);
+      expect(r.days.length).toBeLessThanOrEqual(53);
+    },
+  );
+
+  it("covers the whole year without a gap or a repeat", () => {
+    const WEEK = DAYS_IN_WEEK * 24 * 3600_000;
+    for (let i = 1; i < range.days.length; i++) {
+      expect(range.days[i].getTime() - range.days[i - 1].getTime()).toBe(WEEK);
+    }
+    expect(range.endDate.getTime()).toBeGreaterThanOrEqual(
+      new Date(2026, 11, 31).getTime(),
+    );
+  });
+
+  it("groups the weeks by the month each one starts in", () => {
+    expect(range.headerGroups).toHaveLength(12);
+    expect(range.headerGroups.reduce((n, g) => n + g.days, 0)).toBe(
+      range.days.length,
+    );
+    // Every group has weeks in it; none is an empty heading.
+    expect(range.headerGroups.every((g) => g.days > 0)).toBe(true);
+  });
+
+  it("says the year over the first month and no other", () => {
+    expect(range.labelsCarryYear).toBe(true);
+    expect(range.headerGroups[0].label).toMatch(/2026/);
+    expect(
+      range.headerGroups.slice(1).every((g) => !/2026/.test(g.label)),
+    ).toBe(true);
+  });
+
+  it("names a column by its day alone where a month sits above it", () => {
+    // Fifty-two columns have no room for the month, and the group above
+    // each run of them has already said it.
+    expect(columnLabel(new Date(2026, 10, 16), "week", false)).toBe("16");
+    // A quarter has no month groups, so its weeks still carry theirs.
+    expect(columnLabel(new Date(2026, 10, 16), "week", true)).not.toBe("16");
+  });
+
+  it("puts a bar on the weeks it runs through", () => {
+    const start = range.days[8];
+    const end = new Date(range.days[11]);
+    end.setDate(end.getDate() + 2);
+    const geo = getGeo(
+      { id: "r", title: "r", start, end, allDay: true },
+      range,
+      true,
+    );
+    expect(geo?.left).toBe(8 * YEAR_WEEK_WIDTH);
+    expect(geo?.width).toBe(4 * YEAR_WEEK_WIDTH);
+  });
+
+  it("gives a record inside one week that week's column, whole", () => {
+    const start = new Date(range.days[20]);
+    start.setDate(start.getDate() + 1);
+    const geo = getGeo(
+      { id: "r", title: "r", start, end: start, allDay: true },
+      range,
+      true,
+    );
+    expect(geo?.left).toBe(20 * YEAR_WEEK_WIDTH);
+    expect(geo?.width).toBe(YEAR_WEEK_WIDTH);
   });
 
   it("is the same year from any date inside it", () => {
     expect(buildRange(2026, 0, 1, "year").days[0].getTime()).toBe(
       range.days[0].getTime(),
     );
-  });
-
-  it("runs to the end of the last day of December", () => {
-    expect(range.endDate.getMonth()).toBe(11);
-    expect(range.endDate.getDate()).toBe(31);
-    expect(range.endDate.getHours()).toBe(23);
-  });
-
-  it("says nothing above the months but the year", () => {
-    // The header puts the year after the label, so an empty label is the
-    // whole of it — and the header must not leave a space in front.
-    expect(range.headerGroups).toHaveLength(1);
-    expect(range.headerGroups[0].label).toBe("");
-    expect(range.headerGroups[0].days).toBe(MONTHS_IN_YEAR);
-  });
-
-  it("names a column by its month", () => {
-    // Said without a language: this machine's is not the reader's, and
-    // January is "janv." on the one this is actually used on. What has to
-    // hold is that a column is named rather than numbered, that it is the
-    // name of its own month, and that two months do not share one.
-    const jan = columnLabel(new Date(2026, 0, 1), "month");
-    const dec = columnLabel(new Date(2026, 11, 1), "month");
-    expect(jan).toBe(
-      new Date(2026, 0, 1).toLocaleDateString(undefined, { month: "short" }),
-    );
-    expect(jan).not.toMatch(/^\d+$/);
-    expect(jan).not.toBe(dec);
-  });
-
-  it("puts a bar on the months it runs through", () => {
-    const geo = getGeo(
-      {
-        id: "r",
-        title: "r",
-        start: new Date(2026, 2, 10),
-        end: new Date(2026, 5, 20),
-        allDay: true,
-      },
-      range,
-      true,
-    );
-    expect(geo?.left).toBe(2 * MONTH_WIDTH);
-    expect(geo?.width).toBe(4 * MONTH_WIDTH);
-  });
-
-  it("gives a record inside one month that month's column, whole", () => {
-    const geo = getGeo(
-      {
-        id: "r",
-        title: "r",
-        start: new Date(2026, 10, 3),
-        end: new Date(2026, 10, 4),
-        allDay: true,
-      },
-      range,
-      true,
-    );
-    expect(geo?.left).toBe(10 * MONTH_WIDTH);
-    expect(geo?.width).toBe(MONTH_WIDTH);
   });
 
   it("leaves out a record from another year", () => {
@@ -872,5 +906,62 @@ describe("dropping a card on another row", () => {
 
   it("does nothing when a row lands on itself", () => {
     expect(dropBeforeId(ids, 2, 2)).toBeNull();
+  });
+});
+
+describe("turning a scroll position into a moment, and back", () => {
+  // The scrollbar steps the range the way the arrows do, then puts the
+  // view back on the moment it was reading. That only works if these two
+  // are exact inverses — a drift of a few px per step would walk the view
+  // away from where the person left it.
+  const at = (tf: Timeframe, y = 2026, m = 10, d = 15) =>
+    buildRange(y, m, d, tf);
+
+  it.each<Timeframe>(["day", "week", "month", "quarter", "year"])(
+    "round-trips an offset in %s",
+    (tf) => {
+      const range = at(tf);
+      for (const px of [0, 37, 160, 999]) {
+        expect(offsetOfTime(range, timeAtOffset(range, px))).toBeCloseTo(px, 6);
+      }
+    },
+  );
+
+  it("reads the start of a column as that column's own moment", () => {
+    const range = at("day");
+    expect(timeAtOffset(range, 3 * range.cellWidth)).toBe(
+      range.days[3].getTime(),
+    );
+    expect(offsetOfTime(range, range.days[3].getTime())).toBe(
+      3 * range.cellWidth,
+    );
+  });
+
+  it("holds across a step, which is the whole point", () => {
+    // What the carry does: read the moment, rebuild the range a day on,
+    // ask where that moment went. It must still be the same moment.
+    const before = buildRange(2026, 10, 15, "day");
+    const after = buildRange(2026, 10, 16, "day");
+    const moment = timeAtOffset(before, 30 * before.cellWidth);
+    const px = offsetOfTime(after, moment);
+    expect(timeAtOffset(after, px)).toBe(moment);
+    // A day on, the same moment sits 24 columns further left.
+    expect(px).toBeCloseTo((30 - HOURS_IN_DAY) * before.cellWidth, 6);
+  });
+
+  it("places a moment outside the range outside it, rather than clamping", () => {
+    // The caller clamps; clamping here would report the edge as a hit.
+    const range = at("day");
+    expect(
+      offsetOfTime(range, range.days[0].getTime() - 3600_000),
+    ).toBeLessThan(0);
+  });
+
+  it("measures a month's columns by the month, not by a fixed length", () => {
+    // A Month's columns are days of unequal months; a column is as long
+    // as the gap to the next one, whatever the unit happens to be.
+    const range = buildRange(2026, 1, 15, "month");
+    const mid = offsetOfTime(range, new Date(2026, 1, 15).getTime());
+    expect(mid / range.cellWidth).toBeCloseTo(14, 6);
   });
 });

@@ -36,6 +36,9 @@ export const DAYS_IN_WEEK = 7;
 export const WEEK_WIDTH = 100;
 /** A column in the Year timeframe: a whole month, named. */
 export const MONTH_WIDTH = 110;
+/** A week in the Year view. Narrow: fifty-two of them have to fit, and the
+ *  month above each run of them carries the context a wider one would. */
+export const YEAR_WEEK_WIDTH = 44;
 /** What the Year timeframe shows. */
 export const MONTHS_IN_YEAR = 12;
 export const ROW_HEIGHT = 34;
@@ -90,7 +93,7 @@ export function unitFor(timeframe: Timeframe): CellUnit {
   if (timeframe === "day") return "hour";
   if (timeframe === "week") return "weekday";
   if (timeframe === "quarter") return "week";
-  if (timeframe === "year") return "month";
+  if (timeframe === "year") return "week";
   return "day";
 }
 
@@ -99,7 +102,7 @@ export function cellWidthFor(timeframe: Timeframe): number {
   if (timeframe === "day") return HOUR_WIDTH;
   if (timeframe === "week") return WEEKDAY_WIDTH;
   if (timeframe === "quarter") return WEEK_WIDTH;
-  if (timeframe === "year") return MONTH_WIDTH;
+  if (timeframe === "year") return YEAR_WEEK_WIDTH;
   return DAY_WIDTH;
 }
 
@@ -233,6 +236,11 @@ export interface TimelineRange {
    */
   days: Date[];
   headerGroups: { label: string; days: number }[];
+  /** The groups already say the year where one is wanted, so the header
+   *  must not append its own. Set where the label is written by the
+   *  locale, which places the year and its punctuation ("November 9,
+   *  2023") better than joining two strings can. */
+  labelsCarryYear?: boolean;
   /** What those Dates are. */
   unit: CellUnit;
   /** How wide one of them is drawn. */
@@ -278,6 +286,47 @@ export function dayAt(
   return Math.min(dayCount - 1, Math.max(0, Math.floor(x / width)));
 }
 
+// Turning a sideways scroll position into a moment in time, and back.
+//
+// Both read the gap between the columns rather than the unit's own length,
+// because a column is an hour, a day, a week or a month, and a month is not
+// a fixed number of milliseconds. Whatever the columns are, the distance
+// from one to the next is what one of them is worth.
+//
+// They are inverses, and that is the point: a range can be rebuilt under
+// the view and the view put back on the moment it was reading.
+
+/** How long the column at `i` lasts, in ms. */
+function columnSpan(range: TimelineRange, i: number): number {
+  const { days } = range;
+  if (days.length < 2) return 0;
+  // The last column has no next one to measure against; it lasts as long
+  // as the one before it.
+  const a = Math.min(Math.max(i, 0), days.length - 2);
+  return days[a + 1].getTime() - days[a].getTime();
+}
+
+/** The moment at a horizontal offset in the grid. */
+export function timeAtOffset(range: TimelineRange, px: number): number {
+  const { days, cellWidth } = range;
+  if (days.length === 0 || cellWidth <= 0) return 0;
+  const exact = px / cellWidth;
+  const i = Math.min(Math.max(Math.floor(exact), 0), days.length - 1);
+  return days[i].getTime() + (exact - i) * columnSpan(range, i);
+}
+
+/** Where a moment falls in the grid, in px. Off either end reads as a
+ *  position outside it rather than clamping, so a caller can tell. */
+export function offsetOfTime(range: TimelineRange, t: number): number {
+  const { days, cellWidth } = range;
+  if (days.length === 0 || cellWidth <= 0) return 0;
+  let i = 0;
+  while (i + 1 < days.length && days[i + 1].getTime() <= t) i++;
+  const span = columnSpan(range, i);
+  const frac = span > 0 ? (t - days[i].getTime()) / span : 0;
+  return (i + frac) * cellWidth;
+}
+
 /** The box of a run of columns, given two indexes in either order. */
 export function daySpan(
   a: number,
@@ -309,7 +358,7 @@ export function barCovers(
  * unit on it. A column of bare 1…23 in a view of a single date reads as
  * dates, which is exactly what it is not.
  */
-export function columnLabel(d: Date, unit: CellUnit): string {
+export function columnLabel(d: Date, unit: CellUnit, withMonth = true): string {
   // The locale's own clock: "9 PM" where one is read that way, "21" where
   // it isn't. A hardcoded 24-hour label was wrong in half the world.
   if (unit === "hour") {
@@ -321,6 +370,11 @@ export function columnLabel(d: Date, unit: CellUnit): string {
   if (unit === "week") {
     // The Monday it starts on. A quarter is read by where in it a thing
     // falls, and a date says that better than a week number does.
+    //
+    // Just the day where a month sits above the column (a Year groups its
+    // weeks by month): repeating it in all fifty-two says nothing, and
+    // there is no room for it in any case.
+    if (withMonth === false) return String(d.getDate());
     const m = d.toLocaleDateString(undefined, { month: "short" });
     return `${d.getDate()} ${m}`;
   }
@@ -448,6 +502,7 @@ export function buildRange(
       endDate,
       days: hours,
       headerGroups,
+      labelsCarryYear: true,
       unit: "hour",
       cellWidth: HOUR_WIDTH,
     };
@@ -537,19 +592,64 @@ export function buildRange(
   // A year, a month to a column. Three hundred and sixty-five day-columns
   // came to 14,600px, which is not a year anyone could read.
   if (timeframe === "year") {
-    const startDate = new Date(year, 0, 1);
-    const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+    /** The Thursday of a week beginning on `d`: the day that settles which
+     *  month and which year the week belongs to, as a week is never split
+     *  between two of either. */
+    const midweek = (d: Date) => {
+      const t = new Date(d);
+      t.setDate(d.getDate() + 3);
+      return t;
+    };
+
+    // Weeks, not months. Twelve month-wide columns could say which month a
+    // thing fell in and nothing more: a bar of a few days had no width to
+    // speak of and every short record in a month stacked on its 1st.
+    // The year owns the weeks whose midweek falls in it, which is how a
+    // week that straddles new year is settled — by where most of it lies.
+    // Taken by their Mondays instead, a year both opened under the last
+    // month of the year before and closed under a second "January".
+    const cursor = startOfWeek(new Date(year, 0, 4));
+    const days: Date[] = [];
+    while (midweek(cursor).getFullYear() === year) {
+      days.push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 7);
+    }
+    const startDate = days[0];
+    const lastWeek = days[days.length - 1];
+    // To the end of the last week drawn, not the year's last day: the
+    // column is the week, so a record in the days after new year still
+    // belongs to the column drawn for it.
+    const endDate = new Date(lastWeek);
+    endDate.setDate(lastWeek.getDate() + 6);
+    endDate.setHours(23, 59, 59, 999);
+
+    // A group per month, by the month holding each week's midweek — the
+    // month most of the week falls in. The first group says the year,
+    // written by the locale with its own punctuation.
+    const headerGroups: { label: string; days: number }[] = [];
+    days.map(midweek).forEach((d, i, mid) => {
+      const prev = i > 0 ? mid[i - 1] : null;
+      if (prev && sameMonth(d, prev)) {
+        headerGroups[headerGroups.length - 1].days += 1;
+        return;
+      }
+      headerGroups.push({
+        label: d.toLocaleDateString(undefined, {
+          month: "long",
+          ...(headerGroups.length === 0 ? { year: "numeric" as const } : {}),
+        }),
+        days: 1,
+      });
+    });
+
     return {
       startDate,
       endDate,
-      days: Array.from(
-        { length: MONTHS_IN_YEAR },
-        (_, m) => new Date(year, m, 1),
-      ),
-      // Nothing to say but the year, which the header puts after this.
-      headerGroups: [{ label: "", days: MONTHS_IN_YEAR }],
-      unit: "month",
-      cellWidth: MONTH_WIDTH,
+      days,
+      headerGroups,
+      labelsCarryYear: true,
+      unit: "week",
+      cellWidth: YEAR_WEEK_WIDTH,
     };
   }
 
