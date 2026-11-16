@@ -26,7 +26,7 @@ export const DAY_LEAD_HOURS = (HOURS_SPAN - HOURS_IN_DAY) / 2;
  * one of thirty, so it can carry the weekday's name and a bar can say its
  * dates inside it.
  */
-export const WEEKDAY_WIDTH = 140;
+export const WEEKDAY_WIDTH = 225;
 /** What the Week timeframe shows: one week, Monday first. */
 export const DAYS_IN_WEEK = 7;
 /**
@@ -379,12 +379,33 @@ export function columnLabel(d: Date, unit: CellUnit, withMonth = true): string {
     return `${d.getDate()} ${m}`;
   }
   if (unit === "weekday") {
-    // Seven columns have room for the name, and a week is read by its days
-    // of the week more than by its dates.
-    const name = d.toLocaleDateString(undefined, { weekday: "short" });
+    // The letter and the date: a week is read by its days of the week as
+    // much as by its dates, and at this width the initial is enough to
+    // tell them apart — the column under it is a whole day wide.
+    const name = d.toLocaleDateString(undefined, { weekday: "narrow" });
     return `${name} ${d.getDate()}`;
   }
   return String(d.getDate());
+}
+
+/**
+ * A column's label in two parts, where it has two: a quieter lead and the
+ * part that carries it. A weekday's initial sits beside its date and is
+ * not the thing being read — the date is — so the header can set it back
+ * without either of them being a separate label to keep in step.
+ */
+export function columnParts(
+  d: Date,
+  unit: CellUnit,
+  withMonth = true,
+): { lead?: string; main: string } {
+  if (unit === "weekday") {
+    return {
+      lead: d.toLocaleDateString(undefined, { weekday: "narrow" }),
+      main: String(d.getDate()),
+    };
+  }
+  return { main: columnLabel(d, unit, withMonth) };
 }
 
 /** The same month: how a Year matches a date to one of its columns. */
@@ -529,21 +550,32 @@ export function buildRange(
       59,
       999,
     );
-    const monthName = (d: Date) =>
-      d.toLocaleString("default", { month: "long" });
-    // The header puts the year after this, so it is left out — and the
-    // month is named once unless the week runs across two of them.
-    const label =
-      startDate.getMonth() === last.getMonth()
-        ? `${startDate.getDate()} – ${last.getDate()} ${monthName(last)}`
-        : `${startDate.getDate()} ${monthName(startDate)} – ` +
-          `${last.getDate()} ${monthName(last)}`;
+    // A group per month, as a Day and a Year do: one heading for a week
+    // inside a month, two where it runs across the turn of one. The dates
+    // themselves are under every column already, so the heading names the
+    // month rather than repeating the span.
+    const headerGroups: { label: string; days: number }[] = [];
+    days.forEach((d, i) => {
+      const prev = i > 0 ? days[i - 1] : null;
+      if (prev && sameMonth(d, prev)) {
+        headerGroups[headerGroups.length - 1].days += 1;
+        return;
+      }
+      headerGroups.push({
+        label: d.toLocaleDateString(undefined, {
+          month: "long",
+          ...(headerGroups.length === 0 ? { year: "numeric" as const } : {}),
+        }),
+        days: 1,
+      });
+    });
 
     return {
       startDate,
       endDate,
       days,
-      headerGroups: [{ label, days: DAYS_IN_WEEK }],
+      headerGroups,
+      labelsCarryYear: true,
       unit: "weekday",
       cellWidth: WEEKDAY_WIDTH,
     };

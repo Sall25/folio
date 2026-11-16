@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type { TimelineRange } from "../../hooks/use-timeline-layout";
 import {
-  columnLabel,
+  columnParts,
   HEADER_HEIGHT,
   GROUP_ROW_HEIGHT,
   sameDay,
@@ -79,7 +79,11 @@ function TimelineHeaderImpl({
           // Every unit but a plain day carries more than a number — a
           // time, a weekday, a date — so its label is wider than the
           // marker on the current column is sized for (the stylesheet).
-          (range.unit === "day" ? "" : " db-tl-header__days--wide")
+          // A weekday is an initial and a date now — no wider than a
+          // plain day's number, so it keeps the round marker.
+          (range.unit === "day" || range.unit === "weekday"
+            ? ""
+            : " db-tl-header__days--wide")
         }
         data-unit={range.unit}
         style={{ height: HEADER_HEIGHT }}
@@ -107,7 +111,23 @@ function TimelineHeaderImpl({
             >
               {/* A month above a run of columns says it for all of
                   them, so the column itself need only count its day. */}
-              {columnLabel(day, range.unit, range.headerGroups.length <= 1)}
+              {(() => {
+                const part = columnParts(
+                  day,
+                  range.unit,
+                  range.headerGroups.length <= 1,
+                );
+                return (
+                  <>
+                    {part.lead && (
+                      <span className="db-tl-header__day-lead">
+                        {part.lead}
+                      </span>
+                    )}
+                    {part.main}
+                  </>
+                );
+              })()}
             </span>
           </div>
         ))}

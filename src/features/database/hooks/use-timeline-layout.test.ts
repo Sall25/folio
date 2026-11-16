@@ -25,6 +25,7 @@ import {
   parseIsoDate,
   getGeo,
   columnLabel,
+  columnParts,
   MIN_GRID_WIDTH,
   MIN_TABLE_WIDTH,
   ROW_HEIGHT,
@@ -442,19 +443,43 @@ describe("a week, Monday first", () => {
     expect(range.endDate.getHours()).toBe(23);
   });
 
-  it("names the week once, without the year", () => {
+  it("names the month above the week, saying the year once", () => {
+    // The dates are under every column already, so the heading names the
+    // month rather than repeating the span the columns spell out.
+    expect(range.labelsCarryYear).toBe(true);
     expect(range.headerGroups).toHaveLength(1);
     expect(range.headerGroups[0].days).toBe(DAYS_IN_WEEK);
-    expect(range.headerGroups[0].label).toMatch(/9 – 15/);
-    expect(range.headerGroups[0].label).not.toMatch(/2026/);
+    expect(range.headerGroups[0].label).toMatch(/2026/);
   });
 
   it("names both months when the week runs across two", () => {
     // 30 November 2026 is a Monday; that week ends in December.
     const across = buildRange(2026, 10, 30, "week");
-    expect(across.headerGroups[0].label).toMatch(/30/);
-    expect(across.headerGroups[0].label).toMatch(/6/);
-    expect(across.headerGroups[0].label.split("–")).toHaveLength(2);
+    expect(across.headerGroups).toHaveLength(2);
+    expect(across.headerGroups.reduce((n, g) => n + g.days, 0)).toBe(
+      DAYS_IN_WEEK,
+    );
+    expect(across.headerGroups[0].days).toBe(1);
+    // Only the first says the year.
+    expect(across.headerGroups[0].label).toMatch(/2026/);
+    expect(across.headerGroups[1].label).not.toMatch(/2026/);
+  });
+
+  it("names a weekday by its initial and its date", () => {
+    // Said without a language: a narrow weekday is a letter in en and in
+    // fr alike, and what matters is the date beside it.
+    const monday = range.days[0];
+    const parts = columnParts(monday, "weekday");
+    expect(parts.main).toBe("9");
+    expect(parts.lead).toBe(
+      monday.toLocaleDateString(undefined, { weekday: "narrow" }),
+    );
+    expect(parts.lead!.length).toBeLessThanOrEqual(2);
+  });
+
+  it("leaves a column with nothing to set back alone", () => {
+    expect(columnParts(range.days[0], "hour").lead).toBeUndefined();
+    expect(columnParts(range.days[0], "week").lead).toBeUndefined();
   });
 
   it("carries itself over the end of a year", () => {
