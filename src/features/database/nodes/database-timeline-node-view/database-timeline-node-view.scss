@@ -562,11 +562,11 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   }
 
   &--left {
-    left: 8px;
+    left: 0; 
   }
 
   &--right {
-    right: 8px;
+    right: 0; //8px;
   }
 }
 

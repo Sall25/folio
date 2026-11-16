@@ -201,6 +201,7 @@ function DatabaseTimelineNodeViewImpl() {
     visibleProperties,
     onNewRecord,
   } = useDatabaseContext();
+
   const { addRecordAsync, updatePropertiesAsync } = useDataSource(source?.id);
   const { year, month, day } = useTimelineViewState();
   const { timelineLayout } = useTimelineLayout(
@@ -353,25 +354,65 @@ function DatabaseTimelineNodeViewImpl() {
   // of the timeline. The timeframe controls are not a reason for one: they
   // float over the group row, 28px of it, and a column's label and its bars
   // are below them.
+
   const [endSpill, setEndSpill] = useState(0);
   useEffect(() => {
     const view = viewportRef.current;
     if (!view) return;
+
     const measure = () => {
+      // The editor column's own scrollbar, measured rather than assumed:
+      // its width differs by platform and is 0 where it overlays.
+      const gutter = 15; //window.innerWidth - document.documentElement.clientWidth;
       const spill = Math.max(
         0,
         Math.ceil(
           view.getBoundingClientRect().right -
-            document.documentElement.clientWidth,
+            (document.documentElement.clientWidth - gutter),
         ),
       );
       setEndSpill((prev) => (prev === spill ? prev : spill));
     };
+
+    // Once more after a slide has had time to finish, in case no
+    // transitionend reaches us (a transition cut short).
+    let settle = 0;
+    const measureSoon = () => {
+      measure();
+      window.clearTimeout(settle);
+      settle = window.setTimeout(measure, 220);
+    };
+
+    // The sidebar doesn't resize this element or the document, it moves this
+    // element's right edge — and nothing observes a position. What it does
+    // do is animate, so the slide itself is the signal: the text column's
+    // transform and width, the sidebar's and the peek panel's.
+    const onTransitionEnd = (e: TransitionEvent) => {
+      if (
+        e.propertyName === "transform" ||
+        e.propertyName === "width" ||
+        e.propertyName === "margin-left" ||
+        e.propertyName === "left" ||
+        e.propertyName === "flex-basis"
+      ) {
+        measure();
+      }
+    };
+
     measure();
-    const ro = new ResizeObserver(measure);
+
+    const ro = new ResizeObserver(measureSoon);
     ro.observe(view);
     ro.observe(document.documentElement);
-    return () => ro.disconnect();
+    document.addEventListener("transitionend", onTransitionEnd, true);
+    window.addEventListener("resize", measureSoon);
+
+    return () => {
+      ro.disconnect();
+      window.clearTimeout(settle);
+      document.removeEventListener("transitionend", onTransitionEnd, true);
+      window.removeEventListener("resize", measureSoon);
+    };
   }, []);
 
   // ── Where a range opens ───────────────────────────────────────────────
@@ -724,6 +765,11 @@ function DatabaseTimelineNodeViewImpl() {
                   style={{ top: ind.rowIndex * ROW_HEIGHT + ROW_HEIGHT / 2 }}
                   onClick={() => scrollToRecord(ind)}
                   aria-label={
+                    ind.direction === "left"
+                      ? "Scroll to earlier record"
+                      : "Scroll to later record"
+                  }
+                  tooltip={
                     ind.direction === "left"
                       ? "Scroll to earlier record"
                       : "Scroll to later record"
