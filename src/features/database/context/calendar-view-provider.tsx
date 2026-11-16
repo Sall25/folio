@@ -8,6 +8,7 @@ import {
 } from "./calendar-view-context";
 import { useDataSource } from "../hooks/use-data-source";
 import { useDatabaseContext } from "./database-context";
+import { isoDay } from "../utils/view-placement";
 
 export function CalendarViewProvider({ children }: { children: ReactNode }) {
   const today = useMemo(() => new Date(), []);
@@ -37,8 +38,14 @@ export function CalendarViewProvider({ children }: { children: ReactNode }) {
     async (dayNum: number) => {
       const row = await addRecordAsync({ title: "" });
       if (dateProp) {
-        const iso = new Date(year, month, dayNum).toISOString();
-        setCellValue(row.id, dateProp.id, iso);
+        // isoDay, not toISOString: that is UTC, so a day clicked west of
+        // Greenwich was stored as the one before it. A plain date also
+        // means the record belongs to the day rather than to its midnight.
+        setCellValue(
+          row.id,
+          dateProp.id,
+          isoDay(new Date(year, month, dayNum)),
+        );
       }
     },
     [addRecordAsync, setCellValue, dateProp, month, year],

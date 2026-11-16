@@ -144,12 +144,7 @@ export function DatabaseProvider({
     peopleCounts,
     subItems,
     parentPropertyId,
-  } = useResolvedRecords(
-    resolvedRecords,
-    source,
-    db,
-    editingRecordId,
-  );
+  } = useResolvedRecords(resolvedRecords, source, db, editingRecordId);
   const { tableLayout, groupProp } = useTableLayout(sortedRecords, source, db);
 
   const { listLayout } = useListLayout(sortedRecords, source, db);
@@ -158,6 +153,7 @@ export function DatabaseProvider({
     editor,
     attrs,
     source,
+    activeView: db.activeView,
     groupProp,
     addRecordAsync,
     setCellValue,

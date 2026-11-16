@@ -192,8 +192,15 @@ function TimelineNav({
 }
 
 function DatabaseTimelineNodeViewImpl() {
-  const { db, source, sortedRecords, onUpdateView, attrs, visibleProperties } =
-    useDatabaseContext();
+  const {
+    db,
+    source,
+    sortedRecords,
+    onUpdateView,
+    attrs,
+    visibleProperties,
+    onNewRecord,
+  } = useDatabaseContext();
   const { addRecordAsync, updatePropertiesAsync } = useDataSource(source?.id);
   const { year, month, day } = useTimelineViewState();
   const { timelineLayout } = useTimelineLayout(
@@ -612,7 +619,10 @@ function DatabaseTimelineNodeViewImpl() {
               <Button
                 variant="ghost"
                 className="db-tl-table__add-btn"
-                onClick={() => addRecordAsync({ title: "" })}
+                // The database's own "new record", not a bare addRecord:
+                // that one skipped the default row template, and the date
+                // a timeline needs to be able to place the row at all.
+                onClick={onNewRecord}
               >
                 <Plus className="tiptap-button-icon" />
                 <span className="tiptap-button-text">New</span>

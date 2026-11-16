@@ -44,6 +44,7 @@ import {
 } from "src/types";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_LOAD_LIMIT } from "../../utils/load-limit";
+import { placementSeed } from "../../utils/view-placement";
 import "./database-node.scss";
 import { SelectionToolbar } from "../../components/selection-toolbar";
 import {
@@ -89,8 +90,14 @@ function DatabaseNodeViewBody({
   attrs: DatabaseAttrs;
 }) {
   const { t } = useTranslation();
-  const { db, source, sortedRecords, subItems, parentPropertyId, reorderRecord } =
-    useDatabaseContext();
+  const {
+    db,
+    source,
+    sortedRecords,
+    subItems,
+    parentPropertyId,
+    reorderRecord,
+  } = useDatabaseContext();
   const activeView = db.activeView;
   const tableRef = useRef<HTMLDivElement>(null);
   const {
@@ -107,13 +114,19 @@ function DatabaseNodeViewBody({
     (parentId: string) => {
       if (!parentPropertyId) return;
       setRowOpen(parentId, true);
+      const seed = placementSeed(
+        activeView,
+        source?.properties ?? [],
+        new Date(),
+      );
       void addRecordAsync({
         title: "",
         // Relations are stored as bare row ids.
         values: { [parentPropertyId]: [parentId] } as unknown as Page["values"],
+        ...(seed ? { defaults: seed } : {}),
       });
     },
-    [parentPropertyId, setRowOpen, addRecordAsync],
+    [parentPropertyId, setRowOpen, addRecordAsync, activeView, source],
   );
 
   const { data: templatePage } = usePage(attrs.templateId ?? null);
@@ -157,11 +170,7 @@ function DatabaseNodeViewBody({
     month,
   );
 
-  const {
-    year: tlYear,
-    month: tlMonth,
-    day: tlDay,
-  } = useTimelineViewState();
+  const { year: tlYear, month: tlMonth, day: tlDay } = useTimelineViewState();
   const { timelineLayout } = useTimelineLayout(
     sortedRecords,
     source ?? null,

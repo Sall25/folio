@@ -8,17 +8,20 @@ import type {
   CellValue,
   PropertyType,
   DatabaseProperty,
+  DatabaseView,
 } from "src/types";
 import { insertRecordNode } from "./use-database-seed";
 import { NONE_KEY, valueForGroupKey } from "../utils/group-records";
 import { canWriteGroupValue } from "../utils/group-key";
 import { useWorkspacePeople } from "./use-workspace-people";
 import { startingTemplateId } from "../utils/row-templates";
+import { placementSeed } from "../utils/view-placement";
 
 export function useRecordCreation({
   editor,
   attrs,
   source,
+  activeView,
   groupProp,
   addRecordAsync,
   setCellValue,
@@ -27,10 +30,13 @@ export function useRecordCreation({
   editor: Editor;
   attrs: DatabaseAttrs;
   source: DataSource | null;
+  activeView: DatabaseView | undefined;
   groupProp: DatabaseProperty | undefined;
   addRecordAsync: (opts?: {
     title?: string;
     templateId?: string;
+    values?: Page["values"];
+    defaults?: Page["values"];
   }) => Promise<Page>;
   setCellValue: (
     recordId: string,
@@ -62,11 +68,21 @@ export function useRecordCreation({
     [editor, attrs.id, attrs.sourceId, source],
   );
 
-  // New rows start from the default template, when there is one.
+  // New rows start from the default template, when there is one, and on
+  // today where the view places records by a date — otherwise a page made
+  // from a timeline or a calendar is created off-screen and the button
+  // looks like it did nothing. Passed as defaults, not values: a template
+  // that set that date meant it and keeps it.
   const newRecordOpts = useCallback(() => {
     const templateId = startingTemplateId(source);
-    return templateId ? { templateId } : { title: "" };
-  }, [source]);
+    const base = templateId ? { templateId } : { title: "" };
+    const seed = placementSeed(
+      activeView,
+      source?.properties ?? [],
+      new Date(),
+    );
+    return seed ? { ...base, defaults: seed } : base;
+  }, [source, activeView]);
 
   const onNewRecord = useCallback(() => {
     addRecordAsync(newRecordOpts())

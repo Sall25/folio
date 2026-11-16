@@ -68,6 +68,9 @@ export interface UseDataSourceReturn {
   addRecordAsync: (opts?: {
     /** Values to start with (over the template's / defaults). */
     values?: Page["values"];
+    /** Values for cells the template left empty — a template that set one
+     *  keeps its own, the way "Me" fills a person cell (makeRow). */
+    defaults?: Page["values"];
     title?: string;
     templateId?: string;
   }) => Promise<Page>;
@@ -173,6 +176,7 @@ export function useDataSource(
       title?: string;
       templateId?: ID;
       values?: Page["values"];
+      defaults?: Page["values"];
     }): Promise<Page> => {
       if (!sourceRef.current || !person || !workspaceId)
         throw new Error("No source or no person or no workspaceId");
@@ -212,6 +216,17 @@ export function useDataSource(
       });
 
       if (opts?.values) row.values = { ...(row.values ?? {}), ...opts.values };
+
+      // Only where the cell is still empty: a view seeds a date so its new
+      // record has somewhere to sit, but a template that set that date
+      // meant it — the same rule "Me" follows for person cells in makeRow.
+      if (opts?.defaults) {
+        const values = { ...(row.values ?? {}) };
+        for (const [propertyId, value] of Object.entries(opts.defaults)) {
+          if (values[propertyId] == null) values[propertyId] = value;
+        }
+        row.values = values;
+      }
 
       await addRowAsync(row);
       return row;

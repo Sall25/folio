@@ -29,6 +29,7 @@ import { CollapseToggle } from "./collapse-toggle";
 import { useActivePageActions } from "src/features/pages/context/active-page-context";
 import { NoDatePanel } from "../no-date-panel";
 import { startingTemplateId } from "../../utils/row-templates";
+import { placementSeed } from "../../utils/view-placement";
 import { useLocalStorage } from "src/hooks/use-local-storage";
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -123,13 +124,20 @@ function DatabaseToolbarImpl() {
     transition: "opacity 0.2s ease",
   };
 
-  // New starts from the default template, like the "+ New page" row.
+  // New starts from the default template, like the "+ New page" row, and
+  // on today where the view places records by a date — the same seed that
+  // row gets (use-record-creation), so a page made from the toolbar of a
+  // timeline or a calendar lands somewhere it can be seen.
   const handleNewPage = useCallback(async () => {
     const templateId = startingTemplateId(source);
-    addRecordAsync(templateId ? { templateId } : { title: "" })
+    const seed = placementSeed(activeView, properties, new Date());
+    addRecordAsync({
+      ...(templateId ? { templateId } : { title: "" }),
+      ...(seed ? { defaults: seed } : {}),
+    })
       .then((page) => setTarget({ pageId: page.id, view: "Center" }))
       .catch((error) => console.error("Failed to create page", error));
-  }, [addRecordAsync, setTarget, source]);
+  }, [addRecordAsync, setTarget, source, activeView, properties]);
 
   const onToggle = useCallback(() => setCollapsed((v) => !v), [setCollapsed]);
 
@@ -160,11 +168,14 @@ function DatabaseToolbarImpl() {
     setTarget({ pageId: id, view: "Center" });
   });
   const onPickTemplate = useCallback(
-    (id: ID) =>
-      addRecordAsync({
+    (id: ID) => {
+      const seed = placementSeed(activeView, properties, new Date());
+      return addRecordAsync({
         templateId: id,
-      }).then(/* focus/open as you do for new rows */),
-    [addRecordAsync],
+        ...(seed ? { defaults: seed } : {}),
+      }).then(/* focus/open as you do for new rows */);
+    },
+    [addRecordAsync, activeView, properties],
   );
 
   const onSetDefault = useCallback(
