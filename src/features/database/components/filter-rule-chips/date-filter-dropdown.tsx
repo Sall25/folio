@@ -4,6 +4,7 @@ import type { DatabaseProperty, ID } from "src/types";
 import type { FilterRule } from "src/types/filter-types";
 import "./date-filter-dropdown.scss";
 import { useCallback } from "react";
+import { toDate } from "src/features/database/utils/date-values";
 
 // The relative ranges the matcher's is_within branch understands.
 const WITHIN_RANGES: { value: string; label: string }[] = [
@@ -75,7 +76,7 @@ export function DateFilterDropdown({
               ))}
             </div>
           ) : (
-            // Absolute date → an ISO yyyy-mm-dd string the matcher parses via new Date()
+            // Absolute date → an ISO yyyy-mm-dd string the matcher parses via toDate()
             <input
               type="date"
               className="date-filter-dropdown__date-input"
@@ -93,12 +94,11 @@ export function DateFilterDropdown({
   );
 }
 
-// The matcher parses value with new Date(String(v)); a yyyy-mm-dd string from
+// The matcher parses value with toDate(); a yyyy-mm-dd string from
 // <input type="date"> parses cleanly, so store exactly that.
 function toDateInputValue(v: string | null | undefined): string {
-  if (!v) return "";
-  const d = new Date(v);
-  if (isNaN(d.getTime())) return "";
+  const d = toDate(v);
+  if (!d) return "";
   // yyyy-mm-dd for the native date input
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }

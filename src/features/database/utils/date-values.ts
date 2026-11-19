@@ -13,6 +13,12 @@ export function toDate(value: unknown): Date | null {
     return toDate((value as { start: unknown }).start);
   }
 
+  // "YYYY-MM-DD" is a calendar day: build it in local time, not UTC.
+  const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value));
+  if (day) {
+    return new Date(Number(day[1]), Number(day[2]) - 1, Number(day[3]));
+  }
+
   const date =
     value instanceof Date
       ? new Date(value.getTime())
