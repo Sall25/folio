@@ -1,0 +1,578 @@
+// The database NodeView. Responsibilities kept here are orchestration only:
+//   - load the DataSource + view state
+//   - call the focused hooks (records, view-switch, title, column layout,
+//     bridge publish, node sync, chip visibility)
+//   - assemble the chrome (cover, toolbar, title bar, filter/sort chips)
+//   - branch to the six view renderers (table is node-rendered; the other five
+//     are still imperative)
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Editor, NodeViewProps } from "@tiptap/core";
+import { NodeViewWrapper } from "@tiptap/react";
+import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
+import { usePage } from "src/hooks/use-pages";
+import { useDataSource } from "../../hooks/use-data-source";
+import { useDatabase } from "../../hooks/use-database";
+import { DatabaseProvider } from "../../context/database-provider";
+import { DatabaseToolbar } from "../../components/database-toolbar";
+import { DatabaseTitleBar } from "../../components/database-title-bar";
+import { DataSourcePicker } from "../../components/data-source-picker/data-source-picker";
+import { DatabaseBoardNodeView } from "../database-board-node-view";
+import { DatabaseGalleryNodeView } from "../database-gallery-node-view/database-gallery-node-view";
+import { DatabaseListNodeView } from "../database-list-node-view/database-list-node-view";
+import { DatabaseCalendarNodeView } from "../database-calendar-node-view";
+import { DatabaseTimelineNodeView } from "../database-timeline-node-view/database-timeline-node-view";
+import { DatabaseTableBody } from "../database-table-node";
+import { useDatabaseColumnLayout } from "../../hooks/use-database-column-layout";
+import { useDbVisibleWidth } from "../../hooks/use-db-visible-width";
+import { useDatabaseBridgePublish } from "../../hooks/use-database-bridge-publish";
+import {
+  useDatabaseSeed,
+  useDatabaseCellSync,
+  removeRecordNode,
+} from "../../hooks/use-database-seed";
+import { useTableRecords } from "../../hooks/use-table-records";
+import { useViewSwitch } from "../../hooks/use-view-switch";
+
+import {
+  type DatabaseAttrs,
+  type ID,
+  type DatabaseProperty,
+  type ListView,
+  type TableView,
+  type Page,
+} from "src/types";
+import { useTranslation } from "react-i18next";
+import { DEFAULT_LOAD_LIMIT } from "../../utils/load-limit";
+import { placementSeed } from "../../utils/view-placement";
+import "./database-node.scss";
+import { SelectionToolbar } from "../../components/selection-toolbar";
+import {
+  NewRowEditActionsProvider,
+  NewRowEditStateProvider,
+} from "../../context/new-row-edit-provider";
+import { useActivePageState } from "src/features/pages/context/active-page-context";
+import {
+  useActiveViewFromHash,
+  useBoardLayout,
+  useDatabaseAlign,
+  useListLayout,
+  useMeasureViewDims,
+  useSyncViews,
+} from "../../hooks";
+import { ChipsRow } from "../../components/chips-row";
+import { PersonFilterBar } from "../../components/person-filter-bar";
+import { DatabaseFormNodeView } from "../database-form-node-view";
+import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
+import { usePageViewState } from "src/features/pages/context/page-view-context";
+import { setColumnHint } from "../../utils/skeleton-hints";
+import { DatabaseLoadingSkeletonWithDims } from "../../components/database-loading-skeleton-with-dims/database-loading-skeleton-with-dims";
+import { useTableLayout } from "../../hooks/use-table-layout";
+import { useGalleryLayout } from "../../hooks/use-gallery-layout";
+import { useDatabaseContext } from "../../context/database-context";
+import { useNewRowEditState } from "../../context/new-row-edit-context";
+import { useCalendarLayout } from "../../hooks/use-calendar-layout";
+import { useCalendarViewState } from "../../context/calendar-view-context";
+import { useTimelineViewState } from "../../context";
+import { useTimelineLayout } from "../../hooks/use-timeline-layout";
+import { recordOpenerBlock } from "../../utils/record-opener";
+
+const EMPTY_SOURCE = { properties: [] };
+const EMPTY_PROPERTIES: DatabaseProperty[] = [];
+
+function DatabaseNodeViewBody({
+  locked,
+  editor,
+  attrs,
+}: {
+  locked: boolean;
+  editor: Editor;
+  attrs: DatabaseAttrs;
+}) {
+  const { t } = useTranslation();
+  const {
+    db,
+    source,
+    sortedRecords,
+    subItems,
+    parentPropertyId,
+    reorderRecord,
+  } = useDatabaseContext();
+  const activeView = db.activeView;
+  const tableRef = useRef<HTMLDivElement>(null);
+  const {
+    updatePropertiesAsync,
+    resolvedRecords,
+    isLoading,
+    setCellValue,
+    addRecordAsync,
+  } = useDataSource(source?.id);
+
+  // Sub-items: a new row under `parentId`, which opens to show it.
+  const setRowOpen = db.setRowOpen;
+  const addSubItem = useCallback(
+    (parentId: string) => {
+      if (!parentPropertyId) return;
+      setRowOpen(parentId, true);
+      const seed = placementSeed(
+        activeView,
+        source?.properties ?? [],
+        new Date(),
+      );
+      void addRecordAsync({
+        title: "",
+        // Relations are stored as bare row ids.
+        values: { [parentPropertyId]: [parentId] } as unknown as Page["values"],
+        ...(seed ? { defaults: seed } : {}),
+      });
+    },
+    [parentPropertyId, setRowOpen, addRecordAsync, activeView, source],
+  );
+
+  const { data: templatePage } = usePage(attrs.templateId ?? null);
+
+  const {
+    widthFor,
+    draftWidths,
+    gridTemplateColumns,
+    bodyGridTemplateColumns,
+    commitColumnWidth,
+  } = useDatabaseColumnLayout({
+    properties: source?.properties ?? EMPTY_PROPERTIES,
+    activeView,
+    locked,
+    tableRef,
+    updatePropertiesAsync,
+  });
+
+  const { editingRecordId } = useNewRowEditState();
+
+  // ── Filtered → searched → sorted → grouped records + row layout ───────────
+  const { collapsedKeys } = useTableRecords({
+    resolvedRecords,
+    source: source ?? undefined,
+    db,
+    editingRecordId,
+  });
+
+  // Both run (Rules of Hooks); the inactive one returns a flat/empty layout
+  // cheaply since its view-type guard fails.
+  const { tableLayout } = useTableLayout(sortedRecords, source ?? null, db);
+  const { listLayout } = useListLayout(sortedRecords, source ?? null, db);
+  const { boardLayout } = useBoardLayout(sortedRecords, source ?? null, db);
+  const { galleryLayout } = useGalleryLayout(sortedRecords, db);
+  const { year, month } = useCalendarViewState();
+  const { calendarLayout } = useCalendarLayout(
+    sortedRecords,
+    source ?? null,
+    db,
+    year,
+    month,
+  );
+
+  const { year: tlYear, month: tlMonth, day: tlDay } = useTimelineViewState();
+  // This is the layout the bars are placed from, published to them over the
+  // bridge, and the grid draws a second instance of it. Neither is told how
+  // much context to build, so the two cannot be given different columns —
+  // which, when they were, put every bar at an offset the grid had left
+  // behind (padFor).
+  const { timelineLayout } = useTimelineLayout(
+    sortedRecords,
+    source ?? null,
+    db,
+    tlYear,
+    tlMonth,
+    tlDay,
+  );
+
+  const allRowSlots =
+    activeView?.type === "list"
+      ? listLayout.rowSlots
+      : activeView?.type === "timeline"
+        ? sortedRecords.map((r) => r.id)
+        : tableLayout.rowSlots;
+
+  // ── Load limit (table and list, ungrouped): the first N rows, then
+  //    "Load more". Rows past it aren't placed, so they don't render. ──
+  const limitable =
+    (activeView?.type === "table" && tableLayout.headers.length === 0) ||
+    (activeView?.type === "list" && listLayout.headers.length === 0);
+  const loadLimit =
+    (activeView as TableView | ListView | undefined)?.loadLimit ??
+    DEFAULT_LOAD_LIMIT;
+  // Extra rows loaded with "Load more", for this view only.
+  const [loaded, setLoaded] = useState({ viewId: "", extra: 0 });
+  const extra = loaded.viewId === activeView?.id ? loaded.extra : 0;
+  const shownRows = loadLimit > 0 ? loadLimit + extra : Infinity;
+  // Memoised: the bridge republishes when this array changes.
+  const activeRowSlots = useMemo(() => {
+    if (!limitable || allRowSlots.length <= shownRows) return allRowSlots;
+    const shown = allRowSlots.slice(0, shownRows);
+    // A row being added (or edited) stays in view past the limit.
+    return editingRecordId && !shown.includes(editingRecordId)
+      ? [...shown, editingRecordId]
+      : shown;
+  }, [limitable, allRowSlots, shownRows, editingRecordId]);
+  const hiddenRows = allRowSlots.length - activeRowSlots.length;
+  const loadMore = hiddenRows > 0 && (
+    <button
+      type="button"
+      className="db-load-more"
+      contentEditable={false}
+      onClick={() =>
+        setLoaded({
+          viewId: activeView?.id ?? "",
+          extra: extra + (loadLimit || DEFAULT_LOAD_LIMIT),
+        })
+      }
+    >
+      {t("database.loadMore")}
+      <span className="db-load-more__count">{hiddenRows}</span>
+    </button>
+  );
+
+  useDatabaseBridgePublish({
+    editor,
+    attrs,
+    properties: source?.properties ?? EMPTY_PROPERTIES,
+    activeView,
+    locked,
+    resolvedRecords,
+    sortedRecords,
+    draftWidths,
+    rowSlots: activeRowSlots,
+    hasSource: !!source,
+    setCellValue,
+    templateCover: templatePage?.cover ?? null,
+    boardLayout,
+    galleryLayout,
+    calendarLayout,
+    timelineLayout,
+    subItems,
+    setRowOpen,
+    addSubItem,
+    reorderRecord,
+  });
+
+  // Seed record/cell nodes once at creation; keep cells matching properties.
+  useDatabaseSeed({
+    editor,
+    databaseId: attrs.id ?? null,
+    sourceId: attrs.sourceId ?? null,
+    records: resolvedRecords,
+    properties: source?.properties ?? [],
+    ready: !isLoading && !!source,
+  });
+
+  useDatabaseCellSync({
+    editor,
+    databaseId: attrs.id ?? null,
+    properties: source?.properties ?? [],
+    ready: !isLoading && !!source,
+  });
+
+  useMeasureViewDims(
+    attrs.id,
+    activeView?.type ?? "table",
+    !isLoading && !!source,
+    activeView?.id,
+    sortedRecords.length,
+  );
+
+  // ── View branches ─────────────────────────────────────────────────────────
+  if (activeView?.type === "board") return <DatabaseBoardNodeView />;
+  if (activeView?.type === "gallery") return <DatabaseGalleryNodeView />;
+  if (activeView?.type === "list")
+    return (
+      <>
+        <DatabaseListNodeView />
+        {loadMore}
+      </>
+    );
+  if (activeView?.type === "calendar") return <DatabaseCalendarNodeView />;
+  if (activeView?.type === "timeline") return <DatabaseTimelineNodeView />;
+  if (activeView?.type === "form") return <DatabaseFormNodeView />;
+
+  // ── Table view (node-rendered) ────────────────────────────────────────────
+  return (
+    <>
+      <DatabaseTableBody
+        tableRef={tableRef}
+        gridTemplateColumns={gridTemplateColumns}
+        bodyGridTemplateColumns={bodyGridTemplateColumns}
+        widthFor={widthFor}
+        onCommitColumnWidth={commitColumnWidth}
+        collapsedKeys={collapsedKeys}
+      />
+      {loadMore}
+    </>
+  );
+}
+
+export function DatabaseNodeView({
+  node,
+  editor,
+  getPos,
+  updateAttributes,
+}: NodeViewProps) {
+  const attrs = node.attrs as DatabaseAttrs;
+  const locked = !!attrs.locked;
+
+  // ── DataSource + view state ───────────────────────────────────────────────
+  const {
+    source,
+    isLoading,
+    setCellValue,
+    updatePropertiesAsync,
+    updateSourceMetaAsync,
+    registerViewsAsync,
+    unregisterViewsAsync,
+    resolvedRecords,
+    addRecordAsync,
+    removeRecordAsync,
+  } = useDataSource(attrs.sourceId);
+
+  const [editingRecordId, setEditingRecordId] = useState<ID | null>(null);
+
+  const cancelEmptyRecord = useCallback(
+    (recordId: ID) => {
+      // Remove the record node from the editor, then delete the page.
+      if (editor && attrs.id) removeRecordNode(editor, attrs.id, recordId);
+      removeRecordAsync(recordId);
+      setEditingRecordId(null);
+    },
+    [editor, attrs.id, removeRecordAsync],
+  );
+
+  const attrsRef = useRef(attrs);
+  useEffect(() => {
+    attrsRef.current = attrs;
+  }, [attrs]);
+
+  const handleTitleUpdate = useCallback(
+    (title: string) => updateAttributes({ ...attrsRef.current, title }),
+    [updateAttributes],
+  );
+
+  const db = useDatabase(
+    attrs,
+    updateAttributes,
+    source ?? EMPTY_SOURCE,
+    updatePropertiesAsync,
+    handleTitleUpdate,
+  );
+  const dbRef = useRef(db);
+  useEffect(() => {
+    dbRef.current = db;
+  }, [db]);
+
+  const activeView = db.activeView;
+
+  const dbPageId = source?.pageId ?? attrs.pageId ?? null;
+  const { data: dbPage } = usePage(dbPageId);
+
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  // ── Record open in peek/center view decoration
+  // Marked only in the block it was opened from (utils/record-opener.ts);
+  // opened from elsewhere (sidebar, a relation), in every block.
+  const { target } = usePageViewState();
+  const getPosRef = useRef(getPos);
+  useEffect(() => {
+    getPosRef.current = getPos;
+  }, [getPos]);
+  useEffect(() => {
+    if (!editor) return;
+    const openId = target?.pageId ?? null;
+    const opener = openId ? recordOpenerBlock(openId) : null;
+    const pos = getPosRef.current();
+    const mine =
+      opener != null &&
+      typeof pos === "number" &&
+      editor.view.nodeDOM(pos) === opener;
+    // Opened from another block: that one marks it.
+    if (opener && !mine) return;
+    editor.commands.setOpenRecord(openId, mine ? pos : null);
+    // A record is open → the active-cell ring is redundant/noisy; clear it.
+    // (It returns on the next cell click, or you could re-set it on close.)
+    if (openId) editor.commands.clearActiveCell();
+  }, [editor, target?.pageId]);
+
+  // ── Database alignment
+  useDatabaseAlign();
+
+  // ── View switching (skeleton while a new view type mounts) ────────────────
+  const { switchingTo, dbWithSwitch } = useViewSwitch(db, attrs.activeViewId);
+  // Keeps the toolbar as wide as the visible area.
+  const visibleWidthRef = useDbVisibleWidth();
+
+  // ── View lifecycle  ────────────────────────────────────────────────
+  useSyncViews({
+    views: attrs.views,
+    source,
+    registerViewsAsync,
+    unregisterViewsAsync,
+  });
+
+  // Activate a view from the URL hash (#view=…) once, on first load.
+  useActiveViewFromHash({
+    views: db.views,
+    activeViewId: attrs.activeViewId,
+    setActiveViewId: db.setActiveView,
+  });
+
+  const { visibleProperties } = useDatabaseColumnLayout({
+    properties: source?.properties ?? EMPTY_PROPERTIES,
+    activeView,
+    locked,
+    tableRef,
+    updatePropertiesAsync,
+  });
+
+  // Record the real count as we render it
+  if (source && visibleProperties.length) {
+    setColumnHint(attrs.sourceId, visibleProperties.length);
+  }
+
+  const { activePageId } = useActivePageState();
+  const isOwnPage = activePageId != null && activePageId === dbPageId;
+
+  const actions = useMemo(() => ({ cancelEmptyRecord }), [cancelEmptyRecord]);
+  const state = useMemo(() => ({ editingRecordId }), [editingRecordId]);
+
+  // ── No source yet → picker ────────────────────────────────────────────────
+  if (!attrs.sourceId) {
+    return (
+      <NodeViewWrapper as="div" data-type="database" contentEditable={false}>
+        {/* The picker isn't a .db-node (which positions itself), so it takes
+            the text column like any other block: .top-level-block. */}
+        <div className="top-level-block">
+          <DataSourcePicker
+            viewType={attrs.views[0]?.type ?? "table"}
+            onSelect={(sourceId, pageId, isLinked, savedView, moreViews) =>
+              updateAttributes({
+                ...attrs,
+                sourceId,
+                pageId: pageId ?? attrs.pageId ?? null,
+                isLinked: !!isLinked,
+                title: "",
+                ...(savedView
+                  ? {
+                      views: [savedView, ...(moreViews ?? [])],
+                      activeViewId: savedView.id,
+                    }
+                  : {}),
+              })
+            }
+          />
+        </div>
+      </NodeViewWrapper>
+    );
+  }
+
+  // Skeleton shape, derived from what's available on the NODE (instant) plus the
+  // cached column hint — no dependency on `source` having loaded.
+  //   type    ← attrs.views (view definitions live on the node)
+  //   columns ← last-known count for this source (falls back to the skeleton's
+  //             own default when we've never successfully loaded it before)
+  const skeletonView = attrs.views.find((v) => v.id === attrs.activeViewId);
+  const skeletonType = skeletonView?.type ?? activeView?.type ?? "table";
+
+  if (isLoading || !source) {
+    return (
+      <DatabaseLoadingSkeletonWithDims
+        databaseId={attrs.id}
+        type={skeletonType}
+        views={attrs.views}
+        activeViewId={skeletonView?.id ?? attrs.activeViewId}
+      />
+    );
+  }
+
+  // ── Chrome wrapper shared by every view ───────────────────────────────────
+  const chrome = (body: React.ReactNode) => (
+    <NewRowEditActionsProvider value={actions}>
+      <NewRowEditStateProvider value={state}>
+        <NodeViewWrapper
+          className="db-node"
+          as="div"
+          data-type="database"
+          data-database-id={attrs.id}
+          contentEditable={false}
+        >
+          <DatabaseProvider
+            resolvedRecords={resolvedRecords}
+            updateSourceMetaAsync={updateSourceMetaAsync}
+            attrs={attrs}
+            // Switch-aware db so view tabs anywhere downstream trigger the skeleton.
+            db={dbWithSwitch}
+            source={source}
+            editor={editor}
+            updateAttributes={updateAttributes}
+            addRecordAsync={addRecordAsync}
+            setCellValue={setCellValue}
+            setEditingRecordId={setEditingRecordId}
+            visibleProperties={visibleProperties}
+          >
+            <CardItemGroup>
+              <CardItemGroup className="top-level-block">
+                {dbPage?.cover?.coverImage && (
+                  <div className="db-cover">
+                    <img
+                      src={dbPage.cover.coverImage}
+                      alt=""
+                      className="db-cover__img"
+                    />
+                  </div>
+                )}
+              </CardItemGroup>
+              <CardItemGroup className="db-container">
+                {/* Stays in place while the table scrolls sideways. */}
+                <div
+                  ref={visibleWidthRef}
+                  className="db-sticky-left"
+                  style={{ paddingRight: 20 }}
+                >
+                  {/* The title, above the view tabs and on their left edge —
+                      except on the database's own page, whose page title
+                      already names it. */}
+                  {!isOwnPage && <DatabaseTitleBar />}
+                  <DatabaseToolbar />
+                  <ChipsRow />
+                  <PersonFilterBar />
+
+                  {attrs.id && <SelectionToolbar />}
+                </div>
+                <Spacer orientation="vertical" size={5} />
+
+                {body}
+              </CardItemGroup>
+            </CardItemGroup>
+          </DatabaseProvider>
+        </NodeViewWrapper>
+      </NewRowEditStateProvider>
+    </NewRowEditActionsProvider>
+  );
+
+  // ── Switching views → skeleton in the body slot ───────────────────────────
+  // Chrome stays mounted so the toolbar and tabs don't flash. The skeleton uses
+  // the TARGET view's shape, so it already looks like where you're going. Source
+  // is loaded here, so the real column count is known — use it.
+  if (switchingTo) {
+    const target = attrs.views.find((v) => v.id === switchingTo);
+    return chrome(
+      <DatabaseLoadingSkeletonWithDims
+        databaseId={attrs.id}
+        type={target?.type ?? "table"}
+        views={attrs.views}
+        activeViewId={switchingTo}
+        switching={true}
+      />,
+    );
+  }
+
+  // ── View branches ─────────────────────────────────────────────────────────
+  return chrome(
+    <DatabaseNodeViewBody editor={editor} locked={locked} attrs={attrs} />,
+  );
+}

@@ -20,6 +20,8 @@ import {
   unitFor,
   HOUR_WIDTH,
   buildRange,
+  padFor,
+  headerGroupsFor,
   cellWidthFor,
   isAllDayValue,
   parseIsoDate,
@@ -654,9 +656,13 @@ describe("a year, by the week", () => {
   );
 
   it("covers the whole year without a gap or a repeat", () => {
-    const WEEK = DAYS_IN_WEEK * 24 * 3600_000;
+    // One week on, by the calendar. Not by a count of milliseconds: where
+    // the clocks go forward a week is 167 hours long and where they go
+    // back it is 169, and a column is a week either way.
     for (let i = 1; i < range.days.length; i++) {
-      expect(range.days[i].getTime() - range.days[i - 1].getTime()).toBe(WEEK);
+      expect(range.days[i].getTime()).toBe(
+        shiftDate(range.days[i - 1], "week", 1).getTime(),
+      );
     }
     expect(range.endDate.getTime()).toBeGreaterThanOrEqual(
       new Date(2026, 11, 31).getTime(),
@@ -988,5 +994,187 @@ describe("turning a scroll position into a moment, and back", () => {
     const range = buildRange(2026, 1, 15, "month");
     const mid = offsetOfTime(range, new Date(2026, 1, 15).getTime());
     expect(mid / range.cellWidth).toBeCloseTo(14, 6);
+  });
+});
+
+// ── Scrolling past the range on show ──────────────────────────────────────
+// A range is built with pages of context either side of the page it is
+// anchored to, and that is the whole of how the timeline scrolls past the
+// date, the week, the month on show: the scroller is handed columns to move
+// across, so the browser scrolls its own content and nothing has to write a
+// position under the gesture. Stepping the range at an end and putting the
+// scroll back is what used to snap.
+
+describe("a range with its context either side", () => {
+  const TIMEFRAMES: Timeframe[] = ["day", "week", "month", "quarter", "year"];
+
+  it("gives every timeframe some", () => {
+    for (const tf of TIMEFRAMES) expect(padFor(tf)).toBeGreaterThan(0);
+  });
+
+  it("is the page alone when none is asked for", () => {
+    // Which is what the pure arithmetic — and every test above — reads.
+    for (const tf of TIMEFRAMES) {
+      const page = buildRange(2026, 10, 15, tf);
+      expect(page.anchorIndex).toBe(0);
+      expect(buildRange(2026, 10, 15, tf, 0).days).toHaveLength(
+        page.days.length,
+      );
+    }
+  });
+
+  it.each(TIMEFRAMES)(
+    "holds %s's own page, unchanged, at anchorIndex",
+    (tf) => {
+      const page = buildRange(2026, 10, 15, tf);
+      const pad = padFor(tf);
+      const range = buildRange(2026, 10, 15, tf, pad);
+
+      // The page is in there as it was: the same columns, at anchorIndex.
+      expect(range.anchorIndex).toBe(page.days.length * pad);
+      expect(range.days).toHaveLength(page.days.length * (2 * pad + 1));
+      page.days.forEach((d, i) => {
+        expect(range.days[range.anchorIndex + i].getTime()).toBe(d.getTime());
+      });
+      expect(range.unit).toBe(page.unit);
+      expect(range.cellWidth).toBe(page.cellWidth);
+      expect(range.timeframe).toBe(tf);
+    },
+  );
+
+  it.each(TIMEFRAMES)("runs one way, evenly, in %s", (tf) => {
+    const range = buildRange(2026, 10, 15, tf, padFor(tf));
+    // Strictly increasing, and one column of its own unit apart all the way
+    // across: the context is made of the same thing the page is, and there
+    // is no seam where the two were joined.
+    //
+    // By the calendar, not by a count of milliseconds. Where the clocks
+    // change a day is 23 hours or 25 and a week 167 or 169, and a column is
+    // a day or a week regardless — which is why every step in this file
+    // goes through Date's own setters.
+    for (let i = 1; i < range.days.length; i++) {
+      expect(range.days[i].getTime()).toBeGreaterThan(
+        range.days[i - 1].getTime(),
+      );
+      expect(range.days[i].getTime()).toBe(
+        shiftDate(range.days[i - 1], range.unit, 1).getTime(),
+      );
+    }
+    expect(range.startDate.getTime()).toBe(range.days[0].getTime());
+    expect(range.endDate.getTime()).toBeGreaterThan(
+      range.days[range.days.length - 1].getTime(),
+    );
+  });
+
+  it.each(TIMEFRAMES)("heads every column of %s with something", (tf) => {
+    const range = buildRange(2026, 10, 15, tf, padFor(tf));
+    const covered = range.headerGroups.reduce((n, g) => n + g.days, 0);
+    expect(covered).toBe(range.days.length);
+    expect(range.headerGroups.length).toBeGreaterThan(1);
+    expect(range.labelsCarryYear).toBe(true);
+  });
+
+  it("says the year again when the context crosses one", () => {
+    // Pages of context cross new year, and a heading of "January" among
+    // them says which year it isn't. The locale writes it in, so the
+    // header must not append its own: labelsCarryYear.
+    const range = buildRange(2026, 10, 15, "month", padFor("month"));
+    const withYear = range.headerGroups.filter((g) => /\d{4}/.test(g.label));
+    expect(withYear.length).toBeGreaterThan(1);
+    // And only where it turns: not on every heading.
+    expect(withYear.length).toBeLessThan(range.headerGroups.length);
+  });
+
+  it("names a date per date in Day and a month per month elsewhere", () => {
+    const day = buildRange(2026, 10, 15, "day", 1);
+    // 144 hours from noon on the 12th: seven dates, the first and the last
+    // of them half-drawn — a group per date, none longer than a day.
+    const dates = new Set(day.days.map((d) => d.getDate()));
+    expect(day.headerGroups).toHaveLength(dates.size);
+    expect(day.headerGroups).toHaveLength(7);
+    expect(day.headerGroups.every((g) => g.days <= HOURS_IN_DAY)).toBe(true);
+    expect(day.headerGroups[0].days).toBe(HOURS_IN_DAY - DAY_LEAD_HOURS);
+
+    // By the week's midweek, not by the Monday it starts on: the week of
+    // the 23rd of November is November's, and the week of the 30th is
+    // December's — its Thursday is the 3rd.
+    const weeks = [new Date(2026, 10, 23), new Date(2026, 10, 30)];
+    expect(weeks.every((d) => d.getDay() === 1)).toBe(true);
+    expect(headerGroupsFor(weeks, "week")).toHaveLength(2);
+    // Taken by their Mondays both would read as November.
+    expect(headerGroupsFor(weeks, "weekday")).toHaveLength(1);
+  });
+
+  it("opens Day on its date, not on the afternoon before it", () => {
+    // What the view scrolls to: the page's start plus the hours Day puts
+    // in front of the date it centres.
+    const range = buildRange(2026, 10, 15, "day", padFor("day"));
+    const opensAt = range.anchorIndex + DAY_LEAD_HOURS;
+    expect(range.days[opensAt].getDate()).toBe(15);
+    expect(range.days[opensAt].getHours()).toBe(0);
+  });
+
+  it.each(TIMEFRAMES)("round-trips an offset across %s", (tf) => {
+    // The re-anchor at the far edge reads a moment off the scroll position
+    // and writes it back as one. A drift of a few px either way would be
+    // visible as exactly the jump this is meant to avoid.
+    const range = buildRange(2026, 10, 15, tf, padFor(tf));
+    const width = range.days.length * range.cellWidth;
+    for (const px of [0, 17, width / 3, width / 2, width - 1]) {
+      expect(offsetOfTime(range, timeAtOffset(range, px))).toBeCloseTo(px, 6);
+    }
+  });
+
+  it.each(TIMEFRAMES)("re-anchors %s without moving what is on show", (tf) => {
+    // The far edge, where the scroll has run out of context: the range is
+    // rebuilt around the moment being read. That moment must come back at
+    // a position with room on both sides of it — a page at least — or the
+    // scroll would arrive at an end again and bounce, which is the bug
+    // this whole arrangement replaces.
+    const pad = padFor(tf);
+    const range = buildRange(2026, 10, 15, tf, pad);
+    const edge = range.days.length * range.cellWidth - 1;
+    const moment = timeAtOffset(range, edge);
+
+    const on = new Date(moment);
+    const next = buildRange(
+      on.getFullYear(),
+      on.getMonth(),
+      on.getDate(),
+      tf,
+      pad,
+    );
+    const px = offsetOfTime(next, moment);
+    // The same moment, and still exactly it.
+    expect(timeAtOffset(next, px)).toBeCloseTo(moment, -1);
+
+    const page = buildRange(2026, 10, 15, tf).days.length * range.cellWidth;
+    const width = next.days.length * next.cellWidth;
+    expect(px).toBeGreaterThan(page);
+    expect(width - px).toBeGreaterThan(page);
+  });
+
+  it("places a record that falls outside the page but inside the context", () => {
+    // The payoff, in one assertion: scroll on into next month and the bars
+    // of next month are drawn, where a range of one page had nothing to
+    // show and the record was an arrow at the edge.
+    const rec: TimelineRecord = {
+      id: "r",
+      title: "r",
+      start: new Date(2026, 11, 20),
+      end: new Date(2026, 11, 23),
+      allDay: true,
+    };
+    const page = buildRange(2026, 10, 15, "month");
+    expect(getGeo(rec, page, true)).toBeNull();
+
+    const range = buildRange(2026, 10, 15, "month", padFor("month"));
+    const geo = getGeo(rec, range, true);
+    expect(geo).not.toBeNull();
+    expect(geo!.width).toBe(4 * DAY_WIDTH);
+    // On the 20th of December, wherever that column happens to be.
+    expect(geo!.left / DAY_WIDTH).toBe(
+      range.days.findIndex((d) => d.getMonth() === 11 && d.getDate() === 20),
+    );
   });
 });

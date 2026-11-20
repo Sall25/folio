@@ -110,12 +110,16 @@ function TimelineHeaderImpl({
               }
             >
               {/* A month above a run of columns says it for all of
-                  them, so the column itself need only count its day. */}
+                  them, so the column itself need only count its day —
+                  a Year's fifty-two weeks, where there is no room for it
+                  twice over in any case. A quarter's weeks are wide
+                  enough to carry their own month and few enough to want
+                  it. */}
               {(() => {
                 const part = columnParts(
                   day,
                   range.unit,
-                  range.headerGroups.length <= 1,
+                  range.timeframe !== "year",
                 );
                 return (
                   <>

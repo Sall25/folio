@@ -42,16 +42,16 @@ function dividersFor(range: TimelineRange): number[] {
 function TimelineDayGridImpl({ range }: { range: TimelineRange }) {
   const dividers = useMemo(() => dividersFor(range), [range]);
 
-  // Where the header divides the months itself, the divisions are drawn
-  // rather than shaded, and the shading below would only fight the lines.
-  const grouped = range.headerGroups.length > 1;
-
   // A Year: fifty-two week columns under month headings. The months are
   // the structure there, and a line on every week buries them — so the
   // columns are left unruled and the weeks are read off the ruler. A
   // quarter's fourteen are few enough to rule, and an hour column is a
   // division worth drawing in its own right.
-  const monthsOnly = range.unit === "week" && grouped;
+  //
+  // By the timeframe, not by how many headings there are: a range carries
+  // pages of context either side of its own, so a quarter has as many
+  // month headings as a year does now.
+  const monthsOnly = range.timeframe === "year";
 
   return (
     <div
@@ -73,7 +73,7 @@ function TimelineDayGridImpl({ range }: { range: TimelineRange }) {
           range.unit === "hour"
             ? false
             : range.unit === "week"
-              ? !grouped && day.getMonth() % 2 === 1
+              ? range.timeframe === "quarter" && day.getMonth() % 2 === 1
               : range.unit === "month"
                 ? Math.floor(day.getMonth() / 3) % 2 === 1
                 : day.getDay() === 0 || day.getDay() === 6;

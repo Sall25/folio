@@ -1,0 +1,1028 @@
+$tl-row-height: 34;
+// How tall the two panels may get before each one scrolls.
+$tl-max-height: 460;
+$tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
+
+// ── Empty state ────────────────────────────────────────────────────────────
+.db-tl-empty {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--tt-muted-fg-color, #888);
+  font-size: 0.875rem;
+}
+
+// ── Secondary nav bar ──────────────────────────────────────────────────────
+.db-tl-nav {
+  justify-content: flex-start;
+  max-width: var(--db-editor-width);
+}
+.db-tl-nav__left {
+  width: fit-content !important;
+  min-width: fit-content !important;
+}
+
+.db-tl-nav__label {
+  background: transparent !important;
+  text-transform: capitalize;
+}
+
+.db-tl-nav__arrow,
+.db-tl-nav__toggle-table,
+.db-tl-nav__today {
+  height: 26px;
+  padding: 0 6px;
+  font-size: 0.8125rem;
+}
+
+.db-tl-nav__right {
+  width: fit-content !important;
+  min-width: fit-content !important;
+}
+
+// ── Timeframe switcher ─────────────────────────────────────────────────────
+.db-tl-timeframe-switcher {
+  display: flex;
+  align-items: center;
+  background: var(--tt-subtle-bg-color, rgba(0, 0, 0, 0.04));
+  border-radius: var(--tt-radius-sm, 4px);
+  padding: 2px;
+  gap: 1px;
+}
+
+.db-tl-timeframe-btn {
+  padding: 2px 8px;
+  border: none;
+  background: none;
+  border-radius: calc(var(--tt-radius-sm, 4px) - 1px);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--tt-muted-fg-color, #888);
+  cursor: pointer;
+  transition:
+    background 0.1s,
+    color 0.1s;
+
+  &:hover {
+    color: var(--tt-text-color, #111);
+  }
+
+  &--active {
+    background: var(--tt-bg-color, #fff);
+    color: var(--tt-text-color, #111);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// ── Two-panel layout ───────────────────────────────────────────────────────
+.db-tl-layout {
+  display: flex;
+  // border: 1px solid var(--tt-border-color, #e5e7eb);
+  // border-radius: var(--tt-radius-sm, 4px);
+  // overflow: hidden;
+  // What the row leaves after the collapse button. Nothing here is ever
+  // wider than what is on screen, so the only horizontal scrollbar in a
+  // timeline is the grid's own.
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: hidden;
+  // A ceiling, not a height. Both panels are exactly as tall as their rows
+  // — the table's header plus a line per record plus the empty one, the
+  // gantt's header plus the same — so a timeline of one record was leaving
+  // most of 460px of nothing under itself. Past the ceiling each panel
+  // scrolls, which is what the fixed height was for.
+  max-height: #{$tl-max-height}px;
+  margin-top: 4px;
+}
+
+// ── Left table panel ───────────────────────────────────────────────────────
+.db-tl-table {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-right: 1px solid var(--tt-border-color, #e5e7eb);
+  background: var(--tt-bg-color, #fff);
+}
+
+.db-tl-table__header {
+  display: flex;
+  align-items: flex-end;
+  padding: 0 12px 6px;
+  border-bottom: 1px solid var(--tt-border-color, #e5e7eb);
+  flex-shrink: 0;
+  background: var(--tt-bg-color, #fff);
+  width: 600px;
+  box-sizing: border-box;
+}
+
+.db-tl-table__header-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--tt-muted-fg-color, #9ca3af);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.db-tl-table__body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.db-tl-table__row {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--tt-border-color, #e5e7eb);
+
+  &:hover {
+    background: var(--tt-hover-bg-color, rgba(0, 0, 0, 0.02));
+  }
+
+  &--new:hover {
+    background: none;
+  }
+}
+
+.db-tl-table__name-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: var(--tt-text-color, #111);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  text-align: left;
+  padding: 0;
+
+  &:hover {
+    color: var(--tt-accent-color, #2563eb);
+  }
+}
+
+.db-tl-table__add-btn {
+  justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  font-size: 0.8125rem;
+}
+
+// ── Divider ────────────────────────────────────────────────────────────────
+.db-tl-divider {
+  width: 1px;
+  background: var(--tt-border-color, #e5e7eb);
+  flex-shrink: 0;
+}
+
+// ── Right Gantt panel ──────────────────────────────────────────────────────
+.db-tl-gantt {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// .db-tl-gantt__header-scroll {
+//   overflow-x: auto;
+//   overflow-y: hidden;
+//   flex-shrink: 0;
+//   scrollbar-width: none;
+
+//   &::-webkit-scrollbar {
+//     display: none;
+//   }
+// }
+.db-tl-gantt__header-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
+  scrollbar-width: none;
+  pointer-events: none; // header is display-only, body scroll drives both
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.db-tl-gantt__header {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--tt-border-color, #e5e7eb);
+  background: var(--tt-bg-color, #fff);
+}
+
+.db-tl-gantt__header-top {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  border-bottom: 1px solid var(--tt-border-color, #e5e7eb);
+}
+
+.db-tl-gantt__header-group {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--tt-text-color, #374151);
+  padding: 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  border-right: 1px solid var(--tt-border-color, #e5e7eb);
+}
+
+.db-tl-gantt__header-days {
+  display: flex;
+  height: 28px;
+}
+
+.db-tl-gantt__day-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  color: var(--tt-muted-fg-color, #9ca3af);
+  flex-shrink: 0;
+  border-right: 1px solid var(--tt-border-color, #e5e7eb);
+
+  &--today {
+    color: var(--tt-accent-color, #2563eb);
+    font-weight: 700;
+  }
+
+  &--weekend {
+    background: var(--tt-subtle-bg-color, rgba(0, 0, 0, 0.02));
+  }
+}
+
+.db-tl-gantt__body-scroll {
+  flex: 1;
+  overflow: auto;
+  overflow-y: hidden !important;
+  // hide scrollbar on table side (synced)
+}
+
+.db-tl-gantt__body {
+  position: relative;
+  overflow-y: hidden !important;
+  min-height: 100%;
+  border-top: 1px solid var(--tt-border-color);
+  border-bottom: 1px solid var(--tt-border-color);
+}
+
+// ── Grid lines ─────────────────────────────────────────────────────────────
+.db-tl-gantt__grid-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.db-tl-gantt__col {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-right: 1px solid var(--tt-border-color, #e5e7eb);
+
+  &--weekend {
+    background: var(--tt-subtle-bg-color, rgba(0, 0, 0, 0.02));
+  }
+}
+
+// ── Today line ─────────────────────────────────────────────────────────────
+.db-tl-today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--tt-color-red-inc-1, #ef4444);
+  opacity: 0.7;
+  pointer-events: none;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+// ── Record rows ────────────────────────────────────────────────────────────
+.db-tl-gantt__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--tt-border-color, #e5e7eb);
+
+  &:hover {
+    background: var(--tt-hover-bg-color, rgba(0, 0, 0, 0.015));
+  }
+
+  &--new {
+    pointer-events: none;
+  }
+}
+
+// ── Overflow arrows ────────────────────────────────────────────────────────
+.db-tl-overflow-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--tt-accent-color, #2563eb);
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 4;
+
+  &--left {
+    left: 2px;
+  }
+  &--right {
+    right: 2px;
+  }
+}
+
+// ── Bars ───────────────────────────────────────────────────────────────────
+// A bar fills the box its row puts it in (.db-tl-bar-box, placed on the
+// record's line by timeline-bar.tsx), which it does with an inline
+// inset: 0 — so it sets no offsets or height of its own here.
+//
+// It used to centre itself in a gantt row with top: 50% and a matching
+// translateY(-50%), from when it was placed in that row directly. The
+// inline inset overrode the top but could not override the transform, and
+// a transform that nothing cancels moves the bar up half its height: every
+// card sat half a row above the row it belonged to, up under the day
+// numbers.
+.db-tl-bar {
+  position: absolute;
+  border-radius: 4px;
+  background: var(--tt-accent-subtle-bg, rgba(37, 99, 235, 0.15));
+  border: 1.5px solid var(--tt-accent-color, #2563eb);
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  gap: 4px;
+  cursor: pointer;
+  min-width: 0;
+  z-index: 3;
+  overflow: hidden;
+  transition: background 0.1s;
+  user-select: none;
+
+  &:hover {
+    background: var(--tt-accent-subtle-bg-hover, rgba(37, 99, 235, 0.25));
+
+    .db-tl-bar__handle {
+      opacity: 1;
+    }
+  }
+}
+
+// The title's own rules live in timeline-card-body.scss, which deliberately
+// lets it spill past the bar: a card is as wide as the days it covers, and a
+// name longer than that runs onto the grid rather than being cut. This file
+// used to set overflow: hidden and text-overflow: ellipsis on the same class
+// at the same weight, so which one won came down to which stylesheet loaded
+// last. Nothing here now.
+
+// ── Drag handles ───────────────────────────────────────────────────────────
+.db-tl-bar__handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  opacity: 0;
+  transition: opacity 0.1s;
+  cursor: ew-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+
+  &::after {
+    content: "";
+    display: block;
+    width: 2px;
+    height: 12px;
+    border-radius: 1px;
+    background: var(--tt-accent-color, #2563eb);
+  }
+
+  &--left {
+    left: 3px;
+  }
+  &--right {
+    right: 3px;
+  }
+}
+
+// ── Property badges ────────────────────────────────────────────────────────
+.db-tl-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &--muted {
+    background: var(--tt-muted-bg-color, rgba(0, 0, 0, 0.1));
+    color: var(--tt-text-color, #111);
+  }
+}
+
+.db-tl__toolbar-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--tt-bg-color, #fff);
+}
+
+.db-tl-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+
+  &__groups {
+    position: relative;
+  }
+
+  &__days {
+    position: relative;
+    height: 24px;
+  }
+
+  &__day {
+    position: absolute;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--tt-gray-light-a-500);
+    box-sizing: border-box;
+
+    .dark & {
+      color: var(--tt-gray-dark-a-500);
+    }
+  }
+}
+
+.db-tl-day-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  // Where the ruler above starts naming something else — a new date in
+  // Day, a new month in Year. Its own element, placed at the day itself:
+  // a month opens partway through a week, so this cannot be a border on
+  // the column that happens to contain it.
+  &__divide {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    border-left: 1px solid var(--tt-border-color, #e5e7eb);
+    pointer-events: none;
+  }
+
+  // Columns left unruled: see monthsOnly in timeline-day-grid.
+  &--bare &__col {
+    border-right: none;
+  }
+
+  &__col {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-right: 1px solid var(--tt-border-color, #e5e7eb);
+    box-sizing: border-box;
+
+    &--weekend {
+      background: var(--calendar-column-highlight);
+    }
+  }
+}
+
+.db-tl-bar {
+  cursor: pointer;
+}
+
+.db-tl-viewport {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.db-tl-scroll {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.db-tl-indicators {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.db-tl-indicator {
+  position: absolute;
+  transform: translateY(-50%);
+  min-width: 16px !important;
+  width: 18px !important;
+  min-height: 17px !important;
+  height: 17px !important;
+  border: none;
+  border-radius: 5px !important; //var(--tt-radius-sm);
+  background: rgba(244, 240, 240, 0.812);
+  .dark {
+    background: rgba(225, 220, 220, 0.812); //rgb(60, 58, 58);
+  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  color: var(--tt-gray-light-a-700);
+
+  &:hover {
+    background-color: rgba(225, 220, 220, 0.549) !important;
+  }
+
+  .tiptap-button-icon {
+    color: var(--tt-gray-dark-200) !important;
+    .dark & {
+      color: var(--black) !important;
+    }
+  }
+
+  &--left {
+    left: 8px;
+  }
+
+  &--right {
+    right: 8px;
+  }
+}
+
+// The grid takes what the table leaves, rather than a width of its own.
+//
+// It used to be --db-editor-width wide, which made the two panels together
+// the page's width PLUS the table's: the database spilled past the window,
+// the page grew a horizontal scrollbar of its own, and everything sat
+// shifted right of the sidebar because the page was scrolled along it.
+.db-tl-viewport {
+  position: relative;
+  flex: 1 1 auto;
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  max-height: #{$tl-max-height}px;
+  overflow: hidden;
+}
+
+.db-tl-scroll {
+  height: fit-content;
+  overflow: auto;
+  width: 100%;
+}
+
+.db-tl-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--tt-bg-color);
+}
+
+.db-tl-header__groups {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  background: var(--tt-bg-color);
+  margin-bottom: 5px;
+}
+
+.db-tl-header__group {
+  // Placed where its months fall, not laid out one after another: a range
+  // runs over years and only the groups on screen are drawn, so there is
+  // nothing in front of them to be pushed along by. The label inside still
+  // sticks to the left of its own box as it scrolls through it.
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  box-sizing: border-box;
+  // border-right: 1px solid var(--tt-border-color);
+}
+
+.db-tl-header__group-label {
+  position: sticky;
+  left: 8px;
+  display: inline-block;
+  padding: 4px 0;
+  font-size: 14px;
+  text-transform: capitalize;
+  font-weight: 400;
+  color: var(--tt-text-color, var(--tt-gray-light-a-900));
+  white-space: nowrap;
+
+  .dark & {
+    color: var(--tt-gray-dark-a-900);
+  }
+}
+
+// The database node is the horizontal scroller for a table wide enough to
+// need one: it keeps 250px of padding and lets its container run 100px past
+// its right edge, so there is always something to scroll to. A timeline
+// never is — it is built to the width it is given — so while one is the view
+// on show, the node has nothing to scroll and gives the room back.
+//
+// Scoped by :has to the timeline, so every other view keeps its scroller.
+.db-node:has(.db-tl-layout-wrap) {
+  overflow-x: hidden;
+  padding-right: 0;
+
+  // Back to where the sidebar ends.
+  //
+  // The node's own box already starts at the window's left edge, under the
+  // sidebar — it is this padding that holds its content over in the page's
+  // column, and the sidebar occupies exactly the first --sidebar-width of
+  // that padding. So a timeline keeps the part of it the sidebar is sitting
+  // on and gives back the rest, which is the room between the sidebar and
+  // the column.
+  padding-left: var(--sidebar-width, 0px);
+
+  // Only the body goes. A title, a toolbar and a cover read as part of the
+  // page, so they stay in its column — put back by exactly the distance the
+  // body gave up, which the align hook publishes as --db-column-inset.
+  > .tiptap-card-item-group > .top-level-block,
+  .db-sticky-left {
+    margin-left: var(--db-column-inset, 0px);
+  }
+
+  .db-container {
+    margin-right: 0;
+  }
+}
+
+// The collapse button and the two panels, together as wide as the database
+// is on screen — from the sidebar's edge out, not the page's text column.
+// That width is what the timeline has to spend, and the grid is handed
+// whatever the table does not take.
+.db-tl-toprow {
+  display: flex;
+  align-items: flex-start;
+  width: var(--db-visible-width, var(--db-editor-width, 100%));
+  max-width: var(--db-visible-width, 100%);
+}
+
+.db-tl-nav-overlay {
+  position: absolute;
+  top: 0;
+  // The page's right edge, not the window's. The grid runs the full width
+  // of the screen now, and controls pinned to the end of that sit under a
+  // scrollbar or off the screen; this keeps them level with where the
+  // page's own content stops, which is where the toolbar above them ends
+  // too. --db-column-inset-right is how far the grid runs past it
+  // (use-database-align.ts), and is 0 for a database that has not been
+  // widened.
+  right: var(--db-column-inset-right, 0px);
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  background: linear-gradient(to right, transparent, var(--tt-bg-color) 24px);
+}
+
+.db-tl-nav-controls {
+  display: flex;
+  align-items: center;
+}
+
+.db-tl-toggle-slot {
+  display: flex;
+  align-items: center;
+}
+
+.db-tl-header__days {
+  position: relative;
+}
+
+.db-tl-header__day {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// The weekday's initial beside its date: set back, because the date is
+// what is being read and the letter only says which day it is.
+.db-tl-header__day-lead {
+  margin-right: 5px;
+  opacity: 0.55;
+}
+
+.db-tl-header__day-num {
+  font-size: 12px;
+  // One label, one line: "9 Nov" in a marker sized by its content broke
+  // over two lines and pushed the row's height out.
+  white-space: nowrap;
+  color: var(--tt-gray-light-a-500);
+
+  .dark & {
+    color: var(--tt-gray-dark-a-500);
+  }
+
+  // A time, or a weekday and its date, is wider than a date on its own, so
+  // the marker gives: a pill of the same height rather than a circle that
+  // "09:00" or "Mon 9" cannot fit inside.
+  .db-tl-header__days--wide &--today {
+    width: auto;
+    min-width: 22px;
+    padding: 0 7px;
+    border-radius: 11px;
+  }
+
+  &--today {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--tt-color-red-inc-1); //#dc2626;
+    color: #ffffff !important;
+    font-weight: 700;
+    position: relative;
+
+    // Short stub connecting the badge down into the grid below — the full
+    // vertical guide line through the gantt body is a separate element
+    // (db-tl-today-line), this just visually bridges the gap to it.
+    &::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      width: 2px;
+      height: 8px;
+      background: var(--tt-color-red-inc-1);
+      transform: translateX(-50%);
+    }
+  }
+}
+
+.db-tl-header__highlight {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 1;
+
+  &--hover {
+    background: color-mix(in srgb, var(--tt-selection-color) 12%, transparent);
+  }
+
+  &--selected {
+    background: color-mix(in srgb, var(--tt-selection-color) 20%, transparent);
+  }
+}
+// ── The new-page placeholder ───────────────────────────────────────────────
+// Covers the whole gantt body, but is drawn before the bars, so a bar sits
+// over it and takes its own pointer events: the placeholder only ever
+// appears on empty grid.
+.db-tl-placeholder-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  // No z-index on purpose. It is drawn after the day grid and before the
+  // bars, and that order is what keeps it under them: a stacked layer here
+  // would paint over every bar and swallow the clicks that open a record.
+}
+
+.db-tl-placeholder {
+  position: absolute;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  pointer-events: none;
+
+  &[data-state="hover"] {
+    background: var(--tt-hover-bg-color, rgba(55, 53, 47, 0.05));
+    border: 1.5px dashed var(--tt-border-color, #e5e7eb);
+    color: var(--tt-text-secondary);
+    // The words don't fit in a 40px day, so they are allowed out of it.
+    overflow: visible;
+    justify-content: center;
+  }
+
+  // Drawing a span, and naming what was drawn: both show the page as it
+  // will be, in the accent the bars use.
+  &[data-state="drawing"],
+  &[data-state="naming"] {
+    background: var(--tt-accent-subtle-bg, rgba(37, 99, 235, 0.15));
+    border: 1.5px solid var(--tt-accent-color, #2563eb);
+    color: var(--tt-accent-fg-color, #1d4ed8);
+  }
+
+  &[data-state="naming"] {
+    pointer-events: auto;
+  }
+}
+
+.db-tl-placeholder__title {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  outline: none;
+
+  &::placeholder {
+    color: currentColor;
+    opacity: 0.55;
+  }
+}
+
+.db-tl-placeholder__days {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.db-tl-placeholder__label {
+  position: absolute;
+  left: 100%;
+  margin-left: 6px;
+  white-space: nowrap;
+  color: var(--tt-text-secondary);
+}
+
+// ── The table beside the grid ──────────────────────────────────────────────
+// It is a table view: the same grid, the same cells, the same columns. Only
+// as much of it shows as the panel is wide — the rest is past its edge, for
+// the separator to reveal.
+// The grid inside is as wide as all its columns (width: max-content), which
+// is wider than the panel by design — the separator is what reveals the rest.
+// So the panel is what clips it; without this the hidden columns paint over
+// the separator and the grid beside it.
+.db-tl-table {
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.db-tl-grid {
+  overflow: hidden;
+
+  // Every row on the line its bar is drawn on, which is what lets the two
+  // panels be read across. border-box on purpose: a row's separator line
+  // has to come out of its 34px, not sit under it — content-box makes every
+  // row 35px tall and the panel drifts a pixel further from the grid with
+  // each record.
+  // &.db-node-grid is the same element — the panel's grid carries both
+  // classes. It is here to outrank the rules the table view's stylesheets
+  // set on the same elements, which is what decides a row's height and
+  // whether its separator is drawn at all.
+  &.db-node-grid .react-renderer.node-databaseRecord {
+    height: #{$tl-row-height}px;
+    min-height: #{$tl-row-height}px;
+    box-sizing: border-box;
+    // The line that makes this a table. Drawn here rather than relied on
+    // from elsewhere: it is the whole point of the panel looking the way
+    // it does, and it is not this stylesheet's to lose.
+    border-bottom: 1px solid var(--tt-border-color);
+  }
+
+  // Room for the drag handle at the start of a row. The panel begins at the
+  // sidebar's edge, so the handle cannot sit to the left of a row the way it
+  // does in a table — it sits just inside one (drag-handle.tsx), and this is
+  // the gutter it sits in. Without it the grip covers the page's icon.
+  .react-renderer.node-databaseCell:first-child .db-node-cell,
+  .db-header-row .db-header-cell:first-child {
+    padding-left: 28px;
+  }
+
+  // A cell fills the row it is in and asks for no height of its own. It
+  // asks for 34px elsewhere, where a row is as tall as its contents plus
+  // its separator — here the row is 34px with the separator inside it, so
+  // a cell that still wanted 34 paints its background over the line and
+  // the panel stops looking like a table.
+  &.db-node-grid .db-node-cell {
+    min-height: 0;
+  }
+
+  // As tall as everything above the gantt's first row, which the node view
+  // measures off the gantt itself and hands down as --tl-header-height: the
+  // month row, the gap under it, the day row, and the line the gantt body
+  // draws above its own content. Row 1 of this grid therefore ends where
+  // the gantt's first row begins.
+  //
+  // border-box, like the rows: that measurement is the distance to the
+  // first bar's top edge, so this header's own line comes out of it rather
+  // than being added underneath.
+  .db-tl-table__header,
+  .db-header-row {
+    box-sizing: border-box;
+    height: var(--tl-header-height, #{$tl-header-height}px);
+    min-height: var(--tl-header-height, #{$tl-header-height}px);
+  }
+}
+
+// The gantt body hosts the bars, which are portalled in (timeline-bar.tsx).
+// While a card is being dragged it is lifted above the others and follows
+// the pointer in whole columns and rows, so what you see is where it will
+// land. The card it is standing in for stays put until the drop commits.
+.db-tl-bar-box[data-dragging] {
+  z-index: 6;
+  cursor: grabbing;
+  transition: none;
+
+  .db-tl-bar {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+    opacity: 0.92;
+  }
+}
+
+.db-tl-bar-box {
+  position: absolute;
+  z-index: 3;
+}
+
+// Hidden by the toggle: still here, still holding the records, just not
+// taking any width.
+.db-tl-table[data-hidden] {
+  overflow: hidden;
+  border-right: 0;
+}
+
+// The "+ New" row sits under the grid, on the line the placeholder leaves
+// empty at the bottom of the gantt.
+.db-tl-table__row--new {
+  height: #{$tl-row-height}px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+// ── The separator ──────────────────────────────────────────────────────────
+// Between the table and the grid. Dragging it is how the columns past the
+// panel's edge are brought into view.
+.db-tl-splitter {
+  flex: 0 0 auto;
+  width: 5px;
+  margin: 0 -2px;
+  cursor: col-resize;
+  background: transparent;
+  position: relative;
+  z-index: 6;
+  touch-action: none;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0 1px;
+    border-radius: 999px;
+    background: var(--tt-brand-color-500, #6229ff);
+    opacity: 0;
+    transition: opacity 0.1s ease;
+  }
+
+  &:hover::after,
+  &[data-dragging]::after {
+    opacity: 0.5;
+  }
+
+  &[data-dragging]::after {
+    opacity: 0.9;
+  }
+}

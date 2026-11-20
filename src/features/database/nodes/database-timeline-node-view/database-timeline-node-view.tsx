@@ -10,6 +10,7 @@ import {
 } from "src/components/icons";
 import {
   memo,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -27,6 +28,7 @@ import { useDatabaseColumnLayout } from "../../hooks/use-database-column-layout"
 import { DatabaseTableHeader } from "../database-table-node/database-table-header";
 import {
   clampTableWidth,
+  DAY_LEAD_HOURS,
   DEFAULT_TABLE_WIDTH,
   ROW_HEIGHT,
   GROUP_ROW_HEIGHT,
@@ -34,6 +36,8 @@ import {
   sameDay,
   sameHour,
   stepRange,
+  timeAtOffset,
+  offsetOfTime,
   useTimelineLayout,
 } from "../../hooks/use-timeline-layout";
 import {
@@ -191,6 +195,17 @@ function TimelineNav({
   );
 }
 
+/** How long the scroll must sit still at the far end of a range's context
+ *  before the range is rebuilt around what is on show. Long enough for a
+ *  wheel's momentum and a thumb drag to be over, so the scroll position we
+ *  write is not overridden a frame later. */
+const SCROLL_IDLE_MS = 120;
+
+/** How long our own write is left alone afterwards, so the scroll event it
+ *  raises is not read as the person reaching that end again. A frame is not
+ *  always enough — the event can arrive after it. */
+const SCROLL_SETTLE_MS = 80;
+
 function DatabaseTimelineNodeViewImpl() {
   const {
     db,
@@ -201,7 +216,6 @@ function DatabaseTimelineNodeViewImpl() {
     visibleProperties,
     onNewRecord,
   } = useDatabaseContext();
-
   const { addRecordAsync, updatePropertiesAsync } = useDataSource(source?.id);
   const { year, month, day } = useTimelineViewState();
   const { timelineLayout } = useTimelineLayout(
@@ -354,82 +368,40 @@ function DatabaseTimelineNodeViewImpl() {
   // of the timeline. The timeframe controls are not a reason for one: they
   // float over the group row, 28px of it, and a column's label and its bars
   // are below them.
-
   const [endSpill, setEndSpill] = useState(0);
   useEffect(() => {
     const view = viewportRef.current;
     if (!view) return;
-
     const measure = () => {
-      // The editor column's own scrollbar, measured rather than assumed:
-      // its width differs by platform and is 0 where it overlays.
-      const gutter = 15; //window.innerWidth - document.documentElement.clientWidth;
       const spill = Math.max(
         0,
         Math.ceil(
           view.getBoundingClientRect().right -
-            (document.documentElement.clientWidth - gutter),
+            document.documentElement.clientWidth,
         ),
       );
       setEndSpill((prev) => (prev === spill ? prev : spill));
     };
-
-    // Once more after a slide has had time to finish, in case no
-    // transitionend reaches us (a transition cut short).
-    let settle = 0;
-    const measureSoon = () => {
-      measure();
-      window.clearTimeout(settle);
-      settle = window.setTimeout(measure, 220);
-    };
-
-    // The sidebar doesn't resize this element or the document, it moves this
-    // element's right edge — and nothing observes a position. What it does
-    // do is animate, so the slide itself is the signal: the text column's
-    // transform and width, the sidebar's and the peek panel's.
-    const onTransitionEnd = (e: TransitionEvent) => {
-      if (
-        e.propertyName === "transform" ||
-        e.propertyName === "width" ||
-        e.propertyName === "margin-left" ||
-        e.propertyName === "left" ||
-        e.propertyName === "flex-basis"
-      ) {
-        measure();
-      }
-    };
-
     measure();
-
-    const ro = new ResizeObserver(measureSoon);
+    const ro = new ResizeObserver(measure);
     ro.observe(view);
     ro.observe(document.documentElement);
-    document.addEventListener("transitionend", onTransitionEnd, true);
-    window.addEventListener("resize", measureSoon);
-
-    return () => {
-      ro.disconnect();
-      window.clearTimeout(settle);
-      document.removeEventListener("transitionend", onTransitionEnd, true);
-      window.removeEventListener("resize", measureSoon);
-    };
+    return () => ro.disconnect();
   }, []);
 
   // ── Where a range opens ───────────────────────────────────────────────
-  // Day's columns start before the date on show (buildRange centres it), so
-  // column 0 is the previous afternoon. Open on the date itself instead,
-  // and again whenever the arrows move to another one — but never over a
-  // scroll that was asked for, which Today and the row arrows set below.
+  // On the page the view is anchored to, not on the first of the columns:
+  // a range carries pages of context either side of its own (padFor), and
+  // all of them are there to be scrolled into rather than opened on.
+  //
+  // Day's page then starts before the date on show, which buildRange
+  // centres, so column 0 of it is the previous afternoon: open on the date
+  // itself. Again whenever the arrows move to another page — but never over
+  // a scroll that was asked for, which Today and the row arrows set below.
   const openLeft = useMemo(() => {
-    if (range.unit !== "hour") return 0;
-    const i = range.days.findIndex(
-      (d) =>
-        d.getFullYear() === year &&
-        d.getMonth() === month &&
-        d.getDate() === day,
-    );
-    return i > 0 ? i * range.cellWidth : 0;
-  }, [range, year, month, day]);
+    const lead = range.unit === "hour" ? DAY_LEAD_HOURS : 0;
+    return (range.anchorIndex + lead) * range.cellWidth;
+  }, [range]);
 
   const openedAtRef = useRef<number | null>(null);
 
@@ -474,6 +446,105 @@ function DatabaseTimelineNodeViewImpl() {
     if (pendingScrollRef.current) return;
     el.scrollTo({ left: openLeft, behavior: "auto" });
   }, [openLeft]);
+
+  // ── Scrolling past the range on show ──────────────────────────────────
+  // Nothing here intercepts a scroll, and that is the point. The range is
+  // built with pages of context either side of the one the view is
+  // anchored to (padFor), so the scroller has somewhere to go: a sideways
+  // scroll runs on past the end of the date, the week, the month under its
+  // own momentum, the header naming the months it crosses, and the browser
+  // is scrolling its own content the whole way.
+  //
+  // What was here before stepped the range the moment an end was reached
+  // and wrote the scroll position back. A write only lands while the
+  // browser is not driving the scroll itself, and mid-gesture it is — a
+  // wheel's momentum animating towards its own target, a dragged thumb
+  // recomputed from the pointer every move — so it was overridden a frame
+  // later. That was the snap, and no amount of waiting fixed it, because
+  // the wait is what the gesture was.
+  //
+  // Only the far edge of all that context needs anything, and then only
+  // once the scroll has gone quiet there: the range is rebuilt around the
+  // moment the view is reading. The same moment goes back under the same
+  // pixel, so nothing appears to move — what changes is that there are
+  // pages of room ahead again. Reaching that edge takes ten dates, nine
+  // weeks, five years of scrolling, so this is the end of the road being
+  // extended rather than a step.
+
+  /** The moment the view was reading when the range was rebuilt. */
+  const carryRef = useRef<number | null>(null);
+  /** True while we are moving the scroll ourselves, so our own scroll
+   *  events don't read as the person reaching an end again. */
+  const steppingRef = useRef(false);
+
+  const reanchorTo = useCallback(
+    (at: number) => {
+      const on = new Date(at);
+      // Already anchored there: the range would come back identical, and
+      // the carry below would never be consumed.
+      if (
+        on.getFullYear() === year &&
+        on.getMonth() === month &&
+        on.getDate() === day
+      ) {
+        return;
+      }
+      carryRef.current = at;
+      goTo(on);
+    },
+    [goTo, year, month, day],
+  );
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    let idle = 0;
+    const onScroll = () => {
+      window.clearTimeout(idle);
+      if (steppingRef.current || carryRef.current !== null) return;
+      const max = el.scrollWidth - el.clientWidth;
+      if (max <= 1) return;
+      const atEnd = el.scrollLeft >= max - 1 || el.scrollLeft <= 0;
+      if (!atEnd) return;
+      idle = window.setTimeout(() => {
+        // Still there, still quiet, and still ours to move.
+        if (steppingRef.current || carryRef.current !== null) return;
+        const now = el.scrollWidth - el.clientWidth;
+        if (el.scrollLeft < now - 1 && el.scrollLeft > 0) return;
+        reanchorTo(timeAtOffset(range, el.scrollLeft));
+      }, SCROLL_IDLE_MS);
+    };
+
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.clearTimeout(idle);
+      el.removeEventListener("scroll", onScroll);
+    };
+  }, [range, reanchorTo]);
+
+  // Before the browser paints the new range, not after: put back as an
+  // effect the person sees the window jump and then correct itself.
+  useLayoutEffect(() => {
+    const t = carryRef.current;
+    if (t === null) return;
+    carryRef.current = null;
+    const el = scrollRef.current;
+    if (!el) return;
+    steppingRef.current = true;
+    const max = el.scrollWidth - el.clientWidth;
+    el.scrollLeft = Math.min(
+      Math.max(offsetOfTime(range, t), 0),
+      Math.max(0, max),
+    );
+    // The range just opened on a new page, and its own opening position
+    // must not undo this.
+    openedAtRef.current = openLeft;
+    const done = window.setTimeout(() => {
+      steppingRef.current = false;
+    }, SCROLL_SETTLE_MS);
+    return () => window.clearTimeout(done);
+  }, [range, openLeft]);
 
   function handleToday() {
     pendingScrollRef.current = { type: "today" };
@@ -718,7 +789,7 @@ function DatabaseTimelineNodeViewImpl() {
               >
                 <TimelineHeader highlights={highlights} range={range} />
                 <div
-                  className={`db-tl-gantt__body ${timeframe}`}
+                  className="db-tl-gantt__body"
                   style={{
                     width: gridWidth,
                     minWidth: gridWidth,
@@ -765,11 +836,6 @@ function DatabaseTimelineNodeViewImpl() {
                   style={{ top: ind.rowIndex * ROW_HEIGHT + ROW_HEIGHT / 2 }}
                   onClick={() => scrollToRecord(ind)}
                   aria-label={
-                    ind.direction === "left"
-                      ? "Scroll to earlier record"
-                      : "Scroll to later record"
-                  }
-                  tooltip={
                     ind.direction === "left"
                       ? "Scroll to earlier record"
                       : "Scroll to later record"

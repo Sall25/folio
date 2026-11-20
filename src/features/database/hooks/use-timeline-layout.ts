@@ -245,6 +245,17 @@ export interface TimelineRange {
   unit: CellUnit;
   /** How wide one of them is drawn. */
   cellWidth: number;
+  /** Which timeframe built it. The unit does not say: a quarter and a year
+   *  are both weeks, drawn differently, and the grid and the header each
+   *  have to tell them apart. */
+  timeframe: Timeframe;
+  /**
+   * The column where the page the view is anchored to begins — the month,
+   * the week, the date that was asked for. The columns before it are the
+   * context a scroll runs back into, and the ones after its page the
+   * context it runs on into. 0 where there is none.
+   */
+  anchorIndex: number;
 }
 
 export interface TimelineLayout {
@@ -470,7 +481,163 @@ export function parseIsoDate(iso: unknown): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
+/**
+ * How many pages of context a range carries on either side of the page the
+ * view is anchored to.
+ *
+ * This is the whole of how a timeline scrolls past the range on show. The
+ * scroller's content is what a person can scroll across, so a range of
+ * exactly one page is a wall at either end of it — and growing the range
+ * rather than stepping it when a wall is reached is the difference between
+ * a scroll that carries on and one that snaps. Here the browser scrolls its
+ * own content and nothing writes a position under the gesture.
+ *
+ * Sized so that no timeframe draws much more than a few hundred columns: a
+ * page either side is less than one flick of a trackpad, and ten is a canvas
+ * nobody reaches the end of, drawn in full for every one of them.
+ */
+export function padFor(timeframe: Timeframe): number {
+  switch (timeframe) {
+    case "day":
+      return 2; // 48 hours to a page: ten dates in all
+    case "week":
+      return 4; // nine weeks
+    case "quarter":
+      return 3; // seven quarters
+    case "year":
+      return 2; // five years
+    case "month":
+    default:
+      return 3; // seven months
+  }
+}
+
+/** The month a column belongs to — for a week, the month holding its
+ *  midweek, as a week is never split between two of them. */
+function groupDate(d: Date, unit: CellUnit): Date {
+  if (unit !== "week") return d;
+  const mid = new Date(d);
+  mid.setDate(d.getDate() + 3);
+  return mid;
+}
+
+/**
+ * What stands above the columns: a date per date in Day, a year per year
+ * where a column is itself a month, a month per month everywhere else.
+ *
+ * The year is written in at the first group and wherever the year changes.
+ * A range carrying pages of context around its own crosses years, which is
+ * why this is one rule rather than one per timeframe — and why the locale
+ * writes it ("9 November 2026", "novembre 2026"), placing the year and its
+ * punctuation where that language puts them. The header must not then
+ * append its own: labelsCarryYear.
+ */
+export function headerGroupsFor(
+  days: Date[],
+  unit: CellUnit,
+): { label: string; days: number }[] {
+  const scale = unit === "hour" ? "date" : unit === "month" ? "year" : "month";
+  const out: { label: string; days: number }[] = [];
+  let prev: Date | null = null;
+  for (const col of days) {
+    const d = groupDate(col, unit);
+    const same =
+      prev !== null &&
+      (scale === "date"
+        ? sameDay(d, prev)
+        : scale === "year"
+          ? d.getFullYear() === prev.getFullYear()
+          : sameMonth(d, prev));
+    if (same) {
+      out[out.length - 1].days += 1;
+      continue;
+    }
+    const turnsYear = prev === null || d.getFullYear() !== prev.getFullYear();
+    out.push({
+      label: d.toLocaleDateString(
+        undefined,
+        scale === "year"
+          ? { year: "numeric" }
+          : {
+              ...(scale === "date"
+                ? { day: "numeric", month: "long" }
+                : { month: "long" }),
+              ...(turnsYear ? { year: "numeric" as const } : {}),
+            },
+      ),
+      days: 1,
+    });
+    prev = d;
+  }
+  return out;
+}
+
+/** The last instant a column stands for: what a range's endDate is, taken
+ *  from the last of them. */
+function endOfColumn(d: Date, unit: CellUnit): Date {
+  const end = new Date(d);
+  switch (unit) {
+    case "hour":
+      end.setMinutes(59, 59, 999);
+      break;
+    case "week":
+      end.setDate(d.getDate() + DAYS_IN_WEEK - 1);
+      end.setHours(23, 59, 59, 999);
+      break;
+    case "month":
+      end.setMonth(d.getMonth() + 1, 0);
+      end.setHours(23, 59, 59, 999);
+      break;
+    default:
+      end.setHours(23, 59, 59, 999);
+  }
+  return end;
+}
+
+/** A page with `pad` more pages of its own columns either side of it, by
+ *  the column's own unit — hours before an hour, weeks before a week — so
+ *  the context is made of the same thing the page is. */
+function padPage(page: TimelineRange, pad: number): TimelineRange {
+  const { unit } = page;
+  const more = page.days.length * pad;
+  const last = page.days[page.days.length - 1];
+  const before: Date[] = [];
+  for (let i = more; i >= 1; i--)
+    before.push(shiftDate(page.days[0], unit, -i));
+  const after: Date[] = [];
+  for (let i = 1; i <= more; i++) after.push(shiftDate(last, unit, i));
+
+  const days = [...before, ...page.days, ...after];
+  return {
+    ...page,
+    days,
+    startDate: days[0],
+    endDate: endOfColumn(days[days.length - 1], unit),
+    headerGroups: headerGroupsFor(days, unit),
+    labelsCarryYear: true,
+    anchorIndex: before.length,
+  };
+}
+
+/**
+ * The columns a timeline draws: the page asked for, and `pad` pages of
+ * context either side of it (padFor says how many, and why).
+ *
+ * pad 0 is the page alone, which is what the arrows and every test that
+ * only cares about one span ask for.
+ */
 export function buildRange(
+  year: number,
+  month: number,
+  day: number,
+  timeframe: Timeframe,
+  pad = 0,
+): TimelineRange {
+  const page = buildPage(year, month, day, timeframe);
+  return pad > 0 ? padPage(page, pad) : page;
+}
+
+function buildPage(
   year: number,
   month: number,
   day: number,
@@ -496,36 +663,17 @@ export function buildRange(
     const endDate = new Date(hours[HOURS_SPAN - 1]);
     endDate.setMinutes(59, 59, 999);
 
-    // One group per date the span touches. The first says its year, the
-    // rest don't — the locale writes it ("November 9, 2023" then
-    // "November 10"), so the comma is its own and not ours to add.
-    const headerGroups: { label: string; days: number }[] = [];
-    for (let i = 0; i < hours.length; i++) {
-      const d = hours[i];
-      const prev = i > 0 ? hours[i - 1] : null;
-      if (prev && sameDay(d, prev)) {
-        headerGroups[headerGroups.length - 1].days += 1;
-        continue;
-      }
-      headerGroups.push({
-        label: d.toLocaleDateString(undefined, {
-          day: "numeric",
-          month: "long",
-          // Only the first: the year is said once over the span.
-          ...(headerGroups.length === 0 ? { year: "numeric" as const } : {}),
-        }),
-        days: 1,
-      });
-    }
-
     return {
       startDate,
       endDate,
       days: hours,
-      headerGroups,
+      // One group per date the span touches, named by the locale.
+      headerGroups: headerGroupsFor(hours, "hour"),
       labelsCarryYear: true,
       unit: "hour",
       cellWidth: HOUR_WIDTH,
+      timeframe,
+      anchorIndex: 0,
     };
   }
 
@@ -550,34 +698,20 @@ export function buildRange(
       59,
       999,
     );
-    // A group per month, as a Day and a Year do: one heading for a week
-    // inside a month, two where it runs across the turn of one. The dates
-    // themselves are under every column already, so the heading names the
-    // month rather than repeating the span.
-    const headerGroups: { label: string; days: number }[] = [];
-    days.forEach((d, i) => {
-      const prev = i > 0 ? days[i - 1] : null;
-      if (prev && sameMonth(d, prev)) {
-        headerGroups[headerGroups.length - 1].days += 1;
-        return;
-      }
-      headerGroups.push({
-        label: d.toLocaleDateString(undefined, {
-          month: "long",
-          ...(headerGroups.length === 0 ? { year: "numeric" as const } : {}),
-        }),
-        days: 1,
-      });
-    });
-
     return {
       startDate,
       endDate,
       days,
-      headerGroups,
+      // A group per month, as a Day and a Year have: one heading for a week
+      // inside a month, two where it runs across the turn of one. The dates
+      // themselves are under every column already, so the heading names the
+      // month rather than repeating the span.
+      headerGroups: headerGroupsFor(days, "weekday"),
       labelsCarryYear: true,
       unit: "weekday",
       cellWidth: WEEKDAY_WIDTH,
+      timeframe,
+      anchorIndex: 0,
     };
   }
 
@@ -618,6 +752,8 @@ export function buildRange(
       ],
       unit: "week",
       cellWidth: WEEK_WIDTH,
+      timeframe,
+      anchorIndex: 0,
     };
   }
 
@@ -655,33 +791,18 @@ export function buildRange(
     endDate.setDate(lastWeek.getDate() + 6);
     endDate.setHours(23, 59, 59, 999);
 
-    // A group per month, by the month holding each week's midweek — the
-    // month most of the week falls in. The first group says the year,
-    // written by the locale with its own punctuation.
-    const headerGroups: { label: string; days: number }[] = [];
-    days.map(midweek).forEach((d, i, mid) => {
-      const prev = i > 0 ? mid[i - 1] : null;
-      if (prev && sameMonth(d, prev)) {
-        headerGroups[headerGroups.length - 1].days += 1;
-        return;
-      }
-      headerGroups.push({
-        label: d.toLocaleDateString(undefined, {
-          month: "long",
-          ...(headerGroups.length === 0 ? { year: "numeric" as const } : {}),
-        }),
-        days: 1,
-      });
-    });
-
     return {
       startDate,
       endDate,
       days,
-      headerGroups,
+      // A group per month, by the month holding each week's midweek — the
+      // month most of the week falls in (headerGroupsFor, groupDate).
+      headerGroups: headerGroupsFor(days, "week"),
       labelsCarryYear: true,
       unit: "week",
       cellWidth: YEAR_WEEK_WIDTH,
+      timeframe,
+      anchorIndex: 0,
     };
   }
 
@@ -713,6 +834,8 @@ export function buildRange(
     headerGroups,
     unit: "day",
     cellWidth: DAY_WIDTH,
+    timeframe,
+    anchorIndex: 0,
   };
 }
 
@@ -854,7 +977,10 @@ export function useTimelineLayout(
   const hasEnd = !!endProp;
 
   const timelineLayout = useMemo<TimelineLayout>(() => {
-    const range = buildRange(year, month, day, timeframe);
+    // With its context either side: the scroller is handed several pages of
+    // columns, so a sideways scroll runs past the end of the one on show
+    // under its own momentum instead of hitting a wall and being stepped.
+    const range = buildRange(year, month, day, timeframe, padFor(timeframe));
 
     const records: TimelineRecord[] = sortedRecords.map((r) => {
       const raw = startProp ? r.values?.[startProp.id] : null;
