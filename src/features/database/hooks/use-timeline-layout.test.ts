@@ -13,6 +13,8 @@ import {
   YEAR_WEEK_WIDTH,
   sameMonth,
   sameWeek,
+  sameHour,
+  sameDay,
   startOfWeek,
   stepRange,
   shiftDate,
@@ -21,6 +23,8 @@ import {
   HOUR_WIDTH,
   buildRange,
   padFor,
+  columnWindow,
+  WINDOW_BLOCK,
   headerGroupsFor,
   cellWidthFor,
   isAllDayValue,
@@ -229,12 +233,13 @@ describe("a day, by the hour", () => {
     expect(range.headerGroups.reduce((n, g) => n + g.days, 0)).toBe(HOURS_SPAN);
   });
 
-  it("says the year over the first date and no other", () => {
-    // The header appends no year of its own for hours, so a second "2026"
-    // here would be the one that made a month read "Novembre 2026 2026".
-    expect(range.headerGroups[0].label).toMatch(/2026/);
-    expect(range.headerGroups[1].label).not.toMatch(/2026/);
-    expect(range.headerGroups[2].label).not.toMatch(/2026/);
+  it("says the year over every date", () => {
+    // Every heading, not just the first: the header draws the ones on
+    // screen, and in a range of hundreds of dates the first is almost
+    // never among them. The locale writes the year in, so the header must
+    // append none of its own — a second would read "15 novembre 2026 2026".
+    expect(range.labelsCarryYear).toBe(true);
+    for (const g of range.headerGroups) expect(g.label).toMatch(/2026/);
   });
 });
 
@@ -462,9 +467,10 @@ describe("a week, Monday first", () => {
       DAYS_IN_WEEK,
     );
     expect(across.headerGroups[0].days).toBe(1);
-    // Only the first says the year.
+    // Each names its own year, and neither names the other's month.
     expect(across.headerGroups[0].label).toMatch(/2026/);
-    expect(across.headerGroups[1].label).not.toMatch(/2026/);
+    expect(across.headerGroups[1].label).toMatch(/2026/);
+    expect(across.headerGroups[0].label).not.toBe(across.headerGroups[1].label);
   });
 
   it("names a weekday by its initial and its date", () => {
@@ -678,12 +684,9 @@ describe("a year, by the week", () => {
     expect(range.headerGroups.every((g) => g.days > 0)).toBe(true);
   });
 
-  it("says the year over the first month and no other", () => {
+  it("says the year over every month", () => {
     expect(range.labelsCarryYear).toBe(true);
-    expect(range.headerGroups[0].label).toMatch(/2026/);
-    expect(
-      range.headerGroups.slice(1).every((g) => !/2026/.test(g.label)),
-    ).toBe(true);
+    expect(range.headerGroups.every((g) => /2026/.test(g.label))).toBe(true);
   });
 
   it("names a column by its day alone where a month sits above it", () => {
@@ -1074,15 +1077,17 @@ describe("a range with its context either side", () => {
     expect(range.labelsCarryYear).toBe(true);
   });
 
-  it("says the year again when the context crosses one", () => {
-    // Pages of context cross new year, and a heading of "January" among
-    // them says which year it isn't. The locale writes it in, so the
-    // header must not append its own: labelsCarryYear.
+  it("says which year every heading belongs to", () => {
+    // The bug this replaces: the year was written over the first heading
+    // of the range and no other, and the header draws the headings that
+    // are on screen — which, in twenty years of them, is never the first.
+    // A heading read "novembre", in a range holding twenty Novembers.
     const range = buildRange(2026, 10, 15, "month", padFor("month"));
     const withYear = range.headerGroups.filter((g) => /\d{4}/.test(g.label));
-    expect(withYear.length).toBeGreaterThan(1);
-    // And only where it turns: not on every heading.
-    expect(withYear.length).toBeLessThan(range.headerGroups.length);
+    expect(withYear).toHaveLength(range.headerGroups.length);
+    // Several years of them, each saying its own.
+    const years = new Set(withYear.map((g) => g.label.match(/\d{4}/)![0]));
+    expect(years.size).toBeGreaterThan(5);
   });
 
   it("names a date per date in Day and a month per month elsewhere", () => {
@@ -1172,9 +1177,211 @@ describe("a range with its context either side", () => {
     const geo = getGeo(rec, range, true);
     expect(geo).not.toBeNull();
     expect(geo!.width).toBe(4 * DAY_WIDTH);
-    // On the 20th of December, wherever that column happens to be.
+    // On the 20th of December 2026, wherever that column happens to be —
+    // the range runs over years, so the year is part of saying which.
     expect(geo!.left / DAY_WIDTH).toBe(
-      range.days.findIndex((d) => d.getMonth() === 11 && d.getDate() === 20),
+      range.days.findIndex(
+        (d) =>
+          d.getFullYear() === 2026 && d.getMonth() === 11 && d.getDate() === 20,
+      ),
+    );
+  });
+});
+
+// ── A range with no end to reach ───────────────────────────────────────────
+// Every version of the scroll before this one let the range run out and then
+// tried to hide it, and each had to write a scroll position to do it — which
+// mid-gesture is either overridden or lands as a jump. So the range is built
+// wide enough that no sitting at a wheel reaches an end of it, and only the
+// columns on screen are drawn.
+
+describe("a range nobody scrolls to the end of", () => {
+  const TIMEFRAMES: Timeframe[] = ["day", "week", "month", "quarter", "year"];
+  const DAY = 86_400_000;
+
+  /** How long a padded range runs, in days. */
+  const span = (tf: Timeframe) => {
+    const r = buildRange(2026, 10, 15, tf, padFor(tf));
+    return (r.endDate.getTime() - r.startDate.getTime()) / DAY;
+  };
+
+  it("runs a year either side in Day and ten in Week", () => {
+    // What a wheel would have to cross to find an end. Stated as days so
+    // that shrinking any of these trips the test rather than the person.
+    expect(span("day")).toBeGreaterThan(600);
+    expect(span("week")).toBeGreaterThan(3600);
+    expect(span("month")).toBeGreaterThan(7000);
+    expect(span("quarter")).toBeGreaterThan(35_000);
+    expect(span("year")).toBeGreaterThan(40_000);
+  });
+
+  it.each(TIMEFRAMES)("still opens on the page asked for in %s", (tf) => {
+    // Wide is no use if it loses the date it was asked about.
+    const page = buildRange(2026, 10, 15, tf);
+    const range = buildRange(2026, 10, 15, tf, padFor(tf));
+    page.days.forEach((d, i) => {
+      expect(range.days[range.anchorIndex + i].getTime()).toBe(d.getTime());
+    });
+  });
+});
+
+describe("drawing only the columns on screen", () => {
+  const range = buildRange(2026, 10, 15, "month", padFor("month"));
+  const cell = range.cellWidth;
+
+  it("covers what the viewport shows", () => {
+    const at = 4000;
+    const { from, to } = columnWindow(range, at, 900);
+    expect(from * cell).toBeLessThanOrEqual(at);
+    expect(to * cell).toBeGreaterThanOrEqual(at + 900);
+  });
+
+  it("draws a screenful and not a range", () => {
+    const { from, to } = columnWindow(range, 4000, 900);
+    expect(to - from).toBeLessThan(WINDOW_BLOCK * 5);
+    expect(range.days.length).toBeGreaterThan(5000);
+  });
+
+  it("asks for the same window again when the scroll barely moves", () => {
+    // Which is what keeps the header and the grid still while scrolling:
+    // the window is the prop they are memoised on.
+    const a = columnWindow(range, 4000, 900);
+    const b = columnWindow(range, 4000 + cell, 900);
+    expect(b).toEqual(a);
+  });
+
+  it("moves the window on, a block at a time", () => {
+    const a = columnWindow(range, 4000, 900);
+    const b = columnWindow(range, 4000 + WINDOW_BLOCK * cell, 900);
+    expect(b.from).toBe(a.from + WINDOW_BLOCK);
+    expect(b.to).toBe(a.to + WINDOW_BLOCK);
+  });
+
+  it("keeps inside the range at either end", () => {
+    expect(columnWindow(range, 0, 900).from).toBe(0);
+    const end = range.days.length * cell;
+    expect(columnWindow(range, end - 900, 900).to).toBe(range.days.length);
+  });
+
+  it("draws something before the viewport has been measured", () => {
+    // The first paint happens before the ResizeObserver reports, and a grid
+    // that draws nothing then is a grid that flashes empty.
+    const { from, to } = columnWindow(range, 0, 0);
+    expect(to).toBeGreaterThan(from);
+    expect(to - from).toBeGreaterThan(WINDOW_BLOCK);
+  });
+});
+
+describe("finding a record's columns in a range of thousands", () => {
+  // getGeo used to scan the columns for the one a moment falls in. At a few
+  // dozen columns that was free; at a few thousand, twice per record, every
+  // time a record changes, it is not — so it is a search now. A search that
+  // disagreed with the scan would move every bar, so: it must not.
+  const TIMEFRAMES: Timeframe[] = ["day", "week", "month", "quarter", "year"];
+
+  /** The scan, as getGeo did it, for comparison. */
+  const scanned = (range: ReturnType<typeof buildRange>, t: number) => {
+    const inCell =
+      range.unit === "hour"
+        ? sameHour
+        : range.unit === "week"
+          ? sameWeek
+          : range.unit === "month"
+            ? sameMonth
+            : sameDay;
+    return range.days.findIndex((d) => inCell(d, new Date(t)));
+  };
+
+  it.each(TIMEFRAMES)("agrees with the scan it replaced in %s", (tf) => {
+    const range = buildRange(2026, 10, 15, tf, padFor(tf));
+    const w = range.cellWidth;
+    // Dates spread across the whole of it, and the ends of it exactly.
+    const picks = [0, 1, 7, 99, 500, 1234, range.days.length - 1].filter(
+      (i) => i < range.days.length,
+    );
+    for (const i of picks) {
+      const at = range.days[i];
+      const geo = getGeo(
+        { id: "r", title: "r", start: at, end: at, allDay: false },
+        range,
+        false,
+      );
+      expect(geo).not.toBeNull();
+      // The same column the scan would have found.
+      expect(scanned(range, at.getTime())).toBe(i);
+      expect(geo!.left).toBe(i * w);
+      expect(geo!.width).toBe(w);
+    }
+  });
+
+  it("spans a whole day in Day, not its first hour", () => {
+    // The end of an all-day record used to be found by scanning backwards
+    // for the last column of its date; the search asks for the column
+    // holding the last moment of that date instead, which is the same one.
+    const range = buildRange(2026, 10, 15, "day", padFor("day"));
+    const geo = getGeo(
+      {
+        id: "r",
+        title: "r",
+        start: new Date(2026, 10, 15),
+        end: new Date(2026, 10, 15),
+        allDay: true,
+      },
+      range,
+      true,
+    );
+    expect(geo!.width).toBe(HOURS_IN_DAY * HOUR_WIDTH);
+    expect(range.days[geo!.left / HOUR_WIDTH].getHours()).toBe(0);
+    expect(range.days[geo!.left / HOUR_WIDTH].getDate()).toBe(15);
+  });
+
+  it("runs a bar over the days an all-day record covers", () => {
+    const range = buildRange(2026, 10, 15, "month", padFor("month"));
+    const geo = getGeo(
+      {
+        id: "r",
+        title: "r",
+        start: new Date(2026, 10, 10),
+        end: new Date(2026, 10, 12),
+        allDay: true,
+      },
+      range,
+      true,
+    );
+    expect(geo!.width).toBe(3 * DAY_WIDTH);
+  });
+});
+
+describe("an hour column where the clocks change", () => {
+  // A Day range is a year of hours now, so it always holds both of the
+  // year's transitions. Built from the wall clock, the hour that does not
+  // exist in spring drew its neighbour twice and dropped an hour out of the
+  // grid: two columns, one instant. A column is an hour of elapsed time.
+  const range = buildRange(2026, 10, 15, "day", padFor("day"));
+
+  it("never draws the same instant twice", () => {
+    for (let i = 1; i < range.days.length; i++) {
+      expect(range.days[i].getTime()).toBeGreaterThan(
+        range.days[i - 1].getTime(),
+      );
+    }
+  });
+
+  it("is an hour apart all the way across", () => {
+    for (let i = 1; i < range.days.length; i++) {
+      expect(range.days[i].getTime() - range.days[i - 1].getTime()).toBe(
+        3_600_000,
+      );
+    }
+  });
+
+  it("moves a card by an hour of elapsed time", () => {
+    // The grid is elapsed hours, so a card dragged one column is too, or a
+    // drag across a transition would land a column off what it was dropped
+    // on.
+    const at = new Date(2026, 10, 15, 9);
+    expect(shiftDate(at, "hour", 3).getTime() - at.getTime()).toBe(
+      3 * 3_600_000,
     );
   });
 });

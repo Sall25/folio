@@ -39,8 +39,21 @@ function dividersFor(range: TimelineRange): number[] {
   return out;
 }
 
-function TimelineDayGridImpl({ range }: { range: TimelineRange }) {
+function TimelineDayGridImpl({
+  range,
+  shown,
+}: {
+  range: TimelineRange;
+  shown: { from: number; to: number };
+}) {
   const dividers = useMemo(() => dividersFor(range), [range]);
+  const cell = range.cellWidth;
+  // Only what is on screen: the range is years of columns wide now
+  // (columnWindow).
+  const columns = range.days.slice(shown.from, shown.to);
+  const lines = dividers.filter(
+    (x) => x >= shown.from * cell && x <= shown.to * cell,
+  );
 
   // A Year: fifty-two week columns under month headings. The months are
   // the structure there, and a line on every week buries them — so the
@@ -58,7 +71,8 @@ function TimelineDayGridImpl({ range }: { range: TimelineRange }) {
       className={"db-tl-day-grid" + (monthsOnly ? " db-tl-day-grid--bare" : "")}
       aria-hidden
     >
-      {range.days.map((day, i) => {
+      {columns.map((day, i) => {
+        const index = shown.from + i;
         // Shaded the same way for the same reason: so the eye can find
         // where it is without reading the ruler. Weekends across days,
         // and — where a column is a whole week and no weekend is left to
@@ -79,17 +93,17 @@ function TimelineDayGridImpl({ range }: { range: TimelineRange }) {
                 : day.getDay() === 0 || day.getDay() === 6;
         return (
           <div
-            key={i}
+            key={index}
             className={
               "db-tl-day-grid__col" +
               (isWeekend ? " db-tl-day-grid__col--weekend" : "")
             }
-            style={{ left: i * range.cellWidth, width: range.cellWidth }}
+            style={{ left: index * cell, width: cell }}
           />
         );
       })}
 
-      {dividers.map((left, i) => (
+      {lines.map((left, i) => (
         <div
           key={`d${i}`}
           className="db-tl-day-grid__divide"

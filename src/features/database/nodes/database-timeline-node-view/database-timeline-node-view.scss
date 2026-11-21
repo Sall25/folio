@@ -279,12 +279,6 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   border-bottom: 1px solid var(--tt-border-color);
 }
 
-.db-tl-gantt__body.day,
-.db-tl-gantt__body.year,
-.db-tl-gantt__body.week{
-  overflow-x: hidden;
-}
-
 // ── Grid lines ─────────────────────────────────────────────────────────────
 .db-tl-gantt__grid-lines {
   position: absolute;
@@ -462,7 +456,7 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   flex-direction: column;
 
   &__groups {
-    display: flex;
+    position: relative;
   }
 
   &__days {
@@ -616,7 +610,6 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
 }
 
 .db-tl-header__groups {
-  display: flex;
   position: sticky;
   top: 0;
   z-index: 6;
@@ -625,8 +618,13 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
 }
 
 .db-tl-header__group {
-  flex-shrink: 0;
-  position: relative;
+  // Placed where its months fall, not laid out one after another: a range
+  // runs over years and only the groups on screen are drawn, so there is
+  // nothing in front of them to be pushed along by. The label inside still
+  // sticks to the left of its own box as it scrolls through it.
+  position: absolute;
+  top: 0;
+  bottom: 0;
   box-sizing: border-box;
   // border-right: 1px solid var(--tt-border-color);
 }
@@ -707,7 +705,12 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   display: flex;
   align-items: center;
   padding: 0 8px;
-  background: linear-gradient(to right, transparent, var(--tt-bg-color) 24px);
+  // Opaque, and from its own left edge: a month heading travelling right as
+  // the grid scrolls back ends at the controls rather than running into
+  // them. It was a gradient, which let the heading crowd them for 24px
+  // before it faded. The colour is the group row's own, so what the eye
+  // sees is the heading cut off by the controls and no seam at all.
+  background: var(--tt-bg-color);
 }
 
 .db-tl-nav-controls {

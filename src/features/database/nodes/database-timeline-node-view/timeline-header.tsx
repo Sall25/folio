@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import type { TimelineRange } from "../../hooks/use-timeline-layout";
 import {
   columnParts,
@@ -14,35 +14,64 @@ interface HighlightRange {
   tone: "hover" | "selected";
 }
 
+/** The columns worth drawing: what columnWindow worked out. */
+interface Shown {
+  from: number;
+  to: number;
+}
+
 function TimelineHeaderImpl({
   range,
   highlights,
+  shown,
 }: {
   range: TimelineRange;
   highlights: HighlightRange[];
+  shown: Shown;
 }) {
   const cell = range.cellWidth;
   const gridWidth = range.days.length * cell;
   const hourly = range.unit === "hour";
 
-  const today = new Date();
-  // In Day every column is the same date, so what is marked is the hour.
-  const todayIdx = range.days.findIndex((d) =>
-    hourly ? sameHour(d, today) : sameDay(d, today),
-  );
+  // In Day a column is an hour, so what is marked is the hour. Looked up
+  // when the range changes rather than on every render: the range holds
+  // thousands of columns and the window moves as the grid scrolls.
+  const todayIdx = useMemo(() => {
+    const today = new Date();
+    return range.days.findIndex((d) =>
+      hourly ? sameHour(d, today) : sameDay(d, today),
+    );
+  }, [range, hourly]);
 
-  let dayCursor = 0;
-  const groupsWithYear = range.headerGroups.map((group) => {
-    const groupStart = range.days[dayCursor];
-    // eslint-disable-next-line react-hooks/immutability
-    dayCursor += group.days;
-    // Some ranges write their own year into the label, so the locale
-    // places it — and its punctuation. The rest have it appended here.
-    return {
-      ...group,
-      year: range.labelsCarryYear ? undefined : groupStart?.getFullYear(),
-    };
-  });
+  // Every group, with the column it starts at: a range runs over years now,
+  // so the months above it are drawn from where they fall rather than laid
+  // out one after another — only the ones on screen are drawn at all.
+  const groups = useMemo(() => {
+    const out: {
+      label: string;
+      days: number;
+      start: number;
+      year?: number;
+    }[] = [];
+    let at = 0;
+    for (const group of range.headerGroups) {
+      out.push({
+        label: group.label,
+        days: group.days,
+        start: at,
+        // Some ranges write their own year into the label, so the locale
+        // places it — and its punctuation. The rest have it appended here.
+        year: range.labelsCarryYear ? undefined : range.days[at]?.getFullYear(),
+      });
+      at += group.days;
+    }
+    return out;
+  }, [range]);
+
+  const inView = groups.filter(
+    (g) => g.start < shown.to && g.start + g.days > shown.from,
+  );
+  const columns = range.days.slice(shown.from, shown.to);
 
   return (
     <div
@@ -57,11 +86,11 @@ function TimelineHeaderImpl({
         className="db-tl-header__groups"
         style={{ height: GROUP_ROW_HEIGHT }}
       >
-        {groupsWithYear.map((group, i) => (
+        {inView.map((group) => (
           <div
-            key={`${group.label}-${i}`}
+            key={`${group.label}-${group.start}`}
             className="db-tl-header__group"
-            style={{ width: group.days * cell }}
+            style={{ left: group.start * cell, width: group.days * cell }}
           >
             <span className="db-tl-header__group-label">
               {/* A year has nothing to say above its months but the year
@@ -97,48 +126,38 @@ function TimelineHeaderImpl({
           />
         ))}
 
-        {range.days.map((day, i) => (
-          <div
-            key={i}
-            className="db-tl-header__day"
-            style={{ left: i * cell, width: cell }}
-          >
-            <span
-              className={
-                "db-tl-header__day-num" +
-                (i === todayIdx ? " db-tl-header__day-num--today" : "")
-              }
+        {columns.map((day, i) => {
+          const index = shown.from + i;
+          // A month above a run of columns says it for all of them, so the
+          // column itself need only count its day — a Year's weeks, where
+          // there is no room for it twice over in any case. A quarter's
+          // weeks are wide enough to carry their own month and few enough
+          // to want it.
+          const part = columnParts(day, range.unit, range.timeframe !== "year");
+          return (
+            <div
+              key={index}
+              className="db-tl-header__day"
+              style={{ left: index * cell, width: cell }}
             >
-              {/* A month above a run of columns says it for all of
-                  them, so the column itself need only count its day —
-                  a Year's fifty-two weeks, where there is no room for it
-                  twice over in any case. A quarter's weeks are wide
-                  enough to carry their own month and few enough to want
-                  it. */}
-              {(() => {
-                const part = columnParts(
-                  day,
-                  range.unit,
-                  range.timeframe !== "year",
-                );
-                return (
-                  <>
-                    {part.lead && (
-                      <span className="db-tl-header__day-lead">
-                        {part.lead}
-                      </span>
-                    )}
-                    {part.main}
-                  </>
-                );
-              })()}
-            </span>
-          </div>
-        ))}
+              <span
+                className={
+                  "db-tl-header__day-num" +
+                  (index === todayIdx ? " db-tl-header__day-num--today" : "")
+                }
+              >
+                {part.lead && (
+                  <span className="db-tl-header__day-lead">{part.lead}</span>
+                )}
+                {part.main}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
 export const TimelineHeader = memo(TimelineHeaderImpl);
-export type { HighlightRange };
+export type { HighlightRange, Shown };

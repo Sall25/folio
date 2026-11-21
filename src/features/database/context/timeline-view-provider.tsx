@@ -14,11 +14,14 @@ export function TimelineViewProvider({ children }: { children: ReactNode }) {
   // every caller had to remember all three: the one that jumps to a record
   // set the year and the month and not the day, so in the two timeframes
   // anchored by the day — Day and Week — jumping to a record went nowhere.
-  const goTo = useCallback((date: Date) => {
-    setYear(date.getFullYear());
-    setMonth(date.getMonth());
-    setDay(date.getDate());
-  }, [setYear, setMonth, setDay]);
+  const goTo = useCallback(
+    (date: Date) => {
+      setYear(date.getFullYear());
+      setMonth(date.getMonth());
+      setDay(date.getDate());
+    },
+    [setYear, setMonth, setDay],
+  );
 
   const goToToday = useCallback(() => goTo(new Date()), [goTo]);
 

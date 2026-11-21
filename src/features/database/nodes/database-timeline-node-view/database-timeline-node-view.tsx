@@ -10,7 +10,6 @@ import {
 } from "src/components/icons";
 import {
   memo,
-  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -28,6 +27,7 @@ import { useDatabaseColumnLayout } from "../../hooks/use-database-column-layout"
 import { DatabaseTableHeader } from "../database-table-node/database-table-header";
 import {
   clampTableWidth,
+  columnWindow,
   DAY_LEAD_HOURS,
   DEFAULT_TABLE_WIDTH,
   ROW_HEIGHT,
@@ -36,8 +36,6 @@ import {
   sameDay,
   sameHour,
   stepRange,
-  timeAtOffset,
-  offsetOfTime,
   useTimelineLayout,
 } from "../../hooks/use-timeline-layout";
 import {
@@ -195,17 +193,6 @@ function TimelineNav({
   );
 }
 
-/** How long the scroll must sit still at the far end of a range's context
- *  before the range is rebuilt around what is on show. Long enough for a
- *  wheel's momentum and a thumb drag to be over, so the scroll position we
- *  write is not overridden a frame later. */
-const SCROLL_IDLE_MS = 120;
-
-/** How long our own write is left alone afterwards, so the scroll event it
- *  raises is not read as the person reaching that end again. A frame is not
- *  always enough — the event can arrive after it. */
-const SCROLL_SETTLE_MS = 80;
-
 function DatabaseTimelineNodeViewImpl() {
   const {
     db,
@@ -218,6 +205,12 @@ function DatabaseTimelineNodeViewImpl() {
   } = useDatabaseContext();
   const { addRecordAsync, updatePropertiesAsync } = useDataSource(source?.id);
   const { year, month, day } = useTimelineViewState();
+  const { goTo, goToToday } = useTimelineViewActions();
+
+  const activeView = db.activeView as TimelineView | undefined;
+  const timeframe = activeView?.timeframe ?? "month";
+  const showTable = activeView?.showTable ?? true;
+
   const { timelineLayout } = useTimelineLayout(
     sortedRecords,
     source,
@@ -226,11 +219,6 @@ function DatabaseTimelineNodeViewImpl() {
     month,
     day,
   );
-  const { goTo, goToToday } = useTimelineViewActions();
-
-  const activeView = db.activeView as TimelineView | undefined;
-  const timeframe = activeView?.timeframe ?? "month";
-  const showTable = activeView?.showTable ?? true;
 
   const { range, startProp, placement } = timelineLayout;
 
@@ -284,14 +272,17 @@ function DatabaseTimelineNodeViewImpl() {
   }
   const gridWidth = range.days.length * range.cellWidth;
 
-  const today = new Date();
-  // The column today stands in: a day of the range, or — in Day, where every
-  // column is the same date — the hour it is now.
-  const todayIdx = range.days.findIndex((d) =>
-    range.unit === "hour" ? sameHour(d, today) : sameDay(d, today),
-  );
-  const todayLeft =
-    todayIdx >= 0 ? todayIdx * range.cellWidth + range.cellWidth / 2 : null;
+  // The column today stands in: a day of the range, or — in Day, where a
+  // column is an hour — the hour it is now. Worked out when the range
+  // changes and not on every render: there are thousands of columns to look
+  // through, and a render happens on every scroll event.
+  const todayLeft = useMemo(() => {
+    const today = new Date();
+    const i = range.days.findIndex((d) =>
+      range.unit === "hour" ? sameHour(d, today) : sameDay(d, today),
+    );
+    return i >= 0 ? i * range.cellWidth + range.cellWidth / 2 : null;
+  }, [range]);
 
   function navigate(dir: -1 | 1) {
     // From the date the view is anchored to, not from where its grid
@@ -334,6 +325,14 @@ function DatabaseTimelineNodeViewImpl() {
   }, []);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [viewportWidth, setViewportWidth] = useState(0);
+
+  // Which columns the header and the grid draw: the ones on screen and a
+  // block either side, rounded outwards so that scrolling a few pixels asks
+  // for the same window again and leaves them both alone. The range itself
+  // is years wide and a column is two divs; drawn in full it would be tens
+  // of thousands of them to show thirty.
+  const { from, to } = columnWindow(range, scrollLeft, viewportWidth);
+  const shown = useMemo(() => ({ from, to }), [from, to]);
 
   useEffect(() => {
     const scrollEl = scrollRef.current;
@@ -382,11 +381,40 @@ function DatabaseTimelineNodeViewImpl() {
       );
       setEndSpill((prev) => (prev === spill ? prev : spill));
     };
+    // And again once the layout has finished moving. Collapsing the sidebar
+    // slides the whole column across: the viewport's width may not change
+    // at all, only where its right edge falls, and a ResizeObserver is told
+    // about sizes and not about places. So the same slides useDatabaseAlign
+    // watches are watched here — with its settle timer too, for a
+    // transition that is cut short and never ends.
+    let settle = 0;
+    const measureSoon = () => {
+      measure();
+      window.clearTimeout(settle);
+      settle = window.setTimeout(measure, 220);
+    };
+    const onTransitionEnd = (e: TransitionEvent) => {
+      if (
+        e.propertyName === "transform" ||
+        e.propertyName === "width" ||
+        e.propertyName === "margin-left" ||
+        e.propertyName === "left" ||
+        e.propertyName === "flex-basis"
+      ) {
+        measureSoon();
+      }
+    };
+
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(view);
     ro.observe(document.documentElement);
-    return () => ro.disconnect();
+    document.addEventListener("transitionend", onTransitionEnd, true);
+    return () => {
+      ro.disconnect();
+      window.clearTimeout(settle);
+      document.removeEventListener("transitionend", onTransitionEnd, true);
+    };
   }, []);
 
   // ── Where a range opens ───────────────────────────────────────────────
@@ -448,103 +476,23 @@ function DatabaseTimelineNodeViewImpl() {
   }, [openLeft]);
 
   // ── Scrolling past the range on show ──────────────────────────────────
-  // Nothing here intercepts a scroll, and that is the point. The range is
-  // built with pages of context either side of the one the view is
-  // anchored to (padFor), so the scroller has somewhere to go: a sideways
-  // scroll runs on past the end of the date, the week, the month under its
-  // own momentum, the header naming the months it crosses, and the browser
-  // is scrolling its own content the whole way.
+  // There is nothing here, and that is the fix. The range is built with a
+  // year of hours, ten years of days, a century of weeks either side of the
+  // page the view is anchored to (padFor), so a scroll has nowhere it can
+  // arrive at: no wheel, no flick, no thumb dragged across the track runs
+  // out of columns in a sitting. The browser scrolls its own content and
+  // no scroll position is ever written while a gesture is under way.
   //
-  // What was here before stepped the range the moment an end was reached
-  // and wrote the scroll position back. A write only lands while the
-  // browser is not driving the scroll itself, and mid-gesture it is — a
-  // wheel's momentum animating towards its own target, a dragged thumb
-  // recomputed from the pointer every move — so it was overridden a frame
-  // later. That was the snap, and no amount of waiting fixed it, because
-  // the wait is what the gesture was.
+  // Which is what every version of this before it got wrong. Each one let
+  // the range run out and then tried to hide it — stepping the range at the
+  // end, waiting for the gesture to be over, growing the range as the end
+  // came near — and all of them had to write a scroll position to do it.
+  // Mid-gesture that write is either overridden a frame later or lands as a
+  // jump of the thumb, which is the snap. An end that cannot be reached
+  // needs no handling at all.
   //
-  // Only the far edge of all that context needs anything, and then only
-  // once the scroll has gone quiet there: the range is rebuilt around the
-  // moment the view is reading. The same moment goes back under the same
-  // pixel, so nothing appears to move — what changes is that there are
-  // pages of room ahead again. Reaching that edge takes ten dates, nine
-  // weeks, five years of scrolling, so this is the end of the road being
-  // extended rather than a step.
-
-  /** The moment the view was reading when the range was rebuilt. */
-  const carryRef = useRef<number | null>(null);
-  /** True while we are moving the scroll ourselves, so our own scroll
-   *  events don't read as the person reaching an end again. */
-  const steppingRef = useRef(false);
-
-  const reanchorTo = useCallback(
-    (at: number) => {
-      const on = new Date(at);
-      // Already anchored there: the range would come back identical, and
-      // the carry below would never be consumed.
-      if (
-        on.getFullYear() === year &&
-        on.getMonth() === month &&
-        on.getDate() === day
-      ) {
-        return;
-      }
-      carryRef.current = at;
-      goTo(on);
-    },
-    [goTo, year, month, day],
-  );
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    let idle = 0;
-    const onScroll = () => {
-      window.clearTimeout(idle);
-      if (steppingRef.current || carryRef.current !== null) return;
-      const max = el.scrollWidth - el.clientWidth;
-      if (max <= 1) return;
-      const atEnd = el.scrollLeft >= max - 1 || el.scrollLeft <= 0;
-      if (!atEnd) return;
-      idle = window.setTimeout(() => {
-        // Still there, still quiet, and still ours to move.
-        if (steppingRef.current || carryRef.current !== null) return;
-        const now = el.scrollWidth - el.clientWidth;
-        if (el.scrollLeft < now - 1 && el.scrollLeft > 0) return;
-        reanchorTo(timeAtOffset(range, el.scrollLeft));
-      }, SCROLL_IDLE_MS);
-    };
-
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.clearTimeout(idle);
-      el.removeEventListener("scroll", onScroll);
-    };
-  }, [range, reanchorTo]);
-
-  // Before the browser paints the new range, not after: put back as an
-  // effect the person sees the window jump and then correct itself.
-  useLayoutEffect(() => {
-    const t = carryRef.current;
-    if (t === null) return;
-    carryRef.current = null;
-    const el = scrollRef.current;
-    if (!el) return;
-    steppingRef.current = true;
-    const max = el.scrollWidth - el.clientWidth;
-    el.scrollLeft = Math.min(
-      Math.max(offsetOfTime(range, t), 0),
-      Math.max(0, max),
-    );
-    // The range just opened on a new page, and its own opening position
-    // must not undo this.
-    openedAtRef.current = openLeft;
-    const done = window.setTimeout(() => {
-      steppingRef.current = false;
-    }, SCROLL_SETTLE_MS);
-    return () => window.clearTimeout(done);
-  }, [range, openLeft]);
+  // Only what is on screen is drawn (columnWindow), so what this costs is
+  // the Dates in the range and not a div per column.
 
   function handleToday() {
     pendingScrollRef.current = { type: "today" };
@@ -787,7 +735,11 @@ function DatabaseTimelineNodeViewImpl() {
                   paddingRight: endSpill,
                 }}
               >
-                <TimelineHeader highlights={highlights} range={range} />
+                <TimelineHeader
+                  highlights={highlights}
+                  range={range}
+                  shown={shown}
+                />
                 <div
                   className="db-tl-gantt__body"
                   style={{
@@ -797,7 +749,7 @@ function DatabaseTimelineNodeViewImpl() {
                     position: "relative",
                   }}
                 >
-                  <TimelineDayGrid range={range} />
+                  <TimelineDayGrid range={range} shown={shown} />
 
                   {/* Before the bars on purpose: they are drawn after it,
                       so a bar takes its own pointer events and the

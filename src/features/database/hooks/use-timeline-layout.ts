@@ -161,7 +161,12 @@ export function shiftDate(date: Date, unit: CellUnit, columns: number): Date {
   if (columns === 0) return next;
   switch (unit) {
     case "hour":
-      next.setHours(date.getHours() + columns);
+      // An hour of elapsed time, not the same minute of another wall-clock
+      // hour. Where the clocks go forward, 02:00 does not exist: asking for
+      // it lands on 03:00, and so does asking for 03:00 — which drew one
+      // column twice and left an hour out of the grid. A day of columns
+      // never met this; a year of them meets it twice.
+      next.setTime(date.getTime() + columns * 3_600_000);
       break;
     case "week":
       next.setDate(date.getDate() + columns * DAYS_IN_WEEK);
@@ -485,31 +490,68 @@ export function parseIsoDate(iso: unknown): Date | null {
  * How many pages of context a range carries on either side of the page the
  * view is anchored to.
  *
- * This is the whole of how a timeline scrolls past the range on show. The
- * scroller's content is what a person can scroll across, so a range of
- * exactly one page is a wall at either end of it — and growing the range
- * rather than stepping it when a wall is reached is the difference between
- * a scroll that carries on and one that snaps. Here the browser scrolls its
- * own content and nothing writes a position under the gesture.
+ * This is the whole of how a timeline scrolls past the range on show, and
+ * the numbers are the point of it. The scroller's content is what a person
+ * can scroll across, so what these say is: there is no end to arrive at.
+ * A year of hours, ten years of days, a century of weeks — nothing a wheel
+ * or a thumb does in a sitting reaches the edge of that, so nothing ever
+ * has to be grown, stepped or put back, and no scroll position is ever
+ * written while a gesture is under way. That was every snap there has been
+ * here: a range that ran out, and something trying to hide it.
  *
- * Sized so that no timeframe draws much more than a few hundred columns: a
- * page either side is less than one flick of a trackpad, and ten is a canvas
- * nobody reaches the end of, drawn in full for every one of them.
+ * Only what is on screen is drawn (columnWindow), so the cost of a range
+ * this wide is the Dates in it and not the columns — a few thousand of
+ * them, built once when the view moves rather than as anyone scrolls.
  */
 export function padFor(timeframe: Timeframe): number {
   switch (timeframe) {
     case "day":
-      return 2; // 48 hours to a page: ten dates in all
+      return 180; // 48 hours to a page: about a year of them
     case "week":
-      return 4; // nine weeks
+      return 260; // ten years
     case "quarter":
-      return 3; // seven quarters
+      return 200; // a century
     case "year":
-      return 2; // five years
+      return 60; // a hundred and twenty years
     case "month":
     default:
-      return 3; // seven months
+      return 120; // twenty years
   }
+}
+
+/** How many columns are drawn at a time, rounded to this so that the set
+ *  changes every so often rather than every frame. */
+export const WINDOW_BLOCK = 64;
+
+/**
+ * Which columns are worth drawing: the ones on screen, and a block either
+ * side so that scrolling has somewhere to go before the next set is worked
+ * out. Rounded outwards to whole blocks, so a scroll of a few pixels asks
+ * for the same window as the last one and the header and the grid are left
+ * alone.
+ *
+ * A range is thousands of columns wide now, and a column is a div in the
+ * header and another in the grid. Drawn in full that is tens of thousands
+ * of them for a view that shows thirty.
+ */
+export function columnWindow(
+  range: TimelineRange,
+  scrollLeft: number,
+  viewportWidth: number,
+): { from: number; to: number } {
+  const count = range.days.length;
+  const cell = range.cellWidth;
+  if (count === 0 || cell <= 0) return { from: 0, to: 0 };
+  // Before the viewport has been measured, enough to fill a wide screen:
+  // nothing is worse than a grid that draws nothing on its first paint.
+  const width = viewportWidth > 0 ? viewportWidth : 2000;
+  const first = Math.floor(scrollLeft / cell);
+  const last = Math.ceil((scrollLeft + width) / cell);
+  const block = WINDOW_BLOCK;
+  return {
+    from: Math.max(0, Math.floor(first / block) * block - block),
+    to: Math.min(count, Math.ceil(last / block) * block + block),
+  };
 }
 
 /** The month a column belongs to — for a week, the month holding its
@@ -525,12 +567,15 @@ function groupDate(d: Date, unit: CellUnit): Date {
  * What stands above the columns: a date per date in Day, a year per year
  * where a column is itself a month, a month per month everywhere else.
  *
- * The year is written in at the first group and wherever the year changes.
- * A range carrying pages of context around its own crosses years, which is
- * why this is one rule rather than one per timeframe — and why the locale
- * writes it ("9 November 2026", "novembre 2026"), placing the year and its
- * punctuation where that language puts them. The header must not then
- * append its own: labelsCarryYear.
+ * Every one of them says its year. Only the first used to, which reads
+ * well in a range of one month and not at all in one of twenty years: the
+ * header draws the groups that are on screen, and the one that said the
+ * year was almost never among them. A heading of "November" in a range
+ * that holds twenty of them names nothing.
+ *
+ * The locale writes it in ("9 November 2026", "novembre 2026"), placing
+ * the year and its punctuation where that language puts them. The header
+ * must not then append its own: labelsCarryYear.
  */
 export function headerGroupsFor(
   days: Date[],
@@ -552,7 +597,6 @@ export function headerGroupsFor(
       out[out.length - 1].days += 1;
       continue;
     }
-    const turnsYear = prev === null || d.getFullYear() !== prev.getFullYear();
     out.push({
       label: d.toLocaleDateString(
         undefined,
@@ -562,7 +606,7 @@ export function headerGroupsFor(
               ...(scale === "date"
                 ? { day: "numeric", month: "long" }
                 : { month: "long" }),
-              ...(turnsYear ? { year: "numeric" as const } : {}),
+              year: "numeric",
             },
       ),
       days: 1,
@@ -594,18 +638,18 @@ function endOfColumn(d: Date, unit: CellUnit): Date {
   return end;
 }
 
-/** A page with `pad` more pages of its own columns either side of it, by
- *  the column's own unit — hours before an hour, weeks before a week — so
- *  the context is made of the same thing the page is. */
+/** A page with more pages of its own columns either side of it, by the
+ *  column's own unit — hours before an hour, weeks before a week — so the
+ *  context is made of the same thing the page is. */
 function padPage(page: TimelineRange, pad: number): TimelineRange {
   const { unit } = page;
-  const more = page.days.length * pad;
   const last = page.days[page.days.length - 1];
   const before: Date[] = [];
-  for (let i = more; i >= 1; i--)
+  for (let i = page.days.length * pad; i >= 1; i--)
     before.push(shiftDate(page.days[0], unit, -i));
   const after: Date[] = [];
-  for (let i = 1; i <= more; i++) after.push(shiftDate(last, unit, i));
+  for (let i = 1; i <= page.days.length * pad; i++)
+    after.push(shiftDate(last, unit, i));
 
   const days = [...before, ...page.days, ...after];
   return {
@@ -653,13 +697,13 @@ function buildPage(
     // runs into the small hours of the next morning used to be cut off at
     // the right edge with nowhere to scroll to.
     const startDate = new Date(year, month, day, -DAY_LEAD_HOURS, 0, 0, 0);
-    const hours = Array.from({ length: HOURS_SPAN }, (_, h) => {
-      // setHours, not new Date(y, m, d, h): only this carries an hour past
-      // midnight into the next date.
-      const d = new Date(startDate);
-      d.setHours(startDate.getHours() + h);
-      return d;
-    });
+    // An hour of elapsed time per column (shiftDate says why it is not the
+    // wall clock), which carries past midnight into the next date of its
+    // own accord.
+    const hours = Array.from(
+      { length: HOURS_SPAN },
+      (_, h) => new Date(startDate.getTime() + h * 3_600_000),
+    );
     const endDate = new Date(hours[HOURS_SPAN - 1]);
     endDate.setMinutes(59, 59, 999);
 
@@ -840,6 +884,32 @@ function buildPage(
 }
 
 /**
+ * The column holding a moment: the last one that starts at or before it.
+ *
+ * A search, not a scan. A range is thousands of columns wide and this runs
+ * twice for every record every time one of them changes — and the columns
+ * are in order, which is all a search needs. Out of range either way it
+ * gives the nearest end, which is what the callers want: they have already
+ * clipped to the range's own bounds.
+ */
+function columnOf(range: TimelineRange, t: number): number {
+  const { days } = range;
+  let lo = 0;
+  let hi = days.length - 1;
+  let out = 0;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (days[mid].getTime() <= t) {
+      out = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return out;
+}
+
+/**
  * Where a record's bar sits in the range on show, or null if it falls
  * outside it. Exported for its own tests: it is the one piece of arithmetic
  * that has to agree with what a column means.
@@ -866,24 +936,19 @@ export function getGeo(
     // Its own dates, not the whole span: Day shows the hours either side of
     // the date on show, and a record dated plainly belongs to its day, not
     // to everything on screen.
-    const si = range.days.findIndex((d) => sameDay(d, rec.start!));
-    // Backwards: the LAST column of the end date, not the first, or a day
-    // comes out one hour wide.
-    let ei = -1;
-    for (let i = range.days.length - 1; i >= 0; i--) {
-      if (sameDay(range.days[i], effEnd)) {
-        ei = i;
-        break;
-      }
-    }
-    const from = si < 0 ? 0 : si;
-    const to = ei < 0 ? range.days.length - 1 : ei;
-    // Clipped by the day's own bounds: a date whose midnight falls before
-    // the span still shows, cut off, and the span starts mid-afternoon.
+    //
+    // Clipped by the day's own bounds too: a date whose midnight falls
+    // before the span still shows, cut off, and the span starts mid-
+    // afternoon.
     const dayStart = new Date(rec.start);
     dayStart.setHours(0, 0, 0, 0);
     const dayEnd = new Date(effEnd);
     dayEnd.setHours(23, 59, 59, 999);
+    // Midnight's own column, and the one holding the last moment of the end
+    // date — the LAST of that date's hours, not the first, or a day comes
+    // out one hour wide.
+    const from = columnOf(range, dayStart.getTime());
+    const to = columnOf(range, dayEnd.getTime());
     return {
       left: from * w,
       width: Math.max(w, (to - from + 1) * w),
@@ -897,22 +962,14 @@ export function getGeo(
   const s = cl ? range.startDate : rec.start;
   const e = cr ? range.endDate : effEnd;
 
-  const inCell =
-    range.unit === "hour"
-      ? sameHour
-      : range.unit === "week"
-        ? sameWeek
-        : range.unit === "month"
-          ? sameMonth
-          : sameDay;
-  const si = range.days.findIndex((d) => inCell(d, s));
-  const ei = range.days.findIndex((d) => inCell(d, e));
+  // The columns those two moments fall in. Whatever a column is — an hour,
+  // a day, a week — the one holding a moment is the last one that started
+  // before it, so this needs no rule per unit.
+  const si = columnOf(range, s.getTime());
+  const ei = columnOf(range, e.getTime());
 
-  const left = (si < 0 ? 0 : si) * w;
-  const width = Math.max(
-    w,
-    ((ei < 0 ? range.days.length - 1 : ei) - (si < 0 ? 0 : si) + 1) * w,
-  );
+  const left = si * w;
+  const width = Math.max(w, (ei - si + 1) * w);
 
   return { left, width, clippedLeft: cl, clippedRight: cr };
 }
