@@ -35,6 +35,10 @@ export const DAYS_IN_WEEK = 7;
  * step 105px apart.
  */
 export const WEEK_WIDTH = 105;
+
+/** No bar is drawn thinner than this. A day of a year is six pixels of a
+ *  44px week: a bar nobody could see, let alone take hold of. */
+export const MIN_BAR_WIDTH = 12;
 /** A column in the Year timeframe: a whole month, named. */
 export const MONTH_WIDTH = 110;
 /** A week in the Year view. Narrow: fifty-two of them have to fit, and the
@@ -184,6 +188,31 @@ export function shiftDate(date: Date, unit: CellUnit, columns: number): Date {
 }
 
 /**
+ * How wide one step of a bar is: an hour where a column is an hour, a day
+ * everywhere else.
+ *
+ * A week column is seven days wide, so a bar in a quarter or a year grows
+ * and shrinks a seventh of a column at a time. Counting whole columns there
+ * made the smallest possible drag of a handle a week long — touch the edge
+ * of a one-day record and it became seven.
+ */
+export function grainWidth(unit: CellUnit, cellWidth: number): number {
+  return unit === "week" ? cellWidth / DAYS_IN_WEEK : cellWidth;
+}
+
+/**
+ * The end date a bar is given when its handle is dragged `steps` grains
+ * wide — the last one it covers, so one grain leaves the dates alone.
+ */
+export function endForGrains(start: Date, unit: CellUnit, steps: number): Date {
+  const n = Math.max(1, Math.round(steps)) - 1;
+  const end = new Date(start);
+  if (unit === "hour") end.setTime(start.getTime() + n * 3_600_000);
+  else end.setDate(start.getDate() + n);
+  return end;
+}
+
+/**
  * The record a dragged row lands in front of, as reorderRecord wants it:
  * the id at the new position, or null for the end of the list.
  *
@@ -231,6 +260,50 @@ export interface TimelinePlacement {
   width: number;
   clippedLeft: boolean;
   clippedRight: boolean;
+}
+
+/** Where a bar is, in the three numbers a drop can change. */
+export interface BarBox {
+  left: number;
+  width: number;
+  top: number;
+}
+
+/**
+ * A bar held where it was dropped.
+ *
+ * Dropping a bar writes dates; the bar only moves once that write has come
+ * back round and the view has placed it again. Until then the bar would
+ * spring back to the dates it still has — the drop undone for a moment, and
+ * a jump when the write lands. So the drop's own box is held and drawn in
+ * place of the real one, which is where the bar belongs anyway.
+ */
+export interface HeldBar extends BarBox {
+  /** Where it was before the drop, which is how the hold knows to let go. */
+  was: BarBox;
+}
+
+/** Hold a bar at what a drop asked for. */
+export function holdBar(live: BarBox, asked: Partial<BarBox>): HeldBar {
+  return { ...live, ...asked, was: live };
+}
+
+/**
+ * Whether the dates have caught up with a held bar — which is to say the
+ * view has placed it anywhere other than where it sat when it was dropped.
+ *
+ * Not "where the drop asked for": a write can come back a little different
+ * (a date clipped to the range, a reorder that settled elsewhere), and the
+ * truth, once it is in, is what should be drawn. Half a pixel of slack,
+ * since a position inside a column is read from elapsed time.
+ */
+export function barCaughtUp(held: HeldBar, live: BarBox): boolean {
+  const moved = (a: number, b: number) => Math.abs(a - b) > 0.5;
+  return (
+    moved(live.left, held.was.left) ||
+    moved(live.width, held.was.width) ||
+    moved(live.top, held.was.top)
+  );
 }
 
 export interface TimelineRange {
@@ -341,8 +414,7 @@ export function timeAtOffset(range: TimelineRange, px: number): number {
 export function offsetOfTime(range: TimelineRange, t: number): number {
   const { days, cellWidth } = range;
   if (days.length === 0 || cellWidth <= 0) return 0;
-  let i = 0;
-  while (i + 1 < days.length && days[i + 1].getTime() <= t) i++;
+  const i = columnOf(range, t);
   const span = columnSpan(range, i);
   const frac = span > 0 ? (t - days[i].getTime()) / span : 0;
   return (i + frac) * cellWidth;
@@ -943,48 +1015,50 @@ export function getGeo(
 
   const w = range.cellWidth;
 
-  // A date with no time on it happens that day, not at midnight, so in the
-  // Day timeframe it is the whole day rather than its first hour.
-  if (range.unit === "hour" && rec.allDay) {
-    // Its own dates, not the whole span: Day shows the hours either side of
-    // the date on show, and a record dated plainly belongs to its day, not
-    // to everything on screen.
-    //
-    // Clipped by the day's own bounds too: a date whose midnight falls
-    // before the span still shows, cut off, and the span starts mid-
-    // afternoon.
-    const dayStart = new Date(rec.start);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(effEnd);
-    dayEnd.setHours(23, 59, 59, 999);
-    // Midnight's own column, and the one holding the last moment of the end
-    // date — the LAST of that date's hours, not the first, or a day comes
-    // out one hour wide.
-    const from = columnOf(range, dayStart.getTime());
-    const to = columnOf(range, dayEnd.getTime());
-    return {
-      left: from * w,
-      width: Math.max(w, (to - from + 1) * w),
-      clippedLeft: dayStart < range.startDate,
-      clippedRight: dayEnd > range.endDate,
-    };
+  // Where a moment sits in the grid, in px, clamped to its two ends.
+  //
+  // Not the column it lands in. A week column is seven days wide, so a bar
+  // snapped to one began on the Monday of its week — a record dated the 29th
+  // drawn at the 26th in a quarter, at the 19th in a year, where a column is
+  // a week on a narrower pitch. offsetOfTime reads a position *inside* a
+  // column, which is how the month lines have always been drawn, and for an
+  // hour, a day or a weekday column — where a date is a whole number of
+  // columns — it comes out at exactly the column edge it used to.
+  const grid = range.days.length * w;
+  const px = (d: Date) =>
+    Math.min(Math.max(offsetOfTime(range, d.getTime()), 0), grid);
+
+  // A bar covers whole days — whole hours, in Day: from the start of the one
+  // it begins in to the start of the one after the one it ends in. The end
+  // is taken exclusive so the arithmetic is exact: a bar that stopped at
+  // 23:59:59.999 came out a millisecond short of its last day, which is a
+  // fraction of a pixel in Day and most of one in a year.
+  const from = new Date(rec.start);
+  const to = new Date(effEnd);
+  if (range.unit === "hour" && !rec.allDay) {
+    from.setMinutes(0, 0, 0);
+    to.setMinutes(0, 0, 0);
+    to.setTime(to.getTime() + 3_600_000);
+  } else {
+    // A date with no time on it happens that day, not at midnight, so in the
+    // Day timeframe it is the whole day rather than its first hour.
+    from.setHours(0, 0, 0, 0);
+    to.setHours(0, 0, 0, 0);
+    to.setDate(to.getDate() + 1);
   }
 
-  const cl = rec.start < range.startDate;
-  const cr = effEnd > range.endDate;
-  const s = cl ? range.startDate : rec.start;
-  const e = cr ? range.endDate : effEnd;
+  const left = px(from);
+  const width = Math.max(MIN_BAR_WIDTH, px(to) - left);
 
-  // The columns those two moments fall in. Whatever a column is — an hour,
-  // a day, a week — the one holding a moment is the last one that started
-  // before it, so this needs no rule per unit.
-  const si = columnOf(range, s.getTime());
-  const ei = columnOf(range, e.getTime());
-
-  const left = si * w;
-  const width = Math.max(w, (ei - si + 1) * w);
-
-  return { left, width, clippedLeft: cl, clippedRight: cr };
+  return {
+    left,
+    width,
+    // Marked by the days the bar covers, not by the dates it was given: a
+    // record dated plainly covers all of its last day, so one dated the day
+    // a Day range ends halfway through runs past the end of it.
+    clippedLeft: from < range.startDate,
+    clippedRight: to.getTime() - 1 > range.endDate.getTime(),
+  };
 }
 
 // The overlap-packing pass that used to live here is gone. It put two

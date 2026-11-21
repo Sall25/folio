@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   type Timeframe,
+  type TimelineRange,
   DAY_WIDTH,
   HOURS_IN_DAY,
   HOURS_SPAN,
@@ -21,7 +22,13 @@ import {
   dropBeforeId,
   unitFor,
   HOUR_WIDTH,
-  buildRange,
+  buildRange as buildRangeFresh,
+  endForGrains,
+  grainWidth,
+  holdBar,
+  barCaughtUp,
+  MIN_BAR_WIDTH,
+  parseDateValue,
   padFor,
   columnWindow,
   WINDOW_BLOCK,
@@ -48,6 +55,45 @@ import {
 // The gantt body's geometry. The bars and the new-page placeholder both read
 // their row and their day from these, so if they ever disagree a placeholder
 // lands on a different line from the record it is beside.
+
+/**
+ * The first column that breaks a rule, told in a way a failure can print —
+ * or null when none does.
+ *
+ * A range is thousands of columns wide (a Day range is a year of hours), so
+ * an expect() per column is tens of thousands of them: seconds of matcher
+ * bookkeeping that says nothing the first offender doesn't, and long enough
+ * to time a test out on a slower machine than the one it was written on.
+ */
+function firstBreak<T>(
+  items: T[],
+  holds: (item: T, i: number) => boolean,
+  tell: (item: T, i: number) => Record<string, unknown>,
+): Record<string, unknown> | null {
+  for (let i = 0; i < items.length; i++)
+    if (!holds(items[i], i)) return { at: i, ...tell(items[i], i) };
+  return null;
+}
+
+/**
+ * buildRange, remembered between tests.
+ *
+ * A padded range is thousands of Dates — a Day range is a year of hours —
+ * and this file builds the same few dozen of them over and over. The ranges
+ * are read, never written, so one of each is enough, and the file runs in a
+ * fraction of the time on a slower machine than this one.
+ */
+const BUILT = new Map<string, ReturnType<typeof buildRangeFresh>>();
+function buildRange(
+  ...args: Parameters<typeof buildRangeFresh>
+): ReturnType<typeof buildRangeFresh> {
+  const key = JSON.stringify(args);
+  const had = BUILT.get(key);
+  if (had) return had;
+  const made = buildRangeFresh(...args);
+  BUILT.set(key, made);
+  return made;
+}
 
 const placement = (left: number, width: number): TimelinePlacement => ({
   left,
@@ -409,8 +455,13 @@ describe("what a column is called", () => {
     expect(nine).toMatch(/9/);
     expect(at(0)).not.toBe(nine);
     expect(at(23)).not.toBe(nine);
-    // A time, never a date: 15 November must not read as "15".
-    expect(at(15)).not.toBe("15");
+    // An hour, never a date: twenty-four columns, twenty-four names, and
+    // the same hour reads the same whatever day it falls on. (Not "15
+    // cannot read as 15" — in a locale that keeps a 24-hour clock, it is
+    // exactly what three in the afternoon is called.)
+    const everyHour = Array.from({ length: 24 }, (_, h) => at(h));
+    expect(new Set(everyHour).size).toBe(24);
+    expect(columnLabel(new Date(2027, 0, 2, 15), "hour")).toBe(at(15));
   });
 
   it("names a day with its date, as it always did", () => {
@@ -577,8 +628,10 @@ describe("a quarter, by the week", () => {
     expect(columnLabel(new Date(2026, 9, 12), "week")).toMatch(/^12 /);
   });
 
-  it("puts a bar on the weeks it touches, whole", () => {
-    // 12 Oct to 16 Oct is one week: one column, not a sliver of one.
+  it("puts a bar on the days it covers, inside the weeks", () => {
+    // 12 Oct to 16 Oct is five days of a seven-day column. It used to be
+    // drawn as the whole column, which is where a record dated the 29th
+    // came out at the 26th.
     const geo = getGeo(
       {
         id: "r",
@@ -590,8 +643,31 @@ describe("a quarter, by the week", () => {
       range,
       true,
     );
-    expect(geo?.width).toBe(WEEK_WIDTH);
-    expect(geo?.left).toBe(2 * WEEK_WIDTH); // 28 Sep, 5 Oct, 12 Oct
+    expect(geo?.width).toBe((5 * WEEK_WIDTH) / 7);
+    expect(geo?.left).toBe(2 * WEEK_WIDTH); // 28 Sep, 5 Oct, 12 Oct — a Monday
+  });
+
+  it("starts a bar partway into its week", () => {
+    // The record from the report: 29 October, a Thursday, in the week of
+    // the 26th. Three days in, not at the column's edge.
+    const geo = getGeo(
+      {
+        id: "deposit",
+        title: "Deposit",
+        start: new Date(2026, 9, 29),
+        end: new Date(2026, 10, 12),
+        allDay: true,
+      },
+      range,
+      true,
+    );
+    const column = Math.floor(geo!.left / WEEK_WIDTH);
+    expect(range.days[column].getDate()).toBe(26);
+    expect(geo!.left - column * WEEK_WIDTH).toBeCloseTo(
+      (3 * WEEK_WIDTH) / 7,
+      0,
+    );
+    expect(geo!.width).toBeCloseTo((15 * WEEK_WIDTH) / 7, 0); // 29 Oct–12 Nov
   });
 
   it("spans every week a longer record runs through", () => {
@@ -644,11 +720,18 @@ describe("a year, by the week", () => {
     // How a week that straddles new year is settled: by where most of it
     // lies. Every column's Thursday is inside the year, so no column is
     // drawn under a month of the year before or after.
-    for (const d of range.days) {
+    const midweek = (d: Date) => {
       const thursday = new Date(d);
       thursday.setDate(d.getDate() + 3);
-      expect(thursday.getFullYear()).toBe(2026);
-    }
+      return thursday;
+    };
+    expect(
+      firstBreak(
+        range.days,
+        (d) => midweek(d).getFullYear() === 2026,
+        (d) => ({ column: d.toString(), midweek: midweek(d).toString() }),
+      ),
+    ).toBeNull();
   });
 
   it.each([2021, 2024, 2025, 2026, 2027])(
@@ -671,11 +754,18 @@ describe("a year, by the week", () => {
     // One week on, by the calendar. Not by a count of milliseconds: where
     // the clocks go forward a week is 167 hours long and where they go
     // back it is 169, and a column is a week either way.
-    for (let i = 1; i < range.days.length; i++) {
-      expect(range.days[i].getTime()).toBe(
-        shiftDate(range.days[i - 1], "week", 1).getTime(),
-      );
-    }
+    expect(
+      firstBreak(
+        range.days,
+        (d, i) =>
+          i === 0 ||
+          d.getTime() === shiftDate(range.days[i - 1], "week", 1).getTime(),
+        (d, i) => ({
+          column: d.toString(),
+          week_after: shiftDate(range.days[i - 1], "week", 1).toString(),
+        }),
+      ),
+    ).toBeNull();
     expect(range.endDate.getTime()).toBeGreaterThanOrEqual(
       new Date(2026, 11, 31).getTime(),
     );
@@ -705,7 +795,7 @@ describe("a year, by the week", () => {
     expect(columnLabel(new Date(2026, 10, 16), "week", true)).not.toBe("16");
   });
 
-  it("puts a bar on the weeks it runs through", () => {
+  it("puts a bar on the days it runs through", () => {
     const start = range.days[8];
     const end = new Date(range.days[11]);
     end.setDate(end.getDate() + 2);
@@ -714,20 +804,26 @@ describe("a year, by the week", () => {
       range,
       true,
     );
+    // A Monday to the Wednesday three weeks on: 24 days, where a day is a
+    // seventh of a column.
     expect(geo?.left).toBe(8 * YEAR_WEEK_WIDTH);
-    expect(geo?.width).toBe(4 * YEAR_WEEK_WIDTH);
+    expect(geo?.width).toBeCloseTo((24 * YEAR_WEEK_WIDTH) / 7, 0);
   });
 
-  it("gives a record inside one week that week's column, whole", () => {
+  it("gives a record inside one week its own day of that week", () => {
     const start = new Date(range.days[20]);
-    start.setDate(start.getDate() + 1);
+    start.setDate(start.getDate() + 1); // the Tuesday
     const geo = getGeo(
       { id: "r", title: "r", start, end: start, allDay: true },
       range,
       true,
     );
-    expect(geo?.left).toBe(20 * YEAR_WEEK_WIDTH);
-    expect(geo?.width).toBe(YEAR_WEEK_WIDTH);
+    expect(geo?.left).toBeCloseTo(
+      20 * YEAR_WEEK_WIDTH + YEAR_WEEK_WIDTH / 7,
+      0,
+    );
+    // Six pixels of a 44px week is below the floor every bar gets.
+    expect(geo?.width).toBe(MIN_BAR_WIDTH);
   });
 
   it("is the same year from any date inside it", () => {
@@ -1063,14 +1159,33 @@ describe("a range with its context either side", () => {
     // change a day is 23 hours or 25 and a week 167 or 169, and a column is
     // a day or a week regardless — which is why every step in this file
     // goes through Date's own setters.
-    for (let i = 1; i < range.days.length; i++) {
-      expect(range.days[i].getTime()).toBeGreaterThan(
-        range.days[i - 1].getTime(),
-      );
-      expect(range.days[i].getTime()).toBe(
-        shiftDate(range.days[i - 1], range.unit, 1).getTime(),
-      );
-    }
+    //
+    // Counted from the first column, not from the one before it. Where the
+    // clocks go forward at midnight (Santiago, Asunción) that day has no
+    // midnight, so stepping one at a time lands on 01:00 and carries that
+    // hour for the rest of the range; the grid is built from a fixed base
+    // and keeps every column on its own date's midnight, which is right.
+    const first = range.days[0];
+    expect(
+      firstBreak(
+        range.days,
+        (d, i) => i === 0 || d.getTime() > range.days[i - 1].getTime(),
+        (d, i) => ({
+          column: d.toString(),
+          after: range.days[i - 1]?.toString(),
+        }),
+      ),
+    ).toBeNull();
+    expect(
+      firstBreak(
+        range.days,
+        (d, i) => d.getTime() === shiftDate(first, range.unit, i).getTime(),
+        (d, i) => ({
+          column: d.toString(),
+          calendar: shiftDate(first, range.unit, i).toString(),
+        }),
+      ),
+    ).toBeNull();
     expect(range.startDate.getTime()).toBe(range.days[0].getTime());
     expect(range.endDate.getTime()).toBeGreaterThan(
       range.days[range.days.length - 1].getTime(),
@@ -1318,8 +1433,13 @@ describe("finding a record's columns in a range of thousands", () => {
       expect(geo).not.toBeNull();
       // The same column the scan would have found.
       expect(scanned(range, at.getTime())).toBe(i);
+      // Each pick is a column's own first moment, so the bar starts on its
+      // edge. Its width is one grain of the grid — an hour in Day, a day
+      // everywhere else — with the floor that keeps a year's day visible.
       expect(geo!.left).toBe(i * w);
-      expect(geo!.width).toBe(w);
+      expect(geo!.width).toBe(
+        Math.max(MIN_BAR_WIDTH, grainWidth(range.unit, w)),
+      );
     }
   });
 
@@ -1369,19 +1489,30 @@ describe("an hour column where the clocks change", () => {
   const range = buildRange(2026, 10, 15, "day", padFor("day"));
 
   it("never draws the same instant twice", () => {
-    for (let i = 1; i < range.days.length; i++) {
-      expect(range.days[i].getTime()).toBeGreaterThan(
-        range.days[i - 1].getTime(),
-      );
-    }
+    expect(
+      firstBreak(
+        range.days,
+        (d, i) => i === 0 || d.getTime() > range.days[i - 1].getTime(),
+        (d, i) => ({
+          column: d.toString(),
+          after: range.days[i - 1]?.toString(),
+        }),
+      ),
+    ).toBeNull();
   });
 
   it("is an hour apart all the way across", () => {
-    for (let i = 1; i < range.days.length; i++) {
-      expect(range.days[i].getTime() - range.days[i - 1].getTime()).toBe(
-        3_600_000,
-      );
-    }
+    expect(
+      firstBreak(
+        range.days,
+        (d, i) =>
+          i === 0 || d.getTime() - range.days[i - 1].getTime() === 3_600_000,
+        (d, i) => ({
+          column: d.toString(),
+          ms_after_the_one_before: d.getTime() - range.days[i - 1].getTime(),
+        }),
+      ),
+    ).toBeNull();
   });
 
   it("moves a card by an hour of elapsed time", () => {
@@ -1420,10 +1551,12 @@ describe("a quarter, measured off the reference", () => {
   });
 
   it("puts every month line where the reference has it", () => {
-    expect(at(3)).toBe(45); // 1 April, a Thursday: 3/7 into its week
-    expect(at(4)).toBe(495); // 1 May, a Saturday: 5/7 into its week
-    expect(at(5)).toBe(960); // 1 June, a Tuesday: 1/7
-    expect(at(6)).toBe(1410); // 1 July, a Thursday: 3/7
+    // Half a pixel, not the millionth: where the clocks change inside a
+    // week, a day of it is drawn about a quarter-pixel off (see below).
+    expect(at(3)).toBeCloseTo(45, 0); // 1 April, a Thursday: 3/7 into its week
+    expect(at(4)).toBeCloseTo(495, 0); // 1 May, a Saturday: 5/7 into its week
+    expect(at(5)).toBeCloseTo(960, 0); // 1 June, a Tuesday: 1/7
+    expect(at(6)).toBeCloseTo(1410, 0); // 1 July, a Thursday: 3/7
   });
 
   it("names a column by its date alone", () => {
@@ -1432,5 +1565,291 @@ describe("a quarter, measured off the reference", () => {
     expect(columnParts(range.days[range.anchorIndex], "week", false)).toEqual({
       main: "29",
     });
+  });
+});
+
+// ── What a bar's handle writes ────────────────────────────────────────────
+// Dragging the right edge out over N grains must leave a bar N grains wide.
+// A grain is what the handle can measure: an hour in Day, a day everywhere
+// else. It wrote days whatever the columns were, so in a quarter and a year
+// — where a column is a week — a four-column drag came back less than one
+// column long and the bar sprang back to where it started. Counting whole
+// *columns* instead went the other way: the smallest possible drag of a
+// handle there would have been a week.
+
+describe("resizing a bar", () => {
+  const TIMEFRAMES: Timeframe[] = ["day", "week", "month", "quarter", "year"];
+  const started = new Date(2026, 10, 20, 9);
+
+  it.each(TIMEFRAMES)("leaves a bar as wide as it was dragged in %s", (tf) => {
+    const range = buildRange(2026, 10, 20, tf, padFor(tf));
+    const unit = unitFor(tf);
+    const grain = grainWidth(unit, cellWidthFor(tf));
+    const start = parseDateValue(started.toISOString()).start!;
+
+    for (const steps of [2, 4, 9, 23]) {
+      // What the handle hands over, and what the view draws from it.
+      const end = endForGrains(start, unit, steps);
+      const geo = getGeo(
+        { id: "r", title: "r", start, end, allDay: false },
+        range,
+        true,
+      );
+      expect(geo).not.toBeNull();
+      expect(geo!.width).toBeCloseTo(steps * grain, 6);
+    }
+  });
+
+  it("holds its ground on a drag too small to count", () => {
+    // Half a grain back is still one: a bar cannot be no grains wide, and
+    // the dates stay as they were.
+    const start = new Date(2026, 10, 20, 9);
+    for (const tf of TIMEFRAMES) {
+      const unit = unitFor(tf);
+      expect(endForGrains(start, unit, 0.4).getTime()).toBe(start.getTime());
+      expect(endForGrains(start, unit, 1).getTime()).toBe(start.getTime());
+    }
+  });
+
+  it("measures a quarter's drag in days, a seventh of a column at a time", () => {
+    // A week column cannot be the step, or the smallest drag of a handle
+    // would turn a one-day record into a seven-day one.
+    expect(grainWidth(unitFor("quarter"), cellWidthFor("quarter"))).toBe(15);
+    expect(grainWidth(unitFor("year"), cellWidthFor("year"))).toBe(44 / 7);
+    expect(grainWidth(unitFor("month"), cellWidthFor("month"))).toBe(40);
+    expect(grainWidth(unitFor("day"), cellWidthFor("day"))).toBe(64);
+
+    const start = new Date(2026, 10, 20);
+    expect(
+      (endForGrains(start, unitFor("quarter"), 4).getTime() - start.getTime()) /
+        86_400_000,
+    ).toBe(3);
+    expect(
+      (endForGrains(start, unitFor("day"), 4).getTime() - start.getTime()) /
+        3_600_000,
+    ).toBe(3);
+  });
+});
+
+// ── Where a bar is drawn ──────────────────────────────────────────────────
+// A record dated the 29th was drawn at the 26th in a quarter and at the 19th
+// in a year: a bar took its column's left edge, and a column there is a
+// whole week, so every date in it began on its Monday. A bar is placed by
+// its dates now, interpolated inside the column — the same arithmetic that
+// puts the month lines where the reference has them.
+
+// A position inside a column is read from elapsed time, so where the clocks
+// go back inside one, a day of it is drawn about a quarter of a pixel off —
+// a 169-hour week divided seven ways. Invisible, and the same arithmetic
+// runs both ways (offsetOfTime and timeAtOffset stay inverses), so these
+// are held to half a pixel rather than to the millionth.
+
+describe("a bar's place in the grid", () => {
+  /** The record from the report: Deposit, 29 October to 12 November 2026. */
+  const deposit = {
+    id: "deposit",
+    title: "Deposit",
+    start: new Date(2026, 9, 29),
+    end: new Date(2026, 10, 12),
+    allDay: true,
+  };
+
+  const geoIn = (tf: Timeframe) => {
+    const range = buildRange(2026, 9, 29, tf, padFor(tf));
+    const geo = getGeo(deposit, range, true);
+    expect(geo).not.toBeNull();
+    return { range, geo: geo! };
+  };
+
+  it.each(["quarter", "year"] as Timeframe[])(
+    "starts it on its own date in %s, not on its week's Monday",
+    (tf) => {
+      const { range, geo } = geoIn(tf);
+      const day = grainWidth(range.unit, range.cellWidth);
+
+      // The Monday of the 29th's week is the 26th: three days earlier.
+      const monday = range.days[Math.floor(geo.left / range.cellWidth)];
+      expect(monday.getDate()).toBe(26);
+      expect(geo.left - monday.getTime() * 0).toBeGreaterThan(0);
+      expect(geo.left).toBeCloseTo(
+        offsetOfTime(range, deposit.start.getTime()),
+        6,
+      );
+      // Three days past the column's edge, to within half a pixel.
+      expect(geo.left % range.cellWidth).toBeCloseTo(3 * day, 0);
+
+      // 29 October through the end of 12 November: fifteen days.
+      expect(geo.width).toBeCloseTo(15 * day, 0);
+    },
+  );
+
+  it.each(["day", "week", "month"] as Timeframe[])(
+    "still lands on the column edge in %s, where a column is no wider than a day",
+    (tf) => {
+      // The new arithmetic has to be the old arithmetic wherever a date is a
+      // whole number of columns, or this fix would have moved every other
+      // timeframe by a fraction of a cell.
+      const { range, geo } = geoIn(tf);
+      expect(geo.left % range.cellWidth).toBeCloseTo(0, 6);
+      // Fifteen days — in Day, the hours they really hold: where the clocks
+      // go back inside them that is 361 of them, and the grid has 361
+      // columns there to match.
+      const from = new Date(2026, 9, 29);
+      const to = new Date(2026, 10, 13);
+      const columns =
+        tf === "day" ? (to.getTime() - from.getTime()) / 3_600_000 : 15;
+      expect(geo.width).toBeCloseTo(columns * range.cellWidth, 2);
+    },
+  );
+
+  it("draws a single day in a year wide enough to see", () => {
+    // A day of a year is six pixels of a 44px week. A bar that thin is not
+    // a bar, so there is a floor — and it only ever applies there.
+    const range = buildRange(2026, 10, 20, "year", padFor("year"));
+    const one = {
+      id: "o",
+      title: "o",
+      start: new Date(2026, 10, 20),
+      end: new Date(2026, 10, 20),
+      allDay: true,
+    };
+    const geo = getGeo(one, range, true)!;
+    expect(geo.width).toBe(MIN_BAR_WIDTH);
+    expect(44 / 7).toBeLessThan(MIN_BAR_WIDTH);
+
+    const quarter = buildRange(2026, 10, 20, "quarter", padFor("quarter"));
+    expect(getGeo(one, quarter, true)!.width).toBeCloseTo(15, 6);
+  });
+
+  it("times a bar to the hour in Day, as it always did", () => {
+    const range = buildRange(2026, 10, 20, "day", padFor("day"));
+    const meeting = {
+      id: "m",
+      title: "m",
+      start: new Date(2026, 10, 20, 9, 30),
+      end: new Date(2026, 10, 20, 11, 15),
+      allDay: false,
+    };
+    const geo = getGeo(meeting, range, true)!;
+    // 09:00 through the end of 11:00 — the hours it touches, three of them.
+    expect(geo.left % range.cellWidth).toBeCloseTo(0, 6);
+    expect(geo.width).toBeCloseTo(3 * range.cellWidth, 2);
+  });
+});
+
+// ── Where today's line is drawn ───────────────────────────────────────────
+// The same bug, in the one place the user reaches for when lost. The line
+// and the Today button both looked for a column that *was* today, and in a
+// quarter or a year a column is a week: on six days in seven nothing
+// matched, so the line vanished and the button had nowhere to scroll to.
+
+describe("today's position", () => {
+  /** What the view computes for the line, and scrolls the button to. */
+  const todayLeft = (range: TimelineRange, now: number) =>
+    now < range.startDate.getTime() || now > range.endDate.getTime()
+      ? null
+      : offsetOfTime(range, now);
+
+  it.each(["day", "week", "month", "quarter", "year"] as Timeframe[])(
+    "has one in %s, whatever day of the week today is",
+    (tf) => {
+      // Every day of one week, so a Monday is not what carries the test.
+      // One range for all seven: a quarter's is a century of columns to
+      // build, and the view's range does not change from one day to the
+      // next inside the page it is already showing.
+      const range = buildRange(2026, 10, 19, tf, padFor(tf));
+      for (let d = 16; d <= 22; d++) {
+        const now = new Date(2026, 10, d, 14, 30);
+        const left = todayLeft(range, now.getTime());
+        expect(left).not.toBeNull();
+        expect(left!).toBeGreaterThan(0);
+        expect(left!).toBeLessThan(range.days.length * range.cellWidth);
+      }
+    },
+  );
+
+  it("puts it inside the week it belongs to, in a quarter", () => {
+    const now = new Date(2026, 10, 19, 12); // a Thursday
+    const range = buildRange(2026, 10, 19, "quarter", padFor("quarter"));
+    const left = todayLeft(range, now.getTime())!;
+    const column = Math.floor(left / range.cellWidth);
+    expect(range.days[column].getDay()).toBe(1); // its Monday
+    expect(range.days[column].getDate()).toBe(16);
+    // Thursday noon: 3.5 days into a seven-day column.
+    expect(left % range.cellWidth).toBeCloseTo((3.5 * range.cellWidth) / 7, 6);
+
+    // And the rule it replaced, for the record: looking for a column that
+    // *is* today finds one only in the week whose Monday it is.
+    expect(range.days.findIndex((d) => sameDay(d, now))).toBe(-1);
+    expect(
+      range.days.findIndex((d) => sameDay(d, new Date(2026, 10, 16))),
+    ).toBe(Math.floor(left / range.cellWidth));
+  });
+
+  it("has none when today is outside the range on show", () => {
+    // Which takes some doing: the canvas a quarter is drawn on runs for
+    // over a century. The guard is still what keeps the line off a grid it
+    // doesn't belong on.
+    const range = buildRange(2026, 10, 19, "quarter", padFor("quarter"));
+    expect(range.startDate.getFullYear()).toBeLessThan(1990);
+    expect(todayLeft(range, new Date(1500, 0, 1).getTime())).toBeNull();
+    expect(todayLeft(range, new Date(2600, 0, 1).getTime())).toBeNull();
+  });
+});
+
+// ── A bar held where it was dropped ───────────────────────────────────────
+// A drop writes dates, and the bar is placed from those dates — so between
+// the two the bar sprang back to where it had been and jumped again when
+// the write landed. It is held at what the drop asked for until the view
+// places it somewhere new.
+
+describe("holding a bar where it was dropped", () => {
+  const live = { left: 400, width: 105, top: 68 };
+
+  it("draws what the drop asked for, not what the dates still say", () => {
+    const held = holdBar(live, { left: live.left + 2 * 105 });
+    expect(held.left).toBe(610);
+    expect(held.width).toBe(105); // untouched by a sideways move
+    expect(held.top).toBe(68);
+    // The dates have not come back yet: the bar stays where it was put.
+    expect(barCaughtUp(held, live)).toBe(false);
+  });
+
+  it("lets go once the view has placed it again", () => {
+    const held = holdBar(live, { left: 610 });
+    expect(barCaughtUp(held, { ...live, left: 610 })).toBe(true);
+  });
+
+  it("lets go even when the write came back a little different", () => {
+    // A date clipped to the range, a reorder that settled elsewhere: once
+    // the truth is in, the truth is what to draw.
+    const held = holdBar(live, { left: 610 });
+    expect(barCaughtUp(held, { ...live, left: 505 })).toBe(true);
+    expect(barCaughtUp(held, { ...live, top: 102 })).toBe(true);
+    expect(barCaughtUp(held, { ...live, width: 210 })).toBe(true);
+  });
+
+  it("holds a resized bar by its width", () => {
+    const held = holdBar(live, { width: 4 * 105 });
+    expect(held.width).toBe(420);
+    expect(held.left).toBe(400);
+    expect(barCaughtUp(held, live)).toBe(false);
+    expect(barCaughtUp(held, { ...live, width: 420 })).toBe(true);
+  });
+
+  it("is not fooled by half a pixel", () => {
+    // A position inside a column is read from elapsed time, so the same
+    // place can come back a fraction out (the clocks going back inside a
+    // week). That is not the view placing the bar again.
+    const held = holdBar(live, { left: 610 });
+    expect(barCaughtUp(held, { ...live, left: 400.27 })).toBe(false);
+    expect(barCaughtUp(held, { ...live, left: 401 })).toBe(true);
+  });
+
+  it("holds a row move by the top it was dropped on", () => {
+    const held = holdBar(live, { top: 68 + 34 });
+    expect(held.top).toBe(102);
+    expect(barCaughtUp(held, live)).toBe(false);
+    expect(barCaughtUp(held, { ...live, top: 102 })).toBe(true);
   });
 });

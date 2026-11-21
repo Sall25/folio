@@ -4,8 +4,7 @@ import {
   columnParts,
   HEADER_HEIGHT,
   GROUP_ROW_HEIGHT,
-  sameDay,
-  sameHour,
+  offsetOfTime,
 } from "../../hooks/use-timeline-layout";
 
 interface HighlightRange {
@@ -35,17 +34,18 @@ function TimelineHeaderImpl({
 }) {
   const cell = range.cellWidth;
   const gridWidth = range.days.length * cell;
-  const hourly = range.unit === "hour";
 
-  // In Day a column is an hour, so what is marked is the hour. Looked up
-  // when the range changes rather than on every render: the range holds
-  // thousands of columns and the window moves as the grid scrolls.
+  // The column today falls in — in Day an hour, in a quarter or a year the
+  // week holding it. Looking for a column that *is* today marked nothing at
+  // all in those two, where a column is seven days and only one of them
+  // matched. Looked up when the range changes rather than on every render:
+  // the range holds thousands of columns and the window moves as it scrolls.
   const todayIdx = useMemo(() => {
-    const today = new Date();
-    return range.days.findIndex((d) =>
-      hourly ? sameHour(d, today) : sameDay(d, today),
-    );
-  }, [range, hourly]);
+    const now = new Date().getTime();
+    if (now < range.startDate.getTime() || now > range.endDate.getTime())
+      return -1;
+    return Math.floor(offsetOfTime(range, now) / cell);
+  }, [range, cell]);
 
   // Every group, with the column it starts at: a range runs over years now,
   // so the months above it are drawn from where they fall rather than laid

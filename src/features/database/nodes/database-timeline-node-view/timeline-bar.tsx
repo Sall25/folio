@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
   CellValue,
@@ -11,7 +12,13 @@ import {
   useResizableNode,
 } from "src/components/tiptap-node/resizable-node";
 import {
+  barCaughtUp,
   cellWidthFor,
+  endForGrains,
+  holdBar,
+  type HeldBar,
+  grainWidth,
+  MIN_BAR_WIDTH,
   dropBeforeId,
   shiftDate,
   unitFor,
@@ -22,10 +29,7 @@ import {
   type TimelinePlacement,
 } from "../../hooks/use-timeline-layout";
 import { TimelineCardBody } from "./timeline-card-body";
-import {
-  useTimelineBarDrag,
-  type BarDragState,
-} from "./use-timeline-bar-drag";
+import { useTimelineBarDrag, type BarDragState } from "./use-timeline-bar-drag";
 
 // A record's bar, put into the gantt from outside it.
 //
@@ -70,6 +74,7 @@ function TimelineBarInner({
   cellWidth,
   rowCount,
   onDrop,
+  held,
 }: {
   record: Page;
   view: TimelineView;
@@ -85,6 +90,8 @@ function TimelineBarInner({
   cellWidth: number;
   rowCount: number;
   onDrop: (state: BarDragState) => void;
+  /** Where the last drop put it, until the dates catch up. */
+  held: HeldBar | null;
 }) {
   const { nodeRef, isResizing } = useResizableNode();
   const { drag, isDragging, handlers } = useTimelineBarDrag({
@@ -109,8 +116,8 @@ function TimelineBarInner({
       data-record-id={record.id}
       data-dragging={isDragging || undefined}
       style={{
-        top: rowTop(index),
-        left: placement.left,
+        top: held ? held.top : rowTop(index),
+        left: held ? held.left : placement.left,
         // Where the card would land, while the pointer is still down.
         // A transform, so the drag costs no layout and the card it is
         // standing in for stays where it is until the drop commits.
@@ -120,14 +127,17 @@ function TimelineBarInner({
         // While the handle is being dragged the provider sets the width on
         // this element directly; passing one here would snap it back to the
         // dates on every render until the drag ends.
-        width: isResizing ? undefined : placement.width,
+        width: isResizing ? undefined : (held?.width ?? placement.width),
         height: ROW_HEIGHT,
       }}
     >
       <TimelineCardBody
         record={record}
         view={view}
-        geo={{ left: placement.left, width: placement.width }}
+        geo={{
+          left: held ? held.left : placement.left,
+          width: held ? held.width : placement.width,
+        }}
         setCellValue={setCellValue}
         clippedLeft={placement.clippedLeft}
         clippedRight={placement.clippedRight}
@@ -151,6 +161,28 @@ export function TimelineBar({
   sortedRecordIds,
   reorderRecord,
 }: TimelineBarProps) {
+  // A drop writes dates, and a bar is placed from its dates, so between the
+  // two it would spring back to where it started — the drop undone for as
+  // long as the write takes, then a jump when it lands. It stays where it
+  // was put instead, and the hold ends by itself the moment the view places
+  // it anywhere new (barCaughtUp), which needs no state of its own.
+  const liveLeft = placement.left;
+  const liveWidth = placement.width;
+  const liveTop = rowTop(index);
+  const live = { left: liveLeft, width: liveWidth, top: liveTop };
+  const [held, setHeld] = useState<HeldBar | null>(null);
+  const holding = held && !barCaughtUp(held, live) ? held : null;
+  /** The box on screen: what a fresh gesture starts from. */
+  const shown = holding ?? live;
+
+  // And a stop, in case nothing ever comes back: a bar that waits forever
+  // for a write that failed is worse than one that snaps back to its dates.
+  useEffect(() => {
+    if (!held) return;
+    const letGo = setTimeout(() => setHeld(null), 2000);
+    return () => clearTimeout(letGo);
+  }, [held]);
+
   // This database's gantt, not another one's: a page can hold several, and
   // a bar belongs in the grid of its own.
   const scope = databaseId
@@ -165,19 +197,32 @@ export function TimelineBar({
   // dragging the handle out by one is an hour there and a day here.
   const cell = cellWidthFor(view.timeframe);
   const unit = unitFor(view.timeframe);
+  // A handle moves by the grid's grain, so that is as small as a bar goes:
+  // a column would have made a week the shortest a record could be in a
+  // quarter. Never below the floor every bar is drawn with.
+  const grain = grainWidth(unit, cell);
 
   return createPortal(
     <ResizableNodeProvider
-      min={{ width: cell }}
+      min={{ width: Math.max(MIN_BAR_WIDTH, grain) }}
       onResizeEnd={(dimensions) => {
         const start = parseDateValue(
           record.values?.[view.startDatePropertyId],
         ).start;
         if (!start) return;
-        const cells = Math.max(1, Math.round(dimensions.width / cell));
-        const end = new Date(start);
-        if (view.timeframe === "day") end.setHours(start.getHours() + cells - 1);
-        else end.setDate(start.getDate() + cells - 1);
+        // The last day the handle was dragged over — strictly, the last
+        // grain the handle was dragged over — an hour in Day, a day in
+        // every other timeframe, a week column being seven of them.
+        const end = endForGrains(start, unit, dimensions.width / grain);
+        // Drawn at the width it was dragged to, snapped the way the dates
+        // were, rather than at the width the old dates still give.
+        setHeld(
+          holdBar(live, {
+            left: shown.left,
+            top: shown.top,
+            width: Math.max(1, Math.round(dimensions.width / grain)) * grain,
+          }),
+        );
         setCellValue(recordId, view.startDatePropertyId, {
           start: start.toISOString(),
           end: end.toISOString(),
@@ -194,7 +239,15 @@ export function TimelineBar({
         unit={unit}
         cellWidth={cell}
         rowCount={sortedRecordIds.length}
+        held={holding}
         onDrop={({ columns, rows }) => {
+          setHeld(
+            holdBar(live, {
+              left: shown.left + columns * cell,
+              width: shown.width,
+              top: rowTop(index + rows),
+            }),
+          );
           // Sideways: the dates move together, so the card keeps its
           // length and only its place in time changes.
           if (columns !== 0) {
@@ -205,7 +258,10 @@ export function TimelineBar({
               const moved = shiftDate(start, unit, columns);
               setCellValue(recordId, view.startDatePropertyId, {
                 start: moved.toISOString(),
-                end: (end ? shiftDate(end, unit, columns) : moved).toISOString(),
+                end: (end
+                  ? shiftDate(end, unit, columns)
+                  : moved
+                ).toISOString(),
               });
             }
           }
