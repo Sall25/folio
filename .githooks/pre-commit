@@ -4,7 +4,7 @@
 #   1. Lint the staged .ts/.tsx files (like CI: only what changed)
 #   2. Translations: no duplicate or missing keys
 #   3. Slash menu items
-#   4. Unit tests (drag handle and table guards included)
+#   4. The tests the staged files can reach
 # Any failure stops the commit. Skip once, knowingly: git commit --no-verify
 # (CI still runs everything on the pull request).
 
@@ -27,5 +27,25 @@ node scripts/check-i18n.mjs || fail "translations check failed"
 echo "pre-commit: slash menu items…"
 node scripts/check-slash-items.mjs || fail "slash items check failed"
 
-echo "pre-commit: tests…"
-npx vitest run --reporter=dot || fail "tests failed (a fix was undone? fix the change, don't edit the test to match)"
+# Only the tests the staged files can actually reach. Vitest walks each test
+# file's imports and runs the ones that lead to something staged, so a change
+# to the timeline runs the timeline's tests and not the whole suite — which
+# is most of the wait on a commit, and nearly all of it on a slower machine.
+#
+# Nothing is lost by it: whatever the staged files cannot reach, they cannot
+# break. The whole suite still runs before a push (.githooks/pre-push) and
+# again in CI on the pull request.
+wide=$(git diff --cached --name-only --diff-filter=ACMR -- \
+  vite.config.ts package.json package-lock.json 'tsconfig*.json' scripts/)
+if [ -n "$wide" ]; then
+  # How the suite itself is built or run has changed: every test is in
+  # reach of that, so every test runs.
+  echo "pre-commit: tests (all — the build or the scripts changed)…"
+  npx vitest run --reporter=dot || fail "tests failed (a fix was undone? fix the change, don't edit the test to match)"
+elif [ -n "$files" ]; then
+  echo "pre-commit: tests (what the staged files reach)…"
+  # shellcheck disable=SC2086
+  npx vitest related --run --passWithNoTests --reporter=dot $files || fail "tests failed (a fix was undone? fix the change, don't edit the test to match)"
+else
+  echo "pre-commit: tests — nothing staged that code is built from, skipped."
+fi

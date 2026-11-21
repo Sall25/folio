@@ -1,7 +1,17 @@
 #!/bin/sh
-# Before every push: the typecheck (~20 s), so a red build is caught here
-# instead of on GitHub. The build itself runs in CI only (too slow here).
-# Skip once, knowingly: git push --no-verify (CI still runs everything).
+# Before every push: the whole suite and the typecheck (~30 s together), so
+# a red build is caught here instead of on GitHub. A commit only runs the
+# tests its own files reach (.githooks/pre-commit), and this is where
+# everything else is answered for. The build itself runs in CI only (too
+# slow here). Skip once, knowingly: git push --no-verify (CI still runs
+# everything).
+
+echo "pre-push: tests (all)…"
+npx vitest run --reporter=dot || {
+  echo ""
+  echo "pre-push: tests failed — push stopped."
+  exit 1
+}
 
 echo "pre-push: typecheck…"
 npx tsc --noEmit -p tsconfig.app.json || {
