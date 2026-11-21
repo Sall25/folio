@@ -129,8 +129,8 @@ function matchesRule(
       if (typeof v === "number") return v;
       if (typeof v !== "string" || v.trim() === "") return null;
       if (!isNaN(Number(v))) return Number(v);
-      const d = new Date(v);
-      return isNaN(d.getTime())
+      const d = toDate(v);
+      return d === null
         ? null
         : new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
     };
