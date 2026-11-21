@@ -151,10 +151,14 @@ describe("how wide the two panels are", () => {
   it("keeps the timeframe controls on the page, not on the window", () => {
     // The grid runs to the edge of the screen; controls pinned to the end
     // of it end up under a scrollbar or off the screen. They stop where
-    // the page's content does, level with the toolbar above them.
-    expect(
-      resolve(rules, [el("db-tl-nav-overlay tag:div")], "right")?.value,
-    ).toContain("--db-column-inset-right");
+    // the page's content does, level with the toolbar above them — which
+    // is now a padding, the box itself reaching the window's edge so that
+    // a month heading cannot reappear in the gap past the controls.
+    const overlay = [el("db-tl-nav-overlay tag:div")];
+    expect(resolve(rules, overlay, "right")?.value).toBe("0");
+    expect(resolve(rules, overlay, "padding-right")?.value).toContain(
+      "--db-column-inset-right",
+    );
   });
 
   it("does not move the node itself", () => {
@@ -209,7 +213,9 @@ describe("what makes the panel read as a table", () => {
       r.selector.includes(".db-tl-grid.db-node-grid"),
     );
     expect(
-      own.some((r) => r.decls["border-bottom"]?.value.includes("--tt-border-color")),
+      own.some((r) =>
+        r.decls["border-bottom"]?.value.includes("--tt-border-color"),
+      ),
     ).toBe(true);
     expect(resolve(rules, [grid, record], "border-bottom")?.value).toContain(
       "--tt-border-color",

@@ -700,11 +700,18 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   // too. --db-column-inset-right is how far the grid runs past it
   // (use-database-align.ts), and is 0 for a database that has not been
   // widened.
-  right: var(--db-column-inset-right, 0px);
+  // The box runs to the window's edge even though the controls stop at the
+  // page's: a heading travelling right has to be gone once it reaches them,
+  // and the grid carries on past them to the edge of the screen. Ending the
+  // box where the controls end left that spill uncovered, and a month
+  // reappeared to the right of the switcher.
+  right: 0;
   z-index: 7;
   display: flex;
+  justify-content: flex-end;
   align-items: center;
   padding: 0 8px;
+  padding-right: calc(8px + var(--db-column-inset-right, 0px));
   // Opaque, and from its own left edge: a month heading travelling right as
   // the grid scrolls back ends at the controls rather than running into
   // them. It was a gradient, which let the heading crowd them for 24px

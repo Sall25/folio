@@ -24,10 +24,14 @@ function TimelineHeaderImpl({
   range,
   highlights,
   shown,
+  pinned,
 }: {
   range: TimelineRange;
   highlights: HighlightRange[];
   shown: Shown;
+  /** The heading stuck at the left edge — the lead, and the only one that
+   *  says the year. */
+  pinned: number;
 }) {
   const cell = range.cellWidth;
   const gridWidth = range.days.length * cell;
@@ -49,16 +53,20 @@ function TimelineHeaderImpl({
   const groups = useMemo(() => {
     const out: {
       label: string;
+      full: string;
       days: number;
       start: number;
+      index: number;
       year?: number;
     }[] = [];
     let at = 0;
     for (const group of range.headerGroups) {
       out.push({
         label: group.label,
+        full: group.full,
         days: group.days,
         start: at,
+        index: out.length,
         // Some ranges write their own year into the label, so the locale
         // places it — and its punctuation. The rest have it appended here.
         year: range.labelsCarryYear ? undefined : range.days[at]?.getFullYear(),
@@ -90,20 +98,31 @@ function TimelineHeaderImpl({
         className="db-tl-header__groups"
         style={{ height: GROUP_ROW_HEIGHT }}
       >
-        {inView.map((group) => (
-          <div
-            key={`${group.label}-${group.start}`}
-            className="db-tl-header__group"
-            style={{ left: group.start * cell, width: group.days * cell }}
-          >
-            <span className="db-tl-header__group-label">
-              {/* A year has nothing to say above its months but the year
-                  itself, so the label is empty there and this must not
-                  leave a space in front of it. */}
-              {[group.label, group.year].filter(Boolean).join(" ")}
-            </span>
-          </div>
-        ))}
+        {inView.map((group) => {
+          // Only the lead says which year all this is. The ones after it
+          // run on from it, and a year over each would be the same four
+          // digits a dozen times across one of them.
+          const lead = group.index === pinned;
+          return (
+            <div
+              key={`${group.label}-${group.start}`}
+              className="db-tl-header__group"
+              style={{ left: group.start * cell, width: group.days * cell }}
+            >
+              <span className="db-tl-header__group-label">
+                {/* A year has nothing to say above its months but the year
+                    itself, so the label is empty there and this must not
+                    leave a space in front of it. */}
+                {[
+                  lead ? group.full : group.label,
+                  lead ? group.year : undefined,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       <div

@@ -233,13 +233,17 @@ describe("a day, by the hour", () => {
     expect(range.headerGroups.reduce((n, g) => n + g.days, 0)).toBe(HOURS_SPAN);
   });
 
-  it("says the year over every date", () => {
-    // Every heading, not just the first: the header draws the ones on
-    // screen, and in a range of hundreds of dates the first is almost
-    // never among them. The locale writes the year in, so the header must
-    // append none of its own — a second would read "15 novembre 2026 2026".
+  it("knows the year of every date without saying it", () => {
+    // The heading itself names the date; its year waits in full, for the
+    // one heading the view has pinned at the left. The locale writes the
+    // year in, so the header appends none of its own — a second would
+    // read "15 novembre 2026 2026".
     expect(range.labelsCarryYear).toBe(true);
-    for (const g of range.headerGroups) expect(g.label).toMatch(/2026/);
+    for (const g of range.headerGroups) {
+      expect(g.label).not.toMatch(/2026/);
+      expect(g.full).toMatch(/2026/);
+      expect(g.full).toContain(g.label);
+    }
   });
 });
 
@@ -450,13 +454,15 @@ describe("a week, Monday first", () => {
     expect(range.endDate.getHours()).toBe(23);
   });
 
-  it("names the month above the week, saying the year once", () => {
+  it("names the month above the week, with its year held in reserve", () => {
     // The dates are under every column already, so the heading names the
-    // month rather than repeating the span the columns spell out.
+    // month rather than repeating the span the columns spell out. The year
+    // goes on it only while it leads, which here it does: there is one.
     expect(range.labelsCarryYear).toBe(true);
     expect(range.headerGroups).toHaveLength(1);
     expect(range.headerGroups[0].days).toBe(DAYS_IN_WEEK);
-    expect(range.headerGroups[0].label).toMatch(/2026/);
+    expect(range.headerGroups[0].label).not.toMatch(/2026/);
+    expect(range.headerGroups[0].full).toMatch(/2026/);
   });
 
   it("names both months when the week runs across two", () => {
@@ -467,10 +473,10 @@ describe("a week, Monday first", () => {
       DAYS_IN_WEEK,
     );
     expect(across.headerGroups[0].days).toBe(1);
-    // Each names its own year, and neither names the other's month.
-    expect(across.headerGroups[0].label).toMatch(/2026/);
-    expect(across.headerGroups[1].label).toMatch(/2026/);
+    // Two months named, neither of them saying a year until it leads.
     expect(across.headerGroups[0].label).not.toBe(across.headerGroups[1].label);
+    expect(across.headerGroups[0].label).not.toMatch(/2026/);
+    expect(across.headerGroups[0].full).toMatch(/2026/);
   });
 
   it("names a weekday by its initial and its date", () => {
@@ -684,9 +690,10 @@ describe("a year, by the week", () => {
     expect(range.headerGroups.every((g) => g.days > 0)).toBe(true);
   });
 
-  it("says the year over every month", () => {
+  it("knows each month's year without saying it twice over", () => {
     expect(range.labelsCarryYear).toBe(true);
-    expect(range.headerGroups.every((g) => /2026/.test(g.label))).toBe(true);
+    expect(range.headerGroups.every((g) => !/2026/.test(g.label))).toBe(true);
+    expect(range.headerGroups.every((g) => /2026/.test(g.full))).toBe(true);
   });
 
   it("names a column by its day alone where a month sits above it", () => {
@@ -1078,17 +1085,18 @@ describe("a range with its context either side", () => {
     expect(range.labelsCarryYear).toBe(true);
   });
 
-  it("says which year every heading belongs to", () => {
+  it("knows which year each heading belongs to", () => {
     // The bug this replaces: the year was written over the first heading
     // of the range and no other, and the header draws the headings that
     // are on screen — which, in twenty years of them, is never the first.
-    // A heading read "novembre", in a range holding twenty Novembers.
+    // A heading read "novembre", in a range holding twenty Novembers. Each
+    // carries its own year now, for the view to show on the lead.
     const range = buildRange(2026, 10, 15, "month", padFor("month"));
-    const withYear = range.headerGroups.filter((g) => /\d{4}/.test(g.label));
-    expect(withYear).toHaveLength(range.headerGroups.length);
-    // Several years of them, each saying its own.
-    const years = new Set(withYear.map((g) => g.label.match(/\d{4}/)![0]));
+    const years = new Set(
+      range.headerGroups.map((g) => g.full.match(/\d{4}/)?.[0]),
+    );
     expect(years.size).toBeGreaterThan(5);
+    expect([...years].every(Boolean)).toBe(true);
   });
 
   it("names a date per date in Day and a month per month elsewhere", () => {

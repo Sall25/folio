@@ -334,6 +334,37 @@ function DatabaseTimelineNodeViewImpl() {
   const { from, to } = columnWindow(range, scrollLeft, viewportWidth);
   const shown = useMemo(() => ({ from, to }), [from, to]);
 
+  // Which heading is stuck at the left edge — the lead, and the one the
+  // header puts the year on. Worked out here rather than in the header so
+  // that it changes when the month under the left edge does, and not on
+  // every scroll event: the header redraws when this number does.
+  const groupStarts = useMemo(() => {
+    const out: number[] = [];
+    let at = 0;
+    for (const group of range.headerGroups) {
+      out.push(at);
+      at += group.days;
+    }
+    return out;
+  }, [range]);
+
+  const pinned = useMemo(() => {
+    const col = Math.floor(scrollLeft / range.cellWidth);
+    let lo = 0;
+    let hi = groupStarts.length - 1;
+    let out = 0;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (groupStarts[mid] <= col) {
+        out = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    return out;
+  }, [groupStarts, scrollLeft, range.cellWidth]);
+
   useEffect(() => {
     const scrollEl = scrollRef.current;
     const viewportEl = viewportRef.current;
@@ -739,6 +770,7 @@ function DatabaseTimelineNodeViewImpl() {
                   highlights={highlights}
                   range={range}
                   shown={shown}
+                  pinned={pinned}
                 />
                 <div
                   className="db-tl-gantt__body"

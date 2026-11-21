@@ -241,7 +241,11 @@ export interface TimelineRange {
    * timeframe, the hours of one date.
    */
   days: Date[];
-  headerGroups: { label: string; days: number }[];
+  /** What stands above the columns. `full` is the same heading with its
+   *  year, which the view shows on the one heading it has pinned at the
+   *  left — the rest are under it in the same year, and a year repeated
+   *  over every month says nothing. */
+  headerGroups: { label: string; full: string; days: number }[];
   /** The groups already say the year where one is wanted, so the header
    *  must not append its own. Set where the label is written by the
    *  locale, which places the year and its punctuation ("November 9,
@@ -568,11 +572,14 @@ function groupDate(d: Date, unit: CellUnit): Date {
  * What stands above the columns: a date per date in Day, a year per year
  * where a column is itself a month, a month per month everywhere else.
  *
- * Every one of them says its year. Only the first used to, which reads
- * well in a range of one month and not at all in one of twenty years: the
- * header draws the groups that are on screen, and the one that said the
- * year was almost never among them. A heading of "November" in a range
- * that holds twenty of them names nothing.
+ * Each comes with its year as well, in `full`, and the view puts that one
+ * on the heading it has pinned at the left — the lead. The others follow it
+ * in the same year and say the month alone.
+ *
+ * The year used to be written over the first heading of the range, which
+ * in one of twenty years is a heading nobody ever has on screen, so the
+ * lead read "novembre" and named nothing. Writing it over every heading
+ * instead says 2026 a dozen times down one year.
  *
  * The locale writes it in ("9 November 2026", "novembre 2026"), placing
  * the year and its punctuation where that language puts them. The header
@@ -581,9 +588,9 @@ function groupDate(d: Date, unit: CellUnit): Date {
 export function headerGroupsFor(
   days: Date[],
   unit: CellUnit,
-): { label: string; days: number }[] {
+): { label: string; full: string; days: number }[] {
   const scale = unit === "hour" ? "date" : unit === "month" ? "year" : "month";
-  const out: { label: string; days: number }[] = [];
+  const out: { label: string; full: string; days: number }[] = [];
   let prev: Date | null = null;
   for (const col of days) {
     const d = groupDate(col, unit);
@@ -598,8 +605,8 @@ export function headerGroupsFor(
       out[out.length - 1].days += 1;
       continue;
     }
-    out.push({
-      label: d.toLocaleDateString(
+    const named = (withYear: boolean) =>
+      d.toLocaleDateString(
         undefined,
         scale === "year"
           ? { year: "numeric" }
@@ -607,11 +614,10 @@ export function headerGroupsFor(
               ...(scale === "date"
                 ? { day: "numeric", month: "long" }
                 : { month: "long" }),
-              year: "numeric",
+              ...(withYear ? { year: "numeric" as const } : {}),
             },
-      ),
-      days: 1,
-    });
+      );
+    out.push({ label: named(false), full: named(true), days: 1 });
     prev = d;
   }
   return out;
@@ -792,6 +798,9 @@ function buildPage(
       headerGroups: [
         {
           label: `${monthName(first)} – ${monthName(lastDay)}`,
+          // Its own, so there is no year written into it; the header
+          // appends one to the lead, as labelsCarryYear being unset asks.
+          full: `${monthName(first)} – ${monthName(lastDay)}`,
           days: days.length,
         },
       ],
@@ -863,11 +872,14 @@ function buildPage(
     cursor.setDate(cursor.getDate() + 1);
   }
 
+  const monthAlone = startDate.toLocaleString("default", { month: "long" });
   const headerGroups = [
     {
-      // No year here: the header adds it after the label, and asking for it
-      // twice is what made every month read "Novembre 2026 2026".
-      label: startDate.toLocaleString("default", { month: "long" }),
+      // No year in either: the header adds one to the heading it has
+      // pinned, and asking for it twice is what made a month read
+      // "Novembre 2026 2026".
+      label: monthAlone,
+      full: monthAlone,
       days: days.length,
     },
   ];
