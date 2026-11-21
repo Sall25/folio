@@ -72,6 +72,10 @@ function TimelineHeaderImpl({
     (g) => g.start < shown.to && g.start + g.days > shown.from,
   );
   const columns = range.days.slice(shown.from, shown.to);
+  // A quarter's dates are ticks on a ruler. A year's weeks are 44px wide
+  // and a number straddling two of them would belong to neither, so those
+  // stay in the middle of the week they name.
+  const onTick = range.timeframe === "quarter";
 
   return (
     <div
@@ -128,17 +132,21 @@ function TimelineHeaderImpl({
 
         {columns.map((day, i) => {
           const index = shown.from + i;
-          // A month above a run of columns says it for all of them, so the
-          // column itself need only count its day — a Year's weeks, where
-          // there is no room for it twice over in any case. A quarter's
-          // weeks are wide enough to carry their own month and few enough
-          // to want it.
-          const part = columnParts(day, range.unit, range.timeframe !== "year");
+          // A month above a run of columns says it for all of them, so a
+          // column that is a week need only count the day it starts on.
+          // Measured off the reference: the numbers there sit on the column
+          // edges, a date marking the Monday a week begins rather than
+          // floating in the middle of one — which is also where the month
+          // lines fall, so the two read as one ruler.
+          const part = columnParts(day, range.unit, range.unit !== "week");
           return (
             <div
               key={index}
               className="db-tl-header__day"
-              style={{ left: index * cell, width: cell }}
+              style={{
+                left: index * cell - (onTick ? cell / 2 : 0),
+                width: cell,
+              }}
             >
               <span
                 className={

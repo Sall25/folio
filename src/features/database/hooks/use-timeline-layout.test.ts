@@ -693,7 +693,8 @@ describe("a year, by the week", () => {
     // Fifty-two columns have no room for the month, and the group above
     // each run of them has already said it.
     expect(columnLabel(new Date(2026, 10, 16), "week", false)).toBe("16");
-    // A quarter has no month groups, so its weeks still carry theirs.
+    // It can still name the month where something asks for it; nothing
+    // does now, a quarter's weeks having months over them too.
     expect(columnLabel(new Date(2026, 10, 16), "week", true)).not.toBe("16");
   });
 
@@ -1383,5 +1384,45 @@ describe("an hour column where the clocks change", () => {
     expect(shiftDate(at, "hour", 3).getTime() - at.getTime()).toBe(
       3 * 3_600_000,
     );
+  });
+});
+
+describe("a quarter, measured off the reference", () => {
+  // The reference shows Q2 2027: fourteen columns stepping 105px, the first
+  // of them Monday 29 March, and four month lines — at x 142, 591, 1056 and
+  // 1506 with the first column's edge at 96, so 46, 495, 960 and 1410 along.
+  //
+  // A line falls where its month truly starts, which is inside a week and
+  // not at the Monday nearest it: the 1st of April 2027 is a Thursday, three
+  // sevenths of the way through the week of the 29th. All four say so.
+  const range = buildRange(2027, 3, 15, "quarter", padFor("quarter"));
+  const from = range.anchorIndex * range.cellWidth;
+  const at = (month: number) =>
+    offsetOfTime(range, new Date(2027, month, 1).getTime()) - from;
+
+  it("steps a week at a time, 105px apart", () => {
+    expect(range.cellWidth).toBe(105);
+    expect(range.unit).toBe("week");
+  });
+
+  it("starts the quarter on the Monday the reference starts on", () => {
+    const first = range.days[range.anchorIndex];
+    expect(first.getDay()).toBe(1);
+    expect(first.toDateString()).toBe("Mon Mar 29 2027");
+  });
+
+  it("puts every month line where the reference has it", () => {
+    expect(at(3)).toBe(45); // 1 April, a Thursday: 3/7 into its week
+    expect(at(4)).toBe(495); // 1 May, a Saturday: 5/7 into its week
+    expect(at(5)).toBe(960); // 1 June, a Tuesday: 1/7
+    expect(at(6)).toBe(1410); // 1 July, a Thursday: 3/7
+  });
+
+  it("names a column by its date alone", () => {
+    // The reference's columns read 29, 5, 12, 19 — the month is said once,
+    // above them.
+    expect(columnParts(range.days[range.anchorIndex], "week", false)).toEqual({
+      main: "29",
+    });
   });
 });

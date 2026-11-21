@@ -55,16 +55,14 @@ function TimelineDayGridImpl({
     (x) => x >= shown.from * cell && x <= shown.to * cell,
   );
 
-  // A Year: fifty-two week columns under month headings. The months are
-  // the structure there, and a line on every week buries them — so the
-  // columns are left unruled and the weeks are read off the ruler. A
-  // quarter's fourteen are few enough to rule, and an hour column is a
-  // division worth drawing in its own right.
+  // Where a column is a week — a quarter, a year — the months are the
+  // structure, and a line on every week buries them. So those columns are
+  // left unruled and the weeks are read off the ruler above instead, which
+  // is what the reference does: its only lines are the four months, each
+  // where the month truly starts rather than at the nearest Monday.
   //
-  // By the timeframe, not by how many headings there are: a range carries
-  // pages of context either side of its own, so a quarter has as many
-  // month headings as a year does now.
-  const monthsOnly = range.timeframe === "year";
+  // An hour column, or a day, is a division worth drawing in its own right.
+  const monthsOnly = range.unit === "week";
 
   return (
     <div
@@ -83,14 +81,17 @@ function TimelineDayGridImpl({
         // most of Day under grey, which marks nothing: the hours are
         // already told apart by their own lines and by the ruler, and
         // what a working day is differs by the person reading it.
+        //
+        // Nor the alternating months of a quarter. The reference's grid is
+        // one flat colour from end to end — measured, not guessed — and the
+        // month lines already say where a month begins, which is the one
+        // thing the shading was there to say.
         const isWeekend =
-          range.unit === "hour"
+          range.unit === "hour" || range.unit === "week"
             ? false
-            : range.unit === "week"
-              ? range.timeframe === "quarter" && day.getMonth() % 2 === 1
-              : range.unit === "month"
-                ? Math.floor(day.getMonth() / 3) % 2 === 1
-                : day.getDay() === 0 || day.getDay() === 6;
+            : range.unit === "month"
+              ? Math.floor(day.getMonth() / 3) % 2 === 1
+              : day.getDay() === 0 || day.getDay() === 6;
         return (
           <div
             key={index}

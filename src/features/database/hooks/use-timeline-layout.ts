@@ -30,10 +30,11 @@ export const WEEKDAY_WIDTH = 225;
 /** What the Week timeframe shows: one week, Monday first. */
 export const DAYS_IN_WEEK = 7;
 /**
- * A column in the Quarter timeframe: a whole week. Wide enough for the date
- * of the Monday that starts it.
+ * A column in the Quarter timeframe: a whole week, named by the date of the
+ * Monday that starts it. Measured off the reference, where fourteen of them
+ * step 105px apart.
  */
-export const WEEK_WIDTH = 100;
+export const WEEK_WIDTH = 105;
 /** A column in the Year timeframe: a whole month, named. */
 export const MONTH_WIDTH = 110;
 /** A week in the Year view. Narrow: fifty-two of them have to fit, and the
