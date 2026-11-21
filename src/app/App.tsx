@@ -6,6 +6,7 @@ import {
   QUERY_CACHE_BUSTER,
   QUERY_CACHE_MAX_AGE,
   queryPersister,
+  resumeQueuedWrites,
   shouldPersistQuery,
 } from "../lib/query-persistence";
 import { setPageWriteDefaults } from "src/lib/page-writes";
@@ -59,7 +60,9 @@ function App() {
         },
       }}
       // Anything queued while restoring goes out once the cache is back.
-      onSuccess={() => client.resumePausedMutations()}
+      // Started, not waited for: the provider holds the app on its loading
+      // ring until this returns (resumeQueuedWrites says the rest).
+      onSuccess={() => resumeQueuedWrites(client)}
     >
       {/* Desktop app only: its own title bar (tabs once signed in). */}
       <DesktopTitleBar />

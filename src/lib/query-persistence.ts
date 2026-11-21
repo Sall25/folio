@@ -1,5 +1,5 @@
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import type { Query } from "@tanstack/react-query";
+import type { Query, QueryClient } from "@tanstack/react-query";
 import { clearOfflineDocCache } from "src/lib/offline-doc-cache";
 import { findJsonUnsafeCached } from "src/lib/json-safe";
 import { offlineKv } from "src/lib/offline-kv";
@@ -70,6 +70,26 @@ export const queryPersister = createAsyncStoragePersister({
   key: PERSIST_KEY,
   throttleTime: 1000,
 });
+
+/**
+ * Send what was queued while this device had no connection, once the saved
+ * cache is back.
+ *
+ * It must not return that promise, and this is not a detail. The provider
+ * runs its own `.then(onSuccess).finally(stop saying "restoring")`, so it
+ * waits for whatever onSuccess hands back — and resuming a paused write
+ * while offline never settles: the write pauses again the moment it is
+ * resumed, and a page write goes on retrying for as long as the network is
+ * down (retryWhenOffline). Handing that promise over left the app on its
+ * loading ring, for good, on the one device that needed to open offline:
+ * one holding an edit it had not managed to send.
+ *
+ * Nothing is lost by not waiting. These writes go out when the connection
+ * returns, whether from here or from React Query's own online listener.
+ */
+export function resumeQueuedWrites(client: QueryClient): void {
+  void client.resumePausedMutations();
+}
 
 /** Which queries get written to disk: successful ones whose data survives
  *  the trip through JSON, minus the denylist. */
