@@ -8,6 +8,7 @@ import {
   Box,
   Calendar,
   ChartBar,
+  Share2,
   Code2,
   Columns2,
   Columns3,
@@ -476,6 +477,7 @@ export function getSlashCommands(t: TFunction): SlashCommand[] {
         ["list", "listView", List],
         ["calendar", "calendarView", Calendar],
         ["timeline", "timelineView", ChartBar],
+        ["graph", "graphView", Share2],
         ["form", "formView", ListChecks],
       ] as const
     ).map(([type, key, icon]) => ({

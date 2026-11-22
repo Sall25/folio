@@ -1,7 +1,7 @@
 // A database block waiting for its data source: a faded picture of its view,
 // with the "New database" menu over its right side (data-source-picker.tsx).
 .db-setup {
-   // The preview and the menu share one grid cell: the block is as tall as
+  // The preview and the menu share one grid cell: the block is as tall as
   // the taller of the two, with no empty space under a short preview.
   display: grid;
   padding-top: 4px;
@@ -9,7 +9,6 @@
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  
 
   --db-ph-faint: color-mix(in srgb, var(--tt-text-primary) 28%, transparent);
   --db-ph-line: var(--tt-border-color);
@@ -24,7 +23,7 @@
     padding: 2px 4px 6px;
     border-radius: 8px;
     cursor: pointer;
-   
+
     &:hover,
     &:focus-visible {
       outline: none;
@@ -76,13 +75,19 @@
   }
 
   &__title {
-   
     font-size: 26px;
     font-weight: 700;
     line-height: 1.4;
     color: color-mix(in srgb, var(--tt-text-primary) 22%, transparent);
-    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont,
-      "Segoe UI Variable Display", "Segoe UI", Helvetica, Arial, sans-serif;
+    font-family:
+      ui-sans-serif,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI Variable Display",
+      "Segoe UI",
+      Helvetica,
+      Arial,
+      sans-serif;
   }
 
   // ── The menu ──
@@ -448,5 +453,33 @@
     gap: 8px;
     margin-top: -36px;
     padding: 0 10px 10px;
+  }
+}
+
+// The graph view's placeholder: nodes on a ring, lines across it.
+.db-ph--graph {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  line {
+    stroke: var(--tt-gray-light-a-300);
+
+    .dark & {
+      stroke: var(--tt-gray-dark-a-300);
+    }
+  }
+
+  circle {
+    fill: var(--tt-gray-light-a-400);
+
+    .dark & {
+      fill: var(--tt-gray-dark-a-400);
+    }
   }
 }

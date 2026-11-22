@@ -237,6 +237,35 @@ export function DatabaseLoadingSkeleton({
         );
       }
 
+      // ── Graph: nodes on a ring, with a few lines between ─────────────
+      case "graph": {
+        const count = Math.min(Math.max(rows, 6), 18);
+        const r = 150;
+        const at = (i: number) => {
+          const a = (i / count) * Math.PI * 2 - Math.PI / 2;
+          return { x: 190 + Math.cos(a) * r, y: 170 + Math.sin(a) * r };
+        };
+        return (
+          <div className="db-skeleton__graph">
+            <svg viewBox="0 0 380 340" aria-hidden>
+              {Array.from({ length: count }).map((_, i) => {
+                // Every node joined to the one three along: a ring of
+                // lines, which is what a graph looks like from a distance.
+                const a = at(i);
+                const b = at((i + 3) % count);
+                return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />;
+              })}
+              {Array.from({ length: count }).map((_, i) => {
+                const p = at(i);
+                return (
+                  <circle key={i} cx={p.x} cy={p.y} r={7 + (i % 3) * 2.5} />
+                );
+              })}
+            </svg>
+          </div>
+        );
+      }
+
       // ── Table: the real column names and widths ───────────────────────
       case "table":
       default: {

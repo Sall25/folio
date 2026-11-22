@@ -2,6 +2,7 @@ import type { DatabaseView } from "src/types";
 import {
   Calendar,
   ChartBar,
+  Share2,
   Columns3,
   LayoutGrid,
   List,
@@ -28,6 +29,7 @@ export function ViewIcon({ view }: { view: DatabaseView }) {
       {view.type === "gallery" && <LayoutGrid className="tiptap-button-icon" />}
       {view.type === "calendar" && <Calendar className="tiptap-button-icon" />}
       {view.type === "timeline" && <ChartBar className="tiptap-button-icon" />}
+      {view.type === "graph" && <Share2 className="tiptap-button-icon" />}
       {view.type === "form" && <ListChecks className="tiptap-button-icon" />}
     </>
   );

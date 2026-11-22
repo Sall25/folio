@@ -1386,6 +1386,10 @@
         "title": "Timeline view",
         "description": "Plan pages over time."
       },
+      "graphView": {
+        "title": "Graph view",
+        "description": "See how pages link to one another."
+      },
       "formView": {
         "title": "Form",
         "description": "Collect answers into a new database."
@@ -1560,6 +1564,7 @@
       "gallery": "Gallery",
       "calendar": "Calendar",
       "timeline": "Timeline",
+      "graph": "Graph",
       "form": "Form",
       "more": "{{count}} more…",
       "addView": "Add view",
@@ -1685,6 +1690,16 @@
       "expanded": "Open expanded",
       "count_one": "{{count}} sub-item",
       "count_other": "{{count}} sub-items"
+    },
+    "graph": {
+      "empty": "No records with links yet. Link records through a relation property and they appear here.",
+      "addRelation": "Add a relation to connect records",
+      "relatedTo": "Related to",
+      "relatedFrom": "Related from",
+      "connectWith": "Drag between nodes to link with {{name}}",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "fit": "Fit"
     },
     "manageInCalendar": {
       "open": "Manage in calendar",

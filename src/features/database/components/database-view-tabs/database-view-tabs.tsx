@@ -26,6 +26,7 @@ const VIEW_TYPE_KEYS: DatabaseView["type"][] = [
   "gallery",
   "calendar",
   "timeline",
+  "graph",
   "form",
 ];
 

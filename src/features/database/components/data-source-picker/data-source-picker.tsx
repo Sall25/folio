@@ -7,6 +7,7 @@ import {
   Columns3,
   Database,
   GanttChart,
+  Share2,
   LayoutGrid,
   List as ListIcon,
   ListFilter,
@@ -41,6 +42,7 @@ const VIEW_ICON: Record<DatabaseView["type"], LucideIcon> = {
   list: ListIcon,
   calendar: Calendar,
   timeline: GanttChart,
+  graph: Share2,
   form: ListChecks,
 };
 

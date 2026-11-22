@@ -574,6 +574,20 @@ export interface CalendarView extends BaseView {
   manualOrder?: ID[];
 }
 
+/** A graph of the records and the relations between them. */
+export interface GraphView extends BaseView {
+  type: "graph";
+  /** The relation properties drawn as links. Empty: every relation there
+   *  is, which is what a graph is for on a database nobody has tuned. */
+  linkPropertyIds?: ID[];
+  /** Records linked from another database, drawn as nodes of their own. */
+  includeLinked?: boolean;
+  /** The select/status property a node takes its colour from. */
+  colorPropertyId?: ID | null;
+  /** Nodes dragged somewhere on purpose, kept where they were put. */
+  pinned?: Record<ID, { x: number; y: number }>;
+}
+
 export interface TimelineView extends BaseView {
   type: "timeline";
   startDatePropertyId: ID;
@@ -633,6 +647,7 @@ export type DatabaseView =
   | GalleryView
   | CalendarView
   | TimelineView
+  | GraphView
   | FormView;
 
 // ─────────────────────────────────────────────────────────────────────────────

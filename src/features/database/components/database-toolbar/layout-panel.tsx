@@ -126,6 +126,11 @@ export function LayoutPanel({ view, db, bare = false }: LayoutPanelProps) {
               active={view.type === "timeline"}
               type="timeline"
             />
+            <ViewPalette
+              onSelect={onSelect}
+              active={view.type === "graph"}
+              type="graph"
+            />
           </GridCell>
         </GridRow>
       </Grid>
@@ -139,17 +144,17 @@ export function LayoutPanel({ view, db, bare = false }: LayoutPanelProps) {
       {view.type === "form" && <FormSettings view={view} db={db} />}
       {view.type !== "form" &&
         properties.some((p) => p.config.type === "person") && (
-        <MenuRow
-          label={t("database.assign.showPeopleBar")}
-          toggle
-          checked={!view.hidePeopleBar}
-          onToggle={() =>
-            db.updateView(view.id, {
-              hidePeopleBar: !view.hidePeopleBar,
-            } as Partial<DatabaseView>)
-          }
-        />
-      )}
+          <MenuRow
+            label={t("database.assign.showPeopleBar")}
+            toggle
+            checked={!view.hidePeopleBar}
+            onToggle={() =>
+              db.updateView(view.id, {
+                hidePeopleBar: !view.hidePeopleBar,
+              } as Partial<DatabaseView>)
+            }
+          />
+        )}
       {isTable && (
         <>
           <MenuRow

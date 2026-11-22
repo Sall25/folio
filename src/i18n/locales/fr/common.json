@@ -1386,6 +1386,10 @@
         "title": "Vue chronologie",
         "description": "Planifiez les pages dans le temps."
       },
+      "graphView": {
+        "title": "Vue graphe",
+        "description": "Voir comment les fiches sont reliées entre elles."
+      },
       "formView": {
         "title": "Formulaire",
         "description": "Recueillir des réponses dans une nouvelle base."
@@ -1560,6 +1564,7 @@
       "gallery": "Galerie",
       "calendar": "Calendrier",
       "timeline": "Chronologie",
+      "graph": "Graphe",
       "form": "Formulaire",
       "more": "{{count}} de plus…",
       "addView": "Ajouter une vue",
@@ -1685,6 +1690,16 @@
       "expanded": "Ouvrir déplié",
       "count_one": "{{count}} sous-élément",
       "count_other": "{{count}} sous-éléments"
+    },
+    "graph": {
+      "empty": "Aucune fiche liée pour l'instant. Reliez des fiches par une propriété relation et elles apparaîtront ici.",
+      "addRelation": "Ajouter une relation pour relier les fiches",
+      "relatedTo": "Relié à",
+      "relatedFrom": "Relié depuis",
+      "connectWith": "Glissez d'un nœud à l'autre pour relier par {{name}}",
+      "zoomIn": "Zoom avant",
+      "zoomOut": "Zoom arrière",
+      "fit": "Ajuster"
     },
     "manageInCalendar": {
       "open": "Gérer dans l'agenda",

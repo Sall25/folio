@@ -2,6 +2,7 @@ import { memo, useMemo } from "react";
 import { useCalendarViewState } from "../../context/calendar-view-context";
 import { useCalendarLayout } from "../../hooks/use-calendar-layout";
 import { useDatabaseContext } from "../../context/database-context";
+import { useOpenRecord } from "../../hooks/use-open-record";
 import { CalendarGrid } from "./calendar-grid";
 import { CalendarUnscheduled } from "./calendar-unscheduled";
 import { unscheduledRecords } from "../../utils/manage-in-calendar";
@@ -12,6 +13,9 @@ import "./database-calendar-node-view.scss";
 function DatabaseCalendarNodeViewImpl() {
   const { db, source, sortedRecords } = useDatabaseContext();
   const view = db.activeView;
+  // The view's own way of opening a record (Peek, Center, Full), which is
+  // what every other surface here uses.
+  const openRecord = useOpenRecord(view);
   // Records with no date: nowhere to put them on a month grid, so they are
   // listed beside it to be dragged onto a day (manage-in-calendar.ts).
   const unscheduled = useMemo(
@@ -47,10 +51,7 @@ function DatabaseCalendarNodeViewImpl() {
 
       <CalendarGrid weekHeights={weekHeights} />
 
-      <CalendarUnscheduled
-        records={unscheduled}
-        onOpenRecord={db.setOpenRecordId}
-      />
+      <CalendarUnscheduled records={unscheduled} onOpenRecord={openRecord} />
     </div>
   );
 }

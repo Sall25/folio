@@ -158,6 +158,34 @@
     border-bottom: 1px solid var(--tt-border-color);
   }
 
+  // ── graph ────────────────────────────────────────────────────────────
+  &__graph {
+    display: flex;
+    justify-content: center;
+    padding: 12px 0;
+
+    svg {
+      width: min(380px, 100%);
+      height: auto;
+    }
+
+    line {
+      stroke: var(--tt-gray-light-a-300);
+
+      .dark & {
+        stroke: var(--tt-gray-dark-a-300);
+      }
+    }
+
+    circle {
+      fill: var(--tt-gray-light-a-300);
+
+      .dark & {
+        fill: var(--tt-gray-dark-a-300);
+      }
+    }
+  }
+
   // ── timeline ─────────────────────────────────────────────────────────
   // Two panels side by side, the names and the grid, under a header of
   // months and day numbers — the shape the view has before it has data.

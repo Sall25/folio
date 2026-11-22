@@ -22,6 +22,7 @@ import { DatabaseGalleryNodeView } from "../database-gallery-node-view/database-
 import { DatabaseListNodeView } from "../database-list-node-view/database-list-node-view";
 import { DatabaseCalendarNodeView } from "../database-calendar-node-view";
 import { DatabaseTimelineNodeView } from "../database-timeline-node-view/database-timeline-node-view";
+import { DatabaseGraphNodeView } from "../database-graph-node-view";
 import { DatabaseTableBody } from "../database-table-node";
 import { useDatabaseColumnLayout } from "../../hooks/use-database-column-layout";
 import { useDbVisibleWidth } from "../../hooks/use-db-visible-width";
@@ -171,6 +172,11 @@ function DatabaseNodeViewBody({
   );
 
   const { year: tlYear, month: tlMonth, day: tlDay } = useTimelineViewState();
+  // This is the layout the bars are placed from, published to them over the
+  // bridge, and the grid draws a second instance of it. Neither is told how
+  // much context to build, so the two cannot be given different columns —
+  // which, when they were, put every bar at an offset the grid had left
+  // behind (padFor).
   const { timelineLayout } = useTimelineLayout(
     sortedRecords,
     source ?? null,
@@ -286,6 +292,7 @@ function DatabaseNodeViewBody({
     );
   if (activeView?.type === "calendar") return <DatabaseCalendarNodeView />;
   if (activeView?.type === "timeline") return <DatabaseTimelineNodeView />;
+  if (activeView?.type === "graph") return <DatabaseGraphNodeView />;
   if (activeView?.type === "form") return <DatabaseFormNodeView />;
 
   // ── Table view (node-rendered) ────────────────────────────────────────────

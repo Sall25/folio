@@ -115,6 +115,31 @@ export function ViewPlaceholder({ type }: { type: DatabaseView["type"] }) {
       );
     }
 
+    case "graph": {
+      // Nodes on a ring with a few lines across it: a graph from a
+      // distance, which is all a placeholder has to be.
+      const count = 11;
+      const at = (i: number) => {
+        const a = (i / count) * Math.PI * 2 - Math.PI / 2;
+        return { x: 110 + Math.cos(a) * 78, y: 92 + Math.sin(a) * 68 };
+      };
+      return (
+        <div className="db-ph db-ph--graph">
+          <svg viewBox="0 0 220 184" aria-hidden>
+            {Array.from({ length: count }).map((_, i) => {
+              const a = at(i);
+              const b = at((i + 3) % count);
+              return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />;
+            })}
+            {Array.from({ length: count }).map((_, i) => {
+              const p = at(i);
+              return <circle key={i} cx={p.x} cy={p.y} r={4 + (i % 3)} />;
+            })}
+          </svg>
+        </div>
+      );
+    }
+
     case "timeline": {
       const today = new Date();
       today.setHours(0, 0, 0, 0);

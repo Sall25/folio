@@ -8,6 +8,7 @@ import {
   type CalendarView,
   type DatabaseProperty,
   type TimelineView,
+  type GraphView,
   type FormView,
 } from "src/types";
 
@@ -229,6 +230,23 @@ export function makeDefaultView(
         timeframe: "month",
         showTable: true,
       } satisfies TimelineView;
+    }
+
+    case "graph": {
+      // Every relation, until someone says otherwise: a graph of nothing is
+      // no use, and a database's links are what it has to draw.
+      const color =
+        properties.find((p) => p.config.type === "status") ??
+        properties.find((p) => p.config.type === "select") ??
+        null;
+      return {
+        ...base,
+        type: "graph",
+        linkPropertyIds: [],
+        includeLinked: true,
+        colorPropertyId: color?.id ?? null,
+        pinned: {},
+      } satisfies GraphView;
     }
     case "form": {
       // Starts with the title (and nothing else): a form needs one question.

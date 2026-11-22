@@ -1,6 +1,7 @@
 import {
   Calendar,
   ChartGantt,
+  Share2,
   Columns3,
   LayoutGrid,
   List,
@@ -17,6 +18,7 @@ const VIEW_ICONS = {
   gallery: LayoutGrid,
   calendar: Calendar,
   timeline: ChartGantt,
+  graph: Share2,
   form: ListChecks,
 } as const;
 

@@ -205,6 +205,20 @@ export function makeDefaultView(
         showTable: true,
       } satisfies TimelineView;
     }
+    case "graph": {
+      const color =
+        properties.find((p) => p.config.type === "status") ??
+        properties.find((p) => p.config.type === "select") ??
+        null;
+      return {
+        ...base,
+        type: "graph",
+        linkPropertyIds: [],
+        includeLinked: true,
+        colorPropertyId: color?.id ?? null,
+        pinned: {},
+      } as DatabaseView;
+    }
     case "form": {
       // Starts with the title (and nothing else): a form needs one question.
       const title = properties.find((p) => p.config.type === "title");

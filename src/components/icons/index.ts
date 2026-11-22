@@ -205,6 +205,8 @@ export const CircleAlert = icon("CircleAlert", "error");
 export const Circle = icon("Circle", "circle");
 export const CheckCircle2 = icon("CheckCircle2", "check_circle");
 export const ChartGantt = icon("ChartGantt", "view_timeline");
+// The graph view: records and the relations between them.
+export const Share2 = icon("Share2", "hub");
 export const CaseSensitive = icon("CaseSensitive", "match_case");
 export const Bookmark = icon("Bookmark", "bookmark");
 export const BookMarked = icon("BookMarked", "bookmarks");

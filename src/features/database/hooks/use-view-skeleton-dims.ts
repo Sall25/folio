@@ -41,6 +41,7 @@ const DEFAULTS: Record<string, ViewDims> = {
   board: { columns: 3, rows: 4 },
   gallery: { columns: 4, rows: 8 },
   calendar: { columns: 7, rows: 5 },
+  graph: { columns: 0, rows: 12 },
   timeline: {
     columns: 6,
     rows: 6,
