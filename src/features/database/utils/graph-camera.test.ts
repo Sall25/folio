@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   cameraTransform,
   frameAround,
+  lookingAt,
   graphPointIn,
   pannedBy,
   viewScale,
@@ -214,6 +215,20 @@ describe("zooming about a point", () => {
   ) {
     return (at.x - camera.x - BOX.width / 2) * camera.zoom + BOX.width / 2;
   }
+});
+
+describe("looking at a point", () => {
+  it("puts it in the middle of the view", () => {
+    const camera = lookingAt({ x: 0, y: 0, zoom: 1 }, BOX, { x: 900, y: 120 });
+    expect(camera.x + BOX.width / 2).toBe(900);
+    expect(camera.y + BOX.height / 2).toBe(120);
+  });
+
+  it("does not change how far in the view is", () => {
+    expect(lookingAt({ x: 0, y: 0, zoom: 2.5 }, BOX, { x: 4, y: 4 }).zoom).toBe(
+      2.5,
+    );
+  });
 });
 
 describe("the transform the drawing hangs from", () => {

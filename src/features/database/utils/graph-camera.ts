@@ -158,6 +158,11 @@ export function frameAround(
   };
 }
 
+/** The camera, moved so that this point is in the middle of the view. */
+export function lookingAt(camera: Camera, box: Box, at: GraphPoint): Camera {
+  return { ...camera, x: at.x - box.width / 2, y: at.y - box.height / 2 };
+}
+
 /** The transform the whole drawing hangs from. */
 export function cameraTransform(camera: Camera, box: Box): string {
   return (

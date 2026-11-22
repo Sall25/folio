@@ -1,12 +1,5 @@
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { memo, useCallback, useEffect, useId, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type {
   DatabaseProperty,
@@ -26,9 +19,10 @@ import {
 import {
   ChevronDown,
   Maximize2,
-  Minimize2,
   Minus,
   Plus,
+  Share2,
+  X,
 } from "src/components/icons";
 import { usePagesBase } from "src/hooks/use-pages";
 import { useDatabaseContext } from "../../context/database-context";
@@ -36,9 +30,18 @@ import { useDataSource } from "../../hooks/use-data-source";
 import { useOpenRecord } from "../../hooks/use-open-record";
 import {
   buildGraph,
+  linkCounts,
   linkProperties,
+  relationProperties,
   type GraphNode,
 } from "../../utils/graph-model";
+import {
+  busiest,
+  fromMinimap,
+  minimapFit,
+  minimapViewport,
+  onMinimap,
+} from "../../utils/graph-minimap";
 import {
   fitIntoView,
   layoutGraph,
@@ -52,6 +55,7 @@ import {
 } from "../../utils/graph-camera";
 import { useGraphCanvas } from "./use-graph-canvas";
 import { useGraphConnect, relationIdsOf } from "./use-graph-connect";
+import { GraphConnectionsPanel } from "./graph-connections-panel";
 import "./database-graph-node-view.scss";
 
 // The pages of a view, and what joins them, on a canvas.
@@ -174,8 +178,8 @@ function DatabaseGraphNodeViewImpl() {
     [connectProperty, recordById, pageById],
   );
 
-  // Full-bleed: the one place a plain wheel may zoom, because there is no
-  // page left under it to scroll.
+  // Opened over the page, the way a picture is: the one place a plain wheel
+  // may zoom, because there is no page left under it to scroll.
   const [focused, setFocused] = useState(false);
   const background = view?.background ?? "dots";
 
@@ -183,6 +187,7 @@ function DatabaseGraphNodeViewImpl() {
   // looking, and the canvas hands a ring-press over to it.
   const canvas = useGraphCanvas({
     box: BOX,
+    viewId: view?.id,
     points: positions,
     neighbours: graph.neighbours,
     wheelZooms: focused,
@@ -204,22 +209,35 @@ function DatabaseGraphNodeViewImpl() {
   // The wheel, listened for by hand: React's own wheel is passive, and a
   // zoom that cannot stop ⌘-wheel from zooming the whole page with it is
   // worse than no zoom at all.
-  const surface = useRef<SVGSVGElement | null>(null);
+  //
+  // Held as state rather than in a ref, because opening the graph over the
+  // page moves the canvas into a portal: the element is made again there,
+  // and a ref would leave the listener on the one that was thrown away.
+  const [surface, setSurface] = useState<SVGSVGElement | null>(null);
   const onWheel = canvas.onWheel;
   useEffect(() => {
-    const el = surface.current;
-    if (!el) return;
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
-  }, [onWheel]);
+    if (!surface) return;
+    surface.addEventListener("wheel", onWheel, { passive: false });
+    return () => surface.removeEventListener("wheel", onWheel);
+  }, [surface, onWheel]);
 
+  // Over the page: Escape closes it, and the page behind does not scroll
+  // while it is open — the same bargain the image lightbox makes.
   useEffect(() => {
     if (!focused) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setFocused(false);
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      setFocused(false);
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey, true);
+      document.body.style.overflow = overflow;
+    };
   }, [focused]);
 
   const setBackground = useCallback(
@@ -228,6 +246,76 @@ function DatabaseGraphNodeViewImpl() {
       db.updateView(view.id, { background: next } as Partial<GraphView>);
     },
     [db, view],
+  );
+
+  // ── What the connections panel shows, and what it changes ───────────────
+  //
+  // Everything here is a view setting, not a preference of whoever opened
+  // it: a graph with half its relations switched off is a different view of
+  // the same database, and the next person to open it should see the graph
+  // this one was looking at.
+  const relations = useMemo(() => {
+    const all = relationProperties(source?.properties ?? []);
+    const drawn = new Set(
+      linkProperties(source?.properties ?? [], view).map((p) => p.id),
+    );
+    const counts = linkCounts(sortedRecords, source?.properties ?? []);
+    return {
+      choices: all.map((property) => ({
+        property,
+        drawn: drawn.has(property.id),
+        count: counts.byProperty.get(property.id) ?? 0,
+      })),
+      pageLinks: counts.pageLinks,
+    };
+  }, [source?.properties, view, sortedRecords]);
+
+  /** Switch one relation on or off. Empty means all, so switching the last
+   *  one off has to say so by listing none — which is what "all" looks
+   *  like. Dropping to nothing drawn at all is not a graph, so the first
+   *  switch-off writes the rest out in full instead. */
+  const toggleRelation = useCallback(
+    (id: ID, drawn: boolean) => {
+      if (!view) return;
+      const all = relations.choices.map((c) => c.property.id);
+      const now = new Set(
+        view.linkPropertyIds?.length ? view.linkPropertyIds : all,
+      );
+      if (drawn) now.add(id);
+      else now.delete(id);
+      const next = all.filter((p) => now.has(p));
+      db.updateView(view.id, {
+        linkPropertyIds: next.length === all.length ? [] : next,
+      } as Partial<GraphView>);
+    },
+    [db, view, relations.choices],
+  );
+
+  const setViewFlag = useCallback(
+    (patch: Partial<GraphView>) => {
+      if (!view) return;
+      db.updateView(view.id, patch as Partial<GraphView>);
+    },
+    [db, view],
+  );
+
+  const colorProperties = useMemo(
+    () =>
+      (source?.properties ?? []).filter(
+        (p) =>
+          p.config.type === "select" ||
+          p.config.type === "status" ||
+          p.config.type === "multi_select",
+      ),
+    [source?.properties],
+  );
+
+  // Counted from the records rather than the drawing: when they are being
+  // left out there is nothing in the drawing to count, and the number is
+  // the whole reason the switch is worth offering.
+  const unlinked = useMemo(
+    () => sortedRecords.filter((r) => !graph.neighbours.has(r.id)).length,
+    [sortedRecords, graph.neighbours],
   );
 
   /** Make the relation a graph needs, when the database has none: dragging
@@ -293,10 +381,11 @@ function DatabaseGraphNodeViewImpl() {
 
   const { camera } = canvas;
 
-  return (
+  const body = (
     <div
-      className={`db-graph${focused ? " db-graph--focus" : ""}`}
+      className="db-graph"
       data-type="database-graph"
+      data-open={focused || undefined}
     >
       <div className="db-graph__bar">
         {[...colors.entries()].map(([key, color]) => (
@@ -320,6 +409,49 @@ function DatabaseGraphNodeViewImpl() {
             </span>
           </Button>
         )}
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              aria-label={t("database.graph.connections")}
+            >
+              <Share2 className="tiptap-button-icon" size={15} />
+              <span className="tiptap-button-text">
+                {t("database.graph.connections")}
+              </span>
+              <ChevronDown className="tiptap-button-icon-sub" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <GraphConnectionsPanel
+              relations={relations.choices}
+              pageLinks={{
+                drawn: view?.showPageLinks !== false,
+                count: relations.pageLinks,
+              }}
+              colorProperties={colorProperties}
+              colorPropertyId={view?.colorPropertyId ?? null}
+              colorOf={(node) =>
+                node.colorKey ? colors.get(node.colorKey) : undefined
+              }
+              hideUnlinked={!!view?.hideUnlinked}
+              unlinked={unlinked}
+              mostConnected={busiest(graph.nodes)}
+              pages={graph.nodes.length}
+              connections={graph.edges.length}
+              onToggleRelation={toggleRelation}
+              onTogglePageLinks={(drawn) =>
+                setViewFlag({ showPageLinks: drawn })
+              }
+              onToggleUnlinked={(shown) =>
+                setViewFlag({ hideUnlinked: !shown })
+              }
+              onColorBy={(id) => setViewFlag({ colorPropertyId: id })}
+              onGoTo={canvas.frame}
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -376,124 +508,266 @@ function DatabaseGraphNodeViewImpl() {
         >
           <span className="tiptap-button-text">{t("database.graph.fit")}</span>
         </Button>
-        <Button
-          variant="ghost"
-          onClick={() => setFocused((on) => !on)}
-          aria-label={t(
-            focused ? "database.graph.leaveFocus" : "database.graph.focus",
-          )}
-        >
-          {focused ? (
-            <Minimize2 className="tiptap-button-icon" size={15} />
-          ) : (
+        {!focused && (
+          <Button
+            variant="ghost"
+            onClick={() => setFocused(true)}
+            aria-label={t("database.graph.open")}
+          >
             <Maximize2 className="tiptap-button-icon" size={15} />
-          )}
-        </Button>
+          </Button>
+        )}
       </div>
 
-      <svg
-        ref={surface}
-        className="db-graph__canvas"
-        data-panning={canvas.gesture.panning || undefined}
-        viewBox={`0 0 ${BOX.width} ${BOX.height}`}
-        tabIndex={0}
-        aria-label={t("database.graph.canvas")}
-        onPointerDown={canvas.onBackgroundPointerDown}
-        onKeyDown={canvas.onKeyDown}
-        onPointerLeave={() => setHeld(null)}
-      >
-        <defs>
-          <GroundPaint id={`${uid}-ground`} kind={background} camera={camera} />
-          {graph.nodes.map((node) =>
-            node.image ? (
-              <clipPath
-                key={node.id}
-                id={`${uid}-clip-${node.id}`}
-                clipPathUnits="objectBoundingBox"
-              >
-                <circle cx="0.5" cy="0.5" r="0.5" />
-              </clipPath>
-            ) : null,
-          )}
-        </defs>
+      <div className="db-graph__stage">
+        <svg
+          ref={setSurface}
+          className="db-graph__canvas"
+          data-panning={canvas.gesture.panning || undefined}
+          viewBox={`0 0 ${BOX.width} ${BOX.height}`}
+          tabIndex={0}
+          aria-label={t("database.graph.canvas")}
+          onPointerDown={canvas.onBackgroundPointerDown}
+          onKeyDown={canvas.onKeyDown}
+          onPointerLeave={() => setHeld(null)}
+        >
+          <defs>
+            <GroundPaint
+              id={`${uid}-ground`}
+              kind={background}
+              camera={camera}
+            />
+            {graph.nodes.map((node) =>
+              node.image ? (
+                <clipPath
+                  key={node.id}
+                  id={`${uid}-clip-${node.id}`}
+                  clipPathUnits="objectBoundingBox"
+                >
+                  <circle cx="0.5" cy="0.5" r="0.5" />
+                </clipPath>
+              ) : null,
+            )}
+          </defs>
 
-        <g transform={cameraTransform(camera, BOX)}>
-          <Ground
-            id={`${uid}-ground`}
-            camera={camera}
-            onDoubleClick={canvas.fit}
-          />
+          <g transform={cameraTransform(camera, BOX)}>
+            <Ground
+              id={`${uid}-ground`}
+              camera={camera}
+              onDoubleClick={canvas.fit}
+            />
 
-          {graph.edges.map((edge, i) => {
-            const a = at(edge.from);
-            const b = at(edge.to);
-            if (!a || !b) return null;
-            const lit = held ? edge.from === held || edge.to === held : false;
-            return (
-              <line
-                key={`${edge.from}>${edge.to}>${edge.propertyId ?? "link"}>${i}`}
-                className="db-graph__edge"
-                data-kind={edge.kind}
-                data-lit={lit || undefined}
-                data-dim={held && !lit ? "" : undefined}
-                x1={a.x}
-                y1={a.y}
-                x2={b.x}
-                y2={b.y}
-              />
-            );
-          })}
-
-          {connect.draft &&
-            (() => {
-              const from = at(connect.draft.from);
-              if (!from) return null;
+            {graph.edges.map((edge, i) => {
+              const a = at(edge.from);
+              const b = at(edge.to);
+              if (!a || !b) return null;
+              const lit = held ? edge.from === held || edge.to === held : false;
               return (
                 <line
-                  className="db-graph__edge db-graph__edge--draft"
-                  data-refused={
-                    connect.draft.over && !connect.draft.valid ? "" : undefined
-                  }
-                  x1={from.x}
-                  y1={from.y}
-                  x2={connect.draft.at.x}
-                  y2={connect.draft.at.y}
+                  key={`${edge.from}>${edge.to}>${edge.propertyId ?? "link"}>${i}`}
+                  className="db-graph__edge"
+                  data-kind={edge.kind}
+                  data-lit={lit || undefined}
+                  data-dim={held && !lit ? "" : undefined}
+                  x1={a.x}
+                  y1={a.y}
+                  x2={b.x}
+                  y2={b.y}
                 />
               );
-            })()}
+            })}
 
-          {graph.nodes.map((node) => {
-            const point = at(node.id);
-            if (!point) return null;
-            return (
-              <Node
-                key={node.id}
-                node={node}
-                at={point}
-                clipId={`${uid}-clip-${node.id}`}
-                color={node.colorKey ? colors.get(node.colorKey) : undefined}
-                state={held ? (near(node.id) ? "near" : "dim") : "rest"}
-                isHeld={held === node.id}
-                isMoving={canvas.gesture.moving === node.id}
-                isPlaced={!!view?.pinned?.[node.id]}
-                linking={
-                  connect.draft?.from === node.id
-                    ? "from"
-                    : connect.draft?.over === node.id
-                      ? connect.draft.valid
-                        ? "over"
-                        : "refused"
-                      : undefined
-                }
-                canConnect={connect.canConnect}
-                onHold={setHeld}
-                onPointerDown={canvas.onNodePointerDown}
-              />
-            );
-          })}
-        </g>
-      </svg>
+            {connect.draft &&
+              (() => {
+                const from = at(connect.draft.from);
+                if (!from) return null;
+                return (
+                  <line
+                    className="db-graph__edge db-graph__edge--draft"
+                    data-refused={
+                      connect.draft.over && !connect.draft.valid
+                        ? ""
+                        : undefined
+                    }
+                    x1={from.x}
+                    y1={from.y}
+                    x2={connect.draft.at.x}
+                    y2={connect.draft.at.y}
+                  />
+                );
+              })()}
+
+            {graph.nodes.map((node) => {
+              const point = at(node.id);
+              if (!point) return null;
+              return (
+                <Node
+                  key={node.id}
+                  node={node}
+                  at={point}
+                  clipId={`${uid}-clip-${node.id}`}
+                  color={node.colorKey ? colors.get(node.colorKey) : undefined}
+                  state={held ? (near(node.id) ? "near" : "dim") : "rest"}
+                  isHeld={held === node.id}
+                  isMoving={canvas.gesture.moving === node.id}
+                  isPlaced={!!view?.pinned?.[node.id]}
+                  linking={
+                    connect.draft?.from === node.id
+                      ? "from"
+                      : connect.draft?.over === node.id
+                        ? connect.draft.valid
+                          ? "over"
+                          : "refused"
+                        : undefined
+                  }
+                  canConnect={connect.canConnect}
+                  onHold={setHeld}
+                  onPointerDown={canvas.onNodePointerDown}
+                />
+              );
+            })}
+          </g>
+        </svg>
+
+        <Minimap
+          nodes={graph.nodes}
+          points={positions}
+          camera={camera}
+          colorOf={(node) =>
+            node.colorKey ? colors.get(node.colorKey) : undefined
+          }
+          onLookAt={canvas.lookAt}
+          label={t("database.graph.map")}
+        />
+      </div>
     </div>
+  );
+
+  if (!focused) return body;
+
+  // Over the page, like a picture opened from the text: a backdrop, a way
+  // out at the top, and a click on the dark closes it.
+  return createPortal(
+    <div
+      className="db-graph-open"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("database.graph.canvas")}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => {
+        e.stopPropagation();
+        if (e.target === e.currentTarget) setFocused(false);
+      }}
+    >
+      <Button
+        variant="ghost"
+        className="db-graph-open__close"
+        aria-label={t("database.graph.close")}
+        onClick={() => setFocused(false)}
+      >
+        <X className="tiptap-button-icon" />
+      </Button>
+      {body}
+    </div>,
+    document.body,
+  );
+}
+
+/**
+ * The small map in the corner.
+ *
+ * A canvas you can pan forever is a canvas you can get lost on: pages end
+ * up off the edge with nothing to say which edge. Everything fits in here,
+ * the frame shows what the canvas is looking at, and a press on it goes
+ * there.
+ */
+const MAP = { width: 170, height: 112 };
+
+function Minimap({
+  nodes,
+  points,
+  camera,
+  colorOf,
+  onLookAt,
+  label,
+}: {
+  nodes: GraphNode[];
+  points: Map<ID, GraphPoint>;
+  camera: Camera;
+  colorOf: (node: GraphNode) => string | undefined;
+  onLookAt: (at: GraphPoint) => void;
+  label: string;
+}) {
+  const spots = nodes
+    .map((node) => ({ node, at: points.get(node.id) }))
+    .filter((s): s is { node: GraphNode; at: GraphPoint } => !!s.at);
+  if (spots.length === 0) return null;
+  const fit = minimapFit(
+    spots.map((s) => s.at),
+    BOX,
+    MAP,
+    camera,
+  );
+  const frame = minimapViewport(fit, camera, BOX);
+
+  const go = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const rect = event.currentTarget.getBoundingClientRect();
+    // The mapping as it is now, kept for the whole drag: it is worked out
+    // from where the camera is looking, and re-reading it mid-drag would
+    // move the map under the finger that is dragging it.
+    const held = fit;
+    const scale = rect.width ? MAP.width / rect.width : 1;
+    const look = (e: { clientX: number; clientY: number }) =>
+      onLookAt(
+        fromMinimap(held, {
+          x: (e.clientX - rect.left) * scale,
+          y: (e.clientY - rect.top) * scale,
+        }),
+      );
+    look(event);
+    const move = (e: PointerEvent) => look(e);
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
+
+  return (
+    <svg
+      className="db-graph__map"
+      viewBox={`0 0 ${MAP.width} ${MAP.height}`}
+      width={MAP.width}
+      height={MAP.height}
+      aria-label={label}
+      onPointerDown={go}
+    >
+      <rect
+        className="db-graph__map-frame"
+        x={frame.x}
+        y={frame.y}
+        width={frame.width}
+        height={frame.height}
+        rx={3}
+      />
+      {spots.map(({ node, at }) => {
+        const on = onMinimap(fit, at);
+        return (
+          <circle
+            key={node.id}
+            className="db-graph__map-spot"
+            cx={on.x}
+            cy={on.y}
+            r={node.degree > 0 ? 2.4 : 1.6}
+            style={colorOf(node) ? { fill: colorOf(node) } : undefined}
+          />
+        );
+      })}
+    </svg>
   );
 }
 

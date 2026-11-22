@@ -588,6 +588,11 @@ export interface GraphView extends BaseView {
   pinned?: Record<ID, { x: number; y: number }>;
   /** The ground the canvas is drawn on. Dots when nobody has chosen. */
   background?: GraphBackground;
+  /** Links written in the pages themselves, drawn beside the relations.
+   *  Drawn unless this says otherwise. */
+  showPageLinks?: boolean;
+  /** Pages nothing is joined to: shown unless this says otherwise. */
+  hideUnlinked?: boolean;
 }
 
 /** The grounds a graph canvas can be drawn on. */

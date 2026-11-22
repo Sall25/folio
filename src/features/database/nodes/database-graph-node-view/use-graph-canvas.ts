@@ -1,15 +1,17 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ID } from "src/types";
 import type { GraphPoint } from "../../utils/graph-layout";
 import {
   frameAround,
   graphPointIn,
+  lookingAt,
   pannedBy,
   zoomedAbout,
   START_CAMERA,
   type Box,
   type Camera,
 } from "../../utils/graph-camera";
+import { rememberCamera, rememberedCamera } from "../../utils/graph-cameras";
 
 // The canvas the graph sits on: moved, zoomed, and nodes dragged about on
 // it. Screen business only — none of it touches a record.
@@ -43,6 +45,7 @@ const THROW_WINDOW = 90;
 
 export function useGraphCanvas({
   box,
+  viewId,
   points,
   neighbours,
   wheelZooms,
@@ -52,6 +55,8 @@ export function useGraphCanvas({
   onConnectStart,
 }: {
   box: Box;
+  /** The view this canvas belongs to, so it comes back where it was left. */
+  viewId: ID | undefined;
   /** Where everything is, for framing a view around it. */
   points: Map<ID, GraphPoint>;
   /** What each node touches, for framing one with its own. */
@@ -66,9 +71,15 @@ export function useGraphCanvas({
   /** A drag that began on a node's ring rather than its face. */
   onConnectStart?: (id: ID, event: React.PointerEvent) => void;
 }) {
-  const [camera, setCamera] = useState<Camera>(START_CAMERA);
+  const [camera, setCamera] = useState<Camera>(
+    () => rememberedCamera(viewId) ?? START_CAMERA,
+  );
   const [gesture, setGesture] = useState<GraphGesture>(RESTING);
   const glide = useRef<number | null>(null);
+
+  // Kept for as long as the tab is open, so switching to the table and back
+  // does not land whoever did it at the start again.
+  useEffect(() => rememberCamera(viewId, camera), [viewId, camera]);
 
   /** The canvas an event happened on, whatever part of it was touched. */
   const surfaceOf = (event: {
@@ -109,6 +120,18 @@ export function useGraphCanvas({
       glide.current = requestAnimationFrame(step);
     },
     [box, stopGlide],
+  );
+
+  /** A page and everything it touches, framed. */
+  const frame = useCallback(
+    (id: ID) => {
+      stopGlide();
+      const around = [id, ...(neighbours.get(id) ?? [])]
+        .map((near) => points.get(near))
+        .filter((p): p is GraphPoint => !!p);
+      if (around.length) setCamera(frameAround(around, box));
+    },
+    [box, neighbours, points, stopGlide],
   );
 
   /**
@@ -205,10 +228,7 @@ export function useGraphCanvas({
         return;
       }
       if (event.shiftKey) {
-        const around = [id, ...(neighbours.get(id) ?? [])]
-          .map((near) => points.get(near))
-          .filter((p): p is GraphPoint => !!p);
-        if (around.length) setCamera(frameAround(around, box));
+        frame(id);
         return;
       }
       const surface = surfaceOf(event);
@@ -245,8 +265,7 @@ export function useGraphCanvas({
     [
       box,
       camera,
-      neighbours,
-      points,
+      frame,
       onOpen,
       onMoveNode,
       onUnpin,
@@ -279,6 +298,15 @@ export function useGraphCanvas({
   const zoomIn = useCallback(() => zoomBy(1.2), [zoomBy]);
   const zoomOut = useCallback(() => zoomBy(1 / 1.2), [zoomBy]);
 
+  /** Look at a point: the map, and anything else that knows where to go. */
+  const lookAt = useCallback(
+    (at: GraphPoint) => {
+      stopGlide();
+      setCamera((c) => lookingAt(c, box, at));
+    },
+    [box, stopGlide],
+  );
+
   /** The canvas, once it has been clicked: 0 to fit, + and − to zoom. */
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -302,5 +330,7 @@ export function useGraphCanvas({
     zoomIn,
     zoomOut,
     fit,
+    frame,
+    lookAt,
   };
 }

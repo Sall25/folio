@@ -1706,9 +1706,23 @@
         "grid": "Grid",
         "glow": "Glow"
       },
-      "focus": "Open the canvas full screen",
-      "leaveFocus": "Leave full screen",
-      "canvas": "Graph canvas. Drag to move, hold Command or Control and scroll to zoom."
+      "canvas": "Graph canvas. Drag to move, hold Command or Control and scroll to zoom.",
+      "connections": "Connections",
+      "drawn": "Drawn",
+      "pageLinks": "Links written in pages",
+      "unlinked": "Pages with nothing joined to them",
+      "colourBy": "Colour by",
+      "noColour": "Nothing",
+      "key": "Key",
+      "keyRelation": "a relation property",
+      "keyPageLink": "a link written in the page",
+      "keyRing": "drag the ring to join two pages",
+      "keySize": "bigger means more connections",
+      "mostConnected": "Most connected",
+      "counts": "{{pages}} pages · {{connections}} connections · {{unlinked}} on their own",
+      "map": "Map of the whole graph. Press it to go there.",
+      "open": "Open the graph over the page",
+      "close": "Close the graph"
     },
     "manageInCalendar": {
       "open": "Manage in calendar",

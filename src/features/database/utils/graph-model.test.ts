@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { DatabaseProperty, GraphView, Page } from "src/types";
-import { buildGraph, canConnectWith, linkProperties } from "./graph-model";
+import {
+  buildGraph,
+  canConnectWith,
+  linkCounts,
+  linkProperties,
+  relationProperties,
+} from "./graph-model";
 import { fitIntoView, layoutGraph, nodeRadius } from "./graph-layout";
 
 const relation = (id: string, extra: Record<string, unknown> = {}) =>
@@ -370,5 +376,93 @@ describe("the links inside a page", () => {
     expect(g.nodes[0].image).toBe("https://x/cover.png");
     expect(g.nodes[0].icon).toBe("🌱");
     expect(g.nodes[1].image).toBe("https://x/inside.png");
+  });
+});
+
+// ── What the connections panel switches ─────────────────────────────────────
+// A graph that leaves something out has to be able to say what, and how
+// much: an offer with no number beside it tells nobody whether taking it
+// would change anything.
+
+describe("leaving things out", () => {
+  const doc = (...ids: string[]) => ({
+    type: "doc",
+    content: ids.map((pageId) => ({ type: "pageLink", attrs: { pageId } })),
+  });
+  const records = [
+    {
+      id: "a",
+      title: "A",
+      sourceId: "s",
+      values: { blocking: ["b"] },
+      content: doc("c"),
+    },
+    { id: "b", title: "B", sourceId: "s", values: {}, content: doc() },
+    { id: "c", title: "C", sourceId: "s", values: {}, content: doc() },
+    {
+      id: "lonely",
+      title: "Lonely",
+      sourceId: "s",
+      values: {},
+      content: doc(),
+    },
+  ] as unknown as Page[];
+  const none = () => undefined;
+
+  it("draws the links written in pages until it is told not to", () => {
+    expect(
+      buildGraph(records, props, view(), none).edges.filter(
+        (e) => e.kind === "link",
+      ),
+    ).toHaveLength(1);
+    expect(
+      buildGraph(records, props, view({ showPageLinks: false }), none).edges,
+    ).toEqual([
+      { from: "a", to: "b", propertyId: "blocking", kind: "relation" },
+    ]);
+  });
+
+  it("keeps a page nothing is joined to, unless it is told not to", () => {
+    const shown = buildGraph(records, props, view(), none);
+    expect(shown.nodes.map((n) => n.id)).toContain("lonely");
+    const hidden = buildGraph(
+      records,
+      props,
+      view({ hideUnlinked: true }),
+      none,
+    );
+    expect(hidden.nodes.map((n) => n.id)).not.toContain("lonely");
+    // And nothing else goes with it.
+    expect(hidden.nodes).toHaveLength(3);
+  });
+
+  it("counts every relation, drawn or not, and the links too", () => {
+    const counts = linkCounts(records, props);
+    expect(counts.byProperty.get("blocking")).toBe(1);
+    expect(counts.byProperty.get("parent")).toBe(0);
+    expect(counts.pageLinks).toBe(1);
+    // The derived side is not a choice anyone is offered.
+    expect(counts.byProperty.has("blockedBy")).toBe(false);
+  });
+
+  it("counts what is written, not what is drawn", () => {
+    // Switched off in the view, and still counted: the number is what makes
+    // switching it back on worth doing.
+    const counts = linkCounts(records, props);
+    const drawn = buildGraph(
+      records,
+      props,
+      view({ linkPropertyIds: ["parent"] }),
+      none,
+    );
+    expect(drawn.edges.some((e) => e.propertyId === "blocking")).toBe(false);
+    expect(counts.byProperty.get("blocking")).toBe(1);
+  });
+
+  it("offers every relation there is, without the derived sides", () => {
+    expect(relationProperties(props).map((p) => p.id)).toEqual([
+      "blocking",
+      "parent",
+    ]);
   });
 });

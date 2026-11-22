@@ -47,18 +47,28 @@ export interface GraphModel {
   neighbours: Map<ID, Set<ID>>;
 }
 
-/** The relation properties a graph draws: the ones chosen, or all of them. */
-export function linkProperties(
+/**
+ * Every relation a graph could draw, whether it is drawing it or not: what
+ * the connections panel offers, and what `linkProperties` chooses from.
+ */
+export function relationProperties(
   properties: DatabaseProperty[],
-  view: GraphView | undefined,
 ): DatabaseProperty[] {
-  const relations = properties.filter(
+  return properties.filter(
     (p) =>
       p.config.type === "relation" &&
       // The derived side is the same links read backwards: drawing both
       // would double every edge.
       !isMirror(p),
   );
+}
+
+/** The relation properties a graph draws: the ones chosen, or all of them. */
+export function linkProperties(
+  properties: DatabaseProperty[],
+  view: GraphView | undefined,
+): DatabaseProperty[] {
+  const relations = relationProperties(properties);
   const chosen = view?.linkPropertyIds ?? [];
   if (chosen.length === 0) return relations;
   return relations.filter((p) => chosen.includes(p.id));
@@ -94,6 +104,7 @@ export function buildGraph(
   const links = linkProperties(properties, view);
   const colorPropertyId = view?.colorPropertyId ?? null;
   const includeLinked = view?.includeLinked !== false;
+  const withPageLinks = view?.showPageLinks !== false;
 
   const nodes = new Map<ID, GraphNode>();
   const own = new Set(records.map((r) => r.id));
@@ -127,6 +138,7 @@ export function buildGraph(
 
     // And the links written in the page itself: a graph of pages is first
     // of all a graph of what people wrote into one another.
+    if (!withPageLinks) continue;
     for (const to of pageLinkIds(record.content)) {
       if (to === record.id) continue;
       if (!nodes.has(to)) {
@@ -157,7 +169,50 @@ export function buildGraph(
     if (to) to.degree += 1;
   }
 
-  return { nodes: [...nodes.values()], edges, neighbours };
+  const drawn = [...nodes.values()].filter(
+    (n) => !view?.hideUnlinked || n.degree > 0,
+  );
+  return { nodes: drawn, edges, neighbours };
+}
+
+/**
+ * How many links each relation holds, and how many are written in the pages
+ * themselves — for every relation, not only the ones being drawn.
+ *
+ * The connections panel offers a relation that is switched off, and an
+ * offer with no number beside it tells nobody whether switching it on would
+ * change anything.
+ */
+export function linkCounts(
+  records: Page[],
+  properties: DatabaseProperty[],
+): { byProperty: Map<ID, number>; pageLinks: number } {
+  const byProperty = new Map<ID, number>();
+  const seen = new Set<string>();
+  let pageLinks = 0;
+  for (const property of relationProperties(properties)) {
+    let count = 0;
+    for (const record of records) {
+      for (const to of relationRecordIds(record.values?.[property.id])) {
+        if (to === record.id) continue;
+        const key = `${record.id}>${to}>${property.id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        count += 1;
+      }
+    }
+    byProperty.set(property.id, count);
+  }
+  for (const record of records) {
+    for (const to of pageLinkIds(record.content)) {
+      if (to === record.id) continue;
+      const key = `${record.id}>${to}>link`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      pageLinks += 1;
+    }
+  }
+  return { byProperty, pageLinks };
 }
 
 /**
@@ -199,8 +254,7 @@ function nodeOf(
   colorPropertyId: ID | null,
 ): GraphNode {
   const cover = page.cover as unknown as
-    | { coverImage?: string; gradient?: string; iconName?: string }
-    | undefined;
+    { coverImage?: string; gradient?: string; iconName?: string } | undefined;
   return {
     id: page.id,
     title: page.title ?? "",

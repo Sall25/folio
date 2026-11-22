@@ -54,24 +54,69 @@
     color: var(--tt-text-secondary);
   }
 
-  // Full-bleed: the canvas and nothing else, which is also the one place
-  // a plain wheel may zoom.
-  &--focus {
-    position: fixed;
-    inset: 0;
-    z-index: 960;
-    padding: 12px;
-    background: var(--tt-bg-color);
-    // The screen, not the page's column.
-    width: auto;
-    max-width: none;
+  // Opened over the page: the canvas and nothing else, which is also the
+  // one place a plain wheel may zoom.
+  &[data-open] {
+    width: 100%;
+    max-width: 1400px;
+    height: 100%;
+    padding: 0;
+
+    .db-graph__stage {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
 
     .db-graph__canvas {
-      flex: 1 1 auto;
-      height: auto;
-      min-height: 0;
+      height: 100%;
+      max-height: none;
       aspect-ratio: auto;
     }
+
+    .db-graph__bar {
+      color: rgba(255, 255, 255, 0.86);
+    }
+  }
+
+  // The canvas and whatever stands on it: the map, and anything else that
+  // belongs to the surface rather than to the page.
+  &__stage {
+    position: relative;
+    display: flex;
+    min-width: 0;
+  }
+
+  // The small map, bottom right of the canvas.
+  &__map {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    border: 1px solid var(--tt-border-color);
+    border-radius: 6px;
+    background: var(--tt-bg-color);
+    box-shadow: var(--tt-shadow-elevated-sm, 0 1px 3px rgb(0 0 0 / 12%));
+    cursor: pointer;
+    opacity: 0.86;
+    transition: opacity 0.12s ease;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  &__map-spot {
+    fill: var(--tt-gray-light-a-400);
+
+    .dark & {
+      fill: var(--tt-gray-dark-a-400);
+    }
+  }
+
+  &__map-frame {
+    fill: var(--tt-brand-color-400);
+    fill-opacity: 0.1;
+    stroke: var(--tt-brand-color-400);
+    stroke-width: 1;
   }
 
   &__canvas {
@@ -318,5 +363,182 @@
     &[data-linking="refused"] .db-graph__rim {
       stroke: var(--tt-color-red-inc-1, #ef4444);
     }
+  }
+}
+
+// ── Opened over the page ────────────────────────────────────────────────────
+// The same bargain the image lightbox makes: a dark backdrop, the thing
+// itself in the middle, Esc or a click on the dark to leave.
+.db-graph-open {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px 24px;
+  background: rgba(15, 15, 15, 0.88);
+  animation: db-graph-open-in 0.15s ease-out;
+
+  &__close.tiptap-button {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+
+    .tiptap-button-icon {
+      color: #fff;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+  }
+}
+
+@keyframes db-graph-open-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+// ── The connections panel ───────────────────────────────────────────────────
+.db-graph-panel {
+  width: 290px;
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  padding: 8px 10px 10px;
+  align-items: stretch;
+  gap: 2px;
+
+  &__head {
+    margin: 6px 2px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--tt-text-secondary);
+  }
+
+  // The card's groups are built for a toolbar — as wide as their widest
+  // row, in a row of their own. Here they are a list in a panel.
+  .tiptap-card-item-group {
+    width: 100%;
+    min-width: 0;
+    gap: 1px;
+  }
+
+  &__tick.tiptap-button,
+  &__page.tiptap-button {
+    width: 100%;
+    height: auto;
+    min-height: 28px;
+    justify-content: flex-start;
+    gap: 8px;
+    padding-block: 4px;
+
+    // A relation can be called anything; a name too long for one line
+    // wraps rather than being cut off or widening the panel.
+    .tiptap-button-text {
+      white-space: normal;
+      text-align: left;
+      line-height: 1.25;
+    }
+  }
+
+  // A box rather than a native checkbox: a native one in a dropdown takes
+  // the pointer and the menu closes under it.
+  &__box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 15px;
+    height: 15px;
+    border: 1.5px solid var(--tt-gray-light-a-400);
+    border-radius: 4px;
+    color: #fff;
+
+    .dark & {
+      border-color: var(--tt-gray-dark-a-400);
+    }
+
+    &[data-on] {
+      background: var(--tt-brand-color-400);
+      border-color: var(--tt-brand-color-400);
+    }
+  }
+
+  &__count {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__select.tiptap-button {
+    width: 100%;
+    justify-content: flex-start;
+    border: 1px solid var(--tt-border-color);
+    border-radius: var(--tt-radius-sm);
+  }
+
+  &__key {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 3px 4px;
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+  }
+
+  &__line {
+    stroke: var(--tt-gray-light-a-400);
+    stroke-width: 1.4;
+
+    .dark & {
+      stroke: var(--tt-gray-dark-a-400);
+    }
+  }
+
+  &__blob {
+    fill: var(--tt-gray-light-a-300);
+
+    .dark & {
+      fill: var(--tt-gray-dark-a-300);
+    }
+  }
+
+  &__halo {
+    fill: none;
+    stroke: var(--tt-brand-color-400);
+    stroke-width: 1.2;
+    stroke-dasharray: 2 3;
+  }
+
+  &__pin {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--tt-gray-light-a-300);
+
+    .dark & {
+      background: var(--tt-gray-dark-a-300);
+    }
+  }
+
+  &__foot {
+    margin: 8px 2px 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--tt-border-color);
+    font-size: 12px;
+    color: var(--tt-text-secondary);
   }
 }
