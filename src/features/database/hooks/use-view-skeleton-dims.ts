@@ -29,6 +29,10 @@ export interface ViewDims {
   laneWidth?: number;
   /** Table: the header row's height. */
   headerHeight?: number;
+  /** Timeline: the name panel's width, which is the person's to drag. */
+  tableWidth?: number;
+  /** Timeline: one column — an hour, a day or a week, by the timeframe. */
+  cellWidth?: number;
 }
 
 const DEFAULTS: Record<string, ViewDims> = {
@@ -37,7 +41,14 @@ const DEFAULTS: Record<string, ViewDims> = {
   board: { columns: 3, rows: 4 },
   gallery: { columns: 4, rows: 8 },
   calendar: { columns: 7, rows: 5 },
-  timeline: { columns: 6, rows: 6 },
+  timeline: {
+    columns: 6,
+    rows: 6,
+    rowHeight: 34,
+    tableWidth: 260,
+    cellWidth: 40,
+    headerHeight: 56,
+  },
 };
 
 const keyOf = (databaseId: string, viewType: string, viewId?: string | null) =>
@@ -109,7 +120,9 @@ export function useMeasureViewDims(
       if (box.height) next.height = px(box.height);
       const chrome = scope.querySelector<HTMLElement>(".db-sticky-left");
       if (chrome && box.height) {
-        next.bodyHeight = px(box.bottom - chrome.getBoundingClientRect().bottom);
+        next.bodyHeight = px(
+          box.bottom - chrome.getBoundingClientRect().bottom,
+        );
       }
 
       const records = Array.from(
@@ -186,9 +199,25 @@ export function useMeasureViewDims(
           const top = Math.min(...cards.map((c) => c.top));
           next.columns = cards.filter((c) => Math.abs(c.top - top) < 4).length;
         }
+      } else if (viewType === "timeline") {
+        // A timeline is two panels: the names, whose width is the person's
+        // to drag, and the grid, whose columns are as wide as the timeframe
+        // makes them. Both are what makes a skeleton of it recognisable.
+        next.rows = rows;
+        const h = records[0]?.getBoundingClientRect().height;
+        if (h) next.rowHeight = px(h);
+        const table = scope.querySelector<HTMLElement>(".db-tl-table");
+        const tableWidth = table?.getBoundingClientRect().width;
+        if (tableWidth) next.tableWidth = px(tableWidth);
+        const header = scope.querySelector<HTMLElement>(".db-tl-header");
+        const headerHeight = header?.getBoundingClientRect().height;
+        if (headerHeight) next.headerHeight = px(headerHeight);
+        const cell = scope.querySelector<HTMLElement>(".db-tl-header__day");
+        const cellWidth = cell?.getBoundingClientRect().width;
+        if (cellWidth) next.cellWidth = px(cellWidth);
       } else {
-        // Calendar and timeline: only the size, which is what keeps a
-        // column from stretching.
+        // Calendar: only the size, which is what keeps a column from
+        // stretching.
       }
 
       measure(next);
@@ -220,5 +249,8 @@ function measureCard(scope: HTMLElement, next: Partial<ViewDims>) {
   next.cardWidth = px(r.width);
   next.cardHeight = px(r.height);
   next.coverHeight =
-    px(card.querySelector(".db-board-card__cover")?.getBoundingClientRect().height) ?? 0;
+    px(
+      card.querySelector(".db-board-card__cover")?.getBoundingClientRect()
+        .height,
+    ) ?? 0;
 }

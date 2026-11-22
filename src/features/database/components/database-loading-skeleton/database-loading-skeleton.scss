@@ -35,7 +35,9 @@
     overflow: hidden;
   }
 
-  &__spacer { flex: 1 1 auto; }
+  &__spacer {
+    flex: 1 1 auto;
+  }
 
   // The tabs are the toolbar's own (database-view-tabs.scss), down to the
   // pill on the view you are on; they just can't be clicked yet.
@@ -111,7 +113,9 @@
     overflow: hidden;
   }
 
-  &__cover { line-height: 0; }
+  &__cover {
+    line-height: 0;
+  }
 
   &__card-body {
     display: flex;
@@ -155,21 +159,98 @@
   }
 
   // ── timeline ─────────────────────────────────────────────────────────
+  // Two panels side by side, the names and the grid, under a header of
+  // months and day numbers — the shape the view has before it has data.
   &__timeline {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding-top: 12px;
+    overflow: hidden;
   }
 
-  &__timeline-row {
+  &__tl-head,
+  &__tl-rows {
+    display: grid;
+  }
+
+  &__tl-head {
+    border-bottom: 1px solid var(--tt-border-color);
+  }
+
+  &__tl-head-name {
     display: flex;
     align-items: center;
-    gap: 16px;
-    height: 32px;
+    gap: 8px;
+    padding: 0 10px;
+    border-right: 1px solid var(--tt-border-color);
   }
 
-  &__track { flex: 1 1 auto; min-width: 0; }
+  &__tl-head-grid {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    overflow: hidden;
+  }
+
+  &__tl-months {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 8px 0 10px;
+    overflow: hidden;
+  }
+
+  // The months themselves give way: the controls on the right are pinned
+  // there, as they are in the real header.
+  &__tl-month-run {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  &__tl-ticks {
+    display: flex;
+    align-items: center;
+  }
+
+  &__tl-tick {
+    flex: 0 0 var(--tl-cell, 40px);
+    display: flex;
+    justify-content: center;
+  }
+
+  &__tl-names {
+    border-right: 1px solid var(--tt-border-color);
+  }
+
+  &__tl-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+  }
+
+  &__tl-grid {
+    // The columns themselves: one line every cell, which is what tells a
+    // timeline from a list of bars.
+    background-image: repeating-linear-gradient(
+      to right,
+      var(--tt-border-color) 0 1px,
+      transparent 1px var(--tl-cell, 40px)
+    );
+    overflow: hidden;
+  }
+
+  &__tl-row {
+    display: flex;
+    align-items: center;
+  }
+
+  &__track {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 
 // Nested (in a callout, list, quote, column…): no page-level offsets. The

@@ -132,25 +132,110 @@ export function DatabaseLoadingSkeleton({
           </div>
         );
 
-      // ── Timeline: label + offset bar per row ──────────────────────────
-      case "timeline":
+      // ── Timeline: the two panels, the header, and bars on the grid ───
+      case "timeline": {
+        // What the view was last measured at, or something sensible: the
+        // name panel is dragged to a width and the columns are as wide as
+        // the timeframe makes them, so a skeleton that ignores both is a
+        // picture of a different view.
+        const panel = dims.tableWidth ?? 260;
+        const cell = dims.cellWidth ?? 40;
+        const headHeight = dims.headerHeight ?? 56;
+        const rowH = dims.rowHeight ?? 34;
+        // Enough day numbers to run past the widest sensible grid; the box
+        // is clipped to the view's own width anyway.
+        const ticks = Math.min(Math.ceil(2200 / cell), 80);
         return (
-          <div className="db-skeleton__timeline">
-            {Array.from({ length: rows }).map((_, r) => (
-              <div key={r} className="db-skeleton__timeline-row">
-                <Bone width={120} height={12} />
-                <div className="db-skeleton__track">
-                  <Bone
-                    width={`${20 + (r % 4) * 8}%`}
-                    height={20}
-                    rounded
-                    style={{ marginLeft: `${(r % 5) * 11}%` }}
-                  />
+          <div
+            className="db-skeleton__timeline"
+            style={{ "--tl-cell": `${cell}px` } as CSSProperties}
+          >
+            {/* The names, and the grid's two header rows beside them. */}
+            <div
+              className="db-skeleton__tl-head"
+              style={{ gridTemplateColumns: `${panel}px 1fr` }}
+            >
+              <div
+                className="db-skeleton__tl-head-name"
+                style={{ height: headHeight }}
+              >
+                <Bone width={14} height={12} />
+                <Bone width={54} height={12} />
+              </div>
+              <div
+                className="db-skeleton__tl-head-grid"
+                style={{ height: headHeight }}
+              >
+                <div className="db-skeleton__tl-months">
+                  {/* The months run on under the controls and are clipped
+                      there, as they are in the real header. */}
+                  <div className="db-skeleton__tl-month-run">
+                    <Bone width={96} height={12} />
+                    <Bone
+                      width={70}
+                      height={12}
+                      style={{ marginLeft: cell * 7 }}
+                    />
+                    <Bone
+                      width={70}
+                      height={12}
+                      style={{ marginLeft: cell * 7 }}
+                    />
+                  </div>
+                  {/* The controls on the right of the real header: the
+                      timeframe, and the way to today. */}
+                  <Bone width={66} height={18} rounded />
+                  <Bone width={92} height={18} rounded />
+                </div>
+                <div className="db-skeleton__tl-ticks">
+                  {Array.from({ length: ticks }).map((_, i) => (
+                    <span key={i} className="db-skeleton__tl-tick">
+                      <Bone width={14} height={9} />
+                    </span>
+                  ))}
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* A row is a name on the left and a bar somewhere on the
+                grid: never at the same place twice, never off the
+                columns. */}
+            <div
+              className="db-skeleton__tl-rows"
+              style={{ gridTemplateColumns: `${panel}px 1fr` }}
+            >
+              <div className="db-skeleton__tl-names">
+                {Array.from({ length: rows }).map((_, r) => (
+                  <div
+                    key={r}
+                    className="db-skeleton__tl-name"
+                    style={{ height: rowH }}
+                  >
+                    <Bone width={15} height={15} rounded />
+                    <Bone width={`${42 + ((r * 7) % 4) * 13}%`} height={12} />
+                  </div>
+                ))}
+              </div>
+              <div className="db-skeleton__tl-grid">
+                {Array.from({ length: rows }).map((_, r) => (
+                  <div
+                    key={r}
+                    className="db-skeleton__tl-row"
+                    style={{ height: rowH }}
+                  >
+                    <Bone
+                      width={(2 + ((r * 3) % 5)) * cell}
+                      height={rowH - 12}
+                      rounded
+                      style={{ marginLeft: ((r * 5) % 11) * cell }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         );
+      }
 
       // ── Table: the real column names and widths ───────────────────────
       case "table":
