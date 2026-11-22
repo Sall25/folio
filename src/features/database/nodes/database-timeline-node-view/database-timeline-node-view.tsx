@@ -33,7 +33,7 @@ import {
   ROW_HEIGHT,
   GROUP_ROW_HEIGHT,
   TOTAL_HEADER_HEIGHT,
-  offsetOfTime,
+  todayOffset,
   stepRange,
   useTimelineLayout,
 } from "../../hooks/use-timeline-layout";
@@ -271,19 +271,14 @@ function DatabaseTimelineNodeViewImpl() {
   }
   const gridWidth = range.days.length * range.cellWidth;
 
-  // Where today stands in the grid, in px.
-  //
-  // Its position, not its column: in a quarter or a year a column is a week,
-  // so looking for a column that *is* today found one only on a Monday —
-  // which hid the line, and left the Today button with nowhere to scroll to,
-  // six days in seven. Worked out when the range changes and not on every
-  // render: a render happens on every scroll event.
-  const todayLeft = useMemo(() => {
-    const now = new Date().getTime();
-    if (now < range.startDate.getTime() || now > range.endDate.getTime())
-      return null;
-    return offsetOfTime(range, now);
-  }, [range]);
+  // Where today's line stands, in px: the middle of today, which is where
+  // the circle above it is drawn (todayOffset says more). Worked out when
+  // the range changes and not on every render — a render happens on every
+  // scroll event.
+  const todayLeft = useMemo(
+    () => todayOffset(range, new Date().getTime()),
+    [range],
+  );
 
   function navigate(dir: -1 | 1) {
     // From the date the view is anchored to, not from where its grid

@@ -420,6 +420,39 @@ export function offsetOfTime(range: TimelineRange, t: number): number {
   return (i + frac) * cellWidth;
 }
 
+/**
+ * Where today's line is drawn, or null when today is outside the range.
+ *
+ * The middle of the grain today falls in — the hour in Day, the day in every
+ * other timeframe. The middle, because the date above it is a circle over
+ * the middle of its column and the two read as one marker: drawn at the
+ * exact minute instead, the line stood at the left edge of the cell at
+ * midnight and crossed to the far side by the evening, beside the circle
+ * rather than under it.
+ *
+ * The grain, not the column: a column is a week in a quarter or a year, and
+ * the middle of that week is Thursday.
+ */
+export function todayOffset(range: TimelineRange, now: number): number | null {
+  if (now < range.startDate.getTime() || now > range.endDate.getTime())
+    return null;
+  const from = new Date(now);
+  const to = new Date(now);
+  if (range.unit === "hour") {
+    from.setMinutes(0, 0, 0);
+    to.setMinutes(0, 0, 0);
+    to.setTime(to.getTime() + 3_600_000);
+  } else {
+    from.setHours(0, 0, 0, 0);
+    to.setHours(0, 0, 0, 0);
+    to.setDate(to.getDate() + 1);
+  }
+  return (
+    (offsetOfTime(range, from.getTime()) + offsetOfTime(range, to.getTime())) /
+    2
+  );
+}
+
 /** The box of a run of columns, given two indexes in either order. */
 export function daySpan(
   a: number,

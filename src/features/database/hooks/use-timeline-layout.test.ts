@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   type Timeframe,
-  type TimelineRange,
   DAY_WIDTH,
   HOURS_IN_DAY,
   HOURS_SPAN,
@@ -27,6 +26,7 @@ import {
   grainWidth,
   holdBar,
   barCaughtUp,
+  todayOffset,
   MIN_BAR_WIDTH,
   parseDateValue,
   padFor,
@@ -1744,13 +1744,9 @@ describe("a bar's place in the grid", () => {
 // matched, so the line vanished and the button had nowhere to scroll to.
 
 describe("today's position", () => {
-  /** What the view computes for the line, and scrolls the button to. */
-  const todayLeft = (range: TimelineRange, now: number) =>
-    now < range.startDate.getTime() || now > range.endDate.getTime()
-      ? null
-      : offsetOfTime(range, now);
+  const TIMEFRAMES: Timeframe[] = ["day", "week", "month", "quarter", "year"];
 
-  it.each(["day", "week", "month", "quarter", "year"] as Timeframe[])(
+  it.each(TIMEFRAMES)(
     "has one in %s, whatever day of the week today is",
     (tf) => {
       // Every day of one week, so a Monday is not what carries the test.
@@ -1760,7 +1756,7 @@ describe("today's position", () => {
       const range = buildRange(2026, 10, 19, tf, padFor(tf));
       for (let d = 16; d <= 22; d++) {
         const now = new Date(2026, 10, d, 14, 30);
-        const left = todayLeft(range, now.getTime());
+        const left = todayOffset(range, now.getTime());
         expect(left).not.toBeNull();
         expect(left!).toBeGreaterThan(0);
         expect(left!).toBeLessThan(range.days.length * range.cellWidth);
@@ -1768,23 +1764,60 @@ describe("today's position", () => {
     },
   );
 
-  it("puts it inside the week it belongs to, in a quarter", () => {
-    const now = new Date(2026, 10, 19, 12); // a Thursday
-    const range = buildRange(2026, 10, 19, "quarter", padFor("quarter"));
-    const left = todayLeft(range, now.getTime())!;
-    const column = Math.floor(left / range.cellWidth);
-    expect(range.days[column].getDay()).toBe(1); // its Monday
-    expect(range.days[column].getDate()).toBe(16);
-    // Thursday noon: 3.5 days into a seven-day column.
-    expect(left % range.cellWidth).toBeCloseTo((3.5 * range.cellWidth) / 7, 6);
+  it.each(["week", "month"] as Timeframe[])(
+    "draws the line down the middle of today's column in %s",
+    (tf) => {
+      // Where the circle with the date in it is drawn. The line used to be
+      // put at the exact minute, which at nine in the morning stands a
+      // third of the way into the cell and beside the circle, not under it.
+      const range = buildRange(2026, 10, 19, tf, padFor(tf));
+      const cell = range.cellWidth;
+      for (const hour of [0, 9, 14, 23]) {
+        const now = new Date(2026, 10, 19, hour, 37);
+        const left = todayOffset(range, now.getTime())!;
+        const column = range.days.findIndex((d) => sameDay(d, now));
+        expect(column).toBeGreaterThan(-1);
+        expect(left).toBeCloseTo(column * cell + cell / 2, 6);
+      }
+    },
+  );
 
-    // And the rule it replaced, for the record: looking for a column that
-    // *is* today finds one only in the week whose Monday it is.
-    expect(range.days.findIndex((d) => sameDay(d, now))).toBe(-1);
-    expect(
-      range.days.findIndex((d) => sameDay(d, new Date(2026, 10, 16))),
-    ).toBe(Math.floor(left / range.cellWidth));
+  it("draws it down the middle of the hour in Day", () => {
+    const range = buildRange(2026, 10, 19, "day", padFor("day"));
+    const cell = range.cellWidth;
+    for (const hour of [0, 9, 23]) {
+      const now = new Date(2026, 10, 19, hour, 37);
+      const left = todayOffset(range, now.getTime())!;
+      const column = range.days.findIndex((d) => sameHour(d, now));
+      expect(column).toBeGreaterThan(-1);
+      expect(left).toBeCloseTo(column * cell + cell / 2, 6);
+    }
   });
+
+  it.each(["quarter", "year"] as Timeframe[])(
+    "puts it on today's own day inside the week in %s",
+    (tf) => {
+      // Not the middle of the column: a column is a week there, and the
+      // middle of a week is Thursday.
+      const range = buildRange(2026, 10, 19, tf, padFor(tf));
+      const cell = range.cellWidth;
+      const day = cell / DAYS_IN_WEEK;
+      const now = new Date(2026, 10, 19, 14); // a Thursday
+      const left = todayOffset(range, now.getTime())!;
+      const column = Math.floor(left / cell);
+      expect(range.days[column].getDate()).toBe(16); // its Monday
+      // Thursday is the fourth day of its week: three days in, plus half a
+      // day to reach the middle of it.
+      expect(left - column * cell).toBeCloseTo(3.5 * day, 0);
+
+      // And a Monday sits half a day in, not half a week.
+      const monday = todayOffset(range, new Date(2026, 10, 16, 9).getTime())!;
+      expect(monday - Math.floor(monday / cell) * cell).toBeCloseTo(
+        0.5 * day,
+        0,
+      );
+    },
+  );
 
   it("has none when today is outside the range on show", () => {
     // Which takes some doing: the canvas a quarter is drawn on runs for
@@ -1792,8 +1825,8 @@ describe("today's position", () => {
     // doesn't belong on.
     const range = buildRange(2026, 10, 19, "quarter", padFor("quarter"));
     expect(range.startDate.getFullYear()).toBeLessThan(1990);
-    expect(todayLeft(range, new Date(1500, 0, 1).getTime())).toBeNull();
-    expect(todayLeft(range, new Date(2600, 0, 1).getTime())).toBeNull();
+    expect(todayOffset(range, new Date(1500, 0, 1).getTime())).toBeNull();
+    expect(todayOffset(range, new Date(2600, 0, 1).getTime())).toBeNull();
   });
 });
 
