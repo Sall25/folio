@@ -1697,6 +1697,7 @@
       "blockingLabel": "Bloque",
       "blockedByLabel": "Bloquée par",
       "showArrows": "Afficher les flèches sur la chronologie",
+      "removeLink": "Supprimer cette dépendance",
       "whenDatesChange": "Quand une date change",
       "shift": {
         "overlap": "Décaler seulement en cas de chevauchement",

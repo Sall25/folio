@@ -1697,6 +1697,7 @@
       "blockingLabel": "Blocking",
       "blockedByLabel": "Blocked by",
       "showArrows": "Show arrows on the timeline",
+      "removeLink": "Remove this dependency",
       "whenDatesChange": "When a date changes",
       "shift": {
         "overlap": "Shift only when dates overlap",

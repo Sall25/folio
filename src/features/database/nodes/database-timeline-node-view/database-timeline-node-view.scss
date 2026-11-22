@@ -323,6 +323,54 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   stroke-linecap: round;
 }
 
+// An arrow is a thing to read, but it can also be taken away: the layer
+// lets nothing through, each arrow takes its own pointer events.
+.db-tl-link-group {
+  pointer-events: none;
+}
+
+.db-tl-link__grab {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.db-tl-link-group[data-held] .db-tl-link {
+  stroke-width: 2;
+  color: var(--tt-brand-color-400);
+}
+
+// The button that unlinks, at the middle of the arrow it belongs to.
+.db-tl-link__remove {
+  pointer-events: all;
+  cursor: pointer;
+
+  circle {
+    fill: var(--tt-bg-color);
+    stroke: var(--tt-brand-color-400);
+    stroke-width: 1.5;
+  }
+
+  path {
+    stroke: var(--tt-brand-color-400);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    fill: none;
+  }
+
+  &:hover circle,
+  &:focus-visible circle {
+    fill: var(--tt-brand-color-400);
+  }
+
+  &:hover path,
+  &:focus-visible path {
+    stroke: #ffffff;
+  }
+}
+
 // A link whose two records overlap: the one waiting starts before the one
 // blocking it has finished, which is the plan contradicting itself. Red,
 // arrowhead included — the marker paints itself in currentColor.

@@ -205,6 +205,22 @@ export function linkPath(a: LinkPoint, b: LinkPoint): string {
   );
 }
 
+/**
+ * The middle of that curve, where the button to undo the link is put.
+ *
+ * Worked out rather than measured off the drawn path: the same two shapes,
+ * at halfway. The forward curve leaves and arrives horizontally, so its
+ * halfway point is simply the middle of the two ends; the way round is two
+ * curves joined, and the join is the middle of it.
+ */
+export function linkMidpoint(a: LinkPoint, b: LinkPoint): LinkPoint {
+  if (b.x - a.x >= LOOP_OUT) return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  return {
+    x: (a.x + LOOP_OUT + (b.x - LOOP_OUT)) / 2,
+    y: (a.y + b.y) / 2,
+  };
+}
+
 /** Two decimals is a tenth of a pixel on a retina screen, and keeps a
  *  thousand paths from carrying seventeen digits each. */
 function r(n: number): number {

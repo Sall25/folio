@@ -6,6 +6,7 @@ import {
   dependencyEdges,
   dependencyPair,
   blockingIdsOf,
+  linkMidpoint,
   linkPath,
   wouldCycle,
 } from "./dependencies";
@@ -328,5 +329,34 @@ describe("a link in trouble", () => {
         allDay: true,
       }),
     ).toBe(false);
+  });
+});
+
+// ── Where the button that unlinks sits ───────────────────────────────────
+
+describe("the middle of a link", () => {
+  it("is halfway between the two ends, the usual way round", () => {
+    expect(linkMidpoint({ x: 100, y: 20 }, { x: 300, y: 60 })).toEqual({
+      x: 200,
+      y: 40,
+    });
+  });
+
+  it("is on the curve, not merely between the ends, going round", () => {
+    // Going round, the path is two curves joined; the join is its middle,
+    // and it sits between the two bars rather than on top of either.
+    const a = { x: 300, y: 20 };
+    const b = { x: 120, y: 60 };
+    const mid = linkMidpoint(a, b);
+    expect(mid.y).toBe(40);
+    expect(mid.x).toBeGreaterThan(b.x);
+    expect(mid.x).toBeLessThan(a.x);
+  });
+
+  it("stays put when the two ends share a row", () => {
+    expect(linkMidpoint({ x: 100, y: 40 }, { x: 260, y: 40 })).toEqual({
+      x: 180,
+      y: 40,
+    });
   });
 });

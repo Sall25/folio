@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { linkDraft, pendingLinks } from "./link-draft-store";
+import { droppedLinks, linkDraft, pendingLinks } from "./link-draft-store";
 
 // A link is drawn from the records, and a write takes a moment to come back
 // — so between the two there was nothing on screen, the link made and no
@@ -36,5 +36,32 @@ describe("a link just made", () => {
     expect(pendingLinks()).toEqual([{ from: "c", to: "d" }]);
     vi.advanceTimersByTime(1000);
     expect(pendingLinks()).toHaveLength(0);
+  });
+});
+
+describe("a link just taken away", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => {
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
+  });
+
+  it("is gone from the grid before the write comes back", () => {
+    linkDraft.forget("kick", "deposit");
+    expect(droppedLinks()).toEqual([{ from: "kick", to: "deposit" }]);
+  });
+
+  it("stops a link made a moment ago from being drawn", () => {
+    // Made and unmade before either write landed: the second word wins.
+    linkDraft.remember("kick", "deposit");
+    linkDraft.forget("kick", "deposit");
+    expect(pendingLinks()).toHaveLength(0);
+    expect(droppedLinks()).toHaveLength(1);
+  });
+
+  it("is let go of once the write has had its chance", () => {
+    linkDraft.forget("kick", "deposit");
+    vi.advanceTimersByTime(2600);
+    expect(droppedLinks()).toHaveLength(0);
   });
 });

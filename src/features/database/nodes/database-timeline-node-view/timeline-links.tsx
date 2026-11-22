@@ -1,8 +1,13 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { ID } from "src/types";
 import type { TimelinePlacement } from "../../hooks/use-timeline-layout";
 import { ROW_HEIGHT } from "../../hooks/use-timeline-layout";
-import { linkPath, type DependencyEdge } from "../../utils/dependencies";
+import {
+  linkMidpoint,
+  linkPath,
+  type DependencyEdge,
+} from "../../utils/dependencies";
 import { useLinkDraft } from "../../utils/link-draft-store";
 
 /** Where a bar sits, to the layer that draws arrows between them. */
@@ -30,6 +35,7 @@ function TimelineLinksImpl({
   height,
   from,
   to,
+  onRemove,
 }: {
   edges: DependencyEdge[];
   bars: Record<ID, LinkedBar>;
@@ -38,9 +44,17 @@ function TimelineLinksImpl({
   /** The visible span in px, as the columns know it. */
   from: number;
   to: number;
+  /** Takes the link away. */
+  onRemove: (edge: DependencyEdge) => void;
 }) {
   const paths = useMemo(() => {
-    const out: { key: string; d: string; conflict: boolean }[] = [];
+    const out: {
+      key: string;
+      d: string;
+      conflict: boolean;
+      edge: DependencyEdge;
+      at: { x: number; y: number };
+    }[] = [];
     for (const edge of edges) {
       const a = bars[edge.from];
       const b = bars[edge.to];
@@ -48,13 +62,20 @@ function TimelineLinksImpl({
       const left = Math.min(a.left, b.left);
       const right = Math.max(a.left + a.width, b.left + b.width);
       if (right < from || left > to) continue;
+      const tail = {
+        x: a.left + a.width,
+        y: a.row * ROW_HEIGHT + ROW_HEIGHT / 2,
+      };
+      const head = {
+        x: b.left - TIP_GAP,
+        y: b.row * ROW_HEIGHT + ROW_HEIGHT / 2,
+      };
       out.push({
         key: `${edge.from}>${edge.to}`,
         conflict: !!edge.conflict,
-        d: linkPath(
-          { x: a.left + a.width, y: a.row * ROW_HEIGHT + ROW_HEIGHT / 2 },
-          { x: b.left - TIP_GAP, y: b.row * ROW_HEIGHT + ROW_HEIGHT / 2 },
-        ),
+        edge,
+        at: linkMidpoint(tail, head),
+        d: linkPath(tail, head),
       });
     }
     return out;
@@ -64,6 +85,12 @@ function TimelineLinksImpl({
   // the pointer, dashed, and shown as refused where it cannot be made.
   const draft = useLinkDraft();
 
+  // The arrow under the pointer, which is the one wearing the button that
+  // takes it away. Held on a tap too, so a link can be undone by touch.
+  const [held, setHeld] = useState<string | null>(null);
+  const { t } = useTranslation();
+  const removeLabel = t("database.dependencies.removeLink");
+
   if (paths.length === 0 && !draft) return null;
 
   return (
@@ -71,7 +98,8 @@ function TimelineLinksImpl({
       className="db-tl-links"
       width={width}
       height={height}
-      aria-hidden
+      // Not aria-hidden: an arrow carries a button that removes the link.
+      role="presentation"
       // The marker is defined per layer rather than per page: two timelines
       // on one page would otherwise share one id and the second would point
       // at the first's.
@@ -90,13 +118,47 @@ function TimelineLinksImpl({
         </marker>
       </defs>
       {paths.map((p) => (
-        <path
+        <g
           key={p.key}
-          className="db-tl-link"
-          data-conflict={p.conflict || undefined}
-          d={p.d}
-          markerEnd="url(#db-tl-arrow)"
-        />
+          className="db-tl-link-group"
+          data-held={held === p.key || undefined}
+          onPointerEnter={() => setHeld(p.key)}
+          onPointerLeave={() => setHeld((at) => (at === p.key ? null : at))}
+        >
+          <path
+            className="db-tl-link"
+            data-conflict={p.conflict || undefined}
+            d={p.d}
+            markerEnd="url(#db-tl-arrow)"
+          />
+          {/* A line and a half is nothing to aim at: this one is wide,
+              invisible, and the thing the pointer actually meets. */}
+          <path className="db-tl-link__grab" d={p.d} />
+          {held === p.key && (
+            <g
+              className="db-tl-link__remove"
+              transform={`translate(${p.at.x} ${p.at.y})`}
+              role="button"
+              tabIndex={0}
+              aria-label={removeLabel}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setHeld(null);
+                onRemove(p.edge);
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter" && e.key !== " ") return;
+                e.preventDefault();
+                setHeld(null);
+                onRemove(p.edge);
+              }}
+            >
+              <circle r="9" />
+              <path d="M -3.2 -3.2 L 3.2 3.2 M 3.2 -3.2 L -3.2 3.2" />
+            </g>
+          )}
+        </g>
       ))}
       {draft && (
         <path

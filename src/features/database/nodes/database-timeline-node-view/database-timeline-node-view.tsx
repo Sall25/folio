@@ -10,6 +10,7 @@ import {
 } from "src/components/icons";
 import {
   memo,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -44,8 +45,13 @@ import {
 import { TimelineHeader, type HighlightRange } from "./timeline-header";
 import { TimelineDayGrid } from "./timeline-day-grid";
 import { TimelineLinks, type LinkedBar } from "./timeline-links";
-import { usePendingLinks } from "../../utils/link-draft-store";
 import {
+  linkDraft,
+  useDroppedLinks,
+  usePendingLinks,
+} from "../../utils/link-draft-store";
+import {
+  blockingIdsOf,
   dependencyEdges,
   dependencyPair,
   linkConflict,
@@ -219,7 +225,9 @@ function DatabaseTimelineNodeViewImpl() {
     visibleProperties,
     onNewRecord,
   } = useDatabaseContext();
-  const { addRecordAsync, updatePropertiesAsync } = useDataSource(source?.id);
+  const { addRecordAsync, updatePropertiesAsync, setCellValue } = useDataSource(
+    source?.id,
+  );
   const { year, month, day } = useTimelineViewState();
   const { goTo, goToToday } = useTimelineViewActions();
 
@@ -569,10 +577,18 @@ function DatabaseTimelineNodeViewImpl() {
   // the rest, so an arrow appears under the pointer that drew it rather
   // than a beat later (link-draft-store.ts).
   const justMade = usePendingLinks();
+  const justRemoved = useDroppedLinks();
 
   const links = useMemo(() => {
     if (!showLinks || !dependencies) return EMPTY_EDGES;
-    const stored = dependencyEdges(sortedRecords, dependencies.blocking.id);
+    const all = dependencyEdges(sortedRecords, dependencies.blocking.id);
+    // Links taken away a moment ago are gone from the grid at once, before
+    // the record has stopped carrying them.
+    const stored = justRemoved.length
+      ? all.filter(
+          (e) => !justRemoved.some((d) => d.from === e.from && d.to === e.to),
+        )
+      : all;
     const missing = justMade.filter(
       (p) =>
         !stored.some((e) => e.from === p.from && e.to === p.to) &&
@@ -595,6 +611,7 @@ function DatabaseTimelineNodeViewImpl() {
     sortedRecords,
     timelineLayout.records,
     justMade,
+    justRemoved,
   ]);
 
   const linkedBars = useMemo(() => {
@@ -614,6 +631,21 @@ function DatabaseTimelineNodeViewImpl() {
     }
     return bars;
   }, [links, placement, timelineLayout.records]);
+
+  /** Takes a link away: the blocker's own list, less the one record. */
+  const removeLink = useCallback(
+    (edge: DependencyEdge) => {
+      if (!dependencies) return;
+      const blocker = sortedRecords.find((r) => r.id === edge.from);
+      if (!blocker) return;
+      const left = blockingIdsOf(blocker, dependencies.blocking.id).filter(
+        (id) => id !== edge.to,
+      );
+      setCellValue(edge.from, dependencies.blocking.id, left as never);
+      linkDraft.forget(edge.from, edge.to);
+    },
+    [dependencies, sortedRecords, setCellValue],
+  );
 
   const indicators = useMemo<RowIndicator[]>(() => {
     if (!viewportWidth) return [];
@@ -878,6 +910,7 @@ function DatabaseTimelineNodeViewImpl() {
                       height={ganttHeight}
                       from={scrollLeft - LINK_MARGIN}
                       to={scrollLeft + viewportWidth + LINK_MARGIN}
+                      onRemove={removeLink}
                     />
                   )}
 

@@ -28,6 +28,8 @@ export interface LinkDraft {
 let draft: LinkDraft | null = null;
 /** Links just made, drawn until the write comes back round. */
 let pending: { from: ID; to: ID }[] = [];
+/** Links just taken away, hidden until the write comes back round. */
+let dropped: { from: ID; to: ID }[] = [];
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -83,6 +85,21 @@ export const linkDraft = {
       emit();
     }, 2500);
   },
+
+  /**
+   * A link that has just been unlinked, to leave out until the record it
+   * was written on stops carrying it. The other half of remember: without
+   * it the arrow stays on screen after the button that removed it.
+   */
+  forget(from: ID, to: ID) {
+    pending = pending.filter((p) => p.from !== from || p.to !== to);
+    dropped = [...dropped, { from, to }];
+    emit();
+    setTimeout(() => {
+      dropped = dropped.filter((d) => d.from !== from || d.to !== to);
+      emit();
+    }, 2500);
+  },
 };
 
 const NO_PENDING: { from: ID; to: ID }[] = [];
@@ -90,6 +107,20 @@ const NO_PENDING: { from: ID; to: ID }[] = [];
 /** The links waiting for their write, outside React. */
 export function pendingLinks(): { from: ID; to: ID }[] {
   return pending;
+}
+
+/** The links taken away and waiting for their write, outside React. */
+export function droppedLinks(): { from: ID; to: ID }[] {
+  return dropped;
+}
+
+/** Links removed a moment ago, which the records may still carry. */
+export function useDroppedLinks(): { from: ID; to: ID }[] {
+  return useSyncExternalStore(
+    subscribe,
+    () => (dropped.length ? dropped : NO_PENDING),
+    () => NO_PENDING,
+  );
 }
 
 /** Links made a moment ago, which the records may not carry yet. */
