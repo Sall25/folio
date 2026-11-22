@@ -9,8 +9,9 @@ import {
 import { memo } from "react";
 import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
+import { ViewStageButton } from "../../components/view-stage";
 
-function CalendarNavImpl() {
+function CalendarNavImpl({ onOpenStage }: { onOpenStage?: () => void }) {
   const { t } = useTranslation();
   const { db } = useDatabaseContext();
   // Arrived here from a timeline ("Manage in calendar"): the way back,
@@ -75,6 +76,7 @@ function CalendarNavImpl() {
       >
         <ChevronRight className="tiptap-button-icon" />
       </Button>
+      {onOpenStage && <ViewStageButton onOpen={onOpenStage} />}
     </CardItemGroup>
   );
 }

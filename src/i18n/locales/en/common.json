@@ -1720,9 +1720,7 @@
       "keySize": "bigger means more connections",
       "mostConnected": "Most connected",
       "counts": "{{pages}} pages · {{connections}} connections · {{unlinked}} on their own",
-      "map": "Map of the whole graph. Press it to go there.",
-      "open": "Open the graph over the page",
-      "close": "Close the graph"
+      "map": "Map of the whole graph. Press it to go there."
     },
     "manageInCalendar": {
       "open": "Manage in calendar",
@@ -2039,6 +2037,10 @@
       "submit_other": "Import {{count}} rows",
       "done_one": "{{count}} row imported",
       "done_other": "{{count}} rows imported"
+    },
+    "stage": {
+      "open": "Open over the page",
+      "close": "Close"
     }
   },
   "toolbar": {

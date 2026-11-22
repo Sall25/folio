@@ -1,5 +1,6 @@
 import type { DatabaseProperty, GraphView, ID, Page } from "src/types";
 import { relationRecordIds } from "src/lib/relation-ids";
+import { groupCellValue, groupKey, NO_GROUP_KEY } from "./group-key";
 import { firstImageSrc } from "./first-image";
 import { pageLinkIds } from "./page-links";
 
@@ -102,14 +103,16 @@ export function buildGraph(
   linked: (id: ID) => Page | undefined,
 ): GraphModel {
   const links = linkProperties(properties, view);
-  const colorPropertyId = view?.colorPropertyId ?? null;
+  const colorProperty = view?.colorPropertyId
+    ? properties.find((p) => p.id === view.colorPropertyId)
+    : undefined;
   const includeLinked = view?.includeLinked !== false;
   const withPageLinks = view?.showPageLinks !== false;
 
   const nodes = new Map<ID, GraphNode>();
   const own = new Set(records.map((r) => r.id));
   for (const record of records)
-    nodes.set(record.id, nodeOf(record, true, colorPropertyId));
+    nodes.set(record.id, nodeOf(record, true, colorProperty));
 
   const edges: GraphEdge[] = [];
   const seen = new Set<string>();
@@ -122,7 +125,7 @@ export function buildGraph(
           const page = linked(to);
           // Deleted, or beyond what this person can see.
           if (!page) continue;
-          nodes.set(to, nodeOf(page, own.has(page.id), colorPropertyId));
+          nodes.set(to, nodeOf(page, own.has(page.id), colorProperty));
         }
         const key = `${record.id}>${to}>${property.id}`;
         if (seen.has(key)) continue;
@@ -145,7 +148,7 @@ export function buildGraph(
         if (!includeLinked) continue;
         const page = linked(to);
         if (!page) continue;
-        nodes.set(to, nodeOf(page, own.has(page.id), colorPropertyId));
+        nodes.set(to, nodeOf(page, own.has(page.id), colorProperty));
       }
       const key = `${record.id}>${to}>link`;
       if (seen.has(key)) continue;
@@ -251,7 +254,7 @@ export function canConnectWith(
 function nodeOf(
   page: Page,
   own: boolean,
-  colorPropertyId: ID | null,
+  colorProperty: DatabaseProperty | undefined,
 ): GraphNode {
   const cover = page.cover as unknown as
     { coverImage?: string; gradient?: string; iconName?: string } | undefined;
@@ -264,21 +267,25 @@ function nodeOf(
     icon: cover?.iconName ?? null,
     own,
     sourceId: page.sourceId ?? null,
-    colorKey: colorKeyOf(page, colorPropertyId),
+    colorKey: colorKeyOf(page, colorProperty),
     degree: 0,
   };
 }
 
-/** The value a node is coloured by: a select or status's own name. */
-function colorKeyOf(record: Page, propertyId: ID | null): string | null {
-  if (!propertyId) return null;
-  const raw = record.values?.[propertyId];
-  if (typeof raw === "string") return raw || null;
-  if (Array.isArray(raw)) return typeof raw[0] === "string" ? raw[0] : null;
-  if (raw && typeof raw === "object") {
-    const o = raw as { name?: unknown; id?: unknown };
-    if (typeof o.name === "string") return o.name;
-    if (typeof o.id === "string") return o.id;
-  }
-  return null;
+/**
+ * The value a node is coloured by, as the key the rest of the database
+ * groups by — an option's id, a person's id, a day. The same key the board
+ * makes its columns from, so the graph's colours and the board's columns
+ * mean the same thing, and so the legend has something to look a label up
+ * by (graph-colors.ts). The value itself is no good here: for a select it
+ * is an id, which is not a name, and for a date it is a timestamp, which is
+ * not a bucket.
+ */
+function colorKeyOf(
+  record: Page,
+  property: DatabaseProperty | undefined,
+): string | null {
+  if (!property) return null;
+  const key = groupKey(groupCellValue(record, property), property);
+  return key === NO_GROUP_KEY ? null : key;
 }

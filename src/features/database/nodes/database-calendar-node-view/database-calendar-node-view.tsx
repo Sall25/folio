@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState } from "react";
 import { useCalendarViewState } from "../../context/calendar-view-context";
 import { useCalendarLayout } from "../../hooks/use-calendar-layout";
 import { useDatabaseContext } from "../../context/database-context";
@@ -8,6 +8,7 @@ import { CalendarUnscheduled } from "./calendar-unscheduled";
 import { unscheduledRecords } from "../../utils/manage-in-calendar";
 import { CalendarNav } from "./calendar-nav";
 import { CalendarWeeks } from "./calendar-weeks";
+import { ViewStage } from "../../components/view-stage";
 import "./database-calendar-node-view.scss";
 
 function DatabaseCalendarNodeViewImpl() {
@@ -37,22 +38,35 @@ function DatabaseCalendarNodeViewImpl() {
 
   const { weekHeights } = calendarLayout;
 
+  // A month in a page's column gives each day a few lines; opened over the
+  // page it gives them the screen (view-stage.tsx).
+  const [staged, setStaged] = useState(false);
+
   return (
-    <div
-      className="db-calendar"
-      data-type="database-calendar"
-      style={{
-        gridTemplateRows: weekHeights.map((height) => `${height}px`).join(" "),
-      }}
+    <ViewStage
+      open={staged}
+      onClose={() => setStaged(false)}
+      label={view?.name ?? "Calendar"}
     >
-      <CalendarNav />
+      <div
+        className="db-calendar"
+        data-type="database-calendar"
+        data-staged={staged || undefined}
+        style={{
+          gridTemplateRows: weekHeights
+            .map((height) => `${height}px`)
+            .join(" "),
+        }}
+      >
+        <CalendarNav onOpenStage={staged ? undefined : () => setStaged(true)} />
 
-      <CalendarWeeks />
+        <CalendarWeeks />
 
-      <CalendarGrid weekHeights={weekHeights} />
+        <CalendarGrid weekHeights={weekHeights} />
 
-      <CalendarUnscheduled records={unscheduled} onOpenRecord={openRecord} />
-    </div>
+        <CalendarUnscheduled records={unscheduled} onOpenRecord={openRecord} />
+      </div>
+    </ViewStage>
   );
 }
 

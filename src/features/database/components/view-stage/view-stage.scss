@@ -1,0 +1,75 @@
+// A view opened over the page: the dark behind it, and the view itself
+// lifted out of the column without leaving the document it is written in
+// (view-stage.tsx says why it is not moved).
+
+// Closed, this wrapper is not there at all: no box, no layout, nothing for
+// a grid or a flex row above it to count.
+.db-stage {
+  display: contents;
+}
+
+.db-stage[data-open] {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  inset: 56px 24px 24px;
+  z-index: 100001; // over the scrim
+  width: auto;
+  max-width: 1500px;
+  margin-inline: auto;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--tt-bg-color);
+  box-shadow: 0 18px 60px rgb(0 0 0 / 45%);
+  overflow: auto;
+
+  // The widths a database view measures itself against are published on the
+  // .db-node it sits in, and are the page's column. Over the page the room
+  // is this box, and these say so.
+  --db-editor-width: 100%;
+  --db-visible-width: 100%;
+  --db-column-inset: 0px;
+  --db-column-inset-right: 0px;
+
+  // Whatever the view is, it has the whole box now.
+  > * {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.db-stage-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(15, 15, 15, 0.88);
+  animation: db-stage-in 0.15s ease-out;
+
+  &__close.tiptap-button {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+
+    .tiptap-button-icon {
+      color: #fff;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+  }
+}
+
+@keyframes db-stage-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

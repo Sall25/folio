@@ -1,5 +1,4 @@
 import { memo, useCallback, useEffect, useId, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type {
   DatabaseProperty,
@@ -16,14 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "src/components/tiptap-ui-primitive/dropdown-menu";
-import {
-  ChevronDown,
-  Maximize2,
-  Minus,
-  Plus,
-  Share2,
-  X,
-} from "src/components/icons";
+import { ChevronDown, Minus, Plus, Share2 } from "src/components/icons";
 import { usePagesBase } from "src/hooks/use-pages";
 import { useDatabaseContext } from "../../context/database-context";
 import { useDataSource } from "../../hooks/use-data-source";
@@ -35,6 +27,7 @@ import {
   relationProperties,
   type GraphNode,
 } from "../../utils/graph-model";
+import { graphLegend } from "../../utils/graph-colors";
 import {
   busiest,
   fromMinimap,
@@ -56,6 +49,7 @@ import {
 import { useGraphCanvas } from "./use-graph-canvas";
 import { useGraphConnect, relationIdsOf } from "./use-graph-connect";
 import { GraphConnectionsPanel } from "./graph-connections-panel";
+import { ViewStage, ViewStageButton } from "../../components/view-stage";
 import "./database-graph-node-view.scss";
 
 // The pages of a view, and what joins them, on a canvas.
@@ -221,25 +215,6 @@ function DatabaseGraphNodeViewImpl() {
     return () => surface.removeEventListener("wheel", onWheel);
   }, [surface, onWheel]);
 
-  // Over the page: Escape closes it, and the page behind does not scroll
-  // while it is open — the same bargain the image lightbox makes.
-  useEffect(() => {
-    if (!focused) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      event.stopPropagation();
-      setFocused(false);
-    };
-    window.addEventListener("keydown", onKey, true);
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey, true);
-      document.body.style.overflow = overflow;
-    };
-  }, [focused]);
-
   const setBackground = useCallback(
     (next: GraphBackground) => {
       if (!view) return;
@@ -355,13 +330,26 @@ function DatabaseGraphNodeViewImpl() {
     ]);
   }, [source, updatePropertiesAsync, t]);
 
-  const colors = useMemo(() => {
+  // The legend: what each colour on the canvas means, in the words and the
+  // accents the rest of the database uses for the same values — an option's
+  // own label and its own colour, not the id it is stored under.
+  const legend = useMemo(() => {
     const keys: string[] = [];
     for (const node of graph.nodes)
       if (node.colorKey && !keys.includes(node.colorKey))
         keys.push(node.colorKey);
-    return new Map(keys.map((key, i) => [key, PALETTE[i % PALETTE.length]]));
-  }, [graph.nodes]);
+    const property = (source?.properties ?? []).find(
+      (p) => p.id === view?.colorPropertyId,
+    );
+    return graphLegend(property, keys, {
+      titleOf: (id) => pageById.get(id)?.title ?? undefined,
+    });
+  }, [graph.nodes, source?.properties, view?.colorPropertyId, pageById]);
+
+  const colors = useMemo(
+    () => new Map(legend.map((entry) => [entry.key, entry.accent])),
+    [legend],
+  );
 
   const at = useCallback(
     (id: ID): GraphPoint | undefined =>
@@ -388,10 +376,13 @@ function DatabaseGraphNodeViewImpl() {
       data-open={focused || undefined}
     >
       <div className="db-graph__bar">
-        {[...colors.entries()].map(([key, color]) => (
-          <span key={key} className="db-graph__key">
-            <span className="db-graph__dot" style={{ background: color }} />
-            {key}
+        {legend.map((entry) => (
+          <span key={entry.key} className="db-graph__key">
+            <span
+              className="db-graph__dot"
+              style={{ background: entry.accent }}
+            />
+            {entry.label}
           </span>
         ))}
         <span className="db-graph__spacer" />
@@ -508,15 +499,7 @@ function DatabaseGraphNodeViewImpl() {
         >
           <span className="tiptap-button-text">{t("database.graph.fit")}</span>
         </Button>
-        {!focused && (
-          <Button
-            variant="ghost"
-            onClick={() => setFocused(true)}
-            aria-label={t("database.graph.open")}
-          >
-            <Maximize2 className="tiptap-button-icon" size={15} />
-          </Button>
-        )}
+        {!focused && <ViewStageButton onOpen={() => setFocused(true)} />}
       </div>
 
       <div className="db-graph__stage">
@@ -643,33 +626,14 @@ function DatabaseGraphNodeViewImpl() {
     </div>
   );
 
-  if (!focused) return body;
-
-  // Over the page, like a picture opened from the text: a backdrop, a way
-  // out at the top, and a click on the dark closes it.
-  return createPortal(
-    <div
-      className="db-graph-open"
-      role="dialog"
-      aria-modal="true"
-      aria-label={t("database.graph.canvas")}
-      onClick={(e) => e.stopPropagation()}
-      onMouseDown={(e) => {
-        e.stopPropagation();
-        if (e.target === e.currentTarget) setFocused(false);
-      }}
+  return (
+    <ViewStage
+      open={focused}
+      onClose={() => setFocused(false)}
+      label={t("database.graph.canvas")}
     >
-      <Button
-        variant="ghost"
-        className="db-graph-open__close"
-        aria-label={t("database.graph.close")}
-        onClick={() => setFocused(false)}
-      >
-        <X className="tiptap-button-icon" />
-      </Button>
       {body}
-    </div>,
-    document.body,
+    </ViewStage>
   );
 }
 
@@ -951,15 +915,5 @@ function Node({
     </g>
   );
 }
-
-/** Node colours, in the order a database's values first appear. */
-const PALETTE = [
-  "var(--tt-color-blue-inc-1, #4f7dd1)",
-  "var(--tt-color-green-inc-1, #4a8f5b)",
-  "var(--tt-color-orange-inc-1, #c2893a)",
-  "var(--tt-color-purple-inc-1, #8b78ff)",
-  "var(--tt-color-red-inc-1, #d1584f)",
-  "var(--tt-color-yellow-inc-1, #c9a227)",
-];
 
 export const DatabaseGraphNodeView = memo(DatabaseGraphNodeViewImpl);

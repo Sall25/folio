@@ -21,6 +21,7 @@ import {
 } from "react";
 import { NodeViewContent } from "@tiptap/react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
+import { ViewStage, ViewStageButton } from "../../components/view-stage";
 import { useDataSource } from "../../hooks/use-data-source";
 import type { CalendarView, ID, TimelineView } from "src/types";
 import { useTranslation } from "react-i18next";
@@ -235,6 +236,9 @@ function DatabaseTimelineNodeViewImpl() {
     source?.id,
   );
   const { t } = useTranslation();
+  // A year squeezed into a page's column is a year nobody can read; opened
+  // over the page it has the screen (view-stage.tsx).
+  const [staged, setStaged] = useState(false);
   const { year, month, day } = useTimelineViewState();
   const { goTo, goToToday } = useTimelineViewActions();
 
@@ -783,236 +787,243 @@ function DatabaseTimelineNodeViewImpl() {
   }
 
   return (
-    <div className="db-tl-layout-wrap">
-      <div className="db-tl-toprow">
-        <div
-          className="db-tl-toggle-slot"
-          style={{ height: GROUP_ROW_HEIGHT + 15 }}
-        >
-          <TimelineShowTableToggle
-            showTable={showTable}
-            onToggle={(showTable) => onUpdateView({ showTable })}
-          />
-        </div>
+    <ViewStage
+      open={staged}
+      onClose={() => setStaged(false)}
+      label={activeView?.name ?? "Timeline"}
+    >
+      <div className="db-tl-layout-wrap" data-staged={staged || undefined}>
+        <div className="db-tl-toprow">
+          <div
+            className="db-tl-toggle-slot"
+            style={{ height: GROUP_ROW_HEIGHT + 15 }}
+          >
+            <TimelineShowTableToggle
+              showTable={showTable}
+              onToggle={(showTable) => onUpdateView({ showTable })}
+            />
+          </div>
 
-        <div className="db-tl-layout" ref={layoutRef}>
-          {/* Always mounted, even when it is hidden. The records live in
+          <div className="db-tl-layout" ref={layoutRef}>
+            {/* Always mounted, even when it is hidden. The records live in
               here now, and their bars are portalled out of them: unmounting
               the panel would take every bar in the grid with it. Hidden, it
               is a panel of no width. */}
-          <div
-            className="db-tl-table"
-            data-hidden={!showTable || undefined}
-            style={{
-              width: showTable ? tableWidth : 0,
-              minWidth: showTable ? tableWidth : 0,
-            }}
-          >
-            {/* The same grid the table view is: one column per property,
+            <div
+              className="db-tl-table"
+              data-hidden={!showTable || undefined}
+              style={{
+                width: showTable ? tableWidth : 0,
+                minWidth: showTable ? tableWidth : 0,
+              }}
+            >
+              {/* The same grid the table view is: one column per property,
                   each record a subgrid row of its own cells. That is what
                   makes these rows ordinary rows — the editor's drag handle
                   finds them, and reordering goes down the same path as the
                   table's (board-drag.ts). Only as much of it shows as the
                   panel is wide; the rest is there, past the edge. */}
-            <div
-              ref={tableRef}
-              className="db-node-grid db-tl-grid"
-              // The same inline style the table view's own grid carries
-              // (database-table-body.tsx): display and width are set there,
-              // not in CSS, and without them this is a column of stacked
-              // headers and rows whose subgrid has no grid to sub.
-              style={{
-                display: "grid",
-                width: "max-content",
-                minWidth: "100%",
-                // As tall as the gantt's own header, measured: row 1 of
-                // this grid ends where the gantt's first row begins.
-                ["--tl-header-height" as string]: `${headerHeight}px`,
-                // The trailing track the table's own grid carries too: the
-                // header ends in the add-property cell, so a grid one column
-                // short wraps that cell onto a second line and pushes every
-                // row below out of step with its bar.
-                gridTemplateColumns: `${bodyGridTemplateColumns} 300px`,
-              }}
-            >
-              <DatabaseTableHeader
-                subgrid
-                gridRow={1}
-                visibleProperties={visibleProperties}
-                allProperties={source?.properties ?? []}
-                activeView={activeView}
-                locked={!!attrs.locked}
-                gridTemplateColumns={gridTemplateColumns}
-                widthFor={widthFor}
-                onReorder={(ids) => db.reorderProperties(ids)}
-                onAddProperty={(type) => db.addProperty(type)}
-                onCommitColumnWidth={commitColumnWidth}
-              />
-              <NodeViewContent as="div" className="db-node-grid__body" />
-            </div>
-
-            <div className="db-tl-table__row db-tl-table__row--new">
-              <Button
-                variant="ghost"
-                className="db-tl-table__add-btn"
-                // The database's own "new record", not a bare addRecord:
-                // that one skipped the default row template, and the date
-                // a timeline needs to be able to place the row at all.
-                onClick={onNewRecord}
+              <div
+                ref={tableRef}
+                className="db-node-grid db-tl-grid"
+                // The same inline style the table view's own grid carries
+                // (database-table-body.tsx): display and width are set there,
+                // not in CSS, and without them this is a column of stacked
+                // headers and rows whose subgrid has no grid to sub.
+                style={{
+                  display: "grid",
+                  width: "max-content",
+                  minWidth: "100%",
+                  // As tall as the gantt's own header, measured: row 1 of
+                  // this grid ends where the gantt's first row begins.
+                  ["--tl-header-height" as string]: `${headerHeight}px`,
+                  // The trailing track the table's own grid carries too: the
+                  // header ends in the add-property cell, so a grid one column
+                  // short wraps that cell onto a second line and pushes every
+                  // row below out of step with its bar.
+                  gridTemplateColumns: `${bodyGridTemplateColumns} 300px`,
+                }}
               >
-                <Plus className="tiptap-button-icon" />
-                <span className="tiptap-button-text">New</span>
-              </Button>
+                <DatabaseTableHeader
+                  subgrid
+                  gridRow={1}
+                  visibleProperties={visibleProperties}
+                  allProperties={source?.properties ?? []}
+                  activeView={activeView}
+                  locked={!!attrs.locked}
+                  gridTemplateColumns={gridTemplateColumns}
+                  widthFor={widthFor}
+                  onReorder={(ids) => db.reorderProperties(ids)}
+                  onAddProperty={(type) => db.addProperty(type)}
+                  onCommitColumnWidth={commitColumnWidth}
+                />
+                <NodeViewContent as="div" className="db-node-grid__body" />
+              </div>
+
+              <div className="db-tl-table__row db-tl-table__row--new">
+                <Button
+                  variant="ghost"
+                  className="db-tl-table__add-btn"
+                  // The database's own "new record", not a bare addRecord:
+                  // that one skipped the default row template, and the date
+                  // a timeline needs to be able to place the row at all.
+                  onClick={onNewRecord}
+                >
+                  <Plus className="tiptap-button-icon" />
+                  <span className="tiptap-button-text">New</span>
+                </Button>
+              </div>
             </div>
-          </div>
 
-          {showTable && (
-            // Drag it to give the table more of the room, or less. The
-            // columns past the panel's edge are already rendered; this is
-            // what lets them be seen.
-            <div
-              className="db-tl-splitter"
-              role="separator"
-              aria-orientation="vertical"
-              aria-label="Resize the table"
-              data-dragging={liveWidth !== null || undefined}
-              onPointerDown={startTableResize}
-            />
-          )}
+            {showTable && (
+              // Drag it to give the table more of the room, or less. The
+              // columns past the panel's edge are already rendered; this is
+              // what lets them be seen.
+              <div
+                className="db-tl-splitter"
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize the table"
+                data-dragging={liveWidth !== null || undefined}
+                onPointerDown={startTableResize}
+              />
+            )}
 
-          <div className="db-tl-viewport" ref={viewportRef}>
-            {/* Overlay: sits at the same height as the sticky group row
+            <div className="db-tl-viewport" ref={viewportRef}>
+              {/* Overlay: sits at the same height as the sticky group row
                 (GROUP_ROW_HEIGHT), pinned to the viewport's top-right. The
                 group row underneath keeps scrolling/sticking normally — this
                 just floats the always-visible controls on top of it, on the
                 right edge, so both read as one row. */}
-            <div
-              className="db-tl-nav-overlay"
-              style={{ height: GROUP_ROW_HEIGHT }}
-            >
-              {manageInCalendar && (
-                <>
-                  <Button
-                    variant="ghost"
-                    className="db-tl-manage"
-                    onClick={manageInCalendar}
-                    style={{ background: "transparent" }}
-                  >
-                    <Calendar className="tiptap-button-icon" size={15} />
-                    <span className="tiptap-button-text">
-                      {t("database.manageInCalendar.open")}
-                    </span>
-                  </Button>
-                  <Spacer orientation="horizontal" size={2} />
-                </>
-              )}
-              <TimeframeSwitcher
-                timeframe={timeframe}
-                onSelect={(tf) =>
-                  onUpdateView({ timeframe: tf as TimelineView["timeframe"] })
-                }
-              />
-              <Spacer orientation="horizontal" size={2} />
-              <TimelineNav goToday={handleToday} navigate={navigate} />
-            </div>
-
-            <div className="db-tl-scroll" ref={scrollRef}>
               <div
-                style={{
-                  width: gridWidth,
-                  minWidth: gridWidth,
-                  // Outside the width, not inside it: the columns keep the
-                  // room they are drawn in and the scroller gains the rest.
-                  boxSizing: "content-box",
-                  paddingRight: endSpill,
-                }}
+                className="db-tl-nav-overlay"
+                style={{ height: GROUP_ROW_HEIGHT }}
               >
-                <TimelineHeader
-                  highlights={highlights}
-                  range={range}
-                  shown={shown}
-                  pinned={pinned}
+                {manageInCalendar && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      className="db-tl-manage"
+                      onClick={manageInCalendar}
+                      style={{ background: "transparent" }}
+                    >
+                      <Calendar className="tiptap-button-icon" size={15} />
+                      <span className="tiptap-button-text">
+                        {t("database.manageInCalendar.open")}
+                      </span>
+                    </Button>
+                    <Spacer orientation="horizontal" size={2} />
+                  </>
+                )}
+                <TimeframeSwitcher
+                  timeframe={timeframe}
+                  onSelect={(tf) =>
+                    onUpdateView({ timeframe: tf as TimelineView["timeframe"] })
+                  }
                 />
+                <Spacer orientation="horizontal" size={2} />
+                <TimelineNav goToday={handleToday} navigate={navigate} />
+                {!staged && <ViewStageButton onOpen={() => setStaged(true)} />}
+              </div>
+
+              <div className="db-tl-scroll" ref={scrollRef}>
                 <div
-                  className="db-tl-gantt__body"
                   style={{
                     width: gridWidth,
                     minWidth: gridWidth,
-                    height: ganttHeight,
-                    position: "relative",
+                    // Outside the width, not inside it: the columns keep the
+                    // room they are drawn in and the scroller gains the rest.
+                    boxSizing: "content-box",
+                    paddingRight: endSpill,
                   }}
                 >
-                  <TimelineDayGrid range={range} shown={shown} />
+                  <TimelineHeader
+                    highlights={highlights}
+                    range={range}
+                    shown={shown}
+                    pinned={pinned}
+                  />
+                  <div
+                    className="db-tl-gantt__body"
+                    style={{
+                      width: gridWidth,
+                      minWidth: gridWidth,
+                      height: ganttHeight,
+                      position: "relative",
+                    }}
+                  >
+                    <TimelineDayGrid range={range} shown={shown} />
 
-                  {/* Before the bars on purpose: they are drawn after it,
+                    {/* Before the bars on purpose: they are drawn after it,
                       so a bar takes its own pointer events and the
                       placeholder never appears on top of a record. */}
-                  <TimelinePlaceholder
-                    range={range}
-                    rowCount={rowCount}
-                    onCreate={createFromPlaceholder}
-                  />
+                    <TimelinePlaceholder
+                      range={range}
+                      rowCount={rowCount}
+                      onCreate={createFromPlaceholder}
+                    />
 
-                  {/* The arrows between records that block one another,
+                    {/* The arrows between records that block one another,
                       under the bars so a bar is always the thing the
                       pointer finds. */}
-                  {links.length > 0 && (
-                    <TimelineLinks
-                      edges={links}
-                      bars={linkedBars}
-                      width={gridWidth}
-                      height={ganttHeight}
-                      from={scrollLeft - LINK_MARGIN}
-                      to={scrollLeft + viewportWidth + LINK_MARGIN}
-                      onRemove={removeLink}
-                    />
-                  )}
+                    {links.length > 0 && (
+                      <TimelineLinks
+                        edges={links}
+                        bars={linkedBars}
+                        width={gridWidth}
+                        height={ganttHeight}
+                        from={scrollLeft - LINK_MARGIN}
+                        to={scrollLeft + viewportWidth + LINK_MARGIN}
+                        onRemove={removeLink}
+                      />
+                    )}
 
-                  {todayLeft !== null && (
-                    <div
-                      className="db-tl-today-line"
-                      style={{ left: todayLeft }}
-                      aria-hidden
-                    />
-                  )}
+                    {todayLeft !== null && (
+                      <div
+                        className="db-tl-today-line"
+                        style={{ left: todayLeft }}
+                        aria-hidden
+                      />
+                    )}
 
-                  {/* The bars are portalled in here by timeline-bar.tsx:
+                    {/* The bars are portalled in here by timeline-bar.tsx:
                       each record's own DOM is its row in the panel. */}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div
-              className="db-tl-indicators"
-              // Held inside what is on screen: the arrow that says a record
-              // is off to the right is no use if it is off to the right
-              // itself.
-              style={{ top: headerHeight, right: endSpill }}
-            >
-              {indicators.map((ind) => (
-                <Button
-                  key={ind.recordId}
-                  className={`db-tl-indicator db-tl-indicator--${ind.direction}`}
-                  style={{ top: ind.rowIndex * ROW_HEIGHT + ROW_HEIGHT / 2 }}
-                  onClick={() => scrollToRecord(ind)}
-                  aria-label={
-                    ind.direction === "left"
-                      ? "Scroll to earlier record"
-                      : "Scroll to later record"
-                  }
-                >
-                  {ind.direction === "left" ? (
-                    <ArrowLeft className="tiptap-button-icon" size={12} />
-                  ) : (
-                    <ArrowRight className="tiptap-button-icon" size={12} />
-                  )}
-                </Button>
-              ))}
+              <div
+                className="db-tl-indicators"
+                // Held inside what is on screen: the arrow that says a record
+                // is off to the right is no use if it is off to the right
+                // itself.
+                style={{ top: headerHeight, right: endSpill }}
+              >
+                {indicators.map((ind) => (
+                  <Button
+                    key={ind.recordId}
+                    className={`db-tl-indicator db-tl-indicator--${ind.direction}`}
+                    style={{ top: ind.rowIndex * ROW_HEIGHT + ROW_HEIGHT / 2 }}
+                    onClick={() => scrollToRecord(ind)}
+                    aria-label={
+                      ind.direction === "left"
+                        ? "Scroll to earlier record"
+                        : "Scroll to later record"
+                    }
+                  >
+                    {ind.direction === "left" ? (
+                      <ArrowLeft className="tiptap-button-icon" size={12} />
+                    ) : (
+                      <ArrowRight className="tiptap-button-icon" size={12} />
+                    )}
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </ViewStage>
   );
 }
 

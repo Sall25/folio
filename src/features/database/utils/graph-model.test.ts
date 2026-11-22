@@ -121,6 +121,43 @@ describe("the graph of a view's records", () => {
     expect(plain.nodes.every((n) => n.colorKey === null)).toBe(true);
   });
 
+  it("colours by the value's key, which is what a legend can name", () => {
+    // A select is stored as an option id, or as the option itself. Either
+    // way the node holds the key the rest of the database groups by — an
+    // id is not a name, and the legend is where names come from
+    // (graph-colors.ts).
+    const withOptions = [
+      ...props,
+      {
+        id: "type",
+        name: "Type",
+        config: {
+          type: "select",
+          options: [
+            { id: "o1", label: "Lecture", color: "blue" },
+            { id: "o2", label: "Assignment", color: "orange" },
+          ],
+        },
+      },
+    ] as unknown as DatabaseProperty[];
+    const rows = [
+      row("a", { type: "o1" }),
+      row("b", { type: { id: "o2", label: "Assignment" } }),
+      row("c", { type: [] }),
+    ];
+    const g = buildGraph(
+      rows,
+      withOptions,
+      view({ colorPropertyId: "type" }),
+      () => undefined,
+    );
+    const key = (id: string) => g.nodes.find((n) => n.id === id)?.colorKey;
+    expect(key("a")).toBe("o1");
+    expect(key("b")).toBe("o2");
+    // Nothing chosen: no colour, rather than a colour for "empty".
+    expect(key("c")).toBeNull();
+  });
+
   it("drops a link to a record nobody can find", () => {
     // Deleted, or beyond this person's access: there is no node to join to,
     // and a line to nowhere says less than the record's own page does.
