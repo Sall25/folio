@@ -26,6 +26,8 @@ export interface LinkDraft {
 }
 
 let draft: LinkDraft | null = null;
+/** Links just made, drawn until the write comes back round. */
+let pending: { from: ID; to: ID }[] = [];
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -62,7 +64,42 @@ export const linkDraft = {
   get() {
     return draft;
   },
+
+  /**
+   * A link that has just been written, to draw until the record it was
+   * written on comes back carrying it.
+   *
+   * The same hole a dropped bar falls into: the arrow is drawn from the
+   * records, and for the moment between the write and the records saying
+   * so there was nothing to draw — the link made, and nothing on screen.
+   */
+  remember(from: ID, to: ID) {
+    pending = [...pending, { from, to }];
+    emit();
+    // And a stop, in case the write never lands: an arrow with nothing
+    // behind it is worse than no arrow.
+    setTimeout(() => {
+      pending = pending.filter((p) => p.from !== from || p.to !== to);
+      emit();
+    }, 2500);
+  },
 };
+
+const NO_PENDING: { from: ID; to: ID }[] = [];
+
+/** The links waiting for their write, outside React. */
+export function pendingLinks(): { from: ID; to: ID }[] {
+  return pending;
+}
+
+/** Links made a moment ago, which the records may not carry yet. */
+export function usePendingLinks(): { from: ID; to: ID }[] {
+  return useSyncExternalStore(
+    subscribe,
+    () => (pending.length ? pending : NO_PENDING),
+    () => NO_PENDING,
+  );
+}
 
 /** The link being drawn, for whatever is drawing part of it. */
 export function useLinkDraft(): LinkDraft | null {

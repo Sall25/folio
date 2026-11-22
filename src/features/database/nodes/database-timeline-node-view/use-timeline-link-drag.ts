@@ -103,6 +103,8 @@ export function useTimelineLinkDrag({
           ...(blockingByRecord[from] ?? []),
           to,
         ] as unknown as CellValue);
+        // Drawn straight away, rather than when the write comes back.
+        linkDraft.remember(from, to);
       };
 
       const cancel = () => {

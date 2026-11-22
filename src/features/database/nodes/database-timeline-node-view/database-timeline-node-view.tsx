@@ -44,6 +44,7 @@ import {
 import { TimelineHeader, type HighlightRange } from "./timeline-header";
 import { TimelineDayGrid } from "./timeline-day-grid";
 import { TimelineLinks, type LinkedBar } from "./timeline-links";
+import { usePendingLinks } from "../../utils/link-draft-store";
 import {
   dependencyEdges,
   dependencyPair,
@@ -564,9 +565,22 @@ function DatabaseTimelineNodeViewImpl() {
   const showLinks =
     !!dependencies && !(activeView?.dependencies?.hidden ?? false);
 
+  // Links written a moment ago, before the records carry them: drawn with
+  // the rest, so an arrow appears under the pointer that drew it rather
+  // than a beat later (link-draft-store.ts).
+  const justMade = usePendingLinks();
+
   const links = useMemo(() => {
     if (!showLinks || !dependencies) return EMPTY_EDGES;
-    const edges = dependencyEdges(sortedRecords, dependencies.blocking.id);
+    const stored = dependencyEdges(sortedRecords, dependencies.blocking.id);
+    const missing = justMade.filter(
+      (p) =>
+        !stored.some((e) => e.from === p.from && e.to === p.to) &&
+        // Both ends still have to be records this view is showing.
+        sortedRecords.some((r) => r.id === p.from) &&
+        sortedRecords.some((r) => r.id === p.to),
+    );
+    const edges = missing.length ? [...stored, ...missing] : stored;
     // A link in trouble is drawn red: the record waiting starts before the
     // one blocking it has finished. Read from the dates, which is what the
     // records carry here.
@@ -575,7 +589,13 @@ function DatabaseTimelineNodeViewImpl() {
       ...e,
       conflict: linkConflict(dates.get(e.from), dates.get(e.to)),
     }));
-  }, [showLinks, dependencies, sortedRecords, timelineLayout.records]);
+  }, [
+    showLinks,
+    dependencies,
+    sortedRecords,
+    timelineLayout.records,
+    justMade,
+  ]);
 
   const linkedBars = useMemo(() => {
     if (links.length === 0) return EMPTY_BARS;

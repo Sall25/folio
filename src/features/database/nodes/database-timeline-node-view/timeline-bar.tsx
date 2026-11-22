@@ -99,7 +99,7 @@ function TimelineBarInner({
   held: HeldBar | null;
   blockingByRecord: Record<string, string[]>;
 }) {
-  const { nodeRef, isResizing } = useResizableNode();
+  const { nodeRef, isResizing, startWidth } = useResizableNode();
   const { drag, isDragging, handlers } = useTimelineBarDrag({
     index,
     rowCount,
@@ -151,9 +151,15 @@ function TimelineBarInner({
           ? `translate(${drag.columns * cellWidth}px, ${drag.rows * ROW_HEIGHT}px)`
           : undefined,
         // While the handle is being dragged the provider sets the width on
-        // this element directly; passing one here would snap it back to the
-        // dates on every render until the drag ends.
-        width: isResizing ? undefined : (held?.width ?? placement.width),
+        // this element directly, and a width from here would snap it back
+        // to the dates on every render until the drag ends. Not none at
+        // all, though: on the render where the drag begins the provider has
+        // not written anything yet, and a box with no width collapses onto
+        // its own content — the bar vanished and grew back out of nothing.
+        // The width it had when the handle went down holds that one frame.
+        width: isResizing
+          ? startWidth || held?.width || placement.width
+          : (held?.width ?? placement.width),
         height: ROW_HEIGHT,
       }}
     >
