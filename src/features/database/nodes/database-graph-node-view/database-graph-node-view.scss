@@ -90,7 +90,7 @@
     border: 1px solid var(--tt-border-color);
     border-radius: 6px;
     background: var(--tt-bg-color);
-    box-shadow: var(--tt-shadow-elevated-sm, 0 1px 3px rgb(0 0 0 / 12%));
+    box-shadow: var(--tt-shadow-elevated-sm);
     cursor: pointer;
     opacity: 0.86;
     transition: opacity 0.12s ease;
@@ -126,12 +126,21 @@
     background: var(--tt-subtle-bg-color, rgba(0, 0, 0, 0.02));
     border: 1px solid var(--tt-border-color);
     border-radius: 10px;
+    // Lifted off the page. A canvas is a surface things are moved about
+    // on, and a flat rectangle in the middle of a document reads as a
+    // picture of one; the shadow is what says it is nearer than the text.
+    // The wide, soft one, because this is a large surface — a card's tight
+    // shadow under something this big looks like a seam.
+    box-shadow: var(--tt-shadow-elevated-md);
     // A canvas: dragged about and zoomed, so the browser must not take
     // the gesture for its own scrolling.
     touch-action: none;
     cursor: grab;
     user-select: none;
 
+    // No lift while it is dragged, however tempting: a four-layer shadow
+    // on a surface this wide would be repainted on every frame of the pan,
+    // and the cursor already says what is happening.
     &[data-panning] {
       cursor: grabbing;
     }
