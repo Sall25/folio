@@ -1686,6 +1686,14 @@
       "count_one": "{{count}} sous-élément",
       "count_other": "{{count}} sous-éléments"
     },
+    "manageInCalendar": {
+      "open": "Gérer dans l'agenda",
+      "viewName": "Agenda",
+      "back": "Gestion de {{name}}",
+      "unscheduled_one": "{{count}} fiche sans date",
+      "unscheduled_other": "{{count}} fiches sans date",
+      "unscheduledNote": "Faites-en glisser une sur un jour pour la planifier."
+    },
     "dependencies": {
       "title": "Dépendances",
       "on": "Activées",

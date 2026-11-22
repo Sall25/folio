@@ -1,4 +1,6 @@
-import { ChevronLeft, ChevronRight } from "src/components/icons";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "src/components/icons";
+import { useTranslation } from "react-i18next";
+import { useDatabaseContext } from "../../context/database-context";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import {
   useCalendarViewActions,
@@ -9,6 +11,13 @@ import { Spacer } from "src/components/tiptap-ui-primitive/spacer";
 import { CardItemGroup } from "src/components/tiptap-ui-primitive/card";
 
 function CalendarNavImpl() {
+  const { t } = useTranslation();
+  const { db } = useDatabaseContext();
+  // Arrived here from a timeline ("Manage in calendar"): the way back,
+  // named after the view it leads to. Ephemeral — a reload lands on this
+  // calendar as the ordinary view it is, with no chip and nothing owed.
+  const cameFrom = db.views.find((v) => v.id === db.managingFromViewId);
+
   const { prevMonth, nextMonth, goToday } = useCalendarViewActions();
   const { year, month } = useCalendarViewState();
   const monthLabel = new Date(year, month).toLocaleString("default", {
@@ -26,6 +35,22 @@ function CalendarNavImpl() {
       >
         <span className="tiptap-button-text">{monthLabel}</span>
       </Button>
+      {cameFrom && (
+        <Button
+          variant="ghost"
+          className="db-calendar__back"
+          onClick={() => {
+            db.setActiveView(cameFrom.id);
+            db.setManagingFrom(null);
+          }}
+        >
+          <ArrowLeft className="tiptap-button-icon" size={14} />
+          <span className="tiptap-button-text">
+            {t("database.manageInCalendar.back", { name: cameFrom.name })}
+          </span>
+        </Button>
+      )}
+
       <Spacer orientation="horizontal" />
       <Button
         variant="ghost"

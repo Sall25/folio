@@ -655,6 +655,10 @@ export interface DatabaseUIState {
   openRows: Record<string, boolean>;
   panelStack: PanelView[];
   viewOptionsOpen: boolean;
+  /** The view a trip to the calendar started from ("Manage in calendar"),
+   *  so the calendar can offer the way back. Ephemeral: a reload lands on
+   *  the calendar as an ordinary view, which it is. */
+  managingFromViewId: ID | null;
 }
 export type PanelView =
   | { type: "main" }

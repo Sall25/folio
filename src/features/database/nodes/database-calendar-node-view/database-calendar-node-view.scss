@@ -1,4 +1,4 @@
-:root{
+:root {
   --calendar-column-highlight: var(--tt-gray-light-a-50);
 }
 
@@ -11,21 +11,20 @@
 
   &__nav {
     width: var(--db-editor-width);
-    .month-label{
+    .month-label {
       background-color: transparent !important;
       font-weight: 500;
     }
-    .tiptap-button{
+    .tiptap-button {
       text-transform: capitalize;
-       background-color: transparent !important;
+      background-color: transparent !important;
     }
-  
+
     // display: flex;
     // align-items: center;
     // justify-content: center;
     // gap: 8px;
     // padding: 6px 0;
-
   }
 
   &__month-label {
@@ -205,7 +204,7 @@
     }
   }
 
-  &__nav-btn{
+  &__nav-btn {
     min-width: fit-content !important;
     width: fit-content !important;
     padding: 0;
@@ -219,12 +218,84 @@
   padding: 24px;
   text-align: center;
   color: var(--tt-text-secondary);
-  
 }
 
-.db-calendar__grid__body, 
-.db-calendar__grid__body > div{
+.db-calendar__grid__body,
+.db-calendar__grid__body > div {
   display: contents;
   position: absolute;
   inset: 0;
+}
+
+// ── Arrived from a timeline ────────────────────────────────────────────────
+// The way back, beside the month: a chip rather than a button, because it
+// is not a thing to do here so much as a note about where you are.
+.db-calendar__back {
+  background: color-mix(
+    in srgb,
+    var(--tt-brand-color-400) 16%,
+    transparent
+  ) !important;
+  border: 1px solid
+    color-mix(in srgb, var(--tt-brand-color-400) 45%, transparent);
+  border-radius: 999px;
+  padding: 2px 10px;
+  height: fit-content;
+  min-height: fit-content;
+}
+
+// ── Records with no date ───────────────────────────────────────────────────
+// A record with no date is nowhere at all — not on a calendar, not on a
+// timeline. Listed here, it can be dragged onto a day.
+.db-cal-unscheduled {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 2px 2px;
+
+  &__head {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tt-text-secondary);
+  }
+
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 240px;
+    padding: 4px 10px;
+    border: 1px solid var(--tt-border-color);
+    border-radius: 6px;
+    background: var(--tt-bg-color);
+    font-size: 13px;
+    cursor: grab;
+
+    &:hover {
+      border-color: var(--tt-brand-color-400);
+    }
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  &__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__note {
+    margin: 0;
+    font-size: 12px;
+    color: var(--tt-text-secondary);
+  }
 }

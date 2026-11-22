@@ -1,6 +1,7 @@
 import {
   ArrowLeft,
   ArrowRight,
+  Calendar,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -21,7 +22,12 @@ import {
 import { NodeViewContent } from "@tiptap/react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { useDataSource } from "../../hooks/use-data-source";
-import type { ID, TimelineView } from "src/types";
+import type { CalendarView, ID, TimelineView } from "src/types";
+import { useTranslation } from "react-i18next";
+import {
+  calendarViewFor,
+  dateForCalendar,
+} from "../../utils/manage-in-calendar";
 import "./database-timeline-node-view.scss";
 import { useDatabaseContext } from "../../context/database-context";
 import { useDatabaseColumnLayout } from "../../hooks/use-database-column-layout";
@@ -228,6 +234,7 @@ function DatabaseTimelineNodeViewImpl() {
   const { addRecordAsync, updatePropertiesAsync, setCellValue } = useDataSource(
     source?.id,
   );
+  const { t } = useTranslation();
   const { year, month, day } = useTimelineViewState();
   const { goTo, goToToday } = useTimelineViewActions();
 
@@ -632,6 +639,37 @@ function DatabaseTimelineNodeViewImpl() {
     return bars;
   }, [links, placement, timelineLayout.records]);
 
+  /**
+   * Manage these records in a calendar: the same records on a month grid,
+   * with the way back to this timeline.
+   *
+   * The database's own calendar if it has one (the one on these dates for
+   * choice), otherwise one made here, standing on this timeline's date
+   * property rather than on whichever one came first. The new view stays
+   * afterwards — it is a view of this database like any other, and making
+   * a fresh one on every trip would litter the switcher.
+   */
+  const manageInCalendar = useMemo(() => {
+    if (!activeView) return null;
+    const existing = calendarViewFor(db.views, activeView);
+    const datePropertyId = dateForCalendar(
+      source?.properties ?? [],
+      activeView,
+    );
+    // Nothing to stand on: no date property, no calendar.
+    if (!existing && !datePropertyId) return null;
+    return () => {
+      db.setManagingFrom(activeView.id);
+      if (existing) {
+        db.setActiveView(existing.id);
+        return;
+      }
+      db.addView("calendar", t("database.manageInCalendar.viewName"), {
+        datePropertyId,
+      } as Partial<CalendarView>);
+    };
+  }, [activeView, db, source?.properties, t]);
+
   /** Takes a link away: the blocker's own list, less the one record. */
   const removeLink = useCallback(
     (edge: DependencyEdge) => {
@@ -852,6 +890,22 @@ function DatabaseTimelineNodeViewImpl() {
               className="db-tl-nav-overlay"
               style={{ height: GROUP_ROW_HEIGHT }}
             >
+              {manageInCalendar && (
+                <>
+                  <Button
+                    variant="ghost"
+                    className="db-tl-manage"
+                    onClick={manageInCalendar}
+                    style={{ background: "transparent" }}
+                  >
+                    <Calendar className="tiptap-button-icon" size={15} />
+                    <span className="tiptap-button-text">
+                      {t("database.manageInCalendar.open")}
+                    </span>
+                  </Button>
+                  <Spacer orientation="horizontal" size={2} />
+                </>
+              )}
               <TimeframeSwitcher
                 timeframe={timeframe}
                 onSelect={(tf) =>

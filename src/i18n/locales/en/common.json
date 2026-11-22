@@ -1686,6 +1686,14 @@
       "count_one": "{{count}} sub-item",
       "count_other": "{{count}} sub-items"
     },
+    "manageInCalendar": {
+      "open": "Manage in calendar",
+      "viewName": "Calendar",
+      "back": "Managing {{name}}",
+      "unscheduled_one": "{{count}} record with no date",
+      "unscheduled_other": "{{count}} records with no date",
+      "unscheduledNote": "Drag one onto a day to schedule it."
+    },
     "dependencies": {
       "title": "Dependencies",
       "on": "On",

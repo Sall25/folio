@@ -27,6 +27,7 @@ export function useDatabaseUI(
     openRows: {},
     panelStack: [{ type: "main" }],
     viewOptionsOpen: false,
+    managingFromViewId: null,
   });
 
   const patchUI = useCallback(
@@ -130,14 +131,29 @@ export function useDatabaseUI(
   );
 
   const addView = useCallback(
-    (type: DatabaseView["type"], name: string) => {
-      const newView = makeDefaultView(type, name, properties);
+    (
+      type: DatabaseView["type"],
+      name: string,
+      // Settings the new view is born with, for a caller that knows them —
+      // the calendar a timeline opens is wired to the timeline's own date
+      // property rather than to whichever one comes first.
+      patch?: Partial<Omit<DatabaseView, "id" | "type">>,
+    ) => {
+      const made = makeDefaultView(type, name, properties);
+      const newView = (patch ? { ...made, ...patch } : made) as DatabaseView;
       updateAttributes({
         views: [...attrs.views, newView],
         activeViewId: newView.id,
       });
+      return newView;
     },
     [attrs.views, properties, updateAttributes],
+  );
+
+  /** Remembers the view a trip to the calendar started from, or forgets it. */
+  const setManagingFrom = useCallback(
+    (viewId: ID | null) => patchUI({ managingFromViewId: viewId }),
+    [patchUI],
   );
 
   const updateView = useCallback(
@@ -235,6 +251,8 @@ export function useDatabaseUI(
       resetPanel,
       setActiveView,
       addView,
+      setManagingFrom,
+      managingFromViewId: uiState.managingFromViewId,
       updateView,
       deleteView,
       duplicateView,
@@ -266,6 +284,8 @@ export function useDatabaseUI(
       resetPanel,
       setActiveView,
       addView,
+      setManagingFrom,
+      uiState.managingFromViewId,
       updateView,
       deleteView,
       duplicateView,
