@@ -1535,6 +1535,7 @@
       "sort": "Sort",
       "group": "Group",
       "subItems": "Sub-items",
+      "dependencies": "Dependencies",
       "shown_one": "{{count}} shown",
       "shown_other": "{{count}} shown",
       "filtersCount_one": "{{count}} filter",
@@ -1684,6 +1685,33 @@
       "expanded": "Open expanded",
       "count_one": "{{count}} sub-item",
       "count_other": "{{count}} sub-items"
+    },
+    "dependencies": {
+      "title": "Dependencies",
+      "on": "On",
+      "off": "Off",
+      "onNote": "Records can block one another. These two properties hold it; rename them as you like.",
+      "offNote": "Lets a record block another, through two properties of this database linked both ways. A timeline draws them as arrows.",
+      "blocking": "Blocking",
+      "blockedBy": "Blocked by",
+      "blockingLabel": "Blocking",
+      "blockedByLabel": "Blocked by",
+      "showArrows": "Show arrows on the timeline",
+      "whenDatesChange": "When a date changes",
+      "shift": {
+        "overlap": "Shift only when dates overlap",
+        "gap": "Shift and keep the time between",
+        "none": "Don't shift anything"
+      },
+      "shiftNote": {
+        "overlap": "A record is pushed just far enough to stop overlapping what blocks it.",
+        "gap": "A record is pushed by the same amount, keeping the time between them.",
+        "none": "Records keep their dates; the arrows only show what waits on what."
+      },
+      "avoidWeekends": "Avoid weekends",
+      "avoidWeekendsNote": "A shifted record never starts or ends on a Saturday or Sunday.",
+      "count_one": "{{count}} dependency",
+      "count_other": "{{count}} dependencies"
     },
     "form": {
       "accepting": "Accepting answers",

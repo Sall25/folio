@@ -1535,6 +1535,7 @@
       "sort": "Tri",
       "group": "Groupe",
       "subItems": "Sous-éléments",
+      "dependencies": "Dépendances",
       "shown_one": "{{count}} affichée",
       "shown_other": "{{count}} affichées",
       "filtersCount_one": "{{count}} filtre",
@@ -1684,6 +1685,33 @@
       "expanded": "Ouvrir déplié",
       "count_one": "{{count}} sous-élément",
       "count_other": "{{count}} sous-éléments"
+    },
+    "dependencies": {
+      "title": "Dépendances",
+      "on": "Activées",
+      "off": "Désactivées",
+      "onNote": "Une fiche peut en bloquer une autre. Ces deux propriétés s'en chargent ; renommez-les comme vous voulez.",
+      "offNote": "Permet à une fiche d'en bloquer une autre, grâce à deux propriétés de cette base liées dans les deux sens. La chronologie les dessine en flèches.",
+      "blocking": "Bloque",
+      "blockedBy": "Bloquée par",
+      "blockingLabel": "Bloque",
+      "blockedByLabel": "Bloquée par",
+      "showArrows": "Afficher les flèches sur la chronologie",
+      "whenDatesChange": "Quand une date change",
+      "shift": {
+        "overlap": "Décaler seulement en cas de chevauchement",
+        "gap": "Décaler en gardant l'écart",
+        "none": "Ne rien décaler"
+      },
+      "shiftNote": {
+        "overlap": "La fiche est décalée juste assez pour ne plus chevaucher ce qui la bloque.",
+        "gap": "La fiche est décalée d'autant, l'écart entre les deux est conservé.",
+        "none": "Les dates ne bougent pas ; les flèches montrent seulement ce qui attend quoi."
+      },
+      "avoidWeekends": "Éviter les week-ends",
+      "avoidWeekendsNote": "Une fiche décalée ne commence ni ne finit un samedi ou un dimanche.",
+      "count_one": "{{count}} dépendance",
+      "count_other": "{{count}} dépendances"
     },
     "form": {
       "accepting": "Accepte les réponses",

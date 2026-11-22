@@ -20,7 +20,7 @@ import {
 import { NodeViewContent } from "@tiptap/react";
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { useDataSource } from "../../hooks/use-data-source";
-import type { TimelineView } from "src/types";
+import type { ID, TimelineView } from "src/types";
 import "./database-timeline-node-view.scss";
 import { useDatabaseContext } from "../../context/database-context";
 import { useDatabaseColumnLayout } from "../../hooks/use-database-column-layout";
@@ -43,6 +43,12 @@ import {
 } from "../../context/timeline-view-context";
 import { TimelineHeader, type HighlightRange } from "./timeline-header";
 import { TimelineDayGrid } from "./timeline-day-grid";
+import { TimelineLinks, type LinkedBar } from "./timeline-links";
+import {
+  dependencyEdges,
+  dependencyPair,
+  type DependencyEdge,
+} from "../../utils/dependencies";
 import { TimelinePlaceholder } from "./timeline-placeholder";
 import {
   Popover,
@@ -65,6 +71,15 @@ function useHoveredRecordId(): string | null {
     () => null,
   );
 }
+
+/** Nothing to draw: one object each, so a view with no dependencies hands
+ *  the arrow layer the same empty things on every render. */
+const EMPTY_EDGES: DependencyEdge[] = [];
+const EMPTY_BARS: Record<ID, LinkedBar> = {};
+
+/** How far past the viewport an arrow is still drawn: a curve between two
+ *  bars just off screen can still loop into view. */
+const LINK_MARGIN = 240;
 
 const TIMEFRAMES: TimelineView["timeframe"][] = [
   "day",
@@ -536,6 +551,44 @@ function DatabaseTimelineNodeViewImpl() {
     }
   }
 
+  // ── Dependencies ────────────────────────────────────────────────────────
+  // The links among the records on show, and where their bars are. Both
+  // are read straight off what the view already has: the pair is a relation
+  // of this database with itself (utils/dependencies.ts), so a link is a
+  // value on a record like any other.
+  const dependencies = useMemo(
+    () => dependencyPair(source?.properties ?? [], source?.id),
+    [source?.properties, source?.id],
+  );
+  const showLinks =
+    !!dependencies && !(activeView?.dependencies?.hidden ?? false);
+
+  const links = useMemo(
+    () =>
+      showLinks && dependencies
+        ? dependencyEdges(sortedRecords, dependencies.blocking.id)
+        : EMPTY_EDGES,
+    [showLinks, dependencies, sortedRecords],
+  );
+
+  const linkedBars = useMemo(() => {
+    if (links.length === 0) return EMPTY_BARS;
+    const rowOf = new Map<ID, number>();
+    timelineLayout.records.forEach((rec, i) => rowOf.set(rec.id, i));
+    const bars: Record<ID, LinkedBar> = {};
+    for (const edge of links) {
+      for (const id of [edge.from, edge.to]) {
+        if (bars[id]) continue;
+        const geo = placement[id];
+        const row = rowOf.get(id);
+        // A record with no dates has no bar to draw an arrow to.
+        if (!geo || row === undefined) continue;
+        bars[id] = { ...geo, row };
+      }
+    }
+    return bars;
+  }, [links, placement, timelineLayout.records]);
+
   const indicators = useMemo<RowIndicator[]>(() => {
     if (!viewportWidth) return [];
     const out: RowIndicator[] = [];
@@ -787,6 +840,20 @@ function DatabaseTimelineNodeViewImpl() {
                     rowCount={rowCount}
                     onCreate={createFromPlaceholder}
                   />
+
+                  {/* The arrows between records that block one another,
+                      under the bars so a bar is always the thing the
+                      pointer finds. */}
+                  {links.length > 0 && (
+                    <TimelineLinks
+                      edges={links}
+                      bars={linkedBars}
+                      width={gridWidth}
+                      height={ganttHeight}
+                      from={scrollLeft - LINK_MARGIN}
+                      to={scrollLeft + viewportWidth + LINK_MARGIN}
+                    />
+                  )}
 
                   {todayLeft !== null && (
                     <div

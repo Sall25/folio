@@ -297,6 +297,32 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   }
 }
 
+// ── Dependency arrows ──────────────────────────────────────────────────────
+// One layer for the whole grid, under the bars: a bar must always be what
+// the pointer finds, and an arrow is a thing to read, not to click.
+.db-tl-links {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  // A curve loops past its own bars on the way round; it must not be
+  // clipped at the layer's edge.
+  overflow: visible;
+  z-index: 2;
+  color: var(--tt-gray-light-a-400);
+
+  .dark & {
+    color: var(--tt-gray-dark-a-400);
+  }
+}
+
+.db-tl-link {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
 // ── Today line ─────────────────────────────────────────────────────────────
 .db-tl-today-line {
   position: absolute;

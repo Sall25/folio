@@ -233,6 +233,10 @@ export type PropertyConfig =
       /** The "Parent" side of the database's sub-items (a relation to
        *  itself; its mirror is the "Sub-items" side). utils/sub-items.ts */
       subItems?: boolean;
+      /** The "Blocking" side of the database's dependencies (a relation to
+       *  itself; its mirror is the "Blocked by" side).
+       *  utils/dependencies.ts */
+      dependency?: boolean;
     }
   | {
       type: "rollup";
@@ -450,6 +454,23 @@ interface BaseView {
   hidePeopleBar?: boolean;
   /** How this view shows sub-items (when the database has them). */
   subItems?: SubItemsSettings;
+  /** How this view shows dependencies (when the database has them). */
+  dependencies?: DependenciesSettings;
+}
+
+/** A view's dependency settings (View options › Dependencies). */
+export interface DependenciesSettings {
+  /** Hide the arrows while keeping the links themselves. */
+  hidden?: boolean;
+  /**
+   * What happens to a record when something blocking it moves:
+   *  - "overlap": pushed only far enough to stop overlapping;
+   *  - "gap": pushed by the same amount, keeping the time between them;
+   *  - "none": left where it is.
+   */
+  shift?: "overlap" | "gap" | "none";
+  /** A shifted record never starts or ends on a Saturday or a Sunday. */
+  avoidWeekends?: boolean;
 }
 
 /** A view's sub-items settings (View options › Sub-items). */
@@ -644,7 +665,8 @@ export type PanelView =
   | { type: "open-pages-in" }
   | { type: "group" }
   | { type: "conditional-color" }
-  | { type: "sub-items" };
+  | { type: "sub-items" }
+  | { type: "dependencies" };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Property registry

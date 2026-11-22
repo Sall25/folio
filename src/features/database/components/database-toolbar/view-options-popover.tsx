@@ -8,6 +8,7 @@ import {
   Link as LinkIcon,
   ListFilter,
   ListTree,
+  ArrowRightLeft,
   Lock,
   Palette,
   Plus,
@@ -61,10 +62,12 @@ import { useDatabaseContext } from "../../context/database-context";
 import { downloadCsv, toCsv } from "../../utils/csv-export";
 import { csvImportStore } from "../../utils/csv-import-store";
 import { SubItemsPanel } from "../sub-items-panel";
+import { DependenciesPanel } from "../dependencies-panel";
 import { FormSettings } from "../../nodes/database-form-node-view/form-settings";
 import { requestNewQuestion } from "../../nodes/database-form-node-view/new-question-event";
 import type { FormView } from "src/types";
 import { subItemPair } from "../../utils/sub-items";
+import { dependencyPair } from "../../utils/dependencies";
 
 // The delete confirmation is portaled to <body>, outside the options panel:
 // pressing inside it must not count as a click outside the panel.
@@ -151,6 +154,7 @@ function ViewOptionsContent({
     group: t("database.viewOptions.group"),
     "conditional-color": t("database.viewOptions.conditionalColor"),
     "sub-items": t("database.viewOptions.subItems"),
+    dependencies: t("database.viewOptions.dependencies"),
   };
 
   const locked = db.locked;
@@ -174,6 +178,10 @@ function ViewOptionsContent({
   const { title, sortedRecords, visibleProperties, attrs, editor, source } =
     useDatabaseContext();
   const hasSubItems = !!subItemPair(source?.properties ?? [], source?.id);
+  const hasDependencies = !!dependencyPair(
+    source?.properties ?? [],
+    source?.id,
+  );
   const handleExportCsv = () => {
     downloadCsv(
       title || t("database.picker.newDatabase"),
@@ -306,6 +314,9 @@ function ViewOptionsContent({
               )}
               {panel.type === "sub-items" && (
                 <SubItemsPanel view={view} db={db} />
+              )}
+              {panel.type === "dependencies" && (
+                <DependenciesPanel view={view} db={db} />
               )}
             </PanelSlide>
             {/* group / sub-items land here once their panels exist */}
@@ -504,6 +515,21 @@ function ViewOptionsContent({
                 }
                 navigable
                 onClick={() => db.pushPanel({ type: "sub-items" })}
+                disabled={locked}
+              />
+              {/* Dependencies live beside sub-items: both are a relation of
+                  the database with itself, and both are the database's,
+                  not one view's. */}
+              <MenuRow
+                Icon={ArrowRightLeft}
+                label={t("database.viewOptions.dependencies")}
+                sub={
+                  hasDependencies
+                    ? t("database.dependencies.on")
+                    : t("database.dependencies.off")
+                }
+                navigable
+                onClick={() => db.pushPanel({ type: "dependencies" })}
                 disabled={locked}
               />
 
