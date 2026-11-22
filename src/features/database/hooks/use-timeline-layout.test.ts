@@ -27,6 +27,7 @@ import {
   holdBar,
   barCaughtUp,
   todayOffset,
+  tickUnder,
   MIN_BAR_WIDTH,
   parseDateValue,
   padFor,
@@ -1884,5 +1885,38 @@ describe("holding a bar where it was dropped", () => {
     expect(held.top).toBe(102);
     expect(barCaughtUp(held, live)).toBe(false);
     expect(barCaughtUp(held, { ...live, top: 102 })).toBe(true);
+  });
+});
+
+// ── The date a today marker covers ────────────────────────────────────────
+// A quarter and a year write each week's date over the tick it starts on,
+// and today's marker is drawn where today falls — which on a Sunday is a
+// few pixels short of the next tick, printing "22" on top of "23".
+
+describe("the tick a marker stands on", () => {
+  const CELL = 105;
+  const MARKER = 22;
+
+  it("covers the tick it is drawn on", () => {
+    expect(tickUnder(3 * CELL, CELL, MARKER)).toBe(3);
+    expect(tickUnder(3 * CELL + 8, CELL, MARKER)).toBe(3);
+    expect(tickUnder(4 * CELL - 8, CELL, MARKER)).toBe(4);
+  });
+
+  it("covers nothing when it stands clear", () => {
+    // Midweek: half a column from either tick.
+    expect(tickUnder(3.5 * CELL, CELL, MARKER)).toBe(-1);
+    expect(tickUnder(3 * CELL + MARKER, CELL, MARKER)).toBe(-1);
+  });
+
+  it("covers the next tick, not the one it started from", () => {
+    // Sunday the 22nd in the week of the 16th: six days along a seven-day
+    // column, which is where the collision came from.
+    const sunday = (3 + 6 / 7) * CELL;
+    expect(tickUnder(sunday, CELL, MARKER)).toBe(4);
+  });
+
+  it("says nothing of a grid with no width", () => {
+    expect(tickUnder(500, 0, MARKER)).toBe(-1);
   });
 });

@@ -453,6 +453,21 @@ export function todayOffset(range: TimelineRange, now: number): number | null {
   );
 }
 
+/**
+ * The column tick a marker of `width` px, centred at `at`, is drawn over —
+ * or -1 when it stands clear of all of them.
+ *
+ * A quarter and a year write each week's date over the tick it begins on,
+ * and today's marker is drawn where today falls, which can be a few pixels
+ * short of the next tick: "22" printed on top of "23". The marker wins and
+ * the date it covers is left out, so this is how the header knows which.
+ */
+export function tickUnder(at: number, cell: number, width: number): number {
+  if (cell <= 0) return -1;
+  const nearest = Math.round(at / cell);
+  return Math.abs(nearest * cell - at) < width ? nearest : -1;
+}
+
 /** The box of a run of columns, given two indexes in either order. */
 export function daySpan(
   a: number,

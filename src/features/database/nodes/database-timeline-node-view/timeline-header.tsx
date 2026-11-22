@@ -5,7 +5,13 @@ import {
   HEADER_HEIGHT,
   GROUP_ROW_HEIGHT,
   offsetOfTime,
+  todayOffset,
+  tickUnder,
 } from "../../hooks/use-timeline-layout";
+
+/** How wide today's marker is, as the stylesheet draws it: the room a date
+ *  printed under it would need to give up. */
+const TODAY_MARKER_WIDTH = 22;
 
 interface HighlightRange {
   left: number;
@@ -35,17 +41,37 @@ function TimelineHeaderImpl({
   const cell = range.cellWidth;
   const gridWidth = range.days.length * cell;
 
-  // The column today falls in — in Day an hour, in a quarter or a year the
-  // week holding it. Looking for a column that *is* today marked nothing at
-  // all in those two, where a column is seven days and only one of them
-  // matched. Looked up when the range changes rather than on every render:
-  // the range holds thousands of columns and the window moves as it scrolls.
-  const todayIdx = useMemo(() => {
-    const now = new Date().getTime();
-    if (now < range.startDate.getTime() || now > range.endDate.getTime())
-      return -1;
-    return Math.floor(offsetOfTime(range, now) / cell);
+  // Today, twice over: the column it falls in, and where in the grid it
+  // actually is.
+  //
+  // In Day, Week and Month a column is today, so the marker is that
+  // column's own number, with the line running down from under it. In a
+  // quarter or a year a column is a WEEK and its number is the Monday it
+  // starts on — Monday the 16th for a Sunday the 22nd, a marker six days
+  // from the line it belongs to, reading the wrong date. There the marker
+  // is drawn on the line instead, as today's own date.
+  //
+  // Looked up when the range changes rather than on every render: the range
+  // holds thousands of columns and the window moves as it scrolls.
+  const weekly = range.unit === "week";
+  const today = useMemo(() => {
+    const at = todayOffset(range, new Date().getTime());
+    if (at === null) return null;
+    return {
+      at,
+      column: Math.floor(offsetOfTime(range, new Date().getTime()) / cell),
+      // Its date, written the way a day column writes one.
+      label: columnParts(new Date(), "day", false).main,
+    };
   }, [range, cell]);
+  const todayIdx = weekly ? -1 : (today?.column ?? -1);
+
+  // The week number the marker stands on top of, if any. A week's date is
+  // written over the tick it begins on, and today can fall within a few
+  // pixels of the next one — "22" printed over "23". The marker wins; the
+  // date it covers is left out.
+  const coveredTick =
+    weekly && today ? tickUnder(today.at, cell, TODAY_MARKER_WIDTH) : -1;
 
   // Every group, with the column it starts at: a range runs over years now,
   // so the months above it are drawn from where they fall rather than laid
@@ -149,6 +175,19 @@ function TimelineHeaderImpl({
           />
         ))}
 
+        {/* A quarter and a year mark today on the line, not on the week
+            it falls in — the column's own number is that week's Monday. */}
+        {weekly && today && (
+          <div
+            className="db-tl-header__day"
+            style={{ left: today.at - cell / 2, width: cell }}
+          >
+            <span className="db-tl-header__day-num db-tl-header__day-num--today">
+              {today.label}
+            </span>
+          </div>
+        )}
+
         {columns.map((day, i) => {
           const index = shown.from + i;
           // A month above a run of columns says it for all of them, so a
@@ -167,17 +206,19 @@ function TimelineHeaderImpl({
                 width: cell,
               }}
             >
-              <span
-                className={
-                  "db-tl-header__day-num" +
-                  (index === todayIdx ? " db-tl-header__day-num--today" : "")
-                }
-              >
-                {part.lead && (
-                  <span className="db-tl-header__day-lead">{part.lead}</span>
-                )}
-                {part.main}
-              </span>
+              {index !== coveredTick && (
+                <span
+                  className={
+                    "db-tl-header__day-num" +
+                    (index === todayIdx ? " db-tl-header__day-num--today" : "")
+                  }
+                >
+                  {part.lead && (
+                    <span className="db-tl-header__day-lead">{part.lead}</span>
+                  )}
+                  {part.main}
+                </span>
+              )}
             </div>
           );
         })}
