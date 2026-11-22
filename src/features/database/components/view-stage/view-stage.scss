@@ -1,22 +1,14 @@
-// A view opened over the page: the dark behind it, and the view itself
-// lifted out of the column without leaving the document it is written in
-// (view-stage.tsx says why it is not moved).
+// A view opened over the page: the dark behind it, and the view itself in
+// the middle of that (view-stage.tsx says why it is portalled).
 
-// Closed, this wrapper is not there at all: no box, no layout, nothing for
-// a grid or a flex row above it to count.
+// The view itself, in the middle of the dark.
 .db-stage {
-  display: contents;
-}
-
-.db-stage[data-open] {
   display: flex;
   flex-direction: column;
-  position: fixed;
-  inset: 56px 24px 24px;
-  z-index: 100001; // over the scrim
-  width: auto;
+  width: 100%;
   max-width: 1500px;
-  margin-inline: auto;
+  height: 100%;
+  min-height: 0;
   padding: 10px 12px;
   border-radius: 12px;
   background: var(--tt-bg-color);
@@ -44,6 +36,10 @@
   position: fixed;
   inset: 0;
   z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px 24px;
   background: rgba(15, 15, 15, 0.88);
   animation: db-stage-in 0.15s ease-out;
 

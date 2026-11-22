@@ -42,13 +42,16 @@ const GLIDE_FRICTION = 0.9;
 const GLIDE_FLOOR = 0.5;
 /** A drag that paused before letting go was aimed, not thrown. */
 const THROW_WINDOW = 90;
+/** The hardest a throw can be, in pixels per frame. A pointer that jumps —
+ *  a tablet, a flick, a frame the browser skipped — would otherwise work
+ *  out as a speed no hand could produce and send the canvas into orbit. */
+const MAX_THROW = 60;
 
 export function useGraphCanvas({
   box,
   viewId,
   points,
   neighbours,
-  wheelZooms,
   onMoveNode,
   onOpen,
   onUnpin,
@@ -61,8 +64,6 @@ export function useGraphCanvas({
   points: Map<ID, GraphPoint>;
   /** What each node touches, for framing one with its own. */
   neighbours: Map<ID, Set<ID>>;
-  /** Whether a plain wheel zooms, or is left to the page it sits in. */
-  wheelZooms: boolean;
   /** A node let go of somewhere: where it now lives. */
   onMoveNode: (id: ID, at: GraphPoint) => void;
   onOpen: (id: ID) => void;
@@ -135,18 +136,18 @@ export function useGraphCanvas({
   );
 
   /**
-   * The wheel, as a native listener: React's own is passive, and a zoom
-   * that cannot stop the browser from zooming the whole page with it is
-   * worse than no zoom at all.
+   * The wheel zooms, the way it does in every program whose business is a
+   * canvas — no modifier to remember and nothing to press first. The canvas
+   * owns the wheel while the pointer is over it, and the page has the rest
+   * of itself; a trackpad pinch arrives as a wheel with ctrl held and lands
+   * here too.
    *
-   * A plain wheel is left to the page while the canvas sits inside one —
-   * a canvas in the middle of a document that swallowed the wheel would
-   * trap whoever was only scrolling past it. ⌘/Ctrl zooms, which is also
-   * what a trackpad pinch arrives as.
+   * A native listener rather than React's, which is passive: a zoom that
+   * cannot stop the browser from zooming the whole page with it is worse
+   * than no zoom at all.
    */
   const onWheel = useCallback(
     (event: WheelEvent) => {
-      if (!wheelZooms && !event.ctrlKey && !event.metaKey) return;
       event.preventDefault();
       stopGlide();
       const surface = event.currentTarget as Element | null;
@@ -158,14 +159,19 @@ export function useGraphCanvas({
         zoomedAbout(c, box, graphPointIn(rect, box, c, event), factor),
       );
     },
-    [box, wheelZooms, stopGlide],
+    [box, stopGlide],
   );
 
-  /** Drag the background: the canvas moves under the pointer, and keeps
-   *  going for a moment when it is thrown. */
+  /** Drag the background — or the middle button, from anywhere, over a page
+   *  as much as over the ground: the canvas moves under the pointer, and
+   *  keeps going for a moment when it is thrown. */
   const onBackgroundPointerDown = useCallback(
     (event: React.PointerEvent) => {
-      if (event.button !== 0) return;
+      if (event.button !== 0 && event.button !== 1) return;
+      // The middle button is the pan in every program that has a canvas,
+      // and in a browser it is also autoscroll: this is what stops the
+      // little compass appearing in the middle of the drag.
+      if (event.button === 1) event.preventDefault();
       stopGlide();
       const rect = event.currentTarget.getBoundingClientRect();
       const from = { x: event.clientX, y: event.clientY };
@@ -199,8 +205,10 @@ export function useGraphCanvas({
         if (!moved) return;
         // Let go after a pause: the canvas was placed, not thrown.
         if (performance.now() - last.at > THROW_WINDOW) return;
-        if (Math.hypot(vx, vy) < 1.5) return;
-        throwCanvas(vx, vy, rect);
+        const speed = Math.hypot(vx, vy);
+        if (speed < 1.5) return;
+        const held = speed > MAX_THROW ? MAX_THROW / speed : 1;
+        throwCanvas(vx * held, vy * held, rect);
       };
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", up);

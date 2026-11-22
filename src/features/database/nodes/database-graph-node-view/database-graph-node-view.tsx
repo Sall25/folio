@@ -8,28 +8,18 @@ import type {
   Page,
 } from "src/types";
 import { Button } from "src/components/tiptap-ui-primitive/button";
-import { Card, CardItemGroup } from "src/components/tiptap-ui-primitive/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "src/components/tiptap-ui-primitive/dropdown-menu";
-import { ChevronDown, Minus, Plus, Share2 } from "src/components/icons";
+import { Plus } from "src/components/icons";
 import { usePagesBase } from "src/hooks/use-pages";
 import { useDatabaseContext } from "../../context/database-context";
 import { useDataSource } from "../../hooks/use-data-source";
 import { useOpenRecord } from "../../hooks/use-open-record";
 import {
   buildGraph,
-  linkCounts,
   linkProperties,
-  relationProperties,
   type GraphNode,
 } from "../../utils/graph-model";
 import { graphLegend } from "../../utils/graph-colors";
 import {
-  busiest,
   fromMinimap,
   minimapFit,
   minimapViewport,
@@ -48,7 +38,6 @@ import {
 } from "../../utils/graph-camera";
 import { useGraphCanvas } from "./use-graph-canvas";
 import { useGraphConnect, relationIdsOf } from "./use-graph-connect";
-import { GraphConnectionsPanel } from "./graph-connections-panel";
 import { ViewStage, ViewStageButton } from "../../components/view-stage";
 import "./database-graph-node-view.scss";
 
@@ -64,8 +53,6 @@ import "./database-graph-node-view.scss";
 // else. Moved, zoomed and dragged about by use-graph-canvas.
 
 const BOX = { width: 1000, height: 600 };
-
-const BACKGROUNDS: GraphBackground[] = ["dots", "grid", "glow"];
 
 function DatabaseGraphNodeViewImpl() {
   const { t } = useTranslation();
@@ -184,7 +171,6 @@ function DatabaseGraphNodeViewImpl() {
     viewId: view?.id,
     points: positions,
     neighbours: graph.neighbours,
-    wheelZooms: focused,
     onMoveNode: pinNode,
     onOpen: openRecord,
     onUnpin: unpinNode,
@@ -214,84 +200,6 @@ function DatabaseGraphNodeViewImpl() {
     surface.addEventListener("wheel", onWheel, { passive: false });
     return () => surface.removeEventListener("wheel", onWheel);
   }, [surface, onWheel]);
-
-  const setBackground = useCallback(
-    (next: GraphBackground) => {
-      if (!view) return;
-      db.updateView(view.id, { background: next } as Partial<GraphView>);
-    },
-    [db, view],
-  );
-
-  // ── What the connections panel shows, and what it changes ───────────────
-  //
-  // Everything here is a view setting, not a preference of whoever opened
-  // it: a graph with half its relations switched off is a different view of
-  // the same database, and the next person to open it should see the graph
-  // this one was looking at.
-  const relations = useMemo(() => {
-    const all = relationProperties(source?.properties ?? []);
-    const drawn = new Set(
-      linkProperties(source?.properties ?? [], view).map((p) => p.id),
-    );
-    const counts = linkCounts(sortedRecords, source?.properties ?? []);
-    return {
-      choices: all.map((property) => ({
-        property,
-        drawn: drawn.has(property.id),
-        count: counts.byProperty.get(property.id) ?? 0,
-      })),
-      pageLinks: counts.pageLinks,
-    };
-  }, [source?.properties, view, sortedRecords]);
-
-  /** Switch one relation on or off. Empty means all, so switching the last
-   *  one off has to say so by listing none — which is what "all" looks
-   *  like. Dropping to nothing drawn at all is not a graph, so the first
-   *  switch-off writes the rest out in full instead. */
-  const toggleRelation = useCallback(
-    (id: ID, drawn: boolean) => {
-      if (!view) return;
-      const all = relations.choices.map((c) => c.property.id);
-      const now = new Set(
-        view.linkPropertyIds?.length ? view.linkPropertyIds : all,
-      );
-      if (drawn) now.add(id);
-      else now.delete(id);
-      const next = all.filter((p) => now.has(p));
-      db.updateView(view.id, {
-        linkPropertyIds: next.length === all.length ? [] : next,
-      } as Partial<GraphView>);
-    },
-    [db, view, relations.choices],
-  );
-
-  const setViewFlag = useCallback(
-    (patch: Partial<GraphView>) => {
-      if (!view) return;
-      db.updateView(view.id, patch as Partial<GraphView>);
-    },
-    [db, view],
-  );
-
-  const colorProperties = useMemo(
-    () =>
-      (source?.properties ?? []).filter(
-        (p) =>
-          p.config.type === "select" ||
-          p.config.type === "status" ||
-          p.config.type === "multi_select",
-      ),
-    [source?.properties],
-  );
-
-  // Counted from the records rather than the drawing: when they are being
-  // left out there is nothing in the drawing to count, and the number is
-  // the whole reason the switch is worth offering.
-  const unlinked = useMemo(
-    () => sortedRecords.filter((r) => !graph.neighbours.has(r.id)).length,
-    [sortedRecords, graph.neighbours],
-  );
 
   /** Make the relation a graph needs, when the database has none: dragging
    *  writes a relation, and with nowhere to write it the gesture can only
@@ -401,97 +309,6 @@ function DatabaseGraphNodeViewImpl() {
           </Button>
         )}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              aria-label={t("database.graph.connections")}
-            >
-              <Share2 className="tiptap-button-icon" size={15} />
-              <span className="tiptap-button-text">
-                {t("database.graph.connections")}
-              </span>
-              <ChevronDown className="tiptap-button-icon-sub" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <GraphConnectionsPanel
-              relations={relations.choices}
-              pageLinks={{
-                drawn: view?.showPageLinks !== false,
-                count: relations.pageLinks,
-              }}
-              colorProperties={colorProperties}
-              colorPropertyId={view?.colorPropertyId ?? null}
-              colorOf={(node) =>
-                node.colorKey ? colors.get(node.colorKey) : undefined
-              }
-              hideUnlinked={!!view?.hideUnlinked}
-              unlinked={unlinked}
-              mostConnected={busiest(graph.nodes)}
-              pages={graph.nodes.length}
-              connections={graph.edges.length}
-              onToggleRelation={toggleRelation}
-              onTogglePageLinks={(drawn) =>
-                setViewFlag({ showPageLinks: drawn })
-              }
-              onToggleUnlinked={(shown) =>
-                setViewFlag({ hideUnlinked: !shown })
-              }
-              onColorBy={(id) => setViewFlag({ colorPropertyId: id })}
-              onGoTo={canvas.frame}
-            />
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" aria-label={t("database.graph.background")}>
-              <Swatch kind={background} />
-              <span className="tiptap-button-text">
-                {t(`database.graph.grounds.${background}`)}
-              </span>
-              <ChevronDown className="tiptap-button-icon-sub" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <Card style={{ padding: 8 }}>
-              <CardItemGroup style={{ width: "100%" }}>
-                {BACKGROUNDS.map((kind) => (
-                  <DropdownMenuItem key={kind} asChild>
-                    <Button
-                      variant="ghost"
-                      data-active-state={background === kind ? "on" : "off"}
-                      style={{ justifyContent: "flex-start", width: "100%" }}
-                      onClick={() => setBackground(kind)}
-                    >
-                      <Swatch kind={kind} />
-                      <span className="tiptap-button-text">
-                        {t(`database.graph.grounds.${kind}`)}
-                      </span>
-                    </Button>
-                  </DropdownMenuItem>
-                ))}
-              </CardItemGroup>
-            </Card>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Button
-          variant="ghost"
-          onClick={canvas.zoomOut}
-          aria-label={t("database.graph.zoomOut")}
-        >
-          <Minus className="tiptap-button-icon" size={15} />
-        </Button>
-        <span className="db-graph__zoom">{Math.round(camera.zoom * 100)}%</span>
-        <Button
-          variant="ghost"
-          onClick={canvas.zoomIn}
-          aria-label={t("database.graph.zoomIn")}
-        >
-          <Plus className="tiptap-button-icon" size={15} />
-        </Button>
         <Button
           variant="ghost"
           onClick={canvas.fit}
@@ -802,31 +619,6 @@ function GroundPaint({
     <pattern id={id} width={32} height={32} patternUnits="userSpaceOnUse">
       <circle className="db-graph__speck" cx={16} cy={16} r={1 / camera.zoom} />
     </pattern>
-  );
-}
-
-/** What a ground looks like, small enough for a menu. */
-function Swatch({ kind }: { kind: GraphBackground }) {
-  return (
-    <svg
-      className="db-graph__swatch"
-      viewBox="0 0 16 16"
-      width={16}
-      height={16}
-      aria-hidden="true"
-    >
-      <rect className="db-graph__swatch-bed" width={16} height={16} rx={3} />
-      {kind === "dots" &&
-        [4, 8, 12].map((y) =>
-          [4, 8, 12].map((x) => (
-            <circle key={`${x}-${y}`} cx={x} cy={y} r={0.9} />
-          )),
-        )}
-      {kind === "grid" && (
-        <path d="M5.5 1v14M10.5 1v14M1 5.5h14M1 10.5h14" fill="none" />
-      )}
-      {kind === "glow" && <circle cx={8} cy={8} r={5} />}
-    </svg>
   );
 }
 

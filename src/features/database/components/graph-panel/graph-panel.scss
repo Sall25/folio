@@ -1,0 +1,46 @@
+// View options › Graph. The rows are MenuRows like every other panel's; what
+// is here is the two blocks that are not rows — the key, and the gestures.
+.db-graph-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &__key,
+  &__how {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 8px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--tt-text-secondary);
+  }
+
+  &__how {
+    display: block;
+  }
+
+  &__line {
+    stroke: var(--tt-gray-light-a-400);
+    stroke-width: 1.4;
+
+    .dark & {
+      stroke: var(--tt-gray-dark-a-400);
+    }
+  }
+
+  &__blob {
+    fill: var(--tt-gray-light-a-300);
+
+    .dark & {
+      fill: var(--tt-gray-dark-a-300);
+    }
+  }
+
+  &__halo {
+    fill: none;
+    stroke: var(--tt-brand-color-400);
+    stroke-width: 1.2;
+    stroke-dasharray: 2 3;
+  }
+}

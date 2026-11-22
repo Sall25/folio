@@ -1555,7 +1555,8 @@
       "duplicate": "Duplicate view",
       "delete": "Delete view",
       "exportCsv": "Export as CSV",
-      "importCsv": "Import CSV…"
+      "importCsv": "Import CSV…",
+      "graph": "Graph"
     },
     "views": {
       "table": "Table",
@@ -1697,8 +1698,6 @@
       "relatedTo": "Related to",
       "relatedFrom": "Related from",
       "connectWith": "Drag between nodes to link with {{name}}",
-      "zoomIn": "Zoom in",
-      "zoomOut": "Zoom out",
       "fit": "Fit",
       "background": "Canvas background",
       "grounds": {
@@ -1706,8 +1705,7 @@
         "grid": "Grid",
         "glow": "Glow"
       },
-      "canvas": "Graph canvas. Drag to move, hold Command or Control and scroll to zoom.",
-      "connections": "Connections",
+      "canvas": "Graph canvas. Scroll to zoom, drag to move.",
       "drawn": "Drawn",
       "pageLinks": "Links written in pages",
       "unlinked": "Pages with nothing joined to them",
@@ -1718,9 +1716,17 @@
       "keyPageLink": "a link written in the page",
       "keyRing": "drag the ring to join two pages",
       "keySize": "bigger means more connections",
-      "mostConnected": "Most connected",
-      "counts": "{{pages}} pages · {{connections}} connections · {{unlinked}} on their own",
-      "map": "Map of the whole graph. Press it to go there."
+      "map": "Map of the whole graph. Press it to go there.",
+      "linkCount_one": "{{count}} link",
+      "linkCount_other": "{{count}} links",
+      "moving": "Moving about",
+      "how": {
+        "wheel": "Scroll to zoom, wherever the pointer is.",
+        "drag": "Drag the canvas to move it; drag a page to put it somewhere.",
+        "middle": "Middle-drag moves the canvas from anywhere.",
+        "frame": "Shift-click a page to frame it with everything it touches.",
+        "unpin": "Alt-click a page to hand it back to the layout."
+      }
     },
     "manageInCalendar": {
       "open": "Manage in calendar",

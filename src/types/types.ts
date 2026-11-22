@@ -17,13 +17,7 @@ export type PageView = "Full" | "Center" | "Peek";
 // Primitives
 // ─────────────────────────────────────────────────────────────────────────────
 export type StatusColor =
-  | "gray"
-  | "blue"
-  | "green"
-  | "orange"
-  | "red"
-  | "purple"
-  | "yellow";
+  "gray" | "blue" | "green" | "orange" | "red" | "purple" | "yellow";
 
 export interface StatusItem {
   id: string;
@@ -107,13 +101,7 @@ export type PropertyType =
   | "files";
 
 export type ViewType =
-  | "table"
-  | "board"
-  | "list"
-  | "gallery"
-  | "calendar"
-  | "timeline"
-  | "form";
+  "table" | "board" | "list" | "gallery" | "calendar" | "timeline" | "form";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Property config primitives
@@ -187,10 +175,7 @@ export type AggregationFunction =
 export type DecimalPlaces = "default" | 0 | 1 | 2 | 3 | 4 | 5;
 export type NumberShowAs = "number" | "bar" | "ring";
 export type DateNotifications =
-  | "none"
-  | "same_day"
-  | "1_day_before"
-  | "2_days_before";
+  "none" | "same_day" | "1_day_before" | "2_days_before";
 
 export type PropertyConfig =
   | { type: "title"; showPageIcon?: boolean }
@@ -695,7 +680,8 @@ export type PanelView =
   | { type: "group" }
   | { type: "conditional-color" }
   | { type: "sub-items" }
-  | { type: "dependencies" };
+  | { type: "dependencies" }
+  | { type: "graph" };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Property registry
@@ -772,12 +758,7 @@ export type UpdatedAt = number | null;
 // Stored categories only. "Recent" is a derived view (sort by updatedAt),
 // not a stored category — it lives in the sidebar code, not on the page.
 export type PageCategory =
-  | "Recent"
-  | "Favorites"
-  | "Shared"
-  | "Private"
-  | "Template"
-  | "Teamspaces";
+  "Recent" | "Favorites" | "Shared" | "Private" | "Template" | "Teamspaces";
 
 export type PageSettings = {
   width: "medium" | "full";
@@ -845,13 +826,7 @@ export type PageTreeNode = {
 export type SaveState = "saved" | "unsaved" | "saving";
 
 export type View =
-  | "home"
-  | "page"
-  | "resources"
-  | "library"
-  | "inbox"
-  | "trash"
-  | "chat";
+  "home" | "page" | "resources" | "library" | "inbox" | "trash" | "chat";
 
 export type SimpleEditorContentProps = {
   activePage: Page;
@@ -1115,11 +1090,7 @@ export type Comment = {
 };
 
 export type ThreadStatus =
-  | "active"
-  | "resolved"
-  | "drafted"
-  | "open"
-  | "deleted";
+  "active" | "resolved" | "drafted" | "open" | "deleted";
 
 // A suggested replacement for the anchored text (a "suggestion" thread).
 //   original — the text when it was suggested (shown struck through, and

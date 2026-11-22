@@ -1555,7 +1555,8 @@
       "duplicate": "Dupliquer la vue",
       "delete": "Supprimer la vue",
       "exportCsv": "Exporter en CSV",
-      "importCsv": "Importer un CSV…"
+      "importCsv": "Importer un CSV…",
+      "graph": "Graphe"
     },
     "views": {
       "table": "Tableau",
@@ -1697,8 +1698,6 @@
       "relatedTo": "Relié à",
       "relatedFrom": "Relié depuis",
       "connectWith": "Glissez d'un nœud à l'autre pour relier par {{name}}",
-      "zoomIn": "Zoom avant",
-      "zoomOut": "Zoom arrière",
       "fit": "Ajuster",
       "background": "Fond du canevas",
       "grounds": {
@@ -1706,8 +1705,7 @@
         "grid": "Grille",
         "glow": "Halo"
       },
-      "canvas": "Canevas du graphe. Glissez pour déplacer, Commande ou Contrôle + molette pour zoomer.",
-      "connections": "Connexions",
+      "canvas": "Canevas du graphe. Molette pour zoomer, glissez pour déplacer.",
       "drawn": "Tracé",
       "pageLinks": "Liens écrits dans les pages",
       "unlinked": "Pages sans aucun lien",
@@ -1718,9 +1716,17 @@
       "keyPageLink": "un lien écrit dans la page",
       "keyRing": "glissez l'anneau pour relier deux pages",
       "keySize": "plus gros signifie plus de connexions",
-      "mostConnected": "Les plus connectées",
-      "counts": "{{pages}} pages · {{connections}} connexions · {{unlinked}} isolées",
-      "map": "Carte du graphe entier. Appuyez pour vous y rendre."
+      "map": "Carte du graphe entier. Appuyez pour vous y rendre.",
+      "linkCount_one": "{{count}} lien",
+      "linkCount_other": "{{count}} liens",
+      "moving": "Se déplacer",
+      "how": {
+        "wheel": "La molette zoome, là où se trouve le pointeur.",
+        "drag": "Glissez le canevas pour le déplacer ; glissez une page pour la poser.",
+        "middle": "Le bouton du milieu déplace le canevas depuis n'importe où.",
+        "frame": "Maj + clic sur une page pour la cadrer avec tout ce qu'elle touche.",
+        "unpin": "Alt + clic sur une page pour la rendre à la mise en page."
+      }
     },
     "manageInCalendar": {
       "open": "Gérer dans l'agenda",

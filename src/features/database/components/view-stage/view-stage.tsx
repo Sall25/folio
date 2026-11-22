@@ -15,18 +15,21 @@ import "./view-stage.scss";
 // four lines a day. This gives any of them the screen for as long as it is
 // wanted, and gives it back.
 //
-// WHAT IS NOT MOVED
+// WHY IT IS PORTALLED, AND WHY THAT IS SAFE
 //
-// The view stays exactly where it is in the page: the wrapper is always
-// rendered, `display: contents` while closed so it changes nothing, and
-// fixed over the page while open. Only the backdrop is portalled.
+// Staying in place and going `position: fixed` does not work here: the
+// editor is `contain: layout style`, and layout containment makes it the
+// containing block for every fixed descendant. A view that tried it stayed
+// in its column, trapped in the editor's stacking context, under the very
+// backdrop meant to be behind it.
 //
-// Moving the view itself into a portal would be the obvious way to do this,
-// and it is the one thing that must not happen here. A timeline and a
-// calendar hold their records in a NodeViewContent — the element the editor
-// writes into. React moving a subtree to another parent unmounts it and
-// builds it again, so the editor would be left holding an element that is no
-// longer in the document, and the records inside it would go with it.
+// So the view is portalled to the body. The worry with that is the records:
+// a timeline and a calendar hold theirs in a NodeViewContent, and moving a
+// subtree to another parent unmounts it and builds it again. It survives —
+// what the editor writes into is its own element, which it re-appends
+// whenever React hands the content ref a new wrapper (@tiptap/react's
+// nodeViewContentRef). React owns the wrapper; the editor owns what is
+// inside it.
 
 export function ViewStage({
   open,
@@ -59,33 +62,37 @@ export function ViewStage({
     };
   }, [open, onClose]);
 
-  return (
-    <>
-      {open &&
-        createPortal(<Scrim onClose={onClose} label={label} />, document.body)}
-      <div
-        className="db-stage"
-        data-open={open || undefined}
-        role={open ? "dialog" : undefined}
-        aria-modal={open || undefined}
-        aria-label={open ? label : undefined}
-      >
-        {children}
-      </div>
-    </>
+  if (!open) return <>{children}</>;
+
+  return createPortal(
+    <Scrim onClose={onClose} label={label}>
+      {children}
+    </Scrim>,
+    document.body,
   );
 }
 
-/** The dark behind it, and the way out. */
-function Scrim({ onClose, label }: { onClose: () => void; label: string }) {
+/** The dark, the way out, and the view in the middle of it. */
+function Scrim({
+  onClose,
+  label,
+  children,
+}: {
+  onClose: () => void;
+  label: string;
+  children: ReactNode;
+}) {
   const { t } = useTranslation();
   return (
     <div
       className="db-stage-scrim"
+      role="dialog"
+      aria-modal="true"
       aria-label={label}
       // Portalled out of a node view: React would bubble these back into
       // the editor and reselect the node they came from.
       onClick={(e) => e.stopPropagation()}
+      onDoubleClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => {
         e.stopPropagation();
         if (e.target === e.currentTarget) onClose();
@@ -99,6 +106,7 @@ function Scrim({ onClose, label }: { onClose: () => void; label: string }) {
       >
         <X className="tiptap-button-icon" />
       </Button>
+      <div className="db-stage">{children}</div>
     </div>
   );
 }
