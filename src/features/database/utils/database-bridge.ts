@@ -55,6 +55,9 @@ export interface DatabaseBridgeData {
   galleryPlacement?: Record<string, GalleryPlacement>;
   calendarPlacement?: Record<string, CalendarPlacement>;
   timelinePlacement?: Record<string, TimelinePlacement>;
+  /** What each record blocks, by record id — the stored side of the
+   *  dependency pair (utils/dependencies.ts). */
+  blockingByRecord?: Record<string, string[]>;
   /** Sub-items: each shown row's depth, rows under it, open or not. */
   subItems?: Record<ID, SubItemInfo> | null;
   /** Opens or closes a row's sub-items. */

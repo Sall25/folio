@@ -31,6 +31,7 @@ import {
 import { recordSelection } from "../../utils/record-selection-store";
 import { TimelineCardBody } from "./timeline-card-body";
 import { useTimelineBarDrag, type BarDragState } from "./use-timeline-bar-drag";
+import { useTimelineLinkDrag } from "./use-timeline-link-drag";
 
 // A record's bar, put into the gantt from outside it.
 //
@@ -58,6 +59,8 @@ interface TimelineBarProps {
     propertyId: string,
     value: CellValue,
   ) => void;
+  /** Every record's stored dependency links, by record id. */
+  blockingByRecord: Record<string, string[]>;
   /** The view's order, to move this record within it. */
   sortedRecordIds: string[];
   /** Puts this record in front of another, or last with null. */
@@ -76,6 +79,7 @@ function TimelineBarInner({
   rowCount,
   onDrop,
   held,
+  blockingByRecord,
 }: {
   record: Page;
   view: TimelineView;
@@ -93,6 +97,7 @@ function TimelineBarInner({
   onDrop: (state: BarDragState) => void;
   /** Where the last drop put it, until the dates catch up. */
   held: HeldBar | null;
+  blockingByRecord: Record<string, string[]>;
 }) {
   const { nodeRef, isResizing } = useResizableNode();
   const { drag, isDragging, handlers } = useTimelineBarDrag({
@@ -108,6 +113,13 @@ function TimelineBarInner({
   // is happening to it here, the way a selected row does. Published rather
   // than passed down — the row is rendered by the record's own node, which
   // this bar is portalled out of.
+  const link = useTimelineLinkDrag({
+    recordId: record.id,
+    properties,
+    blockingByRecord,
+    setCellValue,
+  });
+
   const adjusting = isDragging || isResizing;
   useEffect(() => {
     if (!adjusting) return;
@@ -128,6 +140,7 @@ function TimelineBarInner({
       data-record-id={record.id}
       data-dragging={isDragging || undefined}
       data-resizing={isResizing || undefined}
+      data-linking={link.role ?? undefined}
       style={{
         top: held ? held.top : rowTop(index),
         left: held ? held.left : placement.left,
@@ -158,6 +171,26 @@ function TimelineBarInner({
         otherProps={cardProperties(properties, record, view)}
         properties={properties}
       />
+
+      {/* The ends of a dependency: drag from the right-hand dot and this
+          record blocks what you drop on, from the left-hand one and that
+          record blocks this. They appear with the pointer, like the resize
+          handles, and are drawn outside the bar so a short bar still has
+          room for both. */}
+      {link.enabled && (
+        <>
+          <span
+            className="db-tl-bar__link db-tl-bar__link--left"
+            onPointerDown={(e) => link.start(e, "left")}
+            aria-hidden
+          />
+          <span
+            className="db-tl-bar__link db-tl-bar__link--right"
+            onPointerDown={(e) => link.start(e, "right")}
+            aria-hidden
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -173,6 +206,7 @@ export function TimelineBar({
   setCellValue,
   sortedRecordIds,
   reorderRecord,
+  blockingByRecord,
 }: TimelineBarProps) {
   // A drop writes dates, and a bar is placed from its dates, so between the
   // two it would spring back to where it started — the drop undone for as
@@ -253,6 +287,7 @@ export function TimelineBar({
         cellWidth={cell}
         rowCount={sortedRecordIds.length}
         held={holding}
+        blockingByRecord={blockingByRecord}
         onDrop={({ columns, rows }) => {
           setHeld(
             holdBar(live, {

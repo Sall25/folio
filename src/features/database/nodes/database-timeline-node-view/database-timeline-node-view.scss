@@ -323,6 +323,57 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   stroke-linecap: round;
 }
 
+// The one being drawn: dashed while the pointer is down, and red where it
+// would make a record wait on itself (or is already there).
+.db-tl-link--draft {
+  stroke-dasharray: 4 4;
+  color: var(--tt-brand-color-400);
+
+  &[data-refused] {
+    color: var(--tt-color-red-inc-1, #ef4444);
+  }
+}
+
+// ── The dots a dependency is drawn from ────────────────────────────────────
+// Outside the bar on each side, so a bar one day wide still has room for
+// both and neither sits on the resize handles.
+.db-tl-bar__link {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin-top: -4.5px;
+  border-radius: 50%;
+  background: var(--tt-bg-color);
+  border: 1.5px solid var(--tt-brand-color-400);
+  opacity: 0;
+  cursor: crosshair;
+  transition: opacity 0.12s ease;
+  z-index: 4;
+
+  &--left {
+    left: -14px;
+  }
+  &--right {
+    right: -14px;
+  }
+
+  .db-tl-bar-box:hover &,
+  .db-tl-bar-box[data-linking] & {
+    opacity: 1;
+  }
+}
+
+// The bar a link is being drawn from or to.
+.db-tl-bar-box[data-linking="from"] .db-tl-bar,
+.db-tl-bar-box[data-linking="over"] .db-tl-bar {
+  box-shadow: 0 0 0 1.5px var(--tt-brand-color-400) !important;
+}
+
+.db-tl-bar-box[data-linking="refused"] .db-tl-bar {
+  box-shadow: 0 0 0 1.5px var(--tt-color-red-inc-1, #ef4444) !important;
+}
+
 // ── Today line ─────────────────────────────────────────────────────────────
 .db-tl-today-line {
   position: absolute;

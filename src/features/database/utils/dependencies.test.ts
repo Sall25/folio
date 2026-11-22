@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { DatabaseProperty, Page } from "src/types";
 import {
+  canLink,
   dependencyEdges,
   dependencyPair,
   blockingIdsOf,
@@ -203,5 +204,43 @@ describe("the curve between two bars", () => {
   it("carries no more digits than a screen can show", () => {
     const d = linkPath({ x: 100.123456, y: 20.98765 }, { x: 300.5, y: 54.25 });
     expect(d).not.toMatch(/\.\d{3}/);
+  });
+});
+
+// ── Drawing a link from one bar to another ───────────────────────────────
+
+describe("whether a link can be made", () => {
+  // kick → deposit → ship, and a record nothing touches.
+  const blocking = { kick: ["deposit"], deposit: ["ship"] };
+
+  it("allows a new one", () => {
+    expect(canLink(blocking, "ship", "spare")).toBe(true);
+    expect(canLink(blocking, "kick", "ship")).toBe(true); // already implied
+  });
+
+  it("refuses a record to itself", () => {
+    expect(canLink(blocking, "kick", "kick")).toBe(false);
+  });
+
+  it("refuses one that is already there", () => {
+    expect(canLink(blocking, "kick", "deposit")).toBe(false);
+  });
+
+  it("refuses one that would make a record wait on itself", () => {
+    expect(canLink(blocking, "ship", "kick")).toBe(false);
+    expect(canLink(blocking, "deposit", "kick")).toBe(false);
+  });
+
+  it("counts links to records the view is not showing", () => {
+    // The loop runs through a record filtered out of the timeline. It is
+    // still a loop, and the arrows not being drawn does not make it one
+    // the dates could ever satisfy.
+    const through = { kick: ["hidden"], hidden: ["ship"] };
+    expect(canLink(through, "ship", "kick")).toBe(false);
+  });
+
+  it("says no to nothing at all", () => {
+    expect(canLink(blocking, "", "kick")).toBe(false);
+    expect(canLink(blocking, "kick", "")).toBe(false);
   });
 });

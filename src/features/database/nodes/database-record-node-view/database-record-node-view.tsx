@@ -17,6 +17,10 @@ import { cardProperties } from "../../utils/card-properties";
 import { TimelineBar } from "../database-timeline-node-view/timeline-bar";
 import { CalendarEventBar } from "../database-calendar-node-view/calendar-event-bar";
 
+/** One object, so a record with no links doesn't re-render on every
+ *  publish. */
+const EMPTY_BLOCKING: Record<string, string[]> = {};
+
 function resetBoxOverrides(box: HTMLElement) {
   box.style.removeProperty("display");
   box.style.removeProperty("position");
@@ -252,6 +256,7 @@ export default function DatabaseRecordNodeView({
             index={index}
             placement={tp}
             sortedRecordIds={data.sortedRecordIds ?? []}
+            blockingByRecord={data.blockingByRecord ?? EMPTY_BLOCKING}
             reorderRecord={data.reorderRecord}
             databaseId={databaseId ?? null}
             properties={data.properties}

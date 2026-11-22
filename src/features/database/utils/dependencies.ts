@@ -115,6 +115,23 @@ export function wouldCycle(edges: DependencyEdge[], from: ID, to: ID): boolean {
   return false;
 }
 
+/**
+ * Whether a link can be made from one record to another.
+ *
+ * Not to itself, not one that is already there, and not one that would
+ * close a loop. `blocking` is every record's stored links — the whole of
+ * them, including links to records this view is not showing, because a
+ * loop can run through one.
+ */
+export function canLink(blocking: Record<ID, ID[]>, from: ID, to: ID): boolean {
+  if (!from || !to || from === to) return false;
+  if ((blocking[from] ?? []).includes(to)) return false;
+  const edges: DependencyEdge[] = [];
+  for (const [at, tos] of Object.entries(blocking))
+    for (const t of tos) edges.push({ from: at, to: t });
+  return !wouldCycle(edges, from, to);
+}
+
 /** Where an arrow leaves one bar and meets the next, in the grid's pixels. */
 export interface LinkPoint {
   x: number;

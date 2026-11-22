@@ -25,6 +25,7 @@ import { useSession } from "src/hooks/use-session";
 import { usePageTitles } from "./use-page-titles";
 import { frozenPropertyIdFor, useDbSize } from "../utils/db-size";
 import type { SubItemInfo } from "../utils/sub-items";
+import { blockingIdsOf, dependencyPair } from "../utils/dependencies";
 import {
   computeRecordColors,
   type RecordColors,
@@ -62,6 +63,7 @@ const EMPTY_BOARD_PLACEMENT: BoardPlacement = {};
 const EMPTY_CALENDAR_PLACEMENT: Record<string, CalendarPlacement> = {};
 const EMPTY_TIMELINE_PLACEMENT: Record<string, TimelinePlacement> = {};
 const EMPTY_RECORD_COLORS: Record<string, RecordColors> = {};
+const EMPTY_BLOCKING: Record<string, string[]> = {};
 
 export function useDatabaseBridgePublish({
   editor,
@@ -106,6 +108,21 @@ export function useDatabaseBridgePublish({
     });
     return out;
   }, [properties, draftWidths]);
+
+  // What each record blocks, by its own id — the stored side of the
+  // dependency pair (utils/dependencies.ts). A bar writes a link by adding
+  // to one of these lists, and a list has to be whole: the links it holds
+  // to records this view filtered out must survive the write.
+  const blockingByRecord = useMemo(() => {
+    const pair = dependencyPair(properties, attrs.sourceId);
+    if (!pair) return EMPTY_BLOCKING;
+    const out: Record<string, string[]> = {};
+    for (const r of sortedRecords) {
+      const ids = blockingIdsOf(r, pair.blocking.id);
+      if (ids.length) out[r.id] = ids;
+    }
+    return out;
+  }, [properties, sortedRecords, attrs.sourceId]);
 
   const columnValuesByProp = useMemo(() => {
     const out: Record<string, unknown[]> = {};
@@ -171,6 +188,7 @@ export function useDatabaseBridgePublish({
       sortedRecordIds: rowSlots,
       stickyByProp,
       recordColors,
+      blockingByRecord,
       setCellValue: bridgeSetCellValue,
       columnValuesByProp:
         columnValuesByProp as DatabaseBridgeData["columnValuesByProp"],
@@ -207,6 +225,7 @@ export function useDatabaseBridgePublish({
       rowSlots,
       stickyByProp,
       recordColors,
+      blockingByRecord,
       columnValuesByProp,
       bridgeSetCellValue,
       boardLayout,

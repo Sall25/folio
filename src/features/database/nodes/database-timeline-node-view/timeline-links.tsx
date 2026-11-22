@@ -3,6 +3,7 @@ import type { ID } from "src/types";
 import type { TimelinePlacement } from "../../hooks/use-timeline-layout";
 import { ROW_HEIGHT } from "../../hooks/use-timeline-layout";
 import { linkPath, type DependencyEdge } from "../../utils/dependencies";
+import { useLinkDraft } from "../../utils/link-draft-store";
 
 /** Where a bar sits, to the layer that draws arrows between them. */
 export interface LinkedBar extends TimelinePlacement {
@@ -58,7 +59,11 @@ function TimelineLinksImpl({
     return out;
   }, [edges, bars, from, to]);
 
-  if (paths.length === 0) return null;
+  // The link being drawn, if one is: from the dot the drag started on to
+  // the pointer, dashed, and shown as refused where it cannot be made.
+  const draft = useLinkDraft();
+
+  if (paths.length === 0 && !draft) return null;
 
   return (
     <svg
@@ -91,6 +96,17 @@ function TimelineLinksImpl({
           markerEnd="url(#db-tl-arrow)"
         />
       ))}
+      {draft && (
+        <path
+          className="db-tl-link db-tl-link--draft"
+          data-refused={draft.over && !draft.valid ? "" : undefined}
+          d={linkPath(
+            { x: draft.anchorX, y: draft.anchorY },
+            { x: draft.x, y: draft.y },
+          )}
+          markerEnd="url(#db-tl-arrow)"
+        />
+      )}
     </svg>
   );
 }
