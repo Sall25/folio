@@ -115,6 +115,7 @@ function TimelineBarInner({
       className="db-tl-bar-box"
       data-record-id={record.id}
       data-dragging={isDragging || undefined}
+      data-resizing={isResizing || undefined}
       style={{
         top: held ? held.top : rowTop(index),
         left: held ? held.left : placement.left,

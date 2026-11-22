@@ -985,6 +985,17 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   }
 }
 
+// A handle under the pointer keeps its handles up: a resize takes the
+// pointer off the card as soon as it is dragged, and the hover rule that
+// shows them would let go of them mid-drag.
+.db-tl-bar-box[data-resizing] {
+  z-index: 6;
+
+  .db-tl-bar__handle {
+    opacity: 1;
+  }
+}
+
 .db-tl-bar-box {
   position: absolute;
   z-index: 3;
