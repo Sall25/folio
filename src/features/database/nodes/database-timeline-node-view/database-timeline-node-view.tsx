@@ -47,6 +47,7 @@ import { TimelineLinks, type LinkedBar } from "./timeline-links";
 import {
   dependencyEdges,
   dependencyPair,
+  linkConflict,
   type DependencyEdge,
 } from "../../utils/dependencies";
 import { TimelinePlaceholder } from "./timeline-placeholder";
@@ -563,13 +564,18 @@ function DatabaseTimelineNodeViewImpl() {
   const showLinks =
     !!dependencies && !(activeView?.dependencies?.hidden ?? false);
 
-  const links = useMemo(
-    () =>
-      showLinks && dependencies
-        ? dependencyEdges(sortedRecords, dependencies.blocking.id)
-        : EMPTY_EDGES,
-    [showLinks, dependencies, sortedRecords],
-  );
+  const links = useMemo(() => {
+    if (!showLinks || !dependencies) return EMPTY_EDGES;
+    const edges = dependencyEdges(sortedRecords, dependencies.blocking.id);
+    // A link in trouble is drawn red: the record waiting starts before the
+    // one blocking it has finished. Read from the dates, which is what the
+    // records carry here.
+    const dates = new Map(timelineLayout.records.map((r) => [r.id, r]));
+    return edges.map((e) => ({
+      ...e,
+      conflict: linkConflict(dates.get(e.from), dates.get(e.to)),
+    }));
+  }, [showLinks, dependencies, sortedRecords, timelineLayout.records]);
 
   const linkedBars = useMemo(() => {
     if (links.length === 0) return EMPTY_BARS;

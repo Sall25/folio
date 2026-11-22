@@ -323,6 +323,13 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   stroke-linecap: round;
 }
 
+// A link whose two records overlap: the one waiting starts before the one
+// blocking it has finished, which is the plan contradicting itself. Red,
+// arrowhead included — the marker paints itself in currentColor.
+.db-tl-link[data-conflict] {
+  color: var(--tt-color-red-inc-1, #ef4444);
+}
+
 // The one being drawn: dashed while the pointer is down, and red where it
 // would make a record wait on itself (or is already there).
 .db-tl-link--draft {

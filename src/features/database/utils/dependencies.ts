@@ -59,6 +59,8 @@ export interface DependencyEdge {
   from: ID;
   /** The record waiting on it. */
   to: ID;
+  /** The one waiting starts before this one ends (linkConflict). */
+  conflict?: boolean;
 }
 
 /**
@@ -130,6 +132,40 @@ export function canLink(blocking: Record<ID, ID[]>, from: ID, to: ID): boolean {
   for (const [at, tos] of Object.entries(blocking))
     for (const t of tos) edges.push({ from: at, to: t });
   return !wouldCycle(edges, from, to);
+}
+
+/** What a conflict is read from: the dates a bar covers. */
+export interface LinkedDates {
+  start: Date | null;
+  end: Date | null;
+  /** A date with no time of day covers its whole last day. */
+  allDay: boolean;
+}
+
+/**
+ * Whether a link is in trouble: the record waiting starts before the one
+ * blocking it has finished, so the two run side by side and the thing that
+ * is meant to come first does not.
+ *
+ * Read from the dates and not from the bars. Two bars can touch on screen
+ * without their dates meeting — a date in a year view is six pixels wide
+ * and is drawn wider than that so it can be seen at all — and a line drawn
+ * red is the view saying something is wrong with the plan, which had
+ * better be true of the plan rather than of the zoom.
+ */
+export function linkConflict(
+  blocker: LinkedDates | undefined,
+  blocked: LinkedDates | undefined,
+): boolean {
+  if (!blocker?.start || !blocked?.start) return false;
+  const over = new Date(blocker.end ?? blocker.start);
+  if (blocker.allDay) {
+    // Through the end of its last day: a record dated to the 9th is busy
+    // all of the 9th, so one starting that day overlaps it.
+    over.setHours(0, 0, 0, 0);
+    over.setDate(over.getDate() + 1);
+  }
+  return blocked.start.getTime() < over.getTime();
 }
 
 /** Where an arrow leaves one bar and meets the next, in the grid's pixels. */

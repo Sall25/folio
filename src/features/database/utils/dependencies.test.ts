@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { DatabaseProperty, Page } from "src/types";
 import {
   canLink,
+  linkConflict,
   dependencyEdges,
   dependencyPair,
   blockingIdsOf,
@@ -242,5 +243,90 @@ describe("whether a link can be made", () => {
   it("says no to nothing at all", () => {
     expect(canLink(blocking, "", "kick")).toBe(false);
     expect(canLink(blocking, "kick", "")).toBe(false);
+  });
+});
+
+// ── A link whose records overlap ──────────────────────────────────────────
+// The record waiting starts before the one blocking it has finished: the
+// plan contradicts itself, and the arrow is drawn red to say so.
+
+describe("a link in trouble", () => {
+  const dated = (start: string, end: string, allDay = true) => ({
+    start: new Date(start + "T00:00:00"),
+    end: new Date(end + "T00:00:00"),
+    allDay,
+  });
+
+  it("is quiet when the waiting record starts after", () => {
+    const blocker = dated("2026-11-02", "2026-11-06");
+    expect(linkConflict(blocker, dated("2026-11-07", "2026-11-10"))).toBe(
+      false,
+    );
+  });
+
+  it("flags one that starts on the blocker's last day", () => {
+    // A record dated to the 6th is busy all of the 6th.
+    const blocker = dated("2026-11-02", "2026-11-06");
+    expect(linkConflict(blocker, dated("2026-11-06", "2026-11-10"))).toBe(true);
+  });
+
+  it("flags one that starts before the blocker does", () => {
+    const blocker = dated("2026-11-02", "2026-11-06");
+    expect(linkConflict(blocker, dated("2026-10-28", "2026-11-03"))).toBe(true);
+  });
+
+  it("counts the hours when the records carry them", () => {
+    // Day: a meeting ending at ten does not block one starting at eleven.
+    const blocker = {
+      start: new Date(2026, 10, 2, 9),
+      end: new Date(2026, 10, 2, 10),
+      allDay: false,
+    };
+    expect(
+      linkConflict(blocker, {
+        start: new Date(2026, 10, 2, 11),
+        end: new Date(2026, 10, 2, 12),
+        allDay: false,
+      }),
+    ).toBe(false);
+    expect(
+      linkConflict(blocker, {
+        start: new Date(2026, 10, 2, 9, 30),
+        end: null,
+        allDay: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("holds its tongue when a date is missing", () => {
+    // A record with no dates has no bar, and nothing to be wrong about.
+    expect(
+      linkConflict(dated("2026-11-02", "2026-11-06"), {
+        start: null,
+        end: null,
+        allDay: true,
+      }),
+    ).toBe(false);
+    expect(linkConflict(undefined, dated("2026-11-02", "2026-11-06"))).toBe(
+      false,
+    );
+  });
+
+  it("treats a record with no end as lasting its one day", () => {
+    const oneDay = { start: new Date(2026, 10, 2), end: null, allDay: true };
+    expect(
+      linkConflict(oneDay, {
+        start: new Date(2026, 10, 2),
+        end: null,
+        allDay: true,
+      }),
+    ).toBe(true);
+    expect(
+      linkConflict(oneDay, {
+        start: new Date(2026, 10, 3),
+        end: null,
+        allDay: true,
+      }),
+    ).toBe(false);
   });
 });

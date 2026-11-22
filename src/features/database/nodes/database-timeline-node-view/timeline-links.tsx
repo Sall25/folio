@@ -40,7 +40,7 @@ function TimelineLinksImpl({
   to: number;
 }) {
   const paths = useMemo(() => {
-    const out: { key: string; d: string }[] = [];
+    const out: { key: string; d: string; conflict: boolean }[] = [];
     for (const edge of edges) {
       const a = bars[edge.from];
       const b = bars[edge.to];
@@ -50,6 +50,7 @@ function TimelineLinksImpl({
       if (right < from || left > to) continue;
       out.push({
         key: `${edge.from}>${edge.to}`,
+        conflict: !!edge.conflict,
         d: linkPath(
           { x: a.left + a.width, y: a.row * ROW_HEIGHT + ROW_HEIGHT / 2 },
           { x: b.left - TIP_GAP, y: b.row * ROW_HEIGHT + ROW_HEIGHT / 2 },
@@ -92,6 +93,7 @@ function TimelineLinksImpl({
         <path
           key={p.key}
           className="db-tl-link"
+          data-conflict={p.conflict || undefined}
           d={p.d}
           markerEnd="url(#db-tl-arrow)"
         />
