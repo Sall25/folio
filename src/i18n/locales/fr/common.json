@@ -1699,7 +1699,16 @@
       "connectWith": "Glissez d'un nœud à l'autre pour relier par {{name}}",
       "zoomIn": "Zoom avant",
       "zoomOut": "Zoom arrière",
-      "fit": "Ajuster"
+      "fit": "Ajuster",
+      "background": "Fond du canevas",
+      "grounds": {
+        "dots": "Points",
+        "grid": "Grille",
+        "glow": "Halo"
+      },
+      "focus": "Ouvrir le canevas en plein écran",
+      "leaveFocus": "Quitter le plein écran",
+      "canvas": "Canevas du graphe. Glissez pour déplacer, Commande ou Contrôle + molette pour zoomer."
     },
     "manageInCalendar": {
       "open": "Gérer dans l'agenda",

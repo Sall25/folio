@@ -1699,7 +1699,16 @@
       "connectWith": "Drag between nodes to link with {{name}}",
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out",
-      "fit": "Fit"
+      "fit": "Fit",
+      "background": "Canvas background",
+      "grounds": {
+        "dots": "Dots",
+        "grid": "Grid",
+        "glow": "Glow"
+      },
+      "focus": "Open the canvas full screen",
+      "leaveFocus": "Leave full screen",
+      "canvas": "Graph canvas. Drag to move, hold Command or Control and scroll to zoom."
     },
     "manageInCalendar": {
       "open": "Manage in calendar",

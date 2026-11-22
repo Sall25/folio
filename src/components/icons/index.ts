@@ -36,6 +36,7 @@ export const UserPlus = icon("UserPlus", "person_add");
 export const Smile = icon("Smile", "mood");
 export const MessageSquareText = icon("MessageSquareText", "chat");
 export const Maximize2 = icon("Maximize2", "open_in_full");
+export const Minimize2 = icon("Minimize2", "close_fullscreen");
 export const ListFilter = icon("ListFilter", "filter_list");
 export const List = icon("List", "list");
 export const LayoutGrid = icon("LayoutGrid", "grid_view");

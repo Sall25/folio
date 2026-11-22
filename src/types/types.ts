@@ -586,7 +586,12 @@ export interface GraphView extends BaseView {
   colorPropertyId?: ID | null;
   /** Nodes dragged somewhere on purpose, kept where they were put. */
   pinned?: Record<ID, { x: number; y: number }>;
+  /** The ground the canvas is drawn on. Dots when nobody has chosen. */
+  background?: GraphBackground;
 }
+
+/** The grounds a graph canvas can be drawn on. */
+export type GraphBackground = "dots" | "grid" | "glow";
 
 export interface TimelineView extends BaseView {
   type: "timeline";

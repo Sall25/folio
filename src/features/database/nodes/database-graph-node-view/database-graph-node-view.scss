@@ -4,6 +4,14 @@
   flex-direction: column;
   gap: 8px;
   padding: 6px 0 12px;
+  box-sizing: border-box;
+  // The page's own column, like the calendar's grid and the toolbar above
+  // it. The database node around it is a scroller built for a table wider
+  // than the page, and a canvas that took that width would hang off the
+  // right of everything else on the page.
+  width: var(--db-editor-width, 100%);
+  max-width: 100%;
+  min-width: 0;
 
   &--empty {
     padding: 48px 0;
@@ -46,10 +54,34 @@
     color: var(--tt-text-secondary);
   }
 
+  // Full-bleed: the canvas and nothing else, which is also the one place
+  // a plain wheel may zoom.
+  &--focus {
+    position: fixed;
+    inset: 0;
+    z-index: 960;
+    padding: 12px;
+    background: var(--tt-bg-color);
+    // The screen, not the page's column.
+    width: auto;
+    max-width: none;
+
+    .db-graph__canvas {
+      flex: 1 1 auto;
+      height: auto;
+      min-height: 0;
+      aspect-ratio: auto;
+    }
+  }
+
   &__canvas {
     width: 100%;
     height: auto;
-    aspect-ratio: 1000 / 560;
+    aspect-ratio: 1000 / 600;
+    // On a wide page the shape alone would make it taller than the screen.
+    // What it loses in height it does not lose in canvas: the ground is
+    // drawn past the edges and the drawing is centred in whatever is left.
+    max-height: min(62vh, 620px);
     background: var(--tt-subtle-bg-color, rgba(0, 0, 0, 0.02));
     border: 1px solid var(--tt-border-color);
     border-radius: 10px;
@@ -59,8 +91,70 @@
     cursor: grab;
     user-select: none;
 
-    &:active {
+    &[data-panning] {
       cursor: grabbing;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--tt-brand-color-400);
+      outline-offset: 1px;
+    }
+  }
+
+  // The ground. Its ink stays the size it looks right at, whatever the
+  // zoom (the component divides by it), so only the spacing grows.
+  &__ground {
+    // The canvas is dragged by whatever is under the pointer, and this is
+    // under all of it.
+    cursor: inherit;
+  }
+
+  // Faint on purpose. The ground is there to say the canvas moves, not to
+  // be looked at: at full strength a field of dots behind every page reads
+  // as texture and competes with what is drawn on it.
+  &__speck {
+    fill: var(--tt-gray-light-a-200);
+
+    .dark & {
+      fill: var(--tt-gray-dark-a-200);
+    }
+  }
+
+  &__rule {
+    stroke: var(--tt-gray-light-a-200);
+
+    .dark & {
+      stroke: var(--tt-gray-dark-a-100);
+    }
+  }
+
+  &__glow-near {
+    stop-color: var(--tt-brand-color-400);
+    stop-opacity: 0.1;
+  }
+
+  &__glow-far {
+    stop-color: var(--tt-brand-color-400);
+    stop-opacity: 0;
+  }
+
+  &__swatch {
+    flex: 0 0 auto;
+    color: var(--tt-text-secondary);
+
+    .db-graph__swatch-bed {
+      fill: var(--tt-subtle-bg-color, rgba(0, 0, 0, 0.04));
+    }
+
+    circle {
+      fill: currentcolor;
+      opacity: 0.55;
+    }
+
+    path {
+      stroke: currentcolor;
+      stroke-width: 1;
+      opacity: 0.45;
     }
   }
 
@@ -167,6 +261,33 @@
 
     &[data-state="dim"] {
       opacity: 0.3;
+    }
+
+    // Lifted while it is carried, and set back down where it is dropped:
+    // the thing that makes a drag feel like picking something up.
+    &[data-moving] {
+      cursor: grabbing;
+
+      .db-graph__face,
+      .db-graph__rim {
+        filter: drop-shadow(0 3px 5px rgb(0 0 0 / 28%));
+      }
+
+      .db-graph__rim {
+        stroke: var(--tt-brand-color-400);
+        stroke-width: 3;
+      }
+    }
+
+    // Put somewhere on purpose: a hair firmer than one the layout placed,
+    // so it is clear which of the two a page is.
+    &[data-placed]:not([data-moving]) .db-graph__face {
+      stroke: var(--tt-gray-light-a-400);
+      stroke-width: 1;
+
+      .dark & {
+        stroke: var(--tt-gray-dark-a-400);
+      }
     }
 
     &[data-held] .db-graph__rim {
