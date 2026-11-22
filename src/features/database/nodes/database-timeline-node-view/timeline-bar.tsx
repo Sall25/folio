@@ -28,6 +28,7 @@ import {
   rowTop,
   type TimelinePlacement,
 } from "../../hooks/use-timeline-layout";
+import { recordSelection } from "../../utils/record-selection-store";
 import { TimelineCardBody } from "./timeline-card-body";
 import { useTimelineBarDrag, type BarDragState } from "./use-timeline-bar-drag";
 
@@ -102,6 +103,17 @@ function TimelineBarInner({
     disabled: isResizing,
     onDrop,
   });
+
+  // The row in the table beside the grid is the same record: it shows what
+  // is happening to it here, the way a selected row does. Published rather
+  // than passed down — the row is rendered by the record's own node, which
+  // this bar is portalled out of.
+  const adjusting = isDragging || isResizing;
+  useEffect(() => {
+    if (!adjusting) return;
+    recordSelection.setAdjusting(record.id);
+    return () => recordSelection.setAdjusting(null);
+  }, [adjusting, record.id]);
 
   return (
     <div

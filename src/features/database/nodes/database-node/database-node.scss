@@ -22,12 +22,14 @@
   // .db-record becomes the direct grid child.
   .db-node-grid__body,
   .db-node-grid__body > [data-node-view-content-react],
-  .db-node-grid__body > [data-node-view-content-react] > [data-node-view-wrapper],
-  .db-record{
+  .db-node-grid__body
+    > [data-node-view-content-react]
+    > [data-node-view-wrapper],
+  .db-record {
     display: contents;
   }
 
-  .react-renderer.node-databaseRecord{
+  .react-renderer.node-databaseRecord {
     display: grid;
     grid-column: 1 / -1;
     grid-template-columns: subgrid;
@@ -36,7 +38,6 @@
     border-bottom: 1px solid var(--tt-border-color);
     margin-bottom: 0px !important;
     width: 100%;
-   
   }
 
   // ── Selection ─────────────────────────────────────────────────────────────
@@ -97,7 +98,7 @@
       var(--tt-text-primary) 4%,
       var(--tt-bg-color)
     );
-  
+
     box-shadow: inset 0 0 0 1px var(--tt-border-color);
     border-radius: 3px;
   }
@@ -134,7 +135,6 @@
     line-height: 1.4;
   }
 
-
   .db-node-cell--atom {
     justify-content: stretch;
     > * {
@@ -162,7 +162,7 @@
     height: auto;
     overflow: visible;
     white-space: normal;
-    padding: 4px 5px;   // was `auto 5px` — auto is invalid for padding, gets dropped
+    padding: 4px 5px; // was `auto 5px` — auto is invalid for padding, gets dropped
 
     .db-cell-editor__display {
       height: auto;
@@ -252,15 +252,18 @@
   }
 }
 // ── Selected rows (table and list) ──────────────────────────────────────────
-// A row is selected two ways:
+// A row is selected three ways:
 //   • ticked: its checkbox, or drag-selecting rows (data-selected on .db-record);
 //   • picked: its drag handle — the editor marks the row's renderer
 //     .ProseMirror-selectednode (not when the whole database is selected,
-//     which is tinted as a whole).
+//     which is tinted as a whole);
+//   • worked on: its bar in a timeline is being dragged or resized
+//     (data-adjusting, published by the bar — record-selection-store.ts).
+//     The row and the bar are one record, and both say so.
 // Either way it gets ONE ring around the row box — the renderer; .db-record is
 // display: contents — rather than one per cell, which left the table's outline
 // open and split a list row (its cells have gaps) into separate boxes.
-$row-selected: ".react-renderer.node-databaseRecord:has(> .db-record[data-selected]), .react-renderer.node-database:not(.ProseMirror-selectednode) .react-renderer.node-databaseRecord.ProseMirror-selectednode";
+$row-selected: ".react-renderer.node-databaseRecord:has(> .db-record[data-selected]), .react-renderer.node-databaseRecord:has(> .db-record[data-adjusting]), .react-renderer.node-database:not(.ProseMirror-selectednode) .react-renderer.node-databaseRecord.ProseMirror-selectednode";
 
 :is(#{$row-selected}) {
   outline: none;
@@ -333,15 +336,15 @@ $row-selected: ".react-renderer.node-databaseRecord:has(> .db-record[data-select
     cursor: pointer;
     position: relative;
     transition:
-    background-color 120ms ease,
-    border-color 120ms ease;
+      background-color 120ms ease,
+      border-color 120ms ease;
 
     &:hover {
       border-color: var(--tt-text-secondary);
       background: color-mix(in srgb, var(--tt-text-primary) 6%, transparent);
     }
 
-   &:checked {
+    &:checked {
       background: var(--tt-brand-color-500);
       border-color: var(--tt-brand-color-500);
 
@@ -409,9 +412,9 @@ body.db-row-dragselect {
   }
 }
 
-.db-panel{
+.db-panel {
   background-color: transparent;
-  .tiptap-card{
+  .tiptap-card {
     background-color: var(--tt-gray-light-50);
     .dark & {
       background-color: var(--tt-gray-dark-100);
@@ -432,7 +435,9 @@ body.db-row-dragselect {
   background: transparent;
   color: var(--tt-text-secondary);
   cursor: pointer;
-  transition: background 80ms ease, border-color 80ms ease;
+  transition:
+    background 80ms ease,
+    border-color 80ms ease;
 
   &:hover {
     background: var(--tt-gray-light-a-100);
@@ -483,21 +488,20 @@ body.db-row-dragselect {
   }
 }
 
-
 /* Ancestors must NOT scroll horizontally — kill the editor-level scrollbars. */
 .simple-editor-main {
-  overflow-x: hidden;       /* was: auto — this created the editor scrollbar */
+  overflow-x: hidden; /* was: auto — this created the editor scrollbar */
 }
 .simple-editor-wrapper {
-  overflow-x: hidden;       /* was: auto */
+  overflow-x: hidden; /* was: auto */
 }
 
-.simple-editor-content[data-size=full] {
+.simple-editor-content[data-size="full"] {
   overflow-x: visible;
   max-width: none;
   width: 100%;
 }
-.simple-editor-content{
+.simple-editor-content {
   &[data-collapsed="true"][data-size="full"] {
     --db-editor-width: min(1320px, 100%, var(--editor-room, 1320px));
     max-width: 100%;
@@ -531,7 +535,7 @@ body.db-row-dragselect {
   outline: 3px solid var(--tt-brand-color-400);
   outline-offset: -3px;
   //box-shadow: inset 0 0 0 2px var(--tt-brand-color-400);
- 
+
   &::after {
     content: "";
     position: absolute;
@@ -596,7 +600,9 @@ body.db-row-dragselect {
   // );
   overflow-x: auto;
   display: block;
-  transition: margin-left 0.15s ease, width 0.15s ease;
+  transition:
+    margin-left 0.15s ease,
+    width 0.15s ease;
   padding-right: 250px;
 }
 
@@ -630,7 +636,6 @@ body.db-row-dragselect {
     display: none;
   }
 }
-
 
 // ── Title bar and toolbar stay put while the table scrolls sideways ─────────
 // .db-node is the horizontal scroller (the whole database scrolls inside it).
@@ -958,9 +963,11 @@ body.db-row-dragselect {
 
 // Table: the cells paint the row. A cell with its own colour (a "cell only"
 // rule) has its own --cc-bg, so it wins over the row's.
-.db-node-grid .react-renderer.node-databaseRecord[data-cc]
+.db-node-grid
+  .react-renderer.node-databaseRecord[data-cc]
   :is(.db-node-cell, .db-node-cell--atom),
-.db-node-grid .react-renderer.node-databaseRecord
+.db-node-grid
+  .react-renderer.node-databaseRecord
   :is(.db-node-cell, .db-node-cell--atom)[data-cc] {
   background: var(--cc-bg);
 

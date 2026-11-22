@@ -42,17 +42,20 @@
     );
   }
 
-  // The card being resized.
+  // The card being changed — dragged along the grid, or resized by a
+  // handle.
   //
-  // It is the only thing on the grid that is changing, and nothing said so
-  // — the handle moved and the card looked exactly as it had. It takes the
-  // selection colour, the same brand hue a selected row does, with a ring
-  // in it so the card reads as picked up rather than merely tinted.
+  // Nothing said which one it was: the card looked exactly as it had. It
+  // takes the selection colour, the same brand hue a selected row does,
+  // with a ring in it so it reads as picked up rather than merely tinted.
+  // Its row in the table beside the grid takes the same colour, through
+  // data-adjusting (record-selection-store.ts).
   //
   // Mixed into this card's own background, per theme: the selected rule
   // above mixes into a dark grey whatever the theme, which in a light one
   // leaves a tint nobody can see.
-  .db-tl-bar-box[data-resizing] & {
+  .db-tl-bar-box[data-resizing] &,
+  .db-tl-bar-box[data-dragging] & {
     background: color-mix(
       in srgb,
       var(--tt-brand-color-300) 14%,
@@ -67,6 +70,22 @@
         rgba(37, 37, 37, 0.897)
       ) !important;
       box-shadow: 0 0 0 1.5px var(--tt-brand-color-400) !important;
+    }
+  }
+
+  // Dragged: the ring, and the lift it has always had. The ring is set with
+  // !important (this file's background and border are, so a plain rule here
+  // loses to them), which would otherwise drop the shadow that tells a card
+  // in flight from one at rest.
+  .db-tl-bar-box[data-dragging] & {
+    box-shadow:
+      0 0 0 1.5px var(--tt-brand-color-300),
+      0 6px 16px rgba(0, 0, 0, 0.28) !important;
+
+    .dark & {
+      box-shadow:
+        0 0 0 1.5px var(--tt-brand-color-400),
+        0 6px 16px rgba(0, 0, 0, 0.28) !important;
     }
   }
 }

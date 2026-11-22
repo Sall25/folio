@@ -11,15 +11,11 @@ import {
   observeRecord,
   showsRecordsAsRows,
 } from "../../utils/record-visibility";
-import type {
-  CalendarView,
-  TimelineView,
-} from "src/types";
+import type { CalendarView, TimelineView } from "src/types";
 import { BoardCardBody } from "../../primitives/board-card-body";
 import { cardProperties } from "../../utils/card-properties";
 import { TimelineBar } from "../database-timeline-node-view/timeline-bar";
 import { CalendarEventBar } from "../database-calendar-node-view/calendar-event-bar";
-
 
 function resetBoxOverrides(box: HTMLElement) {
   box.style.removeProperty("display");
@@ -48,7 +44,10 @@ export default function DatabaseRecordNodeView({
   const databaseId = node.attrs.databaseId as string | null;
 
   const data = useDatabaseBridgeData(editor, databaseId);
-  const { isSelected, isHovered } = useRecordRowState(databaseId, recordId);
+  const { isSelected, isHovered, isAdjusting } = useRecordRowState(
+    databaseId,
+    recordId,
+  );
   const [wrapperEl, setWrapperEl] = useState<HTMLElement | null>(null);
 
   const isBoard = data?.view?.type === "board";
@@ -234,6 +233,9 @@ export default function DatabaseRecordNodeView({
           data-record-id={recordId}
           data-selected={isSelected || undefined}
           data-hovered={isHovered || undefined}
+          // Its bar is being dragged or resized over in the gantt: the row
+          // is the same record, and shows it the way a selected one does.
+          data-adjusting={isAdjusting || undefined}
           className="db-record"
           style={{ position: "relative" }}
         >

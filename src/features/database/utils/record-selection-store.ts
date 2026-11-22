@@ -9,6 +9,11 @@ let hoveredRecordId: string | null = null;
 // The database the hovered row belongs to (the row menu reads that
 // database's actions; a page can hold several).
 let hoveredDatabaseId: string | null = null;
+// The record whose timeline bar is under the pointer right now — being
+// dragged along the grid, or resized by one of its handles. Published by
+// the bar, read by the record's row in the table beside it, so the two
+// halves of one record show the same thing is happening to it.
+let adjustingRecordId: string | null = null;
 
 const listeners = new Set<() => void>();
 
@@ -61,6 +66,16 @@ export const recordSelection = {
     hoveredDatabaseId = databaseId;
     emit();
   },
+  // ── Being dragged or resized (published by the timeline bar) ─────────
+  setAdjusting(recordId: string | null) {
+    if (adjustingRecordId === recordId) return;
+    adjustingRecordId = recordId;
+    emit();
+  },
+  getAdjusting() {
+    return adjustingRecordId;
+  },
+
   getHovered() {
     return hoveredRecordId;
   },
@@ -136,5 +151,11 @@ export function useRecordRowState(
     () => false,
   );
 
-  return { isSelected, isHovered };
+  const isAdjusting = useSyncExternalStore(
+    subscribe,
+    () => !!recordId && adjustingRecordId === recordId,
+    () => false,
+  );
+
+  return { isSelected, isHovered, isAdjusting };
 }
