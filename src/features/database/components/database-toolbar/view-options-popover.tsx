@@ -235,6 +235,7 @@ function ViewOptionsContent({
           maxHeight:
             "min(600px, var(--radix-popover-content-available-height))",
           overflowY: "auto",
+          overflowX: "hidden",
           overscrollBehavior: "contain",
         }}
       >

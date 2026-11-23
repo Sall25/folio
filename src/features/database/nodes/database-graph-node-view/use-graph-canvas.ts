@@ -150,11 +150,22 @@ export function useGraphCanvas({
   );
 
   /**
-   * The wheel zooms, the way it does in every program whose business is a
-   * canvas — no modifier to remember and nothing to press first. The canvas
-   * owns the wheel while the pointer is over it, and the page has the rest
-   * of itself; a trackpad pinch arrives as a wheel with ctrl held and lands
-   * here too.
+   * The wheel, told apart by what made it — which is what every program
+   * whose business is a canvas does, and the reason none of them need a
+   * modifier explained to anyone:
+   *
+   *   • a pinch (two fingers closing or spreading) zooms about the pointer.
+   *     The browser sends it as a wheel with ctrl held, whether or not any
+   *     ctrl key was touched; ⌘/Ctrl with a real wheel lands here too.
+   *   • two fingers sliding across a trackpad move the canvas, the way they
+   *     move everything else. Zooming on that would make a trackpad
+   *     unusable: nothing could be pushed aside without changing size.
+   *   • a mouse wheel, which has nothing else to do here, zooms.
+   *
+   * A trackpad's deltas come in small, often fractional steps and carry
+   * sideways movement; a wheel's come in large whole ones, straight down.
+   * That is the whole of the telling apart, and it is a guess — so it is a
+   * guess that errs towards moving, which is undoable by moving back.
    *
    * A native listener rather than React's, which is passive: a zoom that
    * cannot stop the browser from zooming the whole page with it is worse
@@ -167,8 +178,23 @@ export function useGraphCanvas({
       const surface = event.currentTarget as Element | null;
       const rect = surface?.getBoundingClientRect();
       if (!rect) return;
-      // A trackpad sends many small deltas; a wheel sends few big ones.
-      const factor = Math.exp(-event.deltaY * 0.002);
+
+      const pinch = event.ctrlKey || event.metaKey;
+      const wheel =
+        !pinch &&
+        event.deltaMode === 0 &&
+        event.deltaX === 0 &&
+        Math.abs(event.deltaY) >= 40 &&
+        Number.isInteger(event.deltaY);
+
+      if (!pinch && !wheel) {
+        // Two fingers, sliding: the canvas goes with them.
+        setCamera((c) => pannedBy(c, box, rect, -event.deltaX, -event.deltaY));
+        return;
+      }
+      // Gentler for a pinch, which arrives in many small steps, than for a
+      // wheel, which arrives in a few big ones.
+      const factor = Math.exp(-event.deltaY * (pinch ? 0.01 : 0.002));
       setCamera((c) =>
         zoomedAbout(c, box, graphPointIn(rect, box, c, event), factor),
       );
@@ -182,10 +208,14 @@ export function useGraphCanvas({
   const onBackgroundPointerDown = useCallback(
     (event: React.PointerEvent) => {
       if (event.button !== 0 && event.button !== 1) return;
-      // The middle button is the pan in every program that has a canvas,
-      // and in a browser it is also autoscroll: this is what stops the
-      // little compass appearing in the middle of the drag.
-      if (event.button === 1) event.preventDefault();
+      // The canvas is not text and not a block to select: without this the
+      // editor puts the caret somewhere, draws its selection ring around
+      // the whole database, and the first drag of the canvas looks like a
+      // mis-click. (The middle button needs it for another reason too —
+      // in a browser that button is autoscroll, and this is what stops the
+      // little compass appearing in the middle of the drag.)
+      event.preventDefault();
+      event.stopPropagation();
       stopGlide();
       const rect = event.currentTarget.getBoundingClientRect();
       const from = { x: event.clientX, y: event.clientY };

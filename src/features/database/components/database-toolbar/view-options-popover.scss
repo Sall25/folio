@@ -1,11 +1,10 @@
-
 .view-options {
- max-height: min(
-    var(--radix-popover-content-available-height, 80vh),
-    80vh
-  );
+  max-height: min(var(--radix-popover-content-available-height, 80vh), 80vh);
   overflow-y: auto;
-  overflow-x: visible;   // ← but this WON'T work with overflow-y: auto (spec forces it)
+  // Sideways there is nothing to reach: a long label is cut, not scrolled
+  // to. (With overflow-y: auto the spec turns "visible" into "auto", which
+  // is where the second scrollbar along the bottom came from.)
+  overflow-x: hidden;
   overscroll-behavior: contain;
   width: 300px;
   display: flex;
@@ -20,21 +19,37 @@
   }
   box-shadow: var(--tt-shadow-elevated-md);
 
-   // Reuse the thin scrollbar pattern (matches the editor's scroll areas),
-  // overriding the thick 0.8rem global default.
-  scrollbar-width: thin !important;
+  // The app's slim pill, the same one the menus and the editor use. Only
+  // the ::-webkit rules: a `scrollbar-width` beside them makes Chrome drop
+  // them and draw the plain one with its own track and colours, which is
+  // what used to show up here.
   &::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
   }
-  &::-webkit-scrollbar-thumb {
-    background: var(--tt-border-color);
-    border-radius: 4px;
-  }
+
   &::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  &__name-input{
+  &::-webkit-scrollbar-thumb {
+    min-height: 28px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 9999px;
+    background-color: var(--app-scrollbar-thumb);
+
+    &:hover {
+      background-color: var(--app-scrollbar-thumb-hover);
+    }
+  }
+
+  // Firefox has no ::-webkit-scrollbar.
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--app-scrollbar-thumb) transparent;
+  }
+
+  &__name-input {
     height: 30px;
   }
   // overflow-y: scroll;
@@ -75,8 +90,8 @@
   }
 
   &__section {
-   width: 100%;
-   justify-content: flex-start;
+    width: 100%;
+    justify-content: flex-start;
   }
 
   &__row {
@@ -108,7 +123,20 @@
       font-size: 12px;
       color: var(--tt-text-color, #9b9a97);
       white-space: nowrap;
-      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+      font-family:
+        ui-sans-serif,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI Variable Display",
+        "Segoe UI",
+        Helvetica,
+        "Apple Color Emoji",
+        "Noto Sans Arabic",
+        "Noto Sans Hebrew",
+        Arial,
+        sans-serif,
+        "Segoe UI Emoji",
+        "Segoe UI Symbol";
       -webkit-font-smoothing: auto;
     }
 
@@ -150,14 +178,28 @@
 }
 
 @keyframes vo-slide-in-right {
-  from { opacity: 0; transform: translateX(8px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 @keyframes vo-slide-in-left {
-  from { opacity: 0; transform: translateX(-8px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .view-options__panel { animation: none; }
+  .view-options__panel {
+    animation: none;
+  }
 }

@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   forgetCamera,
   onFitRequest,
+  onGraphRequest,
+  requestGraph,
   rememberCamera,
   rememberedCamera,
   requestFit,
@@ -72,6 +74,18 @@ describe("asking a canvas for everything in view", () => {
     const b = onFitRequest("g1", () => (asked += 1));
     requestFit("g1");
     expect(asked).toBe(2);
+    a();
+    b();
+  });
+
+  it("keeps one kind of asking out of the other's way", () => {
+    let fitted = 0;
+    let opened = 0;
+    const a = onGraphRequest("g1", "fit", () => (fitted += 1));
+    const b = onGraphRequest("g1", "open", () => (opened += 1));
+    requestGraph("g1", "open");
+    expect(fitted).toBe(0);
+    expect(opened).toBe(1);
     a();
     b();
   });

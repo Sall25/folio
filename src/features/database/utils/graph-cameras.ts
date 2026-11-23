@@ -38,22 +38,36 @@ export function forgetCamera(viewId?: ID): void {
 // that view answers. The same way a view's camera is kept here: by view id,
 // for as long as the tab is open.
 
-const fitters = new Map<ID, Set<() => void>>();
+export type GraphRequest = "fit" | "open";
+
+const listeners = new Map<string, Set<() => void>>();
+const key = (viewId: ID, what: GraphRequest) => `${what}:${viewId}`;
 
 /** A canvas, saying it is the one showing this view. */
-export function onFitRequest(viewId: ID | undefined, fit: () => void): () => void {
+export function onGraphRequest(
+  viewId: ID | undefined,
+  what: GraphRequest,
+  run: () => void,
+): () => void {
   if (!viewId) return () => {};
-  const forView = fitters.get(viewId) ?? new Set();
-  forView.add(fit);
-  fitters.set(viewId, forView);
+  const k = key(viewId, what);
+  const forView = listeners.get(k) ?? new Set();
+  forView.add(run);
+  listeners.set(k, forView);
   return () => {
-    forView.delete(fit);
-    if (forView.size === 0) fitters.delete(viewId);
+    forView.delete(run);
+    if (forView.size === 0) listeners.delete(k);
   };
 }
 
-/** Everything in view, on whichever canvas is showing this view. */
-export function requestFit(viewId: ID | undefined): void {
+/** Ask whichever canvas is showing this view. */
+export function requestGraph(viewId: ID | undefined, what: GraphRequest): void {
   if (!viewId) return;
-  for (const fit of fitters.get(viewId) ?? []) fit();
+  for (const run of listeners.get(key(viewId, what)) ?? []) run();
 }
+
+/** Everything in view, on whichever canvas is showing this view. */
+export const onFitRequest = (viewId: ID | undefined, fit: () => void) =>
+  onGraphRequest(viewId, "fit", fit);
+export const requestFit = (viewId: ID | undefined) =>
+  requestGraph(viewId, "fit");

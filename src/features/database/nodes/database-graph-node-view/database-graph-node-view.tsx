@@ -19,7 +19,7 @@ import {
   type GraphNode,
 } from "../../utils/graph-model";
 import { graphLegend } from "../../utils/graph-colors";
-import { onFitRequest } from "../../utils/graph-cameras";
+import { onGraphRequest } from "../../utils/graph-cameras";
 import {
   fromMinimap,
   minimapFit,
@@ -39,7 +39,7 @@ import {
 } from "../../utils/graph-camera";
 import { useGraphCanvas } from "./use-graph-canvas";
 import { useGraphConnect, relationIdsOf } from "./use-graph-connect";
-import { ViewStage, ViewStageButton } from "../../components/view-stage";
+import { ViewStage } from "../../components/view-stage";
 import "./database-graph-node-view.scss";
 
 // The pages of a view, and what joins them, on a canvas.
@@ -198,11 +198,16 @@ function DatabaseGraphNodeViewImpl() {
     return () => surface.removeEventListener("wheel", onWheel);
   }, [surface, onWheel]);
 
-  // "Everything in view" is a setting in the layout panel now, and that
-  // panel sits in the toolbar knowing nothing about where the pages are. It
-  // asks by view; this is the canvas that answers (graph-cameras.ts).
+  // Framing the graph and opening it over the page are settings in the
+  // layout panel now, and that panel sits in the toolbar knowing nothing
+  // about where the pages are or whether this canvas is the one on screen.
+  // It asks by view; this is the canvas that answers (graph-cameras.ts).
   const fit = canvas.fit;
-  useEffect(() => onFitRequest(view?.id, fit), [view?.id, fit]);
+  useEffect(() => onGraphRequest(view?.id, "fit", fit), [view?.id, fit]);
+  useEffect(
+    () => onGraphRequest(view?.id, "open", () => setFocused(true)),
+    [view?.id],
+  );
 
   /** Make the relation a graph needs, when the database has none: dragging
    *  writes a relation, and with nowhere to write it the gesture can only
@@ -308,8 +313,6 @@ function DatabaseGraphNodeViewImpl() {
             </span>
           </Button>
         )}
-
-        {!focused && <ViewStageButton onOpen={() => setFocused(true)} />}
       </div>
 
       <div className="db-graph__stage">

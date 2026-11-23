@@ -1706,7 +1706,7 @@
       "canvas": "Graph canvas. Scroll to zoom, drag to move.",
       "drawn": "Drawn",
       "pageLinks": "Links written in pages",
-      "unlinked": "Pages with nothing joined to them",
+      "unlinked": "Pages with no links",
       "colourBy": "Colour by",
       "noColour": "Nothing",
       "key": "Key",

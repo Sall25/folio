@@ -7,6 +7,7 @@ import {
 } from "src/components/tiptap-ui-primitive/card";
 import {
   Circle,
+  Frame,
   LayoutGrid,
   Maximize2,
   Palette,
@@ -22,7 +23,7 @@ import {
   linkProperties,
   relationProperties,
 } from "../../utils/graph-model";
-import { requestFit } from "../../utils/graph-cameras";
+import { requestGraph } from "../../utils/graph-cameras";
 import { MenuRow } from "../menu-row";
 import "./graph-panel.scss";
 
@@ -121,10 +122,15 @@ export function GraphPanel({
         {/* The canvas is elsewhere on the page; it answers to its view
             (graph-cameras.ts). */}
         <MenuRow
-          Icon={Maximize2}
+          Icon={Frame}
           label={t("database.graph.fit")}
           sub={t("database.graph.fitSub")}
-          onClick={() => requestFit(view.id)}
+          onClick={() => requestGraph(view.id, "fit")}
+        />
+        <MenuRow
+          Icon={Maximize2}
+          label={t("database.stage.open")}
+          onClick={() => requestGraph(view.id, "open")}
         />
       </CardItemGroup>
 
