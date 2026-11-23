@@ -14,9 +14,17 @@ import { useChatPeople } from "./use-chat";
 //   • "dm" → anyone you share a workspace or a teamspace with.
 // Names come from useChatPeople, which also resolves people in other
 // workspaces (usePeople only has yours).
+//
+// `scope` is the room being invited to, when there is one. Without it the
+// list followed whichever space the person was standing in, which is not
+// the same thing: inviting to a teamspace room from the workspace offered
+// the whole workspace, and the server then dropped everyone who was not in
+// that teamspace — silently, until this was fixed (migration 060). The
+// candidates and the server now read the same rule.
 export function useChatCandidates(
   mode: "room" | "dm",
   excludeIds: string[] = [],
+  scope?: { teamspaceId: string | null },
 ) {
   const { person } = useCurrentPerson();
   const { data: people = [] } = usePeople();
@@ -25,6 +33,9 @@ export function useChatCandidates(
   const space = useCurrentSpace();
   const enterable = useEnterableTeamspaces();
   const excludeKey = excludeIds.join(",");
+  // undefined: no room was named, so follow the space the person is in.
+  // null: a room that belongs to the workspace rather than a teamspace.
+  const scopedTeamspace = scope ? scope.teamspaceId : undefined;
 
   const ids = useMemo(() => {
     const set = new Set<string>();
@@ -37,8 +48,19 @@ export function useChatCandidates(
       }
     };
 
-    if (mode === "room" && space.kind === "teamspace") {
-      const ts = (teamspaces as Teamspace[]).find((t) => t.id === space.id);
+    const roomTeamspace =
+      mode !== "room"
+        ? null
+        : scopedTeamspace !== undefined
+          ? scopedTeamspace
+          : space.kind === "teamspace"
+            ? space.id
+            : null;
+
+    if (roomTeamspace) {
+      const ts = (teamspaces as Teamspace[]).find(
+        (t) => t.id === roomTeamspace,
+      );
       if (ts) addTeamspace(ts);
     } else {
       (people as Person[]).forEach((p) => set.add(p.id));
@@ -48,7 +70,17 @@ export function useChatCandidates(
     if (person) set.delete(person.id);
     for (const id of excludeKey ? excludeKey.split(",") : []) set.delete(id);
     return [...set];
-  }, [mode, space, teamspaces, groups, people, enterable, person, excludeKey]);
+  }, [
+    mode,
+    space,
+    scopedTeamspace,
+    teamspaces,
+    groups,
+    people,
+    enterable,
+    person,
+    excludeKey,
+  ]);
 
   const { data = [], isLoading } = useChatPeople(ids);
   const candidates = useMemo(

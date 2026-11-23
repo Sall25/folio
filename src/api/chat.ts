@@ -1,4 +1,5 @@
 import { supabase } from "./supabase-client";
+import { toInviteResult, type InviteResult } from "./chat-invite";
 import type {
   ChatRoomKind,
   ChatVisibility,
@@ -199,16 +200,18 @@ export async function createChatRoom(args: {
   return data as string;
 }
 
+export type { InviteResult };
+
 export async function addChatMembers(
   roomId: string,
   memberIds: string[],
-): Promise<number> {
+): Promise<InviteResult> {
   const { data, error } = await supabase.rpc("add_chat_members", {
     p_room: roomId,
     p_member_ids: memberIds,
   });
   fail(error);
-  return data as number;
+  return toInviteResult(data);
 }
 
 export async function joinChatRoom(roomId: string): Promise<void> {

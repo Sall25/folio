@@ -156,6 +156,18 @@ export function useChatRealtimeSync() {
           qc.invalidateQueries({ queryKey: ["chat", "rooms"] });
         },
       )
+      // Being added to a room — or taken out of one — is news to the person
+      // it happened to: until their rooms query knows, the room has no
+      // membership for them and the composer stays shut. They are not
+      // writing anything at that moment, so nothing else would refetch it.
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chat_members" },
+        () => {
+          qc.invalidateQueries({ queryKey: ["chat", "rooms"] });
+          qc.invalidateQueries({ queryKey: chatKeys.unread() });
+        },
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
