@@ -208,7 +208,8 @@
     "roomActions": "Actions du salon",
     "mentionedYou": "On t'a mentionné",
     "privatePage": "Page privée",
-    "someone": "quelqu'un"
+    "someone": "quelqu'un",
+    "inviteSkipped": "{{names}} n'ont pas pu être ajoutés : ils ne font pas partie de l'espace d'équipe de ce salon."
   },
   "comments": {
     "onProperty": "sur {{name}}",

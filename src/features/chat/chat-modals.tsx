@@ -401,18 +401,37 @@ export function InviteToRoomModal({
     [room.members],
   );
   const { selected, toggle } = useSelection();
-  const { candidates, isLoading } = useChatCandidates("room", existing);
+  // The room's own scope, not the space the person happens to be in: a
+  // teamspace room takes that teamspace's members wherever it is opened
+  // from.
+  const { candidates, isLoading } = useChatCandidates("room", existing, {
+    teamspaceId: room.teamspaceId,
+  });
   const add = useAddChatMembers();
+  // People the server would not add. It can still happen — someone left
+  // the teamspace between the list being drawn and the invite being sent —
+  // and saying nothing is what made this look like it had worked.
+  const [skipped, setSkipped] = useState<string[]>([]);
 
   const submit = async () => {
     if (!selected.size) return;
     try {
-      await add.mutateAsync({ roomId: room.id, memberIds: [...selected] });
+      const result = await add.mutateAsync({
+        roomId: room.id,
+        memberIds: [...selected],
+      });
+      if (result.skipped.length) {
+        setSkipped(result.skipped);
+        return; // stay open, with the reason on screen
+      }
       onClose();
     } catch {
       /* keep open */
     }
   };
+
+  const nameOf = (id: string) =>
+    candidates.find((c) => c.id === id)?.name ?? t("chat.someone", "someone");
 
   return (
     <ChatModal
@@ -424,6 +443,16 @@ export function InviteToRoomModal({
       footer={
         <>
           {add.error && <span className="chm__error">{add.error.message}</span>}
+          {!add.error && skipped.length > 0 && (
+            <span className="chm__error">
+              {t("chat.inviteSkipped", {
+                names: skipped.map(nameOf).join(", "),
+                count: skipped.length,
+                defaultValue:
+                  "{{names}} could not be added: they are not in this room's teamspace.",
+              })}
+            </span>
+          )}
           <Button
             variant="primary"
             disabled={!selected.size || add.isPending}
