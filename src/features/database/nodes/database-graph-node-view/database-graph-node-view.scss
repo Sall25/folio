@@ -145,9 +145,13 @@
       cursor: grabbing;
     }
 
+    // No ring. The canvas takes the keyboard on a press so + − and 0 work
+    // straight away, and a browser that counts that press as keyboard-ish
+    // would otherwise draw a ring around the whole thing for a click —
+    // which is the "it gets focused" that started this.
+    &:focus,
     &:focus-visible {
-      outline: 2px solid var(--tt-brand-color-400);
-      outline-offset: 1px;
+      outline: none;
     }
   }
 

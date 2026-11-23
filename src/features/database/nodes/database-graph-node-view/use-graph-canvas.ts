@@ -351,6 +351,60 @@ export function useGraphCanvas({
     ],
   );
 
+  /**
+   * Two fingers on a touchscreen, for the machines whose trackpad pinch
+   * never reaches the page at all: some Windows webviews take it for their
+   * own page zoom and send nothing on. Touch events rather than pointer
+   * bookkeeping, because what matters is the pair — how far apart the two
+   * are, and where their middle is.
+   */
+  const onTouchStart = useCallback(
+    (event: TouchEvent) => {
+      if (event.touches.length !== 2) return;
+      event.preventDefault();
+      stopGlide();
+      const surface = event.currentTarget as Element | null;
+      const rect = surface?.getBoundingClientRect();
+      if (!rect) return;
+
+      const span = (touches: TouchList) =>
+        Math.hypot(
+          touches[0].clientX - touches[1].clientX,
+          touches[0].clientY - touches[1].clientY,
+        );
+      const middle = (touches: TouchList) => ({
+        clientX: (touches[0].clientX + touches[1].clientX) / 2,
+        clientY: (touches[0].clientY + touches[1].clientY) / 2,
+      });
+      let apart = span(event.touches) || 1;
+
+      const move = (e: TouchEvent) => {
+        if (e.touches.length !== 2) return;
+        e.preventDefault();
+        const now = span(e.touches) || 1;
+        const factor = now / apart;
+        apart = now;
+        setCamera((c) =>
+          zoomedAbout(
+            c,
+            box,
+            graphPointIn(rect, box, c, middle(e.touches)),
+            factor,
+          ),
+        );
+      };
+      const end = () => {
+        window.removeEventListener("touchmove", move);
+        window.removeEventListener("touchend", end);
+        window.removeEventListener("touchcancel", end);
+      };
+      window.addEventListener("touchmove", move, { passive: false });
+      window.addEventListener("touchend", end);
+      window.addEventListener("touchcancel", end);
+    },
+    [box, stopGlide],
+  );
+
   const zoomBy = useCallback(
     (factor: number) => {
       stopGlide();
@@ -401,6 +455,7 @@ export function useGraphCanvas({
     camera,
     gesture,
     onWheel,
+    onTouchStart,
     onBackgroundPointerDown,
     onNodePointerDown,
     onKeyDown,

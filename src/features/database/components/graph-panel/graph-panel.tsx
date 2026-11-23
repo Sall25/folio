@@ -10,7 +10,9 @@ import {
   Frame,
   LayoutGrid,
   Maximize2,
+  Minus,
   Palette,
+  Plus,
   Share2,
   Sparkles,
 } from "src/components/icons";
@@ -126,6 +128,16 @@ export function GraphPanel({
           label={t("database.graph.fit")}
           sub={t("database.graph.fitSub")}
           onClick={() => requestGraph(view.id, "fit")}
+        />
+        <MenuRow
+          Icon={Plus}
+          label={t("database.graph.zoomIn")}
+          onClick={() => requestGraph(view.id, "zoomIn")}
+        />
+        <MenuRow
+          Icon={Minus}
+          label={t("database.graph.zoomOut")}
+          onClick={() => requestGraph(view.id, "zoomOut")}
         />
         <MenuRow
           Icon={Maximize2}

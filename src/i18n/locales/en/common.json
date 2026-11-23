@@ -1718,14 +1718,16 @@
       "linkCount_other": "{{count}} links",
       "moving": "Moving about",
       "how": {
-        "wheel": "Scroll to zoom, wherever the pointer is.",
+        "wheel": "Pinch to zoom, or hold Ctrl and scroll. Keys: + − and 0.",
         "drag": "Drag a page onto another to join them; drag it anywhere else to move it.",
-        "middle": "Middle-drag moves the canvas from anywhere.",
+        "middle": "Two fingers slide the canvas; so does a drag, or the middle button.",
         "frame": "Shift-click a page to frame it with everything it touches.",
         "unpin": "Alt-click a page to hand it back to the layout."
       },
       "canvasLabel": "Canvas",
-      "fitSub": "Everything in view"
+      "fitSub": "Everything in view",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out"
     },
     "manageInCalendar": {
       "open": "Manage in calendar",

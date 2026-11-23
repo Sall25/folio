@@ -38,7 +38,7 @@ export function forgetCamera(viewId?: ID): void {
 // that view answers. The same way a view's camera is kept here: by view id,
 // for as long as the tab is open.
 
-export type GraphRequest = "fit" | "open";
+export type GraphRequest = "fit" | "open" | "zoomIn" | "zoomOut";
 
 const listeners = new Map<string, Set<() => void>>();
 const key = (viewId: ID, what: GraphRequest) => `${what}:${viewId}`;

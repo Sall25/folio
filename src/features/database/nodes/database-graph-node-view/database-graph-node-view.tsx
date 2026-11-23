@@ -192,18 +192,35 @@ function DatabaseGraphNodeViewImpl() {
   // and a ref would leave the listener on the one that was thrown away.
   const [surface, setSurface] = useState<SVGSVGElement | null>(null);
   const onWheel = canvas.onWheel;
+  const onTouchStart = canvas.onTouchStart;
   useEffect(() => {
     if (!surface) return;
     surface.addEventListener("wheel", onWheel, { passive: false });
-    return () => surface.removeEventListener("wheel", onWheel);
-  }, [surface, onWheel]);
+    // Two fingers on a screen, for machines where the trackpad's pinch is
+    // eaten by the webview before the page sees it.
+    surface.addEventListener("touchstart", onTouchStart, { passive: false });
+    return () => {
+      surface.removeEventListener("wheel", onWheel);
+      surface.removeEventListener("touchstart", onTouchStart);
+    };
+  }, [surface, onWheel, onTouchStart]);
 
   // Framing the graph and opening it over the page are settings in the
   // layout panel now, and that panel sits in the toolbar knowing nothing
   // about where the pages are or whether this canvas is the one on screen.
   // It asks by view; this is the canvas that answers (graph-cameras.ts).
   const fit = canvas.fit;
+  const zoomIn = canvas.zoomIn;
+  const zoomOut = canvas.zoomOut;
   useEffect(() => onGraphRequest(view?.id, "fit", fit), [view?.id, fit]);
+  useEffect(
+    () => onGraphRequest(view?.id, "zoomIn", zoomIn),
+    [view?.id, zoomIn],
+  );
+  useEffect(
+    () => onGraphRequest(view?.id, "zoomOut", zoomOut),
+    [view?.id, zoomOut],
+  );
   useEffect(
     () => onGraphRequest(view?.id, "open", () => setFocused(true)),
     [view?.id],
@@ -323,7 +340,13 @@ function DatabaseGraphNodeViewImpl() {
           viewBox={`0 0 ${BOX.width} ${BOX.height}`}
           tabIndex={0}
           aria-label={t("database.graph.canvas")}
-          onPointerDown={canvas.onBackgroundPointerDown}
+          onPointerDown={(e) => {
+            // Quietly: :focus-visible stays off for a press, so no ring — but
+            // 0, + and − work from the moment the canvas is touched instead
+            // of only after it has been tabbed to.
+            e.currentTarget.focus({ preventScroll: true });
+            canvas.onBackgroundPointerDown(e);
+          }}
           onKeyDown={canvas.onKeyDown}
           onPointerLeave={() => setHeld(null)}
         >

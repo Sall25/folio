@@ -1718,14 +1718,16 @@
       "linkCount_other": "{{count}} liens",
       "moving": "Se déplacer",
       "how": {
-        "wheel": "La molette zoome, là où se trouve le pointeur.",
+        "wheel": "Pincez pour zoomer, ou Ctrl + molette. Touches : + − et 0.",
         "drag": "Glissez une page sur une autre pour les relier ; ailleurs, pour la déplacer.",
-        "middle": "Le bouton du milieu déplace le canevas depuis n'importe où.",
+        "middle": "Deux doigts déplacent le canevas ; un glissement ou le bouton du milieu aussi.",
         "frame": "Maj + clic sur une page pour la cadrer avec tout ce qu'elle touche.",
         "unpin": "Alt + clic sur une page pour la rendre à la mise en page."
       },
       "canvasLabel": "Canevas",
-      "fitSub": "Tout afficher"
+      "fitSub": "Tout afficher",
+      "zoomIn": "Zoom avant",
+      "zoomOut": "Zoom arrière"
     },
     "manageInCalendar": {
       "open": "Gérer dans l'agenda",
