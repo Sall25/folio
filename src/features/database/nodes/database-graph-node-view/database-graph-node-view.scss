@@ -286,6 +286,15 @@
       user-select: none;
     }
 
+    // A page's own icon, drawn by the icon font rather than written out.
+    .db-graph__glyph {
+      color: var(--tt-text-primary);
+
+      .dark & {
+        color: var(--tt-gray-dark-a-900, #e8e8e8);
+      }
+    }
+
     .db-graph__label {
       fill: var(--tt-text-secondary);
       font-size: 11px;

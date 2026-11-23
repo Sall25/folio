@@ -18,8 +18,12 @@ export interface GraphNode {
   /** The page's cover, or the first image in it: what makes a node that
    *  page rather than a dot. */
   image: string | null;
-  /** Its icon, when it has no picture to show. */
+  /** Its icon, when it has no picture to show: an emoji to write out, or
+   *  a glyph name for the icon font. */
   icon: string | null;
+  iconKind: "emoji" | "glyph" | null;
+  /** The colour chosen for that icon, if one was. */
+  iconColor: string | null;
   /** False for a record pulled in from another database by a relation. */
   own: boolean;
   /** Which database it belongs to, for the ones that are not this one. */
@@ -257,14 +261,33 @@ function nodeOf(
   colorProperty: DatabaseProperty | undefined,
 ): GraphNode {
   const cover = page.cover as unknown as
-    { coverImage?: string; gradient?: string; iconName?: string } | undefined;
+    | {
+        coverImage?: string;
+        gradient?: string;
+        iconName?: string;
+        target?: string;
+        color?: string;
+      }
+    | undefined;
+  // An icon is one of three things, and only one of them is text: an
+  // uploaded picture (a URL), an emoji (the character itself), or the name
+  // of a glyph in the icon font. Writing a name out is how "ac_unit" ended
+  // up on a node instead of a snowflake.
+  const uploaded = cover?.target === "Upload" ? cover.iconName : undefined;
+  const icon = uploaded ? null : (cover?.iconName ?? null);
   return {
     id: page.id,
     title: page.title ?? "",
     // Its cover, or the first picture inside it — the same order a card
-    // uses, so a page looks like itself wherever it is shown.
-    image: cover?.coverImage || firstImageSrc(page.content) || null,
-    icon: cover?.iconName ?? null,
+    // uses, so a page looks like itself wherever it is shown. An uploaded
+    // icon is a picture too.
+    image: cover?.coverImage || uploaded || firstImageSrc(page.content) || null,
+    icon,
+    iconKind: icon ? (cover?.target === "Emoji" ? "emoji" : "glyph") : null,
+    iconColor:
+      cover?.color && cover.color !== "var(--tt-text-color)"
+        ? cover.color
+        : null,
     own,
     sourceId: page.sourceId ?? null,
     colorKey: colorKeyOf(page, colorProperty),

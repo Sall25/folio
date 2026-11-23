@@ -214,6 +214,8 @@ describe("where the nodes go", () => {
     title: id,
     image: null,
     icon: null,
+    iconKind: null,
+    iconColor: null,
     own: true,
     sourceId: "s",
     colorKey: null,
@@ -420,6 +422,65 @@ describe("the links inside a page", () => {
 // A graph that leaves something out has to be able to say what, and how
 // much: an offer with no number beside it tells nobody whether taking it
 // would change anything.
+
+describe("what a page shows on the canvas", () => {
+  const withCover = (cover: unknown) =>
+    buildGraph(
+      [
+        { id: "a", title: "A", sourceId: "s", values: {}, cover },
+      ] as unknown as Page[],
+      props,
+      view(),
+      () => undefined,
+    ).nodes[0];
+
+  it("writes an emoji out, because an emoji is text", () => {
+    const node = withCover({ target: "Emoji", iconName: "😃" });
+    expect(node.icon).toBe("😃");
+    expect(node.iconKind).toBe("emoji");
+  });
+
+  it("keeps a glyph's name as a name to look up, not as a word to draw", () => {
+    // "ac_unit" means a snowflake to the icon font and nothing to anyone
+    // else; drawing it as text is how the name ended up on the canvas.
+    const node = withCover({ target: "Icons", iconName: "ac_unit" });
+    expect(node.icon).toBe("ac_unit");
+    expect(node.iconKind).toBe("glyph");
+  });
+
+  it("treats an uploaded icon as the picture it is", () => {
+    const node = withCover({ target: "Upload", iconName: "https://x/y.png" });
+    expect(node.image).toBe("https://x/y.png");
+    expect(node.icon).toBeNull();
+    expect(node.iconKind).toBeNull();
+  });
+
+  it("prefers the cover to the icon, and either to nothing", () => {
+    const node = withCover({
+      target: "Icons",
+      iconName: "ac_unit",
+      coverImage: "https://x/cover.png",
+    });
+    expect(node.image).toBe("https://x/cover.png");
+    const bare = withCover(undefined);
+    expect(bare.image).toBeNull();
+    expect(bare.icon).toBeNull();
+  });
+
+  it("carries a colour chosen for the icon, but not the default one", () => {
+    expect(
+      withCover({ target: "Icons", iconName: "home", color: "#ff8800" })
+        .iconColor,
+    ).toBe("#ff8800");
+    expect(
+      withCover({
+        target: "Icons",
+        iconName: "home",
+        color: "var(--tt-text-color)",
+      }).iconColor,
+    ).toBeNull();
+  });
+});
 
 describe("leaving things out", () => {
   const doc = (...ids: string[]) => ({

@@ -10,6 +10,7 @@ import type {
 import { Button } from "src/components/tiptap-ui-primitive/button";
 import { Plus } from "src/components/icons";
 import { usePagesBase } from "src/hooks/use-pages";
+import { DynamicIcon } from "src/features/pages/cover/dynamic-icon";
 import { useDatabaseContext } from "../../context/database-context";
 import { useDataSource } from "../../hooks/use-data-source";
 import { useOpenRecord } from "../../hooks/use-open-record";
@@ -683,11 +684,36 @@ function Node({
           clipPath={`url(#${clipId})`}
         />
       )}
-      {!node.image && node.icon && (
-        <text className="db-graph__icon" y={r * 0.35} fontSize={r}>
-          {node.icon}
-        </text>
-      )}
+      {/* An emoji is text and can be drawn as text. A glyph is a name —
+          "ac_unit" — that means a snowflake only to the icon font, and the
+          font is reached through the same component every other page icon
+          in the app uses, so a name with a look saved on it ("home;fill:0")
+          and the older names that map to new glyphs all behave here as
+          they do everywhere else. */}
+      {!node.image &&
+        node.icon &&
+        (node.iconKind === "emoji" ? (
+          <text className="db-graph__icon" y={r * 0.35} fontSize={r}>
+            {node.icon}
+          </text>
+        ) : (
+          <foreignObject
+            x={-r * 0.58}
+            y={-r * 0.58}
+            width={r * 1.16}
+            height={r * 1.16}
+            // The glyph belongs to the node under it: the press that opens
+            // or drags the page must not land on the icon instead.
+            style={{ pointerEvents: "none", overflow: "visible" }}
+          >
+            <DynamicIcon
+              name={node.icon}
+              size={Math.round(r * 1.16)}
+              className="db-graph__glyph"
+              style={node.iconColor ? { color: node.iconColor } : undefined}
+            />
+          </foreignObject>
+        ))}
       <circle className="db-graph__rim" r={r} />
       <text className="db-graph__label" y={r + 16}>
         {node.title || "—"}
