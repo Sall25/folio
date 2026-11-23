@@ -32,6 +32,22 @@ import { ViewPalette } from "./view-palette";
 import { CardLayoutPicker } from "./card-layout-picker";
 import { LoadLimitPicker } from "./load-limit-picker";
 import { FormSettings } from "../../nodes/database-form-node-view/form-settings";
+import { GraphPanel } from "../graph-panel";
+
+// Every layout the grid offers, in rows of three.
+const LAYOUTS: DatabaseView["type"][] = [
+  "table",
+  "list",
+  "board",
+  "gallery",
+  "calendar",
+  "timeline",
+  "graph",
+];
+const LAYOUT_ROWS = Array.from(
+  { length: Math.ceil(LAYOUTS.length / 3) },
+  (_, i) => LAYOUTS.slice(i * 3, i * 3 + 3),
+);
 
 interface LayoutPanelProps {
   view: DatabaseView;
@@ -80,59 +96,28 @@ export function LayoutPanel({ view, db, bare = false }: LayoutPanelProps) {
 
   const content = (
     <div className="w-full mt-2">
+      {/* Three to a row, from one list: the row a layout lands in is
+          arithmetic, not markup, so the next one added cannot end up
+          sharing a cell with its neighbour. */}
       <Grid columns="1fr 1fr 1fr" gap={5} style={{ gap: 10 }}>
-        <GridRow style={{ gap: 10 }}>
-          <GridCell>
-            <ViewPalette
-              onSelect={onSelect}
-              active={view.type === "table"}
-              type="table"
-            />
-          </GridCell>
-
-          <GridCell>
-            <ViewPalette
-              onSelect={onSelect}
-              active={view.type === "list"}
-              type="list"
-            />
-          </GridCell>
-          <GridCell>
-            <ViewPalette
-              onSelect={onSelect}
-              active={view.type === "board"}
-              type="board"
-            />
-          </GridCell>
-        </GridRow>
-        <GridRow style={{ gap: 10, marginTop: 10 }}>
-          <GridCell>
-            <ViewPalette
-              onSelect={onSelect}
-              active={view.type === "gallery"}
-              type="gallery"
-            />
-          </GridCell>
-          <GridCell>
-            <ViewPalette
-              onSelect={onSelect}
-              active={view.type === "calendar"}
-              type="calendar"
-            />
-          </GridCell>
-          <GridCell>
-            <ViewPalette
-              onSelect={onSelect}
-              active={view.type === "timeline"}
-              type="timeline"
-            />
-            <ViewPalette
-              onSelect={onSelect}
-              active={view.type === "graph"}
-              type="graph"
-            />
-          </GridCell>
-        </GridRow>
+        {LAYOUT_ROWS.map((row, i) => (
+          <GridRow key={i} style={{ gap: 10, marginTop: i === 0 ? 0 : 10 }}>
+            {row.map((type) => (
+              <GridCell key={type}>
+                <ViewPalette
+                  onSelect={onSelect}
+                  active={view.type === type}
+                  type={type}
+                />
+              </GridCell>
+            ))}
+            {/* The last row's empty places, so what is in it keeps its
+                width instead of stretching across the card. */}
+            {Array.from({ length: 3 - row.length }, (_, j) => (
+              <GridCell key={`gap-${j}`} />
+            ))}
+          </GridRow>
+        ))}
       </Grid>
 
       <MenuRow
@@ -142,6 +127,12 @@ export function LayoutPanel({ view, db, bare = false }: LayoutPanelProps) {
         onToggle={() => updateAttributes({ ...attrs, hideTitle: showDbTitle })}
       />
       {view.type === "form" && <FormSettings view={view} db={db} />}
+      {view.type === "graph" && (
+        <>
+          <Separator orientation="horizontal" style={{ height: 0.5 }} />
+          <GraphPanel view={view} db={db} />
+        </>
+      )}
       {view.type !== "form" &&
         properties.some((p) => p.config.type === "person") && (
           <MenuRow

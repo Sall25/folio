@@ -12,7 +12,6 @@ import {
   Lock,
   Palette,
   Plus,
-  Share2,
   SlidersHorizontal,
   Trash2,
   Upload,
@@ -64,7 +63,6 @@ import { downloadCsv, toCsv } from "../../utils/csv-export";
 import { csvImportStore } from "../../utils/csv-import-store";
 import { SubItemsPanel } from "../sub-items-panel";
 import { DependenciesPanel } from "../dependencies-panel";
-import { GraphPanel } from "../graph-panel";
 import { FormSettings } from "../../nodes/database-form-node-view/form-settings";
 import { requestNewQuestion } from "../../nodes/database-form-node-view/new-question-event";
 import type { FormView } from "src/types";
@@ -157,7 +155,6 @@ function ViewOptionsContent({
     "conditional-color": t("database.viewOptions.conditionalColor"),
     "sub-items": t("database.viewOptions.subItems"),
     dependencies: t("database.viewOptions.dependencies"),
-    graph: t("database.viewOptions.graph"),
   };
 
   const locked = db.locked;
@@ -321,7 +318,6 @@ function ViewOptionsContent({
               {panel.type === "dependencies" && (
                 <DependenciesPanel view={view} db={db} />
               )}
-              {panel.type === "graph" && <GraphPanel view={view} db={db} />}
             </PanelSlide>
             {/* group / sub-items land here once their panels exist */}
           </CardBody>
@@ -521,18 +517,6 @@ function ViewOptionsContent({
                 onClick={() => db.pushPanel({ type: "sub-items" })}
                 disabled={locked}
               />
-              {/* A graph's own settings — what it draws, what the colours
-                  mean, what it is drawn on — live here with every other
-                  view's, not in a menu above the canvas. */}
-              {view.type === "graph" && (
-                <MenuRow
-                  Icon={Share2}
-                  label={t("database.viewOptions.graph")}
-                  navigable
-                  onClick={() => db.pushPanel({ type: "graph" })}
-                  disabled={locked}
-                />
-              )}
               {/* Dependencies live beside sub-items: both are a relation of
                   the database with itself, and both are the database's,
                   not one view's. */}

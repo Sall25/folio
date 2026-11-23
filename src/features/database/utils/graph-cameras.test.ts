@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   forgetCamera,
+  onFitRequest,
   rememberCamera,
   rememberedCamera,
+  requestFit,
 } from "./graph-cameras";
 
 describe("where each graph was left looking", () => {
@@ -35,5 +37,48 @@ describe("where each graph was left looking", () => {
     forgetCamera("g1");
     expect(rememberedCamera("g1")).toBeUndefined();
     expect(rememberedCamera("g2")).toBeDefined();
+  });
+});
+
+describe("asking a canvas for everything in view", () => {
+  beforeEach(() => forgetCamera());
+
+  it("reaches the canvas showing that view", () => {
+    let asked = 0;
+    const off = onFitRequest("g1", () => (asked += 1));
+    requestFit("g1");
+    expect(asked).toBe(1);
+    off();
+  });
+
+  it("leaves other views alone", () => {
+    let asked = 0;
+    const off = onFitRequest("g1", () => (asked += 1));
+    requestFit("g2");
+    expect(asked).toBe(0);
+    off();
+  });
+
+  it("stops asking a canvas that has gone", () => {
+    let asked = 0;
+    onFitRequest("g1", () => (asked += 1))();
+    requestFit("g1");
+    expect(asked).toBe(0);
+  });
+
+  it("asks both canvases when one view is open twice", () => {
+    let asked = 0;
+    const a = onFitRequest("g1", () => (asked += 1));
+    const b = onFitRequest("g1", () => (asked += 1));
+    requestFit("g1");
+    expect(asked).toBe(2);
+    a();
+    b();
+  });
+
+  it("is quiet about a view with no id, and about nobody listening", () => {
+    expect(() => onFitRequest(undefined, () => {})()).not.toThrow();
+    expect(() => requestFit(undefined)).not.toThrow();
+    expect(() => requestFit("nobody")).not.toThrow();
   });
 });

@@ -282,23 +282,6 @@
       user-select: none;
     }
 
-    // The ring a link is drawn from: invisible until the pointer is near
-    // the page, and never in the way of moving it.
-    .db-graph__ring {
-      fill: none;
-      stroke: var(--tt-brand-color-400);
-      stroke-width: 2;
-      stroke-dasharray: 2 3;
-      opacity: 0;
-      cursor: crosshair;
-      transition: opacity 0.12s ease;
-    }
-
-    &:hover .db-graph__ring,
-    &[data-linking] .db-graph__ring {
-      opacity: 1;
-    }
-
     .db-graph__label {
       fill: var(--tt-text-secondary);
       font-size: 11px;
@@ -360,11 +343,26 @@
     }
 
     &[data-linking="from"] .db-graph__rim,
-    &[data-linking="over"] .db-graph__rim,
     &:focus-visible .db-graph__rim {
       stroke: var(--tt-brand-color-400);
     }
 
+    // The page a dragged one is being held over: it grows a little and
+    // takes the brand ring, so the drop that joins them is visible before
+    // it happens.
+    &[data-linking="over"] {
+      .db-graph__rim {
+        stroke: var(--tt-brand-color-400);
+        stroke-width: 3;
+      }
+
+      .db-graph__face {
+        filter: drop-shadow(0 0 6px var(--tt-brand-color-400));
+      }
+    }
+
+    // Already joined, or nowhere to write it: say so rather than letting
+    // the drop quietly do nothing.
     &[data-linking="refused"] .db-graph__rim {
       stroke: var(--tt-color-red-inc-1, #ef4444);
     }

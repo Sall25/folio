@@ -687,8 +687,7 @@ export type PanelView =
   | { type: "group" }
   | { type: "conditional-color" }
   | { type: "sub-items" }
-  | { type: "dependencies" }
-  | { type: "graph" };
+  | { type: "dependencies" };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Property registry

@@ -19,6 +19,7 @@ import {
   type GraphNode,
 } from "../../utils/graph-model";
 import { graphLegend } from "../../utils/graph-colors";
+import { onFitRequest } from "../../utils/graph-cameras";
 import {
   fromMinimap,
   minimapFit,
@@ -164,8 +165,12 @@ function DatabaseGraphNodeViewImpl() {
   const [focused, setFocused] = useState(false);
   const background = view?.background ?? "dots";
 
-  // The canvas first: the link gesture needs to know where the view is
-  // looking, and the canvas hands a ring-press over to it.
+  const connect = useGraphConnect({
+    property: connectProperty,
+    linksOf,
+    setCellValue,
+  });
+
   const canvas = useGraphCanvas({
     box: BOX,
     viewId: view?.id,
@@ -174,16 +179,8 @@ function DatabaseGraphNodeViewImpl() {
     onMoveNode: pinNode,
     onOpen: openRecord,
     onUnpin: unpinNode,
-    onConnectStart: (id, event) => connect.onPointerDown(event, id),
-  });
-
-  const connect = useGraphConnect({
-    property: connectProperty,
-    linksOf,
-    setCellValue,
-    openRecord,
-    box: BOX,
-    camera: canvas.camera,
+    canLink: connect.canLink,
+    onLink: connect.link,
   });
 
   // The wheel, listened for by hand: React's own wheel is passive, and a
@@ -200,6 +197,12 @@ function DatabaseGraphNodeViewImpl() {
     surface.addEventListener("wheel", onWheel, { passive: false });
     return () => surface.removeEventListener("wheel", onWheel);
   }, [surface, onWheel]);
+
+  // "Everything in view" is a setting in the layout panel now, and that
+  // panel sits in the toolbar knowing nothing about where the pages are. It
+  // asks by view; this is the canvas that answers (graph-cameras.ts).
+  const fit = canvas.fit;
+  useEffect(() => onFitRequest(view?.id, fit), [view?.id, fit]);
 
   /** Make the relation a graph needs, when the database has none: dragging
    *  writes a relation, and with nowhere to write it the gesture can only
@@ -294,13 +297,10 @@ function DatabaseGraphNodeViewImpl() {
           </span>
         ))}
         <span className="db-graph__spacer" />
-        {connect.canConnect ? (
-          <span className="db-graph__key db-graph__key--hint">
-            {t("database.graph.connectWith", {
-              name: connectProperty?.name ?? "",
-            })}
-          </span>
-        ) : (
+        {!connect.canConnect && (
+          // Nothing to write a link in: an older database, or a graph view
+          // added to one that started as something else. Everything else a
+          // graph needs it is born with (make-data-source.ts).
           <Button variant="ghost" onClick={addRelation}>
             <Plus className="tiptap-button-icon" size={15} />
             <span className="tiptap-button-text">
@@ -309,13 +309,6 @@ function DatabaseGraphNodeViewImpl() {
           </Button>
         )}
 
-        <Button
-          variant="ghost"
-          onClick={canvas.fit}
-          aria-label={t("database.graph.fit")}
-        >
-          <span className="tiptap-button-text">{t("database.graph.fit")}</span>
-        </Button>
         {!focused && <ViewStageButton onOpen={() => setFocused(true)} />}
       </div>
 
@@ -377,26 +370,6 @@ function DatabaseGraphNodeViewImpl() {
               );
             })}
 
-            {connect.draft &&
-              (() => {
-                const from = at(connect.draft.from);
-                if (!from) return null;
-                return (
-                  <line
-                    className="db-graph__edge db-graph__edge--draft"
-                    data-refused={
-                      connect.draft.over && !connect.draft.valid
-                        ? ""
-                        : undefined
-                    }
-                    x1={from.x}
-                    y1={from.y}
-                    x2={connect.draft.at.x}
-                    y2={connect.draft.at.y}
-                  />
-                );
-              })()}
-
             {graph.nodes.map((node) => {
               const point = at(node.id);
               if (!point) return null;
@@ -412,15 +385,14 @@ function DatabaseGraphNodeViewImpl() {
                   isMoving={canvas.gesture.moving === node.id}
                   isPlaced={!!view?.pinned?.[node.id]}
                   linking={
-                    connect.draft?.from === node.id
+                    canvas.gesture.moving === node.id
                       ? "from"
-                      : connect.draft?.over === node.id
-                        ? connect.draft.valid
+                      : canvas.gesture.over === node.id
+                        ? canvas.gesture.joins
                           ? "over"
                           : "refused"
                         : undefined
                   }
-                  canConnect={connect.canConnect}
                   onHold={setHeld}
                   onPointerDown={canvas.onNodePointerDown}
                 />
@@ -632,7 +604,6 @@ function Node({
   isMoving,
   isPlaced,
   linking,
-  canConnect,
   onHold,
   onPointerDown,
 }: {
@@ -645,9 +616,8 @@ function Node({
   isMoving: boolean;
   isPlaced: boolean;
   linking: "from" | "over" | "refused" | undefined;
-  canConnect: boolean;
   onHold: (id: ID | null) => void;
-  onPointerDown: (event: React.PointerEvent, id: ID, ring: boolean) => void;
+  onPointerDown: (event: React.PointerEvent, id: ID) => void;
 }) {
   // Its links make it bigger, but a page is a page: never a speck.
   const r = nodeRadius(node.degree);
@@ -666,10 +636,10 @@ function Node({
       tabIndex={0}
       onPointerEnter={() => onHold(node.id)}
       onFocus={() => onHold(node.id)}
-      // Press to open the page, drag to move it about; the ring around it
-      // draws a link, ⌥ hands it back to the layout and ⇧ frames it with
-      // everything it touches (use-graph-canvas.ts).
-      onPointerDown={(e) => onPointerDown(e, node.id, false)}
+      // Press to open the page; drag it onto another to join the two, or
+      // anywhere else to move it. ⌥ hands it back to the layout and ⇧
+      // frames it with everything it touches (use-graph-canvas.ts).
+      onPointerDown={(e) => onPointerDown(e, node.id)}
     >
       <circle
         className="db-graph__face"
@@ -693,14 +663,6 @@ function Node({
         </text>
       )}
       <circle className="db-graph__rim" r={r} />
-      {canConnect && (
-        // The ring: a drag from here joins this page to another.
-        <circle
-          className="db-graph__ring"
-          r={r + 5}
-          onPointerDown={(e) => onPointerDown(e, node.id, true)}
-        />
-      )}
       <text className="db-graph__label" y={r + 16}>
         {node.title || "—"}
       </text>

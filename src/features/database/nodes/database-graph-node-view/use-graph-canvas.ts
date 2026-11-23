@@ -28,11 +28,22 @@ export interface GraphGesture {
   moving: ID | null;
   /** Where it is while it is dragged, before anything is saved. */
   movingAt: GraphPoint | null;
+  /** The node it is being held over: dropping it there joins the two. */
+  over: ID | null;
+  /** Whether that drop would be allowed — already joined, or no relation
+   *  to write it in, and it would not. */
+  joins: boolean;
   /** The canvas itself is being dragged. */
   panning: boolean;
 }
 
-const RESTING: GraphGesture = { moving: null, movingAt: null, panning: false };
+const RESTING: GraphGesture = {
+  moving: null,
+  movingAt: null,
+  over: null,
+  joins: false,
+  panning: false,
+};
 
 /** How far a press may wander and still count as a press. */
 const SLACK = 4;
@@ -55,7 +66,8 @@ export function useGraphCanvas({
   onMoveNode,
   onOpen,
   onUnpin,
-  onConnectStart,
+  canLink,
+  onLink,
 }: {
   box: Box;
   /** The view this canvas belongs to, so it comes back where it was left. */
@@ -69,8 +81,10 @@ export function useGraphCanvas({
   onOpen: (id: ID) => void;
   /** A node handed back to the layout. */
   onUnpin?: (id: ID) => void;
-  /** A drag that began on a node's ring rather than its face. */
-  onConnectStart?: (id: ID, event: React.PointerEvent) => void;
+  /** Whether dropping one page on another would join them. */
+  canLink?: (from: ID, to: ID) => boolean;
+  /** Join them. A drop that joins does not also move the page. */
+  onLink?: (from: ID, to: ID) => void;
 }) {
   const [camera, setCamera] = useState<Camera>(
     () => rememberedCamera(viewId) ?? START_CAMERA,
@@ -217,20 +231,16 @@ export function useGraphCanvas({
   );
 
   /**
-   * Press a node: still, and the page opens; moved, and the node moves.
-   * A press on the ring around it draws a link instead, ⌥ hands it back to
-   * the layout, and ⇧ frames it with everything it touches.
+   * Press a page: still, and it opens; dragged onto another page, the two
+   * are joined; dragged anywhere else, it is moved there. ⌥ hands it back
+   * to the layout, and ⇧ frames it with everything it touches.
    */
   const onNodePointerDown = useCallback(
-    (event: React.PointerEvent, id: ID, ring: boolean) => {
+    (event: React.PointerEvent, id: ID) => {
       if (event.button !== 0) return;
       event.preventDefault();
       event.stopPropagation();
       stopGlide();
-      if (ring) {
-        onConnectStart?.(id, event);
-        return;
-      }
       if (event.altKey) {
         onUnpin?.(id);
         return;
@@ -247,6 +257,18 @@ export function useGraphCanvas({
       // The camera as it stands: a drag of a node does not zoom.
       const now = camera;
 
+      // The page it is being held over, if any. Read from the document
+      // rather than from the points, so it is the thing actually under the
+      // pointer — the same test the drop will make.
+      const nodeUnder = (e: PointerEvent): ID | null => {
+        const el = document
+          .elementFromPoint(e.clientX, e.clientY)
+          ?.closest<SVGGElement>("[data-node-id]");
+        const under = el?.dataset.nodeId ?? null;
+        return under && under !== id ? under : null;
+      };
+      let over: ID | null = null;
+
       const move = (e: PointerEvent) => {
         if (
           !moved &&
@@ -254,9 +276,12 @@ export function useGraphCanvas({
         )
           return;
         moved = true;
+        over = nodeUnder(e);
         setGesture({
           moving: id,
           movingAt: graphPointIn(rect, box, now, e),
+          over,
+          joins: !!over && !!canLink?.(id, over),
           panning: false,
         });
       };
@@ -264,8 +289,21 @@ export function useGraphCanvas({
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", up);
         setGesture(RESTING);
-        if (!moved) onOpen(id);
-        else onMoveNode(id, graphPointIn(rect, box, now, e));
+        if (!moved) {
+          onOpen(id);
+          return;
+        }
+        // Dropped on another page: that is a link, and the page goes back
+        // to where it was — it was carried there to say something about
+        // the other one, not to live there. A drop the graph refuses (they
+        // are already joined, or there is no relation to write) goes back
+        // too, rather than leaving the page sitting on top of the other.
+        const target = over ?? nodeUnder(e);
+        if (target) {
+          if (canLink?.(id, target)) onLink?.(id, target);
+          return;
+        }
+        onMoveNode(id, graphPointIn(rect, box, now, e));
       };
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", up);
@@ -277,7 +315,8 @@ export function useGraphCanvas({
       onOpen,
       onMoveNode,
       onUnpin,
-      onConnectStart,
+      canLink,
+      onLink,
       stopGlide,
     ],
   );

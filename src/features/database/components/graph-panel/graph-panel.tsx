@@ -8,6 +8,7 @@ import {
 import {
   Circle,
   LayoutGrid,
+  Maximize2,
   Palette,
   Share2,
   Sparkles,
@@ -21,16 +22,16 @@ import {
   linkProperties,
   relationProperties,
 } from "../../utils/graph-model";
+import { requestFit } from "../../utils/graph-cameras";
 import { MenuRow } from "../menu-row";
 import "./graph-panel.scss";
 
-// View options › Graph: what the canvas draws, what the colours mean, and
-// what it is drawn on.
+// Layouts › Graph: what the canvas draws, what the colours mean, what it is
+// drawn on, and how to get back to all of it.
 //
-// It lives here rather than in a menu of its own above the canvas because
-// that is where every other view keeps its settings — the table's
-// properties, the board's grouping, the timeline's dependencies. A graph is
-// a view, not an app inside one.
+// It sits under the layout grid, where a graph is chosen, with the table's
+// and the gallery's own settings — not in a menu above the canvas and not
+// in a panel of its own. A graph is a view, not an app inside one.
 
 const BACKGROUNDS: { kind: GraphBackground; Icon: typeof Circle }[] = [
   { kind: "dots", Icon: Circle },
@@ -115,6 +116,18 @@ export function GraphPanel({
 
   return (
     <div className="db-graph-panel">
+      <CardItemGroup>
+        <CardGroupLabel>{t("database.graph.canvasLabel")}</CardGroupLabel>
+        {/* The canvas is elsewhere on the page; it answers to its view
+            (graph-cameras.ts). */}
+        <MenuRow
+          Icon={Maximize2}
+          label={t("database.graph.fit")}
+          sub={t("database.graph.fitSub")}
+          onClick={() => requestFit(view.id)}
+        />
+      </CardItemGroup>
+
       <CardItemGroup>
         <CardGroupLabel>{t("database.graph.drawn")}</CardGroupLabel>
         {choices.map(({ property, drawn, count: n }) => (
@@ -204,13 +217,6 @@ export function GraphPanel({
             />
           </svg>
           {t("database.graph.keyPageLink")}
-        </div>
-        <div className="db-graph-panel__key">
-          <svg width="26" height="14" aria-hidden="true">
-            <circle className="db-graph-panel__blob" cx="13" cy="7" r="4.5" />
-            <circle className="db-graph-panel__halo" cx="13" cy="7" r="6.5" />
-          </svg>
-          {t("database.graph.keyRing")}
         </div>
         <div className="db-graph-panel__key">
           <svg width="26" height="14" aria-hidden="true">

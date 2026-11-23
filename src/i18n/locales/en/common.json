@@ -1555,8 +1555,7 @@
       "duplicate": "Duplicate view",
       "delete": "Delete view",
       "exportCsv": "Export as CSV",
-      "importCsv": "Import CSV…",
-      "graph": "Graph"
+      "importCsv": "Import CSV…"
     },
     "views": {
       "table": "Table",
@@ -1697,7 +1696,6 @@
       "addRelation": "Add a relation to connect records",
       "relatedTo": "Related to",
       "relatedFrom": "Related from",
-      "connectWith": "Drag between nodes to link with {{name}}",
       "fit": "Fit",
       "background": "Canvas background",
       "grounds": {
@@ -1714,7 +1712,6 @@
       "key": "Key",
       "keyRelation": "a relation property",
       "keyPageLink": "a link written in the page",
-      "keyRing": "drag the ring to join two pages",
       "keySize": "bigger means more connections",
       "map": "Map of the whole graph. Press it to go there.",
       "linkCount_one": "{{count}} link",
@@ -1722,11 +1719,13 @@
       "moving": "Moving about",
       "how": {
         "wheel": "Scroll to zoom, wherever the pointer is.",
-        "drag": "Drag the canvas to move it; drag a page to put it somewhere.",
+        "drag": "Drag a page onto another to join them; drag it anywhere else to move it.",
         "middle": "Middle-drag moves the canvas from anywhere.",
         "frame": "Shift-click a page to frame it with everything it touches.",
         "unpin": "Alt-click a page to hand it back to the layout."
-      }
+      },
+      "canvasLabel": "Canvas",
+      "fitSub": "Everything in view"
     },
     "manageInCalendar": {
       "open": "Manage in calendar",
