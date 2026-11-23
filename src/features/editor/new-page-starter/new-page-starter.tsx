@@ -12,6 +12,7 @@ import {
   PsListIcon,
   PsTableIcon,
   PsTemplateIcon,
+  PsGraphIcon,
   PsTimelineIcon,
 } from "src/components/tiptap-icons/page-starter-icons";
 import { Button, ButtonGroup } from "src/components/tiptap-ui-primitive/button";
@@ -46,6 +47,7 @@ const VIEWS: { type: ViewType; icon: ReactNode }[] = [
   { type: "gallery", icon: <PsGalleryIcon {...ICON} /> },
   { type: "calendar", icon: <PsCalendarIcon {...ICON} /> },
   { type: "timeline", icon: <PsTimelineIcon {...ICON} /> },
+  { type: "graph", icon: <PsGraphIcon {...ICON} /> },
 ];
 
 // Keep the editor's focus and selection when a row is pressed.

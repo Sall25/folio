@@ -12,4 +12,8 @@ export const PsListIcon = icon("PsListIcon", "view_list");
 export const PsGalleryIcon = icon("PsGalleryIcon", "gallery_thumbnail");
 export const PsCalendarIcon = icon("PsCalendarIcon", "calendar_month");
 export const PsTimelineIcon = icon("PsTimelineIcon", "view_timeline");
-export const PsChevronRightIcon = icon("PsChevronRightIcon", "keyboard_arrow_right");
+export const PsGraphIcon = icon("PsGraphIcon", "hub");
+export const PsChevronRightIcon = icon(
+  "PsChevronRightIcon",
+  "keyboard_arrow_right",
+);

@@ -4,6 +4,7 @@ import { DEFAULT_CONFIGS } from "../types";
 
 function defaultProperties(
   viewType: DatabaseView["type"] = "table",
+  sourceId: ID = "",
 ): DatabaseProperty[] {
   const properties: DatabaseProperty[] = [
     {
@@ -40,6 +41,38 @@ function defaultProperties(
         width: 180,
       },
     );
+  } else if (viewType === "graph") {
+    // A graph draws a database's links to itself, so the thing it cannot
+    // open without is the link: the stored side and its mirror, the same
+    // pair sub-items is made of. Born with it, like a board is born with
+    // its Status — otherwise the first graph anyone opens is a field of
+    // dots with no way to join two of them.
+    const outward = crypto.randomUUID();
+    const inward = crypto.randomUUID();
+    properties.push(
+      {
+        id: outward,
+        name: "Related to",
+        config: {
+          type: "relation",
+          targetSourceId: sourceId,
+          showOnTarget: true,
+          mirrorPropertyId: inward,
+        },
+        width: 200,
+      } as DatabaseProperty,
+      {
+        id: inward,
+        name: "Related from",
+        config: {
+          type: "relation",
+          targetSourceId: sourceId,
+          showOnTarget: false,
+          mirrorPropertyId: outward,
+        },
+        width: 200,
+      } as DatabaseProperty,
+    );
   } else if (viewType === "calendar" || viewType === "timeline") {
     properties.push({
       id: crypto.randomUUID(),
@@ -69,12 +102,15 @@ export function makeDataSource(opts: {
   /** The view it's first shown in: picks the starting properties. */
   viewType?: DatabaseView["type"];
 }): DataSource {
+  // Worked out before the properties, because a graph's relation points at
+  // the database it belongs to.
+  const id = opts.sourceId ?? newId();
   return {
-    id: opts.sourceId ?? newId(),
+    id,
     name: opts.name,
     pageId: opts.pageId,
     hostPageId: opts.hostPageId ?? null,
-    properties: defaultProperties(opts.viewType),
+    properties: defaultProperties(opts.viewType, id),
     createdAt: Date.now(),
     updatedAt: null,
     views: [],

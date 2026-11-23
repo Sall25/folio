@@ -101,7 +101,14 @@ export type PropertyType =
   | "files";
 
 export type ViewType =
-  "table" | "board" | "list" | "gallery" | "calendar" | "timeline" | "form";
+  | "table"
+  | "board"
+  | "list"
+  | "gallery"
+  | "calendar"
+  | "timeline"
+  | "graph"
+  | "form";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Property config primitives
