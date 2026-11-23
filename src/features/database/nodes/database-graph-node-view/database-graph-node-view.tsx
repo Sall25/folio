@@ -17,6 +17,7 @@ import { useOpenRecord } from "../../hooks/use-open-record";
 import {
   buildGraph,
   linkProperties,
+  type GraphEdge,
   type GraphNode,
 } from "../../utils/graph-model";
 import { graphLegend } from "../../utils/graph-colors";
@@ -33,6 +34,7 @@ import {
   nodeRadius,
   type GraphPoint,
 } from "../../utils/graph-layout";
+import { bendOffsets, edgeShape, pairKey } from "../../utils/graph-edges";
 import {
   cameraTransform,
   visibleRect,
@@ -285,6 +287,53 @@ function DatabaseGraphNodeViewImpl() {
     [legend],
   );
 
+  // How big each page is drawn, so a connection knows where to stop.
+  const radiusOf = useCallback(
+    (id: ID) => {
+      const node = graph.nodes.find((n) => n.id === id);
+      return nodeRadius(node?.degree ?? 0);
+    },
+    [graph.nodes],
+  );
+
+  // Two pages can be joined more than once — a relation and a link written
+  // in the page, or two different relations. Each gets its own bend, so
+  // they fan out instead of lying on top of one another.
+  const bends = useMemo(() => {
+    const perPair = new Map<string, number[]>();
+    graph.edges.forEach((edge, i) => {
+      const key = pairKey(edge.from, edge.to);
+      const list = perPair.get(key) ?? [];
+      list.push(i);
+      perPair.set(key, list);
+    });
+    const out = new Map<number, number>();
+    for (const list of perPair.values()) {
+      const offsets = bendOffsets(list.length);
+      // A single link bends a little anyway: a shallow arc reads as a
+      // connection, a straight line reads as a border.
+      list.forEach((index, n) =>
+        out.set(index, list.length === 1 ? 0.07 : offsets[n]),
+      );
+    }
+    return out;
+  }, [graph.edges]);
+  const bendOf = useCallback(
+    (_edge: GraphEdge, index: number) => bends.get(index) ?? 0,
+    [bends],
+  );
+
+  /** A connection's colour at one end: that page's own, or the quiet grey
+   *  the stylesheet gives a page with no colour. */
+  const stopOf = useCallback(
+    (id: ID) => {
+      const node = graph.nodes.find((n) => n.id === id);
+      const colour = node?.colorKey ? colors.get(node.colorKey) : undefined;
+      return colour ? { stopColor: colour } : undefined;
+    },
+    [graph.nodes, colors],
+  );
+
   const at = useCallback(
     (id: ID): GraphPoint | undefined =>
       canvas.gesture.moving === id && canvas.gesture.movingAt
@@ -382,18 +431,48 @@ function DatabaseGraphNodeViewImpl() {
               const b = at(edge.to);
               if (!a || !b) return null;
               const lit = held ? edge.from === held || edge.to === held : false;
+              const shape = edgeShape(
+                { at: a, r: radiusOf(edge.from) },
+                { at: b, r: radiusOf(edge.to) },
+                bendOf(edge, i),
+              );
+              const id = `${uid}-e${i}`;
               return (
-                <line
+                <g
                   key={`${edge.from}>${edge.to}>${edge.propertyId ?? "link"}>${i}`}
-                  className="db-graph__edge"
+                  className="db-graph__link"
                   data-kind={edge.kind}
                   data-lit={lit || undefined}
                   data-dim={held && !lit ? "" : undefined}
-                  x1={a.x}
-                  y1={a.y}
-                  x2={b.x}
-                  y2={b.y}
-                />
+                >
+                  {/* The colours run along the line between the two pages,
+                      not along the arc: a gradient measured on a bent path
+                      slides about as the bend changes. */}
+                  <linearGradient
+                    id={id}
+                    gradientUnits="userSpaceOnUse"
+                    x1={shape.x1}
+                    y1={shape.y1}
+                    x2={shape.x2}
+                    y2={shape.y2}
+                  >
+                    <stop
+                      className="db-graph__stop"
+                      offset="0"
+                      style={stopOf(edge.from)}
+                    />
+                    <stop
+                      className="db-graph__stop"
+                      offset="1"
+                      style={stopOf(edge.to)}
+                    />
+                  </linearGradient>
+                  <path
+                    className="db-graph__edge"
+                    d={shape.d}
+                    stroke={`url(#${id})`}
+                  />
+                </g>
               );
             })}
 

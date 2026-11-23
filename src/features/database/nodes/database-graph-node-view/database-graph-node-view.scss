@@ -212,42 +212,51 @@
     }
   }
 
+  // A connection: one thin arc carrying both pages' colours, stopping
+  // clear of each rim so the pages sit on top of it rather than being
+  // skewered by it (graph-edges.ts does the geometry).
   &__edge {
-    stroke: var(--tt-gray-light-a-400);
-    stroke-width: 1.2;
+    fill: none;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    opacity: 0.75;
+    transition:
+      opacity 0.12s ease,
+      stroke-width 0.12s ease;
+  }
 
-    // A link written in a page, rather than a relation property: the same
-    // connection, drawn a little more lightly.
-    &[data-kind="link"] {
-      stroke-dasharray: 5 4;
-    }
+  // The colour at each end of that arc. A page with no colour of its own
+  // lends the quiet grey the rest of the canvas is drawn in.
+  &__stop {
+    stop-color: var(--tt-gray-light-a-400);
 
     .dark & {
-      stroke: var(--tt-gray-dark-a-400);
-    }
-
-    &[data-dim] {
-      opacity: 0.25;
-    }
-
-    // The links of whatever is under the pointer, which is the question a
-    // graph is usually asked: what does this one touch?
-    &[data-lit] {
-      stroke: var(--tt-brand-color-400);
-      stroke-width: 1.8;
-      opacity: 1;
+      stop-color: var(--tt-gray-dark-a-400);
     }
   }
 
-  // The link being drawn, while the pointer is still down.
-  &__edge--draft {
-    stroke: var(--tt-brand-color-400);
-    stroke-width: 1.8;
-    stroke-dasharray: 4 4;
-    pointer-events: none;
+  &__link {
+    // A link written in a page rather than a relation property: the same
+    // connection, said more lightly.
+    &[data-kind="link"] .db-graph__edge {
+      stroke-dasharray: 1 5;
+      opacity: 0.6;
+    }
 
-    &[data-refused] {
-      stroke: var(--tt-color-red-inc-1, #ef4444);
+    &[data-dim] .db-graph__edge {
+      opacity: 0.14;
+    }
+
+    // What the page under the pointer touches, which is the question a
+    // graph is usually asked. Brighter, thicker, and lit from within.
+    &[data-lit] .db-graph__edge {
+      stroke-width: 2.4;
+      opacity: 1;
+      filter: drop-shadow(0 0 3px var(--tt-brand-color-400));
+    }
+
+    &[data-lit][data-kind="link"] .db-graph__edge {
+      opacity: 0.9;
     }
   }
 
