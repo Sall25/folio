@@ -208,7 +208,8 @@
     "roomActions": "Room actions",
     "mentionedYou": "You were mentioned",
     "privatePage": "Private page",
-    "someone": "someone"
+    "someone": "someone",
+    "inviteSkipped": "{{names}} could not be added: they are not in this room's teamspace."
   },
   "showcase": {
     "defaultName": "Showcase",
@@ -1727,7 +1728,30 @@
       "canvasLabel": "Canvas",
       "fitSub": "Everything in view",
       "zoomIn": "Zoom in",
-      "zoomOut": "Zoom out"
+      "zoomOut": "Zoom out",
+      "find": "Find",
+      "findPlaceholder": "A page on the canvas…",
+      "untitled": "Untitled",
+      "noLinks": "unlinked",
+      "focus": "Focus",
+      "focusOff": "Dim nothing",
+      "focusHops_one": "Dim past {{count}} link",
+      "focusHops_other": "Dim past {{count}} links",
+      "path": "What joins two pages",
+      "pathSub": "Press one page, then another",
+      "pathWaiting": "Now press the other page",
+      "pathNone": "Nothing joins {{a}} and {{b}}.",
+      "chainApart_one": "{{count}} connection apart",
+      "chainApart_other": "{{count}} connections apart",
+      "looks": "How it looks",
+      "cluster": "Clusters hold together",
+      "clusterSub": "Pages sharing a colour sit together",
+      "fadeByAge": "Fade by age",
+      "fadeByAgeSub": "Fainter the longer since an edit",
+      "linkNames": "Name every connection",
+      "linkNamesSub": "Not only the one under the pointer",
+      "labelsByZoom": "Hide titles when far out",
+      "labelsByZoomSub": "Except the page under the pointer"
     },
     "manageInCalendar": {
       "open": "Manage in calendar",

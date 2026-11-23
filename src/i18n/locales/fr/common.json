@@ -208,7 +208,8 @@
     "roomActions": "Actions du salon",
     "mentionedYou": "On t'a mentionné",
     "privatePage": "Page privée",
-    "someone": "quelqu'un"
+    "someone": "quelqu'un",
+    "inviteSkipped": "{{names}} n'ont pas pu être ajoutés : ils ne font pas partie de l'espace d'équipe de ce salon."
   },
   "comments": {
     "onProperty": "sur {{name}}",
@@ -1727,7 +1728,30 @@
       "canvasLabel": "Canevas",
       "fitSub": "Tout afficher",
       "zoomIn": "Zoom avant",
-      "zoomOut": "Zoom arrière"
+      "zoomOut": "Zoom arrière",
+      "find": "Trouver",
+      "findPlaceholder": "Une page sur le canevas…",
+      "untitled": "Sans titre",
+      "noLinks": "sans lien",
+      "focus": "Mise au point",
+      "focusOff": "Ne rien estomper",
+      "focusHops_one": "Estomper au-delà de {{count}} lien",
+      "focusHops_other": "Estomper au-delà de {{count}} liens",
+      "path": "Ce qui relie deux pages",
+      "pathSub": "Clique sur une page, puis sur une autre",
+      "pathWaiting": "Clique maintenant sur l’autre page",
+      "pathNone": "Rien ne relie {{a}} et {{b}}.",
+      "chainApart_one": "{{count}} connexion d’écart",
+      "chainApart_other": "{{count}} connexions d’écart",
+      "looks": "L’allure",
+      "cluster": "Les couleurs se regroupent",
+      "clusterSub": "Les pages d’une même couleur se rassemblent",
+      "fadeByAge": "Estomper avec l’âge",
+      "fadeByAgeSub": "Plus pâle à mesure que la modification s’éloigne",
+      "linkNames": "Nommer chaque connexion",
+      "linkNamesSub": "Pas seulement celle sous le pointeur",
+      "labelsByZoom": "Masquer les titres de loin",
+      "labelsByZoomSub": "Sauf la page sous le pointeur"
     },
     "manageInCalendar": {
       "open": "Gérer dans l'agenda",

@@ -22,6 +22,11 @@ export interface LayoutOptions {
   steps?: number;
   /** Nodes the person put somewhere: held there, and pulled on by others. */
   pinned?: Record<ID, GraphPoint>;
+  /** What each node is grouped by — the value it takes its colour from.
+   *  Given, nodes sharing a value are drawn towards one another, so the
+   *  colours gather into places instead of being sprinkled through the
+   *  same web. Left out, nothing gathers. */
+  groups?: Map<ID, string | null>;
 }
 
 /** How far apart two joined nodes would like to be. */
@@ -31,6 +36,10 @@ const PUSH = 9000;
 /** How strongly the middle pulls, so a loose piece does not wander off. */
 const GRAVITY = 0.004;
 const FRICTION = 0.82;
+/** How strongly a node is drawn towards the middle of its own group. Well
+ *  under the spring, so what a page is joined to still decides where it
+ *  sits and its colour only leans on that. */
+const GROUP_PULL = 0.012;
 
 /**
  * Lay the graph out. The same nodes and edges always give the same
@@ -40,7 +49,7 @@ const FRICTION = 0.82;
 export function layoutGraph(
   nodes: GraphNode[],
   edges: GraphEdge[],
-  { width, height, steps = 320, pinned = {} }: LayoutOptions,
+  { width, height, steps = 320, pinned = {}, groups }: LayoutOptions,
 ): Map<ID, GraphPoint> {
   const at = new Map<ID, GraphPoint & { vx: number; vy: number }>();
   const mid = { x: width / 2, y: height / 2 };
@@ -102,6 +111,31 @@ export function layoutGraph(
       a.vy += (dy / d) * force;
       b.vx -= (dx / d) * force;
       b.vy -= (dy / d) * force;
+    }
+
+    // Each group towards its own middle, worked out where it stands now.
+    // Nodes with no value of their own are left out of it: "nothing here"
+    // is not a group, and gathering them would make one.
+    if (groups?.size) {
+      const middles = new Map<string, { x: number; y: number; n: number }>();
+      for (const node of nodes) {
+        const group = groups.get(node.id);
+        if (!group) continue;
+        const p = at.get(node.id)!;
+        const sum = middles.get(group) ?? { x: 0, y: 0, n: 0 };
+        sum.x += p.x;
+        sum.y += p.y;
+        sum.n += 1;
+        middles.set(group, sum);
+      }
+      for (const node of nodes) {
+        const group = groups.get(node.id);
+        const sum = group ? middles.get(group) : undefined;
+        if (!sum) continue;
+        const p = at.get(node.id)!;
+        p.vx += (sum.x / sum.n - p.x) * GROUP_PULL;
+        p.vy += (sum.y / sum.n - p.y) * GROUP_PULL;
+      }
     }
 
     for (const node of nodes) {

@@ -235,6 +235,21 @@
     }
   }
 
+  // What a connection is called, written along it. Painted with a halo of
+  // the page's own background so it reads where it crosses the line it
+  // belongs to.
+  &__edge-name {
+    fill: var(--tt-text-secondary);
+    font-size: 9px;
+    text-anchor: middle;
+    pointer-events: none;
+    user-select: none;
+    paint-order: stroke;
+    stroke: var(--tt-bg-color);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+  }
+
   &__link {
     // A link written in a page rather than a relation property: the same
     // connection, said more lightly.
@@ -267,6 +282,11 @@
   &__node {
     // Press to open the page, drag to move it: the hand says so.
     cursor: grab;
+
+    // How solid the page is before anything is being asked about: 1, or
+    // less when the canvas is fading pages by how long since anyone
+    // touched them (graph-focus.ts works out how much less).
+    opacity: var(--db-graph-age, 1);
 
     &:active {
       cursor: grabbing;
@@ -315,7 +335,13 @@
     }
 
     &[data-state="dim"] {
-      opacity: 0.3;
+      opacity: calc(var(--db-graph-age, 1) * 0.3);
+    }
+
+    // One end of "what joins these two?", waiting for its pair.
+    &[data-picked] .db-graph__rim {
+      stroke: var(--tt-brand-color-400);
+      stroke-width: 3;
     }
 
     // Lifted while it is carried, and set back down where it is dropped:

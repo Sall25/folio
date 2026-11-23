@@ -585,6 +585,20 @@ export interface GraphView extends BaseView {
   showPageLinks?: boolean;
   /** Pages nothing is joined to: shown unless this says otherwise. */
   hideUnlinked?: boolean;
+  /** How many links away a page stays lit while another is under the
+   *  pointer. 1 when nobody has chosen — its own and nothing else — and 0
+   *  to dim nothing at all. */
+  focusDepth?: 0 | 1 | 2 | 3;
+  /** Draw pages that share a colour nearer one another. */
+  cluster?: boolean;
+  /** The longer since a page was edited, the fainter it is drawn. */
+  fadeByAge?: boolean;
+  /** Write each connection's name along it, not only on the one under the
+   *  pointer. */
+  showLinkNames?: boolean;
+  /** Hide the titles when zoomed far enough out that they are a smudge.
+   *  On unless this says otherwise. */
+  labelsByZoom?: boolean;
 }
 
 /** The grounds a graph canvas can be drawn on. */

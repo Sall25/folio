@@ -38,16 +38,19 @@ export function forgetCamera(viewId?: ID): void {
 // that view answers. The same way a view's camera is kept here: by view id,
 // for as long as the tab is open.
 
-export type GraphRequest = "fit" | "open" | "zoomIn" | "zoomOut";
+export type GraphRequest = "fit" | "open" | "zoomIn" | "zoomOut" | "look";
 
-const listeners = new Map<string, Set<() => void>>();
+/** What a request carries, when it is about one page: its id. */
+export type GraphRequestArg = ID | undefined;
+
+const listeners = new Map<string, Set<(arg: GraphRequestArg) => void>>();
 const key = (viewId: ID, what: GraphRequest) => `${what}:${viewId}`;
 
 /** A canvas, saying it is the one showing this view. */
 export function onGraphRequest(
   viewId: ID | undefined,
   what: GraphRequest,
-  run: () => void,
+  run: (arg: GraphRequestArg) => void,
 ): () => void {
   if (!viewId) return () => {};
   const k = key(viewId, what);
@@ -60,10 +63,15 @@ export function onGraphRequest(
   };
 }
 
-/** Ask whichever canvas is showing this view. */
-export function requestGraph(viewId: ID | undefined, what: GraphRequest): void {
+/** Ask whichever canvas is showing this view. `arg` is the page a request
+ *  is about, for the ones that are about one — "look" at this page. */
+export function requestGraph(
+  viewId: ID | undefined,
+  what: GraphRequest,
+  arg?: GraphRequestArg,
+): void {
   if (!viewId) return;
-  for (const run of listeners.get(key(viewId, what)) ?? []) run();
+  for (const run of listeners.get(key(viewId, what)) ?? []) run(arg);
 }
 
 /** Everything in view, on whichever canvas is showing this view. */

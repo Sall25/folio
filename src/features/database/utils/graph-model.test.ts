@@ -216,6 +216,7 @@ describe("where the nodes go", () => {
     icon: null,
     iconKind: null,
     iconColor: null,
+    updatedAt: null,
     own: true,
     sourceId: "s",
     colorKey: null,

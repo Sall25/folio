@@ -11,20 +11,30 @@ import {
   LayoutGrid,
   Maximize2,
   Minus,
+  Clock,
+  Group,
+  Hash,
+  Link2,
   Palette,
   Plus,
+  Search,
   Share2,
   Sparkles,
+  TypeOutline,
 } from "src/components/icons";
 import { relationRecordIds } from "src/lib/relation-ids";
 import { pageLinkIds } from "../../utils/page-links";
 import type { UseDatabaseReturn } from "../../hooks";
 import { useDatabaseContext } from "../../context/database-context";
 import {
+  buildGraph,
   linkCounts,
   linkProperties,
   relationProperties,
 } from "../../utils/graph-model";
+import { busiest } from "../../utils/graph-minimap";
+import { matching } from "../../utils/graph-focus";
+import { setGraphSession, useGraphSession } from "../../utils/graph-session";
 import { requestGraph } from "../../utils/graph-cameras";
 import { MenuRow } from "../menu-row";
 import "./graph-panel.scss";
@@ -117,6 +127,42 @@ export function GraphPanel({
 
   const count = (n: number) => t("database.graph.linkCount", { count: n });
 
+  // ── Finding your way about ────────────────────────────────────────────
+  //
+  // The canvas is elsewhere on the page and holds the drawing; what is
+  // typed here and what is picked there are kept in one place both can see
+  // (graph-session.ts). The hubs and the orphans are worked out from the
+  // records, the same way the canvas works out its own graph — ours alone,
+  // since a page from another database is not this view's to jump to.
+  const session = useGraphSession(view.id);
+  const model = useMemo(
+    () => buildGraph(sortedRecords, properties, graph, () => undefined),
+    [sortedRecords, properties, graph],
+  );
+  const jumps = useMemo(() => {
+    const hubs = busiest(model.nodes, 3);
+    const orphans = model.nodes.filter((n) => n.degree === 0).slice(0, 3);
+    return [...hubs, ...orphans];
+  }, [model.nodes]);
+
+  const look = (id: ID) => requestGraph(view.id, "look", id);
+  const setQuery = (query: string) => setGraphSession(view.id, { query });
+  /** ↵ in the find field: go to the first page it matches. */
+  const goToFirstMatch = () => {
+    const hits = matching(model.nodes, session.query);
+    const hit = model.nodes.find((n) => hits.has(n.id));
+    if (hit) look(hit.id);
+  };
+  const togglePathMode = () =>
+    setGraphSession(view.id, {
+      pathMode: !session.pathMode,
+      picked: [],
+      chain: [],
+    });
+  const titleOf = (id: ID) =>
+    model.nodes.find((n) => n.id === id)?.title ||
+    t("database.graph.untitled");
+
   return (
     <div className="db-graph-panel">
       <CardItemGroup>
@@ -143,6 +189,121 @@ export function GraphPanel({
           Icon={Maximize2}
           label={t("database.stage.open")}
           onClick={() => requestGraph(view.id, "open")}
+        />
+      </CardItemGroup>
+
+      <CardItemGroup>
+        <CardGroupLabel>{t("database.graph.find")}</CardGroupLabel>
+        <label className="db-graph-panel__find">
+          <Search className="tiptap-button-icon" size={15} />
+          <input
+            type="text"
+            value={session.query}
+            placeholder={t("database.graph.findPlaceholder")}
+            aria-label={t("database.graph.find")}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                goToFirstMatch();
+              }
+              if (e.key === "Escape") setQuery("");
+            }}
+          />
+        </label>
+        {jumps.map((node) => (
+          <MenuRow
+            key={node.id}
+            Icon={node.degree > 0 ? Share2 : Circle}
+            label={node.title || t("database.graph.untitled")}
+            sub={node.degree > 0 ? count(node.degree) : t("database.graph.noLinks")}
+            onClick={() => look(node.id)}
+          />
+        ))}
+      </CardItemGroup>
+
+      <CardItemGroup>
+        <CardGroupLabel>{t("database.graph.focus")}</CardGroupLabel>
+        {/* How much of the canvas stays lit around the page under the
+            pointer. One link away is what it has always done. */}
+        <MenuRow
+          label={t("database.graph.focusOff")}
+          selected={(graph?.focusDepth ?? 1) === 0}
+          onClick={() => set({ focusDepth: 0 })}
+        />
+        {([1, 2, 3] as const).map((hops) => (
+          <MenuRow
+            key={hops}
+            label={t("database.graph.focusHops", { count: hops })}
+            selected={(graph?.focusDepth ?? 1) === hops}
+            onClick={() => set({ focusDepth: hops })}
+          />
+        ))}
+        <MenuRow
+          Icon={Link2}
+          label={t("database.graph.path")}
+          sub={
+            session.pathMode && session.picked.length === 1
+              ? t("database.graph.pathWaiting")
+              : t("database.graph.pathSub")
+          }
+          toggle
+          checked={session.pathMode}
+          onToggle={togglePathMode}
+        />
+        {session.chain.length > 1 && (
+          <div className="db-graph-panel__chain">
+            {session.chain.map((step) => step.title || "—").join(" → ")}
+            <span className="db-graph-panel__apart">
+              {t("database.graph.chainApart", {
+                count: session.chain.length - 1,
+              })}
+            </span>
+          </div>
+        )}
+        {session.picked.length === 2 && session.chain.length === 0 && (
+          <div className="db-graph-panel__chain">
+            {t("database.graph.pathNone", {
+              a: titleOf(session.picked[0]),
+              b: titleOf(session.picked[1]),
+            })}
+          </div>
+        )}
+      </CardItemGroup>
+
+      <CardItemGroup>
+        <CardGroupLabel>{t("database.graph.looks")}</CardGroupLabel>
+        <MenuRow
+          Icon={Group}
+          label={t("database.graph.cluster")}
+          sub={t("database.graph.clusterSub")}
+          toggle
+          checked={!!graph?.cluster}
+          onToggle={() => set({ cluster: !graph?.cluster })}
+        />
+        <MenuRow
+          Icon={Clock}
+          label={t("database.graph.fadeByAge")}
+          sub={t("database.graph.fadeByAgeSub")}
+          toggle
+          checked={!!graph?.fadeByAge}
+          onToggle={() => set({ fadeByAge: !graph?.fadeByAge })}
+        />
+        <MenuRow
+          Icon={Hash}
+          label={t("database.graph.linkNames")}
+          sub={t("database.graph.linkNamesSub")}
+          toggle
+          checked={!!graph?.showLinkNames}
+          onToggle={() => set({ showLinkNames: !graph?.showLinkNames })}
+        />
+        <MenuRow
+          Icon={TypeOutline}
+          label={t("database.graph.labelsByZoom")}
+          sub={t("database.graph.labelsByZoomSub")}
+          toggle
+          checked={graph?.labelsByZoom !== false}
+          onToggle={() => set({ labelsByZoom: graph?.labelsByZoom === false })}
         />
       </CardItemGroup>
 

@@ -21,6 +21,13 @@ import {
   type GraphNode,
 } from "../../utils/graph-model";
 import { graphLegend } from "../../utils/graph-colors";
+import {
+  ageFade,
+  chainBetween,
+  hopsFrom,
+  matching,
+} from "../../utils/graph-focus";
+import { setGraphSession, useGraphSession } from "../../utils/graph-session";
 import { onGraphRequest } from "../../utils/graph-cameras";
 import {
   fromMinimap,
@@ -57,6 +64,9 @@ import "./database-graph-node-view.scss";
 // else. Moved, zoomed and dragged about by use-graph-canvas.
 
 const BOX = { width: 1000, height: 600 };
+/** Zoomed out past this, the titles are a smudge and are left off — unless
+ *  the canvas has been told to keep them. */
+const LABEL_ZOOM = 0.7;
 
 function DatabaseGraphNodeViewImpl() {
   const { t } = useTranslation();
@@ -92,22 +102,99 @@ function DatabaseGraphNodeViewImpl() {
   // seeded, so the same pages settle in the same places each time this view
   // is opened rather than rearranging themselves under the person.
   const pinned = view?.pinned;
+  // What each page is grouped by, when the canvas is drawing its colours as
+  // places rather than as a sprinkling: its own colour value, or nothing.
+  const cluster = !!view?.cluster;
+  const groups = useMemo(
+    () =>
+      cluster
+        ? new Map(graph.nodes.map((node) => [node.id, node.colorKey]))
+        : undefined,
+    [cluster, graph.nodes],
+  );
   const positions = useMemo(() => {
     const settled = layoutGraph(graph.nodes, graph.edges, {
       ...BOX,
       pinned: pinned ?? {},
+      groups,
     });
     // Once anything has been put somewhere on purpose, the canvas stops
     // rearranging itself around it.
     const anyPinned = !!pinned && Object.keys(pinned).length > 0;
     return anyPinned ? settled : fitIntoView(settled, BOX).at;
-  }, [graph, pinned]);
+  }, [graph, pinned, groups]);
 
   const [held, setHeld] = useState<ID | null>(null);
-  const near = useCallback(
-    (id: ID) => held === id || !!graph.neighbours.get(held ?? "")?.has(id),
+
+  // What the canvas is being asked right now, from the panel in the toolbar:
+  // a word typed into Find, or two pages picked to see what joins them
+  // (graph-session.ts).
+  const session = useGraphSession(view?.id);
+  const query = session.query;
+
+  /** How far each page is from the one under the pointer. */
+  const hops = useMemo(
+    () => (held ? hopsFrom(graph.neighbours, held) : null),
     [held, graph.neighbours],
   );
+  /** How far that still counts as near. 0 dims nothing. */
+  const depth = view?.focusDepth ?? 1;
+  // Read once, when the canvas is first drawn: fading by age is measured
+  // in days, and a clock read on every render would be a new number each
+  // time for no change anyone could see.
+  const [now] = useState(() => Date.now());
+  const found = useMemo(
+    () => matching(graph.nodes, query),
+    [graph.nodes, query],
+  );
+  const chain = useMemo(
+    () => new Set(session.chain.map((step) => step.id)),
+    [session.chain],
+  );
+  /** The pairs the chain runs through, so its own connections light up and
+   *  the others between the same pages do not. */
+  const chainPairs = useMemo(() => {
+    const pairs = new Set<string>();
+    for (let i = 0; i < session.chain.length - 1; i++)
+      pairs.add(pairKey(session.chain[i].id, session.chain[i + 1].id));
+    return pairs;
+  }, [session.chain]);
+
+  /**
+   * Which pages are being talked about, and which are standing back.
+   *
+   * One question at a time, the one being asked right now first: a word
+   * being typed, then a chain asked for earlier, then whatever the pointer
+   * happens to be resting on. A chain stays lit underneath a search and
+   * comes back when the field is cleared. "rest" is the ordinary state,
+   * where nothing is dimmed at all.
+   */
+  const stateOf = useCallback(
+    (id: ID): "rest" | "near" | "dim" => {
+      if (query.trim()) return found.has(id) ? "near" : "dim";
+      if (chain.size) return chain.has(id) ? "near" : "dim";
+      if (hops && depth > 0)
+        return (hops.get(id) ?? Infinity) <= depth ? "near" : "dim";
+      return "rest";
+    },
+    [chain, query, found, hops, depth],
+  );
+
+  const edgeLit = useCallback(
+    (edge: GraphEdge): boolean => {
+      if (query.trim()) return found.has(edge.from) && found.has(edge.to);
+      if (chain.size) return chainPairs.has(pairKey(edge.from, edge.to));
+      if (hops && depth > 0)
+        return (
+          (hops.get(edge.from) ?? Infinity) <= depth &&
+          (hops.get(edge.to) ?? Infinity) <= depth
+        );
+      return false;
+    },
+    [chain, chainPairs, query, found, hops, depth],
+  );
+  /** Whether anything is being singled out at all. */
+  const picking = chain.size > 0 || !!query.trim() || (!!hops && depth > 0);
 
   /** A node dropped somewhere stays there, for everyone. */
   const pinNode = useCallback(
@@ -174,13 +261,41 @@ function DatabaseGraphNodeViewImpl() {
     setCellValue,
   });
 
+  /**
+   * A press while two pages are being picked: the first is remembered, the
+   * second asks the question. Nothing joins them is an answer too — both
+   * stay picked, and the panel says so, rather than the canvas going quiet
+   * as though the press had missed.
+   */
+  const pick = useCallback(
+    (id: ID) => {
+      const step = (of: ID) => ({
+        id: of,
+        title: graph.nodes.find((n) => n.id === of)?.title ?? "",
+      });
+      const first = session.picked[0];
+      if (session.picked.length !== 1 || first === id) {
+        setGraphSession(view?.id, { picked: [id], chain: [] });
+        return;
+      }
+      const between = chainBetween(graph.neighbours, first, id);
+      setGraphSession(view?.id, {
+        picked: between.length ? [] : [first, id],
+        chain: between.map(step),
+      });
+    },
+    [graph.nodes, graph.neighbours, session.picked, view?.id],
+  );
+
   const canvas = useGraphCanvas({
     box: BOX,
     viewId: view?.id,
     points: positions,
     neighbours: graph.neighbours,
     onMoveNode: pinNode,
-    onOpen: openRecord,
+    // While two pages are being picked, a press picks rather than opens:
+    // the one gesture a canvas has, lent to the question being asked.
+    onOpen: session.pathMode ? pick : openRecord,
     onUnpin: unpinNode,
     canLink: connect.canLink,
     onLink: connect.link,
@@ -227,6 +342,17 @@ function DatabaseGraphNodeViewImpl() {
   useEffect(
     () => onGraphRequest(view?.id, "open", () => setFocused(true)),
     [view?.id],
+  );
+  // "Take me to this page": a hub, an orphan, or the first thing Find
+  // matched. Framed with what it touches, which is what makes arriving
+  // somewhere on a canvas mean anything.
+  const frameNode = canvas.frame;
+  useEffect(
+    () =>
+      onGraphRequest(view?.id, "look", (id) => {
+        if (id) frameNode(id);
+      }),
+    [view?.id, frameNode],
   );
 
   /** Make the relation a graph needs, when the database has none: dragging
@@ -334,6 +460,17 @@ function DatabaseGraphNodeViewImpl() {
     [graph.nodes, colors],
   );
 
+  /** What a connection is called: the relation's own name, or the words
+   *  for a link somebody wrote in a page. */
+  const nameOf = useCallback(
+    (edge: GraphEdge) =>
+      edge.propertyId
+        ? ((source?.properties ?? []).find((p) => p.id === edge.propertyId)
+            ?.name ?? "")
+        : t("database.graph.keyPageLink"),
+    [source?.properties, t],
+  );
+
   const at = useCallback(
     (id: ID): GraphPoint | undefined =>
       canvas.gesture.moving === id && canvas.gesture.movingAt
@@ -430,7 +567,7 @@ function DatabaseGraphNodeViewImpl() {
               const a = at(edge.from);
               const b = at(edge.to);
               if (!a || !b) return null;
-              const lit = held ? edge.from === held || edge.to === held : false;
+              const lit = edgeLit(edge);
               const shape = edgeShape(
                 { at: a, r: radiusOf(edge.from) },
                 { at: b, r: radiusOf(edge.to) },
@@ -443,7 +580,7 @@ function DatabaseGraphNodeViewImpl() {
                   className="db-graph__link"
                   data-kind={edge.kind}
                   data-lit={lit || undefined}
-                  data-dim={held && !lit ? "" : undefined}
+                  data-dim={picking && !lit ? "" : undefined}
                 >
                   {/* The colours run along the line between the two pages,
                       not along the arc: a gradient measured on a bent path
@@ -472,6 +609,19 @@ function DatabaseGraphNodeViewImpl() {
                     d={shape.d}
                     stroke={`url(#${id})`}
                   />
+                  {/* What the connection is, written along it: always when
+                      the canvas is set to say so, and on the one under the
+                      pointer either way. Seventeen identical lines say that
+                      things are joined and nothing about how. */}
+                  {(view?.showLinkNames || lit) && (
+                    <text
+                      className="db-graph__edge-name"
+                      x={shape.mid.x}
+                      y={shape.mid.y - 4}
+                    >
+                      {nameOf(edge)}
+                    </text>
+                  )}
                 </g>
               );
             })}
@@ -486,7 +636,15 @@ function DatabaseGraphNodeViewImpl() {
                   at={point}
                   clipId={`${uid}-clip-${node.id}`}
                   color={node.colorKey ? colors.get(node.colorKey) : undefined}
-                  state={held ? (near(node.id) ? "near" : "dim") : "rest"}
+                  state={stateOf(node.id)}
+                  fade={view?.fadeByAge ? ageFade(node.updatedAt, now) : 1}
+                  showLabel={
+                    view?.labelsByZoom === false ||
+                    camera.zoom >= LABEL_ZOOM ||
+                    held === node.id ||
+                    canvas.gesture.moving === node.id
+                  }
+                  isPicked={session.picked.includes(node.id)}
                   isHeld={held === node.id}
                   isMoving={canvas.gesture.moving === node.id}
                   isPlaced={!!view?.pinned?.[node.id]}
@@ -706,6 +864,9 @@ function Node({
   clipId,
   color,
   state,
+  fade,
+  showLabel,
+  isPicked,
   isHeld,
   isMoving,
   isPlaced,
@@ -718,6 +879,12 @@ function Node({
   clipId: string;
   color: string | undefined;
   state: "rest" | "near" | "dim";
+  /** How solid it is drawn before anything else dims it: 1, or less for a
+   *  page nobody has touched in a while. */
+  fade: number;
+  showLabel: boolean;
+  /** Picked as one end of "what joins these two?". */
+  isPicked: boolean;
   isHeld: boolean;
   isMoving: boolean;
   isPlaced: boolean;
@@ -731,6 +898,11 @@ function Node({
     <g
       className="db-graph__node"
       data-state={state}
+      // Fading by age and standing back from what is being asked about are
+      // two different reasons to be faint, and they multiply in the
+      // stylesheet rather than fighting over one opacity.
+      style={fade < 1 ? ({ "--db-graph-age": fade } as React.CSSProperties) : undefined}
+      data-picked={isPicked || undefined}
       data-held={isHeld || undefined}
       data-moving={isMoving || undefined}
       data-placed={isPlaced || undefined}
@@ -794,9 +966,11 @@ function Node({
           </foreignObject>
         ))}
       <circle className="db-graph__rim" r={r} />
-      <text className="db-graph__label" y={r + 16}>
-        {node.title || "—"}
-      </text>
+      {showLabel && (
+        <text className="db-graph__label" y={r + 16}>
+          {node.title || "—"}
+        </text>
+      )}
     </g>
   );
 }

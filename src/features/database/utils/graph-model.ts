@@ -24,6 +24,9 @@ export interface GraphNode {
   iconKind: "emoji" | "glyph" | null;
   /** The colour chosen for that icon, if one was. */
   iconColor: string | null;
+  /** When the page was last edited, for a canvas that fades what nobody
+   *  has touched in a while. Null when nothing was ever recorded. */
+  updatedAt: number | null;
   /** False for a record pulled in from another database by a relation. */
   own: boolean;
   /** Which database it belongs to, for the ones that are not this one. */
@@ -288,6 +291,7 @@ function nodeOf(
       cover?.color && cover.color !== "var(--tt-text-color)"
         ? cover.color
         : null,
+    updatedAt: page.updatedAt ?? null,
     own,
     sourceId: page.sourceId ?? null,
     colorKey: colorKeyOf(page, colorProperty),
