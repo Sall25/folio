@@ -8,7 +8,7 @@
 .dark {
   --tiptap-card-bg-color: #1f1f1f;
   --tiptap-card-border-color: var(--tt-gray-dark-a-100);
-  --tiptap-card-group-label-color: var(--tt-gray-dark-a-800);
+  --tiptap-card-group-label-color: #ada9a3;
   --tt-card-bg-color: var( --tiptap-card-bg-color);
 }
 
@@ -71,10 +71,9 @@
   padding-left: 0.5rem;
   padding-right: 0.5rem;
   padding-bottom: 0.25rem;
-  line-height: normal;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: normal;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500 !important;
   text-transform: capitalize;
   color: var(--tiptap-card-group-label-color);
 }

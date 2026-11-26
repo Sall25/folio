@@ -68,6 +68,7 @@ import { requestNewQuestion } from "../../nodes/database-form-node-view/new-ques
 import type { FormView } from "src/types";
 import { subItemPair } from "../../utils/sub-items";
 import { dependencyPair } from "../../utils/dependencies";
+import { ViewIcon } from "./view-icon";
 
 // The delete confirmation is portaled to <body>, outside the options panel:
 // pressing inside it must not count as a click outside the panel.
@@ -84,35 +85,30 @@ function SubPanelHeader({
   onClose?: () => void;
 }) {
   return (
-    <CardHeader>
+    <CardHeader style={{ borderBottom: "none", alignItems: "center" }}>
       <Button
         variant="ghost"
         // className="view-options__back"
         onClick={onBack}
         style={{
           background: "transparent",
+          alignItems: "flex-end",
+          paddingRight: 0,
+          minWidth: "fit-content",
+          width: "fit-content",
         }}
       >
         <ChevronLeft size={16} className="tiptap-button-icon" />
       </Button>
-      <Button
-        variant="ghost"
-        style={{
-          background: "transparent",
-          paddingLeft: 0,
-          marginLeft: 0,
-          minWidth: "fit-content",
-          width: "fit-content",
-          color: "var(--tt-text-primary)",
-        }}
-      >
+      <CardGroupLabel>
         <span className="tiptap-button-text">{title}</span>
-      </Button>
+      </CardGroupLabel>
       <Spacer orientation="horizontal" />
       {onClose && (
         <Button
-          variant="ghost"
+          // variant="ghost"
           className="view-options__close"
+          data-highlighted={true}
           onClick={onClose}
         >
           <X size={16} className="tiptap-button-icon" />
@@ -229,16 +225,7 @@ function ViewOptionsContent({
   // ── Sub-panel: replace the body, add a back header ──────────────────────
   if (panel.type !== "main") {
     return (
-      <Card
-        className="view-options"
-        style={{
-          maxHeight:
-            "min(600px, var(--radix-popover-content-available-height))",
-          overflowY: "auto",
-          overflowX: "hidden",
-          overscrollBehavior: "contain",
-        }}
-      >
+      <Card className="view-options">
         <SubPanelHeader
           title={panelTitles[panel.type] ?? t("database.viewOptions.options")}
           onBack={db.popPanel}
@@ -256,16 +243,7 @@ function ViewOptionsContent({
             <SpinnerRing />
           </div>
         ) : (
-          <CardBody
-            key={"card-body"}
-            style={{
-              width: "100%",
-              padding: "5px 10px",
-              maxHeight:
-                "min(600px, var(--radix-popover-content-available-height))",
-              scrollbarWidth: "thin",
-            }}
-          >
+          <CardBody key={"card-body"} className="view-options__body">
             <PanelSlide panelKey={panel.type}>
               {panel.type === "properties" && (
                 <PropertiesPanel
@@ -330,7 +308,7 @@ function ViewOptionsContent({
   // ── Main panel ──────────────────────────────────────────────────────────
   return (
     <Card className="view-options">
-      <CardHeader>
+      <CardHeader className="view-options__card-header">
         <CardGroupLabel>
           {view.type === "form"
             ? t("database.form.settings")
@@ -338,11 +316,7 @@ function ViewOptionsContent({
         </CardGroupLabel>
         <Spacer orientation="horizontal" />
         {onClose && (
-          <Button
-            variant="ghost"
-            className="view-options__close"
-            onClick={onClose}
-          >
+          <Button className="view-options__close" onClick={onClose}>
             <X size={16} className="tiptap-button-icon" />
           </Button>
         )}
@@ -359,10 +333,7 @@ function ViewOptionsContent({
           <SpinnerRing />
         </div>
       ) : (
-        <CardBody
-          key={"main-body"}
-          style={{ width: "100%", padding: "5px 10px" }}
-        >
+        <CardBody key={"main-body"} className="view-options__body">
           <CardItemGroup
             className="view-options__name"
             orientation="horizontal"
@@ -380,20 +351,23 @@ function ViewOptionsContent({
               <Button
                 variant="ghost"
                 data-active-state="on"
-                style={{ background: "transparent" }}
+                style={{
+                  border: "1px solid var(--tt-border-color)",
+                  minHeight: 30,
+                  height: 30,
+                  padding: "0 6px",
+                  background: "transparent",
+                }}
+                // style={{  }}
               >
-                {view.target === "Emoji" ? (
-                  <span key={"emoji"} className="tiptap-button-icon">
-                    {view.iconName}
-                  </span>
-                ) : (
+                {view.iconName ? (
                   <DynamicIcon
-                    key={"dynamic-icon"}
                     className="tiptap-button-icon"
                     name={view.iconName}
                     size={20}
-                    style={{ color: view.color }}
                   />
+                ) : (
+                  <ViewIcon view={view} />
                 )}
               </Button>
             </IconPickerPopover>
@@ -518,21 +492,21 @@ function ViewOptionsContent({
                 onClick={() => db.pushPanel({ type: "sub-items" })}
                 disabled={locked}
               />
-              {/* Dependencies live beside sub-items: both are a relation of
-                  the database with itself, and both are the database's,
-                  not one view's. */}
-              <MenuRow
-                Icon={ArrowRightLeft}
-                label={t("database.viewOptions.dependencies")}
-                sub={
-                  hasDependencies
-                    ? t("database.dependencies.on")
-                    : t("database.dependencies.off")
-                }
-                navigable
-                onClick={() => db.pushPanel({ type: "dependencies" })}
-                disabled={locked}
-              />
+
+              {view.type === "timeline" && (
+                <MenuRow
+                  Icon={ArrowRightLeft}
+                  label={t("database.viewOptions.dependencies")}
+                  sub={
+                    hasDependencies
+                      ? t("database.dependencies.on")
+                      : t("database.dependencies.off")
+                  }
+                  navigable
+                  onClick={() => db.pushPanel({ type: "dependencies" })}
+                  disabled={locked}
+                />
+              )}
 
               <Separator orientation="horizontal" />
 
@@ -631,10 +605,6 @@ export function ViewOptionsPopover({
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // useEffect(() => {
-  //   if (providedOpen) db.resetPanel();
-  // }, [providedOpen, db.resetPanel]);
-
   const closeControlled = () => {
     db.resetPanel();
     onOpenChange?.(false);
@@ -730,8 +700,10 @@ export function ViewOptionsPopover({
           align="end"
           sideOffset={-26}
           avoidCollisions
-          collisionPadding={4}
-          style={{ zIndex: 999 }}
+          collisionPadding={8}
+          style={{
+            zIndex: 999,
+          }}
           onInteractOutside={(e) => {
             if (isInConfirmDialog(e.target)) e.preventDefault();
           }}
@@ -745,6 +717,7 @@ export function ViewOptionsPopover({
               setOpen(false);
               db.resetPanel();
             }}
+            onClose={closeControlled}
           />
         </PopoverContent>
       </PopoverPortal>

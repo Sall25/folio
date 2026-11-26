@@ -1,6 +1,35 @@
 .db-actions-menu__shortcut{
-  line-height: 1.2;
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
   -webkit-font-smoothing: auto;
+  font-weight: 450 !important;
+  letter-spacing: -0.15px;
+  font-kerning: normal;
+  font-synthesis: none;
+  line-height: 1.4px;
+  font-size: 14px !important;
 
+}
+.db-menu-row--toggle{
+  border-radius: var(--tt-radius-sm);
+  &:hover{
+    background-color: var(--tt-gray-light-a-50);
+    .dark & {
+      background-color: var(--tt-gray-dark-a-50);
+    }
+  }
+}
+.db-menu-row--button{
+ .tiptap-button-icon{
+    color: var(--tt-text-primary) !important;
+  }
+  font-weight: 450 !important;
+  letter-spacing: -0.15px;
+  font-kerning: normal;
+  font-synthesis: none;
+  &:hover{
+    background-color: var(--tt-gray-light-a-50) !important;
+    .dark & {
+      background-color: var(--tt-gray-dark-a-50) !important;
+    }
+  }
 }

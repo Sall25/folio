@@ -1,22 +1,24 @@
+
 .view-options {
-  max-height: min(var(--radix-popover-content-available-height, 80vh), 80vh);
-  overflow-y: auto;
+  //max-height: min(600px, var(--radix-popover-content-available-height));
+  //overflow-y: auto;
   // Sideways there is nothing to reach: a long label is cut, not scrolled
   // to. (With overflow-y: auto the spec turns "visible" into "auto", which
   // is where the second scrollbar along the bottom came from.)
-  overflow-x: hidden;
-  overscroll-behavior: contain;
+  //overflow-x: hidden;
+//  overscroll-behavior: contain;
   width: 300px;
   display: flex;
   flex-direction: column;
   min-height: 400px;
   max-height: 600px;
-  border-radius: var(--tt-radius-lg);
-  border: 1px solid var(--tt-border-color);
-  background-color: var(--tt-gray-light-50);
-  .dark & {
-    background-color: var(--tt-gray-dark-100);
-  }
+  border-radius: 0;
+  border: none; //1px solid var(--tt-border-color);
+  border-left: 1px solid var(--tt-border-color);
+  background-color: var(--tt-bg-color);
+  // .dark & {
+  //   background-color: var(--tt-gray-dark-100);
+  // }
   box-shadow: var(--tt-shadow-elevated-md);
 
   // The app's slim pill, the same one the menus and the editor use. Only
@@ -51,13 +53,59 @@
 
   &__name-input {
     height: 30px;
+    outline: 1px solid var(--tt-border-color) !important;
+    .dark & {
+      background-color: #fcfcfc08;
+    }
   }
-  // overflow-y: scroll;
+  
+  &__body {
+    width: 100%;
+    padding: 5px;
+    max-height: min(600px, var(--radix-popover-content-available-height));
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    // Important: allow WebKit scrollbar styling
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+
+    &::-webkit-scrollbar {
+      width: 13px;
+    }
+    ::-webkit-scrollbar-thumb {
+      min-height: 40px;
+      border-radius: 9999px;
+      background-color: var(--app-scrollbar-thumb);
+      background-clip: padding-box;
+     
+      &:hover {
+        background-color: var(--app-scrollbar-thumb-hover);
+      }
+
+      &:active {
+        background-color: var(--app-scrollbar-thumb-hover);
+      }
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    // &::-webkit-scrollbar-thumb {
+    //   background: var(--app-scrollbar-thumb);
+    //   border-radius: 8px;
+    // }
+  }
 
   &__header {
     display: flex;
     align-items: center;
     padding: 4px 8px 6px;
+  }
+
+  &__card-header{
+    border-bottom: none;
   }
 
   &__title {
@@ -67,10 +115,17 @@
   }
 
   &__close {
-    min-height: 22px;
-    height: 22px;
-    width: 22px;
+    min-height: 20px;
+    height: 20px;
+    min-width: 20px;
+    width: 20px;
+    border-radius: var(--tt-radius-xl);
+    cursor:pointer;
     padding: 0;
+    
+    .tiptap-button-icon{
+      color: var(--tt-text-primary);
+    }
   }
 
   &__name {
@@ -104,7 +159,7 @@
     justify-content: flex-start;
     border-radius: var(--tt-radius-sm);
     font-size: 14px;
-    color: var(--tt-paragraph-text-color);
+    color: var(--tt-text-primary); //var(--tt-paragraph-text-color);
 
     &-icon {
       display: inline-flex;
@@ -121,7 +176,7 @@
 
     &-value {
       font-size: 12px;
-      color: var(--tt-text-color, #9b9a97);
+      color: var(--tt-text-primary, #9b9a97);
       white-space: nowrap;
       font-family:
         ui-sans-serif,

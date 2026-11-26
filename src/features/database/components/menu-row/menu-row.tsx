@@ -87,6 +87,7 @@ export function MenuRow({
             justifyContent: "flex-start",
             borderRadius: "var(--tt-radius-sm)",
             background: "transparent",
+            color: "var(--tt-text-primary)",
           }}
         >
           {iconEl}
@@ -112,11 +113,16 @@ export function MenuRow({
       role="menuitem"
       onClick={onClick}
       disabled={disabled}
-      className={danger ? "tiptap-button-delete" : undefined}
+      className={
+        danger
+          ? "db-menu-row--button tiptap-button-delete"
+          : "db-menu-row--button"
+      }
       style={{
         width: "100%",
         justifyContent: "flex-start",
         borderRadius: "var(--tt-radius-sm)",
+        color: "var(--tt-text-primary)",
       }}
     >
       {iconEl}
