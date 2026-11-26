@@ -7,6 +7,7 @@ import type {
   TimelineView,
 } from "src/types";
 import type { UseDatabaseReturn } from "./use-database";
+import { useTranslation } from "react-i18next";
 
 export const DAY_WIDTH = 40;
 /**
@@ -339,6 +340,7 @@ export interface TimelineRange {
    * context it runs on into. 0 where there is none.
    */
   anchorIndex: number;
+  lang?: string;
 }
 
 export interface TimelineLayout {
@@ -499,14 +501,19 @@ export function barCovers(
  * unit on it. A column of bare 1…23 in a view of a single date reads as
  * dates, which is exactly what it is not.
  */
-export function columnLabel(d: Date, unit: CellUnit, withMonth = true): string {
+export function columnLabel(
+  d: Date,
+  unit: CellUnit,
+  withMonth = true,
+  lang?: string,
+): string {
   // The locale's own clock: "9 PM" where one is read that way, "21" where
   // it isn't. A hardcoded 24-hour label was wrong in half the world.
   if (unit === "hour") {
-    return d.toLocaleTimeString(undefined, { hour: "numeric" });
+    return d.toLocaleTimeString(lang, { hour: "numeric" });
   }
   if (unit === "month") {
-    return d.toLocaleDateString(undefined, { month: "short" });
+    return d.toLocaleDateString(lang, { month: "short" });
   }
   if (unit === "week") {
     // The Monday it starts on. A quarter is read by where in it a thing
@@ -516,14 +523,14 @@ export function columnLabel(d: Date, unit: CellUnit, withMonth = true): string {
     // weeks by month): repeating it in all fifty-two says nothing, and
     // there is no room for it in any case.
     if (withMonth === false) return String(d.getDate());
-    const m = d.toLocaleDateString(undefined, { month: "short" });
+    const m = d.toLocaleDateString(lang, { month: "short" });
     return `${d.getDate()} ${m}`;
   }
   if (unit === "weekday") {
     // The letter and the date: a week is read by its days of the week as
     // much as by its dates, and at this width the initial is enough to
     // tell them apart — the column under it is a whole day wide.
-    const name = d.toLocaleDateString(undefined, { weekday: "narrow" });
+    const name = d.toLocaleDateString(lang, { weekday: "narrow" });
     return `${name} ${d.getDate()}`;
   }
   return String(d.getDate());
@@ -539,10 +546,11 @@ export function columnParts(
   d: Date,
   unit: CellUnit,
   withMonth = true,
+  lang?: string,
 ): { lead?: string; main: string } {
   if (unit === "weekday") {
     return {
-      lead: d.toLocaleDateString(undefined, { weekday: "narrow" }),
+      lead: d.toLocaleDateString(lang, { weekday: "narrow" }),
       main: String(d.getDate()),
     };
   }
@@ -708,6 +716,7 @@ function groupDate(d: Date, unit: CellUnit): Date {
 export function headerGroupsFor(
   days: Date[],
   unit: CellUnit,
+  lang?: string,
 ): { label: string; full: string; days: number }[] {
   const scale = unit === "hour" ? "date" : unit === "month" ? "year" : "month";
   const out: { label: string; full: string; days: number }[] = [];
@@ -727,7 +736,7 @@ export function headerGroupsFor(
     }
     const named = (withYear: boolean) =>
       d.toLocaleDateString(
-        undefined,
+        lang,
         scale === "year"
           ? { year: "numeric" }
           : {
@@ -768,7 +777,11 @@ function endOfColumn(d: Date, unit: CellUnit): Date {
 /** A page with more pages of its own columns either side of it, by the
  *  column's own unit — hours before an hour, weeks before a week — so the
  *  context is made of the same thing the page is. */
-function padPage(page: TimelineRange, pad: number): TimelineRange {
+function padPage(
+  page: TimelineRange,
+  pad: number,
+  lang?: string,
+): TimelineRange {
   const { unit } = page;
   const last = page.days[page.days.length - 1];
   const before: Date[] = [];
@@ -784,7 +797,7 @@ function padPage(page: TimelineRange, pad: number): TimelineRange {
     days,
     startDate: days[0],
     endDate: endOfColumn(days[days.length - 1], unit),
-    headerGroups: headerGroupsFor(days, unit),
+    headerGroups: headerGroupsFor(days, unit, lang),
     labelsCarryYear: true,
     anchorIndex: before.length,
   };
@@ -803,9 +816,10 @@ export function buildRange(
   day: number,
   timeframe: Timeframe,
   pad = 0,
+  lang?: string,
 ): TimelineRange {
-  const page = buildPage(year, month, day, timeframe);
-  return pad > 0 ? padPage(page, pad) : page;
+  const page = buildPage(year, month, day, timeframe, lang);
+  return pad > 0 ? padPage(page, pad, lang) : page;
 }
 
 function buildPage(
@@ -813,6 +827,7 @@ function buildPage(
   month: number,
   day: number,
   timeframe: Timeframe,
+  lang?: string,
 ): TimelineRange {
   // Day is the one timeframe whose columns are not days: it shows a single
   // date, an hour to a column. Everything downstream reads range.unit and
@@ -839,7 +854,7 @@ function buildPage(
       endDate,
       days: hours,
       // One group per date the span touches, named by the locale.
-      headerGroups: headerGroupsFor(hours, "hour"),
+      headerGroups: headerGroupsFor(hours, "hour", lang),
       labelsCarryYear: true,
       unit: "hour",
       cellWidth: HOUR_WIDTH,
@@ -877,7 +892,7 @@ function buildPage(
       // inside a month, two where it runs across the turn of one. The dates
       // themselves are under every column already, so the heading names the
       // month rather than repeating the span.
-      headerGroups: headerGroupsFor(days, "weekday"),
+      headerGroups: headerGroupsFor(days, "weekday", lang),
       labelsCarryYear: true,
       unit: "weekday",
       cellWidth: WEEKDAY_WIDTH,
@@ -971,7 +986,7 @@ function buildPage(
       days,
       // A group per month, by the month holding each week's midweek — the
       // month most of the week falls in (headerGroupsFor, groupDate).
-      headerGroups: headerGroupsFor(days, "week"),
+      headerGroups: headerGroupsFor(days, "week", lang),
       labelsCarryYear: true,
       unit: "week",
       cellWidth: YEAR_WEEK_WIDTH,
@@ -1168,11 +1183,20 @@ export function useTimelineLayout(
   const titleProp = source?.properties.find((p) => p.config.type === "title");
   const hasEnd = !!endProp;
 
+  const { i18n } = useTranslation();
+
   const timelineLayout = useMemo<TimelineLayout>(() => {
     // With its context either side: the scroller is handed several pages of
     // columns, so a sideways scroll runs past the end of the one on show
     // under its own momentum instead of hitting a wall and being stepped.
-    const range = buildRange(year, month, day, timeframe, padFor(timeframe));
+    const range = buildRange(
+      year,
+      month,
+      day,
+      timeframe,
+      padFor(timeframe),
+      i18n.resolvedLanguage,
+    );
 
     const records: TimelineRecord[] = sortedRecords.map((r) => {
       const raw = startProp ? r.values?.[startProp.id] : null;
@@ -1214,6 +1238,7 @@ export function useTimelineLayout(
     endProp,
     titleProp,
     hasEnd,
+    i18n.resolvedLanguage,
   ]);
 
   return { timelineLayout };

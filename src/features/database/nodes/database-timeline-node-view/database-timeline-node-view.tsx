@@ -109,6 +109,7 @@ interface RowIndicator {
   rowIndex: number;
   direction: "left" | "right";
   start: Date;
+  end?: Date;
   geo: { left: number; width: number } | undefined;
 }
 
@@ -235,7 +236,7 @@ function DatabaseTimelineNodeViewImpl() {
   const { addRecordAsync, updatePropertiesAsync, setCellValue } = useDataSource(
     source?.id,
   );
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // A year squeezed into a page's column is a year nobody can read; opened
   // over the page it has the screen (view-stage.tsx).
   const [staged, setStaged] = useState(false);
@@ -712,6 +713,7 @@ function DatabaseTimelineNodeViewImpl() {
           rowIndex,
           direction,
           start: rec.start,
+          end: rec.end ?? undefined,
           geo,
         });
       }
@@ -1005,11 +1007,8 @@ function DatabaseTimelineNodeViewImpl() {
                     className={`db-tl-indicator db-tl-indicator--${ind.direction}`}
                     style={{ top: ind.rowIndex * ROW_HEIGHT + ROW_HEIGHT / 2 }}
                     onClick={() => scrollToRecord(ind)}
-                    aria-label={
-                      ind.direction === "left"
-                        ? "Scroll to earlier record"
-                        : "Scroll to later record"
-                    }
+                    aria-label={`${ind.start.toLocaleDateString(i18n.resolvedLanguage, { month: "long", day: "numeric", year: "numeric" })} ${ind.end ? `->${ind.end.toLocaleDateString(i18n.resolvedLanguage, { month: "short", day: "numeric", year: "numeric" })}` : ""} `}
+                    tooltip={`${ind.start.toLocaleDateString(i18n.resolvedLanguage, { month: "long", day: "numeric", year: "numeric" })} ${ind.end ? `->${ind.end.toLocaleDateString(i18n.resolvedLanguage, { month: "short", day: "numeric", year: "numeric" })}` : ""} `}
                   >
                     {ind.direction === "left" ? (
                       <ArrowLeft className="tiptap-button-icon" size={12} />

@@ -8,6 +8,7 @@ import {
   todayOffset,
   tickUnder,
 } from "../../hooks/use-timeline-layout";
+import { useTranslation } from "react-i18next";
 
 /** How wide today's marker is, as the stylesheet draws it: the room a date
  *  printed under it would need to give up. */
@@ -40,6 +41,7 @@ function TimelineHeaderImpl({
 }) {
   const cell = range.cellWidth;
   const gridWidth = range.days.length * cell;
+  const { i18n } = useTranslation();
 
   // Today, twice over: the column it falls in, and where in the grid it
   // actually is.
@@ -61,9 +63,9 @@ function TimelineHeaderImpl({
       at,
       column: Math.floor(offsetOfTime(range, new Date().getTime()) / cell),
       // Its date, written the way a day column writes one.
-      label: columnParts(new Date(), "day", false).main,
+      label: columnParts(new Date(), "day", false, i18n.resolvedLanguage).main,
     };
-  }, [range, cell]);
+  }, [range, cell, i18n.resolvedLanguage]);
   const todayIdx = weekly ? -1 : (today?.column ?? -1);
 
   // The week number the marker stands on top of, if any. A week's date is
@@ -196,7 +198,12 @@ function TimelineHeaderImpl({
           // edges, a date marking the Monday a week begins rather than
           // floating in the middle of one — which is also where the month
           // lines fall, so the two read as one ruler.
-          const part = columnParts(day, range.unit, range.unit !== "week");
+          const part = columnParts(
+            day,
+            range.unit,
+            range.unit !== "week",
+            i18n.resolvedLanguage,
+          );
           return (
             <div
               key={index}
