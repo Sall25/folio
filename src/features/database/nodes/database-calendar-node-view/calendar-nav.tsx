@@ -14,6 +14,7 @@ import { ViewStageButton } from "../../components/view-stage";
 function CalendarNavImpl({ onOpenStage }: { onOpenStage?: () => void }) {
   const { t } = useTranslation();
   const { db } = useDatabaseContext();
+  const { i18n } = useTranslation();
   // Arrived here from a timeline ("Manage in calendar"): the way back,
   // named after the view it leads to. Ephemeral — a reload lands on this
   // calendar as the ordinary view it is, with no chip and nothing owed.
@@ -21,10 +22,13 @@ function CalendarNavImpl({ onOpenStage }: { onOpenStage?: () => void }) {
 
   const { prevMonth, nextMonth, goToday } = useCalendarViewActions();
   const { year, month } = useCalendarViewState();
-  const monthLabel = new Date(year, month).toLocaleString("default", {
-    month: "long",
-    year: "numeric",
-  });
+  const monthLabel = new Date(year, month).toLocaleString(
+    i18n.resolvedLanguage,
+    {
+      month: "long",
+      year: "numeric",
+    },
+  );
 
   return (
     <CardItemGroup orientation="horizontal" className="db-calendar__nav">

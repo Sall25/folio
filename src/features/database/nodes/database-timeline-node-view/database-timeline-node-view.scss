@@ -639,7 +639,7 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
     position: absolute;
     top: 0;
     bottom: 0;
-    border-right: 1px solid var(--tt-border-color, #e5e7eb);
+    // border-right: 1px solid var(--tt-border-color, #e5e7eb);
     box-sizing: border-box;
 
     &--weekend {
@@ -647,7 +647,29 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
     }
   }
 }
-
+.db-tl-manage{
+  border: 1px solid var(--tt-border-color);
+  min-height: 20px !important;
+  height: 26.5px !important;
+  border-radius: var(--tt-radius-xs);
+}
+.db-tl-timeframe-switcher,
+.db-tl-manage{
+  text-transform: capitalize;
+  font-weight: 450 !important;
+  letter-spacing: -0.15px;
+  font-kerning: normal;
+  font-synthesis: none;
+  color: var(--tt-text-primary);
+   background-color: transparent;
+  cursor: pointer;
+  .tiptap-button-icon{
+    color: var(--tt-text-primary);
+  }
+  &:hover{
+    background-color: transparent !important;
+  }
+}
 .db-tl-bar {
   cursor: pointer;
 }
@@ -768,13 +790,14 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   padding: 4px 0;
   font-size: 14px;
   text-transform: capitalize;
-  font-weight: 400;
-  color: var(--tt-text-color, var(--tt-gray-light-a-900));
   white-space: nowrap;
-
-  .dark & {
-    color: var(--tt-gray-dark-a-900);
-  }
+  font-weight: 450 !important;
+  letter-spacing: -0.15px;
+  font-kerning: normal;
+  font-synthesis: none;
+  color: var(--tt-text-primary);
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  -webkit-font-smoothing: auto;
 }
 
 // The database node is the horizontal scroller for a table wide enough to
@@ -888,6 +911,13 @@ $tl-header-height: 61; // fallback for --tl-header-height (TOTAL_HEADER_HEIGHT)
   // over two lines and pushed the row's height out.
   white-space: nowrap;
   color: var(--tt-gray-light-a-500);
+  text-transform: capitalize;
+  font-weight: 450 !important;
+  letter-spacing: -0.15px;
+  font-kerning: normal;
+  font-synthesis: none;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  -webkit-font-smoothing: auto;
 
   .dark & {
     color: var(--tt-gray-dark-a-500);

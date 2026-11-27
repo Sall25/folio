@@ -125,9 +125,7 @@ function TimeframeSwitcher({
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
-          style={{
-            textTransform: "capitalize",
-          }}
+          className="db-tl-timeframe-switcher"
         >
           <span className="tiptap-button-text">{timeframe}</span>
           <Spacer orientation="horizontal" size={0.2} />

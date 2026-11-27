@@ -142,7 +142,7 @@ function TimelineBarInner({
       data-resizing={isResizing || undefined}
       data-linking={link.role ?? undefined}
       style={{
-        top: held ? held.top : rowTop(index),
+        top: (held ? held.top : rowTop(index)) - 2.2,
         left: held ? held.left : placement.left,
         // Where the card would land, while the pointer is still down.
         // A transform, so the drag costs no layout and the card it is
@@ -160,7 +160,7 @@ function TimelineBarInner({
         width: isResizing
           ? startWidth || held?.width || placement.width
           : (held?.width ?? placement.width),
-        height: ROW_HEIGHT,
+        height: ROW_HEIGHT + 4,
       }}
     >
       <TimelineCardBody

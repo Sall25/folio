@@ -38,6 +38,11 @@
       white-space: nowrap !important;
       overflow: hidden !important;
       text-overflow: ellipsis !important;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+      -webkit-font-smoothing: auto;
+      letter-spacing: -0.15px;
+      font-kerning: normal;
+      font-synthesis: none;
     }
      // Same exception here — the wrap block also pins 34px + padding.
     &.db-cell-board-view {

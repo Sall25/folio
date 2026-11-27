@@ -11,7 +11,6 @@ import { Cell } from "../../components/cells/cell";
 import "./timeline-card-body.scss";
 import { useResizableNode } from "src/components/tiptap-node/resizable-node";
 import { recordSelection } from "../../utils/record-selection-store";
-import { ROW_HEIGHT } from "../../hooks/use-timeline-layout";
 
 interface TimelineCardBodyProps {
   view: DatabaseView;
@@ -56,7 +55,12 @@ export function TimelineCardBody({
     // property on this element silently overriding what the parent intends.
     <div
       className="db-tl-bar"
-      style={{ position: "absolute", inset: 0, height: ROW_HEIGHT - 2 }}
+      style={{
+        position: "absolute",
+        inset: 0,
+        height: "100%",
+        border: "1.5px solid var(--tt-border-color)",
+      }}
       onClick={() => onOpenRecord(record.id)}
       onMouseEnter={() => recordSelection.setHovered(record.id)}
       onMouseLeave={() => recordSelection.setHovered(null)}
@@ -70,7 +74,7 @@ export function TimelineCardBody({
 
       <Button variant="ghost" className="db-tl-bar__content">
         <span className="db-tl-bar__icon">
-          <DynamicIcon name={record.cover.iconName ?? undefined} size={14} />
+          <DynamicIcon name={record.cover.iconName ?? undefined} size={16} />
         </span>
         <span className="tiptap-button-text db-tl-bar__title">
           {record.title}
@@ -82,10 +86,7 @@ export function TimelineCardBody({
           much there is to read. Outside the button — these are cells, not
           part of what opens the record. */}
       {otherProps && otherProps.length > 0 && (
-        <div
-          className="db-tl-bar__props"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div className="db-tl-bar__props" onClick={(e) => e.stopPropagation()}>
           {otherProps.map((p) => (
             <Cell
               key={p.id}
